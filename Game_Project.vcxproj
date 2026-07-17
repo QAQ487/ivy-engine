@@ -132,6 +132,8 @@ if %ERRORLEVEL% GEQ 8 exit /b %ERRORLEVEL%
 robocopy "$(ProjectDir)rom" "$(OutDir)rom" /MIR /NJH /NJS /NDL /NFL /NC /NS /NP
 if %ERRORLEVEL% GEQ 8 exit /b %ERRORLEVEL%
 
+if not exist "$(OutDir)project.json" copy /Y "$(ProjectDir)project.json" "$(OutDir)project.json"
+
 exit /b 0</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -169,6 +171,8 @@ if %ERRORLEVEL% GEQ 8 exit /b %ERRORLEVEL%
 
 robocopy "$(ProjectDir)rom" "$(OutDir)rom" /MIR /NJH /NJS /NDL /NFL /NC /NS /NP
 if %ERRORLEVEL% GEQ 8 exit /b %ERRORLEVEL%
+
+if not exist "$(OutDir)project.json" copy /Y "$(ProjectDir)project.json" "$(OutDir)project.json"
 
 exit /b 0</Command>
     </PostBuildEvent>
@@ -243,6 +247,7 @@ exit /b 0</Command>
     <ClInclude Include="engine\ecs\component_factory.h" />
     <ClInclude Include="engine\editor\editor_prefab_panel.h" />
     <ClInclude Include="engine\editor\project_asset_index.h" />
+    <ClInclude Include="engine\editor\project_manager.h" />
     <ClInclude Include="engine\editor\editor_project_browser.h" />
     <ClInclude Include="engine\editor\editor_ui_panel.h" />
     <ClInclude Include="engine\ecs\prefab_serializer.h" />
@@ -362,6 +367,7 @@ exit /b 0</Command>
     <ClCompile Include="engine\ecs\component_factory.cpp" />
     <ClCompile Include="engine\editor\editor_prefab_panel.cpp" />
     <ClCompile Include="engine\editor\project_asset_index.cpp" />
+    <ClCompile Include="engine\editor\project_manager.cpp" />
     <ClCompile Include="engine\editor\editor_project_browser.cpp" />
     <ClCompile Include="engine\editor\editor_ui_panel.cpp" />
     <ClCompile Include="engine\ecs\prefab_serializer.cpp" />

@@ -31,6 +31,9 @@
 #include "camera_director.h"
 #include "scene_transition.h"
 #include "engine/ecs/model_asset_cache.h"
+#ifndef GAME_RUNTIME
+#include "engine/editor/project_manager.h"
+#endif
 #include "engine/scene/scene_runtime.h"
 #include "engine/ecs/prefab_runtime.h"
 #include "third_person_camera.h"
@@ -71,11 +74,21 @@ void GameScene::Initialize() {
 	{
 #ifndef GAME_RUNTIME
 		Grid_Initialize();
+		ProjectManager::Instance().BootstrapAtStartup();
 #endif
 		ModelAssetCache::Instance().Initialize();
 		EngineGUI_Initialize(GetWindowHandle(), GetDevice(), GetDeviceContext());
 		SceneCanvas_Initialize();
+#ifndef GAME_RUNTIME
+		{
+			std::string scenePath = EngineGUI_ResolveStartupScenePath();
+			if (scenePath.empty())
+				scenePath = EngineGUI_GetDefaultScenePath();
+			EngineGUI_LoadFromFile(scenePath.c_str());
+		}
+#else
 		EngineGUI_LoadFromFile(EngineGUI_GetDefaultScenePath().c_str());
+#endif
 	}
 
 	// Billboard system

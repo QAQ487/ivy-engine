@@ -55,6 +55,8 @@
 #include "engine/ecs/component_factory.h"
 #include "engine/editor/editor_project_browser.h"
 #include "engine/editor/editor_ui_panel.h"
+#include "engine/editor/project_asset_index.h"
+#include "engine/editor/project_manager.h"
 #include "engine/editor/transform_gizmo.h"
 #include "engine/editor/ui_gizmo.h"
 #include "engine/ecs/visual_component.h"
@@ -106,6 +108,12 @@ static bool  g_showDeleteTagPopup = false;
 static int   g_pendingDeleteTagId = -1;
 static bool  g_showDefaultScenePopup = false;
 static bool  g_showUiOverlay = true;
+static bool  g_showNewProjectPopup = false;
+static char  g_newProjectName[128] = "NewProject";
+static std::string g_newProjectParentDir;
+static std::string g_projectStatusMessage;
+enum class PendingFolderPickAction { None = 0, NewProject, OpenProject };
+static PendingFolderPickAction g_pendingFolderPick = PendingFolderPickAction::None;
 static EditorEditMode g_editMode = EditorEditMode::Scene3D;
 
 static constexpr float kToolbarHeight = 36.0f;
@@ -220,11 +228,16 @@ enum class PendingEditorAction {
     None = 0,
     LoadScene,
     NewScene,
+    OpenProject,
+    CreateProject,
     Exit,
 };
 
 static PendingEditorAction g_pendingEditorAction = PendingEditorAction::None;
 static std::string g_pendingEditorSceneFile;
+static std::string g_pendingProjectPath;
+static std::string g_pendingCreateProjectParent;
+static std::string g_pendingCreateProjectName;
 static bool g_showUnsavedChangesPopup = false;
 
 void EngineGUI_QueueUnsavedLoad(const char* filename) {
@@ -247,6 +260,12 @@ static std::string g_scriptReloadStatus = "Script DLL reload: not initialized";
 static void SaveScene();
 static void SaveSceneToFile(const std::string& sceneFile);
 static void NewScene();
+static void SaveProject();
+static void ApplyProjectSessionState();
+static bool SwitchToOpenedProject();
+static void RequestOpenProject(const std::string& rootPath);
+static void BeginNewProjectFlow();
+static void BeginOpenProjectFlow();
 
 static void RemapNodeTagsAfterDelete(GameObject* node, int deletedId) {
     if (!node)
@@ -689,8 +708,152 @@ static void DrawPropertiesEmptyState() {
     ImGui::TextWrapped("Use Window > Rendering Settings for skybox, shadows, and render defaults.");
 }
 
+static void ApplyProjectSessionState() {
+    auto& project = ProjectManager::Instance();
+    if (!project.IsOpen())
+        return;
+
+    const int zoom = project.GetEditorUiZoomPercent();
+    if (IsValidUiZoomPercent(zoom))
+        ApplyUiZoom(zoom);
+    else
+        ApplyUiZoom(100);
+
+    TagRegistry::Instance().LoadFromFile();
+    ModelAssetCache::Instance().RefreshAssetDirectory();
+    ProjectAssetIndex::Instance().Refresh();
+    SceneLoader_RefreshSceneAssets();
+
+    if (!project.GetData().defaultScene.empty())
+        SceneLoader_SetDefaultSceneFileName(project.GetData().defaultScene, false);
+    else
+        SceneLoader_LoadDefaultSceneSetting();
+
+    SceneLoader_UnloadScriptDlls();
+    SceneLoader_LoadScriptDlls();
+    g_scriptReloadStatus = "Watching script DLLs";
+}
+
+static bool SwitchToOpenedProject() {
+    if (!ProjectManager::Instance().IsOpen())
+        return false;
+
+    if (g_isPlaying)
+        ReturnToStart();
+
+    ApplyProjectSessionState();
+
+    std::string scenePath = ProjectManager::Instance().ResolveSceneToLoad();
+    if (scenePath.empty())
+        scenePath = EngineGUI_GetDefaultScenePath();
+
+    if (!scenePath.empty())
+        EngineGUI_LoadFromFileCore(scenePath.c_str());
+
+    ProjectManager::Instance().UpdateWindowTitle(GetWindowHandle());
+    g_projectStatusMessage.clear();
+    return true;
+}
+
+static void RequestOpenProject(const std::string& rootPath) {
+    if (rootPath.empty())
+        return;
+
+    if (EngineGUI_IsSceneDirty()) {
+        g_pendingEditorAction = PendingEditorAction::OpenProject;
+        g_pendingProjectPath = rootPath;
+        g_showUnsavedChangesPopup = true;
+        return;
+    }
+
+    std::string error;
+    if (!ProjectManager::Instance().OpenProject(rootPath, &error)) {
+        g_projectStatusMessage = error.empty() ? "Failed to open project." : error;
+        MessageBoxA(GetWindowHandle(), g_projectStatusMessage.c_str(), "Open Project",
+                    MB_OK | MB_ICONERROR);
+        return;
+    }
+    SwitchToOpenedProject();
+}
+
+static void BeginOpenProjectFlow() {
+    std::string folder;
+    if (!ProjectManager::PickFolder(GetWindowHandle(), L"Open Project", &folder))
+        return;
+    RequestOpenProject(folder);
+}
+
+static void BeginNewProjectFlow() {
+    std::string folder;
+    if (!ProjectManager::PickFolder(GetWindowHandle(), L"Select Parent Folder for New Project",
+                                    &folder)) {
+        return;
+    }
+    g_newProjectParentDir = folder;
+    snprintf(g_newProjectName, sizeof(g_newProjectName), "NewProject");
+    g_showNewProjectPopup = true;
+}
+
+static void SaveProject() {
+    auto& project = ProjectManager::Instance();
+    if (!project.IsOpen()) {
+        MessageBoxA(GetWindowHandle(), "No project is open.", "Save Project",
+                    MB_OK | MB_ICONWARNING);
+        return;
+    }
+
+    SaveScene();
+
+    const std::string sceneFile = NormalizeSceneFileName(SceneLoader_GetSaveFileName());
+    if (!sceneFile.empty())
+        project.SetLastOpenedScene(sceneFile);
+
+    project.SetDefaultScene(SceneLoader_GetDefaultSceneFileName());
+    project.SetEditorUiZoomPercent(g_uiZoomPercent);
+    SaveUiPrefs();
+
+    std::string error;
+    if (!project.SaveProjectFile(&error)) {
+        MessageBoxA(GetWindowHandle(),
+                    error.empty() ? "Failed to save project.json" : error.c_str(),
+                    "Save Project", MB_OK | MB_ICONERROR);
+        return;
+    }
+
+    project.UpdateWindowTitle(GetWindowHandle());
+    g_projectStatusMessage = "Project saved.";
+}
+
 static void DrawEditorMenuBar() {
     if (ImGui::BeginMenu("File")) {
+        if (ImGui::MenuItem("New Project..."))
+            g_pendingFolderPick = PendingFolderPickAction::NewProject;
+        if (ImGui::MenuItem("Open Project..."))
+            g_pendingFolderPick = PendingFolderPickAction::OpenProject;
+        if (ImGui::MenuItem("Save Project", "Ctrl+Shift+S"))
+            SaveProject();
+
+        if (ImGui::BeginMenu("Recent Projects")) {
+            const auto& recent = ProjectManager::Instance().GetRecentProjects();
+            if (recent.empty()) {
+                ImGui::MenuItem("(empty)", nullptr, false, false);
+            }
+            else {
+                for (size_t i = 0; i < recent.size(); ++i) {
+                    const std::string& path = recent[i];
+                    const bool isCurrent =
+                        ProjectManager::Instance().IsOpen() &&
+                        path == ProjectManager::Instance().GetRootPath();
+                    char label[512];
+                    snprintf(label, sizeof(label), "%zu  %s", i + 1, path.c_str());
+                    if (ImGui::MenuItem(label, nullptr, isCurrent, !isCurrent))
+                        RequestOpenProject(path);
+                }
+            }
+            ImGui::EndMenu();
+        }
+
+        ImGui::Separator();
         if (ImGui::MenuItem("Save Scene", "Ctrl+S"))
             SaveScene();
         if (ImGui::MenuItem("New Scene..."))
@@ -757,6 +920,7 @@ static void DrawEditorMenuBar() {
                 if (ImGui::MenuItem(label, nullptr, g_uiZoomPercent == percent)) {
                     ApplyUiZoom(percent);
                     SaveUiPrefs();
+                    ProjectManager::Instance().SetEditorUiZoomPercent(percent);
                 }
             }
             ImGui::EndMenu();
@@ -768,9 +932,15 @@ static void DrawEditorMenuBar() {
 static void ExecutePendingEditorAction() {
     const PendingEditorAction action = g_pendingEditorAction;
     const std::string payload = g_pendingEditorSceneFile;
+    const std::string projectPath = g_pendingProjectPath;
+    const std::string createParent = g_pendingCreateProjectParent;
+    const std::string createName = g_pendingCreateProjectName;
 
     g_pendingEditorAction = PendingEditorAction::None;
     g_pendingEditorSceneFile.clear();
+    g_pendingProjectPath.clear();
+    g_pendingCreateProjectParent.clear();
+    g_pendingCreateProjectName.clear();
     g_showUnsavedChangesPopup = false;
     ImGui::CloseCurrentPopup();
 
@@ -787,6 +957,34 @@ static void ExecutePendingEditorAction() {
             g_selUiElement = nullptr;
             SceneLoader_CopySceneFileName(payload);
             SaveScene();
+        }
+        break;
+
+    case PendingEditorAction::OpenProject:
+        if (!projectPath.empty()) {
+            std::string error;
+            if (!ProjectManager::Instance().OpenProject(projectPath, &error)) {
+                MessageBoxA(GetWindowHandle(),
+                            error.empty() ? "Failed to open project." : error.c_str(),
+                            "Open Project", MB_OK | MB_ICONERROR);
+            }
+            else {
+                SwitchToOpenedProject();
+            }
+        }
+        break;
+
+    case PendingEditorAction::CreateProject:
+        if (!createParent.empty()) {
+            std::string error;
+            if (!ProjectManager::Instance().CreateProject(createParent, createName, &error)) {
+                MessageBoxA(GetWindowHandle(),
+                            error.empty() ? "Failed to create project." : error.c_str(),
+                            "New Project", MB_OK | MB_ICONERROR);
+            }
+            else {
+                SwitchToOpenedProject();
+            }
         }
         break;
 
@@ -842,6 +1040,45 @@ static void DrawEditorPopups() {
         ImGui::SameLine();
         if (ImGui::Button("Cancel", ImVec2(120, 0))) {
             g_showNewScenePopup = false;
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::EndPopup();
+    }
+
+    if (g_showNewProjectPopup)
+        ImGui::OpenPopup("NewProjectPopup");
+    ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+    if (ImGui::BeginPopupModal("NewProjectPopup", &g_showNewProjectPopup, ImGuiWindowFlags_AlwaysAutoResize)) {
+        ImGui::Text("New Project Name");
+        ImGui::SetNextItemWidth(280.0f);
+        ImGui::InputText("##NewProjectNameModal", g_newProjectName, IM_ARRAYSIZE(g_newProjectName));
+        ImGui::TextDisabled("%s", g_newProjectParentDir.c_str());
+        ImGui::Separator();
+        if (ImGui::Button("Create", ImVec2(120, 0))) {
+            const std::string name = TrimString(g_newProjectName);
+            if (EngineGUI_IsSceneDirty()) {
+                g_pendingEditorAction = PendingEditorAction::CreateProject;
+                g_pendingCreateProjectParent = g_newProjectParentDir;
+                g_pendingCreateProjectName = name;
+                g_showUnsavedChangesPopup = true;
+            }
+            else {
+                std::string error;
+                if (!ProjectManager::Instance().CreateProject(g_newProjectParentDir, name, &error)) {
+                    MessageBoxA(GetWindowHandle(),
+                                error.empty() ? "Failed to create project." : error.c_str(),
+                                "New Project", MB_OK | MB_ICONERROR);
+                }
+                else {
+                    SwitchToOpenedProject();
+                }
+            }
+            g_showNewProjectPopup = false;
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Cancel", ImVec2(120, 0))) {
+            g_showNewProjectPopup = false;
             ImGui::CloseCurrentPopup();
         }
         ImGui::EndPopup();
@@ -948,8 +1185,10 @@ static void DrawEditorPopups() {
                 SceneLoader_TryGetSceneAsset(i, nullptr, &displayName, &fileName);
                 const bool selected = (fileName == SceneLoader_GetDefaultSceneFileName());
                 const std::string label = std::string(ICON_FA_MAP) + " " + displayName;
-                if (ImGui::Selectable(label.c_str(), selected))
+                if (ImGui::Selectable(label.c_str(), selected)) {
                     SceneLoader_SetDefaultSceneFileName(fileName, true);
+                    ProjectManager::Instance().SetDefaultScene(fileName);
+                }
                 if (selected)
                     ImGui::SetItemDefaultFocus();
             }
@@ -999,6 +1238,9 @@ static void DrawEditorPopups() {
         if (ImGui::Button("Cancel", ImVec2(120, 0))) {
             g_pendingEditorAction = PendingEditorAction::None;
             g_pendingEditorSceneFile.clear();
+            g_pendingProjectPath.clear();
+            g_pendingCreateProjectParent.clear();
+            g_pendingCreateProjectName.clear();
             g_showUnsavedChangesPopup = false;
             ImGui::CloseCurrentPopup();
         }
@@ -1140,9 +1382,17 @@ static void StartPlay() {
 void EngineGUI_Initialize(HWND hwnd, ID3D11Device* device,
     ID3D11DeviceContext* context)
 {
+    ProjectManager::Instance().BootstrapAtStartup();
+
     ModelAssetCache::Instance().RefreshAssetDirectory();
     SceneLoader_Initialize(true);
     g_scriptReloadStatus = "Watching script DLLs";
+
+    if (ProjectManager::Instance().IsOpen() &&
+        !ProjectManager::Instance().GetData().defaultScene.empty()) {
+        SceneLoader_SetDefaultSceneFileName(
+            ProjectManager::Instance().GetData().defaultScene, false);
+    }
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -1167,8 +1417,18 @@ void EngineGUI_Initialize(HWND hwnd, ID3D11Device* device,
     g_imguiInitialized = true;
 
     LoadUiPrefs();
-    ApplyUiZoom(g_uiZoomPercent);
+    if (ProjectManager::Instance().IsOpen()) {
+        const int zoom = ProjectManager::Instance().GetEditorUiZoomPercent();
+        if (IsValidUiZoomPercent(zoom))
+            ApplyUiZoom(zoom);
+        else
+            ApplyUiZoom(g_uiZoomPercent);
+    }
+    else {
+        ApplyUiZoom(g_uiZoomPercent);
+    }
 
+    ProjectManager::Instance().UpdateWindowTitle(hwnd);
     DebugCamera_SetEnabled(g_enabled);
 }
 
@@ -1203,6 +1463,10 @@ const std::string& EngineGUI_GetActiveCameraNodeName() { return g_activeCameraNo
 void EngineGUI_SetActiveCameraNodeName(const std::string& n) { g_activeCameraNode = n; }
 void EngineGUI_SetEnabled(bool e) { g_enabled = e; DebugCamera_SetEnabled(e); }
 const std::string& EngineGUI_GetDefaultScenePath() { return SceneLoader_GetDefaultScenePath(); }
+
+std::string EngineGUI_ResolveStartupScenePath() {
+    return ProjectManager::Instance().ResolveSceneToLoad();
+}
 
 bool EngineGUI_IsUiOverlayVisible() { return g_showUiOverlay; }
 void EngineGUI_SetUiOverlayVisible(bool visible) { g_showUiOverlay = visible; }
@@ -1892,6 +2156,8 @@ void EngineGUI_Draw() {
 
     if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_S))
         SaveScene();
+    if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiMod_Shift | ImGuiKey_S))
+        SaveProject();
 
     if (ImGui::BeginMainMenuBar()) {
         DrawEditorMenuBar();
@@ -2784,4 +3050,14 @@ void EngineGUI_Draw() {
 
     if (ImGui::GetIO().WantCaptureMouse)
         Mouse_ClearWheel();
+
+    // Run Win32 folder dialogs after ImGui finishes the frame (avoids menu reentrancy).
+    if (g_pendingFolderPick != PendingFolderPickAction::None) {
+        const PendingFolderPickAction action = g_pendingFolderPick;
+        g_pendingFolderPick = PendingFolderPickAction::None;
+        if (action == PendingFolderPickAction::NewProject)
+            BeginNewProjectFlow();
+        else if (action == PendingFolderPickAction::OpenProject)
+            BeginOpenProjectFlow();
+    }
 }

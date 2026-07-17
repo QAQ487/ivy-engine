@@ -182,6 +182,9 @@
     <ClInclude Include="engine\editor\project_asset_index.h">
       <Filter>engine\editor</Filter>
     </ClInclude>
+    <ClInclude Include="engine\editor\project_manager.h">
+      <Filter>engine\editor</Filter>
+    </ClInclude>
     <ClInclude Include="engine\editor\editor_project_browser.h">
       <Filter>engine\editor</Filter>
     </ClInclude>
@@ -479,6 +482,9 @@
       <Filter>engine\editor</Filter>
     </ClCompile>
     <ClCompile Include="engine\editor\project_asset_index.cpp">
+      <Filter>engine\editor</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\editor\project_manager.cpp">
       <Filter>engine\editor</Filter>
     </ClCompile>
     <ClCompile Include="engine\editor\editor_project_browser.cpp">

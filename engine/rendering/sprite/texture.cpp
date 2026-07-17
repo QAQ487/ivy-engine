@@ -7,6 +7,8 @@
  ===========================================================================**/
 #include "texture.h"
 #include <string>
+#include <cstdio>
+#include <Windows.h>
  // #include "direct3d.h" // SAFE_RELEASE
 #include "engine/rendering/d3d11/renderer.h" // �f�o�C�X�ƃR���e�L�X�g�̎擾
 #include "DirectXTex.h" // DirectXTex���C�u������g�p
@@ -66,8 +68,16 @@ int TextureLoad(const wchar_t* ptr_file_name, bool mipmap) {
 		/* �e�N�X�`���ǂݍ��� */
 		TexMetadata metadata;
 		ScratchImage image;
-		// �摜�t�@�C���̓ǂݍ���
-		LoadFromWICFile(ptr_file_name, WIC_FLAGS_NONE, &metadata, image); // RGBA�̃o�C�i���f�[�^��image�ɓ���Ă����i�l�X�ȃt�@�C���ɑΉ����Ă���j// JPEG�͔����摜���ł��Ȃ��i��t���k�Ȃ��߁j
+		HRESULT loadHr = LoadFromWICFile(ptr_file_name, WIC_FLAGS_NONE, &metadata, image);
+		if (FAILED(loadHr)) {
+			char pathUtf8[MAX_PATH * 3] = {};
+			WideCharToMultiByte(CP_UTF8, 0, ptr_file_name, -1, pathUtf8, sizeof(pathUtf8),
+				nullptr, nullptr);
+			char msg[512];
+			snprintf(msg, sizeof(msg), "Failed to load texture:\n%s", pathUtf8);
+			MessageBoxA(nullptr, msg, "Texture Error", MB_OK | MB_ICONERROR);
+			return -1;
+		}
 		// �摜�t�@�C���̃T�C�Y��擾
 		g_textures[i].m_width = (unsigned int)metadata.width; // sizet = longlong
 		g_textures[i].m_height = (unsigned int)metadata.height;
@@ -84,7 +94,7 @@ int TextureLoad(const wchar_t* ptr_file_name, bool mipmap) {
 		// �V�F�[�_�[���\�[�X�p�b�N�r���[�̐���
 		HRESULT hr = CreateShaderResourceView(g_pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_textures[i].m_ptr_Texture);
 		if (FAILED(hr)) {
-			MessageBox(nullptr, "�e�N�X�`���̓ǂݍ��݂Ɏ��s���܂���", "�G���[", MB_OK | MB_ICONERROR);
+			MessageBoxA(nullptr, "Failed to create texture shader resource view.", "Texture Error", MB_OK | MB_ICONERROR);
 			break;
 		}
 

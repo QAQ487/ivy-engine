@@ -117,6 +117,10 @@ const std::string& EngineGUI_GetDefaultScenePath() {
     return SceneLoader_GetDefaultScenePath();
 }
 
+std::string EngineGUI_ResolveStartupScenePath() {
+    return {};
+}
+
 CameraMode EngineGUI_GetCameraMode() {
     return g_cameraMode;
 }

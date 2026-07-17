@@ -33,6 +33,8 @@ bool EngineGUI_MouseToViewportLocal(float& x, float& y);
 bool EngineGUI_SaveToFile(const char* filename);
 bool EngineGUI_LoadFromFile(const char* filename);
 const std::string& EngineGUI_GetDefaultScenePath();
+// Editor: last-opened scene from the active project, or empty to use default scene path.
+std::string EngineGUI_ResolveStartupScenePath();
 
 // Editor scene dirty-state (unsaved changes).
 // Dirty true → show UnsavedChangesPopup when switching scenes / exiting.

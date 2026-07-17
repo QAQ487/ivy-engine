@@ -1,0 +1,9 @@
+{
+  "name": "GameEngine Sample",
+  "version": 1,
+  "lastOpenedScene": "scene_sample_menu.json",
+  "defaultScene": "scene_sample_menu.json",
+  "editor": {
+    "uiZoomPercent": 100
+  }
+}
