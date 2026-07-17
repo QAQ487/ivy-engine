@@ -2,7 +2,10 @@
 
 This file documents the reusable game engine in this repository. It is not a game design document and should not be treated as documentation for any one game built with the engine.
 
-The manual is written for both human developers and AI agents. Use it as a map from engine concepts to source files, public APIs, JSON fields, and expected runtime behavior.
+**New to the engine?** Read the human tutorial first: [`ENGINE_USER_GUIDE.md`](ENGINE_USER_GUIDE.md).  
+**Need every function?** See [`ENGINE_API_REFERENCE.md`](ENGINE_API_REFERENCE.md).
+
+This manual is written for both human developers and AI agents. Use it as a map from engine concepts to source files, public APIs, JSON fields, and expected runtime behavior.
 
 ## AI Agent Quick Reference
 
