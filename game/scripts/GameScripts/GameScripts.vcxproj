@@ -1,0 +1,304 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>17.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{e9e3b9bc-bad1-4862-ae40-2358478f1c8a}</ProjectGuid>
+    <RootNamespace>GameScripts</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <RepoRoot>$(MSBuildThisFileDirectory)..\..\..\</RepoRoot>
+  </PropertyGroup>
+  <PropertyGroup>
+    <TargetName>GameScripts</TargetName>
+    <RuntimeScriptBin>$(RepoRoot)$(Platform)\$(Configuration)\game\scripts\bin\</RuntimeScriptBin>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>$(RepoRoot)game\scripts\bin\</OutDir>
+    <IntDir>$(MSBuildThisFileDirectory)$(Platform)\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>$(RepoRoot)game\scripts\bin\</OutDir>
+    <IntDir>$(MSBuildThisFileDirectory)$(Platform)\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutDir>$(RepoRoot)game\scripts\bin\</OutDir>
+    <IntDir>$(MSBuildThisFileDirectory)$(Platform)\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>$(RepoRoot)game\scripts\bin\</OutDir>
+    <IntDir>$(MSBuildThisFileDirectory)$(Platform)\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;_DEBUG;GAMESCRIPTS_EXPORTS;SCRIPT_DLL_BUILD;FBXSDK_SHARED;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>$(RepoRoot);$(RepoRoot)src\app;$(RepoRoot)src\app\scene;$(RepoRoot)src\app\camera;$(RepoRoot)src\app\rendering;$(RepoRoot)game\scripts\core;$(RepoRoot)game\scripts\items;$(RepoRoot)game\scripts\ai;$(RepoRoot)game\scripts\managers;$(RepoRoot)game\scripts\player;$(RepoRoot)game\scripts\camera;$(RepoRoot)game\scripts\rendering;$(RepoRoot)game\scripts\test;$(RepoRoot)game\scripts\magnet;$(RepoRoot)game\scripts\ui;$(RepoRoot)libraries;$(RepoRoot)libraries\fbxsdk\include;$(RepoRoot)libraries\effekseer\include\Effekseer;$(RepoRoot)libraries\effekseer\include\EffekseerRendererDX11;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableUAC>false</EnableUAC>
+      <AdditionalLibraryDirectories>$(RepoRoot)libraries\fbxsdk\lib\x64\debug;$(RepoRoot)libraries\effekseer\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>libfbxsdk.lib;d3dcompiler.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
+      <ImportLibrary>$(OutDir)$(TargetName).lib</ImportLibrary>
+      <ProgramDataBaseFileName>$(OutDir)$(TargetName).pdb</ProgramDataBaseFileName>
+    </Link>
+    <PostBuildEvent>
+      <Command>if not exist "$(RuntimeScriptBin)" mkdir "$(RuntimeScriptBin)"
+xcopy /Y /D "$(OutDir)$(TargetName).dll" "$(RuntimeScriptBin)"
+xcopy /Y /D "$(OutDir)$(TargetName).pdb" "$(RuntimeScriptBin)"</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;NDEBUG;GAMESCRIPTS_EXPORTS;SCRIPT_DLL_BUILD;FBXSDK_SHARED;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>$(RepoRoot);$(RepoRoot)src\app;$(RepoRoot)src\app\scene;$(RepoRoot)src\app\camera;$(RepoRoot)src\app\rendering;$(RepoRoot)game\scripts\core;$(RepoRoot)game\scripts\items;$(RepoRoot)game\scripts\ai;$(RepoRoot)game\scripts\managers;$(RepoRoot)game\scripts\player;$(RepoRoot)game\scripts\camera;$(RepoRoot)game\scripts\rendering;$(RepoRoot)game\scripts\test;$(RepoRoot)game\scripts\magnet;$(RepoRoot)game\scripts\ui;$(RepoRoot)libraries;$(RepoRoot)libraries\fbxsdk\include;$(RepoRoot)libraries\effekseer\include\Effekseer;$(RepoRoot)libraries\effekseer\include\EffekseerRendererDX11;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableUAC>false</EnableUAC>
+      <AdditionalLibraryDirectories>$(RepoRoot)libraries\fbxsdk\lib\x64\release;$(RepoRoot)libraries\effekseer\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>libfbxsdk.lib;d3dcompiler.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
+      <ImportLibrary>$(OutDir)$(TargetName).lib</ImportLibrary>
+      <ProgramDataBaseFileName>$(OutDir)$(TargetName).pdb</ProgramDataBaseFileName>
+    </Link>
+    <PostBuildEvent>
+      <Command>if not exist "$(RuntimeScriptBin)" mkdir "$(RuntimeScriptBin)"
+xcopy /Y /D "$(OutDir)$(TargetName).dll" "$(RuntimeScriptBin)"
+xcopy /Y /D "$(OutDir)$(TargetName).pdb" "$(RuntimeScriptBin)"</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_DEBUG;GAMESCRIPTS_EXPORTS;SCRIPT_DLL_BUILD;FBXSDK_SHARED;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>$(RepoRoot);$(RepoRoot)src\app;$(RepoRoot)src\app\scene;$(RepoRoot)src\app\camera;$(RepoRoot)src\app\rendering;$(RepoRoot)game\scripts\core;$(RepoRoot)game\scripts\items;$(RepoRoot)game\scripts\ai;$(RepoRoot)game\scripts\managers;$(RepoRoot)game\scripts\player;$(RepoRoot)game\scripts\camera;$(RepoRoot)game\scripts\rendering;$(RepoRoot)game\scripts\test;$(RepoRoot)game\scripts\magnet;$(RepoRoot)game\scripts\ui;$(RepoRoot)libraries;$(RepoRoot)libraries\fbxsdk\include;$(RepoRoot)libraries\effekseer\include\Effekseer;$(RepoRoot)libraries\effekseer\include\EffekseerRendererDX11;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableUAC>false</EnableUAC>
+      <AdditionalLibraryDirectories>$(RepoRoot)libraries\fbxsdk\lib\x64\debug;$(RepoRoot)libraries\effekseer\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>libfbxsdk.lib;d3dcompiler.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
+      <ImportLibrary>$(OutDir)$(TargetName).lib</ImportLibrary>
+      <ProgramDataBaseFileName>$(OutDir)$(TargetName).pdb</ProgramDataBaseFileName>
+    </Link>
+    <PostBuildEvent>
+      <Command>if not exist "$(RuntimeScriptBin)" mkdir "$(RuntimeScriptBin)"
+xcopy /Y /D "$(OutDir)$(TargetName).dll" "$(RuntimeScriptBin)"
+xcopy /Y /D "$(OutDir)$(TargetName).pdb" "$(RuntimeScriptBin)"</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>NDEBUG;GAMESCRIPTS_EXPORTS;SCRIPT_DLL_BUILD;FBXSDK_SHARED;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>$(RepoRoot);$(RepoRoot)src\app;$(RepoRoot)src\app\scene;$(RepoRoot)src\app\camera;$(RepoRoot)src\app\rendering;$(RepoRoot)game\scripts\core;$(RepoRoot)game\scripts\items;$(RepoRoot)game\scripts\ai;$(RepoRoot)game\scripts\managers;$(RepoRoot)game\scripts\player;$(RepoRoot)game\scripts\camera;$(RepoRoot)game\scripts\rendering;$(RepoRoot)game\scripts\test;$(RepoRoot)game\scripts\magnet;$(RepoRoot)game\scripts\ui;$(RepoRoot)libraries;$(RepoRoot)libraries\fbxsdk\include;$(RepoRoot)libraries\effekseer\include\Effekseer;$(RepoRoot)libraries\effekseer\include\EffekseerRendererDX11;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableUAC>false</EnableUAC>
+      <AdditionalLibraryDirectories>$(RepoRoot)libraries\fbxsdk\lib\x64\release;$(RepoRoot)libraries\effekseer\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>libfbxsdk.lib;d3dcompiler.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
+      <ImportLibrary>$(OutDir)$(TargetName).lib</ImportLibrary>
+      <ProgramDataBaseFileName>$(OutDir)$(TargetName).pdb</ProgramDataBaseFileName>
+    </Link>
+    <PostBuildEvent>
+      <Command>if not exist "$(RuntimeScriptBin)" mkdir "$(RuntimeScriptBin)"
+xcopy /Y /D "$(OutDir)$(TargetName).dll" "$(RuntimeScriptBin)"
+xcopy /Y /D "$(OutDir)$(TargetName).pdb" "$(RuntimeScriptBin)"</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\engine\scripting\script_runtime_api.h" />
+    <ClInclude Include="..\managers\CenterPoleScript.h" />
+    <ClInclude Include="..\ai\DummyPlayerScript.h" />
+    <ClInclude Include="..\ai\EnemyAiScript.h" />
+    <ClInclude Include="..\managers\ItemSpawnManagerScript.h" />
+    <ClInclude Include="..\items\SpeedReducePoleItem.h" />
+    <ClInclude Include="..\items\ShockwavePoleItem.h" />
+    <ClInclude Include="..\items\ArrowStickerItem.h" />
+    <ClInclude Include="..\items\MineItem.h" />
+    <ClInclude Include="..\ai\ChaseTestEnemyScript.h" />
+    <ClInclude Include="..\..\..\engine\scripting\script_dll_register.h" />
+    <ClInclude Include="..\test\HotReloadTestScript.h" />
+    <ClInclude Include="..\test\BallRunAnimTestScript.h" />
+    <ClInclude Include="..\test\PlayerAnimTestScript.h" />
+    <ClInclude Include="..\test\EffectReleaseTestScript.h" />
+    <ClInclude Include="..\test\MagnetHelixVfxTestScript.h" />
+    <ClInclude Include="..\player\PlayerScript.h" />
+    <ClInclude Include="..\managers\PointAreaScript.h" />
+    <ClInclude Include="..\managers\TrainingExitZoneScript.h" />
+    <ClInclude Include="..\managers\TrainingItemSlotScript.h" />
+    <ClInclude Include="..\managers\RoundManagerScript.h" />
+    <ClInclude Include="..\magnet\MagnetFieldSystem.h" />
+    <ClInclude Include="..\magnet\MagnetHelixPath.h" />
+    <ClInclude Include="..\magnet\ImpactSparkVfx.h" />
+    <ClInclude Include="..\magnet\MagnetLinkVfx.h" />
+    <ClInclude Include="..\ui\LockOnUI.h" />
+    <ClInclude Include="..\ui\OffscreenEnemyIndicator.h" />
+    <ClInclude Include="..\ui\PlayerNametag.h" />
+    <ClInclude Include="..\ui\TitleTextScript.h" />
+    <ClInclude Include="..\ui\ColorSelectUiScripts.h" />
+    <ClInclude Include="..\ui\LobbyColorUiScripts.h" />
+    <ClInclude Include="..\camera\IntroCameraScript.h" />
+    <ClInclude Include="..\rendering\LeaderSpotlightScript.h" />
+    <ClInclude Include="..\core\game_score.h" />
+    <ClInclude Include="..\core\GameMode.h" />
+    <ClInclude Include="..\core\PlayerColor.h" />
+    <ClInclude Include="framework.h" />
+    <ClInclude Include="pch.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\engine\physics\core\rigidbody.cpp" />
+    <ClCompile Include="..\..\..\engine\scripting\script_dll_exports.cpp" />
+    <ClCompile Include="..\..\..\engine\scripting\ui_canvas_script_dll_exports.cpp" />
+    <ClCompile Include="..\..\..\engine\scripting\script_runtime_api.cpp" />
+    <ClCompile Include="..\managers\CenterPoleScript.cpp" />
+    <ClCompile Include="..\ai\DummyPlayerScript.cpp" />
+    <ClCompile Include="..\ai\EnemyAiScript.cpp" />
+    <ClCompile Include="..\managers\ItemSpawnManagerScript.cpp" />
+    <ClCompile Include="..\core\GameSceneHooks.cpp" />
+    <ClCompile Include="..\core\ItemWorldApi.cpp" />
+    <ClCompile Include="..\core\PlayerColor.cpp" />
+    <ClCompile Include="..\items\SpeedReducePoleItem.cpp" />
+    <ClCompile Include="..\items\ShockwavePoleItem.cpp" />
+    <ClCompile Include="..\items\ArrowStickerItem.cpp" />
+    <ClCompile Include="..\items\MineItem.cpp" />
+    <ClCompile Include="..\items\MysteryBoxItem.cpp" />
+    <ClCompile Include="..\ai\ChaseTestEnemyScript.cpp" />
+    <ClCompile Include="..\test\HotReloadTestScript.cpp" />
+    <ClCompile Include="..\test\BallRunAnimTestScript.cpp" />
+    <ClCompile Include="..\test\PlayerAnimTestScript.cpp" />
+    <ClCompile Include="..\test\EffectReleaseTestScript.cpp" />
+    <ClCompile Include="..\test\MagnetHelixVfxTestScript.cpp" />
+    <ClCompile Include="..\player\PlayerScript.cpp" />
+    <ClCompile Include="..\managers\PointAreaScript.cpp" />
+    <ClCompile Include="..\managers\TrainingExitZoneScript.cpp" />
+    <ClCompile Include="..\managers\TrainingItemSlotScript.cpp" />
+    <ClCompile Include="..\managers\RoundManagerScript.cpp" />
+    <ClCompile Include="..\magnet\MagnetFieldSystem.cpp" />
+    <ClCompile Include="..\magnet\ImpactSparkVfx.cpp" />
+    <ClCompile Include="..\magnet\MagnetLinkVfx.cpp" />
+    <ClCompile Include="..\ui\LockOnUI.cpp" />
+    <ClCompile Include="..\ui\OffscreenEnemyIndicator.cpp" />
+    <ClCompile Include="..\ui\PlayerNametag.cpp" />
+    <ClCompile Include="..\ui\TitleTextScript.cpp" />
+    <ClCompile Include="..\ui\ColorSelectUiScripts.cpp" />
+    <ClCompile Include="..\ui\LobbyColorUiScripts.cpp" />
+    <ClCompile Include="..\camera\IntroCameraScript.cpp" />
+    <ClCompile Include="..\rendering\LeaderSpotlightScript.cpp" />
+    <ClCompile Include="..\rendering\SceneTransitionScript.cpp" />
+    <ClCompile Include="..\core\game_score.cpp" />
+    <ClCompile Include="..\core\GameMode.cpp" />
+    <ClCompile Include="pch.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+    </ClCompile>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

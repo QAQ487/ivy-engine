@@ -1,0 +1,282 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="core">
+      <UniqueIdentifier>{7f50f407-2bdc-49dd-a84e-bc2d1d855b49}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="items">
+      <UniqueIdentifier>{3c0f3b01-b9ea-45d5-90a7-a19c43bfce1d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ai">
+      <UniqueIdentifier>{7159ad91-2b15-4a1b-8c7a-b502ede5da12}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="managers">
+      <UniqueIdentifier>{156e8c3e-2ef6-4281-9e15-243689622b19}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="player">
+      <UniqueIdentifier>{9cdbeb26-21b6-4bea-afb3-8bf6e4e5c0db}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="test">
+      <UniqueIdentifier>{fb884f68-f52c-4cdf-bfa1-786457e4a00c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="magnet">
+      <UniqueIdentifier>{c5e1f80a-3f32-4f36-9b9c-5537da2b7fcb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="EngineRefs">
+      <UniqueIdentifier>{21a5097b-e95a-4732-8da4-484319295bec}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="VFX">
+      <UniqueIdentifier>{6a3de325-0887-4752-af73-539dd321346c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="camera">
+      <UniqueIdentifier>{8c4f2a11-6d9e-4b2a-9f31-2a7c5e8d1b04}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="rendering">
+      <UniqueIdentifier>{9d5a3b22-7eaf-5c3b-a042-3b8d6f9e2c15}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ui">
+      <UniqueIdentifier>{ae6b4c33-8fb0-6d4c-b153-4c9e7a0f3d26}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\engine\scripting\script_dll_register.h">
+      <Filter>EngineRefs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\engine\scripting\script_runtime_api.h">
+      <Filter>EngineRefs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ai\ChaseTestEnemyScript.h">
+      <Filter>ai</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ai\DummyPlayerScript.h">
+      <Filter>ai</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ai\EnemyAiScript.h">
+      <Filter>ai</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\game_score.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\GameMode.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\items\ArrowStickerItem.h">
+      <Filter>items</Filter>
+    </ClInclude>
+    <ClInclude Include="..\items\MineItem.h">
+      <Filter>items</Filter>
+    </ClInclude>
+    <ClInclude Include="..\items\ShockwavePoleItem.h">
+      <Filter>items</Filter>
+    </ClInclude>
+    <ClInclude Include="..\items\SpeedReducePoleItem.h">
+      <Filter>items</Filter>
+    </ClInclude>
+    <ClInclude Include="..\managers\CenterPoleScript.h">
+      <Filter>managers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\managers\ItemSpawnManagerScript.h">
+      <Filter>managers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\managers\PointAreaScript.h">
+      <Filter>managers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\managers\TrainingExitZoneScript.h">
+      <Filter>managers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\managers\TrainingItemSlotScript.h">
+      <Filter>managers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\managers\RoundManagerScript.h">
+      <Filter>managers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\player\PlayerScript.h">
+      <Filter>player</Filter>
+    </ClInclude>
+    <ClInclude Include="..\magnet\MagnetFieldSystem.h">
+      <Filter>magnet</Filter>
+    </ClInclude>
+    <ClInclude Include="..\test\HotReloadTestScript.h">
+      <Filter>test</Filter>
+    </ClInclude>
+    <ClInclude Include="framework.h">
+    </ClInclude>
+    <ClInclude Include="pch.h">
+    </ClInclude>
+    <ClInclude Include="..\test\BallRunAnimTestScript.h">
+      <Filter>test</Filter>
+    </ClInclude>
+    <ClInclude Include="..\test\PlayerAnimTestScript.h">
+      <Filter>test</Filter>
+    </ClInclude>
+    <ClInclude Include="..\test\EffectReleaseTestScript.h">
+      <Filter>test</Filter>
+    </ClInclude>
+    <ClInclude Include="..\camera\IntroCameraScript.h">
+      <Filter>camera</Filter>
+    </ClInclude>
+    <ClInclude Include="..\rendering\LeaderSpotlightScript.h">
+      <Filter>rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\PlayerColor.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\test\MagnetHelixVfxTestScript.h">
+      <Filter>test</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ui\LockOnUI.h">
+      <Filter>ui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ui\OffscreenEnemyIndicator.h">
+      <Filter>ui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ui\PlayerNametag.h">
+      <Filter>ui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ui\TitleTextScript.h">
+      <Filter>ui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ui\ColorSelectUiScripts.h">
+      <Filter>ui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ui\LobbyColorUiScripts.h">
+      <Filter>ui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\magnet\ImpactSparkVfx.h">
+      <Filter>VFX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\magnet\MagnetLinkVfx.h">
+      <Filter>VFX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\magnet\MagnetHelixPath.h">
+      <Filter>VFX</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\engine\physics\core\rigidbody.cpp">
+      <Filter>EngineRefs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\engine\scripting\script_dll_exports.cpp">
+      <Filter>EngineRefs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\engine\scripting\ui_canvas_script_dll_exports.cpp">
+      <Filter>EngineRefs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\engine\scripting\script_runtime_api.cpp">
+      <Filter>EngineRefs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ai\ChaseTestEnemyScript.cpp">
+      <Filter>ai</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ai\DummyPlayerScript.cpp">
+      <Filter>ai</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ai\EnemyAiScript.cpp">
+      <Filter>ai</Filter>
+    </ClCompile>
+    <ClCompile Include="..\core\game_score.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\core\GameMode.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\core\GameSceneHooks.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\core\ItemWorldApi.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\core\PlayerColor.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\items\ArrowStickerItem.cpp">
+      <Filter>items</Filter>
+    </ClCompile>
+    <ClCompile Include="..\items\MineItem.cpp">
+      <Filter>items</Filter>
+    </ClCompile>
+    <ClCompile Include="..\items\MysteryBoxItem.cpp">
+      <Filter>items</Filter>
+    </ClCompile>
+    <ClCompile Include="..\items\ShockwavePoleItem.cpp">
+      <Filter>items</Filter>
+    </ClCompile>
+    <ClCompile Include="..\items\SpeedReducePoleItem.cpp">
+      <Filter>items</Filter>
+    </ClCompile>
+    <ClCompile Include="..\managers\CenterPoleScript.cpp">
+      <Filter>managers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\managers\ItemSpawnManagerScript.cpp">
+      <Filter>managers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\managers\PointAreaScript.cpp">
+      <Filter>managers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\managers\TrainingExitZoneScript.cpp">
+      <Filter>managers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\managers\TrainingItemSlotScript.cpp">
+      <Filter>managers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\managers\RoundManagerScript.cpp">
+      <Filter>managers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\player\PlayerScript.cpp">
+      <Filter>player</Filter>
+    </ClCompile>
+    <ClCompile Include="..\magnet\MagnetFieldSystem.cpp">
+      <Filter>magnet</Filter>
+    </ClCompile>
+    <ClCompile Include="..\test\HotReloadTestScript.cpp">
+      <Filter>test</Filter>
+    </ClCompile>
+    <ClCompile Include="pch.cpp">
+    </ClCompile>
+    <ClCompile Include="..\test\BallRunAnimTestScript.cpp">
+      <Filter>test</Filter>
+    </ClCompile>
+    <ClCompile Include="..\test\PlayerAnimTestScript.cpp">
+      <Filter>test</Filter>
+    </ClCompile>
+    <ClCompile Include="..\test\EffectReleaseTestScript.cpp">
+      <Filter>test</Filter>
+    </ClCompile>
+    <ClCompile Include="..\camera\IntroCameraScript.cpp">
+      <Filter>camera</Filter>
+    </ClCompile>
+    <ClCompile Include="..\rendering\LeaderSpotlightScript.cpp">
+      <Filter>rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="..\rendering\SceneTransitionScript.cpp">
+      <Filter>rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="..\test\MagnetHelixVfxTestScript.cpp">
+      <Filter>test</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ui\LockOnUI.cpp">
+      <Filter>ui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ui\OffscreenEnemyIndicator.cpp">
+      <Filter>ui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ui\PlayerNametag.cpp">
+      <Filter>ui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ui\TitleTextScript.cpp">
+      <Filter>ui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ui\ColorSelectUiScripts.cpp">
+      <Filter>ui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ui\LobbyColorUiScripts.cpp">
+      <Filter>ui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\magnet\ImpactSparkVfx.cpp">
+      <Filter>VFX</Filter>
+    </ClCompile>
+    <ClCompile Include="..\magnet\MagnetLinkVfx.cpp">
+      <Filter>VFX</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

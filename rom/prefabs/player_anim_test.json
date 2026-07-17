@@ -1,0 +1,54 @@
+{
+  "name": "PlayerAnimTest",
+  "prefabAssetPath": "rom/prefabs/player_anim_test.json",
+  "components": {
+    "SceneTransform": {
+      "posX": 0.0,
+      "posY": 0.0,
+      "posZ": 0.0,
+      "rotX": 0.0,
+      "rotY": 0.0,
+      "rotZ": 0.0,
+      "scaleX": 1.0,
+      "scaleY": 1.0,
+      "scaleZ": 1.0
+    },
+    "visual": {
+      "model": "rom/model/player/t pose.fbx",
+      "proxy_model": "rom/model/player/t pose.fbx",
+      "shader": "toon",
+      "animate": true,
+      "active_clip": "idle",
+      "animations": {
+        "idle": "rom/model/player/idle.fbx",
+        "run": "rom/model/player/run.fbx",
+        "dance": "rom/model/player/dance1.fbx",
+        "jump": "rom/model/player/jump.fbx",
+        "pull": "rom/model/player/pull.fbx",
+        "push": "rom/model/player/push.fbx",
+        "throw": "rom/model/player/throw.fbx"
+      }
+    },
+    "Script": {
+      "scriptClass": "PlayerAnimTestScript",
+      "properties": {
+        "idleClip": "idle",
+        "runClip": "run",
+        "danceClip": "dance",
+        "jumpClip": "jump",
+        "pushClip": "push",
+        "pullClip": "pull",
+        "throwClip": "throw",
+        "idlePath": "rom/model/player/idle.fbx",
+        "runPath": "rom/model/player/run.fbx",
+        "dancePath": "rom/model/player/dance1.fbx",
+        "jumpPath": "rom/model/player/jump.fbx",
+        "pushPath": "rom/model/player/push.fbx",
+        "pullPath": "rom/model/player/pull.fbx",
+        "throwPath": "rom/model/player/throw.fbx",
+        "spinSpeed": 25.0
+      }
+    }
+  },
+  "children": []
+}

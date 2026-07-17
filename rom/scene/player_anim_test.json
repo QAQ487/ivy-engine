@@ -1,0 +1,145 @@
+{
+    "canvas": {
+        "elements": [
+            {
+                "alignment": "LEFT",
+                "anchor": "TOP_LEFT",
+                "characterSpacing": 12.0,
+                "color": {
+                    "a": 1.0,
+                    "b": 0.85,
+                    "g": 1.0,
+                    "r": 0.85
+                },
+                "font": {
+                    "charHeight": 32.0,
+                    "charWidth": 32.0,
+                    "charsPerRow": 16,
+                    "texture": "rom/texture/consolab_ascii_512.png"
+                },
+                "fontSize": 0.75,
+                "name": "AnimTestStatus",
+                "position": {
+                    "x": 20.0,
+                    "y": 20.0
+                },
+                "text": "Player Anim Test\n1 idle  2 run  3 dance  4 jump\n5 push  6 pull  7 throw  0 base/T-pose\nQ/E yaw",
+                "type": "text",
+                "visible": true
+            }
+        ],
+        "name": "scene"
+    },
+    "nodes": [
+        {
+            "children": [],
+            "components": {
+                "DirectionalLight": {
+                    "castShadows": false,
+                    "color": [
+                        0.95,
+                        0.95,
+                        1.0
+                    ],
+                    "enabled": true,
+                    "intensity": 0.75,
+                    "specColor": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ],
+                    "specPower": 32.0
+                },
+                "SceneTransform": {
+                    "posX": 0.0,
+                    "posY": 8.0,
+                    "posZ": 0.0,
+                    "rotX": 50.0,
+                    "rotY": -35.0,
+                    "rotZ": 0.0,
+                    "scaleX": 1.0,
+                    "scaleY": 1.0,
+                    "scaleZ": 1.0
+                }
+            },
+            "name": "Directional Light",
+            "tag": 0
+        },
+        {
+            "children": [],
+            "components": {
+                "SceneTransform": {
+                    "posX": 0.0,
+                    "posY": -0.5,
+                    "posZ": 0.0,
+                    "rotX": 0.0,
+                    "rotY": 0.0,
+                    "rotZ": 0.0,
+                    "scaleX": 20.0,
+                    "scaleY": 0.2,
+                    "scaleZ": 20.0
+                },
+                "visual": {
+                    "model": "Box_Brown"
+                }
+            },
+            "name": "Ground",
+            "tag": 2
+        },
+        {
+            "children": [],
+            "components": {
+                "SceneTransform": {
+                    "posX": 0.0,
+                    "posY": 0.0,
+                    "posZ": 0.0,
+                    "rotX": 0.0,
+                    "rotY": 0.0,
+                    "rotZ": 0.0,
+                    "scaleX": 1.0,
+                    "scaleY": 1.0,
+                    "scaleZ": 1.0
+                },
+                "visual": {
+                    "model": "rom/model/player/t pose.fbx",
+                    "proxy_model": "rom/model/player/t pose.fbx",
+                    "shader": "toon",
+                    "animate": true,
+                    "active_clip": "idle",
+                    "animations": {
+                        "idle": "rom/model/player/idle.fbx",
+                        "run": "rom/model/player/run.fbx",
+                        "dance": "rom/model/player/dance1.fbx",
+                        "jump": "rom/model/player/jump.fbx",
+                        "pull": "rom/model/player/pull.fbx",
+                        "push": "rom/model/player/push.fbx",
+                        "throw": "rom/model/player/throw.fbx"
+                    }
+                },
+                "Script": {
+                    "scriptClass": "PlayerAnimTestScript",
+                    "properties": {
+                        "idleClip": "idle",
+                        "runClip": "run",
+                        "danceClip": "dance",
+                        "jumpClip": "jump",
+                        "pushClip": "push",
+                        "pullClip": "pull",
+                        "throwClip": "throw",
+                        "idlePath": "rom/model/player/idle.fbx",
+                        "runPath": "rom/model/player/run.fbx",
+                        "dancePath": "rom/model/player/dance1.fbx",
+                        "jumpPath": "rom/model/player/jump.fbx",
+                        "pushPath": "rom/model/player/push.fbx",
+                        "pullPath": "rom/model/player/pull.fbx",
+                        "throwPath": "rom/model/player/throw.fbx",
+                        "spinSpeed": 25.0
+                    }
+                }
+            },
+            "name": "PlayerAnimTest",
+            "prefabAssetPath": "rom/prefabs/player_anim_test.json",
+            "tag": 0
+        }
+    ]
+}

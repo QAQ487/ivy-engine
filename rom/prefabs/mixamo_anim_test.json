@@ -1,0 +1,33 @@
+﻿{
+  "name": "BallRunAnimTest",
+  "prefabAssetPath": "rom/prefabs/ball_run_anim_test.json",
+  "components": {
+    "SceneTransform": {
+      "posX": 0.0,
+      "posY": 1.0,
+      "posZ": 0.0,
+      "rotX": 0.0,
+      "rotY": 0.0,
+      "rotZ": 0.0,
+      "scaleX": 1.0,
+      "scaleY": 1.0,
+      "scaleZ": 1.0
+    },
+    "visual": {
+      "model": "rom/model/player/Walking.fbx",
+      "proxy_model": "rom/model/player/Walking.fbx",
+      "animate": true,
+      "animations": {
+        "mutant": "rom/model/player/Mutant Walking.fbx"
+      }
+    },
+    "Script": {
+      "scriptClass": "BallRunAnimTestScript",
+      "properties": {
+        "runClip": "",
+        "danceClip": "mutant"
+      }
+    }
+  },
+  "children": []
+}

@@ -1,0 +1,231 @@
+﻿#include "prefab_runtime.h"
+
+#include "prefab_serializer.h"
+#include "engine/scene/scene_runtime.h"
+#include "../scripting/script_component.h"
+#include "transform.h"
+#include "../scene/scene_loader.h"
+#include "scene_manager.h"
+#include <algorithm>
+#include <unordered_set>
+#include <utility>
+
+using namespace DirectX;
+
+namespace {
+
+PrefabRuntimeBeforeDestroyFn g_beforeDestroyCallback = nullptr;
+GameObject* g_spawnRoot = nullptr;
+std::vector<GameObject*> g_pendingDestroy;
+std::unordered_set<GameObject*> g_pendingDestroySet;
+
+void CollectSubtree(GameObject* node, std::vector<GameObject*>& out) {
+    if (!node) return;
+    out.push_back(node);
+    for (const auto& child : node->GetChildren())
+        CollectSubtree(child.get(), out);
+}
+
+std::unique_ptr<GameObject> ExtractFromSceneGraph(GameObject* obj) {
+    if (!obj || obj == g_spawnRoot) return nullptr;
+
+    auto& roots = SceneLoader_GetSceneNodes();
+    for (auto it = roots.begin(); it != roots.end(); ++it) {
+        if (it->get() == obj) {
+            std::unique_ptr<GameObject> owned = std::move(*it);
+            roots.erase(it);
+            owned->SetParent(nullptr);
+            return owned;
+        }
+    }
+
+    GameObject* parent = obj->GetParent();
+    if (!parent) return nullptr;
+
+    auto& siblings = parent->GetChildren();
+    auto it = std::find_if(siblings.begin(), siblings.end(),
+        [obj](const std::unique_ptr<GameObject>& c) { return c.get() == obj; });
+    if (it == siblings.end()) return nullptr;
+
+    std::unique_ptr<GameObject> owned = std::move(*it);
+    siblings.erase(it);
+    owned->SetParent(nullptr);
+    return owned;
+}
+
+void DestroySubtreeOwned(std::unique_ptr<GameObject> owned) {
+    if (!owned) return;
+    owned.reset();
+}
+
+bool IsInSceneGraph(GameObject* obj) {
+    if (!obj) return false;
+
+    std::function<bool(GameObject*)> visit;
+    visit = [&](GameObject* node) {
+        if (!node) return false;
+        if (node == obj) return true;
+        for (const auto& child : node->GetChildren()) {
+            if (child && visit(child.get()))
+                return true;
+        }
+        return false;
+    };
+
+    for (const auto& root : SceneLoader_GetSceneNodes()) {
+        if (root && visit(root.get()))
+            return true;
+    }
+    return false;
+}
+
+} // namespace
+
+void PrefabRuntime_SetBeforeDestroyCallback(PrefabRuntimeBeforeDestroyFn callback) {
+    g_beforeDestroyCallback = callback;
+}
+
+bool PrefabRuntime_IsSpawnRoot(const GameObject* obj) {
+    return obj && obj->GetName() == PREFAB_RUNTIME_SPAWN_ROOT_NAME;
+}
+
+bool PrefabRuntime_IsRuntimeSpawned(const GameObject* obj) {
+    if (!obj || PrefabRuntime_IsSpawnRoot(obj)) return false;
+    for (const GameObject* p = obj->GetParent(); p; p = p->GetParent()) {
+        if (PrefabRuntime_IsSpawnRoot(p)) return true;
+    }
+    return false;
+}
+
+GameObject* PrefabRuntime_EnsureSpawnRoot() {
+    if (g_spawnRoot && !IsInSceneGraph(g_spawnRoot))
+        g_spawnRoot = nullptr;
+    if (g_spawnRoot && !PrefabRuntime_IsSpawnRoot(g_spawnRoot))
+        g_spawnRoot = nullptr;
+    if (g_spawnRoot) return g_spawnRoot;
+
+    auto& roots = SceneLoader_GetSceneNodes();
+    for (const auto& root : roots) {
+        if (root && root->GetName() == PREFAB_RUNTIME_SPAWN_ROOT_NAME) {
+            g_spawnRoot = root.get();
+            return g_spawnRoot;
+        }
+    }
+
+    auto spawnRoot = std::make_unique<GameObject>(PREFAB_RUNTIME_SPAWN_ROOT_NAME);
+    spawnRoot->SetActive(true);
+    g_spawnRoot = spawnRoot.get();
+    roots.push_back(std::move(spawnRoot));
+    return g_spawnRoot;
+}
+
+GameObject* PrefabRuntime_Instantiate(const char* prefabPath,
+                                      const XMFLOAT3& worldPos,
+                                      const XMFLOAT3& worldRot,
+                                      GameObject* parent,
+                                      bool startActive)
+{
+    if (!prefabPath || !prefabPath[0]) return nullptr;
+
+    std::unique_ptr<GameObject> instance = PrefabSerializer::LoadFromFile(prefabPath);
+    if (!instance) return nullptr;
+
+    instance->SetPrefabAssetPath(prefabPath);
+    instance->SetPosition(worldPos);
+    instance->SetRotation(worldRot);
+    instance->SyncComponentsFromLegacyTransform();
+    if (engine::Transform* t = instance->GetComponent<engine::Transform>()) {
+        t->localPosition = worldPos;
+        t->localRotation = worldRot;
+    }
+    instance->SetActive(startActive);
+
+    GameObject* parentNode = parent ? parent : PrefabRuntime_EnsureSpawnRoot();
+    if (!parentNode) return nullptr;
+
+    GameObject* raw = instance.get();
+    parentNode->AddChild(std::move(instance));
+
+    if (SceneBase* scene = SceneManager::Instance().GetCurrentScene())
+        SceneRuntime::Instance().RegisterSubtree(raw, scene);
+
+    return raw;
+}
+
+void PrefabRuntime_Destroy(GameObject* obj) {
+    if (!obj || PrefabRuntime_IsSpawnRoot(obj)) return;
+    if (g_pendingDestroySet.count(obj)) return;
+
+    obj->SetActive(false);
+
+    if (g_beforeDestroyCallback)
+        g_beforeDestroyCallback(obj);
+
+    g_pendingDestroy.push_back(obj);
+    g_pendingDestroySet.insert(obj);
+}
+
+void PrefabRuntime_DestroyAllSpawnedChildren() {
+    std::vector<GameObject*> children;
+    for (const auto& root : SceneLoader_GetSceneNodes()) {
+        if (!root || !PrefabRuntime_IsSpawnRoot(root.get())) continue;
+        for (const auto& child : root->GetChildren()) {
+            if (child)
+                children.push_back(child.get());
+        }
+        break;
+    }
+
+    if (children.empty()) return;
+
+    for (GameObject* obj : children)
+        PrefabRuntime_Destroy(obj);
+    PrefabRuntime_FlushDestroyed();
+}
+
+void PrefabRuntime_ResetSessionState() {
+    g_beforeDestroyCallback = nullptr;
+    g_spawnRoot = nullptr;
+    g_pendingDestroy.clear();
+    g_pendingDestroySet.clear();
+}
+
+void PrefabRuntime_FlushDestroyed() {
+    if (g_pendingDestroy.empty()) return;
+
+    SceneBase* scene = SceneManager::Instance().GetCurrentScene();
+
+    std::vector<GameObject*> toFlush;
+    toFlush.swap(g_pendingDestroy);
+    g_pendingDestroySet.clear();
+
+    for (GameObject* obj : toFlush) {
+        if (!obj) continue;
+
+        std::vector<GameObject*> subtree;
+        CollectSubtree(obj, subtree);
+
+        for (GameObject* node : subtree) {
+            if (ScriptComponent* sc = node->GetComponent<ScriptComponent>())
+                sc->Teardown();
+        }
+
+        if (scene)
+            SceneRuntime::Instance().UnregisterSubtree(obj, scene, true);
+
+        std::unique_ptr<GameObject> owned = ExtractFromSceneGraph(obj);
+        DestroySubtreeOwned(std::move(owned));
+    }
+
+    if (g_spawnRoot) {
+        bool rootStillExists = false;
+        for (const auto& root : SceneLoader_GetSceneNodes()) {
+            if (root.get() == g_spawnRoot) {
+                rootStillExists = true;
+                break;
+            }
+        }
+        if (!rootStillExists)
+            g_spawnRoot = nullptr;
+    }
+}

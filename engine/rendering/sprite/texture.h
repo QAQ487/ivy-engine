@@ -1,0 +1,36 @@
+/**===========================================================================
+ File   : texture.h
+ Title  : テクスチャの管理
+ Author : 大月 捷豊
+ Date   : 2025/6/6
+ Brief  :
+   ===========================================================================**/
+#ifndef TEXTURE_H
+#define TEXTURE_H
+
+#include <d3d11.h>
+#include <DirectXMath.h> // XMFLOAT2
+
+void Texture_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext);
+void Texture_Finalize();
+
+// テクスチャのロード
+// 引数
+// ptr_file_name : テクスチャファイル名
+// b_mipmap : ミップマップを生成するかどうか
+// 戻り値 : テクスチャの管理番号（読み込めなかった場合は-1）
+int  TextureLoad(const wchar_t* ptr_file_name, bool mipmap = true);
+int  TextureGetWhiteTexture();
+void TextureAllRelease();
+void TextureSetTexture(int texture_id);
+
+DirectX::XMUINT2 TextureGetSize(int texture_id);
+const unsigned int& TextureGetWidth(int texture_id);
+const unsigned int& TextureGetHeight(int texture_id);
+ID3D11ShaderResourceView* TextureGetSRV(int texture_id);
+
+// Cubemap loader (DDS only). Returns cached SRV or nullptr on failure.
+ID3D11ShaderResourceView* CubemapLoad(const wchar_t* fileName);
+void CubemapReleaseAll();
+
+#endif // TEXTURE_H

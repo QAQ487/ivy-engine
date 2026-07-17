@@ -1,0 +1,1203 @@
+{
+    "canvas": {
+        "elements": [
+            {
+                "alignment": "LEFT",
+                "anchor": "TOP_LEFT",
+                "characterSpacing": 16.0,
+                "color": {
+                    "a": 1.0,
+                    "b": 0.0,
+                    "g": 0.0,
+                    "r": 0.0
+                },
+                "font": {
+                    "charHeight": 32.0,
+                    "charWidth": 32.0,
+                    "charsPerRow": 16,
+                    "texture": "rom/texture/consolab_ascii_512.png"
+                },
+                "fontSize": 1.0,
+                "name": "ScoreText",
+                "position": {
+                    "x": 20.0,
+                    "y": 20.0
+                },
+                "text": "Score: 556",
+                "type": "text",
+                "visible": false
+            },
+            {
+                "alignment": "LEFT",
+                "anchor": "TOP_LEFT",
+                "characterSpacing": 12.0,
+                "color": {
+                    "a": 1.0,
+                    "b": 0.20000000298023224,
+                    "g": 1.0,
+                    "r": 0.20000000298023224
+                },
+                "font": {
+                    "charHeight": 32.0,
+                    "charWidth": 32.0,
+                    "charsPerRow": 16,
+                    "texture": "rom/texture/consolab_ascii_512.png"
+                },
+                "fontSize": 0.8500000238418579,
+                "name": "EnemyAiDebug",
+                "position": {
+                    "x": 20.0,
+                    "y": 52.0
+                },
+                "text": "=== Enemy AI ===\n[1] EnemyAi  profile:1\n  control: Normal\n  mode:    ChaseBonus\n  think:   chase bonus point\n  move:    (0.99, -0.16)  grounded:no  nearEdge:no\n  timers:  mode=5.2s  rethink=-0.8s\n  item:    held=none  chasing=no  placeCd=0.0s\n  place:   dist=-1.0m  inRange=n/a\n  cd:      mag=0.0s  charge=0.0s\n  charge:  aimed=yes  orbiting=no",
+                "type": "text",
+                "visible": false
+            },
+            {
+                "alignment": "CENTER",
+                "anchor": "TOP_RIGHT",
+                "characterSpacing": 20.0,
+                "color": {
+                    "a": 1.0,
+                    "b": 1.0,
+                    "g": 0.949999988079071,
+                    "r": 0.20000000298023224
+                },
+                "font": {
+                    "charHeight": 32.0,
+                    "charWidth": 32.0,
+                    "charsPerRow": 16,
+                    "texture": "rom/texture/consolab_ascii_512.png"
+                },
+                "fontSize": 1.350000023841858,
+                "name": "TimerText",
+                "position": {
+                    "x": -90.0,
+                    "y": 24.0
+                },
+                "text": "0:46",
+                "type": "text",
+                "visible": true
+            },
+            {
+                "anchor": "TOP_CENTER",
+                "color": {
+                    "a": 0.8500000238418579,
+                    "b": 0.11999999731779099,
+                    "g": 0.11999999731779099,
+                    "r": 0.11999999731779099
+                },
+                "name": "ScoreBarBg",
+                "position": {
+                    "x": -480.0,
+                    "y": 18.0
+                },
+                "rotation": 0.0,
+                "size": {
+                    "height": 28.0,
+                    "width": 960.0
+                },
+                "texture": "",
+                "type": "sprite",
+                "visible": true
+            },
+            {
+                "anchor": "TOP_CENTER",
+                "color": {
+                    "a": 1.0,
+                    "b": 0.25,
+                    "g": 0.8500000238418579,
+                    "r": 0.20000000298023224
+                },
+                "name": "ScoreBarP1",
+                "position": {
+                    "x": -480.0,
+                    "y": 18.0
+                },
+                "rotation": 0.0,
+                "size": {
+                    "height": 28.0,
+                    "width": 960.0
+                },
+                "texture": "",
+                "type": "sprite",
+                "visible": true
+            },
+            {
+                "anchor": "TOP_CENTER",
+                "color": {
+                    "a": 1.0,
+                    "b": 0.20000000298023224,
+                    "g": 0.20000000298023224,
+                    "r": 0.949999988079071
+                },
+                "name": "ScoreBarP2",
+                "position": {
+                    "x": 480.0,
+                    "y": 18.0
+                },
+                "rotation": 0.0,
+                "size": {
+                    "height": 28.0,
+                    "width": 0.0
+                },
+                "texture": "",
+                "type": "sprite",
+                "visible": true
+            },
+            {
+                "anchor": "TOP_CENTER",
+                "color": {
+                    "a": 1.0,
+                    "b": 0.15000000596046448,
+                    "g": 0.9200000166893005,
+                    "r": 1.0
+                },
+                "name": "ScoreBarP3",
+                "position": {
+                    "x": 480.0,
+                    "y": 18.0
+                },
+                "rotation": 0.0,
+                "size": {
+                    "height": 28.0,
+                    "width": 0.0
+                },
+                "texture": "",
+                "type": "sprite",
+                "visible": true
+            },
+            {
+                "anchor": "TOP_CENTER",
+                "color": {
+                    "a": 1.0,
+                    "b": 1.0,
+                    "g": 0.44999998807907104,
+                    "r": 0.20000000298023224
+                },
+                "name": "ScoreBarP4",
+                "position": {
+                    "x": 480.0,
+                    "y": 18.0
+                },
+                "rotation": 0.0,
+                "size": {
+                    "height": 28.0,
+                    "width": 0.0
+                },
+                "texture": "",
+                "type": "sprite",
+                "visible": true
+            },
+            {
+                "alignment": "CENTER",
+                "anchor": "TOP_CENTER",
+                "characterSpacing": 24.0,
+                "color": {
+                    "a": 1.0,
+                    "b": 1.0,
+                    "g": 1.0,
+                    "r": 1.0
+                },
+                "font": {
+                    "charHeight": 32.0,
+                    "charWidth": 32.0,
+                    "charsPerRow": 16,
+                    "texture": "rom/texture/consolab_ascii_512.png"
+                },
+                "fontSize": 0.75,
+                "name": "ScoreP1Text",
+                "position": {
+                    "x": 0.0,
+                    "y": 52.0
+                },
+                "text": "556",
+                "type": "text",
+                "visible": true
+            },
+            {
+                "alignment": "CENTER",
+                "anchor": "TOP_CENTER",
+                "characterSpacing": 24.0,
+                "color": {
+                    "a": 1.0,
+                    "b": 1.0,
+                    "g": 1.0,
+                    "r": 1.0
+                },
+                "font": {
+                    "charHeight": 32.0,
+                    "charWidth": 32.0,
+                    "charsPerRow": 16,
+                    "texture": "rom/texture/consolab_ascii_512.png"
+                },
+                "fontSize": 0.75,
+                "name": "ScoreP2Text",
+                "position": {
+                    "x": 480.0,
+                    "y": 52.0
+                },
+                "text": "0",
+                "type": "text",
+                "visible": true
+            },
+            {
+                "alignment": "CENTER",
+                "anchor": "TOP_CENTER",
+                "characterSpacing": 24.0,
+                "color": {
+                    "a": 1.0,
+                    "b": 1.0,
+                    "g": 1.0,
+                    "r": 1.0
+                },
+                "font": {
+                    "charHeight": 32.0,
+                    "charWidth": 32.0,
+                    "charsPerRow": 16,
+                    "texture": "rom/texture/consolab_ascii_512.png"
+                },
+                "fontSize": 0.75,
+                "name": "ScoreP3Text",
+                "position": {
+                    "x": 480.0,
+                    "y": 52.0
+                },
+                "text": "0",
+                "type": "text",
+                "visible": true
+            },
+            {
+                "alignment": "CENTER",
+                "anchor": "TOP_CENTER",
+                "characterSpacing": 24.0,
+                "color": {
+                    "a": 1.0,
+                    "b": 1.0,
+                    "g": 1.0,
+                    "r": 1.0
+                },
+                "font": {
+                    "charHeight": 32.0,
+                    "charWidth": 32.0,
+                    "charsPerRow": 16,
+                    "texture": "rom/texture/consolab_ascii_512.png"
+                },
+                "fontSize": 0.75,
+                "name": "ScoreP4Text",
+                "position": {
+                    "x": 480.0,
+                    "y": 52.0
+                },
+                "text": "0",
+                "type": "text",
+                "visible": true
+            },
+            {
+                "anchor": "TOP_RIGHT",
+                "color": {
+                    "a": 0.9200000166893005,
+                    "b": 0.8500000238418579,
+                    "g": 0.75,
+                    "r": 0.15000000596046448
+                },
+                "name": "StatusPanelBorder",
+                "position": {
+                    "x": -304.0,
+                    "y": 72.0
+                },
+                "rotation": 0.0,
+                "size": {
+                    "height": 668.0,
+                    "width": 304.0
+                },
+                "texture": "",
+                "type": "sprite",
+                "visible": true
+            },
+            {
+                "anchor": "TOP_RIGHT",
+                "color": {
+                    "a": 0.8799999952316284,
+                    "b": 0.07999999821186066,
+                    "g": 0.07999999821186066,
+                    "r": 0.07999999821186066
+                },
+                "name": "StatusPanelBg",
+                "position": {
+                    "x": -298.0,
+                    "y": 78.0
+                },
+                "rotation": 0.0,
+                "size": {
+                    "height": 656.0,
+                    "width": 292.0
+                },
+                "texture": "",
+                "type": "sprite",
+                "visible": true
+            },
+            {
+                "anchor": "TOP_RIGHT",
+                "color": {
+                    "a": 1.0,
+                    "b": 1.0,
+                    "g": 1.0,
+                    "r": 1.0
+                },
+                "name": "HudP1Icon",
+                "position": {
+                    "x": -276.0,
+                    "y": 96.0
+                },
+                "rotation": 0.0,
+                "size": {
+                    "height": 96.0,
+                    "width": 96.0
+                },
+                "texture": "rom/texture/UI/player_icon/player_green/green_player_icon.png",
+                "type": "sprite",
+                "visible": true
+            },
+            {
+                "anchor": "TOP_RIGHT",
+                "color": {
+                    "a": 1.0,
+                    "b": 1.0,
+                    "g": 1.0,
+                    "r": 1.0
+                },
+                "name": "HudP1EnergyBar",
+                "position": {
+                    "x": -276.0,
+                    "y": 96.0
+                },
+                "rotation": 0.0,
+                "size": {
+                    "height": 96.0,
+                    "width": 96.0
+                },
+                "texture": "rom/texture/UI/player_icon/player_green/green_player_energy_bar.png",
+                "type": "sprite",
+                "visible": true
+            },
+            {
+                "alignment": "LEFT",
+                "anchor": "TOP_RIGHT",
+                "characterSpacing": 22.0,
+                "color": {
+                    "a": 1.0,
+                    "b": 1.0,
+                    "g": 1.0,
+                    "r": 1.0
+                },
+                "font": {
+                    "charHeight": 32.0,
+                    "charWidth": 32.0,
+                    "charsPerRow": 16,
+                    "texture": "rom/texture/consolab_ascii_512.png"
+                },
+                "fontSize": 0.8500000238418579,
+                "name": "HudP1Name",
+                "position": {
+                    "x": -168.0,
+                    "y": 108.0
+                },
+                "text": "P1 YOU",
+                "type": "text",
+                "visible": true
+            },
+            {
+                "alignment": "LEFT",
+                "anchor": "TOP_RIGHT",
+                "characterSpacing": 20.0,
+                "color": {
+                    "a": 1.0,
+                    "b": 0.8500000238418579,
+                    "g": 0.8500000238418579,
+                    "r": 0.8500000238418579
+                },
+                "font": {
+                    "charHeight": 32.0,
+                    "charWidth": 32.0,
+                    "charsPerRow": 16,
+                    "texture": "rom/texture/consolab_ascii_512.png"
+                },
+                "fontSize": 0.6499999761581421,
+                "name": "HudP1Status",
+                "position": {
+                    "x": -168.0,
+                    "y": 144.0
+                },
+                "text": "Alive",
+                "type": "text",
+                "visible": true
+            },
+            {
+                "anchor": "TOP_RIGHT",
+                "color": {
+                    "a": 1.0,
+                    "b": 0.44999998807907104,
+                    "g": 0.44999998807907104,
+                    "r": 0.44999998807907104
+                },
+                "name": "HudP2Icon",
+                "position": {
+                    "x": -276.0,
+                    "y": 228.0
+                },
+                "rotation": 0.0,
+                "size": {
+                    "height": 96.0,
+                    "width": 96.0
+                },
+                "texture": "rom/texture/UI/player_icon/player_red/red_player_icon.png",
+                "type": "sprite",
+                "visible": true
+            },
+            {
+                "anchor": "TOP_RIGHT",
+                "color": {
+                    "a": 1.0,
+                    "b": 0.44999998807907104,
+                    "g": 0.44999998807907104,
+                    "r": 0.44999998807907104
+                },
+                "name": "HudP2EnergyBar",
+                "position": {
+                    "x": -276.0,
+                    "y": 228.0
+                },
+                "rotation": 0.0,
+                "size": {
+                    "height": 96.0,
+                    "width": 96.0
+                },
+                "texture": "rom/texture/UI/player_icon/player_red/red_player_energy_bar.png",
+                "type": "sprite",
+                "visible": true
+            },
+            {
+                "alignment": "LEFT",
+                "anchor": "TOP_RIGHT",
+                "characterSpacing": 22.0,
+                "color": {
+                    "a": 1.0,
+                    "b": 1.0,
+                    "g": 1.0,
+                    "r": 1.0
+                },
+                "font": {
+                    "charHeight": 32.0,
+                    "charWidth": 32.0,
+                    "charsPerRow": 16,
+                    "texture": "rom/texture/consolab_ascii_512.png"
+                },
+                "fontSize": 0.8500000238418579,
+                "name": "HudP2Name",
+                "position": {
+                    "x": -168.0,
+                    "y": 240.0
+                },
+                "text": "P2",
+                "type": "text",
+                "visible": true
+            },
+            {
+                "alignment": "LEFT",
+                "anchor": "TOP_RIGHT",
+                "characterSpacing": 20.0,
+                "color": {
+                    "a": 1.0,
+                    "b": 0.8500000238418579,
+                    "g": 0.8500000238418579,
+                    "r": 0.8500000238418579
+                },
+                "font": {
+                    "charHeight": 32.0,
+                    "charWidth": 32.0,
+                    "charsPerRow": 16,
+                    "texture": "rom/texture/consolab_ascii_512.png"
+                },
+                "fontSize": 0.6499999761581421,
+                "name": "HudP2Status",
+                "position": {
+                    "x": -168.0,
+                    "y": 276.0
+                },
+                "text": "Dead",
+                "type": "text",
+                "visible": true
+            },
+            {
+                "anchor": "TOP_RIGHT",
+                "color": {
+                    "a": 1.0,
+                    "b": 0.44999998807907104,
+                    "g": 0.44999998807907104,
+                    "r": 0.44999998807907104
+                },
+                "name": "HudP3Icon",
+                "position": {
+                    "x": -276.0,
+                    "y": 360.0
+                },
+                "rotation": 0.0,
+                "size": {
+                    "height": 96.0,
+                    "width": 96.0
+                },
+                "texture": "rom/texture/UI/player_icon/player_yellow/yellow_player_icon.png",
+                "type": "sprite",
+                "visible": true
+            },
+            {
+                "anchor": "TOP_RIGHT",
+                "color": {
+                    "a": 1.0,
+                    "b": 0.44999998807907104,
+                    "g": 0.44999998807907104,
+                    "r": 0.44999998807907104
+                },
+                "name": "HudP3EnergyBar",
+                "position": {
+                    "x": -276.0,
+                    "y": 360.0
+                },
+                "rotation": 0.0,
+                "size": {
+                    "height": 96.0,
+                    "width": 96.0
+                },
+                "texture": "rom/texture/UI/player_icon/player_yellow/yellow_player_energy_bar.png",
+                "type": "sprite",
+                "visible": true
+            },
+            {
+                "alignment": "LEFT",
+                "anchor": "TOP_RIGHT",
+                "characterSpacing": 22.0,
+                "color": {
+                    "a": 1.0,
+                    "b": 1.0,
+                    "g": 1.0,
+                    "r": 1.0
+                },
+                "font": {
+                    "charHeight": 32.0,
+                    "charWidth": 32.0,
+                    "charsPerRow": 16,
+                    "texture": "rom/texture/consolab_ascii_512.png"
+                },
+                "fontSize": 0.8500000238418579,
+                "name": "HudP3Name",
+                "position": {
+                    "x": -168.0,
+                    "y": 372.0
+                },
+                "text": "P3",
+                "type": "text",
+                "visible": true
+            },
+            {
+                "alignment": "LEFT",
+                "anchor": "TOP_RIGHT",
+                "characterSpacing": 20.0,
+                "color": {
+                    "a": 1.0,
+                    "b": 0.8500000238418579,
+                    "g": 0.8500000238418579,
+                    "r": 0.8500000238418579
+                },
+                "font": {
+                    "charHeight": 32.0,
+                    "charWidth": 32.0,
+                    "charsPerRow": 16,
+                    "texture": "rom/texture/consolab_ascii_512.png"
+                },
+                "fontSize": 0.6499999761581421,
+                "name": "HudP3Status",
+                "position": {
+                    "x": -168.0,
+                    "y": 408.0
+                },
+                "text": "Dead",
+                "type": "text",
+                "visible": true
+            },
+            {
+                "anchor": "TOP_RIGHT",
+                "color": {
+                    "a": 1.0,
+                    "b": 0.44999998807907104,
+                    "g": 0.44999998807907104,
+                    "r": 0.44999998807907104
+                },
+                "name": "HudP4Icon",
+                "position": {
+                    "x": -276.0,
+                    "y": 492.0
+                },
+                "rotation": 0.0,
+                "size": {
+                    "height": 96.0,
+                    "width": 96.0
+                },
+                "texture": "rom/texture/UI/player_icon/player_blue/blue_player_icon.png",
+                "type": "sprite",
+                "visible": true
+            },
+            {
+                "anchor": "TOP_RIGHT",
+                "color": {
+                    "a": 1.0,
+                    "b": 0.44999998807907104,
+                    "g": 0.44999998807907104,
+                    "r": 0.44999998807907104
+                },
+                "name": "HudP4EnergyBar",
+                "position": {
+                    "x": -276.0,
+                    "y": 492.0
+                },
+                "rotation": 0.0,
+                "size": {
+                    "height": 96.0,
+                    "width": 96.0
+                },
+                "texture": "rom/texture/UI/player_icon/player_blue/blue_player_energy_bar.png",
+                "type": "sprite",
+                "visible": true
+            },
+            {
+                "alignment": "LEFT",
+                "anchor": "TOP_RIGHT",
+                "characterSpacing": 22.0,
+                "color": {
+                    "a": 1.0,
+                    "b": 1.0,
+                    "g": 1.0,
+                    "r": 1.0
+                },
+                "font": {
+                    "charHeight": 32.0,
+                    "charWidth": 32.0,
+                    "charsPerRow": 16,
+                    "texture": "rom/texture/consolab_ascii_512.png"
+                },
+                "fontSize": 0.8500000238418579,
+                "name": "HudP4Name",
+                "position": {
+                    "x": -168.0,
+                    "y": 504.0
+                },
+                "text": "P4",
+                "type": "text",
+                "visible": true
+            },
+            {
+                "alignment": "LEFT",
+                "anchor": "TOP_RIGHT",
+                "characterSpacing": 20.0,
+                "color": {
+                    "a": 1.0,
+                    "b": 0.8500000238418579,
+                    "g": 0.8500000238418579,
+                    "r": 0.8500000238418579
+                },
+                "font": {
+                    "charHeight": 32.0,
+                    "charWidth": 32.0,
+                    "charsPerRow": 16,
+                    "texture": "rom/texture/consolab_ascii_512.png"
+                },
+                "fontSize": 0.6499999761581421,
+                "name": "HudP4Status",
+                "position": {
+                    "x": -168.0,
+                    "y": 540.0
+                },
+                "text": "Dead",
+                "type": "text",
+                "visible": true
+            },
+            {
+                "alignment": "CENTER",
+                "anchor": "CENTER",
+                "characterSpacing": 32.0,
+                "color": {
+                    "a": 1.0,
+                    "b": 1.0,
+                    "g": 1.0,
+                    "r": 1.0
+                },
+                "font": {
+                    "charHeight": 32.0,
+                    "charWidth": 32.0,
+                    "charsPerRow": 16,
+                    "texture": "rom/texture/consolab_ascii_512.png"
+                },
+                "fontSize": 4.0,
+                "name": "Countdown",
+                "position": {
+                    "x": -32.0,
+                    "y": -64.0
+                },
+                "text": "GO!",
+                "type": "text",
+                "visible": false
+            },
+            {
+                "anchor": "BOTTOM_LEFT",
+                "color": {
+                    "a": 1.0,
+                    "b": 1.0,
+                    "g": 1.0,
+                    "r": 1.0
+                },
+                "name": "HoldItemIcon",
+                "position": {
+                    "x": 50.0,
+                    "y": -200.0
+                },
+                "rotation": 0.0,
+                "size": {
+                    "height": 150.0,
+                    "width": 150.0
+                },
+                "texture": "rom/texture/UI/items/item_icon.PNG",
+                "type": "sprite",
+                "visible": false
+            },
+            {
+                "anchor": "TOP_LEFT",
+                "color": {
+                    "a": 0.2999989986419678,
+                    "b": 0.0,
+                    "g": 0.0,
+                    "r": 1.0
+                },
+                "name": "RedOverlay",
+                "position": {
+                    "x": 0.0,
+                    "y": 0.0
+                },
+                "rotation": 0.0,
+                "size": {
+                    "height": 1080.0,
+                    "width": 1920.0
+                },
+                "texture": "",
+                "type": "sprite",
+                "visible": false
+            },
+            {
+                "anchor": "BOTTOM_RIGHT",
+                "color": {
+                    "a": 1.0,
+                    "b": 0.7046413421630859,
+                    "g": 0.7046413421630859,
+                    "r": 0.7046413421630859
+                },
+                "name": "knockback cd bg",
+                "position": {
+                    "x": -300.0,
+                    "y": -300.0
+                },
+                "rotation": 0.0,
+                "size": {
+                    "height": 200.0,
+                    "width": 200.0
+                },
+                "texture": "rom/texture/UI/UI_KnockbackCD.png",
+                "type": "sprite",
+                "visible": true
+            },
+            {
+                "anchor": "BOTTOM_RIGHT",
+                "color": {
+                    "a": 1.0,
+                    "b": 1.0,
+                    "g": 1.0,
+                    "r": 1.0
+                },
+                "name": "Knockback cooldown",
+                "position": {
+                    "x": -300.0,
+                    "y": -300.0
+                },
+                "rotation": 0.0,
+                "size": {
+                    "height": 200.0,
+                    "width": 200.0
+                },
+                "texture": "rom/texture/UI/UI_KnockbackCD.png",
+                "type": "sprite",
+                "visible": true
+            }
+        ],
+        "name": "scene"
+    },
+    "nodes": [
+        {
+            "children": [],
+            "components": {
+                "SceneTransform": {
+                    "posX": 0.0,
+                    "posY": 0.0,
+                    "posZ": 0.0,
+                    "rotX": 0.0,
+                    "rotY": 0.0,
+                    "rotZ": 0.0,
+                    "scaleX": 1.0,
+                    "scaleY": 1.0,
+                    "scaleZ": 1.0
+                },
+                "Script": {
+                    "scriptClass": "RoundManagerScript"
+                }
+            },
+            "name": "GameDirector",
+            "tag": 0
+        },
+        {
+            "children": [],
+            "components": {
+                "SceneTransform": {
+                    "posX": 0.0,
+                    "posY": 0.0,
+                    "posZ": 0.0,
+                    "rotX": 0.0,
+                    "rotY": 0.0,
+                    "rotZ": 0.0,
+                    "scaleX": 1.0,
+                    "scaleY": 1.0,
+                    "scaleZ": 1.0
+                },
+                "Script": {
+                    "scriptClass": "IntroCameraScript"
+                }
+            },
+            "name": "IntroCamera",
+            "tag": 0
+        },
+        {
+            "children": [],
+            "components": {
+                "DirectionalLight": {
+                    "castShadows": true,
+                    "color": [
+                        0.8500000238418579,
+                        0.8799999952316284,
+                        0.949999988079071
+                    ],
+                    "enabled": true,
+                    "intensity": 0.30000001192092896,
+                    "specColor": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ],
+                    "specPower": 32.0
+                },
+                "SceneTransform": {
+                    "posX": 0.0,
+                    "posY": 6.0,
+                    "posZ": 0.0,
+                    "rotX": 55.0,
+                    "rotY": -30.0,
+                    "rotZ": 0.0,
+                    "scaleX": 1.0,
+                    "scaleY": 1.0,
+                    "scaleZ": 1.0
+                }
+            },
+            "name": "Directional Light",
+            "tag": 0
+        },
+        {
+            "children": [],
+            "components": {
+                "SceneTransform": {
+                    "posX": 0.0,
+                    "posY": 22.0,
+                    "posZ": 0.0,
+                    "rotX": 75.0,
+                    "rotY": 0.0,
+                    "rotZ": 0.0,
+                    "scaleX": 1.0,
+                    "scaleY": 1.0,
+                    "scaleZ": 1.0
+                },
+                "Script": {
+                    "scriptClass": "LeaderSpotlightScript"
+                },
+                "SpotLight": {
+                    "attenuation": [
+                        1.0,
+                        0.09000000357627869,
+                        0.03200000151991844
+                    ],
+                    "castShadows": false,
+                    "color": [
+                        1.0,
+                        0.9700000286102295,
+                        0.8999999761581421
+                    ],
+                    "enabled": true,
+                    "innerAngleDeg": 8.0,
+                    "intensity": 5.0,
+                    "outerAngleDeg": 10.0,
+                    "range": 45.0,
+                    "specColor": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ],
+                    "specPower": 32.0
+                },
+                "visual": {
+                    "model": ""
+                }
+            },
+            "name": "LeaderSpotlight",
+            "tag": 0
+        },
+        {
+            "children": [],
+            "components": {
+                "Collider": {
+                    "colliderCenter": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": -1.0
+                    },
+                    "colliderType": 5,
+                    "halfExtents": {
+                        "x": 25.0,
+                        "y": 0.5,
+                        "z": 25.0
+                    },
+                    "height": 1.0,
+                    "meshSizePadding": 0.0,
+                    "radius": 47.0,
+                    "showDebugCollider": true
+                },
+                "SceneTransform": {
+                    "posX": 0.0,
+                    "posY": -0.05000000074505806,
+                    "posZ": 0.0,
+                    "rotX": 0.0,
+                    "rotY": 0.0,
+                    "rotZ": 0.0,
+                    "scaleX": 2.0,
+                    "scaleY": 1.0,
+                    "scaleZ": 2.0
+                },
+                "visual": {
+                    "model": "rom/model/map objects/circle_field.fbx",
+                    "proxy_model": "rom/model/map objects/circle_field.fbx"
+                }
+            },
+            "name": "ground",
+            "tag": 2
+        },
+        {
+            "children": [],
+            "components": {
+                "Collider": {
+                    "colliderCenter": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    },
+                    "colliderType": 5,
+                    "halfExtents": {
+                        "x": 0.5,
+                        "y": 0.5,
+                        "z": 0.5
+                    },
+                    "height": 24.0,
+                    "meshSizePadding": 0.0,
+                    "radius": 1.2999999523162842,
+                    "showDebugCollider": true
+                },
+                "SceneTransform": {
+                    "posX": 0.0,
+                    "posY": 0.0,
+                    "posZ": 0.0,
+                    "rotX": 0.0,
+                    "rotY": 0.0,
+                    "rotZ": 0.0,
+                    "scaleX": 1.0,
+                    "scaleY": 1.0,
+                    "scaleZ": 1.0
+                },
+                "Script": {
+                    "scriptClass": "CenterPoleScript"
+                },
+                "visual": {
+                    "model": "rom/model/map objects/center_pole.fbx",
+                    "proxy_model": "rom/model/map objects/center_pole.fbx",
+                    "shader": "toon"
+                }
+            },
+            "name": "CenterPole",
+            "tag": 0
+        },
+        {
+            "children": [],
+            "components": {
+                "Billboard": {
+                    "color": {
+                        "a": 0.8799999952316284,
+                        "b": 0.550000011920929,
+                        "g": 0.949999988079071,
+                        "r": 1.0
+                    },
+                    "enabled": true,
+                    "groundAligned": true,
+                    "rotation": 0.0,
+                    "sizeX": 20.0,
+                    "sizeY": 20.0,
+                    "texture": "rom/texture/point_area_circle.png"
+                },
+                "SceneTransform": {
+                    "posX": 0.0,
+                    "posY": 0.0,
+                    "posZ": 0.0,
+                    "rotX": 0.0,
+                    "rotY": 0.0,
+                    "rotZ": 0.0,
+                    "scaleX": 1.0,
+                    "scaleY": 1.0,
+                    "scaleZ": 1.0
+                },
+                "Script": {
+                    "properties": {
+                        "areaRadius": 10.0,
+                        "pointsPerSecond": 100.0,
+                        "repositionInterval": 15.0
+                    },
+                    "scriptClass": "PointAreaScript"
+                }
+            },
+            "name": "PointArea",
+            "tag": 0
+        },
+        {
+            "children": [],
+            "components": {
+                "Collider": {
+                    "colliderCenter": {
+                        "x": 0.0,
+                        "y": 1.0,
+                        "z": 0.0
+                    },
+                    "colliderType": 2,
+                    "halfExtents": {
+                        "x": 0.5,
+                        "y": 0.5,
+                        "z": 0.5
+                    },
+                    "height": 2.0,
+                    "meshSizePadding": 0.0,
+                    "radius": 1.0,
+                    "showDebugCollider": false
+                },
+                "SceneTransform": {
+                    "posX": 0.0,
+                    "posY": 1.899999976158142,
+                    "posZ": -3.0999999046325684,
+                    "rotX": 0.0,
+                    "rotY": 0.0,
+                    "rotZ": 0.0,
+                    "scaleX": 0.25,
+                    "scaleY": 0.25,
+                    "scaleZ": 0.25
+                },
+                "Script": {
+                    "properties": {
+                        "cameraMaxPitch": 15.0,
+                        "cameraMinPitch": -10.0,
+                        "magnetOrbitAcceleration": 10.0,
+                        "moveSpeed": 20.0
+                    },
+                    "scriptClass": "PlayerScript"
+                },
+                "visual": {
+                    "animate": true,
+                    "animations": {
+                        "dance": "rom/model/player/dance1.fbx",
+                        "run": "rom/model/player/run.fbx"
+                    },
+                    "model": "rom/model/player/t pose.fbx",
+                    "proxy_model": "rom/model/player/t pose.fbx",
+                    "shader": "toon"
+                }
+            },
+            "name": "Player",
+            "tag": 5
+        },
+        {
+            "children": [],
+            "components": {
+                "Collider": {
+                    "colliderCenter": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    },
+                    "colliderType": 0,
+                    "halfExtents": {
+                        "x": 0.5,
+                        "y": 0.5,
+                        "z": 0.5
+                    },
+                    "height": 2.0,
+                    "meshSizePadding": 0.0,
+                    "radius": 0.5,
+                    "showDebugCollider": true
+                },
+                "SceneTransform": {
+                    "posX": 0.0,
+                    "posY": 0.0,
+                    "posZ": 0.0,
+                    "rotX": 0.0,
+                    "rotY": 0.0,
+                    "rotZ": 0.0,
+                    "scaleX": 1.0,
+                    "scaleY": 1.0,
+                    "scaleZ": 1.0
+                },
+                "visual": {
+                    "model": "arena"
+                }
+            },
+            "name": "arena",
+            "tag": 0
+        }
+    ],
+    "settings": {
+        "render": {
+            "clearColor": [
+                0.6899999976158142,
+                0.7699999809265137,
+                0.8700000047683716,
+                1.0
+            ],
+            "defaultShader": "standard",
+            "skyboxCubemap": "rom/skybox/MySkybox.dds",
+            "skyboxEnabled": true,
+            "skyboxExposure": 1.0,
+            "skyboxRotationYDeg": 0.0,
+            "skyboxTint": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+            ]
+        }
+    },
+    "version": 4
+}

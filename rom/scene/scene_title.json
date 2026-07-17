@@ -1,0 +1,215 @@
+{
+    "canvas": {
+        "elements": [
+            {
+                "anchor": "TOP_LEFT",
+                "color": {
+                    "a": 1.0,
+                    "b": 1.0,
+                    "g": 1.0,
+                    "r": 1.0
+                },
+                "name": "bg",
+                "position": {
+                    "x": 0.0,
+                    "y": 0.0
+                },
+                "rotation": 0.0,
+                "size": {
+                    "height": 1080.0,
+                    "width": 1920.0
+                },
+                "texture": "rom/texture/UI/title/Main menu_bg.png",
+                "type": "sprite",
+                "visible": true
+            },
+            {
+                "anchor": "TOP_LEFT",
+                "color": {
+                    "a": 1.0,
+                    "b": 1.0,
+                    "g": 1.0,
+                    "r": 1.0
+                },
+                "name": "title",
+                "position": {
+                    "x": 1040.5926513671875,
+                    "y": 83.48833465576172
+                },
+                "rotation": 0.0,
+                "size": {
+                    "height": 412.0,
+                    "width": 782.0
+                },
+                "texture": "rom/texture/UI/title/Main menu_logo.png",
+                "type": "sprite",
+                "visible": true
+            },
+            {
+                "anchor": "CENTER",
+                "color": {
+                    "a": 0.699999988079071,
+                    "b": 1.0,
+                    "g": 1.0,
+                    "r": 1.0
+                },
+                "font": {
+                    "charHeight": 32.0,
+                    "charWidth": 32.0,
+                    "charsPerRow": 16,
+                    "texture": "rom/texture/consolab_ascii_512.png"
+                },
+                "hoverColor": {
+                    "a": 1.0,
+                    "b": 1.0,
+                    "g": 1.0,
+                    "r": 1.0
+                },
+                "name": "play",
+                "onClick": {
+                    "play": true,
+                    "scene": "scene_mode_select",
+                    "script": "LoadScene"
+                },
+                "position": {
+                    "x": 198.44479370117188,
+                    "y": 20.212318420410156
+                },
+                "pressedColor": {
+                    "a": 1.0,
+                    "b": 0.5,
+                    "g": 0.5,
+                    "r": 0.5
+                },
+                "size": {
+                    "height": 218.07864379882812,
+                    "width": 577.51171875
+                },
+                "text": "",
+                "textColor": {
+                    "a": 1.0,
+                    "b": 1.0,
+                    "g": 1.0,
+                    "r": 1.0
+                },
+                "textHoverColor": {
+                    "a": 1.0,
+                    "b": 1.0,
+                    "g": 1.0,
+                    "r": 1.0
+                },
+                "textScale": 1.5,
+                "texture": "rom/texture/UI/title/Button_play.png",
+                "type": "button",
+                "visible": true
+            },
+            {
+                "anchor": "CENTER",
+                "color": {
+                    "a": 0.699999988079071,
+                    "b": 1.0,
+                    "g": 1.0,
+                    "r": 1.0
+                },
+                "font": {
+                    "charHeight": 32.0,
+                    "charWidth": 32.0,
+                    "charsPerRow": 16,
+                    "texture": "rom/texture/consolab_ascii_512.png"
+                },
+                "hoverColor": {
+                    "a": 1.0,
+                    "b": 1.0,
+                    "g": 1.0,
+                    "r": 1.0
+                },
+                "name": "exit",
+                "onClick": {
+                    "play": true,
+                    "scene": "",
+                    "script": "ExitGame"
+                },
+                "position": {
+                    "x": 354.5162658691406,
+                    "y": 270.092041015625
+                },
+                "pressedColor": {
+                    "a": 1.0,
+                    "b": 0.5,
+                    "g": 0.5,
+                    "r": 0.5
+                },
+                "size": {
+                    "height": 125.53079986572266,
+                    "width": 273.6405334472656
+                },
+                "text": "",
+                "textColor": {
+                    "a": 1.0,
+                    "b": 1.0,
+                    "g": 1.0,
+                    "r": 1.0
+                },
+                "textHoverColor": {
+                    "a": 1.0,
+                    "b": 1.0,
+                    "g": 1.0,
+                    "r": 1.0
+                },
+                "textScale": 1.5,
+                "texture": "rom/texture/UI/title/Button_exit.png",
+                "type": "button",
+                "visible": true
+            },
+            {
+                "anchor": "CENTER",
+                "color": {
+                    "a": 1.0,
+                    "b": 1.0,
+                    "g": 1.0,
+                    "r": 1.0
+                },
+                "name": "text",
+                "position": {
+                    "x": -898.3943481445312,
+                    "y": 421.5845947265625
+                },
+                "rotation": 0.0,
+                "size": {
+                    "height": 50.0,
+                    "width": 827.0
+                },
+                "texture": "rom/texture/UI/title/Main menu_press to start.png",
+                "type": "sprite",
+                "visible": true,
+                "script": {
+                    "scriptClass": "TitleTextScript"
+                }
+            }
+        ],
+        "name": "scene"
+    },
+    "nodes": [],
+    "settings": {
+        "render": {
+            "clearColor": [
+                0.6899999976158142,
+                0.7699999809265137,
+                0.8700000047683716,
+                1.0
+            ],
+            "defaultShader": "standard",
+            "skyboxCubemap": "",
+            "skyboxEnabled": false,
+            "skyboxExposure": 1.0,
+            "skyboxRotationYDeg": 0.0,
+            "skyboxTint": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+            ]
+        }
+    },
+    "version": 4
+}

@@ -1,0 +1,34 @@
+{
+    "name": "PointArea",
+    "components": {
+        "SceneTransform": {
+            "posX": 0.0,
+            "posY": 0.0,
+            "posZ": 0.0,
+            "rotX": 0.0,
+            "rotY": 0.0,
+            "rotZ": 0.0,
+            "scaleX": 1.0,
+            "scaleY": 1.0,
+            "scaleZ": 1.0
+        },
+        "Billboard": {
+            "color": {
+                "a": 0.88,
+                "b": 0.55,
+                "g": 0.95,
+                "r": 1.0
+            },
+            "enabled": true,
+            "groundAligned": true,
+            "rotation": 0.0,
+            "sizeX": 5.0,
+            "sizeY": 5.0,
+            "texture": "rom/texture/point_area_circle.png"
+        },
+        "Script": {
+            "scriptClass": "PointAreaScript"
+        }
+    },
+    "children": []
+}

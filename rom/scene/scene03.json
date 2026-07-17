@@ -1,0 +1,357 @@
+{
+    "canvas": {
+        "elements": [],
+        "name": "scene"
+    },
+    "nodes": [
+        {
+            "children": [],
+            "components": {
+                "Collider": {
+                    "colliderCenter": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    },
+                    "colliderType": 1,
+                    "halfExtents": {
+                        "x": 25.0,
+                        "y": 0.5,
+                        "z": 25.0
+                    },
+                    "height": 2.0,
+                    "meshSizePadding": 0.0,
+                    "radius": 0.5,
+                    "showDebugCollider": false
+                },
+                "SceneTransform": {
+                    "posX": 0.0,
+                    "posY": -0.44999998807907104,
+                    "posZ": 0.0,
+                    "rotX": 0.0,
+                    "rotY": 0.0,
+                    "rotZ": 0.0,
+                    "scaleX": 50.0,
+                    "scaleY": 1.0,
+                    "scaleZ": 50.0
+                },
+                "visual": {
+                    "model": "Box_Brown"
+                }
+            },
+            "name": "Ground",
+            "tag": 2
+        },
+        {
+            "children": [],
+            "components": {
+                "Collider": {
+                    "colliderCenter": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    },
+                    "colliderType": 4,
+                    "halfExtents": {
+                        "x": 0.5,
+                        "y": 0.5,
+                        "z": 0.5
+                    },
+                    "height": 2.0,
+                    "meshSizePadding": 0.0,
+                    "radius": 0.5,
+                    "showDebugCollider": true
+                },
+                "SceneTransform": {
+                    "posX": 5.0,
+                    "posY": 0.0,
+                    "posZ": 4.0,
+                    "rotX": 0.0,
+                    "rotY": 0.0,
+                    "rotZ": 0.0,
+                    "scaleX": 2.0,
+                    "scaleY": 2.0,
+                    "scaleZ": 2.0
+                },
+                "visual": {
+                    "model": "Cone_Yellow"
+                }
+            },
+            "name": "MeshCone_Upright",
+            "tag": 4
+        },
+        {
+            "children": [],
+            "components": {
+                "Collider": {
+                    "colliderCenter": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    },
+                    "colliderType": 4,
+                    "halfExtents": {
+                        "x": 0.5,
+                        "y": 0.5,
+                        "z": 0.5
+                    },
+                    "height": 2.0,
+                    "meshSizePadding": 0.0,
+                    "radius": 0.5,
+                    "showDebugCollider": true
+                },
+                "SceneTransform": {
+                    "posX": -4.0,
+                    "posY": 0.0,
+                    "posZ": 6.0,
+                    "rotX": 0.0,
+                    "rotY": 45.0,
+                    "rotZ": 0.0,
+                    "scaleX": 1.5,
+                    "scaleY": 3.0,
+                    "scaleZ": 1.5
+                },
+                "visual": {
+                    "model": "Cone_Yellow"
+                }
+            },
+            "name": "MeshCone_Rotated",
+            "tag": 4
+        },
+        {
+            "children": [],
+            "components": {
+                "Collider": {
+                    "colliderCenter": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    },
+                    "colliderType": 4,
+                    "halfExtents": {
+                        "x": 0.5,
+                        "y": 0.5,
+                        "z": 0.5
+                    },
+                    "height": 2.0,
+                    "meshSizePadding": 0.0,
+                    "radius": 0.5,
+                    "showDebugCollider": true
+                },
+                "SceneTransform": {
+                    "posX": -5.0,
+                    "posY": 10.779821395874023,
+                    "posZ": 2.0,
+                    "rotX": 0.0,
+                    "rotY": 29.999996185302734,
+                    "rotZ": 0.0,
+                    "scaleX": 4.0,
+                    "scaleY": 4.0,
+                    "scaleZ": 0.29999998211860657
+                },
+                "visual": {
+                    "model": "Wall"
+                }
+            },
+            "name": "MeshWall_Angled",
+            "tag": 4
+        },
+        {
+            "children": [],
+            "components": {
+                "Collider": {
+                    "colliderCenter": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    },
+                    "colliderType": 4,
+                    "halfExtents": {
+                        "x": 0.5,
+                        "y": 0.5,
+                        "z": 0.5
+                    },
+                    "height": 2.0,
+                    "meshSizePadding": 0.0,
+                    "radius": 0.5,
+                    "showDebugCollider": false
+                },
+                "SceneTransform": {
+                    "posX": 0.0,
+                    "posY": 0.0,
+                    "posZ": 9.0,
+                    "rotX": 0.0,
+                    "rotY": 0.0,
+                    "rotZ": 0.0,
+                    "scaleX": 2.0,
+                    "scaleY": 4.0,
+                    "scaleZ": 2.0
+                },
+                "visual": {
+                    "model": "tree"
+                }
+            },
+            "name": "MeshTree",
+            "tag": 4
+        },
+        {
+            "children": [],
+            "components": {
+                "Collider": {
+                    "colliderCenter": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    },
+                    "colliderType": 4,
+                    "halfExtents": {
+                        "x": 0.5,
+                        "y": 0.5,
+                        "z": 0.5
+                    },
+                    "height": 2.0,
+                    "meshSizePadding": 0.0,
+                    "radius": 0.5,
+                    "showDebugCollider": false
+                },
+                "SceneTransform": {
+                    "posX": 10.0,
+                    "posY": 5.0,
+                    "posZ": 8.0,
+                    "rotX": 0.0,
+                    "rotY": 0.0,
+                    "rotZ": 0.0,
+                    "scaleX": 0.5,
+                    "scaleY": 0.5,
+                    "scaleZ": 0.5
+                },
+                "visual": {
+                    "model": "kirby"
+                }
+            },
+            "name": "MeshKirby",
+            "tag": 4
+        },
+        {
+            "children": [],
+            "components": {
+                "SceneTransform": {
+                    "posX": 0.0,
+                    "posY": 1.0,
+                    "posZ": -2.0,
+                    "rotX": 0.0,
+                    "rotY": 0.0,
+                    "rotZ": 0.0,
+                    "scaleX": 1.0,
+                    "scaleY": 1.0,
+                    "scaleZ": 1.0
+                },
+                "Script": {
+                    "properties": {
+                        "jumpForce": 10.0,
+                        "magnetForce": 50.0,
+                        "magnetMaxDist": 30.0,
+                        "moveSpeed": 5.0,
+                        "orbitMaxLaunchSpeed": 50.0,
+                        "orbitRadiusSpeed": 3.0,
+                        "orbitSpeed": 3.0,
+                        "orbitSpinPower": 5.0
+                    },
+                    "scriptClass": "WASDPlayerScript"
+                },
+                "visual": {
+                    "model": "rom/model/object/Box_Blue.fbx",
+                    "proxy_model": "rom/model/object/Box_Blue.fbx",
+                    "shader": "toon"
+                }
+            },
+            "name": "Player",
+            "tag": 0
+        },
+        {
+            "children": [],
+            "components": {
+                "SceneTransform": {
+                    "posX": 0.0,
+                    "posY": 45.0,
+                    "posZ": -20.0,
+                    "rotX": 65.0,
+                    "rotY": 0.0,
+                    "rotZ": 0.0,
+                    "scaleX": 1.0,
+                    "scaleY": 1.0,
+                    "scaleZ": 1.0
+                },
+                "Camera": {
+                    "enabled": true,
+                    "fov": 45.0,
+                    "nearClip": 0.5,
+                    "farClip": 1000.0
+                }
+            },
+            "name": "FixedCamera",
+            "tag": 0
+        },
+        {
+            "children": [],
+            "components": {
+                "Collider": {
+                    "colliderCenter": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    },
+                    "colliderType": 0,
+                    "halfExtents": {
+                        "x": 0.5,
+                        "y": 0.5,
+                        "z": 0.5
+                    },
+                    "height": 2.0,
+                    "meshSizePadding": 0.0,
+                    "radius": 0.5,
+                    "showDebugCollider": true
+                },
+                "SceneTransform": {
+                    "posX": -14.840169906616211,
+                    "posY": 9.287802696228027,
+                    "posZ": 0.0,
+                    "rotX": 0.0,
+                    "rotY": -0.0,
+                    "rotZ": 0.0,
+                    "scaleX": 1.0,
+                    "scaleY": 1.0,
+                    "scaleZ": 1.0
+                },
+                "visual": {
+                    "model": "rom/model/map objects/Lootbox.fbx",
+                    "shader": "toon"
+                }
+            },
+            "name": "Lootbox.fbx",
+            "tag": 0
+        }
+    ],
+    "settings": {
+        "render": {
+            "clearColor": [
+                0.6899999976158142,
+                0.7699999809265137,
+                0.8700000047683716,
+                1.0
+            ],
+            "defaultShader": "standard",
+            "skyboxCubemap": "rom/texture/sky/default_sky.dds",
+            "skyboxEnabled": true,
+            "skyboxExposure": 1.0,
+            "skyboxRotationYDeg": 0.0,
+            "skyboxTint": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+            ]
+        }
+    },
+    "version": 4
+}

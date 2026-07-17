@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <ItemGroup>
+    <HlslShader Include="shaders\PixelShader2D.hlsl">
+      <ShaderTarget>ps_5_0</ShaderTarget>
+    </HlslShader>
+    <HlslShader Include="shaders\PixelShaderUnlit.hlsl">
+      <ShaderTarget>ps_5_0</ShaderTarget>
+    </HlslShader>
+    <HlslShader Include="shaders\ParticlePS.hlsl">
+      <ShaderTarget>ps_5_0</ShaderTarget>
+    </HlslShader>
+    <HlslShader Include="shaders\ParticleVS.hlsl">
+      <ShaderTarget>vs_5_0</ShaderTarget>
+    </HlslShader>
+    <HlslShader Include="shaders\VertexShader2D.hlsl">
+      <ShaderTarget>vs_5_0</ShaderTarget>
+    </HlslShader>
+    <HlslShader Include="shaders\VertexShaderUnlit.hlsl">
+      <ShaderTarget>vs_5_0</ShaderTarget>
+    </HlslShader>
+    <HlslShader Include="shaders\VertexShader3D.hlsl">
+      <ShaderTarget>vs_5_0</ShaderTarget>
+    </HlslShader>
+    <HlslShader Include="shaders\PixelShader3D.hlsl">
+      <ShaderTarget>ps_5_0</ShaderTarget>
+    </HlslShader>
+    <HlslShader Include="shaders\PixelShader3D_Hemisphere.hlsl">
+      <ShaderTarget>ps_5_0</ShaderTarget>
+    </HlslShader>
+    <HlslShader Include="shaders\PixelShader3D_Rim.hlsl">
+      <ShaderTarget>ps_5_0</ShaderTarget>
+    </HlslShader>
+    <HlslShader Include="shaders\PixelShader3D_SurfaceFX.hlsl">
+      <ShaderTarget>ps_5_0</ShaderTarget>
+    </HlslShader>
+    <HlslShader Include="shaders\PixelShader3D_DirectionalPixel.hlsl">
+      <ShaderTarget>ps_5_0</ShaderTarget>
+    </HlslShader>
+    <HlslShader Include="shaders\PixelShader3D_PointPixel.hlsl">
+      <ShaderTarget>ps_5_0</ShaderTarget>
+    </HlslShader>
+    <HlslShader Include="shaders\PixelShader3D_SpotPixel.hlsl">
+      <ShaderTarget>ps_5_0</ShaderTarget>
+    </HlslShader>
+    <HlslShader Include="shaders\PixelShader3D_Toon.hlsl">
+      <ShaderTarget>ps_5_0</ShaderTarget>
+    </HlslShader>
+    <HlslShader Include="shaders\VertexShader3D_Outline.hlsl">
+      <ShaderTarget>vs_5_0</ShaderTarget>
+    </HlslShader>
+    <HlslShader Include="shaders\PixelShader3D_Outline.hlsl">
+      <ShaderTarget>ps_5_0</ShaderTarget>
+    </HlslShader>
+    <HlslShader Include="shaders\SkyboxPS.hlsl">
+      <ShaderTarget>ps_5_0</ShaderTarget>
+    </HlslShader>
+    <HlslShader Include="shaders\SkyboxVS.hlsl">
+      <ShaderTarget>vs_5_0</ShaderTarget>
+    </HlslShader>
+  </ItemGroup>
+
+  <PropertyGroup>
+    <ShaderOutputDir>$(ProjectDir)rom\shader\</ShaderOutputDir>
+    <ShaderCommonDir>$(ProjectDir)shaders\</ShaderCommonDir>
+  </PropertyGroup>
+
+  <Target Name="CompileHlslShaders"
+          BeforeTargets="PrepareForBuild"
+          Condition="'$(Platform)' == 'x64'"
+          Inputs="%(HlslShader.Identity);$(ShaderCommonDir)ShaderCommon.hlsli;$(ShaderCommonDir)LightingCommon.hlsli"
+          Outputs="$(ShaderOutputDir)%(HlslShader.Filename).cso">
+    <MakeDir Directories="$(ShaderOutputDir)" Condition="!Exists('$(ShaderOutputDir)')" />
+    <Exec Command="fxc /nologo /T %(HlslShader.ShaderTarget) /E main /Fo &quot;$(ShaderOutputDir)%(HlslShader.Filename).cso&quot; &quot;%(HlslShader.Identity)&quot;"
+          WorkingDirectory="$(ProjectDir)"
+          StandardOutputImportance="Low" />
+  </Target>
+
+</Project>

@@ -1,0 +1,500 @@
+{
+    "canvas": {
+        "elements": [
+            {
+                "anchor": "TOP_LEFT",
+                "color": {
+                    "a": 0.7843137383460999,
+                    "b": 1.0,
+                    "g": 1.0,
+                    "r": 1.0
+                },
+                "name": "bg",
+                "position": {
+                    "x": 0.0,
+                    "y": 0.0
+                },
+                "rotation": 0.0,
+                "size": {
+                    "height": 1080.0,
+                    "width": 1920.0
+                },
+                "texture": "rom/texture/UI/lobby/sample_room.png",
+                "type": "sprite",
+                "visible": true
+            },
+            {
+                "anchor": "CENTER",
+                "color": {
+                    "a": 1.0,
+                    "b": 1.0,
+                    "g": 1.0,
+                    "r": 1.0
+                },
+                "font": {
+                    "charHeight": 32.0,
+                    "charWidth": 32.0,
+                    "charsPerRow": 16,
+                    "texture": "rom/texture/consolab_ascii_512.png"
+                },
+                "hoverColor": {
+                    "a": 1.0,
+                    "b": 1.0,
+                    "g": 1.0,
+                    "r": 1.0
+                },
+                "name": "p1 bg",
+                "onClick": {
+                    "play": false,
+                    "scene": "",
+                    "script": "RotateLobbyColor"
+                },
+                "position": {
+                    "x": -905.0,
+                    "y": -395.0
+                },
+                "pressedColor": {
+                    "a": 1.0,
+                    "b": 0.85,
+                    "g": 0.85,
+                    "r": 0.85
+                },
+                "size": {
+                    "height": 419.0,
+                    "width": 412.0
+                },
+                "text": "",
+                "textColor": {
+                    "a": 1.0,
+                    "b": 1.0,
+                    "g": 1.0,
+                    "r": 1.0
+                },
+                "textHoverColor": {
+                    "a": 1.0,
+                    "b": 1.0,
+                    "g": 1.0,
+                    "r": 1.0
+                },
+                "textScale": 1.0,
+                "texture": "rom/texture/UI/lobby/Loading_icon.png",
+                "type": "button",
+                "visible": true
+            },
+            {
+                "anchor": "CENTER",
+                "color": {
+                    "a": 1.0,
+                    "b": 1.0,
+                    "g": 1.0,
+                    "r": 1.0
+                },
+                "font": {
+                    "charHeight": 32.0,
+                    "charWidth": 32.0,
+                    "charsPerRow": 16,
+                    "texture": "rom/texture/consolab_ascii_512.png"
+                },
+                "hoverColor": {
+                    "a": 1.0,
+                    "b": 1.0,
+                    "g": 1.0,
+                    "r": 1.0
+                },
+                "name": "p2 bg",
+                "onClick": {
+                    "play": false,
+                    "scene": "",
+                    "script": "RotateLobbyColor"
+                },
+                "position": {
+                    "x": -345.0,
+                    "y": -395.0
+                },
+                "pressedColor": {
+                    "a": 1.0,
+                    "b": 0.85,
+                    "g": 0.85,
+                    "r": 0.85
+                },
+                "size": {
+                    "height": 419.0,
+                    "width": 412.0
+                },
+                "text": "",
+                "textColor": {
+                    "a": 1.0,
+                    "b": 1.0,
+                    "g": 1.0,
+                    "r": 1.0
+                },
+                "textHoverColor": {
+                    "a": 1.0,
+                    "b": 1.0,
+                    "g": 1.0,
+                    "r": 1.0
+                },
+                "textScale": 1.0,
+                "texture": "rom/texture/UI/lobby/Loading_icon.png",
+                "type": "button",
+                "visible": true
+            },
+            {
+                "anchor": "CENTER",
+                "color": {
+                    "a": 1.0,
+                    "b": 1.0,
+                    "g": 1.0,
+                    "r": 1.0
+                },
+                "font": {
+                    "charHeight": 32.0,
+                    "charWidth": 32.0,
+                    "charsPerRow": 16,
+                    "texture": "rom/texture/consolab_ascii_512.png"
+                },
+                "hoverColor": {
+                    "a": 1.0,
+                    "b": 1.0,
+                    "g": 1.0,
+                    "r": 1.0
+                },
+                "name": "p3 bg",
+                "onClick": {
+                    "play": false,
+                    "scene": "",
+                    "script": "RotateLobbyColor"
+                },
+                "position": {
+                    "x": -905.0,
+                    "y": 50.0
+                },
+                "pressedColor": {
+                    "a": 1.0,
+                    "b": 0.85,
+                    "g": 0.85,
+                    "r": 0.85
+                },
+                "size": {
+                    "height": 419.0,
+                    "width": 412.0
+                },
+                "text": "",
+                "textColor": {
+                    "a": 1.0,
+                    "b": 1.0,
+                    "g": 1.0,
+                    "r": 1.0
+                },
+                "textHoverColor": {
+                    "a": 1.0,
+                    "b": 1.0,
+                    "g": 1.0,
+                    "r": 1.0
+                },
+                "textScale": 1.0,
+                "texture": "rom/texture/UI/lobby/Loading_icon.png",
+                "type": "button",
+                "visible": true
+            },
+            {
+                "anchor": "CENTER",
+                "color": {
+                    "a": 1.0,
+                    "b": 1.0,
+                    "g": 1.0,
+                    "r": 1.0
+                },
+                "font": {
+                    "charHeight": 32.0,
+                    "charWidth": 32.0,
+                    "charsPerRow": 16,
+                    "texture": "rom/texture/consolab_ascii_512.png"
+                },
+                "hoverColor": {
+                    "a": 1.0,
+                    "b": 1.0,
+                    "g": 1.0,
+                    "r": 1.0
+                },
+                "name": "p4 bg",
+                "onClick": {
+                    "play": false,
+                    "scene": "",
+                    "script": "RotateLobbyColor"
+                },
+                "position": {
+                    "x": -345.0,
+                    "y": 50.0
+                },
+                "pressedColor": {
+                    "a": 1.0,
+                    "b": 0.85,
+                    "g": 0.85,
+                    "r": 0.85
+                },
+                "size": {
+                    "height": 419.0,
+                    "width": 412.0
+                },
+                "text": "",
+                "textColor": {
+                    "a": 1.0,
+                    "b": 1.0,
+                    "g": 1.0,
+                    "r": 1.0
+                },
+                "textHoverColor": {
+                    "a": 1.0,
+                    "b": 1.0,
+                    "g": 1.0,
+                    "r": 1.0
+                },
+                "textScale": 1.0,
+                "texture": "rom/texture/UI/lobby/Loading_icon.png",
+                "type": "button",
+                "visible": true
+            },
+            {
+                "anchor": "CENTER",
+                "color": {
+                    "a": 0.699999988079071,
+                    "b": 1.0,
+                    "g": 1.0,
+                    "r": 1.0
+                },
+                "font": {
+                    "charHeight": 32.0,
+                    "charWidth": 32.0,
+                    "charsPerRow": 16,
+                    "texture": "rom/texture/consolab_ascii_512.png"
+                },
+                "hoverColor": {
+                    "a": 1.0,
+                    "b": 1.0,
+                    "g": 1.0,
+                    "r": 1.0
+                },
+                "name": "back",
+                "onClick": {
+                    "play": true,
+                    "scene": "scene_mode_select",
+                    "script": "LoadScene"
+                },
+                "position": {
+                    "x": 179.06683349609375,
+                    "y": 332.0205993652344
+                },
+                "pressedColor": {
+                    "a": 1.0,
+                    "b": 0.5,
+                    "g": 0.5,
+                    "r": 0.5
+                },
+                "size": {
+                    "height": 174.06936645507813,
+                    "width": 363.5600280761719
+                },
+                "text": "",
+                "textColor": {
+                    "a": 1.0,
+                    "b": 1.0,
+                    "g": 1.0,
+                    "r": 1.0
+                },
+                "textHoverColor": {
+                    "a": 1.0,
+                    "b": 1.0,
+                    "g": 1.0,
+                    "r": 1.0
+                },
+                "textScale": 1.5,
+                "texture": "rom/texture/UI/lobby/back.png",
+                "type": "button",
+                "visible": true
+            },
+            {
+                "anchor": "CENTER",
+                "color": {
+                    "a": 0.699999988079071,
+                    "b": 1.0,
+                    "g": 1.0,
+                    "r": 1.0
+                },
+                "font": {
+                    "charHeight": 32.0,
+                    "charWidth": 32.0,
+                    "charsPerRow": 16,
+                    "texture": "rom/texture/consolab_ascii_512.png"
+                },
+                "hoverColor": {
+                    "a": 1.0,
+                    "b": 1.0,
+                    "g": 1.0,
+                    "r": 1.0
+                },
+                "name": "next",
+                "onClick": {
+                    "play": true,
+                    "scene": "scene_battle_royale",
+                    "script": "LoadSelectedModeMatch"
+                },
+                "position": {
+                    "x": 544.4356079101563,
+                    "y": 328.6730651855469
+                },
+                "pressedColor": {
+                    "a": 1.0,
+                    "b": 0.5,
+                    "g": 0.5,
+                    "r": 0.5
+                },
+                "size": {
+                    "height": 179.09060668945313,
+                    "width": 367.17767333984375
+                },
+                "text": "",
+                "textColor": {
+                    "a": 1.0,
+                    "b": 1.0,
+                    "g": 1.0,
+                    "r": 1.0
+                },
+                "textHoverColor": {
+                    "a": 1.0,
+                    "b": 1.0,
+                    "g": 1.0,
+                    "r": 1.0
+                },
+                "textScale": 1.5,
+                "texture": "rom/texture/UI/lobby/next.png",
+                "type": "button",
+                "visible": true
+            },
+            {
+                "anchor": "CENTER",
+                "color": {
+                    "a": 1.0,
+                    "b": 1.0,
+                    "g": 1.0,
+                    "r": 1.0
+                },
+                "name": "p1 color",
+                "position": {
+                    "x": -875.0,
+                    "y": -105.0
+                },
+                "rotation": 0.0,
+                "size": {
+                    "height": 83.0,
+                    "width": 344.0
+                },
+                "texture": "rom/texture/UI/lobby/color_white.png",
+                "type": "sprite",
+                "visible": true,
+                "script": {
+                    "scriptClass": "LobbyColorPreviewScript"
+                }
+            },
+            {
+                "anchor": "CENTER",
+                "color": {
+                    "a": 1.0,
+                    "b": 1.0,
+                    "g": 1.0,
+                    "r": 1.0
+                },
+                "name": "p2 color",
+                "position": {
+                    "x": -315.0,
+                    "y": -105.0
+                },
+                "rotation": 0.0,
+                "size": {
+                    "height": 83.0,
+                    "width": 344.0
+                },
+                "texture": "rom/texture/UI/lobby/color_white.png",
+                "type": "sprite",
+                "visible": true,
+                "script": {
+                    "scriptClass": "LobbyColorPreviewScript"
+                }
+            },
+            {
+                "anchor": "CENTER",
+                "color": {
+                    "a": 1.0,
+                    "b": 1.0,
+                    "g": 1.0,
+                    "r": 1.0
+                },
+                "name": "p3 color",
+                "position": {
+                    "x": -865.8367309570313,
+                    "y": 335.0
+                },
+                "rotation": 0.0,
+                "size": {
+                    "height": 83.0,
+                    "width": 344.0
+                },
+                "texture": "rom/texture/UI/lobby/color_white.png",
+                "type": "sprite",
+                "visible": true,
+                "script": {
+                    "scriptClass": "LobbyColorPreviewScript"
+                }
+            },
+            {
+                "anchor": "CENTER",
+                "color": {
+                    "a": 1.0,
+                    "b": 1.0,
+                    "g": 1.0,
+                    "r": 1.0
+                },
+                "name": "p4 color",
+                "position": {
+                    "x": -315.0,
+                    "y": 335.0
+                },
+                "rotation": 0.0,
+                "size": {
+                    "height": 83.0,
+                    "width": 344.0
+                },
+                "texture": "rom/texture/UI/lobby/color_white.png",
+                "type": "sprite",
+                "visible": true,
+                "script": {
+                    "scriptClass": "LobbyColorPreviewScript"
+                }
+            }
+        ],
+        "name": "scene"
+    },
+    "nodes": [],
+    "settings": {
+        "render": {
+            "clearColor": [
+                0.6899999976158142,
+                0.7699999809265137,
+                0.8700000047683716,
+                1.0
+            ],
+            "defaultShader": "standard",
+            "skyboxCubemap": "",
+            "skyboxEnabled": false,
+            "skyboxExposure": 1.0,
+            "skyboxRotationYDeg": 0.0,
+            "skyboxTint": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+            ]
+        }
+    },
+    "version": 4
+}

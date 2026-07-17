@@ -1,0 +1,743 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="engine">
+      <UniqueIdentifier>{508a3ee1-464f-468a-b15e-760449196000}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engine\audio">
+      <UniqueIdentifier>{9f2374de-4953-4a7f-b510-b837d2ba05be}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engine\core">
+      <UniqueIdentifier>{eae62deb-8916-46d9-acfb-0577c110cfe0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engine\debug">
+      <UniqueIdentifier>{ddd72854-aee0-4a9d-a09d-78ff0f50f9a8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engine\ecs">
+      <UniqueIdentifier>{318e56a0-6822-400e-ac51-70db3d484504}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engine\editor">
+      <UniqueIdentifier>{92ff11fe-e16c-4222-aef7-0e78de915a92}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engine\input">
+      <UniqueIdentifier>{74589c63-6bdd-41cb-9718-e7dc0652035b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engine\physics">
+      <UniqueIdentifier>{d1a90f72-3dc5-4645-81d6-5ca34d83c8a5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engine\physics\collider">
+      <UniqueIdentifier>{5b4f7c65-91af-4a47-9d68-3afd362aba49}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engine\physics\core">
+      <UniqueIdentifier>{f061b99d-1926-466c-bd9b-b2fed83a9a34}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engine\rendering">
+      <UniqueIdentifier>{59b804d6-c544-4af6-ab6a-d055a3f5965d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engine\rendering\billboard">
+      <UniqueIdentifier>{83bdef91-f4ca-4d38-803b-cb682eb39606}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engine\rendering\d3d11">
+      <UniqueIdentifier>{1e84f670-c29b-4d6d-8ba0-21f7866a5b98}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engine\rendering\effect">
+      <UniqueIdentifier>{bca805cc-15cc-4928-946e-10fae6bb84b9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engine\rendering\environment">
+      <UniqueIdentifier>{a4e8c1d2-7f3b-4a9e-b6c5-1d2e3f4a5b6c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engine\rendering\lighting">
+      <UniqueIdentifier>{cc996a20-be56-4b7e-9dd0-fcadfe564372}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engine\rendering\model">
+      <UniqueIdentifier>{ac14084b-4d9c-41b6-b131-d9cb01070e55}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engine\rendering\sprite">
+      <UniqueIdentifier>{3c691783-e715-4c49-859c-2e9dea3811df}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engine\scene">
+      <UniqueIdentifier>{a79918d4-15d0-4918-a445-703dceb117a3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engine\scripting">
+      <UniqueIdentifier>{256fea9c-2df4-44c0-9eae-4d2ac4a3c2f8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engine\ui">
+      <UniqueIdentifier>{a6347998-a333-414c-8703-408c7f9f0a47}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="libraries">
+      <UniqueIdentifier>{6b2f824c-dfdd-4dfb-ba6d-0480fc4e11fb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="libraries\directxtex">
+      <UniqueIdentifier>{3b7a7f6f-4080-476d-a0ef-a24225fe6215}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="libraries\imguizmo">
+    </Filter>
+    <Filter Include="libraries\imgui">
+      <UniqueIdentifier>{29377383-b7f5-4e4a-b5e6-aab99389c2ce}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shaders">
+      <UniqueIdentifier>{61318ebd-e566-455f-b524-d686818539a3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src">
+      <UniqueIdentifier>{a95d040c-ca11-4999-b8f1-6aa14ccfc012}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\app">
+      <UniqueIdentifier>{d6b2edd6-ab75-4f28-9eb9-6cbd3a733fba}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\app\camera">
+      <UniqueIdentifier>{f9308389-0f36-451e-9cf8-67ae4230fe8f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\app\rendering">
+      <UniqueIdentifier>{4753001a-9fef-463c-a14f-9e61c9335e31}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\app\scene">
+      <UniqueIdentifier>{1c0b6dec-a2a2-4aeb-a546-3dedd5726e81}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engine\rendering\particleSystem">
+      <UniqueIdentifier>{45fe13a0-6edc-476f-8edf-b2bc37651e1c}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="engine\audio\audio_manager.h">
+      <Filter>engine\audio</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\core\easing.h">
+      <Filter>engine\core</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\core\engine_gui.h">
+      <Filter>engine\core</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\core\engine_gui_internal.h">
+      <Filter>engine\core</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\core\game_object.h">
+      <Filter>engine\core</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\core\system_timer.h">
+      <Filter>engine\core</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\debug\debug_drawer.h">
+      <Filter>engine\debug</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\debug\debug_ofstream.h">
+      <Filter>engine\debug</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\debug\debug_text.h">
+      <Filter>engine\debug</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\ecs\collider_component.h">
+      <Filter>engine\ecs</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\ecs\effect_component.h">
+      <Filter>engine\ecs</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\ecs\component.h">
+      <Filter>engine\ecs</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\ecs\component_factory.h">
+      <Filter>engine\ecs</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\ecs\game_object.h">
+      <Filter>engine\ecs</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\ecs\model_asset_cache.h">
+      <Filter>engine\ecs</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\ecs\prefab_serializer.h">
+      <Filter>engine\ecs</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\ecs\string_utils.h">
+      <Filter>engine\ecs</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\ecs\transform.h">
+      <Filter>engine\ecs</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\ecs\visual_component.h">
+      <Filter>engine\ecs</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\ecs\billboard_component.h">
+      <Filter>engine\ecs</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\ecs\material_component.h">
+      <Filter>engine\ecs</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\ecs\camera_component.h">
+      <Filter>engine\ecs</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\ecs\directional_light_component.h">
+      <Filter>engine\ecs</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\ecs\point_light_component.h">
+      <Filter>engine\ecs</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\ecs\spot_light_component.h">
+      <Filter>engine\ecs</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\editor\editor_prefab_panel.h">
+      <Filter>engine\editor</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\editor\project_asset_index.h">
+      <Filter>engine\editor</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\editor\editor_project_browser.h">
+      <Filter>engine\editor</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\editor\editor_ui_panel.h">
+      <Filter>engine\editor</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\editor\light_gizmo.h">
+      <Filter>engine\editor</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\editor\camera_gizmo.h">
+      <Filter>engine\editor</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\editor\transform_gizmo.h">
+      <Filter>engine\editor</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\editor\ui_gizmo.h">
+      <Filter>engine\editor</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\input\controller.h">
+      <Filter>engine\input</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\input\key_logger.h">
+      <Filter>engine\input</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\input\keyboard.h">
+      <Filter>engine\input</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\input\mouse.h">
+      <Filter>engine\input</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\physics\collider\collider.h">
+      <Filter>engine\physics\collider</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\physics\core\physics_system.h">
+      <Filter>engine\physics\core</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\physics\core\rigidbody.h">
+      <Filter>engine\physics\core</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\rendering\billboard\billboard.h">
+      <Filter>engine\rendering\billboard</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\rendering\d3d11\renderer.h">
+      <Filter>engine\rendering\d3d11</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\rendering\d3d11\shader.h">
+      <Filter>engine\rendering\d3d11</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\rendering\effect\effect_object.h">
+      <Filter>engine\rendering\effect</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\rendering\effect\effect_system.h">
+      <Filter>engine\rendering\effect</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\rendering\environment\skybox.h">
+      <Filter>engine\rendering\environment</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\rendering\lighting\lighting.h">
+      <Filter>engine\rendering\lighting</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\rendering\lighting\shadow.h">
+      <Filter>engine\rendering\lighting</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\rendering\model\model.h">
+      <Filter>engine\rendering\model</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\rendering\model\model_util.h">
+      <Filter>engine\rendering\model</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\rendering\sprite\sprite.h">
+      <Filter>engine\rendering\sprite</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\rendering\sprite\texture.h">
+      <Filter>engine\rendering\sprite</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\scene\scene_loader.h">
+      <Filter>engine\scene</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\scene\scene_camera.h">
+      <Filter>engine\scene</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\scene\scene_lighting.h">
+      <Filter>engine\scene</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\scene\scene_node.h">
+      <Filter>engine\scene</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\scripting\script_component.h">
+      <Filter>engine\scripting</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\scripting\script_dll_register.h">
+      <Filter>engine\scripting</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\scripting\script_factory.h">
+      <Filter>engine\scripting</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\scripting\script_register.h">
+      <Filter>engine\scripting</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\scripting\script_fields.h">
+      <Filter>engine\scripting</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\scripting\script_runtime_api.h">
+      <Filter>engine\scripting</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\scripting\script_watcher.h">
+      <Filter>engine\scripting</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\scripting\ui_canvas_script.h">
+      <Filter>engine\scripting</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\scripting\ui_canvas_script_factory.h">
+      <Filter>engine\scripting</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\scripting\ui_canvas_script_register.h">
+      <Filter>engine\scripting</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\ui\scene_canvas.h">
+      <Filter>engine\ui</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\ui\ui_bar.h">
+      <Filter>engine\ui</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\ui\ui_button.h">
+      <Filter>engine\ui</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\ui\ui_canvas.h">
+      <Filter>engine\ui</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\ui\ui_element.h">
+      <Filter>engine\ui</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\ui\ui_element_script_host.h">
+      <Filter>engine\ui</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\ui\ui_sprite.h">
+      <Filter>engine\ui</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\ui\ui_text.h">
+      <Filter>engine\ui</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\ui\ui_text_renderer.h">
+      <Filter>engine\ui</Filter>
+    </ClInclude>
+    <ClInclude Include="libraries\directxtex\DirectXTex.h">
+      <Filter>libraries\directxtex</Filter>
+    </ClInclude>
+    <ClInclude Include="libraries\imguizmo\ImGuizmo.h">
+      <Filter>libraries\imguizmo</Filter>
+    </ClInclude>
+    <ClInclude Include="libraries\imgui\imconfig.h">
+      <Filter>libraries\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="libraries\imgui\imgui.h">
+      <Filter>libraries\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="libraries\imgui\imgui_impl_dx11.h">
+      <Filter>libraries\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="libraries\imgui\imgui_impl_win32.h">
+      <Filter>libraries\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="libraries\imgui\imgui_internal.h">
+      <Filter>libraries\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="libraries\imgui\imstb_rectpack.h">
+      <Filter>libraries\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="libraries\imgui\imstb_textedit.h">
+      <Filter>libraries\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="libraries\imgui\imstb_truetype.h">
+      <Filter>libraries\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\app\camera\camera.h">
+      <Filter>src\app\camera</Filter>
+    </ClInclude>
+    <ClInclude Include="src\app\camera\debug_camera.h">
+      <Filter>src\app\camera</Filter>
+    </ClInclude>
+    <ClInclude Include="src\app\camera\third_person_camera.h">
+      <Filter>src\app\camera</Filter>
+    </ClInclude>
+    <ClInclude Include="src\app\main.h">
+      <Filter>src\app</Filter>
+    </ClInclude>
+    <ClInclude Include="src\app\rendering\fade.h">
+      <Filter>src\app\rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="src\app\rendering\scene_transition.h">
+      <Filter>src\app\rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="src\app\rendering\grid.h">
+      <Filter>src\app\rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="src\app\rendering\WICTextureLoader11.h">
+      <Filter>src\app\rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="src\app\scene\game_scene.h">
+      <Filter>src\app\scene</Filter>
+    </ClInclude>
+    <ClInclude Include="src\app\scene\game_scene_script_hooks.h">
+      <Filter>src\app\scene</Filter>
+    </ClInclude>
+    <ClInclude Include="src\app\scene\scene_manager.h">
+      <Filter>src\app\scene</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\scene\render_settings.h">
+      <Filter>engine\core</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\rendering\particle\particle_system.h">
+      <Filter>engine\rendering\particleSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="src\app\camera\camera_director.h">
+      <Filter>src\app\camera</Filter>
+    </ClInclude>
+    <ClInclude Include="src\app\camera\camera_pose.h">
+      <Filter>src\app\camera</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="engine\audio\audio_manager.cpp">
+      <Filter>engine\audio</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\core\easing.cpp">
+      <Filter>engine\core</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\core\engine_gui.cpp">
+      <Filter>engine\core</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\core\engine_gui_persistence.cpp">
+      <Filter>engine\core</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\core\system_timer.cpp">
+      <Filter>engine\core</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\debug\debug_drawer.cpp">
+      <Filter>engine\debug</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\debug\debug_ofstream.cpp">
+      <Filter>engine\debug</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\debug\debug_text.cpp">
+      <Filter>engine\debug</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\ecs\collider_component.cpp">
+      <Filter>engine\ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\ecs\effect_component.cpp">
+      <Filter>engine\ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\ecs\component_factory.cpp">
+      <Filter>engine\ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\ecs\game_object.cpp">
+      <Filter>engine\ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\ecs\model_asset_cache.cpp">
+      <Filter>engine\ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\ecs\prefab_runtime.cpp">
+      <Filter>engine\ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\ecs\prefab_serializer.cpp">
+      <Filter>engine\ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\ecs\transform.cpp">
+      <Filter>engine\ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\ecs\visual_component.cpp">
+      <Filter>engine\ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\ecs\billboard_component.cpp">
+      <Filter>engine\ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\ecs\material_component.cpp">
+      <Filter>engine\ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\ecs\camera_component.cpp">
+      <Filter>engine\ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\ecs\directional_light_component.cpp">
+      <Filter>engine\ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\ecs\point_light_component.cpp">
+      <Filter>engine\ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\ecs\spot_light_component.cpp">
+      <Filter>engine\ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\editor\editor_prefab_panel.cpp">
+      <Filter>engine\editor</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\editor\project_asset_index.cpp">
+      <Filter>engine\editor</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\editor\editor_project_browser.cpp">
+      <Filter>engine\editor</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\editor\editor_ui_panel.cpp">
+      <Filter>engine\editor</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\editor\light_gizmo.cpp">
+      <Filter>engine\editor</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\editor\camera_gizmo.cpp">
+      <Filter>engine\editor</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\editor\transform_gizmo.cpp">
+      <Filter>engine\editor</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\editor\ui_gizmo.cpp">
+      <Filter>engine\editor</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\input\controller.cpp">
+      <Filter>engine\input</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\input\key_logger.cpp">
+      <Filter>engine\input</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\input\keyboard.cpp">
+      <Filter>engine\input</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\input\mouse.cpp">
+      <Filter>engine\input</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\physics\collider\collider.cpp">
+      <Filter>engine\physics\collider</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\physics\core\physics_system.cpp">
+      <Filter>engine\physics\core</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\physics\core\rigidbody.cpp">
+      <Filter>engine\physics\core</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\rendering\billboard\billboard.cpp">
+      <Filter>engine\rendering\billboard</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\rendering\d3d11\renderer.cpp">
+      <Filter>engine\rendering\d3d11</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\rendering\d3d11\shader.cpp">
+      <Filter>engine\rendering\d3d11</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\rendering\effect\effect_object.cpp">
+      <Filter>engine\rendering\effect</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\rendering\effect\effect_system.cpp">
+      <Filter>engine\rendering\effect</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\rendering\environment\skybox.cpp">
+      <Filter>engine\rendering\environment</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\rendering\lighting\lighting.cpp">
+      <Filter>engine\rendering\lighting</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\rendering\lighting\shadow.cpp">
+      <Filter>engine\rendering\lighting</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\rendering\model\model.cpp">
+      <Filter>engine\rendering\model</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\rendering\model\model_util.cpp">
+      <Filter>engine\rendering\model</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\rendering\sprite\sprite.cpp">
+      <Filter>engine\rendering\sprite</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\rendering\sprite\texture.cpp">
+      <Filter>engine\rendering\sprite</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\scene\scene_loader.cpp">
+      <Filter>engine\scene</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\scene\scene_camera.cpp">
+      <Filter>engine\scene</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\scene\scene_lighting.cpp">
+      <Filter>engine\scene</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\scene\scene_runtime.cpp">
+      <Filter>engine\scene</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\scripting\script_component.cpp">
+      <Filter>engine\scripting</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\scripting\script_factory.cpp">
+      <Filter>engine\scripting</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\scripting\ui_canvas_script_factory.cpp">
+      <Filter>engine\scripting</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\scripting\script_runtime_api.cpp">
+      <Filter>engine\scripting</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\scripting\script_watcher.cpp">
+      <Filter>engine\scripting</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\ui\scene_canvas.cpp">
+      <Filter>engine\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\ui\ui_bar.cpp">
+      <Filter>engine\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\ui\ui_button.cpp">
+      <Filter>engine\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\ui\ui_canvas.cpp">
+      <Filter>engine\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\ui\ui_element.cpp">
+      <Filter>engine\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\ui\ui_element_script_host.cpp">
+      <Filter>engine\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\ui\ui_sprite.cpp">
+      <Filter>engine\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\ui\ui_text.cpp">
+      <Filter>engine\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\ui\ui_text_renderer.cpp">
+      <Filter>engine\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\imguizmo\ImGuizmo.cpp">
+      <Filter>libraries\imguizmo</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\imgui\imgui.cpp">
+      <Filter>libraries\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\imgui\imgui_demo.cpp">
+      <Filter>libraries\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\imgui\imgui_draw.cpp">
+      <Filter>libraries\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\imgui\imgui_impl_dx11.cpp">
+      <Filter>libraries\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\imgui\imgui_impl_win32.cpp">
+      <Filter>libraries\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\imgui\imgui_tables.cpp">
+      <Filter>libraries\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\imgui\imgui_widgets.cpp">
+      <Filter>libraries\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\app\camera\camera.cpp">
+      <Filter>src\app\camera</Filter>
+    </ClCompile>
+    <ClCompile Include="src\app\camera\camera_director.cpp">
+      <Filter>src\app\camera</Filter>
+    </ClCompile>
+    <ClCompile Include="src\app\camera\camera_pose.cpp">
+      <Filter>src\app\camera</Filter>
+    </ClCompile>
+    <ClCompile Include="src\app\camera\debug_camera.cpp">
+      <Filter>src\app\camera</Filter>
+    </ClCompile>
+    <ClCompile Include="src\app\camera\third_person_camera.cpp">
+      <Filter>src\app\camera</Filter>
+    </ClCompile>
+    <ClCompile Include="src\app\main.cpp">
+      <Filter>src\app</Filter>
+    </ClCompile>
+    <ClCompile Include="src\app\rendering\fade.cpp">
+      <Filter>src\app\rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="src\app\rendering\scene_transition.cpp">
+      <Filter>src\app\rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="src\app\rendering\grid.cpp">
+      <Filter>src\app\rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="src\app\rendering\WICTextureLoader11.cpp">
+      <Filter>src\app\rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="src\app\scene\game_scene.cpp">
+      <Filter>src\app\scene</Filter>
+    </ClCompile>
+    <ClCompile Include="src\app\scene\game_scene_script_hooks.cpp">
+      <Filter>src\app\scene</Filter>
+    </ClCompile>
+    <ClCompile Include="src\app\scene\scene_manager.cpp">
+      <Filter>src\app\scene</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\scene\render_settings.cpp">
+      <Filter>engine\core</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\rendering\particle\particle_system.cpp">
+      <Filter>engine\rendering\particleSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="pch.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="shaders\ShaderCommon.hlsli">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\LightingCommon.hlsli">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\ParticlePS.hlsl">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\ParticleVS.hlsl">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\PixelShader2D.hlsl">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\PixelShader3D.hlsl">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\PixelShader3D_DirectionalPixel.hlsl">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\PixelShader3D_Hemisphere.hlsl">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\PixelShader3D_PointPixel.hlsl">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\PixelShader3D_Rim.hlsl">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\PixelShader3D_SpotPixel.hlsl">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\PixelShaderUnlit.hlsl">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\SkyboxPS.hlsl">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\SkyboxVS.hlsl">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\VertexShader2D.hlsl">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\VertexShader3D.hlsl">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\VertexShaderUnlit.hlsl">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\VertexShader3D_Outline.hlsl">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\PixelShader3D_SurfaceFX.hlsl">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\PixelShader3D_Toon.hlsl">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\PixelShader3D_Outline.hlsl">
+      <Filter>shaders</Filter>
+    </None>
+  </ItemGroup>
+</Project>

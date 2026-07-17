@@ -1,0 +1,398 @@
+/**===========================================================================
+ File   :  [third_person_camera.cpp]
+ Brief  :  Follow camera writes PlayerFollowCam node; Director applies global.
+           Pull/Push soft-face the magnet target; Orbit hard-locks look.
+ ===========================================================================**/
+#include "third_person_camera.h"
+#include "camera_pose.h"
+#include "engine/input/mouse.h"
+#include "engine/input/controller.h"
+#include "engine/rendering/d3d11/renderer.h"
+#include "engine/ecs/camera_component.h"
+#include "engine/ecs/game_object.h"
+#include "engine/ecs/transform.h"
+#include "engine/core/easing.h"
+#include <cmath>
+#include <memory>
+
+using namespace DirectX;
+
+namespace {
+
+constexpr float kBaseDistance = 8.0f;
+constexpr float kBaseHeight = 3.0f;
+constexpr float kBaseFov = 45.0f;
+constexpr float kLookAtHeight = 1.5f;
+constexpr float kPullDistanceScale = 0.95f;
+constexpr float kOrbitDistance = 13.0f;
+constexpr float kOrbitPitchBias = 12.0f;
+constexpr float kPushFovBump = 5.0f;
+constexpr float kPushLagDuration = 0.20f;
+constexpr float kParamBlendSpeed = 6.0f;
+constexpr float kNormalFollowSharpness = 14.0f;
+constexpr float kPullFollowSharpness = 40.0f;
+constexpr float kOrbitFollowSharpness = 10.0f;
+constexpr float kPushFollowSharpnessStart = 2.5f;
+constexpr float kPushFollowSharpnessEnd = 18.0f;
+// Soft-turn yaw/pitch toward the pull/push target while held.
+constexpr float kMagnetFaceSharpness = 10.0f;
+constexpr float kMagnetFacePitchBias = 12.0f;
+
+XMFLOAT3* s_targetPos = nullptr;
+float*    s_targetYaw = nullptr;
+float s_distance = kBaseDistance;
+float s_height = kBaseHeight;
+float s_pitch = 15.0f;
+float s_mouseSensitivity = 0.2f;
+float s_controllerSensitivity = 120.0f;
+bool  s_cursorHidden = false;
+float s_minPitch = -89.0f;
+float s_maxPitch = 89.0f;
+
+ThirdPersonMagnetMode s_magnetMode = ThirdPersonMagnetMode::Normal;
+ThirdPersonMagnetMode s_prevMagnetMode = ThirdPersonMagnetMode::Normal;
+XMFLOAT3 s_magnetTarget = { 0.0f, 0.0f, 0.0f };
+bool s_hasMagnetTarget = false;
+
+float s_currentDistance = kBaseDistance;
+float s_currentFov = kBaseFov;
+float s_pushBurstT = 1.0f;
+bool  s_hasSmoothedEye = false;
+XMFLOAT3 s_smoothedEye = { 0.0f, 0.0f, 0.0f };
+
+bool s_orbitLocked = false;
+float s_orbitLockYaw = 0.0f;
+float s_orbitLockPitch = 15.0f;
+float s_preOrbitPitch = 15.0f;
+
+bool s_hasFollowPose = false;
+CameraPose s_followPose;
+
+std::unique_ptr<GameObject> s_followCamNode;
+
+float Clampf(float v, float lo, float hi) {
+	if (v < lo) return lo;
+	if (v > hi) return hi;
+	return v;
+}
+
+float LerpFloat(float a, float b, float t) {
+	return a + (b - a) * t;
+}
+
+float ExpSmoothToward(float current, float target, float sharpness, float dt) {
+	const float t = 1.0f - expf(-sharpness * dt);
+	return LerpFloat(current, target, t);
+}
+
+XMFLOAT3 ExpSmoothToward(const XMFLOAT3& current, const XMFLOAT3& target, float sharpness, float dt) {
+	const float t = 1.0f - expf(-sharpness * dt);
+	return {
+		LerpFloat(current.x, target.x, t),
+		LerpFloat(current.y, target.y, t),
+		LerpFloat(current.z, target.z, t),
+	};
+}
+
+float NormalizeYawDeg(float yaw) {
+	while (yaw >= 360.0f) yaw -= 360.0f;
+	while (yaw < 0.0f) yaw += 360.0f;
+	return yaw;
+}
+
+float ShortestAngleDeltaDeg(float from, float to) {
+	float d = to - from;
+	while (d > 180.0f) d -= 360.0f;
+	while (d < -180.0f) d += 360.0f;
+	return d;
+}
+
+float ExpSmoothAngleToward(float current, float target, float sharpness, float dt) {
+	const float t = 1.0f - expf(-sharpness * dt);
+	return NormalizeYawDeg(current + ShortestAngleDeltaDeg(current, target) * t);
+}
+
+bool IsPullOrPushMode(ThirdPersonMagnetMode mode) {
+	return mode == ThirdPersonMagnetMode::Pull || mode == ThirdPersonMagnetMode::Push;
+}
+
+void DesiredFaceAnglesToTarget(const XMFLOAT3& player, const XMFLOAT3& target,
+	float& outYawDeg, float& outPitchDeg) {
+	const float dx = target.x - player.x;
+	const float dy = target.y - (player.y + kLookAtHeight);
+	const float dz = target.z - player.z;
+	const float horiz = sqrtf(dx * dx + dz * dz);
+
+	outYawDeg = NormalizeYawDeg(XMConvertToDegrees(atan2f(dx, dz)));
+	if (horiz > 0.05f) {
+		const float elevDeg = XMConvertToDegrees(atan2f(dy, horiz));
+		outPitchDeg = Clampf(-elevDeg + kMagnetFacePitchBias, s_minPitch, s_maxPitch);
+	} else {
+		outPitchDeg = Clampf(kMagnetFacePitchBias, s_minPitch, s_maxPitch);
+	}
+}
+
+void EnsureFollowCamNode() {
+	if (s_followCamNode)
+		return;
+	s_followCamNode = std::make_unique<GameObject>("PlayerFollowCam");
+	s_followCamNode->AddComponent<engine::Transform>();
+	s_followCamNode->AddComponent<CameraComponent>();
+}
+
+void WriteFollowPose(const CameraPose& pose) {
+	EnsureFollowCamNode();
+	auto* transform = s_followCamNode->GetComponent<engine::Transform>();
+	auto* cam = s_followCamNode->GetComponent<CameraComponent>();
+	CameraPose_WriteToNode(transform, cam, pose);
+	s_followPose = pose;
+	s_hasFollowPose = true;
+}
+
+float DesiredDistanceForMode(ThirdPersonMagnetMode mode) {
+	switch (mode) {
+	case ThirdPersonMagnetMode::Pull:  return kBaseDistance * kPullDistanceScale;
+	case ThirdPersonMagnetMode::Orbit: return kOrbitDistance;
+	case ThirdPersonMagnetMode::Push:
+	case ThirdPersonMagnetMode::Normal:
+	default:                           return kBaseDistance;
+	}
+}
+
+float DesiredFovForMode(ThirdPersonMagnetMode mode) {
+	if (mode == ThirdPersonMagnetMode::Push && s_pushBurstT < 1.0f)
+		return kBaseFov + kPushFovBump * (1.0f - s_pushBurstT);
+	return kBaseFov;
+}
+
+float FollowSharpnessForMode(ThirdPersonMagnetMode mode) {
+	switch (mode) {
+	case ThirdPersonMagnetMode::Pull:
+		return kPullFollowSharpness;
+	case ThirdPersonMagnetMode::Orbit:
+		return kOrbitFollowSharpness;
+	case ThirdPersonMagnetMode::Push: {
+		const float t = Clampf(s_pushBurstT, 0.0f, 1.0f);
+		if (t < 1.0f) {
+			const float eased = static_cast<float>(easeOutCubic(t));
+			return LerpFloat(kPushFollowSharpnessStart, kPushFollowSharpnessEnd, eased);
+		}
+		// Still slightly laggy while push held after burst recovers.
+		return kPushFollowSharpnessEnd * 0.75f;
+	}
+	case ThirdPersonMagnetMode::Normal:
+	default:
+		return kNormalFollowSharpness;
+	}
+}
+
+void OnMagnetModeChanged(ThirdPersonMagnetMode prev, ThirdPersonMagnetMode next) {
+	if (next == ThirdPersonMagnetMode::Push && prev != ThirdPersonMagnetMode::Push)
+		s_pushBurstT = 0.0f;
+
+	if (next == ThirdPersonMagnetMode::Orbit && prev != ThirdPersonMagnetMode::Orbit) {
+		s_orbitLocked = true;
+		s_orbitLockYaw = s_targetYaw ? *s_targetYaw : 0.0f;
+		s_preOrbitPitch = s_pitch;
+		s_orbitLockPitch = Clampf(s_pitch + kOrbitPitchBias, s_minPitch, s_maxPitch);
+	}
+
+	if (prev == ThirdPersonMagnetMode::Orbit && next != ThirdPersonMagnetMode::Orbit) {
+		if (s_orbitLocked) {
+			if (s_targetYaw)
+				*s_targetYaw = s_orbitLockYaw;
+			s_pitch = s_preOrbitPitch;
+		}
+		s_orbitLocked = false;
+	}
+}
+
+} // namespace
+
+void ThirdPersonCamera_Initialize() {
+	s_targetPos = nullptr;
+	s_targetYaw = nullptr;
+	s_pitch = 15.0f;
+	s_minPitch = -89.0f;
+	s_maxPitch = 89.0f;
+	s_magnetMode = ThirdPersonMagnetMode::Normal;
+	s_prevMagnetMode = ThirdPersonMagnetMode::Normal;
+	s_hasMagnetTarget = false;
+	s_currentDistance = kBaseDistance;
+	s_currentFov = kBaseFov;
+	s_pushBurstT = 1.0f;
+	s_hasSmoothedEye = false;
+	s_orbitLocked = false;
+	s_hasFollowPose = false;
+	s_distance = kBaseDistance;
+	s_height = kBaseHeight;
+}
+
+void ThirdPersonCamera_Update(double elapsed_time) {
+	if (!s_targetPos || !s_targetYaw)
+		return;
+
+	HWND hWnd = GetWindowHandle();
+	const float dt = static_cast<float>(elapsed_time);
+	if (dt <= 0.0f)
+		return;
+
+	if (s_magnetMode != s_prevMagnetMode) {
+		OnMagnetModeChanged(s_prevMagnetMode, s_magnetMode);
+		s_prevMagnetMode = s_magnetMode;
+	}
+
+	const bool orbitLookLocked = (s_magnetMode == ThirdPersonMagnetMode::Orbit && s_orbitLocked);
+	const bool magnetFaceLocked = IsPullOrPushMode(s_magnetMode) && s_hasMagnetTarget;
+
+	int dx = 0, dy = 0;
+	if (s_cursorHidden && hWnd) {
+		const int centerX = (int)(GetClientWidth() * 0.5f);
+		const int centerY = (int)(GetClientHeight() * 0.5f);
+
+		int clientX = 0;
+		int clientY = 0;
+		Mouse_GetClientPosition(clientX, clientY);
+
+		dx = clientX - centerX;
+		dy = clientY - centerY;
+
+		POINT screenCenter = { centerX, centerY };
+		ClientToScreen(hWnd, &screenCenter);
+		SetCursorPos(screenCenter.x, screenCenter.y);
+	}
+
+	{ int unused_dx, unused_dy; Mouse_GetDelta(unused_dx, unused_dy); }
+
+	if (magnetFaceLocked) {
+		float desiredYaw = 0.0f;
+		float desiredPitch = s_pitch;
+		DesiredFaceAnglesToTarget(*s_targetPos, s_magnetTarget, desiredYaw, desiredPitch);
+		*s_targetYaw = ExpSmoothAngleToward(*s_targetYaw, desiredYaw, kMagnetFaceSharpness, dt);
+		s_pitch = ExpSmoothToward(s_pitch, desiredPitch, kMagnetFaceSharpness, dt);
+		(void)Controller_GetRightStick();
+	} else if (!orbitLookLocked) {
+		float currentYaw = *s_targetYaw;
+		currentYaw += dx * s_mouseSensitivity;
+		*s_targetYaw = NormalizeYawDeg(currentYaw);
+
+		s_pitch += dy * s_mouseSensitivity;
+
+		XMFLOAT2 rightStick = Controller_GetRightStick();
+		*s_targetYaw = NormalizeYawDeg(*s_targetYaw + rightStick.x * s_controllerSensitivity * dt);
+		s_pitch -= rightStick.y * s_controllerSensitivity * dt;
+
+		if (s_pitch < s_minPitch) s_pitch = s_minPitch;
+		if (s_pitch > s_maxPitch) s_pitch = s_maxPitch;
+	} else {
+		// Drain stick/mouse so they don't accumulate into other systems oddly.
+		(void)Controller_GetRightStick();
+	}
+
+	s_pushBurstT = Clampf(s_pushBurstT + dt / kPushLagDuration, 0.0f, 1.0f);
+
+	const float desiredDistance = DesiredDistanceForMode(s_magnetMode);
+	const float desiredFov = DesiredFovForMode(s_magnetMode);
+	s_currentDistance = ExpSmoothToward(s_currentDistance, desiredDistance, kParamBlendSpeed, dt);
+	s_currentFov = ExpSmoothToward(s_currentFov, desiredFov, kParamBlendSpeed, dt);
+
+	XMFLOAT3 playerPos = *s_targetPos;
+	float yawDeg = orbitLookLocked ? s_orbitLockYaw : *s_targetYaw;
+	float pitchDeg = orbitLookLocked ? s_orbitLockPitch : s_pitch;
+
+	float yawRad = XMConvertToRadians(yawDeg);
+	float pitchRad = XMConvertToRadians(pitchDeg);
+
+	float dirX = -sinf(yawRad) * cosf(pitchRad);
+	float dirY = sinf(pitchRad);
+	float dirZ = -cosf(yawRad) * cosf(pitchRad);
+
+	float safeDistance = fmaxf(0.5f, s_currentDistance - 0.3f);
+	XMFLOAT3 headPos = { playerPos.x, playerPos.y + s_height, playerPos.z };
+
+	XMFLOAT3 idealEye;
+	idealEye.x = headPos.x + dirX * safeDistance;
+	idealEye.y = headPos.y + dirY * safeDistance;
+	idealEye.z = headPos.z + dirZ * safeDistance;
+
+	XMFLOAT3 lookAt = { playerPos.x, playerPos.y + kLookAtHeight, playerPos.z };
+
+	if (!s_hasSmoothedEye) {
+		s_smoothedEye = idealEye;
+		s_hasSmoothedEye = true;
+	} else {
+		const float sharpness = FollowSharpnessForMode(s_magnetMode);
+		s_smoothedEye = ExpSmoothToward(s_smoothedEye, idealEye, sharpness, dt);
+	}
+
+	CameraPose pose;
+	pose.eye = s_smoothedEye;
+	pose.lookAt = lookAt;
+	pose.up = { 0.0f, 1.0f, 0.0f };
+	pose.fov = s_currentFov;
+	pose.nearClip = 0.5f;
+	pose.farClip = 1000.0f;
+	WriteFollowPose(pose);
+}
+
+void ThirdPersonCamera_SetTarget(XMFLOAT3* positionPtr, float* yawPtr) {
+	s_targetPos = positionPtr;
+	s_targetYaw = yawPtr;
+	s_hasSmoothedEye = false;
+	s_hasFollowPose = false;
+}
+
+void ThirdPersonCamera_SetDistance(float distance) {
+	s_distance = distance;
+}
+
+void ThirdPersonCamera_SetHeight(float height) {
+	s_height = height;
+}
+
+void ThirdPersonCamera_SetMouseSensitivity(float sensitivity) {
+	s_mouseSensitivity = sensitivity;
+}
+
+void ThirdPersonCamera_SetControllerSensitivity(float sensitivity) {
+	s_controllerSensitivity = sensitivity;
+}
+
+void ThirdPersonCamera_SetPitchLimits(float minPitch, float maxPitch) {
+	s_minPitch = minPitch;
+	s_maxPitch = maxPitch;
+}
+
+float ThirdPersonCamera_GetPitch() {
+	return s_pitch;
+}
+
+bool ThirdPersonCamera_IsCursorVisible() {
+	return !s_cursorHidden;
+}
+
+void ThirdPersonCamera_ShowCursor(bool show) {
+	if (show && s_cursorHidden) {
+		while (ShowCursor(TRUE) < 0) {}
+		s_cursorHidden = false;
+	} else if (!show && !s_cursorHidden) {
+		while (ShowCursor(FALSE) >= 0) {}
+		s_cursorHidden = true;
+	}
+}
+
+void ThirdPersonCamera_SetMagnetMode(ThirdPersonMagnetMode mode) {
+	s_magnetMode = mode;
+}
+
+void ThirdPersonCamera_SetMagnetTarget(const XMFLOAT3& targetPos) {
+	s_magnetTarget = targetPos;
+	s_hasMagnetTarget = true;
+}
+
+bool ThirdPersonCamera_TryGetFollowPose(CameraPose& outPose) {
+	if (!s_hasFollowPose)
+		return false;
+	outPose = s_followPose;
+	return true;
+}

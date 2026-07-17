@@ -1,0 +1,53 @@
+{
+    "name": "ArrowStickerItem",
+    "tag": 8,
+    "prefabAssetPath": "rom/prefabs/arrow_sticker_item.json",
+    "components": {
+        "SceneTransform": {
+            "posX": 0.0,
+            "posY": 0.0,
+            "posZ": 0.0,
+            "rotX": 0.0,
+            "rotY": 0.0,
+            "rotZ": 0.0,
+            "scaleX": 0.7,
+            "scaleY": 0.7,
+            "scaleZ": 0.7
+        },
+        "Collider": {
+            "colliderCenter": { "x": 0.0, "y": 0.0, "z": 0.0 },
+            "colliderType": 1,
+            "halfExtents": { "x": 0.35, "y": 0.35, "z": 0.35 },
+            "height": 2.0,
+            "meshSizePadding": 0.0,
+            "radius": 0.5,
+            "showDebugCollider": false
+        },
+        "Billboard": {
+            "color": {
+                "a": 0.92,
+                "b": 1.0,
+                "g": 1.0,
+                "r": 1.0
+            },
+            "enabled": false,
+            "groundAligned": true,
+            "rotation": 0.0,
+            "sizeX": 1.2,
+            "sizeY": 1.2,
+            "texture": "rom/texture/arrow_sticker.png"
+        },
+        "visual": {
+            "model": "rom/model/object/Box_Sand.fbx",
+            "proxy_model": "rom/model/object/Box_Sand.fbx",
+            "shader": "toon"
+        },
+        "Script": {
+            "scriptClass": "ArrowStickerItemScript",
+            "properties": {
+                "stickerBoostImpulse": 50.0
+            }
+        }
+    },
+    "children": []
+}

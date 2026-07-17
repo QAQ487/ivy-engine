@@ -1,0 +1,341 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations"><ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>16.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}</ProjectGuid>
+    <RootNamespace>GameScriptsExternal</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>GameScripts.External</ProjectName>
+  
+    <EngineRoot>$(MSBuildThisFileDirectory)..\</EngineRoot>
+</PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Utility</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v145</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Utility</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v145</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Utility</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+      <OutDir>$(MSBuildThisFileDirectory)..\..\bin\game\scripts\bin\</OutDir>
+      <RuntimeScriptBin>$(MSBuildThisFileDirectory)..\..\bin\game\scripts\bin\</RuntimeScriptBin>
+
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Utility</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+      <OutDir>$(MSBuildThisFileDirectory)..\..\bin\game\scripts\bin\</OutDir>
+      <RuntimeScriptBin>$(MSBuildThisFileDirectory)..\..\bin\game\scripts\bin\</RuntimeScriptBin>
+
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <TargetName>GameScripts.External</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <TargetName>GameScripts.External</TargetName>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>false</SDLCheck>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <PreprocessorDefinitions>_DEBUG;_WINDOWS;GAME_RUNTIME;%(PreprocessorDefinitions);FBXSDK_SHARED</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <AdditionalIncludeDirectories>$(EngineRoot);$(EngineRoot)\libraries\fbxsdk\include;$(EngineRoot)\libraries\effekseer\include\Effekseer;$(EngineRoot)\libraries\effekseer\include\EffekseerRendererDX11;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories);$(EngineRoot)\libraries\effekseer\Lib;$(EngineRoot)\libraries\fbxsdk\lib\x64\debug</AdditionalLibraryDirectories>
+      <AdditionalDependencies>$(CoreLibraryDependencies);%(AdditionalDependencies);libfbxsdk.lib;DirectXTex_Debug.lib</AdditionalDependencies>
+      <AdditionalOptions>/ignore:4099 %(AdditionalOptions)</AdditionalOptions>
+    </Link>
+    <PostBuildEvent>
+      <Command>xcopy /D /Y "$(TargetDir)*.cso" "$(EngineRoot)rom\shader\"
+
+xcopy /D /Y "$(EngineRoot)\libraries\fbxsdk\dll\Debug\*.*" "$(RuntimeScriptBin)" /E /I
+
+if not exist "$(OutDir)game" mkdir "$(OutDir)game"
+if not exist "$(OutDir)rom" mkdir "$(OutDir)rom"
+
+xcopy /y /d /e "$(EngineRoot)game\*" "$(OutDir)game\"
+xcopy /y /d /e "$(EngineRoot)rom\*" "$(OutDir)rom\"</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>false</SDLCheck>
+      <PreprocessorDefinitions>NDEBUG;_WINDOWS;GAME_RUNTIME;%(PreprocessorDefinitions);FBXSDK_SHARED</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <AdditionalIncludeDirectories>$(EngineRoot);$(EngineRoot)\libraries\fbxsdk\include;$(EngineRoot)\libraries\effekseer\include\Effekseer;$(EngineRoot)\libraries\effekseer\include\EffekseerRendererDX11;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories);$(EngineRoot)\libraries\effekseer\Lib;$(EngineRoot)\libraries\fbxsdk\lib\x64\release</AdditionalLibraryDirectories>
+      <AdditionalDependencies>$(CoreLibraryDependencies);%(AdditionalDependencies);libfbxsdk.lib;DirectXTex_Release.lib</AdditionalDependencies>
+      <AdditionalOptions>/ignore:4099 %(AdditionalOptions)</AdditionalOptions>
+    </Link>
+    <PostBuildEvent>
+      <Command>xcopy /D /Y "$(TargetDir)*.cso" "$(EngineRoot)rom\shader\"
+
+xcopy /D /Y "$(EngineRoot)\libraries\fbxsdk\dll\Debug\*.*" "$(RuntimeScriptBin)" /E /I
+
+if not exist "$(OutDir)game" mkdir "$(OutDir)game"
+if not exist "$(OutDir)rom" mkdir "$(OutDir)rom"
+
+xcopy /y /d /e "$(EngineRoot)game\*" "$(OutDir)game\"
+xcopy /y /d /e "$(EngineRoot)rom\*" "$(OutDir)rom\"</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <FxCompile Include="PixelShader2D.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
+    </FxCompile>
+    <FxCompile Include="PixelShaderUnlit.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
+    </FxCompile>
+    <FxCompile Include="VertexShader2D.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
+    </FxCompile>
+    <FxCompile Include="VertexShaderUnlit.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
+    </FxCompile>
+    <FxCompile Include="VertexShader3D.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
+    </FxCompile>
+    <FxCompile Include="PixelShader3D.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
+    </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ShaderCommon.hlsli" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="camera.h" />
+    <ClInclude Include="debug_camera.h" />
+    <ClInclude Include="DirectXTex.h" />
+    <ClInclude Include="engine\audio\audio_manager.h" />
+    <ClInclude Include="engine\rendering\billboard\billboard.h" />
+    <ClInclude Include="..\ui\LockOnUI.h" />
+    <ClInclude Include="engine\physics\collider\collider.h" />
+    <ClInclude Include="engine\core\easing.h" />
+    <ClInclude Include="engine\core\system_timer.h" />
+    <ClInclude Include="engine\input\controller.h" />
+    <ClInclude Include="engine\input\keyboard.h" />
+    <ClInclude Include="engine\input\key_logger.h" />
+    <ClInclude Include="engine\input\mouse.h" />
+    <ClInclude Include="engine\rendering\d3d11\renderer.h" />
+    <ClInclude Include="engine\rendering\d3d11\shader.h" />
+    <ClInclude Include="engine\debug\debug_drawer.h" />
+    <ClInclude Include="engine\debug\debug_ofstream.h" />
+    <ClInclude Include="engine\debug\debug_text.h" />
+    <ClInclude Include="engine\rendering\effect\effect_object.h" />
+    <ClInclude Include="engine\rendering\effect\effect_system.h" />
+    <ClInclude Include="engine\core\engine_gui.h" />
+    <ClInclude Include="engine\rendering\lighting\lighting.h" />
+    <ClInclude Include="engine\rendering\lighting\shadow.h" />
+    <ClInclude Include="engine\core\game_object.h" />
+    <ClInclude Include="engine\ecs\collider_component.h" />
+    <ClInclude Include="engine\ecs\game_object.h" />
+    <ClInclude Include="engine\ecs\model_asset_cache.h" />
+    <ClInclude Include="engine\scene\scene_loader.h" />
+    <ClInclude Include="engine\ecs\string_utils.h" />
+    <ClInclude Include="engine\rendering\model\model.h" />
+    <ClInclude Include="engine\rendering\model\model_util.h" />
+    <ClInclude Include="engine\physics\core\physics_system.h" />
+    <ClInclude Include="engine\physics\core\rigidbody.h" />
+    <ClInclude Include="engine\ecs\component.h" />
+    <ClInclude Include="engine\ecs\component_factory.h" />
+    <ClInclude Include="engine\ecs\prefab_serializer.h" />
+    <ClInclude Include="engine\scene\scene_node.h" />
+    <ClInclude Include="engine\ecs\transform.h" />
+    <ClInclude Include="engine\ecs\visual_component.h" />
+    <ClInclude Include="engine\scripting\script_dll_register.h" />
+    <ClInclude Include="engine\scripting\script_factory.h" />
+    <ClInclude Include="engine\scripting\script_register.h" />
+    <ClInclude Include="engine\scripting\script_runtime_api.h" />
+    <ClInclude Include="engine\scripting\script_component.h" />
+    <ClInclude Include="engine\scripting\script_watcher.h" />
+    <ClInclude Include="engine\rendering\sprite\sprite.h" />
+    <ClInclude Include="engine\rendering\sprite\texture.h" />
+    <ClInclude Include="engine\ui\ui_bar.h" />
+    <ClInclude Include="engine\ui\ui_button.h" />
+    <ClInclude Include="engine\ui\ui_canvas.h" />
+    <ClInclude Include="engine\ui\ui_element.h" />
+    <ClInclude Include="engine\ui\ui_sprite.h" />
+    <ClInclude Include="engine\ui\ui_text.h" />
+    <ClInclude Include="engine\ui\ui_text_renderer.h" />
+    <ClInclude Include="engine\ui\scene_canvas.h" />
+    <ClInclude Include="fade.h" />
+    <ClInclude Include="game_scene.h" />
+    <ClInclude Include="main.h" />
+    <ClInclude Include="scene_manager.h" />
+    <ClInclude Include="third_person_camera.h" />
+    <ClInclude Include="WICTextureLoader11.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="camera.cpp" />
+    <ClCompile Include="debug_camera.cpp" />
+    <ClCompile Include="engine\audio\audio_manager.cpp" />
+    <ClCompile Include="engine\rendering\billboard\billboard.cpp" />
+    <ClCompile Include="..\ui\LockOnUI.cpp" />
+    <ClCompile Include="engine\physics\collider\collider.cpp" />
+    <ClCompile Include="engine\core\easing.cpp" />
+    <ClCompile Include="engine\core\system_timer.cpp" />
+    <ClCompile Include="engine\input\controller.cpp" />
+    <ClCompile Include="engine\input\keyboard.cpp" />
+    <ClCompile Include="engine\input\key_logger.cpp" />
+    <ClCompile Include="engine\input\mouse.cpp" />
+    <ClCompile Include="engine\rendering\d3d11\renderer.cpp" />
+    <ClCompile Include="engine\rendering\d3d11\shader.cpp" />
+    <ClCompile Include="engine\debug\debug_drawer.cpp" />
+    <ClCompile Include="engine\debug\debug_ofstream.cpp" />
+    <ClCompile Include="engine\debug\debug_text.cpp" />
+    <ClCompile Include="engine\rendering\effect\effect_object.cpp" />
+    <ClCompile Include="engine\rendering\effect\effect_system.cpp" />
+    <ClCompile Include="engine\core\engine_gui_runtime.cpp" />
+    <ClCompile Include="engine\rendering\lighting\lighting.cpp" />
+    <ClCompile Include="engine\rendering\lighting\shadow.cpp" />
+    <ClCompile Include="engine\ecs\collider_component.cpp" />
+    <ClCompile Include="engine\ecs\game_object.cpp" />
+    <ClCompile Include="engine\ecs\model_asset_cache.cpp" />
+    <ClCompile Include="engine\scene\scene_loader.cpp" />
+    <ClCompile Include="engine\scene\scene_runtime.cpp" />
+    <ClCompile Include="engine\ecs\visual_component.cpp" />
+    <ClCompile Include="engine\rendering\model\model.cpp" />
+    <ClCompile Include="engine\rendering\model\model_util.cpp" />
+    <ClCompile Include="engine\physics\core\physics_system.cpp" />
+    <ClCompile Include="engine\physics\core\rigidbody.cpp" />
+    <ClCompile Include="engine\ecs\component_factory.cpp" />
+    <ClCompile Include="engine\ecs\prefab_serializer.cpp" />
+    <ClCompile Include="engine\ecs\transform.cpp" />
+    <ClCompile Include="engine\scripting\script_factory.cpp" />
+    <ClCompile Include="engine\scripting\script_runtime_api.cpp">
+      <PreprocessorDefinitions>SCRIPT_RUNTIME_API_HOST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="engine\scripting\script_component.cpp" />
+    <ClCompile Include="engine\scripting\script_watcher.cpp" />
+    <ClCompile Include="engine\rendering\sprite\sprite.cpp" />
+    <ClCompile Include="engine\rendering\sprite\texture.cpp" />
+    <ClCompile Include="engine\ui\ui_bar.cpp" />
+    <ClCompile Include="engine\ui\ui_button.cpp" />
+    <ClCompile Include="engine\ui\ui_canvas.cpp" />
+    <ClCompile Include="engine\ui\ui_element.cpp" />
+    <ClCompile Include="engine\ui\ui_sprite.cpp" />
+    <ClCompile Include="engine\ui\ui_text.cpp" />
+    <ClCompile Include="engine\ui\ui_text_renderer.cpp" />
+    <ClCompile Include="engine\ui\scene_canvas.cpp" />
+    <ClCompile Include="fade.cpp" />
+    <ClCompile Include="game_scene.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="scene_manager.cpp" />
+    <ClCompile Include="third_person_camera.cpp" />
+    <ClCompile Include="WICTextureLoader11.cpp" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
+
+
+
+

@@ -1,0 +1,94 @@
+﻿/*****************************************************
+ * File: engine/components/visual_component.h
+ * Project: d3d11_engine
+ * Author: Terry
+ * -----------------------------------------------------------------------------
+ * REFACTOR (2026-03-13)
+ *   - Removed internal m_model / m_realModel unique_ptrs.
+ *     Model loading goes through ModelAssetCache so every object shares
+ *     the same GPU resource cache.
+ *   - GetModel() / GetRealModel() are now const-path lookups into the cache.
+ *
+ * Registered with ComponentFactory as "visual".
+ *
+ * Fields (mirroring the JSON schema):
+ *   "model"       – primary model path (required for runtime rendering)
+ *   "proxy_model" – optional lower-poly stand-in used in editor/paused mode
+ *
+ * Usage:
+ *   // Attach to any GameObject:
+ *   auto* vc = obj->AddComponent<VisualComponent>();
+ *   vc->modelPath = "rom/model/object/Enemy.fbx";
+ *
+ *   // Draw loop:
+ *   if (auto* vc = obj->GetComponent<VisualComponent>())
+ *       if (Model3D* m = vc->GetModel()) { m->SetPosition(...); m->Draw(); }
+ *****************************************************/
+#pragma once
+#include <string>
+#include <unordered_map>
+#include <memory>
+#include <DirectXMath.h>
+#include "component.h"
+#include "../rendering/model/model.h"
+#include "../rendering/d3d11/shader.h"
+
+class VisualComponent : public Component {
+public:
+    std::string modelPath;       // components.visual.model
+    std::string proxyModelPath;  // components.visual.proxy_model (optional)
+
+    bool playAnimation = false;
+
+    // Named clip -> external animation FBX path. Empty activeClip uses base mesh anim.
+    std::unordered_map<std::string, std::string> animationPaths;
+    std::string activeClip;
+
+    // Per-instance glow (shared Model3D cache must not store emission globally).
+    DirectX::XMFLOAT4 emissionGlow = {0.0f, 0.0f, 0.0f, 0.0f};
+
+    // Per-object shader override. Empty string uses scene default from RenderSettings.
+    std::string shaderOverride;
+
+    // SurfaceFX (shader: "surface_fx") — JSON object "surface_fx".
+    std::string surfaceFxTexturePath;
+    SURFACE_FX_PARAMS surfaceFx;
+    bool hasSurfaceFx = false;
+
+    ID3D11ShaderResourceView* GetSurfaceFxSRV();
+
+    const char* GetTypeName() const override { return "visual"; }
+
+    void OnDetach() override;
+    void OnReset() override;
+    void Update(double elapsed_time) override;
+    void PlayClip(const std::string& clipName);
+
+    // ── Model access ──────────────────────────────────────────────────────
+    // Both methods look up the shared model cache.
+    // They return nullptr when the path is empty or the model fails to load.
+
+    // Editor / paused mode: prefer proxy_model, fall back to model.
+    Model3D* GetModel() const {
+        const std::string& path = proxyModelPath.empty() ? modelPath : proxyModelPath;
+        return GetFromCache(path);
+    }
+
+    // Play mode: full-quality model; animated objects use a per-instance copy.
+    Model3D* GetRealModel() const;
+
+    std::string Serialize() const override;
+    void Deserialize(const std::string& jsonStr) override;
+
+private:
+    static Model3D* GetFromCache(const std::string& path);
+    void EnsureAnimInstance();
+    void EnsureAnimationsLoaded();
+    void ReleaseSurfaceFxTexture();
+
+    mutable std::unique_ptr<Model3D> m_animInstance;
+    bool m_animationsLoaded = false;
+
+    ID3D11ShaderResourceView* m_surfaceFxSRV = nullptr;
+    std::string m_surfaceFxLoadedPath;
+};
