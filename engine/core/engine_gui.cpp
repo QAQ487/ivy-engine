@@ -42,6 +42,7 @@
 #include "engine/rendering/d3d11/renderer.h"
 #include "engine/physics/collider/collider.h"
 #include "engine/ecs/game_object.h"          // unified ::GameObject
+#include "engine/ecs/tag_registry.h"
 #include "debug_camera.h"
 #include "engine/input/mouse.h"
 #include "engine/debug/debug_drawer.h"
@@ -97,8 +98,12 @@ static CameraMode  g_cameraMode = CameraMode::ThirdPerson;
 static std::string g_activeCameraNode;
 static float g_scrollSensitivity = 1.0f;
 static char  g_newSceneName[128] = "new_scene";
+static char  g_newTagName[64] = "";
 static bool  g_showRenderingSettings = false;
 static bool  g_showNewScenePopup = false;
+static bool  g_showAddTagPopup = false;
+static bool  g_showDeleteTagPopup = false;
+static int   g_pendingDeleteTagId = -1;
 static bool  g_showDefaultScenePopup = false;
 static bool  g_showUiOverlay = true;
 static EditorEditMode g_editMode = EditorEditMode::Scene3D;
@@ -175,6 +180,37 @@ static std::string g_scriptReloadStatus = "Script DLL reload: not initialized";
 static void SaveScene();
 static void SaveSceneToFile(const std::string& sceneFile);
 static void NewScene();
+
+static void RemapNodeTagsAfterDelete(GameObject* node, int deletedId) {
+    if (!node)
+        return;
+
+    const int tagId = node->GetTagId();
+    if (tagId == deletedId)
+        node->SetTag(Tag::TAG_NONE);
+    else if (tagId > deletedId)
+        node->SetTag(tagId - 1);
+
+    auto& ignore = node->m_ignoreCollisionTags;
+    for (size_t i = 0; i < ignore.size();) {
+        const int ignoreId = static_cast<int>(ignore[i]);
+        if (ignoreId == deletedId) {
+            ignore.erase(ignore.begin() + static_cast<std::ptrdiff_t>(i));
+            continue;
+        }
+        if (ignoreId > deletedId)
+            ignore[i] = static_cast<Tag>(ignoreId - 1);
+        ++i;
+    }
+
+    for (auto& child : node->GetChildren())
+        RemapNodeTagsAfterDelete(child.get(), deletedId);
+}
+
+static void RemapSceneTagsAfterDelete(int deletedId) {
+    for (auto& root : SceneLoader_GetSceneNodes())
+        RemapNodeTagsAfterDelete(root.get(), deletedId);
+}
 
 static bool ToolbarIconButton(const char* icon, const char* tooltip,
     ImVec2 size = ImVec2(28, 0))
@@ -725,6 +761,85 @@ static void DrawEditorPopups() {
         ImGui::SameLine();
         if (ImGui::Button("Cancel", ImVec2(120, 0))) {
             g_showNewScenePopup = false;
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::EndPopup();
+    }
+
+    if (g_showAddTagPopup)
+        ImGui::OpenPopup("AddTagPopup");
+    ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+    if (ImGui::BeginPopupModal("AddTagPopup", &g_showAddTagPopup, ImGuiWindowFlags_AlwaysAutoResize)) {
+        static bool s_addTagFailed = false;
+        ImGui::Text("New Tag Name");
+        ImGui::SetNextItemWidth(260.0f);
+        const bool enterPressed = ImGui::InputText("##NewTagNameModal", g_newTagName,
+            IM_ARRAYSIZE(g_newTagName), ImGuiInputTextFlags_EnterReturnsTrue);
+        if (ImGui::IsItemEdited())
+            s_addTagFailed = false;
+        if (s_addTagFailed)
+            ImGui::TextColored(ImVec4(1.0f, 0.4f, 0.4f, 1.0f), "Name is empty or already exists.");
+        ImGui::Separator();
+
+        auto tryAddTag = [&]() {
+            TagRegistry& tags = TagRegistry::Instance();
+            const int newId = tags.AddTag(g_newTagName);
+            if (newId < 0) {
+                s_addTagFailed = true;
+                return false;
+            }
+            tags.SaveToFile();
+            if (g_selNode) {
+                g_selNode->SetTag(newId);
+                EngineGUI_MarkSceneDirty();
+            }
+            s_addTagFailed = false;
+            g_showAddTagPopup = false;
+            ImGui::CloseCurrentPopup();
+            return true;
+        };
+
+        if (ImGui::Button("Create", ImVec2(120, 0)) || enterPressed)
+            tryAddTag();
+        ImGui::SameLine();
+        if (ImGui::Button("Cancel", ImVec2(120, 0))) {
+            s_addTagFailed = false;
+            g_showAddTagPopup = false;
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::EndPopup();
+    }
+
+    if (g_showDeleteTagPopup)
+        ImGui::OpenPopup("DeleteTagPopup");
+    ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+    if (ImGui::BeginPopupModal("DeleteTagPopup", &g_showDeleteTagPopup, ImGuiWindowFlags_AlwaysAutoResize)) {
+        TagRegistry& tags = TagRegistry::Instance();
+        const char* tagName = tags.IsValid(g_pendingDeleteTagId)
+            ? tags.GetName(g_pendingDeleteTagId)
+            : "(invalid)";
+        ImGui::Text("Delete tag \"%s\"?", tagName);
+        ImGui::TextWrapped(
+            "Nodes using this tag will be set to NONE. "
+            "Higher custom tag ids will be remapped.");
+        ImGui::Separator();
+
+        if (ImGui::Button("Delete", ImVec2(120, 0))) {
+            if (tags.CanRemove(g_pendingDeleteTagId)) {
+                const int deletedId = g_pendingDeleteTagId;
+                RemapSceneTagsAfterDelete(deletedId);
+                tags.RemoveTag(deletedId);
+                tags.SaveToFile();
+                EngineGUI_MarkSceneDirty();
+            }
+            g_pendingDeleteTagId = -1;
+            g_showDeleteTagPopup = false;
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Cancel", ImVec2(120, 0))) {
+            g_pendingDeleteTagId = -1;
+            g_showDeleteTagPopup = false;
             ImGui::CloseCurrentPopup();
         }
         ImGui::EndPopup();
@@ -1978,15 +2093,81 @@ void EngineGUI_Draw() {
             ImGui::Separator();
 
             ImGui::Text("Tag");
-            const char* tagNames[] = { "NONE","SHADOW","GROUND","OBSTACLES","WALL","PLAYER","ENEMY","BULLET","SCLAP" };
-            const int tagCount = IM_ARRAYSIZE(tagNames);
-            int currentTag = static_cast<int>(g_selNode->GetTag());
-            if (currentTag < 0 || currentTag >= tagCount)
-                currentTag = static_cast<int>(Tag::TAG_NONE);
-            ImGui::SameLine(80);
-            if (ImGui::Combo("##Tag", &currentTag, tagNames, tagCount)) {
-                g_selNode->SetTag(static_cast<Tag>(currentTag));
-                runtimeDirty = true;
+            {
+                TagRegistry& tags = TagRegistry::Instance();
+                int currentTag = g_selNode->GetTagId();
+                if (!tags.IsValid(currentTag))
+                    currentTag = static_cast<int>(Tag::TAG_NONE);
+
+                ImGui::SameLine(80);
+                ImGui::SetNextItemWidth(-1);
+                const char* preview = tags.GetName(currentTag);
+                if (ImGui::BeginCombo("##Tag", preview, ImGuiComboFlags_HeightLarge)) {
+                    const float removeW = ImGui::GetFrameHeight();
+                    const float spacing = ImGui::GetStyle().ItemInnerSpacing.x;
+                    const int noneId = static_cast<int>(Tag::TAG_NONE);
+
+                    for (int i = 0; i < tags.GetCount(); ++i) {
+                        ImGui::PushID(i);
+                        const bool selected = (i == currentTag);
+                        const bool showRemove = (i != noneId);
+                        const bool canRemove = tags.CanRemove(i);
+                        const char* name = tags.GetName(i);
+
+                        if (showRemove) {
+                            const float labelW =
+                                ImGui::GetContentRegionAvail().x - removeW - spacing;
+                            if (ImGui::Selectable(name, selected, 0,
+                                    ImVec2((labelW > 1.0f) ? labelW : 1.0f, 0.0f))) {
+                                g_selNode->SetTag(i);
+                                runtimeDirty = true;
+                            }
+                            if (selected)
+                                ImGui::SetItemDefaultFocus();
+
+                            ImGui::SameLine(0.0f, spacing);
+                            if (!canRemove)
+                                ImGui::BeginDisabled();
+                            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+                            ImGui::PushStyleColor(ImGuiCol_ButtonHovered,
+                                ImVec4(0.85f, 0.25f, 0.25f, 0.55f));
+                            ImGui::PushStyleColor(ImGuiCol_ButtonActive,
+                                ImVec4(0.9f, 0.2f, 0.2f, 0.75f));
+                            if (ImGui::Button(ICON_FA_XMARK "##RemoveTag",
+                                    ImVec2(removeW, removeW))) {
+                                g_pendingDeleteTagId = i;
+                                g_showDeleteTagPopup = true;
+                                ImGui::CloseCurrentPopup();
+                            }
+                            ImGui::PopStyleColor(3);
+                            if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled |
+                                    ImGuiHoveredFlags_DelayShort)) {
+                                ImGui::SetTooltip(canRemove
+                                    ? "Delete tag"
+                                    : "Built-in tags cannot be deleted");
+                            }
+                            if (!canRemove)
+                                ImGui::EndDisabled();
+                        }
+                        else {
+                            if (ImGui::Selectable(name, selected)) {
+                                g_selNode->SetTag(i);
+                                runtimeDirty = true;
+                            }
+                            if (selected)
+                                ImGui::SetItemDefaultFocus();
+                        }
+                        ImGui::PopID();
+                    }
+
+                    ImGui::Separator();
+                    if (ImGui::Selectable(ICON_FA_PLUS "  Add New")) {
+                        g_newTagName[0] = '\0';
+                        g_showAddTagPopup = true;
+                        ImGui::CloseCurrentPopup();
+                    }
+                    ImGui::EndCombo();
+                }
             }
             ImGui::Spacing();
 

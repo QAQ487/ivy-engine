@@ -140,6 +140,9 @@
     <ClInclude Include="engine\ecs\game_object.h">
       <Filter>engine\ecs</Filter>
     </ClInclude>
+    <ClInclude Include="engine\ecs\tag_registry.h">
+      <Filter>engine\ecs</Filter>
+    </ClInclude>
     <ClInclude Include="engine\ecs\model_asset_cache.h">
       <Filter>engine\ecs</Filter>
     </ClInclude>
@@ -434,6 +437,9 @@
       <Filter>engine\ecs</Filter>
     </ClCompile>
     <ClCompile Include="engine\ecs\game_object.cpp">
+      <Filter>engine\ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\ecs\tag_registry.cpp">
       <Filter>engine\ecs</Filter>
     </ClCompile>
     <ClCompile Include="engine\ecs\model_asset_cache.cpp">

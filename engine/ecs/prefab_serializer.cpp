@@ -9,6 +9,7 @@
  *****************************************************/
 #include "prefab_serializer.h"
 #include "component_factory.h"
+#include "tag_registry.h"
 
 #include <fstream>
 #include <sstream>
@@ -23,7 +24,7 @@ using json = nlohmann::json;
 static json SerializeNode(const GameObject& node) {
     json j;
     j["name"] = node.GetName();
-    j["tag"] = static_cast<int>(node.GetTag());
+    j["tag"] = node.GetTagId();
     if (!node.GetPrefabAssetPath().empty())
         j["prefabAssetPath"] = node.GetPrefabAssetPath();
 
@@ -54,10 +55,8 @@ static std::unique_ptr<GameObject> DeserializeNode(const json& j) {
     auto node = std::make_unique<GameObject>(name);
 
     const int tagValue = j.value("tag", static_cast<int>(Tag::TAG_NONE));
-    if (tagValue >= static_cast<int>(Tag::TAG_NONE) &&
-        tagValue < static_cast<int>(Tag::TAG_MAX)) {
-        node->SetTag(static_cast<Tag>(tagValue));
-    }
+    if (TagRegistry::Instance().IsValid(tagValue))
+        node->SetTag(tagValue);
 
     if (j.contains("prefabAssetPath"))
         node->SetPrefabAssetPath(j["prefabAssetPath"].get<std::string>());

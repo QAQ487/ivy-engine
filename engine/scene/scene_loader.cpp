@@ -5,6 +5,7 @@
 #include "engine/ecs/collider_component.h"
 #include "engine/ecs/effect_component.h"
 #include "engine/ecs/prefab_serializer.h"
+#include "engine/ecs/tag_registry.h"
 #include "engine/scene/scene_runtime.h"
 #include "engine/ecs/prefab_runtime.h"
 #include <Windows.h>
@@ -373,6 +374,7 @@ void SceneLoader_DrainScriptReloadQueue(
 }
 
 void SceneLoader_Initialize(bool enableScriptWatcher) {
+    TagRegistry::Instance().LoadFromFile();
     SceneLoader_RegisterComponentTypes();
     SceneLoader_RefreshSceneAssets();
     SceneLoader_LoadDefaultSceneSetting();
@@ -426,7 +428,11 @@ std::unique_ptr<GameObject> GameObjectFromLegacyBlock(const json& jb) {
         t->SnapshotStartState();
     }
 
-    node->SetTag(static_cast<Tag>(jb.value("tag", 0)));
+    const int tagValue = jb.value("tag", 0);
+    if (TagRegistry::Instance().IsValid(tagValue))
+        node->SetTag(tagValue);
+    else
+        node->SetTag(Tag::TAG_NONE);
 
     if (auto* cc = node->GetComponent<ColliderComponent>()) {
         cc->colliderType = static_cast<ColliderType>(jb.value("colliderType", 0));
@@ -501,10 +507,8 @@ bool SceneLoader_LoadFromFile(const char* filename) {
                         node->SetName(jn["name"].get<std::string>());
                     if (jn.contains("tag") && jn["tag"].is_number_integer()) {
                         const int tagValue = jn["tag"].get<int>();
-                        if (tagValue >= static_cast<int>(Tag::TAG_NONE) &&
-                            tagValue < static_cast<int>(Tag::TAG_MAX)) {
-                            node->SetTag(static_cast<Tag>(tagValue));
-                        }
+                        if (TagRegistry::Instance().IsValid(tagValue))
+                            node->SetTag(tagValue);
                     }
                     if (jn.contains("components") && jn["components"].is_object() &&
                         jn["components"].contains("SceneTransform")) {

@@ -247,8 +247,13 @@ public:
     void SetActive(bool active) { m_isActive = active; }
     bool IsActive() const       { return m_isActive; }
 
-    void SetTag(Tag tag)   { m_tag = tag; }
-    Tag  GetTag() const    { return m_tag; }
+    void SetTag(Tag tag) { m_tag = tag; }
+    void SetTag(int tagId) {
+        if (tagId >= 0)
+            m_tag = static_cast<Tag>(tagId);
+    }
+    Tag GetTag() const { return m_tag; }
+    int GetTagId() const { return static_cast<int>(m_tag); }
 
     void SetPosition(const DirectX::XMFLOAT3& p) { m_position = p; }
     DirectX::XMFLOAT3 GetPosition() const         { return m_position; }

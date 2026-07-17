@@ -229,6 +229,7 @@ exit /b 0</Command>
     <ClInclude Include="engine\ecs\collider_component.h" />
     <ClInclude Include="engine\ecs\effect_component.h" />
     <ClInclude Include="engine\ecs\game_object.h" />
+    <ClInclude Include="engine\ecs\tag_registry.h" />
     <ClInclude Include="engine\ecs\model_asset_cache.h" />
     <ClInclude Include="engine\scene\scene_loader.h" />
     <ClInclude Include="engine\scene\render_settings.h" />
@@ -334,6 +335,7 @@ exit /b 0</Command>
     <ClCompile Include="engine\ecs\collider_component.cpp" />
     <ClCompile Include="engine\ecs\effect_component.cpp" />
     <ClCompile Include="engine\ecs\game_object.cpp" />
+    <ClCompile Include="engine\ecs\tag_registry.cpp" />
     <ClCompile Include="engine\ecs\model_asset_cache.cpp" />
     <ClCompile Include="engine\scene\scene_loader.cpp" />
     <ClCompile Include="engine\scene\render_settings.cpp" />
