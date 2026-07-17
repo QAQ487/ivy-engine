@@ -24,10 +24,12 @@ When asked to work on the engine, start here:
 Important source files:
 
 - `engine/ecs/game_object.h`: scene object, hierarchy, components, lifecycle, collider helpers.
+- `engine/ecs/tag_registry.h`: project tag name list (`rom/tags.json`), builtins + custom tags.
 - `engine/ecs/component.h`: base component contract.
 - `engine/ecs/component_factory.h`: JSON component-name registry.
 - `engine/ecs/prefab_serializer.h`: recursive prefab node format.
 - `engine/scene/scene_loader.h`: scene load/save, script DLL loading, runtime sync.
+- `engine/editor/project_manager.h`: content project open/create/save, `project.json`, recent list.
 - `engine/scripting/Script.h`: script base class.
 - `engine/scripting/script_runtime_api.h`: script-facing host API.
 - `engine/ui/ui_canvas.h`: scene UI container.
@@ -64,8 +66,31 @@ flowchart TD
 - `src/app/main.cpp`: Win32 entry point and main loop.
 - `src/app/scene/scene_manager.h`: `SceneBase` and singleton `SceneManager`.
 - `src/app/scene/game_scene.cpp`: central runtime scene. It initializes engine GUI/runtime GUI, scene loading, shadows, lighting, model cache, UI canvas, skybox, billboards, and per-frame update/draw passes.
-- `engine/core/engine_gui.cpp`: editor-mode ImGui scene editor, play/stop control, prefab panels, selection, scene dirty state, and script reload handling.
+- `engine/core/engine_gui.cpp`: editor-mode ImGui scene editor, play/stop control, prefab panels, selection, scene dirty state, project File menu, fixed-aspect game viewport, and script reload handling.
 - `engine/core/engine_gui_runtime.cpp`: runtime replacement for editor GUI functions under `GAME_RUNTIME`.
+- `engine/editor/project_manager.cpp`: Unity-style content projects (`project.json`, cwd switch, New/Open/Save, recent list).
+
+## Content projects
+
+A **content project** is a directory containing at least `rom/` and usually `project.json`. The editor sets the process working directory to that root so existing relative asset paths continue to work.
+
+`project.json` schema (version 1):
+
+| Field | Type | Meaning |
+|-------|------|---------|
+| `name` | string | Display name (window title) |
+| `version` | int | Schema version (`1`) |
+| `lastOpenedScene` | string | Scene file name restored on open |
+| `defaultScene` | string | Default / play scene; mirrored to `rom/scene/default_scene.txt` |
+| `editor.uiZoomPercent` | int | ImGui scale percent |
+
+Recent projects are stored outside the content tree in `%AppData%/GameEngine/recent_projects.json`.
+
+New Project scaffolds `rom/scene/scene_main.json`, copies engine builtins (`rom/shader`, `rom/font`, `rom/texture`) from the editor ship folder, and may copy `external_content_template` scripts when the engine repo is discoverable. See also [`CONTENT_PROJECT.md`](CONTENT_PROJECT.md) for deploy-oriented external repos.
+
+## Editor viewport aspect
+
+`engine/core/engine_gui.cpp` lays out a **fixed-aspect** game viewport (ratio from the original 1920×1080 chrome). The viewport fits inside the center region; left/right panels absorb letterbox gutters. Camera projection, shadows, Effekseer, and UI hit-tests use that viewport’s width÷height — not the full client area. There is no authored per-camera aspect field in render settings.
 
 ## ECS Object Model
 
@@ -82,27 +107,38 @@ Important `GameObject` data:
 
 - `m_position`, `m_rotation`, `m_scale`: legacy public transform fields.
 - `m_isActive`: inactive objects skip update and draw.
-- `m_tag`: value from `Tag`.
+- `m_tag`: integer id into the project `TagRegistry` (builtins match `enum class Tag`).
 - `m_rigidbody`: per-object physics body.
 - `m_collider`: optional runtime collider.
-- `m_ignoreCollisionTags`: tags this object ignores.
+- `m_ignoreCollisionTags`: tag ids this object ignores.
 - `m_name`: editor and serialization name.
 - `m_prefabAssetPath`: source prefab path for round-trip serialization.
 - `m_children`: owned child objects.
 - `m_components`: owned components keyed by C++ type.
 
-`Tag` values:
+### Tag registry
 
-- `TAG_NONE`
-- `TAG_SHADOW`
-- `TAG_GROUND`
-- `TAG_OBSTACLES`
-- `TAG_WALL`
-- `TAG_PLAYER`
-- `TAG_ENEMY`
-- `TAG_BULLET`
-- `TAG_SCLAP`
-- `TAG_MAX`
+Source: `engine/ecs/tag_registry.h`, file `rom/tags.json`.
+
+Built-in names (stable indices, match `enum class Tag`):
+
+- `NONE` (0), `SHADOW`, `GROUND`, `OBSTACLES`, `WALL`, `PLAYER`, `ENEMY`, `BULLET`, `SCLAP`
+- `TAG_MAX` in C++ marks the end of builtins; custom tags append after this.
+
+`rom/tags.json` shape:
+
+```json
+{ "tags": [ "NONE", "SHADOW", "GROUND", "…", "MyCustom" ] }
+```
+
+Rules:
+
+- Names are trimmed; uniqueness is case-insensitive.
+- Built-ins cannot be removed in the editor.
+- Deleting a custom tag remaps open-scene objects and ignore lists (deleted → `NONE`, higher custom ids decrement), then saves `tags.json`.
+- Scene/prefab JSON `"tag"` is the integer index, not the string name.
+
+Legacy `enum class Tag` values (`TAG_NONE` … `TAG_SCLAP`, `TAG_MAX`) remain for scripts and collision helpers; they are the first entries of the registry.
 
 Common `GameObject` functions:
 
@@ -259,7 +295,7 @@ Scene wrapper:
 Recursive node keys:
 
 - `name`: serialized object name. Defaults to `"GameObject"` on load.
-- `tag`: integer value from `Tag`. Defaults to `TAG_NONE`.
+- `tag`: integer index into `TagRegistry` / `rom/tags.json` (0 = `NONE`). Defaults to `TAG_NONE`.
 - `prefabAssetPath`: optional path to the source prefab.
 - `components`: object where each key is a component type name and each value is that component's JSON object.
 - `children`: recursive array of child nodes.

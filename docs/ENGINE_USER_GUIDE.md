@@ -31,6 +31,7 @@ For a content-only external repo, see [`CONTENT_PROJECT.md`](CONTENT_PROJECT.md)
 17. [Play mode, hot reload, shipping](#17-play-mode-hot-reload-shipping)
 18. [Common recipes](#18-common-recipes)
 19. [Troubleshooting](#19-troubleshooting)
+20. [Projects (New / Open / Save)](#20-projects-new--open--save)
 
 ---
 
@@ -79,13 +80,15 @@ Open `Game_Project.sln` in Visual Studio 2022 (x64 Debug or Release).
 4. Build **GameScripts**.
 5. Set **Game_Project** as the startup project and run it (F5).
 
-You should get a window (design size **1920×1080**). The startup scene comes from:
+You should get a window (design size **1920×1080**). The editor opens a **content project** (folder with `rom/` and `project.json`). Startup prefers:
 
-```text
-rom/scene/default_scene.txt
-```
+1. Last entry in **Recent Projects** (if still valid)
+2. Else the current working directory when it contains `rom/` (the sample next to the exe after build)
+3. The scene to load comes from `project.json` → `lastOpenedScene` (fallback: `defaultScene` / `rom/scene/default_scene.txt`)
 
-That file points at `scene_sample_menu.json` by default. Change the text inside to switch the default scene.
+The in-repo sample ships [`project.json`](../project.json) pointing at `scene_sample_menu.json`. Change **File → Save Project** or **Project Settings → Default Scene** to update defaults.
+
+See [§20 Projects](#20-projects-new--open--save) for New / Open / Save Project.
 
 ### Try the sample pack
 
@@ -119,13 +122,25 @@ Scene JSON  →  GameObject tree  →  Components  →  Scripts (DLL)
 
 Every thing in the world is a `GameObject`:
 
-- Has a **name**, optional **tag** (Player, Enemy, Ground, …)
+- Has a **name**, optional **tag** (from the project tag list — see [Tags](#tags))
 - Has **position / rotation / scale** (legacy fields + `SceneTransform` component)
 - Can have **children** (hierarchy)
 - Can have a **rigidbody** and a **collider**
 - Can hold any number of **components**
 
 Inactive objects (`SetActive(false)`) skip update and draw.
+
+### Tags
+
+Tags are a **project-wide name list**, not only a fixed C++ enum.
+
+- Built-in names (`NONE`, `PLAYER`, `ENEMY`, `GROUND`, …) keep stable indices that match `enum class Tag` in code.
+- You can **add custom tags** in the inspector (**Add New**). They are appended after the builtins.
+- The list is stored in `rom/tags.json` and reloads when you open a project or load a scene.
+- **Deleting a custom tag** remaps objects in the open scene: that tag → `NONE`, and higher custom ids shift down. Built-ins cannot be deleted.
+- Collision ignore lists use the same ids and are remapped the same way.
+
+In scene JSON, `"tag"` is an integer index into this list (0 = `NONE`).
 
 ### Components
 
@@ -178,11 +193,18 @@ Press **F2** to open the editor UI.
 Typical panels and workflows:
 
 1. **Scene hierarchy** — select objects, expand children.
-2. **Inspector / properties** — edit transform, components, script fields.
-3. **Project / prefab browser** — drag assets and prefabs into the scene.
-4. **Viewport** — 3D view with transform gizmo; selection wireframe overlay.
+2. **Inspector / properties** — edit transform, components, script fields, and **tags** (pick / add / delete custom).
+3. **Project / prefab browser** — drag assets and prefabs into the scene (indexes the open project’s `rom/` and `game/scripts/`).
+4. **Viewport** — 3D game view with a **fixed aspect ratio** (see below); transform gizmo and selection wireframe.
 5. **Play toolbar** — Play / Stop (F3).
 6. **UI edit mode** — switch edit mode to place canvas elements on screen.
+7. **File menu** — New / Open / Save Project, Recent Projects, Save Scene, New Scene.
+
+### Viewport aspect ratio
+
+The editor game viewport keeps a **constant aspect** derived from the original 1920×1080 layout (fit-inside the available center area, letterboxed). Side panels fill the gutters.
+
+Play mode, cameras, shadows, and UI hit-testing use that viewport rectangle’s width÷height — not the full window size. There is no separate “aspect” field in Render Settings; resizing the window grows or shrinks the letterboxed preview while preserving the ratio.
 
 ### Camera modes in the editor
 
@@ -193,7 +215,8 @@ The editor can drive different camera behaviors (third-person, scene camera node
 
 ### Saving work
 
-Scenes are JSON under `rom/scene/`. Save from the editor when prompted, or use the save controls in the GUI. Unsaved changes show a dirty state and warn before load/exit.
+- **Save Scene** (Ctrl+S) — writes the current scene JSON under `rom/scene/`.
+- **Save Project** (Ctrl+Shift+S) — saves the scene **and** writes `project.json` (last opened scene, default scene, UI zoom). Unsaved scene changes still warn before load/exit/project switch.
 
 ---
 
@@ -201,8 +224,10 @@ Scenes are JSON under `rom/scene/`. Save from the editor when prompted, or use t
 
 | Path | Put here |
 |------|----------|
+| `project.json` | Project name, last/default scene, editor prefs (at project root) |
 | `rom/scene/*.json` | Full scenes |
-| `rom/scene/default_scene.txt` | Startup scene file name |
+| `rom/scene/default_scene.txt` | Default / play startup scene file name (kept in sync with `project.json`) |
+| `rom/tags.json` | Project tag name list (builtins + custom) |
 | `rom/prefabs/*.json` | Reusable object templates |
 | `rom/model/` | FBX / OBJ meshes and anims |
 | `rom/texture/` | Albedo, UI, fonts, sky DDS, etc. |
@@ -210,6 +235,7 @@ Scenes are JSON under `rom/scene/`. Save from the editor when prompted, or use t
 | `rom/effect/` | Effekseer effect files |
 | `rom/shader/` | Built shader binaries (from `shaders/`) |
 | `rom/font/` | Font-related assets if used |
+| `rom/editor/` | Editor UI prefs (e.g. zoom) for this project |
 
 Paths in JSON are usually relative to the working directory, like:
 
@@ -568,7 +594,7 @@ virtual void OnCollision(GameObject* other);
 virtual void OnCollisionExit(GameObject* other);
 ```
 
-Tags (`TAG_PLAYER`, `TAG_ENEMY`, …) and ignore lists filter who can collide.
+Tags (`PLAYER`, `ENEMY`, custom names, …) and ignore lists filter who can collide. Built-in C++ constants (`TAG_PLAYER`, …) still match the first entries in `rom/tags.json`.
 
 Triggers: set `IsTrigger` on the collider so you get overlap without resolution.
 
@@ -797,13 +823,13 @@ Controller_SetVibration(0.5f, 0.5f, 0);
 
 ### Default scene for Runtime
 
-`rom/scene/default_scene.txt` → file name of the scene JSON to load when the player starts.
+Runtime still boots from `rom/scene/default_scene.txt` next to the exe (file name of the scene JSON). In the editor, **Project Settings → Default Scene** and **Save Project** keep that file aligned with `project.json` → `defaultScene`.
 
 ### Shipping with Game_Runtime
 
 1. Build **Game_Runtime** and **GameScripts** (Release | x64 recommended).
 2. Ensure `rom/` and `game/scripts/bin/GameScripts.dll` sit next to the exe as your deploy layout expects.
-3. For external content repos, follow [`CONTENT_PROJECT.md`](CONTENT_PROJECT.md) and `deploy\deploy.bat`.
+3. For external content repos, follow [`CONTENT_PROJECT.md`](CONTENT_PROJECT.md) and `deploy\deploy.bat` — or create a project in the editor (**File → New Project**) which scaffolds a similar layout.
 
 Runtime builds skip the ImGui editor; players never see F2 panels.
 
@@ -827,11 +853,11 @@ Runtime builds skip the ImGui editor; players never see F2 panels.
 
 1. Author UI in the scene `canvas` (text + buttons), or start from `scene_sample_menu.json`.
 2. Set button `onClick` to `LoadScene` with your playground scene and `"play": true`.
-3. Set `default_scene.txt` to your menu scene for boot.
+3. Set the project default scene (editor **Project Settings → Default Scene**, or `default_scene.txt` / `project.json`) to your menu scene for boot.
 
 ### “I want gravity and floor collision”
 
-1. Floor: mesh + mesh or box collider, tag `TAG_GROUND`.
+1. Floor: mesh + mesh or box collider, tag `GROUND` (`TAG_GROUND` in code).
 2. Player: sphere/capsule collider + rigidbody with gravity.
 3. Movement script applies horizontal force / velocity; let integration handle fall.
 
@@ -851,18 +877,71 @@ Use Effekseer via Effect component / `EffectObject::SpawnW`, or a short-lived pa
 
 | Symptom | Things to check |
 |---------|-----------------|
-| Blank / wrong startup | `rom/scene/default_scene.txt` and that the JSON exists |
+| Blank / wrong startup | `project.json` last/default scene, `rom/scene/default_scene.txt`, and that the JSON exists |
+| Wrong project / missing assets | **File → Open Project** on the folder that contains `rom/`; cwd must be that project root |
+| New project missing fonts/UI | New projects copy `rom/texture` (and shaders/fonts) from the editor; recreate if an older scaffold is empty |
 | Script never runs | `REGISTER_SCRIPT`, matching `scriptClass`, GameScripts built, Play mode on |
 | Model missing | Path under `rom/`, FBX SDK DLL beside exe, case of path |
 | Collider wrong | Type/radius/center; enable `showDebugCollider`; mesh needs model |
+| Tag missing / wrong id | `rom/tags.json`; custom tags only after builtins; remapping after delete |
 | No hot reload | Rebuild GameScripts; editor must be the host that loaded the DLL |
-| UI wrong scale | Design for 1920×1080 anchors; check viewport vs windowed mode |
+| UI wrong scale | Design for 1920×1080 anchors; check letterboxed viewport vs full window |
 | 3D audio silent / crash | Listener/emitter GameObject still alive; call Stop before destroy |
 | Shadows ugly | Raise shadow quality in render settings; check light direction |
 
 ### Transform gotcha
 
 The engine keeps **legacy** `m_position` / `m_rotation` / `m_scale` and the **`SceneTransform`** component. Editor and serializers sync them; if you write low-level code, call the sync helpers or always go through the same path you started with.
+
+---
+
+## 20. Projects (New / Open / Save)
+
+A **content project** is a folder the editor opens as the working root:
+
+```text
+MyGame/
+  project.json
+  rom/          # scenes, assets, tags, shaders, …
+  game/scripts/ # optional GameScripts sources
+```
+
+The editor calls `SetCurrentDirectory` on that folder so relative paths like `rom/model/...` keep working.
+
+### File menu
+
+| Command | What it does |
+|---------|----------------|
+| **New Project…** | Pick a parent folder, enter a name → scaffolds `rom/`, blank `scene_main.json`, copies engine shaders/fonts/textures, optional scripts template |
+| **Open Project…** | Pick any folder that contains `rom/` (creates `project.json` if missing) |
+| **Save Project** (Ctrl+Shift+S) | Saves the current scene + writes `project.json` (and syncs `default_scene.txt`) |
+| **Recent Projects** | Reopen up to 12 recent roots (`%AppData%/GameEngine/recent_projects.json`) |
+
+### `project.json` fields
+
+```json
+{
+  "name": "MyGame",
+  "version": 1,
+  "lastOpenedScene": "scene_main.json",
+  "defaultScene": "scene_main.json",
+  "editor": {
+    "uiZoomPercent": 100
+  }
+}
+```
+
+| Field | Meaning |
+|-------|---------|
+| `name` | Shown in the window title |
+| `lastOpenedScene` | Scene file restored when the project opens |
+| `defaultScene` | Play / runtime default (also written to `rom/scene/default_scene.txt`) |
+| `editor.uiZoomPercent` | ImGui UI scale (100 / 125 / 150 / 175 / 200) |
+
+### Sample vs your game
+
+- The **engine repo** includes a sample project (`project.json` + `rom/` + `game/`). After build, that layout is copied next to `Game_Project.exe`.
+- **File → New Project** creates a separate game folder anywhere on disk. Scripts can still target the engine via `MagneticField.Engine.props` (same idea as [`CONTENT_PROJECT.md`](CONTENT_PROJECT.md)).
 
 ---
 
@@ -873,7 +952,7 @@ The engine keeps **legacy** `m_position` / `m_rotation` / `m_scale` and the **`S
 | **This guide** | Learning workflows |
 | [`ENGINE_API_REFERENCE.md`](ENGINE_API_REFERENCE.md) | Looking up a specific function |
 | [`ENGINE_MANUAL.md`](ENGINE_MANUAL.md) | JSON field names, registration rules, agent/source map |
-| [`CONTENT_PROJECT.md`](CONTENT_PROJECT.md) | Splitting game content into another repo |
+| [`CONTENT_PROJECT.md`](CONTENT_PROJECT.md) | Splitting game content into another repo / deploy |
 | `rom/prefabs/`, `rom/scene/` | Real examples to copy |
 | `game/scripts/` | Real gameplay patterns |
 
