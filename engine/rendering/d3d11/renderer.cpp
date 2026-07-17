@@ -37,6 +37,12 @@ static float g_ClientWidth = (float)SCREEN_WIDTH;
 static float g_ClientHeight = (float)SCREEN_HEIGHT;
 static BOOL g_Windowed = TRUE;
 
+// Saved windowed geometry for borderless fullscreen toggle (not DXGI exclusive).
+static DWORD g_SavedStyle = 0;
+static DWORD g_SavedExStyle = 0;
+static WINDOWPLACEMENT g_SavedPlacement = { sizeof(WINDOWPLACEMENT) };
+static bool g_HasSavedPlacement = false;
+
 static HRESULT CreateDepthBuffer(UINT width, UINT height) {
 	if (!g_D3DDevice) return E_FAIL;
 
@@ -194,8 +200,26 @@ HRESULT Renderer_ResizeBuffers(UINT width, UINT height) {
 
 	g_ImmediateContext->OMSetRenderTargets(0, nullptr, nullptr);
 
+	// Must release all views that reference swap-chain buffers before ResizeBuffers
+	// (DXGI_ERROR_INVALID_CALL / 0x887A0001 if outstanding refs remain).
+	if (g_RenderTargetView) {
+		g_RenderTargetView->Release();
+		g_RenderTargetView = nullptr;
+	}
+	if (g_DepthStencilView) {
+		g_DepthStencilView->Release();
+		g_DepthStencilView = nullptr;
+	}
+
 	HRESULT hr = g_SwapChain->ResizeBuffers(0, width, height, DXGI_FORMAT_UNKNOWN, 0);
-	if (FAILED(hr)) return hr;
+	if (FAILED(hr)) {
+		// Recover previous-size views so OM is not left unbound.
+		CreateRenderTargetFromSwapChain();
+		CreateDepthBuffer((UINT)g_BackBufferWidth, (UINT)g_BackBufferHeight);
+		if (g_RenderTargetView)
+			g_ImmediateContext->OMSetRenderTargets(1, &g_RenderTargetView, g_DepthStencilView);
+		return hr;
+	}
 
 	g_BackBufferWidth = (float)width;
 	g_BackBufferHeight = (float)height;
@@ -236,22 +260,63 @@ BOOL Renderer_IsWindowed() {
 }
 
 HRESULT Renderer_SetWindowMode(BOOL bWindow) {
-	if (!g_SwapChain || !g_hWnd)
+	if (!g_hWnd)
 		return E_FAIL;
 
 	if (g_Windowed == bWindow)
 		return S_OK;
 
-	g_Windowed = bWindow;
+	if (!bWindow) {
+		// Enter borderless windowed fullscreen on the nearest monitor.
+		g_SavedStyle = (DWORD)::GetWindowLong(g_hWnd, GWL_STYLE);
+		g_SavedExStyle = (DWORD)::GetWindowLong(g_hWnd, GWL_EXSTYLE);
+		g_SavedPlacement = {};
+		g_SavedPlacement.length = sizeof(WINDOWPLACEMENT);
+		g_HasSavedPlacement = (::GetWindowPlacement(g_hWnd, &g_SavedPlacement) != FALSE);
 
-	if (bWindow) {
-		::ShowWindow(g_hWnd, SW_RESTORE);
+		HMONITOR mon = ::MonitorFromWindow(g_hWnd, MONITOR_DEFAULTTONEAREST);
+		MONITORINFO mi = {};
+		mi.cbSize = sizeof(mi);
+		if (!::GetMonitorInfo(mon, &mi))
+			return E_FAIL;
+
+		::SetWindowLong(g_hWnd, GWL_STYLE, WS_POPUP | WS_VISIBLE);
+		::SetWindowPos(
+			g_hWnd,
+			HWND_TOP,
+			mi.rcMonitor.left,
+			mi.rcMonitor.top,
+			mi.rcMonitor.right - mi.rcMonitor.left,
+			mi.rcMonitor.bottom - mi.rcMonitor.top,
+			SWP_FRAMECHANGED | SWP_SHOWWINDOW);
+
+		g_Windowed = FALSE;
+	}
+	else {
+		// Restore previous windowed style and placement.
+		if (g_SavedStyle != 0)
+			::SetWindowLong(g_hWnd, GWL_STYLE, (LONG)g_SavedStyle);
+		if (g_SavedExStyle != 0 || g_HasSavedPlacement)
+			::SetWindowLong(g_hWnd, GWL_EXSTYLE, (LONG)g_SavedExStyle);
+
+		if (g_HasSavedPlacement) {
+			::SetWindowPlacement(g_hWnd, &g_SavedPlacement);
+		}
+		else {
+			::ShowWindow(g_hWnd, SW_RESTORE);
+		}
+
+		::SetWindowPos(
+			g_hWnd,
+			nullptr,
+			0, 0, 0, 0,
+			SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED | SWP_SHOWWINDOW);
+
+		g_Windowed = TRUE;
 	}
 
-	HRESULT hr = g_SwapChain->SetFullscreenState(bWindow ? FALSE : TRUE, nullptr);
-	if (FAILED(hr))
-		return hr;
-
+	// WM_SIZE from SetWindowPos also resizes; call explicitly so callers
+	// (e.g. before message pump processes WM_SIZE) still sync the backbuffer.
 	return Renderer_ResizeToClient();
 }
 
@@ -334,6 +399,15 @@ HRESULT InitRenderer(HINSTANCE /*hInstance*/, HWND hWnd, BOOL bWindow) {
 		&g_FeatureLevel,
 		&g_ImmediateContext);
 	if (FAILED(hr)) return hr;
+
+	// Disable DXGI's default Alt+Enter exclusive fullscreen (breaks ImGui / RTV).
+	{
+		IDXGIFactory* factory = nullptr;
+		if (SUCCEEDED(g_SwapChain->GetParent(__uuidof(IDXGIFactory), reinterpret_cast<void**>(&factory))) && factory) {
+			factory->MakeWindowAssociation(hWnd, DXGI_MWA_NO_ALT_ENTER);
+			factory->Release();
+		}
+	}
 
 #if defined(_DEBUG)
 	{

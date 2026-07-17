@@ -113,16 +113,42 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstanc
 	wc.hbrBackground = (HBRUSH)(COLOR_BACKGROUND + 1); // background brush
 	RegisterClass(&wc);	// register class with Windows
 
-	// Make the client area exactly SCREEN_WIDTH x SCREEN_HEIGHT so that
-	// WM_MOUSEMOVE coordinates are in the same space as the D3D11 backbuffer.
-	RECT	rc = { 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT };
-	AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW ^ (WS_THICKFRAME | WS_MAXIMIZEBOX | WS_MINIMIZEBOX), FALSE);
+	// Default client size is the design resolution (1920x1080). Clamp so the
+	// outer window fits the primary monitor work area (16:10 / smaller laptops).
+	const DWORD windowStyle = WS_OVERLAPPEDWINDOW;
+	int clientW = SCREEN_WIDTH;
+	int clientH = SCREEN_HEIGHT;
 
-	// Create the main window
+	HMONITOR primaryMon = MonitorFromPoint(POINT{ 0, 0 }, MONITOR_DEFAULTTOPRIMARY);
+	MONITORINFO mi = {};
+	mi.cbSize = sizeof(mi);
+	if (GetMonitorInfo(primaryMon, &mi)) {
+		const int workW = mi.rcWork.right - mi.rcWork.left;
+		const int workH = mi.rcWork.bottom - mi.rcWork.top;
+
+		RECT outer = { 0, 0, clientW, clientH };
+		AdjustWindowRect(&outer, windowStyle, FALSE);
+		const int outerW = outer.right - outer.left;
+		const int outerH = outer.bottom - outer.top;
+		if (outerW > workW || outerH > workH) {
+			const float scaleX = (float)workW / (float)outerW;
+			const float scaleY = (float)workH / (float)outerH;
+			const float scale = (scaleX < scaleY) ? scaleX : scaleY;
+			clientW = (int)((float)clientW * scale);
+			clientH = (int)((float)clientH * scale);
+			if (clientW < 640) clientW = 640;
+			if (clientH < 360) clientH = 360;
+		}
+	}
+
+	RECT rc = { 0, 0, clientW, clientH };
+	AdjustWindowRect(&rc, windowStyle, FALSE);
+
+	// Create the main window (resizable / maximizable)
 	HWND	hWnd = CreateWindow(
 		CLASS_NAME,	// window class
 		WINDOW_CAPTION,	// window title
-		WS_OVERLAPPEDWINDOW ^ (WS_THICKFRAME | WS_MAXIMIZEBOX | WS_MINIMIZEBOX), // window style (fixed size)
+		windowStyle,
 		CW_USEDEFAULT,      // position
 		CW_USEDEFAULT,
 		rc.right - rc.left, // width
@@ -371,6 +397,12 @@ void Draw(void) {
    Window procedure - handles Windows messages
 ===========================================================================**/
 LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+
+	// Alt+Enter: borderless windowed fullscreen (handle before ImGui so it always works).
+	if (uMsg == WM_SYSKEYDOWN && wParam == VK_RETURN && (lParam & (1 << 29))) {
+		Renderer_SetWindowMode(Renderer_IsWindowed() ? FALSE : TRUE);
+		return 0;
+	}
 
 #ifndef GAME_RUNTIME
 	// Allow ImGui to process Windows messages first

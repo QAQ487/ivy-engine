@@ -119,6 +119,73 @@ static constexpr float kEditorViewportAspect =
     (1920.0f - kLeftPanelWidth - kRightPanelWidth) /
     (1080.0f - 58.0f - 250.0f);
 
+// Editor UI zoom (100 / 125 / 150 / 175 / 200). Default 100%; persisted to rom/editor/ui_prefs.json.
+static constexpr const char* kUiPrefsPath = "rom/editor/ui_prefs.json";
+static constexpr int kUiZoomPercents[] = { 100, 125, 150, 175, 200 };
+static int g_uiZoomPercent = 100;
+static float g_uiZoom = 1.0f;
+static ImGuiStyle g_baseStyle{};
+static bool g_baseStyleCaptured = false;
+
+static float Ui(float px) { return px * g_uiZoom; }
+
+static bool IsValidUiZoomPercent(int percent) {
+    for (int p : kUiZoomPercents) {
+        if (p == percent) return true;
+    }
+    return false;
+}
+
+static void SaveUiPrefs() {
+    try {
+        std::error_code ec;
+        fs::create_directories("rom/editor", ec);
+        json j;
+        j["uiZoomPercent"] = g_uiZoomPercent;
+        std::ofstream file(kUiPrefsPath);
+        if (file.is_open())
+            file << j.dump(2);
+    }
+    catch (...) {
+    }
+}
+
+static void LoadUiPrefs() {
+    g_uiZoomPercent = 100;
+    g_uiZoom = 1.0f;
+    try {
+        std::ifstream file(kUiPrefsPath);
+        if (!file.is_open()) return;
+        json j;
+        file >> j;
+        const int percent = j.value("uiZoomPercent", 100);
+        if (IsValidUiZoomPercent(percent)) {
+            g_uiZoomPercent = percent;
+            g_uiZoom = static_cast<float>(percent) / 100.0f;
+        }
+    }
+    catch (...) {
+    }
+}
+
+static void ApplyUiZoom(int percent) {
+    if (!IsValidUiZoomPercent(percent))
+        percent = 100;
+    g_uiZoomPercent = percent;
+    g_uiZoom = static_cast<float>(percent) / 100.0f;
+
+    if (!g_imguiInitialized) return;
+
+    ImGuiStyle& style = ImGui::GetStyle();
+    if (!g_baseStyleCaptured) {
+        g_baseStyle = style;
+        g_baseStyleCaptured = true;
+    }
+    style = g_baseStyle;
+    style.ScaleAllSizes(g_uiZoom);
+    style.FontScaleMain = g_uiZoom;
+}
+
 static std::string ShaderVariantPreviewLabel(Shader3DVariant v) {
     const char* label = Shader3DVariantLabel(v);
     if (Shader3DVariantIsUserVisible(v))
@@ -212,10 +279,9 @@ static void RemapSceneTagsAfterDelete(int deletedId) {
         RemapNodeTagsAfterDelete(root.get(), deletedId);
 }
 
-static bool ToolbarIconButton(const char* icon, const char* tooltip,
-    ImVec2 size = ImVec2(28, 0))
+static bool ToolbarIconButton(const char* icon, const char* tooltip)
 {
-    const bool pressed = ImGui::Button(icon, size);
+    const bool pressed = ImGui::Button(icon, ImVec2(Ui(28.0f), 0.0f));
     if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort))
         ImGui::SetTooltip("%s", tooltip);
     return pressed;
@@ -264,17 +330,17 @@ static float EditorMenuBarHeight() {
 }
 
 static float EditorTopChrome() {
-    return EditorMenuBarHeight() + kToolbarHeight;
+    return EditorMenuBarHeight() + Ui(kToolbarHeight);
 }
 
 static EditorLayoutMetrics ComputeEditorLayout(float screenW, float screenH) {
     EditorLayoutMetrics layout;
     layout.topChrome = EditorTopChrome();
-    layout.leftWidth = kLeftPanelWidth;
-    layout.rightWidth = kRightPanelWidth;
+    layout.leftWidth = Ui(kLeftPanelWidth);
+    layout.rightWidth = Ui(kRightPanelWidth);
 
-    layout.bottomHeight = (std::max)(kBottomPanelMinHeight, screenH * kBottomPanelScreenFraction);
-    const float maxBottomHeight = screenH - layout.topChrome - kEditorViewportMinHeight;
+    layout.bottomHeight = (std::max)(Ui(kBottomPanelMinHeight), screenH * kBottomPanelScreenFraction);
+    const float maxBottomHeight = screenH - layout.topChrome - Ui(kEditorViewportMinHeight);
     layout.bottomHeight = (std::min)(layout.bottomHeight, maxBottomHeight);
 
     const float previewAvailX = layout.leftWidth;
@@ -677,9 +743,24 @@ static void DrawEditorMenuBar() {
         ImGui::EndMenu();
     }
 
-    if (ImGui::BeginMenu("Settings")) {
+    if (ImGui::BeginMenu("Project Settings")) {
         if (ImGui::MenuItem("Default Scene..."))
             g_showDefaultScenePopup = true;
+        ImGui::EndMenu();
+    }
+
+    if (ImGui::BeginMenu("Engine Settings")) {
+        if (ImGui::BeginMenu("UI Scale")) {
+            for (int percent : kUiZoomPercents) {
+                char label[16];
+                snprintf(label, sizeof(label), "%d%%", percent);
+                if (ImGui::MenuItem(label, nullptr, g_uiZoomPercent == percent)) {
+                    ApplyUiZoom(percent);
+                    SaveUiPrefs();
+                }
+            }
+            ImGui::EndMenu();
+        }
         ImGui::EndMenu();
     }
 }
@@ -1078,13 +1159,15 @@ void EngineGUI_Initialize(HWND hwnd, ID3D11Device* device,
                 "Warning: failed to load icon font rom/font/fa-solid-900.ttf\n");
         }
     }
-    io.FontGlobalScale = 1.25f;
 
     ImGui_ImplWin32_EnableDpiAwareness();
     ImGui_ImplWin32_Init(hwnd);
     ImGui_ImplDX11_Init(device, context);
     ImGui::StyleColorsDark();
     g_imguiInitialized = true;
+
+    LoadUiPrefs();
+    ApplyUiZoom(g_uiZoomPercent);
 
     DebugCamera_SetEnabled(g_enabled);
 }
@@ -1820,7 +1903,7 @@ void EngineGUI_Draw() {
 
     // ── Toolbar ───────────────────────────────────────────────────────────────
     ImGui::SetNextWindowPos(ImVec2(0, menuBarHeight));
-    ImGui::SetNextWindowSize(ImVec2(screenW, kToolbarHeight));
+    ImGui::SetNextWindowSize(ImVec2(screenW, Ui(kToolbarHeight)));
     ImGui::Begin("##Toolbar", nullptr,
         ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize |
         ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar);
@@ -1854,7 +1937,7 @@ void EngineGUI_Draw() {
             SaveScene();
 
         ImGui::SameLine();
-        if (ImGui::Button(ICON_FA_ROTATE_RIGHT, ImVec2(28, 0)))
+        if (ImGui::Button(ICON_FA_ROTATE_RIGHT, ImVec2(Ui(28.0f), 0.0f)))
             SceneLoader_ScanScriptDllsForChanges(true);
         if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort))
             ImGui::SetTooltip("Reload Scripts\n%s", g_scriptReloadStatus.c_str());
