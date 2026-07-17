@@ -2,6 +2,8 @@
 
 A practical guide for humans: how to open the project, build scenes, attach components, write scripts, and ship a playable build.
 
+The repo ships a **minimal sample pack** (menu + playground) instead of a full game. Use those scenes as a starting point.
+
 If you need every function signature, use [`ENGINE_API_REFERENCE.md`](ENGINE_API_REFERENCE.md).  
 If you need JSON schemas and source maps for tools/agents, use [`ENGINE_MANUAL.md`](ENGINE_MANUAL.md).  
 For a content-only external repo, see [`CONTENT_PROJECT.md`](CONTENT_PROJECT.md).
@@ -83,7 +85,15 @@ You should get a window (design size **1920×1080**). The startup scene comes fr
 rom/scene/default_scene.txt
 ```
 
-That file currently points at a scene JSON name (for example `scene_title.json`). Change the text inside to switch the default scene.
+That file points at `scene_sample_menu.json` by default. Change the text inside to switch the default scene.
+
+### Try the sample pack
+
+1. Run **Game_Project**.
+2. Press **F3** (or Play) on the sample menu.
+3. Click **Play** to load `scene_sample_playground.json`.
+4. Move with **WASD** / left stick. A blue box spins via `SampleSpinScript`.
+5. Press **F3** again to stop Play mode in the editor.
 
 ### First keys to remember
 
@@ -141,7 +151,7 @@ Scripts are **not** engine code. They live in `game/scripts/`, compile to `GameS
 
 ```json
 "Script": {
-  "scriptClass": "DummyPlayerScript"
+  "scriptClass": "SampleSpinScript"
 }
 ```
 
@@ -365,7 +375,7 @@ Example (`rom/prefabs/dummy_player.json`):
 
 ```json
 {
-  "name": "DummyPlayer",
+  "name": "SampleProp",
   "components": {
     "SceneTransform": { "posY": 1.0, "scaleX": 1.0, "scaleY": 1.0, "scaleZ": 1.0 },
     "visual": {
@@ -378,7 +388,7 @@ Example (`rom/prefabs/dummy_player.json`):
       "showDebugCollider": true
     },
     "Script": {
-      "scriptClass": "DummyPlayerScript"
+      "scriptClass": "SampleSpinScript"
     }
   },
   "children": []
@@ -415,16 +425,11 @@ Author once as a prefab → place many instances in scenes → override only wha
 
 ```text
 game/scripts/
-  player/
-  ai/
-  items/
-  managers/
-  ui/
-  core/
+  sample/          # SamplePlayerScript, SampleSpinScript
   GameScripts/GameScripts.vcxproj
 ```
 
-Add your `.h` / `.cpp` to the **GameScripts** project, then rebuild that project.
+Add your `.h` / `.cpp` under `game/scripts/` (any folder), add them to the **GameScripts** project, then rebuild that project.
 
 ### Minimal script
 
@@ -440,6 +445,8 @@ public:
     void OnUpdate(engine::GameObject& self, float dt) override;
 };
 ```
+
+(See also shipped samples: `SamplePlayerScript`, `SampleSpinScript` in `game/scripts/sample/`.)
 
 **Source**
 
@@ -658,7 +665,7 @@ Anchors: `TOP_LEFT`, `CENTER`, `BOTTOM_RIGHT`, and the other six compass points.
 
 ### Scene canvas
 
-Each scene can embed a `canvas` object. Title screens are mostly canvas (see `rom/scene/scene_title.json`).
+Each scene can embed a `canvas` object. See `rom/scene/scene_sample_menu.json` for a minimal menu.
 
 From scripts:
 
@@ -812,15 +819,15 @@ Runtime builds skip the ImGui editor; players never see F2 panels.
 
 ### “I want an enemy I can place many times”
 
-1. Build `rom/prefabs/my_enemy.json` with visual, collider, `EnemyAiScript`.
+1. Build `rom/prefabs/my_enemy.json` with visual, collider, and your AI `scriptClass`.
 2. Instantiate from the editor browser or `ScriptApi_PrefabInstantiate`.
 3. Tune `properties` per instance if needed.
 
 ### “I want a title menu that opens a level”
 
-1. Author UI in the scene `canvas` (sprites + buttons).
-2. Set button action / scene file to `rom/scene/scene_lobby.json`.
-3. Set `default_scene.txt` to your title scene for boot.
+1. Author UI in the scene `canvas` (text + buttons), or start from `scene_sample_menu.json`.
+2. Set button `onClick` to `LoadScene` with your playground scene and `"play": true`.
+3. Set `default_scene.txt` to your menu scene for boot.
 
 ### “I want gravity and floor collision”
 

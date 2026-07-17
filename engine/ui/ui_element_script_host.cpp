@@ -78,6 +78,20 @@ void UIElementScriptHost::Update(UIElement& owner, double elapsed_time) {
     m_script->OnUpdate(owner, static_cast<float>(elapsed_time));
 }
 
+void UIElementScriptHost::InvokeOnClick(UIElement& owner) {
+    if (!m_script)
+        return;
+
+    if (!m_scriptCreated) {
+        if (!EngineGUI_IsPlaying())
+            return;
+        m_script->OnCreate(owner);
+        m_scriptCreated = true;
+    }
+
+    m_script->OnClick(owner);
+}
+
 void UIElementScriptHost::Teardown(UIElement& owner) {
     if (m_script && m_scriptCreated) {
         m_script->OnDestroy(owner);

@@ -1,1 +1,1 @@
-scene_battle_royale.json
+scene_sample_menu.json

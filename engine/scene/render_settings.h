@@ -19,7 +19,7 @@ struct ShadowQualityPreset {
 
 struct RenderSettingsData {
     bool skyboxEnabled = true;
-    std::string skyboxCubemapPath = "rom/texture/sky/default_sky.dds";
+    std::string skyboxCubemapPath = "rom/skybox/MySkybox.dds";
     DirectX::XMFLOAT4 skyboxTint = { 1.0f, 1.0f, 1.0f, 1.0f };
     float skyboxExposure = 1.0f;
     float skyboxRotationYDeg = 0.0f;

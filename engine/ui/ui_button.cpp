@@ -205,10 +205,13 @@ void UIButton::Activate() {
 
 	m_isPressed = true;
 
-	// Invoke callback if set
+	// Builtin / registered action callback (LoadScene, ExitGame, custom binders)
 	if (m_onClick) {
 		m_onClick();
 	}
+
+	// Optional UICanvasScript OnClick for content-authored click logic
+	InvokeAttachedScriptOnClick();
 
 	// Reset pressed state after a short time (handled in next update)
 	m_isPressed = false;

@@ -16,9 +16,10 @@ When asked to work on the engine, start here:
 - Content, assets, scenes, prefabs, and game scripts live in `rom/` and `game/scripts/`.
 - Do not change game content or game-specific scripts unless the user asks for game behavior changes.
 - Scene and prefab data are JSON files. Prefer preserving existing key names and component names exactly.
-- Component serialization names are case-sensitive: `SceneTransform`, `visual`, `Billboard`, `Script`, `Collider`, `DirectionalLight`, `PointLight`, `SpotLight`.
+- Component serialization names are case-sensitive: `SceneTransform`, `visual`, `Billboard`, `Script`, `Collider`, `DirectionalLight`, `PointLight`, `SpotLight`, `Camera`, `Material`, `Effect`.
 - User-authored scripts are loaded through the `GameScripts` DLL and referenced from JSON with `"scriptClass"`.
-- `GameObject` has legacy public transform fields and a newer component-based `engine::Transform`. Keep both paths in sync when changing engine behavior.
+- Third-person play follow looks for objects tagged `TAG_PLAYER` (not a hard-coded script class name).
+- UI buttons use builtin actions `LoadScene` / `ExitGame`, or a `UICanvasScript::OnClick` on the element — not game-specific engine binders.
 
 Important source files:
 

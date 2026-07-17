@@ -6,7 +6,8 @@ bool GameSceneScript_InvokeBool(const char* exportName) {
 	using BoolFn = bool(*)();
 	if (BoolFn fn = reinterpret_cast<BoolFn>(ScriptFactory::Instance().ResolveDllExport(exportName)))
 		return fn();
-	return false;
+	// Optional content hook: missing export is success (samples / games may omit it).
+	return true;
 }
 
 void GameSceneScript_Invoke(const char* exportName) {

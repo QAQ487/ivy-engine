@@ -86,6 +86,11 @@ void UIElement::UpdateAttachedScript(double elapsed_time) {
         m_scriptHost->Update(*this, elapsed_time);
 }
 
+void UIElement::InvokeAttachedScriptOnClick() {
+    if (m_scriptHost)
+        m_scriptHost->InvokeOnClick(*this);
+}
+
 void UIElement::TeardownAttachedScript() {
     if (m_scriptHost)
         m_scriptHost->Teardown(*this);

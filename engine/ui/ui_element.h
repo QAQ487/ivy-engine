@@ -96,6 +96,7 @@ public:
     void SetScriptClass(const std::string& scriptClass);
     const std::string& GetScriptClass() const;
     void UpdateAttachedScript(double elapsed_time);
+    void InvokeAttachedScriptOnClick();
     void TeardownAttachedScript();
 };
 

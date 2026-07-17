@@ -1,1 +1,1 @@
-scene_title.json
+scene_sample_menu.json

@@ -433,55 +433,10 @@ static bool AcceptAssetPathDrop(const char* const* extensions, int count, std::s
     return accepted;
 }
 
-static bool IsEnemyAiAdvancedKey(const std::string& key) {
-    static const char* kEnemyAdvancedKeys[] = {
-        "itemChaseChance", "playerAttackChance", "chargeChance",
-        "helixAmpMin", "helixAmpMax", "helixTurnsMin", "helixTurnsMax",
-        "helixRotateSpeed", "helixTravelTime", "helixParticleSize",
-        "intentNoise", "reactionDelayMin", "reactionDelayMax",
-        "magTravelMinDist", "magUtilityEnergyMin", "comboChainChance",
-        "midChaseTravelChance", "utilityCooldownScale"
-    };
-    for (const char* advancedKey : kEnemyAdvancedKeys) {
-        if (key == advancedKey)
-            return true;
-    }
-    return false;
-}
-
 static bool DrawScriptPropertyField(GameObject* editNode,
                                     const std::string& key,
-                                    nlohmann::json& val,
-                                    bool enemyPersonalityCombo) {
+                                    nlohmann::json& val) {
     std::string wid = "##SC_" + key;
-    if (enemyPersonalityCombo && key == "personality") {
-        int personality = val.get<int>();
-        const char* labels[] = {
-            "Balanced (0)",
-            "PointHunter (1)",
-            "Aggressor (2)",
-            "Collector (3)",
-            "Trickster (4)",
-            "Cautious (5)",
-            "ExtremeAggressor (6)",
-            "Custom (99)"
-        };
-        const int values[] = { 0, 1, 2, 3, 4, 5, 6, 99 };
-        int currentItem = 0;
-        for (int i = 0; i < 8; ++i) {
-            if (values[i] == personality) {
-                currentItem = i;
-                break;
-            }
-        }
-        ImGui::Text("personality:"); ImGui::SameLine(80);
-        ImGui::SetNextItemWidth(-1);
-        if (ImGui::Combo(wid.c_str(), &currentItem, labels, 8)) {
-            val = values[currentItem];
-            return true;
-        }
-        return false;
-    }
     if (val.is_number_float()) {
         float f = val.get<float>();
         ImGui::Text("%s:", key.c_str()); ImGui::SameLine(80);
@@ -914,10 +869,8 @@ void ReturnToStart() {
 
 static bool HasThirdPersonPlayerNode(GameObject* node) {
     if (!node) return false;
-    if (auto* sc = node->GetComponent<ScriptComponent>()) {
-        if (sc->GetScriptClass() == "PlayerScript")
-            return true;
-    }
+    if (node->GetTag() == Tag::TAG_PLAYER)
+        return true;
     for (const auto& child : node->GetChildren()) {
         if (HasThirdPersonPlayerNode(child.get()))
             return true;
@@ -2460,35 +2413,9 @@ void EngineGUI_Draw() {
                     nlohmann::json props = sc->GetEditableProperties();
                     if (props.is_object() && !props.empty()) {
                         bool changed = false;
-                        const bool enemyAiScript =
-                            sc->GetScriptClass() == "EnemyAiScript";
-                        if (enemyAiScript) {
-                            static const char* kEnemyPublicKeys[] = {
-                                "personality", "playerIndex", "runClip",
-                                "showAdvancedTuning", "showAiDebug"
-                            };
-                            for (const char* publicKey : kEnemyPublicKeys) {
-                                if (!props.contains(publicKey))
-                                    continue;
-                                if (DrawScriptPropertyField(g_selNode, publicKey, props[publicKey], true))
-                                    changed = true;
-                            }
-                            const bool showEnemyAdvanced =
-                                props.value("showAdvancedTuning", false);
-                            if (showEnemyAdvanced
-                                && ImGui::CollapsingHeader("Advanced Tuning")) {
-                                for (auto& [key, val] : props.items()) {
-                                    if (!IsEnemyAiAdvancedKey(key))
-                                        continue;
-                                    if (DrawScriptPropertyField(g_selNode, key, val, false))
-                                        changed = true;
-                                }
-                            }
-                        } else {
-                            for (auto& [key, val] : props.items()) {
-                                if (DrawScriptPropertyField(g_selNode, key, val, false))
-                                    changed = true;
-                            }
+                        for (auto& [key, val] : props.items()) {
+                            if (DrawScriptPropertyField(g_selNode, key, val))
+                                changed = true;
                         }
                         if (changed) {
                             sc->ApplyProperties(props);

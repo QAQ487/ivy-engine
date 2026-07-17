@@ -6,7 +6,7 @@
 #include "../rendering/sprite/sprite.h"
 #include "../ecs/string_utils.h"
 #include "../core/engine_gui.h"
-#include "../scripting/script_factory.h"
+#include "../ecs/string_utils.h"
 #include <cstring>
 #include <string>
 #include <algorithm>
@@ -52,135 +52,6 @@ namespace {
 				if (!button) return;
 				button->SetOnClick([]() {
 					PostQuitMessage(0);
-				});
-			};
-		}
-
-		if (registry.find("PickPlayerColor") == registry.end()) {
-			registry["PickPlayerColor"] = [](UIButton* button) {
-				if (!button) return;
-				const std::string& name = button->GetName();
-				const char* prefix = "PickPlayer_";
-				if (name.rfind(prefix, 0) != 0) return;
-				const std::string suffix = name.c_str() + std::strlen(prefix);
-				button->SetOnClick([suffix]() {
-					using PickFn = void(*)(const char*);
-					auto fn = reinterpret_cast<PickFn>(
-						ScriptFactory::Instance().ResolveDllExport("GameScripts_PickPlayerColor"));
-					if (fn)
-						fn(suffix.c_str());
-				});
-			};
-		}
-
-		if (registry.find("PickEnemyColor") == registry.end()) {
-			registry["PickEnemyColor"] = [](UIButton* button) {
-				if (!button) return;
-				const std::string& name = button->GetName();
-				const char* prefix = "PickEnemy_";
-				if (name.rfind(prefix, 0) != 0) return;
-				const std::string suffix = name.c_str() + std::strlen(prefix);
-				button->SetOnClick([suffix]() {
-					using PickFn = void(*)(const char*);
-					auto fn = reinterpret_cast<PickFn>(
-						ScriptFactory::Instance().ResolveDllExport("GameScripts_PickEnemyColor"));
-					if (fn)
-						fn(suffix.c_str());
-				});
-			};
-		}
-
-		if (registry.find("RotateLobbyColor") == registry.end()) {
-			registry["RotateLobbyColor"] = [](UIButton* button) {
-				if (!button) return;
-				const std::string& name = button->GetName();
-				if (name.size() < 2 || name[0] != 'p' || name[1] < '1' || name[1] > '4')
-					return;
-				const int slot = name[1] - '1';
-				button->SetOnClick([slot]() {
-					using RotateFn = void(*)(int);
-					auto fn = reinterpret_cast<RotateFn>(
-						ScriptFactory::Instance().ResolveDllExport("GameScripts_RotateLobbyColor"));
-					if (fn)
-						fn(slot);
-				});
-			};
-		}
-
-		if (registry.find("SelectBattleRoyale") == registry.end()) {
-			registry["SelectBattleRoyale"] = [](UIButton* button) {
-				if (!button) return;
-				button->SetOnClick([]() {
-					using Fn = void(*)();
-					auto fn = reinterpret_cast<Fn>(
-						ScriptFactory::Instance().ResolveDllExport("GameScripts_SelectBattleRoyale"));
-					if (fn)
-						fn();
-				});
-			};
-		}
-
-		if (registry.find("SelectExtremeBattle") == registry.end()) {
-			registry["SelectExtremeBattle"] = [](UIButton* button) {
-				if (!button) return;
-				button->SetOnClick([]() {
-					using Fn = void(*)();
-					auto fn = reinterpret_cast<Fn>(
-						ScriptFactory::Instance().ResolveDllExport("GameScripts_SelectExtremeBattle"));
-					if (fn)
-						fn();
-				});
-			};
-		}
-
-		if (registry.find("Select2v2") == registry.end()) {
-			registry["Select2v2"] = [](UIButton* button) {
-				if (!button) return;
-				button->SetOnClick([]() {
-					using Fn = void(*)();
-					auto fn = reinterpret_cast<Fn>(
-						ScriptFactory::Instance().ResolveDllExport("GameScripts_Select2v2"));
-					if (fn)
-						fn();
-				});
-			};
-		}
-
-		if (registry.find("Start2v2Match") == registry.end()) {
-			registry["Start2v2Match"] = [](UIButton* button) {
-				if (!button) return;
-				button->SetOnClick([]() {
-					using Fn = void(*)();
-					auto fn = reinterpret_cast<Fn>(
-						ScriptFactory::Instance().ResolveDllExport("GameScripts_Start2v2Match"));
-					if (fn)
-						fn();
-				});
-			};
-		}
-
-		if (registry.find("SelectTraining") == registry.end()) {
-			registry["SelectTraining"] = [](UIButton* button) {
-				if (!button) return;
-				button->SetOnClick([]() {
-					using Fn = void(*)();
-					auto fn = reinterpret_cast<Fn>(
-						ScriptFactory::Instance().ResolveDllExport("GameScripts_SelectTraining"));
-					if (fn)
-						fn();
-				});
-			};
-		}
-
-		if (registry.find("LoadSelectedModeMatch") == registry.end()) {
-			registry["LoadSelectedModeMatch"] = [](UIButton* button) {
-				if (!button) return;
-				button->SetOnClick([]() {
-					using Fn = void(*)();
-					auto fn = reinterpret_cast<Fn>(
-						ScriptFactory::Instance().ResolveDllExport("GameScripts_LoadSelectedModeMatch"));
-					if (fn)
-						fn();
 				});
 			};
 		}

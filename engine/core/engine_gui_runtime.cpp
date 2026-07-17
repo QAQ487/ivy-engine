@@ -1,6 +1,7 @@
 #include "engine_gui.h"
 #include "engine/scene/scene_loader.h"
 #include "engine/ecs/model_asset_cache.h"
+#include "engine/ecs/game_object.h"
 #include "engine/scripting/script_component.h"
 #include "src/app/camera/debug_camera.h"
 #include "src/app/camera/third_person_camera.h"
@@ -15,10 +16,8 @@ static std::string g_activeCameraNode;
 
 static bool HasThirdPersonPlayerNode(GameObject* node) {
     if (!node) return false;
-    if (auto* sc = node->GetComponent<ScriptComponent>()) {
-        if (sc->GetScriptClass() == "PlayerScript")
-            return true;
-    }
+    if (node->GetTag() == Tag::TAG_PLAYER)
+        return true;
     for (const auto& child : node->GetChildren()) {
         if (HasThirdPersonPlayerNode(child.get()))
             return true;

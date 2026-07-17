@@ -51,7 +51,7 @@ public:
     // removal).  Use this to release runtime resources and undo OnCreate work.
     virtual void OnDestroy(engine::GameObject& self) {}
 
-    // Optional physics body used while playing (e.g. EnemyAiScript proxy).
+    // Optional physics body used while playing (e.g. a runtime collider proxy).
     // Editor selection overlay uses this for collider placement during play.
     virtual GameObject* GetRuntimePhysicsProxy(const GameObject& self) const {
         (void)self;

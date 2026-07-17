@@ -19,6 +19,7 @@ public:
     UICanvasScript* GetScript() const { return m_script.get(); }
 
     void Update(UIElement& owner, double elapsed_time);
+    void InvokeOnClick(UIElement& owner);
     void Teardown(UIElement& owner);
 
 private:

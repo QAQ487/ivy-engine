@@ -1,0 +1,139 @@
+{
+    "version": 4,
+    "settings": {
+        "render": {
+            "skyboxEnabled": true,
+            "skyboxCubemap": "rom/skybox/MySkybox.dds",
+            "skyboxTint": { "r": 1.0, "g": 1.0, "b": 1.0, "a": 1.0 },
+            "skyboxExposure": 1.0,
+            "skyboxRotationYDeg": 0.0,
+            "clearColor": { "r": 0.55, "g": 0.7, "b": 0.85, "a": 1.0 },
+            "defaultShader": "standard",
+            "shadowQuality": "medium"
+        }
+    },
+    "nodes": [
+        {
+            "name": "Directional Light",
+            "tag": 0,
+            "components": {
+                "SceneTransform": {
+                    "posX": 0.0, "posY": 10.0, "posZ": 0.0,
+                    "rotX": 45.0, "rotY": -30.0, "rotZ": 0.0,
+                    "scaleX": 1.0, "scaleY": 1.0, "scaleZ": 1.0
+                },
+                "DirectionalLight": {
+                    "enabled": true,
+                    "castShadows": true,
+                    "color": [1.0, 0.97, 0.92],
+                    "intensity": 1.1,
+                    "specColor": [1.0, 1.0, 1.0],
+                    "specPower": 32.0
+                }
+            },
+            "children": []
+        },
+        {
+            "name": "Ground",
+            "tag": 2,
+            "components": {
+                "SceneTransform": {
+                    "posX": 0.0, "posY": -0.5, "posZ": 0.0,
+                    "rotX": 0.0, "rotY": 0.0, "rotZ": 0.0,
+                    "scaleX": 40.0, "scaleY": 1.0, "scaleZ": 40.0
+                },
+                "visual": {
+                    "model": "rom/model/object/Box_Brown.fbx",
+                    "shader": "standard"
+                },
+                "Collider": {
+                    "colliderType": 1,
+                    "colliderCenter": { "x": 0.0, "y": 0.0, "z": 0.0 },
+                    "halfExtents": { "x": 20.0, "y": 0.5, "z": 20.0 },
+                    "radius": 0.5,
+                    "height": 1.0,
+                    "meshSizePadding": 0.0,
+                    "showDebugCollider": false
+                }
+            },
+            "children": []
+        },
+        {
+            "name": "Player",
+            "tag": 5,
+            "components": {
+                "SceneTransform": {
+                    "posX": 0.0, "posY": 1.0, "posZ": 0.0,
+                    "rotX": 0.0, "rotY": 0.0, "rotZ": 0.0,
+                    "scaleX": 1.0, "scaleY": 1.0, "scaleZ": 1.0
+                },
+                "visual": {
+                    "model": "rom/model/object/Box_Green.fbx",
+                    "proxy_model": "rom/model/object/Box_Green.fbx",
+                    "shader": "toon"
+                },
+                "Collider": {
+                    "colliderType": 2,
+                    "colliderCenter": { "x": 0.0, "y": 0.0, "z": 0.0 },
+                    "halfExtents": { "x": 0.5, "y": 0.5, "z": 0.5 },
+                    "radius": 0.5,
+                    "height": 2.0,
+                    "meshSizePadding": 0.0,
+                    "showDebugCollider": true
+                },
+                "Script": {
+                    "scriptClass": "SamplePlayerScript",
+                    "properties": {
+                        "moveSpeed": 6.0
+                    }
+                }
+            },
+            "children": []
+        },
+        {
+            "name": "SpinningBox",
+            "tag": 0,
+            "components": {
+                "SceneTransform": {
+                    "posX": 4.0, "posY": 1.0, "posZ": 3.0,
+                    "rotX": 0.0, "rotY": 0.0, "rotZ": 0.0,
+                    "scaleX": 1.0, "scaleY": 1.0, "scaleZ": 1.0
+                },
+                "visual": {
+                    "model": "rom/model/object/Box_Blue.fbx",
+                    "shader": "standard"
+                },
+                "Script": {
+                    "scriptClass": "SampleSpinScript",
+                    "properties": {
+                        "degreesPerSecond": 60.0
+                    }
+                }
+            },
+            "children": []
+        }
+    ],
+    "canvas": {
+        "name": "sample_playground",
+        "elements": [
+            {
+                "type": "text",
+                "name": "Hint",
+                "anchor": "TOP_LEFT",
+                "position": { "x": 24.0, "y": 24.0 },
+                "text": "WASD / Stick to move",
+                "fontSize": 1.0,
+                "characterSpacing": 18.0,
+                "alignment": "LEFT",
+                "color": { "r": 1.0, "g": 1.0, "b": 1.0, "a": 0.9 },
+                "font": {
+                    "texture": "rom/texture/consolab_ascii_512.png",
+                    "charWidth": 32.0,
+                    "charHeight": 32.0,
+                    "charsPerRow": 16
+                },
+                "visible": true
+            }
+        ]
+    }
+}

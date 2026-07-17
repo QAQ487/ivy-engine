@@ -15,11 +15,13 @@ This folder is a starter template for a **content-only** project.
 ## Setup
 1. Copy this `external_content_template` folder to a new repo.
 2. Edit `MagneticField.Engine.props` and set `EngineRoot` to your engine repo path.
-3. Put your script `.cpp/.h` files under `game/scripts/` (grouped in `core/`, `items/`, `ai/`, `managers/`, `player/`, `test/`).
+3. Put your script `.cpp/.h` files under `game/scripts/` (for example `sample/` or your own folders) and add them to `GameScripts.vcxproj`.
 4. Put your game assets under `rom/`.
 5. Build `game/scripts/GameScripts/GameScripts.vcxproj`.
 6. Run `deploy\deploy.bat Debug` (or `Release`).
 7. Launch `deploy\Game_Runtime.exe`.
+
+Startup scene is controlled by `rom/scene/default_scene.txt` (engine samples use `scene_sample_menu.json`).
 
 ## Required runtime layout
 After deploy, this layout is produced:

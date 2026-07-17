@@ -53,6 +53,7 @@
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <Import Project="$(MSBuildThisFileDirectory)..\..\..\MagneticField.Engine.props" Condition="exists('$(MSBuildThisFileDirectory)..\..\..\MagneticField.Engine.props')" />
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
   <ImportGroup Label="Shared">
@@ -101,7 +102,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(RepoRoot);$(RepoRoot)src\app;$(RepoRoot)src\app\scene;$(RepoRoot)src\app\camera;$(RepoRoot)src\app\rendering;$(RepoRoot)game\scripts\core;$(RepoRoot)game\scripts\items;$(RepoRoot)game\scripts\ai;$(RepoRoot)game\scripts\managers;$(RepoRoot)game\scripts\player;$(RepoRoot)game\scripts\test;$(RepoRoot)libraries;$(RepoRoot)libraries\fbxsdk\include;$(RepoRoot)libraries\effekseer\include\Effekseer;$(RepoRoot)libraries\effekseer\include\EffekseerRendererDX11;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(RepoRoot);$(EngineRoot)src\app;$(EngineRoot)src\app\scene;$(EngineRoot)src\app\camera;$(EngineRoot)src\app\rendering;$(EngineRoot)libraries;$(EngineRoot)libraries\fbxsdk\include;$(EngineRoot)libraries\effekseer\include\Effekseer;$(EngineRoot)libraries\effekseer\include\EffekseerRendererDX11;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
@@ -109,8 +110,8 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalLibraryDirectories>$(RepoRoot)libraries\fbxsdk\lib\x64\debug;$(RepoRoot)libraries\effekseer\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>libfbxsdk.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(EngineRoot)libraries\fbxsdk\lib\x64\debug;$(EngineRoot)libraries\effekseer\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>libfbxsdk.lib;d3dcompiler.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <ImportLibrary>$(OutDir)$(TargetName).lib</ImportLibrary>
       <ProgramDataBaseFileName>$(OutDir)$(TargetName).pdb</ProgramDataBaseFileName>
@@ -131,7 +132,7 @@ xcopy /Y /D "$(OutDir)$(TargetName).pdb" "$(RuntimeScriptBin)"</Command>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(RepoRoot);$(RepoRoot)src\app;$(RepoRoot)src\app\scene;$(RepoRoot)src\app\camera;$(RepoRoot)src\app\rendering;$(RepoRoot)game\scripts\core;$(RepoRoot)game\scripts\items;$(RepoRoot)game\scripts\ai;$(RepoRoot)game\scripts\managers;$(RepoRoot)game\scripts\player;$(RepoRoot)game\scripts\test;$(RepoRoot)libraries;$(RepoRoot)libraries\fbxsdk\include;$(RepoRoot)libraries\effekseer\include\Effekseer;$(RepoRoot)libraries\effekseer\include\EffekseerRendererDX11;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(RepoRoot);$(EngineRoot)src\app;$(EngineRoot)src\app\scene;$(EngineRoot)src\app\camera;$(EngineRoot)src\app\rendering;$(EngineRoot)libraries;$(EngineRoot)libraries\fbxsdk\include;$(EngineRoot)libraries\effekseer\include\Effekseer;$(EngineRoot)libraries\effekseer\include\EffekseerRendererDX11;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
@@ -139,8 +140,8 @@ xcopy /Y /D "$(OutDir)$(TargetName).pdb" "$(RuntimeScriptBin)"</Command>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalLibraryDirectories>$(RepoRoot)libraries\fbxsdk\lib\x64\release;$(RepoRoot)libraries\effekseer\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>libfbxsdk.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(EngineRoot)libraries\fbxsdk\lib\x64\release;$(EngineRoot)libraries\effekseer\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>libfbxsdk.lib;d3dcompiler.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <ImportLibrary>$(OutDir)$(TargetName).lib</ImportLibrary>
       <ProgramDataBaseFileName>$(OutDir)$(TargetName).pdb</ProgramDataBaseFileName>
@@ -159,7 +160,7 @@ xcopy /Y /D "$(OutDir)$(TargetName).pdb" "$(RuntimeScriptBin)"</Command>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(RepoRoot);$(RepoRoot)src\app;$(RepoRoot)src\app\scene;$(RepoRoot)src\app\camera;$(RepoRoot)src\app\rendering;$(RepoRoot)game\scripts\core;$(RepoRoot)game\scripts\items;$(RepoRoot)game\scripts\ai;$(RepoRoot)game\scripts\managers;$(RepoRoot)game\scripts\player;$(RepoRoot)game\scripts\test;$(RepoRoot)libraries;$(RepoRoot)libraries\fbxsdk\include;$(RepoRoot)libraries\effekseer\include\Effekseer;$(RepoRoot)libraries\effekseer\include\EffekseerRendererDX11;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(RepoRoot);$(EngineRoot)src\app;$(EngineRoot)src\app\scene;$(EngineRoot)src\app\camera;$(EngineRoot)src\app\rendering;$(EngineRoot)libraries;$(EngineRoot)libraries\fbxsdk\include;$(EngineRoot)libraries\effekseer\include\Effekseer;$(EngineRoot)libraries\effekseer\include\EffekseerRendererDX11;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
@@ -167,8 +168,8 @@ xcopy /Y /D "$(OutDir)$(TargetName).pdb" "$(RuntimeScriptBin)"</Command>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalLibraryDirectories>$(RepoRoot)libraries\fbxsdk\lib\x64\debug;$(RepoRoot)libraries\effekseer\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>libfbxsdk.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(EngineRoot)libraries\fbxsdk\lib\x64\debug;$(EngineRoot)libraries\effekseer\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>libfbxsdk.lib;d3dcompiler.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <ImportLibrary>$(OutDir)$(TargetName).lib</ImportLibrary>
       <ProgramDataBaseFileName>$(OutDir)$(TargetName).pdb</ProgramDataBaseFileName>
@@ -189,7 +190,7 @@ xcopy /Y /D "$(OutDir)$(TargetName).pdb" "$(RuntimeScriptBin)"</Command>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(RepoRoot);$(RepoRoot)src\app;$(RepoRoot)src\app\scene;$(RepoRoot)src\app\camera;$(RepoRoot)src\app\rendering;$(RepoRoot)game\scripts\core;$(RepoRoot)game\scripts\items;$(RepoRoot)game\scripts\ai;$(RepoRoot)game\scripts\managers;$(RepoRoot)game\scripts\player;$(RepoRoot)game\scripts\test;$(RepoRoot)libraries;$(RepoRoot)libraries\fbxsdk\include;$(RepoRoot)libraries\effekseer\include\Effekseer;$(RepoRoot)libraries\effekseer\include\EffekseerRendererDX11;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(RepoRoot);$(EngineRoot)src\app;$(EngineRoot)src\app\scene;$(EngineRoot)src\app\camera;$(EngineRoot)src\app\rendering;$(EngineRoot)libraries;$(EngineRoot)libraries\fbxsdk\include;$(EngineRoot)libraries\effekseer\include\Effekseer;$(EngineRoot)libraries\effekseer\include\EffekseerRendererDX11;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
@@ -197,8 +198,8 @@ xcopy /Y /D "$(OutDir)$(TargetName).pdb" "$(RuntimeScriptBin)"</Command>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalLibraryDirectories>$(RepoRoot)libraries\fbxsdk\lib\x64\release;$(RepoRoot)libraries\effekseer\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>libfbxsdk.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(EngineRoot)libraries\fbxsdk\lib\x64\release;$(EngineRoot)libraries\effekseer\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>libfbxsdk.lib;d3dcompiler.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <ImportLibrary>$(OutDir)$(TargetName).lib</ImportLibrary>
       <ProgramDataBaseFileName>$(OutDir)$(TargetName).pdb</ProgramDataBaseFileName>
@@ -210,45 +211,16 @@ xcopy /Y /D "$(OutDir)$(TargetName).pdb" "$(RuntimeScriptBin)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\engine\scripting\script_runtime_api.h" />
-    <ClInclude Include="..\managers\CenterPoleScript.h" />
-    <ClInclude Include="..\ai\DummyPlayerScript.h" />
-    <ClInclude Include="..\ai\EnemyAiScript.h" />
-    <ClInclude Include="..\managers\ItemSpawnManagerScript.h" />
-    <ClInclude Include="..\items\SpeedReducePoleItem.h" />
-    <ClInclude Include="..\items\ShockwavePoleItem.h" />
-    <ClInclude Include="..\items\ArrowStickerItem.h" />
-    <ClInclude Include="..\items\MineItem.h" />
-    <ClInclude Include="..\ai\ChaseTestEnemyScript.h" />
-    <ClInclude Include="..\..\..\engine\scripting\script_dll_register.h" />
-    <ClInclude Include="..\test\HotReloadTestScript.h" />
-    <ClInclude Include="..\player\PlayerScript.h" />
-    <ClInclude Include="..\managers\PointAreaScript.h" />
-    <ClInclude Include="..\managers\RoundManagerScript.h" />
-    <ClInclude Include="..\core\game_score.h" />
+    <ClInclude Include="$(EngineRoot)engine\scripting\script_runtime_api.h" />
+    <ClInclude Include="$(EngineRoot)engine\scripting\script_dll_register.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\engine\physics\core\rigidbody.cpp" />
-    <ClCompile Include="..\..\..\engine\scripting\script_dll_exports.cpp" />
-    <ClCompile Include="..\..\..\engine\scripting\script_runtime_api.cpp" />
-    <ClCompile Include="..\managers\CenterPoleScript.cpp" />
-    <ClCompile Include="..\ai\DummyPlayerScript.cpp" />
-    <ClCompile Include="..\ai\EnemyAiScript.cpp" />
-    <ClCompile Include="..\managers\ItemSpawnManagerScript.cpp" />
-    <ClCompile Include="..\core\ItemWorldApi.cpp" />
-    <ClCompile Include="..\items\SpeedReducePoleItem.cpp" />
-    <ClCompile Include="..\items\ShockwavePoleItem.cpp" />
-    <ClCompile Include="..\items\ArrowStickerItem.cpp" />
-    <ClCompile Include="..\items\MineItem.cpp" />
-    <ClCompile Include="..\items\MysteryBoxItem.cpp" />
-    <ClCompile Include="..\ai\ChaseTestEnemyScript.cpp" />
-    <ClCompile Include="..\test\HotReloadTestScript.cpp" />
-    <ClCompile Include="..\player\PlayerScript.cpp" />
-    <ClCompile Include="..\managers\PointAreaScript.cpp" />
-    <ClCompile Include="..\managers\RoundManagerScript.cpp" />
-    <ClCompile Include="..\core\game_score.cpp" />
+    <ClCompile Include="$(EngineRoot)engine\physics\core\rigidbody.cpp" />
+    <ClCompile Include="$(EngineRoot)engine\scripting\script_dll_exports.cpp" />
+    <ClCompile Include="$(EngineRoot)engine\scripting\ui_canvas_script_dll_exports.cpp" />
+    <ClCompile Include="$(EngineRoot)engine\scripting\script_runtime_api.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
