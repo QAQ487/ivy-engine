@@ -12,7 +12,7 @@
  // #include "direct3d.h" // SAFE_RELEASE
 #include "engine/rendering/d3d11/renderer.h" // �f�o�C�X�ƃR���e�L�X�g�̎擾
 #include "DirectXTex.h" // DirectXTex���C�u������g�p
-#include "engine/debug/debug_ofstream.h" // hal::dout
+#include "engine/debug_draw/debug_ofstream.h" // hal::dout
 using namespace DirectX;
 
 static constexpr int MAX_TEXTURES = 1024; // �ő�e�N�X�`����

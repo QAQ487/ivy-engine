@@ -12,7 +12,7 @@
 using namespace DirectX;
 
 #include "renderer.h"
-#include "engine/debug/debug_ofstream.h"
+#include "engine/debug_draw/debug_ofstream.h"
 #include <fstream>
 #include <vector>
 #include <cstdio>

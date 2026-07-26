@@ -5,7 +5,7 @@
  ===========================================================================**/
 #include "audio_manager.h"
 #include "engine/ecs/game_object.h"
-#include "engine/debug/debug_drawer.h"
+#include "engine/debug_draw/debug_drawer.h"
 #include <algorithm>
 
  // Internal structure to hold all data for a single sound

@@ -11,7 +11,7 @@
 #include "engine/rendering/particle/particle_system.h"
 #include "engine/input/key_logger.h"
 #include "engine/input/mouse.h"
-#include "engine/debug/debug_drawer.h"
+#include "engine/debug_draw/debug_drawer.h"
 #include "engine/core/engine_gui.h"
 #include "engine/rendering/sprite/texture.h"
 #include "engine/physics/collider/collider.h"

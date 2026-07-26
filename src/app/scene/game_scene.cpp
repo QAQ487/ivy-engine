@@ -46,7 +46,7 @@
 #include "engine/scene/scene_lighting.h"
 #include "engine/scene/scene_loader.h"
 #include "game_scene_script_hooks.h"
-#include "engine/debug/debug_drawer.h"
+#include "engine/debug_draw/debug_drawer.h"
 
 
 #include <cstdio>

@@ -30,8 +30,8 @@
 #include "engine/input/mouse.h"
 #include "engine/input/controller.h"
 #include "debug_camera.h"
-#include "engine/debug/debug_text.h"
-#include "engine/debug/debug_ofstream.h"
+#include "engine/debug_draw/debug_text.h"
+#include "engine/debug_draw/debug_ofstream.h"
 
 #ifndef GAME_RUNTIME
 #include "imgui/imgui.h"

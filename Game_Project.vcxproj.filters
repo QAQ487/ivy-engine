@@ -116,15 +116,6 @@
     <ClInclude Include="engine\core\system_timer.h">
       <Filter>engine\core</Filter>
     </ClInclude>
-    <ClInclude Include="engine\debug\debug_drawer.h">
-      <Filter>engine\debug</Filter>
-    </ClInclude>
-    <ClInclude Include="engine\debug\debug_ofstream.h">
-      <Filter>engine\debug</Filter>
-    </ClInclude>
-    <ClInclude Include="engine\debug\debug_text.h">
-      <Filter>engine\debug</Filter>
-    </ClInclude>
     <ClInclude Include="engine\ecs\collider_component.h">
       <Filter>engine\ecs</Filter>
     </ClInclude>
@@ -404,6 +395,15 @@
     <ClInclude Include="src\app\camera\camera_pose.h">
       <Filter>src\app\camera</Filter>
     </ClInclude>
+    <ClInclude Include="engine\debug_draw\debug_drawer.h">
+      <Filter>engine\debug</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\debug_draw\debug_ofstream.h">
+      <Filter>engine\debug</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\debug_draw\debug_text.h">
+      <Filter>engine\debug</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\audio\audio_manager.cpp">
@@ -420,15 +420,6 @@
     </ClCompile>
     <ClCompile Include="engine\core\system_timer.cpp">
       <Filter>engine\core</Filter>
-    </ClCompile>
-    <ClCompile Include="engine\debug\debug_drawer.cpp">
-      <Filter>engine\debug</Filter>
-    </ClCompile>
-    <ClCompile Include="engine\debug\debug_ofstream.cpp">
-      <Filter>engine\debug</Filter>
-    </ClCompile>
-    <ClCompile Include="engine\debug\debug_text.cpp">
-      <Filter>engine\debug</Filter>
     </ClCompile>
     <ClCompile Include="engine\ecs\collider_component.cpp">
       <Filter>engine\ecs</Filter>
@@ -686,6 +677,15 @@
       <Filter>engine\rendering\particleSystem</Filter>
     </ClCompile>
     <ClCompile Include="pch.cpp" />
+    <ClCompile Include="engine\debug_draw\debug_drawer.cpp">
+      <Filter>engine\debug</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\debug_draw\debug_ofstream.cpp">
+      <Filter>engine\debug</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\debug_draw\debug_text.cpp">
+      <Filter>engine\debug</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\ShaderCommon.hlsli">

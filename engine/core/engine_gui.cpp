@@ -45,7 +45,7 @@
 #include "engine/ecs/tag_registry.h"
 #include "debug_camera.h"
 #include "engine/input/mouse.h"
-#include "engine/debug/debug_drawer.h"
+#include "engine/debug_draw/debug_drawer.h"
 #include "camera.h"
 
  // Scene-graph / component-system headers

@@ -1,4 +1,4 @@
-/**===========================================================================
+﻿/**===========================================================================
 
  File   :  [sprite.cpp]
 
@@ -15,7 +15,7 @@
 #include "texture.h"
 #include <math.h>
 #include <float.h>
-#include "engine/debug/debug_ofstream.h"
+#include "engine/debug_draw/debug_ofstream.h"
 #include "sprite.h"
 
 #include <algorithm>

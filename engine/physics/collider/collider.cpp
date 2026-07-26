@@ -15,7 +15,7 @@
 #include "../core/rigidbody.h"
 #include <DirectXMath.h>
 #include <algorithm>
-#include "engine/debug/debug_drawer.h"
+#include "engine/debug_draw/debug_drawer.h"
 #include "engine/rendering/d3d11/renderer.h"
 #include <cmath>
 #include <cfloat>

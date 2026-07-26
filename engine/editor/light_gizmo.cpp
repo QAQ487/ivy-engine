@@ -1,5 +1,5 @@
-#include "light_gizmo.h"
-#include "engine/debug/debug_drawer.h"
+﻿#include "light_gizmo.h"
+#include "engine/debug_draw/debug_drawer.h"
 #include "engine/ecs/directional_light_component.h"
 #include "engine/ecs/point_light_component.h"
 #include "engine/ecs/spot_light_component.h"
