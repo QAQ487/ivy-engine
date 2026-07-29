@@ -23,7 +23,7 @@
 #include <string>
 
 namespace {
-constexpr std::uint32_t kScriptRuntimeApiVersion = 29;
+constexpr std::uint32_t kScriptRuntimeApiVersion = 30;
 
 template <typename T>
 T* FindComponentByTypeName(GameObject& object, const char* typeName) {
@@ -221,6 +221,12 @@ void Host_GameObjectDestroyCollider(GameObject* object) {
     delete object->m_collider;
     object->m_collider = nullptr;
     object->m_colliderOwnedByHost = false;
+}
+
+void Host_GameObjectAddIgnoreCollisionTag(GameObject* object, Tag tag) {
+    if (!object)
+        return;
+    object->AddIgnoreCollisionTag(tag);
 }
 
 DirectX::XMFLOAT3 Host_ColliderGetWorldCenter(const Collider* collider) {
@@ -445,6 +451,7 @@ const ScriptRuntimeApi g_scriptRuntimeApi = {
     &Host_ColliderComponentApplyToOwner,
     &Host_GameObjectCreateBoxCollider,
     &Host_GameObjectDestroyCollider,
+    &Host_GameObjectAddIgnoreCollisionTag,
     &Host_ColliderGetWorldCenter,
     &Host_BoxColliderGetSize,
     &Host_BoxColliderSetSize,
@@ -723,6 +730,12 @@ void ScriptApi_DestroyCollider(engine::GameObject& object) {
     const ScriptRuntimeApi* api = ScriptRuntimeApi_GetHost();
     if (api && api->gameObjectDestroyCollider)
         api->gameObjectDestroyCollider(&object);
+}
+
+void ScriptApi_GameObjectAddIgnoreCollisionTag(engine::GameObject& object, Tag tag) {
+    const ScriptRuntimeApi* api = ScriptRuntimeApi_GetHost();
+    if (api && api->gameObjectAddIgnoreCollisionTag)
+        api->gameObjectAddIgnoreCollisionTag(&object, tag);
 }
 
 DirectX::XMFLOAT3 ScriptApi_GetColliderWorldCenter(const Collider& collider) {

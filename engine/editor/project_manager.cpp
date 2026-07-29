@@ -100,6 +100,90 @@ std::string SanitizeProjectFolderName(const std::string& name) {
     return out.empty() ? "NewProject" : out;
 }
 
+// Must match external_content_template/.../GameScripts.vcxproj ProjectGuid.
+constexpr const char* kGameScriptsProjectGuid = "{E9E3B9BC-BAD1-4862-AE40-2358478F1C8A}";
+
+bool WriteContentProjectSolution(const fs::path& root, std::string* errorOut) {
+    const std::string folderName = root.filename().string();
+    if (folderName.empty() || folderName == "." || folderName == "..") {
+        if (errorOut)
+            *errorOut = "Cannot derive .sln name from project folder";
+        return false;
+    }
+
+    const fs::path slnPath = root / (folderName + ".sln");
+    std::ofstream sln(slnPath, std::ios::trunc);
+    if (!sln.is_open()) {
+        if (errorOut)
+            *errorOut = "Failed to create " + slnPath.string();
+        return false;
+    }
+
+    sln <<
+        "Microsoft Visual Studio Solution File, Format Version 12.00\n"
+        "# Visual Studio Version 17\n"
+        "VisualStudioVersion = 17.0.31903.59\n"
+        "MinimumVisualStudioVersion = 10.0.40219.1\n"
+        "Project(\"{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}\") = \"GameScripts\", "
+        "\"game\\scripts\\GameScripts\\GameScripts.vcxproj\", \""
+        << kGameScriptsProjectGuid << "\"\n"
+        "EndProject\n"
+        "Global\n"
+        "\tGlobalSection(SolutionConfigurationPlatforms) = preSolution\n"
+        "\t\tDebug|x64 = Debug|x64\n"
+        "\t\tDebug|x86 = Debug|x86\n"
+        "\t\tRelease|x64 = Release|x64\n"
+        "\t\tRelease|x86 = Release|x86\n"
+        "\tEndGlobalSection\n"
+        "\tGlobalSection(ProjectConfigurationPlatforms) = postSolution\n"
+        "\t\t" << kGameScriptsProjectGuid << ".Debug|x64.ActiveCfg = Debug|x64\n"
+        "\t\t" << kGameScriptsProjectGuid << ".Debug|x64.Build.0 = Debug|x64\n"
+        "\t\t" << kGameScriptsProjectGuid << ".Debug|x86.ActiveCfg = Debug|Win32\n"
+        "\t\t" << kGameScriptsProjectGuid << ".Debug|x86.Build.0 = Debug|Win32\n"
+        "\t\t" << kGameScriptsProjectGuid << ".Release|x64.ActiveCfg = Release|x64\n"
+        "\t\t" << kGameScriptsProjectGuid << ".Release|x64.Build.0 = Release|x64\n"
+        "\t\t" << kGameScriptsProjectGuid << ".Release|x86.ActiveCfg = Release|Win32\n"
+        "\t\t" << kGameScriptsProjectGuid << ".Release|x86.Build.0 = Release|Win32\n"
+        "\tEndGlobalSection\n"
+        "\tGlobalSection(SolutionProperties) = preSolution\n"
+        "\t\tHideSolutionNode = FALSE\n"
+        "\tEndGlobalSection\n"
+        "EndGlobal\n";
+    return true;
+}
+
+bool WriteContentBuildScriptsBat(const fs::path& root, std::string* errorOut) {
+    const fs::path batPath = root / "build_scripts.bat";
+    std::ofstream bat(batPath, std::ios::trunc);
+    if (!bat.is_open()) {
+        if (errorOut)
+            *errorOut = "Failed to create " + batPath.string();
+        return false;
+    }
+
+    bat <<
+        "@echo off\n"
+        "setlocal\n"
+        "set ROOT=%~dp0\n"
+        "set CONFIG=Debug\n"
+        "if not \"%1\"==\"\" set CONFIG=%1\n"
+        "\n"
+        "set MSBUILD=\n"
+        "for /f \"usebackq delims=\" %%i in (`\"%ProgramFiles(x86)%\\Microsoft Visual Studio\\Installer\\vswhere.exe\" "
+        "-latest -requires Microsoft.Component.MSBuild -find MSBuild\\**\\Bin\\MSBuild.exe`) do set MSBUILD=%%i\n"
+        "\n"
+        "if \"%MSBUILD%\"==\"\" (\n"
+        "  echo MSBuild not found. Open the project .sln in Visual Studio instead.\n"
+        "  exit /b 1\n"
+        ")\n"
+        "\n"
+        "echo Building GameScripts ^| %CONFIG% ^| x64\n"
+        "\"%MSBUILD%\" \"%ROOT%game\\scripts\\GameScripts\\GameScripts.vcxproj\" "
+        "/p:Configuration=%CONFIG% /p:Platform=x64 /v:m\n"
+        "exit /b %ERRORLEVEL%\n";
+    return true;
+}
+
 fs::path FindEngineRepoRoot() {
     // Walk up from cwd and exe dir looking for the external content template.
     std::vector<fs::path> seeds;
@@ -489,6 +573,13 @@ bool ProjectManager::ScaffoldNewProjectTree(const std::string& rootPath,
     else {
         fs::create_directories(root / "game" / "scripts" / "GameScripts", ec);
     }
+
+    // Always emit a content-project .sln + build helper so scripts build outside
+    // the engine repo without opening Game_Project.sln.
+    if (!WriteContentProjectSolution(root, errorOut))
+        return false;
+    if (!WriteContentBuildScriptsBat(root, errorOut))
+        return false;
 
     ProjectData data = MakeDefaultData(rootPath, projectName);
     data.lastOpenedScene = "scene_main.json";

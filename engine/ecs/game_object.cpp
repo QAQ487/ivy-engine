@@ -11,6 +11,12 @@
 
 using namespace DirectX;
 
+void GameObject::AddIgnoreCollisionTag(Tag tag) {
+    // Must live in the EXE .cpp so /MT script DLLs do not allocate this vector
+    // on the DLL heap (destroying the GameObject in the EXE would then assert).
+    m_ignoreCollisionTags.push_back(tag);
+}
+
 engine::Transform* GameObject::GetTransform() {
     return GetComponent<engine::Transform>();
 }

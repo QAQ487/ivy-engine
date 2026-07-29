@@ -287,7 +287,7 @@ public:
                       DirectX::XMFLOAT3& scale) const;
 
     // ── Collision ignore ──────────────────────────────────────────────────
-    void AddIgnoreCollisionTag(Tag tag) { m_ignoreCollisionTags.push_back(tag); }
+    void AddIgnoreCollisionTag(Tag tag);
     bool ShouldIgnoreCollisionWith(Tag otherTag) const {
         for (const auto& t : m_ignoreCollisionTags)
             if (t == otherTag) return true;

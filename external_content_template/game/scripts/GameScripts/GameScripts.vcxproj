@@ -76,7 +76,10 @@
   </PropertyGroup>
   <PropertyGroup>
     <TargetName>GameScripts</TargetName>
-    <RuntimeScriptBin>$(RepoRoot)$(Platform)\$(Configuration)\game\scripts\bin\</RuntimeScriptBin>
+    <!-- Local content-project copy (deploy.bat reads this). -->
+    <RuntimeScriptBin>$(RepoRoot)game\scripts\bin\</RuntimeScriptBin>
+    <!-- Editor/runtime load DLL next to Game_Project.exe / Game_Runtime.exe. -->
+    <EngineScriptBin>$(EngineOutDir)game\scripts\bin\</EngineScriptBin>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <OutDir>$(RepoRoot)game\scripts\bin\</OutDir>
@@ -102,7 +105,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(RepoRoot);$(EngineRoot)src\app;$(EngineRoot)src\app\scene;$(EngineRoot)src\app\camera;$(EngineRoot)src\app\rendering;$(EngineRoot)libraries;$(EngineRoot)libraries\fbxsdk\include;$(EngineRoot)libraries\effekseer\include\Effekseer;$(EngineRoot)libraries\effekseer\include\EffekseerRendererDX11;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(RepoRoot);$(EngineRoot);$(EngineRoot)src\app;$(EngineRoot)src\app\scene;$(EngineRoot)src\app\camera;$(EngineRoot)src\app\rendering;$(EngineRoot)libraries;$(EngineRoot)libraries\fbxsdk\include;$(EngineRoot)libraries\effekseer\include\Effekseer;$(EngineRoot)libraries\effekseer\include\EffekseerRendererDX11;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
@@ -119,7 +122,10 @@
     <PostBuildEvent>
       <Command>if not exist "$(RuntimeScriptBin)" mkdir "$(RuntimeScriptBin)"
 xcopy /Y /D "$(OutDir)$(TargetName).dll" "$(RuntimeScriptBin)"
-xcopy /Y /D "$(OutDir)$(TargetName).pdb" "$(RuntimeScriptBin)"</Command>
+if exist "$(OutDir)$(TargetName).pdb" xcopy /Y /D "$(OutDir)$(TargetName).pdb" "$(RuntimeScriptBin)"
+if not exist "$(EngineScriptBin)" mkdir "$(EngineScriptBin)"
+xcopy /Y /D "$(OutDir)$(TargetName).dll" "$(EngineScriptBin)"
+if exist "$(OutDir)$(TargetName).pdb" xcopy /Y /D "$(OutDir)$(TargetName).pdb" "$(EngineScriptBin)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -132,7 +138,7 @@ xcopy /Y /D "$(OutDir)$(TargetName).pdb" "$(RuntimeScriptBin)"</Command>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(RepoRoot);$(EngineRoot)src\app;$(EngineRoot)src\app\scene;$(EngineRoot)src\app\camera;$(EngineRoot)src\app\rendering;$(EngineRoot)libraries;$(EngineRoot)libraries\fbxsdk\include;$(EngineRoot)libraries\effekseer\include\Effekseer;$(EngineRoot)libraries\effekseer\include\EffekseerRendererDX11;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(RepoRoot);$(EngineRoot);$(EngineRoot)src\app;$(EngineRoot)src\app\scene;$(EngineRoot)src\app\camera;$(EngineRoot)src\app\rendering;$(EngineRoot)libraries;$(EngineRoot)libraries\fbxsdk\include;$(EngineRoot)libraries\effekseer\include\Effekseer;$(EngineRoot)libraries\effekseer\include\EffekseerRendererDX11;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
@@ -149,7 +155,10 @@ xcopy /Y /D "$(OutDir)$(TargetName).pdb" "$(RuntimeScriptBin)"</Command>
     <PostBuildEvent>
       <Command>if not exist "$(RuntimeScriptBin)" mkdir "$(RuntimeScriptBin)"
 xcopy /Y /D "$(OutDir)$(TargetName).dll" "$(RuntimeScriptBin)"
-xcopy /Y /D "$(OutDir)$(TargetName).pdb" "$(RuntimeScriptBin)"</Command>
+if exist "$(OutDir)$(TargetName).pdb" xcopy /Y /D "$(OutDir)$(TargetName).pdb" "$(RuntimeScriptBin)"
+if not exist "$(EngineScriptBin)" mkdir "$(EngineScriptBin)"
+xcopy /Y /D "$(OutDir)$(TargetName).dll" "$(EngineScriptBin)"
+if exist "$(OutDir)$(TargetName).pdb" xcopy /Y /D "$(OutDir)$(TargetName).pdb" "$(EngineScriptBin)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -160,7 +169,7 @@ xcopy /Y /D "$(OutDir)$(TargetName).pdb" "$(RuntimeScriptBin)"</Command>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(RepoRoot);$(EngineRoot)src\app;$(EngineRoot)src\app\scene;$(EngineRoot)src\app\camera;$(EngineRoot)src\app\rendering;$(EngineRoot)libraries;$(EngineRoot)libraries\fbxsdk\include;$(EngineRoot)libraries\effekseer\include\Effekseer;$(EngineRoot)libraries\effekseer\include\EffekseerRendererDX11;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(RepoRoot);$(EngineRoot);$(EngineRoot)src\app;$(EngineRoot)src\app\scene;$(EngineRoot)src\app\camera;$(EngineRoot)src\app\rendering;$(EngineRoot)libraries;$(EngineRoot)libraries\fbxsdk\include;$(EngineRoot)libraries\effekseer\include\Effekseer;$(EngineRoot)libraries\effekseer\include\EffekseerRendererDX11;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
@@ -177,7 +186,10 @@ xcopy /Y /D "$(OutDir)$(TargetName).pdb" "$(RuntimeScriptBin)"</Command>
     <PostBuildEvent>
       <Command>if not exist "$(RuntimeScriptBin)" mkdir "$(RuntimeScriptBin)"
 xcopy /Y /D "$(OutDir)$(TargetName).dll" "$(RuntimeScriptBin)"
-xcopy /Y /D "$(OutDir)$(TargetName).pdb" "$(RuntimeScriptBin)"</Command>
+if exist "$(OutDir)$(TargetName).pdb" xcopy /Y /D "$(OutDir)$(TargetName).pdb" "$(RuntimeScriptBin)"
+if not exist "$(EngineScriptBin)" mkdir "$(EngineScriptBin)"
+xcopy /Y /D "$(OutDir)$(TargetName).dll" "$(EngineScriptBin)"
+if exist "$(OutDir)$(TargetName).pdb" xcopy /Y /D "$(OutDir)$(TargetName).pdb" "$(EngineScriptBin)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -190,7 +202,7 @@ xcopy /Y /D "$(OutDir)$(TargetName).pdb" "$(RuntimeScriptBin)"</Command>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(RepoRoot);$(EngineRoot)src\app;$(EngineRoot)src\app\scene;$(EngineRoot)src\app\camera;$(EngineRoot)src\app\rendering;$(EngineRoot)libraries;$(EngineRoot)libraries\fbxsdk\include;$(EngineRoot)libraries\effekseer\include\Effekseer;$(EngineRoot)libraries\effekseer\include\EffekseerRendererDX11;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(RepoRoot);$(EngineRoot);$(EngineRoot)src\app;$(EngineRoot)src\app\scene;$(EngineRoot)src\app\camera;$(EngineRoot)src\app\rendering;$(EngineRoot)libraries;$(EngineRoot)libraries\fbxsdk\include;$(EngineRoot)libraries\effekseer\include\Effekseer;$(EngineRoot)libraries\effekseer\include\EffekseerRendererDX11;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
@@ -207,7 +219,10 @@ xcopy /Y /D "$(OutDir)$(TargetName).pdb" "$(RuntimeScriptBin)"</Command>
     <PostBuildEvent>
       <Command>if not exist "$(RuntimeScriptBin)" mkdir "$(RuntimeScriptBin)"
 xcopy /Y /D "$(OutDir)$(TargetName).dll" "$(RuntimeScriptBin)"
-xcopy /Y /D "$(OutDir)$(TargetName).pdb" "$(RuntimeScriptBin)"</Command>
+if exist "$(OutDir)$(TargetName).pdb" xcopy /Y /D "$(OutDir)$(TargetName).pdb" "$(RuntimeScriptBin)"
+if not exist "$(EngineScriptBin)" mkdir "$(EngineScriptBin)"
+xcopy /Y /D "$(OutDir)$(TargetName).dll" "$(EngineScriptBin)"
+if exist "$(OutDir)$(TargetName).pdb" xcopy /Y /D "$(OutDir)$(TargetName).pdb" "$(EngineScriptBin)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

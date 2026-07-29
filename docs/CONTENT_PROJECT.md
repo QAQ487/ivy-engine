@@ -6,6 +6,8 @@ For day-to-day editing inside the engine editor, prefer **File → New Project /
 
 ## What this project owns
 - `project.json` (recommended — editor session + default/last scene)
+- `<ProjectName>.sln` (GameScripts only — open this to build scripts outside the engine)
+- `build_scripts.bat` (optional MSBuild helper)
 - `rom/` assets and `rom/scene/*.json`
 - `rom/tags.json` (project tag list; created/updated by the editor)
 - `game/scripts/` script sources
@@ -21,9 +23,11 @@ For day-to-day editing inside the engine editor, prefer **File → New Project /
 2. Edit `MagneticField.Engine.props` and set `EngineRoot` to your engine repo path.
 3. Put your script `.cpp/.h` files under `game/scripts/` (for example `sample/` or your own folders) and add them to `GameScripts.vcxproj`.
 4. Put your game assets under `rom/` (include engine builtins: `rom/shader`, `rom/font`, `rom/texture` — New Project copies these automatically).
-5. Build `game/scripts/GameScripts/GameScripts.vcxproj`.
+5. Open `<ProjectName>.sln` (or run `build_scripts.bat`) and build **GameScripts** | x64.
 6. Run `deploy\deploy.bat Debug` (or `Release`).
 7. Launch `deploy\Game_Runtime.exe`.
+
+**File → New Project** also writes `<FolderName>.sln` and `build_scripts.bat` into the new content folder.
 
 ## Startup scene
 
@@ -43,6 +47,7 @@ After deploy, this layout is produced:
 - `deploy/game/scripts/bin/GameScripts.dll`
 
 ## Notes
-- `GameScripts.vcxproj` is configured to reference engine headers/libs through `$(EngineRoot)`.
+- `GameScripts.vcxproj` references engine headers/libs through `$(EngineRoot)`.
+- Post-build copies `GameScripts.dll` to the content `game/scripts/bin/` **and** to `$(EngineOutDir)game/scripts/bin/` so the editor/runtime next to the engine exe can load it.
 - Build `Game_Runtime` in the engine repo first.
 - Opening the content folder with **File → Open Project** in `Game_Project` is the supported editor workflow for external games.

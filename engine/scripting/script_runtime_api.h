@@ -9,6 +9,7 @@
 #include "engine/input/controller.h"
 #include "engine/input/keyboard.h"
 #include "engine/core/engine_gui.h"
+#include "engine/ecs/game_object.h"
 #include "engine/ecs/collider_component.h"
 #include "engine/ecs/effect_component.h"
 #include "engine/scene/scene_node.h"
@@ -140,6 +141,7 @@ struct ScriptRuntimeApi {
                                                 DirectX::XMFLOAT3 size,
                                                 DirectX::XMFLOAT3 center);
     void (*gameObjectDestroyCollider)(GameObject* object);
+    void (*gameObjectAddIgnoreCollisionTag)(GameObject* object, Tag tag);
     DirectX::XMFLOAT3 (*colliderGetWorldCenter)(const Collider* collider);
     DirectX::XMFLOAT3 (*boxColliderGetSize)(const BoxCollider* collider);
     void (*boxColliderSetSize)(BoxCollider* collider, DirectX::XMFLOAT3 size);
@@ -191,6 +193,7 @@ BoxCollider* ScriptApi_CreateBoxCollider(engine::GameObject& object,
                                          DirectX::XMFLOAT3 size,
                                          DirectX::XMFLOAT3 center);
 void ScriptApi_DestroyCollider(engine::GameObject& object);
+void ScriptApi_GameObjectAddIgnoreCollisionTag(engine::GameObject& object, Tag tag);
 DirectX::XMFLOAT3 ScriptApi_GetColliderWorldCenter(const Collider& collider);
 DirectX::XMFLOAT3 ScriptApi_GetBoxColliderSize(const BoxCollider& collider);
 void ScriptApi_SetBoxColliderSize(BoxCollider& collider, DirectX::XMFLOAT3 size);

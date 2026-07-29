@@ -912,7 +912,7 @@ The editor calls `SetCurrentDirectory` on that folder so relative paths like `ro
 
 | Command | What it does |
 |---------|----------------|
-| **New Project…** | Pick a parent folder, enter a name → scaffolds `rom/`, blank `scene_main.json`, copies engine shaders/fonts/textures, optional scripts template |
+| **New Project…** | Pick a parent folder, enter a name → scaffolds `rom/`, blank `scene_main.json`, copies engine shaders/fonts/textures, optional scripts template, plus `<Name>.sln` + `build_scripts.bat` for building GameScripts outside the engine |
 | **Open Project…** | Pick any folder that contains `rom/` (creates `project.json` if missing) |
 | **Save Project** (Ctrl+Shift+S) | Saves the current scene + writes `project.json` (and syncs `default_scene.txt`) |
 | **Recent Projects** | Reopen up to 12 recent roots (`%AppData%/GameEngine/recent_projects.json`) |
