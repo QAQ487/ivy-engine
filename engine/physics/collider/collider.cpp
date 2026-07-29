@@ -34,8 +34,10 @@ void GetOwnerPose(const GameObject* owner, XMFLOAT3& pos, XMFLOAT3& rot, XMFLOAT
 // A world-space sphere becomes an ellipsoid in mesh-local space under non-uniform scale.
 // Use the smallest scale axis so the local test sphere conservatively encloses that ellipsoid.
 float MeshLocalTestRadius(float worldRadius, const XMFLOAT3& effScale) {
-    const float minScale = (std::min)({ effScale.x, effScale.y, effScale.z, 1e-6f });
-    return worldRadius / minScale;
+    // Guard: clamp the *minimum axis* away from zero — do NOT include epsilon in std::min,
+    // or minScale is always 1e-6 and local radius becomes worldRadius*1e6 (player launched).
+    const float minScale = (std::min)({ effScale.x, effScale.y, effScale.z });
+    return worldRadius / (std::max)(minScale, 1e-6f);
 }
 
 float LocalPenetrationToWorld(float localPenetration,
@@ -278,7 +280,6 @@ XMFLOAT3 BoxCollider::GetSize() const {
 static void ResolveContact(GameObject* self, GameObject* other,
                            const XMFLOAT3& normal,
                            float penetration,
-                           float restitution = 0.0f,
                            float slope = 0.0005f) {
     Rigidbody& rbA = self->GetRigidbody();
     Rigidbody& rbB = other->GetRigidbody();
@@ -292,6 +293,7 @@ static void ResolveContact(GameObject* self, GameObject* other,
     float invA = (!kinA && mA > 0.0f) ? 1.0f / mA : 0.0f;
     float invB = (!kinB && mB > 0.0f) ? 1.0f / mB : 0.0f;
     float invSum = invA + invB;
+    const float restitution = (std::max)(rbA.GetRestitution(), rbB.GetRestitution());
 
     // Position correction
     float pen = max(0.0f, penetration - slope) * 0.95f;
@@ -742,37 +744,57 @@ void SphereCollider::ResolveCollision(Collider* other) {
     {
         MeshCollider* mesh = static_cast<MeshCollider*>(other);
 
-        // 1. Calculate the movement vector (where we came from to where we are)
-        // We can use velocity to determine the "sweep" direction and distance
-        XMFLOAT3 v = m_owner->GetRigidbody().GetVelocity();
-        XMVECTOR velVec = XMLoadFloat3(&v);
-        float speed = XMVectorGetX(XMVector3Length(velVec));
+        // Continuous sweep: cast from previous center along this frame's displacement.
+        // Casting forward from the *current* position misses walls already behind a
+        // fast disc (thin perimeter mesh + high throw speed).
+        const XMFLOAT3 prev = m_owner->m_previousPosition;
+        const XMFLOAT3 cur = m_owner->GetPosition();
+        const XMFLOAT3 delta = {
+            cur.x - prev.x,
+            cur.y - prev.y,
+            cur.z - prev.z
+        };
+        const float moveLen = std::sqrt(
+            delta.x * delta.x + delta.y * delta.y + delta.z * delta.z);
 
-        if (speed > 0.001f) {
-            XMFLOAT3 rayDir;
-            XMStoreFloat3(&rayDir, XMVector3Normalize(velVec));
+        if (moveLen > 0.001f) {
+            const XMFLOAT3 rayDir = {
+                delta.x / moveLen,
+                delta.y / moveLen,
+                delta.z / moveLen
+            };
+            // Start just behind the previous sphere so the surface is hit before center.
+            const XMFLOAT3 rayOrigin = {
+                prev.x - rayDir.x * m_radius,
+                prev.y - rayDir.y * m_radius,
+                prev.z - rayDir.z * m_radius
+            };
+            const float sweepDistance = moveLen + m_radius * 2.0f;
 
-            // Ray length should be (velocity * dt) + radius to cover the "sweep"
-            // Since we are already at the new position, we check slightly behind and ahead
-            XMFLOAT3 rayOrigin = m_owner->GetPosition();
-
-            // We use a Raycast to see if we crossed a triangle boundary
             XMFLOAT3 hitPoint, hitNormal;
-            float sweepDistance = (speed * 0.016f) + m_radius; // Adjust 0.016f to your dt
-
             if (mesh->Raycast(rayOrigin, rayDir, sweepDistance, hitPoint, hitNormal)) {
-                // TUNNELING DETECTED: We hit something in our path
-                XMVECTOR n = XMLoadFloat3(&hitNormal);
-                float penetration = sweepDistance; // Simplified for sweep
+                // Face normals may point either way; flip so bounce pushes out of wall.
+                const XMFLOAT3 toPrev = {
+                    prev.x - hitPoint.x,
+                    prev.y - hitPoint.y,
+                    prev.z - hitPoint.z
+                };
+                if (toPrev.x * hitNormal.x + toPrev.y * hitNormal.y + toPrev.z * hitNormal.z < 0.0f) {
+                    hitNormal.x = -hitNormal.x;
+                    hitNormal.y = -hitNormal.y;
+                    hitNormal.z = -hitNormal.z;
+                }
 
-                // Immediately snap to surface to prevent falling through
+                XMVECTOR n = XMLoadFloat3(&hitNormal);
                 XMVECTOR surfacePosV = XMLoadFloat3(&hitPoint) + (n * m_radius);
                 XMFLOAT3 surfacePos;
-            	XMStoreFloat3(&surfacePos, surfacePosV);
+                XMStoreFloat3(&surfacePos, surfacePosV);
                 m_owner->SetPosition(surfacePos);
 
-                // Resolve the velocity (bounce or slide)
-                ResolveContact(m_owner, other->GetOwner(), hitNormal, penetration);
+                // Small penetration keeps ResolveContact applying the bounce impulse.
+                ResolveContact(m_owner, other->GetOwner(), hitNormal, 0.01f);
+                m_owner->OnCollision(other->GetOwner());
+                other->GetOwner()->OnCollision(m_owner);
                 return;
             }
         }
@@ -1343,10 +1365,6 @@ bool MeshCollider::CheckCollision(const Collider* other) const {
         return { lr.x * invEffScale.x, lr.y * invEffScale.y, lr.z * invEffScale.z };
     };
 
-    // For radius: under non-uniform scale a world sphere is an ellipsoid in local space.
-    // Dividing by the smallest scale axis gives a conservative enclosing local sphere.
-    const float minEffScale = (std::min)({ effScale.x, effScale.y, effScale.z, 1e-6f });
-
     // Test all triangles in local space against a local-space sphere; early-exit on first hit.
     auto testTrianglesLocal = [&](const XMFLOAT3& localCenter, float worldRadius) -> bool {
         const float localRadius = MeshLocalTestRadius(worldRadius, effScale);
@@ -1455,10 +1473,6 @@ void MeshCollider::ResolveCollision(Collider* other) {
         return { lr.x * invEffScale.x, lr.y * invEffScale.y, lr.z * invEffScale.z };
     };
 
-    // Conservative local radius: divide by min effective scale (see MeshLocalTestRadius).
-    const float minEffScale = (std::min)({ effScale.x, effScale.y, effScale.z, 1e-6f });
-    (void)minEffScale;
-
     // Local-space normal -> world-space normal: N_world = normalize(R * S^-1 * N_local)
     auto localNormalToWorld = [&](const XMFLOAT3& localNormal) -> XMFLOAT3 {
         XMVECTOR n = XMVectorSet(
@@ -1471,12 +1485,41 @@ void MeshCollider::ResolveCollision(Collider* other) {
         return result;
     };
 
-    float maxPenetration = -FLT_MAX;
-    XMFLOAT3 bestLocalNormal = { 0, 1, 0 };
-    float bestWorldNormalY = -1.0f;
-    bool collisionFound = false;
+    // Keep deepest penetration per distinct world-normal cluster, then resolve each
+    // cluster once. Iterating the same contact repeatedly over-pushes and shakes;
+    // keeping only the single deepest contact flips between corner walls.
+    struct ContactCluster {
+        XMFLOAT3 localNormal = {0, 1, 0};
+        XMFLOAT3 worldNormal = {0, 1, 0};
+        float localPen = -FLT_MAX;
+    };
+    ContactCluster clusters[4];
+    int clusterCount = 0;
 
-    // Accumulate deepest penetration from local-space triangle tests.
+    auto considerContact = [&](const XMFLOAT3& localN, float localPen) {
+        const XMFLOAT3 worldN = localNormalToWorld(localN);
+        for (int s = 0; s < clusterCount; ++s) {
+            const float d =
+                clusters[s].worldNormal.x * worldN.x +
+                clusters[s].worldNormal.y * worldN.y +
+                clusters[s].worldNormal.z * worldN.z;
+            if (d > 0.7f) {
+                if (localPen > clusters[s].localPen) {
+                    clusters[s].localPen = localPen;
+                    clusters[s].localNormal = localN;
+                    clusters[s].worldNormal = worldN;
+                }
+                return;
+            }
+        }
+        if (clusterCount < 4) {
+            clusters[clusterCount].localNormal = localN;
+            clusters[clusterCount].worldNormal = worldN;
+            clusters[clusterCount].localPen = localPen;
+            ++clusterCount;
+        }
+    };
+
     auto testTrianglesLocal = [&](const XMFLOAT3& localCenter, float worldRadius) {
         const float localRadius = MeshLocalTestRadius(worldRadius, effScale);
         for (size_t i = 0; i < m_indices.size(); i += 3) {
@@ -1485,16 +1528,7 @@ void MeshCollider::ResolveCollision(Collider* other) {
             const XMFLOAT3& v2 = m_vertices[m_indices[i + 2]];
             XMFLOAT3 n; float p;
             if (TriangleIntersectsSphere(v0, v1, v2, localCenter, localRadius, n, p)) {
-                const XMFLOAT3 worldN = localNormalToWorld(n);
-                const bool deeper = p > maxPenetration + 1e-4f;
-                const bool similarButFlatter =
-                    p > maxPenetration - 1e-3f && worldN.y > bestWorldNormalY;
-                if (deeper || similarButFlatter) {
-                    maxPenetration = p;
-                    bestLocalNormal = n;
-                    bestWorldNormalY = worldN.y;
-                    collisionFound = true;
-                }
+                considerContact(n, p);
             }
         }
     };
@@ -1520,22 +1554,36 @@ void MeshCollider::ResolveCollision(Collider* other) {
             XMConvertToRadians(otherObj->GetRotation().z));
         XMVECTOR axis = XMVector3Normalize(XMVector3TransformNormal(XMVectorSet(0, 1, 0, 0), rm));
         XMFLOAT3 af; XMStoreFloat3(&af, axis);
-        testTrianglesLocal(worldToLocal({ cC.x + af.x * hh, cC.y + af.y * hh, cC.z + af.z * hh }), r); // Top
-        testTrianglesLocal(worldToLocal({ cC.x - af.x * hh, cC.y - af.y * hh, cC.z - af.z * hh }), r); // Bottom
-        testTrianglesLocal(worldToLocal(cC), r); // Mid
+        testTrianglesLocal(worldToLocal({ cC.x + af.x * hh, cC.y + af.y * hh, cC.z + af.z * hh }), r);
+        testTrianglesLocal(worldToLocal({ cC.x - af.x * hh, cC.y - af.y * hh, cC.z - af.z * hh }), r);
+        testTrianglesLocal(worldToLocal(cC), r);
         break;
     }
     case ColliderType::CYLINDER:
         other->ResolveCollision(this);
         return;
+    default:
+        break;
     }
 
-    const float worldPenetration = LocalPenetrationToWorld(
-        maxPenetration, bestLocalNormal, effScale, rotM);
-    if (collisionFound && worldPenetration > 0.0005f) {
-        XMFLOAT3 worldNormal = StabilizeFloorContactNormal(localNormalToWorld(bestLocalNormal));
-        // Note: bestNormal is triangle -> other direction
-        ResolveContact(otherObj, m_owner, worldNormal, worldPenetration, 0.0f, 0.001f);
+    // Deepest cluster first so the primary wall wins position before secondary.
+    int order[4] = {0, 1, 2, 3};
+    for (int a = 0; a < clusterCount; ++a) {
+        for (int b = a + 1; b < clusterCount; ++b) {
+            if (clusters[order[b]].localPen > clusters[order[a]].localPen) {
+                int tmp = order[a]; order[a] = order[b]; order[b] = tmp;
+            }
+        }
+    }
+
+    for (int oi = 0; oi < clusterCount; ++oi) {
+        const ContactCluster& c = clusters[order[oi]];
+        const float worldPenetration = LocalPenetrationToWorld(
+            c.localPen, c.localNormal, effScale, rotM);
+        if (worldPenetration <= 0.0005f) continue;
+        XMFLOAT3 worldNormal = StabilizeFloorContactNormal(c.worldNormal);
+        // Note: normal is triangle -> other direction
+        ResolveContact(otherObj, m_owner, worldNormal, worldPenetration, 0.001f);
     }
 
     m_owner->OnCollision(otherObj);

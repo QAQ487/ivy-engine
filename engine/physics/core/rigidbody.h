@@ -27,6 +27,7 @@ private:
 	bool m_gravityOverridden = false;
 	float m_mass = 1.0f;
 	float m_drag = 0.05f;
+	float m_restitution = 0.0f;
 	DirectX::XMFLOAT3 m_velocity = {0, 0, 0};
 	DirectX::XMFLOAT3 m_forceAccum = {0, 0, 0};
 
@@ -43,6 +44,12 @@ public:
 
 	void SetDrag(float drag) { m_drag = drag; }
 	float GetDrag() const { return m_drag; }
+
+	// Bounce coefficient [0..1+]. Combined as max(self, other) in ResolveContact.
+	void SetRestitution(float restitution) {
+		m_restitution = restitution < 0.0f ? 0.0f : restitution;
+	}
+	float GetRestitution() const { return m_restitution; }
 
 	void SetVelocity(const DirectX::XMFLOAT3& v) { m_velocity = v; }
 	DirectX::XMFLOAT3 GetVelocity() const { return m_velocity; }
