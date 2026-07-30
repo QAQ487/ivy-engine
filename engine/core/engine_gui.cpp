@@ -62,6 +62,7 @@
 #include "engine/ecs/visual_component.h"
 #include "engine/ecs/billboard_component.h"
 #include "engine/ecs/material_component.h"
+#include "engine/ecs/rigidbody_component.h"
 #include "engine/ecs/directional_light_component.h"
 #include "engine/ecs/point_light_component.h"
 #include "engine/ecs/spot_light_component.h"
@@ -2802,6 +2803,48 @@ void EngineGUI_Draw() {
                 ImGui::Spacing();
             }
 
+            if (RigidbodyComponent* rbc = g_selNode->GetComponent<RigidbodyComponent>()) {
+                ImGui::Separator();
+                ImGui::Text("Rigidbody");
+                Rigidbody& rb = rbc->Body();
+
+                bool useGravity = rb.UseGravity();
+                if (ImGui::Checkbox("Use Gravity", &useGravity)) {
+                    rb.SetUseGravity(useGravity);
+                    runtimeDirty = true;
+                }
+
+                bool isKinematic = rb.IsKinematic();
+                if (ImGui::Checkbox("Is Kinematic", &isKinematic)) {
+                    rb.SetIsKinematic(isKinematic);
+                    runtimeDirty = true;
+                }
+
+                float mass = rb.GetMass();
+                if (ImGui::DragFloat("Mass", &mass, 0.05f, 0.001f, 1000.0f)) {
+                    rb.SetMass(mass);
+                    runtimeDirty = true;
+                }
+
+                float drag = rb.GetDrag();
+                if (ImGui::DragFloat("Drag", &drag, 0.01f, 0.0f, 50.0f)) {
+                    rb.SetDrag(drag);
+                    runtimeDirty = true;
+                }
+
+                float restitution = rb.GetRestitution();
+                if (ImGui::DragFloat("Restitution", &restitution, 0.01f, 0.0f, 2.0f)) {
+                    rb.SetRestitution(restitution);
+                    runtimeDirty = true;
+                }
+
+                if (ImGui::Button("Remove Rigidbody")) {
+                    g_selNode->RemoveComponent<RigidbodyComponent>();
+                    runtimeDirty = true;
+                }
+                ImGui::Spacing();
+            }
+
             // Material property editor
             if (MaterialComponent* mc = g_selNode->GetComponent<MaterialComponent>()) {
                 ImGui::Separator();
@@ -2973,6 +3016,10 @@ void EngineGUI_Draw() {
             }
             if (!g_selNode->GetComponent<MaterialComponent>() && ImGui::Button("Add Material")) {
                 g_selNode->AddComponent<MaterialComponent>();
+                runtimeDirty = true;
+            }
+            if (!g_selNode->GetComponent<RigidbodyComponent>() && ImGui::Button("Add Rigidbody")) {
+                g_selNode->AddComponent<RigidbodyComponent>();
                 runtimeDirty = true;
             }
             if (!g_selNode->GetComponent<ColliderComponent>() && ImGui::Button("Add Collider")) {

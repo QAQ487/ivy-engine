@@ -155,6 +155,9 @@
     <ClInclude Include="engine\ecs\material_component.h">
       <Filter>engine\ecs</Filter>
     </ClInclude>
+    <ClInclude Include="engine\ecs\rigidbody_component.h">
+      <Filter>engine\ecs</Filter>
+    </ClInclude>
     <ClInclude Include="engine\ecs\camera_component.h">
       <Filter>engine\ecs</Filter>
     </ClInclude>
@@ -455,6 +458,9 @@
       <Filter>engine\ecs</Filter>
     </ClCompile>
     <ClCompile Include="engine\ecs\material_component.cpp">
+      <Filter>engine\ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\ecs\rigidbody_component.cpp">
       <Filter>engine\ecs</Filter>
     </ClCompile>
     <ClCompile Include="engine\ecs\camera_component.cpp">

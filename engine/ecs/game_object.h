@@ -28,6 +28,7 @@
 #include "scene_manager.h"
 #include "../physics/collider/collider.h"
 #include "component.h"
+#include "rigidbody_component.h"
 
 namespace engine { class Transform; }
 
@@ -64,7 +65,6 @@ public:
     DirectX::XMFLOAT3 m_scale            = {1.0f, 1.0f, 1.0f};
     bool              m_isActive         = true;
     Tag               m_tag              = Tag::TAG_NONE;
-    Rigidbody         m_rigidbody;
     Collider*         m_collider         = nullptr;
     bool              m_colliderOwnedByHost = false;
     bool              m_debugCollider    = false;
@@ -206,11 +206,17 @@ public:
     virtual void LogicUpdate(double /*elapsed_time*/) {}
 
     virtual void IntegratePhysics(double elapsed_time) {
-        if (!m_rigidbody.IsKinematic()) {
-            DirectX::XMFLOAT3 pos = m_position;
-            m_rigidbody.Integrate(pos, elapsed_time);
-            m_position = pos;
-        }
+        RigidbodyComponent* rc = GetComponent<RigidbodyComponent>();
+        if (!rc)
+            return;
+
+        Rigidbody& rb = rc->Body();
+        if (rb.IsKinematic())
+            return;
+
+        DirectX::XMFLOAT3 pos = m_position;
+        rb.Integrate(pos, elapsed_time);
+        m_position = pos;
     }
 
     // Draw this object and all children.
@@ -264,8 +270,20 @@ public:
     void SetScale(const DirectX::XMFLOAT3& s) { m_scale = s; }
     DirectX::XMFLOAT3 GetScale() const         { return m_scale; }
 
-    Rigidbody&       GetRigidbody()       { return m_rigidbody; }
-    const Rigidbody& GetRigidbody() const { return m_rigidbody; }
+    // Ensures a RigidbodyComponent exists (lazy-add). Prefer attaching
+    // Rigidbody in the editor so settings serialize into the scene.
+    Rigidbody& GetRigidbody() {
+        RigidbodyComponent* rc = GetComponent<RigidbodyComponent>();
+        if (!rc)
+            rc = AddComponent<RigidbodyComponent>();
+        return rc->Body();
+    }
+    const Rigidbody& GetRigidbody() const {
+        if (const RigidbodyComponent* rc = GetComponent<RigidbodyComponent>())
+            return rc->Body();
+        static const Rigidbody s_fallback;
+        return s_fallback;
+    }
 
     Collider*       GetCollider()       { return m_collider; }
     const Collider* GetCollider() const { return m_collider; }

@@ -13,6 +13,7 @@
 #include "engine/ecs/visual_component.h"
 #include "engine/ecs/billboard_component.h"
 #include "engine/ecs/material_component.h"
+#include "engine/ecs/rigidbody_component.h"
 #include "engine/ecs/camera_component.h"
 #include "engine/ecs/directional_light_component.h"
 #include "engine/ecs/point_light_component.h"
@@ -171,6 +172,10 @@ void SceneLoader_RegisterComponentTypes() {
     ComponentFactory::Instance().Register("Material",
         []() -> std::unique_ptr<Component> {
             return std::make_unique<MaterialComponent>();
+        });
+    ComponentFactory::Instance().Register("Rigidbody",
+        []() -> std::unique_ptr<Component> {
+            return std::make_unique<RigidbodyComponent>();
         });
     ComponentFactory::Instance().Register("Script",
         []() -> std::unique_ptr<Component> {

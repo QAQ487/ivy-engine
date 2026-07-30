@@ -44,5 +44,8 @@
       <Filter>sample</Filter>
     </ClCompile>
     <ClCompile Include="pch.cpp" />
+    <ClCompile Include="..\..\..\engine\ecs\rigidbody_component.cpp">
+      <Filter>EngineRefs</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

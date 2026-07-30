@@ -256,6 +256,7 @@ exit /b 0</Command>
     <ClInclude Include="engine\ecs\visual_component.h" />
     <ClInclude Include="engine\ecs\billboard_component.h" />
     <ClInclude Include="engine\ecs\material_component.h" />
+    <ClInclude Include="engine\ecs\rigidbody_component.h" />
     <ClInclude Include="engine\ecs\camera_component.h" />
     <ClInclude Include="engine\ecs\directional_light_component.h" />
     <ClInclude Include="engine\ecs\point_light_component.h" />
@@ -350,6 +351,7 @@ exit /b 0</Command>
     <ClCompile Include="engine\ecs\visual_component.cpp" />
     <ClCompile Include="engine\ecs\billboard_component.cpp" />
     <ClCompile Include="engine\ecs\material_component.cpp" />
+    <ClCompile Include="engine\ecs\rigidbody_component.cpp" />
     <ClCompile Include="engine\ecs\camera_component.cpp" />
     <ClCompile Include="engine\ecs\directional_light_component.cpp" />
     <ClCompile Include="engine\ecs\point_light_component.cpp" />

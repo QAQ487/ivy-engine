@@ -1,6 +1,7 @@
 ﻿#include "collider_component.h"
 #include "engine/ecs/game_object.h"
 #include "model_asset_cache.h"
+#include "rigidbody_component.h"
 #include "visual_component.h"
 
 #include "libraries/nlohmann/json.hpp"
@@ -52,7 +53,11 @@ void ColliderComponent::ApplyToOwner() {
         break;
     }
 
-    owner->GetRigidbody().SetIsKinematic(true);
+    // Static colliders default to kinematic. Authored RigidbodyComponent keeps
+    // its own isKinematic / mass / drag from the scene (do not overwrite).
+    const bool hadRigidbody = owner->HasComponent<RigidbodyComponent>();
+    if (!hadRigidbody)
+        owner->GetRigidbody().SetIsKinematic(true);
 }
 
 std::string ColliderComponent::Serialize() const {

@@ -219,6 +219,7 @@ xcopy /Y /D "$(OutDir)$(TargetName).pdb" "$(RuntimeScriptBin)"</Command>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\engine\physics\core\rigidbody.cpp" />
+    <ClCompile Include="..\..\..\engine\ecs\rigidbody_component.cpp" />
     <ClCompile Include="..\..\..\engine\scripting\script_dll_exports.cpp" />
     <ClCompile Include="..\..\..\engine\scripting\ui_canvas_script_dll_exports.cpp" />
     <ClCompile Include="..\..\..\engine\scripting\script_runtime_api.cpp" />
