@@ -12,6 +12,7 @@
 
 #include "collider.h"
 #include "engine/ecs/game_object.h"
+#include "engine/ecs/transform.h"
 #include "../core/rigidbody.h"
 #include <DirectXMath.h>
 #include <algorithm>
@@ -28,7 +29,11 @@ void GetOwnerPose(const GameObject* owner, XMFLOAT3& pos, XMFLOAT3& rot, XMFLOAT
         pos = rot = scale = {0.0f, 0.0f, 0.0f};
         return;
     }
-    owner->GetWorldPose(pos, rot, scale);
+    // Use physics pose (m_position), not GetWorldPose/Transform. Transform can lag
+    // one frame behind rigidbody integration; CCD then rays the wrong segment.
+    pos = owner->GetPosition();
+    rot = owner->GetRotation();
+    scale = owner->GetScale();
 }
 
 // A world-space sphere becomes an ellipsoid in mesh-local space under non-uniform scale.
@@ -747,12 +752,22 @@ void SphereCollider::ResolveCollision(Collider* other) {
         // Continuous sweep: cast from previous center along this frame's displacement.
         // Casting forward from the *current* position misses walls already behind a
         // fast disc (thin perimeter mesh + high throw speed).
-        const XMFLOAT3 prev = m_owner->m_previousPosition;
-        const XMFLOAT3 cur = m_owner->GetPosition();
+        // Prefer collider world centers so local center offsets stay consistent.
+        const XMFLOAT3 curCenter = GetWorldCenter();
+        const XMFLOAT3 centerOffset = {
+            curCenter.x - m_owner->GetPosition().x,
+            curCenter.y - m_owner->GetPosition().y,
+            curCenter.z - m_owner->GetPosition().z
+        };
+        const XMFLOAT3 prevCenter = {
+            m_owner->m_previousPosition.x + centerOffset.x,
+            m_owner->m_previousPosition.y + centerOffset.y,
+            m_owner->m_previousPosition.z + centerOffset.z
+        };
         const XMFLOAT3 delta = {
-            cur.x - prev.x,
-            cur.y - prev.y,
-            cur.z - prev.z
+            curCenter.x - prevCenter.x,
+            curCenter.y - prevCenter.y,
+            curCenter.z - prevCenter.z
         };
         const float moveLen = std::sqrt(
             delta.x * delta.x + delta.y * delta.y + delta.z * delta.z);
@@ -765,19 +780,20 @@ void SphereCollider::ResolveCollision(Collider* other) {
             };
             // Start just behind the previous sphere so the surface is hit before center.
             const XMFLOAT3 rayOrigin = {
-                prev.x - rayDir.x * m_radius,
-                prev.y - rayDir.y * m_radius,
-                prev.z - rayDir.z * m_radius
+                prevCenter.x - rayDir.x * m_radius,
+                prevCenter.y - rayDir.y * m_radius,
+                prevCenter.z - rayDir.z * m_radius
             };
             const float sweepDistance = moveLen + m_radius * 2.0f;
 
             XMFLOAT3 hitPoint, hitNormal;
-            if (mesh->Raycast(rayOrigin, rayDir, sweepDistance, hitPoint, hitNormal)) {
+            const bool rayHit = mesh->Raycast(rayOrigin, rayDir, sweepDistance, hitPoint, hitNormal);
+            if (rayHit) {
                 // Face normals may point either way; flip so bounce pushes out of wall.
                 const XMFLOAT3 toPrev = {
-                    prev.x - hitPoint.x,
-                    prev.y - hitPoint.y,
-                    prev.z - hitPoint.z
+                    prevCenter.x - hitPoint.x,
+                    prevCenter.y - hitPoint.y,
+                    prevCenter.z - hitPoint.z
                 };
                 if (toPrev.x * hitNormal.x + toPrev.y * hitNormal.y + toPrev.z * hitNormal.z < 0.0f) {
                     hitNormal.x = -hitNormal.x;
@@ -786,10 +802,14 @@ void SphereCollider::ResolveCollision(Collider* other) {
                 }
 
                 XMVECTOR n = XMLoadFloat3(&hitNormal);
-                XMVECTOR surfacePosV = XMLoadFloat3(&hitPoint) + (n * m_radius);
-                XMFLOAT3 surfacePos;
-                XMStoreFloat3(&surfacePos, surfacePosV);
-                m_owner->SetPosition(surfacePos);
+                XMVECTOR surfaceCenterV = XMLoadFloat3(&hitPoint) + (n * m_radius);
+                XMFLOAT3 surfaceCenter;
+                XMStoreFloat3(&surfaceCenter, surfaceCenterV);
+                m_owner->SetPosition({
+                    surfaceCenter.x - centerOffset.x,
+                    surfaceCenter.y - centerOffset.y,
+                    surfaceCenter.z - centerOffset.z
+                });
 
                 // Small penetration keeps ResolveContact applying the bounce impulse.
                 ResolveContact(m_owner, other->GetOwner(), hitNormal, 0.01f);

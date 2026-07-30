@@ -9,6 +9,7 @@
  ===========================================================================**/
 #include "physics_system.h"
 #include "engine/ecs/game_object.h"
+#include "engine/ecs/transform.h"
 #include <DirectXMath.h>
 #include <vector>
 #include <cmath>
@@ -130,6 +131,22 @@ namespace {
 		const XMFLOAT3 prevPos = a->m_previousPosition;
 		const XMFLOAT3 curPos  = a->GetPosition();
 
+		// Thin mesh walls: discrete CheckCollision at sub-steps often misses when
+		// a fast sphere jumps past zero-thickness triangles. Sphere↔Mesh
+		// ResolveCollision already runs continuous raycast CCD along prev→cur.
+		const bool sphereVsMesh =
+			ca->GetType() == ColliderType::SPHERE && cb->GetType() == ColliderType::MESH;
+		const bool meshVsSphere =
+			ca->GetType() == ColliderType::MESH && cb->GetType() == ColliderType::SPHERE;
+		if (sphereVsMesh || meshVsSphere) {
+			a->SetPosition(curPos);
+			if (IsDynamic(a))
+				ca->ResolveCollision(cb);
+			if (bDynamic)
+				cb->ResolveCollision(ca);
+			return;
+		}
+
 		float dx   = curPos.x - prevPos.x;
 		float dy   = curPos.y - prevPos.y;
 		float dz   = curPos.z - prevPos.z;
@@ -137,11 +154,13 @@ namespace {
 
 		// Number of sub-steps: at least 1, more when the displacement is large
 		// relative to the collider radius (prevents tunneling through thin objects).
+		// Step size ~0.25R so thin boxes still get sampled; cap raised for fast throws.
 		float colliderR = GetApproxRadius(ca);
 		int   nSteps    = 1;
-		if (colliderR > 1e-4f && dLen > colliderR * 0.5f) {
-			nSteps = static_cast<int>(std::ceil(dLen / (colliderR * 0.5f)));
-			nSteps = min(nSteps, 16); // cap to keep performance predictable
+		const float stepSize = colliderR * 0.25f;
+		if (stepSize > 1e-4f && dLen > stepSize) {
+			nSteps = static_cast<int>(std::ceil(dLen / stepSize));
+			nSteps = min(nSteps, 64);
 		}
 
 		for (int step = 1; step <= nSteps; step++) {
@@ -230,7 +249,8 @@ void PhysicsSystem_ResolveCollisions() {
 
 			// スウェプトブロードフェーズ: 現在位置でのスフィアチェックに加え、
 			// 前フレームから現フレームへの経路全体をカプセルで包んで判定する。
-			if (!BroadPhasePassSwept(ca, prevCenterA, cb)) continue;
+			const bool bpOk = BroadPhasePassSwept(ca, prevCenterA, cb);
+			if (!bpOk) continue;
 
 			// ナローフェーズ（スウェプト）: 変位が大きい場合はサブステップで判定する。
 			DoSweptNarrowPhase(a, ca, b, cb, bDynamic);

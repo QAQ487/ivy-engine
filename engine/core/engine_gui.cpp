@@ -108,6 +108,7 @@ static bool  g_showAddTagPopup = false;
 static bool  g_showDeleteTagPopup = false;
 static int   g_pendingDeleteTagId = -1;
 static bool  g_showDefaultScenePopup = false;
+static bool  g_showGravityPopup = false;
 static bool  g_showUiOverlay = true;
 static bool  g_showNewProjectPopup = false;
 static char  g_newProjectName[128] = "NewProject";
@@ -910,6 +911,8 @@ static void DrawEditorMenuBar() {
     if (ImGui::BeginMenu("Project Settings")) {
         if (ImGui::MenuItem("Default Scene..."))
             g_showDefaultScenePopup = true;
+        if (ImGui::MenuItem("Gravity...", nullptr, false, ProjectManager::Instance().IsOpen()))
+            g_showGravityPopup = true;
         ImGui::EndMenu();
     }
 
@@ -1203,6 +1206,37 @@ static void DrawEditorPopups() {
         }
         ImGui::EndPopup();
     }
+
+
+    if (g_showGravityPopup)
+        ImGui::OpenPopup("GravityPopup");
+    ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+    const bool gravityPopupWasOpen = g_showGravityPopup;
+    if (ImGui::BeginPopupModal("GravityPopup", &g_showGravityPopup, ImGuiWindowFlags_AlwaysAutoResize)) {
+        ImGui::Text("Project Gravity");
+        ImGui::TextDisabled("Stored in project.json (physics.gravity)");
+        ImGui::Separator();
+
+        float gravity = ProjectManager::Instance().GetPhysicsGravity();
+        ImGui::SetNextItemWidth(160.0f);
+        if (ImGui::DragFloat("m/s^2", &gravity, 0.05f, 0.1f, 100.0f, "%.2f"))
+            ProjectManager::Instance().SetPhysicsGravity(gravity);
+        if (ImGui::IsItemDeactivatedAfterEdit()) {
+            ProjectManager::Instance().SetPhysicsGravity(gravity);
+            ProjectManager::Instance().SaveProjectFile(nullptr);
+        }
+
+        ImGui::Separator();
+        if (ImGui::Button("Close", ImVec2(120, 0))) {
+            ProjectManager::Instance().SetPhysicsGravity(gravity);
+            ProjectManager::Instance().SaveProjectFile(nullptr);
+            g_showGravityPopup = false;
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::EndPopup();
+    }
+    if (gravityPopupWasOpen && !g_showGravityPopup)
+        ProjectManager::Instance().SaveProjectFile(nullptr);
 
     if (g_showUnsavedChangesPopup)
         ImGui::OpenPopup("UnsavedChangesPopup");

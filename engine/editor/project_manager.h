@@ -16,12 +16,17 @@ public:
         int uiZoomPercent = 100;
     };
 
+    struct PhysicsSettings {
+        float gravity = 9.81f;
+    };
+
     struct ProjectData {
         std::string name;
         int version = kSchemaVersion;
         std::string lastOpenedScene;
         std::string defaultScene;
         EditorSettings editor;
+        PhysicsSettings physics;
     };
 
     static ProjectManager& Instance();
@@ -44,6 +49,8 @@ public:
     void SetDefaultScene(const std::string& fileName);
     void SetEditorUiZoomPercent(int percent);
     int GetEditorUiZoomPercent() const { return m_data.editor.uiZoomPercent; }
+    void SetPhysicsGravity(float gravity);
+    float GetPhysicsGravity() const { return m_data.physics.gravity; }
 
     // Absolute path or rom/scene-relative filename suitable for EngineGUI_LoadFromFile.
     std::string ResolveSceneToLoad() const;

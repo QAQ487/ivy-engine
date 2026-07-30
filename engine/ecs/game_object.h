@@ -29,6 +29,7 @@
 #include "../physics/collider/collider.h"
 #include "component.h"
 #include "rigidbody_component.h"
+#include "transform.h"
 
 namespace engine { class Transform; }
 
@@ -214,9 +215,15 @@ public:
         if (rb.IsKinematic())
             return;
 
+        // PhysicsSystem_Update already integrates dynamic objects that have a
+        // collider (registered in the scene). Integrating again here doubled
+        // movement once SetPosition kept Transform in sync with m_position.
+        if (m_collider)
+            return;
+
         DirectX::XMFLOAT3 pos = m_position;
         rb.Integrate(pos, elapsed_time);
-        m_position = pos;
+        SetPosition(pos);
     }
 
     // Draw this object and all children.
@@ -261,13 +268,27 @@ public:
     Tag GetTag() const { return m_tag; }
     int GetTagId() const { return static_cast<int>(m_tag); }
 
-    void SetPosition(const DirectX::XMFLOAT3& p) { m_position = p; }
+    void SetPosition(const DirectX::XMFLOAT3& p) {
+        m_position = p;
+        // Keep Transform in lockstep — colliders/GetWorldPose read it; scripts
+        // call SetPosition from the DLL so this must stay header-inline.
+        if (engine::Transform* t = GetComponent<engine::Transform>())
+            t->localPosition = p;
+    }
     DirectX::XMFLOAT3 GetPosition() const         { return m_position; }
 
-    void SetRotation(const DirectX::XMFLOAT3& r) { m_rotation = r; }
+    void SetRotation(const DirectX::XMFLOAT3& r) {
+        m_rotation = r;
+        if (engine::Transform* t = GetComponent<engine::Transform>())
+            t->localRotation = r;
+    }
     DirectX::XMFLOAT3 GetRotation() const         { return m_rotation; }
 
-    void SetScale(const DirectX::XMFLOAT3& s) { m_scale = s; }
+    void SetScale(const DirectX::XMFLOAT3& s) {
+        m_scale = s;
+        if (engine::Transform* t = GetComponent<engine::Transform>())
+            t->localScale = s;
+    }
     DirectX::XMFLOAT3 GetScale() const         { return m_scale; }
 
     // Ensures a RigidbodyComponent exists (lazy-add). Prefer attaching

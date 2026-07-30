@@ -11,7 +11,11 @@
 #define RIGIDBODY_H
 #include <DirectXMath.h>
 
+// Engine default gravity (m/s^2). Projects may override via Physics_SetGravity.
 static const float GRAVITY = 9.81f;
+
+float Physics_GetGravity();
+void Physics_SetGravity(float gravity);
 
 enum class ForceMode {
 	Force,          // Add a continuous force. Mass-dependent.

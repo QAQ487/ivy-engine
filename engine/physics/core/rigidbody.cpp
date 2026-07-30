@@ -9,6 +9,18 @@
  ===========================================================================**/
 #include "rigidbody.h"
 
+namespace {
+	float g_worldGravity = GRAVITY;
+}
+
+float Physics_GetGravity() {
+	return g_worldGravity;
+}
+
+void Physics_SetGravity(float gravity) {
+	g_worldGravity = (gravity > 0.0f) ? gravity : GRAVITY;
+}
+
 void Rigidbody::AddForce(const DirectX::XMFLOAT3& force, ForceMode mode) {
 	if (m_isKinematic) return;
 
@@ -62,7 +74,7 @@ void Rigidbody::Integrate(DirectX::XMFLOAT3& position, double elapsed_time) {
 	if (dt <= 0.0f) return;
 
 	if (m_useGravity && !m_gravityOverridden) {
-		m_forceAccum.y -= GRAVITY * m_mass;
+		m_forceAccum.y -= Physics_GetGravity() * m_mass;
 	}
 
 	// Calculate acceleration from accumulated forces (a = F/m)

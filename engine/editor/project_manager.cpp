@@ -1,5 +1,6 @@
 #include "project_manager.h"
 
+#include "engine/physics/core/rigidbody.h"
 #include "libraries/nlohmann/json.hpp"
 
 #include <Windows.h>
@@ -374,6 +375,7 @@ ProjectManager::ProjectData ProjectManager::MakeDefaultData(const std::string& r
     data.defaultScene = fromTxt.empty() ? "scene_main.json" : fromTxt;
     data.lastOpenedScene = data.defaultScene;
     data.editor.uiZoomPercent = 100;
+    data.physics.gravity = GRAVITY;
 
     try {
         std::ifstream prefs(fs::path(rootPath) / "rom" / "editor" / "ui_prefs.json");
@@ -409,6 +411,11 @@ bool ProjectManager::LoadProjectFile(const std::string& rootPath, ProjectData* o
         out->editor.uiZoomPercent = 100;
         if (j.contains("editor") && j["editor"].is_object())
             out->editor.uiZoomPercent = j["editor"].value("uiZoomPercent", 100);
+        out->physics.gravity = GRAVITY;
+        if (j.contains("physics") && j["physics"].is_object())
+            out->physics.gravity = j["physics"].value("gravity", GRAVITY);
+        if (!(out->physics.gravity > 0.0f))
+            out->physics.gravity = GRAVITY;
 
         if (out->defaultScene.empty())
             out->defaultScene = ReadDefaultSceneFileName(rootPath);
@@ -433,6 +440,8 @@ bool ProjectManager::WriteProjectFile(const std::string& rootPath, const Project
         j["defaultScene"] = data.defaultScene;
         j["editor"] = json::object();
         j["editor"]["uiZoomPercent"] = data.editor.uiZoomPercent;
+        j["physics"] = json::object();
+        j["physics"]["gravity"] = data.physics.gravity;
 
         const fs::path filePath = fs::path(rootPath) / kProjectFileName;
         std::ofstream file(filePath, std::ios::trunc);
@@ -509,6 +518,7 @@ bool ProjectManager::ActivateRoot(const std::string& rootPath, std::string* erro
     m_rootPath = root.string();
     m_data = std::move(data);
     m_open = true;
+    Physics_SetGravity(m_data.physics.gravity);
     TouchRecent(m_rootPath);
     return true;
 }
@@ -637,6 +647,12 @@ void ProjectManager::SetDefaultScene(const std::string& fileName) {
 
 void ProjectManager::SetEditorUiZoomPercent(int percent) {
     m_data.editor.uiZoomPercent = percent;
+}
+
+void ProjectManager::SetPhysicsGravity(float gravity) {
+    m_data.physics.gravity = (gravity > 0.0f) ? gravity : GRAVITY;
+    if (m_open)
+        Physics_SetGravity(m_data.physics.gravity);
 }
 
 std::string ProjectManager::ResolveSceneToLoad() const {
