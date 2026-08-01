@@ -76,9 +76,6 @@ struct ScriptRuntimeApi {
     void (*engineGuiStartPlay)();
 
     UICanvas* (*sceneCanvasGetCanvas)();
-    void (*sceneCanvasShowCountdown)(int count);
-    void (*sceneCanvasShowCountdownText)(const char* text);
-    void (*sceneCanvasHideCountdown)();
     void (*sceneCanvasShowRedOverlay)();
     void (*sceneCanvasHideRedOverlay)();
     void (*sceneCanvasSetRedOverlayAlpha)(float alpha);
@@ -284,9 +281,6 @@ void ScriptApi_DebugDrawSphereWire(DirectX::XMFLOAT3 position,
                                    DirectX::XMFLOAT4 color = {0.2f, 0.8f, 1.0f, 0.95f});
 
 UICanvas* ScriptApi_SceneCanvasGetCanvas();
-void ScriptApi_SceneCanvasShowCountdown(int count);
-void ScriptApi_SceneCanvasShowCountdownText(const char* text);
-void ScriptApi_SceneCanvasHideCountdown();
 void ScriptApi_SceneCanvasSetTimerSeconds(float seconds);
 void ScriptApi_SceneCanvasRequestSceneFile(const char* sceneFile, bool playOnLoad);
 UIElement* ScriptApi_UICanvasGetElement(UICanvas& canvas, const char* name);

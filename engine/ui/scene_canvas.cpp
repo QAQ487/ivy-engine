@@ -21,7 +21,6 @@ using json = nlohmann::json;
 std::unique_ptr<UICanvas> g_canvas;
 
 UISprite* g_redOverlay = nullptr; // Full-screen red tint shown during player respawn countdown
-UIText* g_countdown = nullptr;    // Countdown text for fall respawn
 UIText* g_scoreText = nullptr;    // Score display (top-left corner)
 UIText* g_timerText = nullptr;    // Timer display (top-middle)
 std::string g_pendingSceneFile;
@@ -171,13 +170,11 @@ namespace {
 
 	void BindSceneHudElements() {
 		g_redOverlay = nullptr;
-		g_countdown = nullptr;
 		g_scoreText = nullptr;
 		g_timerText = nullptr;
 		if (!g_canvas) return;
 
 		g_redOverlay = dynamic_cast<UISprite*>(g_canvas->GetElement("RedOverlay"));
-		g_countdown = dynamic_cast<UIText*>(g_canvas->GetElement("Countdown"));
 		g_scoreText = dynamic_cast<UIText*>(g_canvas->GetElement("ScoreText"));
 		g_timerText = dynamic_cast<UIText*>(g_canvas->GetElement("TimerText"));
 	}
@@ -325,7 +322,6 @@ void SceneCanvas_Finalize()
 	g_canvas.reset();
 	UIButton::ShutdownSharedFont();
 	g_redOverlay = nullptr;
-	g_countdown = nullptr;
 	g_scoreText = nullptr;
 	g_timerText = nullptr;
 	g_pendingSceneFile.clear();
@@ -520,29 +516,6 @@ std::string SceneCanvas_ConsumeRequestedSceneFile(bool* playOnLoad)
 	g_pendingSceneFile.clear();
 	g_pendingScenePlayOnLoad = false;
 	return requested;
-}
-
-void SceneCanvas_ShowCountdown(int count)
-{
-	if (g_countdown) {
-		g_countdown->SetText(std::to_string(count));
-		g_countdown->SetVisible(true);
-	}
-}
-
-void SceneCanvas_ShowCountdownText(const char* text)
-{
-	if (g_countdown && text) {
-		g_countdown->SetText(text);
-		g_countdown->SetVisible(true);
-	}
-}
-
-void SceneCanvas_HideCountdown()
-{
-	if (g_countdown) {
-		g_countdown->SetVisible(false);
-	}
 }
 
 void SceneCanvas_ShowRedOverlay()

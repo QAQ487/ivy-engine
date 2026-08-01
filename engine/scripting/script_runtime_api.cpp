@@ -23,7 +23,7 @@
 #include <string>
 
 namespace {
-constexpr std::uint32_t kScriptRuntimeApiVersion = 30;
+constexpr std::uint32_t kScriptRuntimeApiVersion = 31;
 
 template <typename T>
 T* FindComponentByTypeName(GameObject& object, const char* typeName) {
@@ -415,9 +415,6 @@ const ScriptRuntimeApi g_scriptRuntimeApi = {
     &Host_EngineGUILoadFromFile,
     &Host_EngineGUIStartPlay,
     &SceneCanvas_GetCanvas,
-    &SceneCanvas_ShowCountdown,
-    &SceneCanvas_ShowCountdownText,
-    &SceneCanvas_HideCountdown,
     &SceneCanvas_ShowRedOverlay,
     &SceneCanvas_HideRedOverlay,
     &SceneCanvas_SetRedOverlayAlpha,
@@ -629,24 +626,6 @@ void EngineGUI_SetActiveCameraNodeName(const std::string& name) {
 UICanvas* SceneCanvas_GetCanvas() {
     const ScriptRuntimeApi* api = ScriptRuntimeApi_GetHost();
     return api && api->sceneCanvasGetCanvas ? api->sceneCanvasGetCanvas() : nullptr;
-}
-
-void SceneCanvas_ShowCountdown(int count) {
-    const ScriptRuntimeApi* api = ScriptRuntimeApi_GetHost();
-    if (api && api->sceneCanvasShowCountdown)
-        api->sceneCanvasShowCountdown(count);
-}
-
-void SceneCanvas_ShowCountdownText(const char* text) {
-    const ScriptRuntimeApi* api = ScriptRuntimeApi_GetHost();
-    if (api && api->sceneCanvasShowCountdownText)
-        api->sceneCanvasShowCountdownText(text);
-}
-
-void SceneCanvas_HideCountdown() {
-    const ScriptRuntimeApi* api = ScriptRuntimeApi_GetHost();
-    if (api && api->sceneCanvasHideCountdown)
-        api->sceneCanvasHideCountdown();
 }
 
 void SceneCanvas_ShowRedOverlay() {
@@ -1043,24 +1022,6 @@ void ScriptApi_DebugDrawSphereWire(DirectX::XMFLOAT3 position,
 UICanvas* ScriptApi_SceneCanvasGetCanvas() {
     const ScriptRuntimeApi* api = ScriptRuntimeApi_GetHost();
     return api && api->sceneCanvasGetCanvas ? api->sceneCanvasGetCanvas() : nullptr;
-}
-
-void ScriptApi_SceneCanvasShowCountdown(int count) {
-    const ScriptRuntimeApi* api = ScriptRuntimeApi_GetHost();
-    if (api && api->sceneCanvasShowCountdown)
-        api->sceneCanvasShowCountdown(count);
-}
-
-void ScriptApi_SceneCanvasShowCountdownText(const char* text) {
-    const ScriptRuntimeApi* api = ScriptRuntimeApi_GetHost();
-    if (api && api->sceneCanvasShowCountdownText)
-        api->sceneCanvasShowCountdownText(text);
-}
-
-void ScriptApi_SceneCanvasHideCountdown() {
-    const ScriptRuntimeApi* api = ScriptRuntimeApi_GetHost();
-    if (api && api->sceneCanvasHideCountdown)
-        api->sceneCanvasHideCountdown();
 }
 
 void ScriptApi_SceneCanvasSetTimerSeconds(float seconds) {

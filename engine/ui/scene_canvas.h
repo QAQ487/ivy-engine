@@ -32,11 +32,6 @@ void SceneCanvas_BindButtonAction(UIButton* button);
 void SceneCanvas_RequestSceneFile(const std::string& sceneFile, bool playOnLoad = false);
 std::string SceneCanvas_ConsumeRequestedSceneFile(bool* playOnLoad = nullptr);
 
-// Show/hide the centred respawn countdown number.
-void SceneCanvas_ShowCountdown(int count);
-void SceneCanvas_ShowCountdownText(const char* text);
-void SceneCanvas_HideCountdown();
-
 // Show/hide a red full-screen overlay (used during player respawn countdown).
 void SceneCanvas_ShowRedOverlay();
 void SceneCanvas_HideRedOverlay();
