@@ -327,6 +327,7 @@ public:
 
     // ── Collision ignore ──────────────────────────────────────────────────
     void AddIgnoreCollisionTag(Tag tag);
+    void RemoveIgnoreCollisionTag(Tag tag);
     bool ShouldIgnoreCollisionWith(Tag otherTag) const {
         for (const auto& t : m_ignoreCollisionTags)
             if (t == otherTag) return true;

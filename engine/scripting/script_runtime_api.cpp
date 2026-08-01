@@ -229,6 +229,12 @@ void Host_GameObjectAddIgnoreCollisionTag(GameObject* object, Tag tag) {
     object->AddIgnoreCollisionTag(tag);
 }
 
+void Host_GameObjectRemoveIgnoreCollisionTag(GameObject* object, Tag tag) {
+    if (!object)
+        return;
+    object->RemoveIgnoreCollisionTag(tag);
+}
+
 DirectX::XMFLOAT3 Host_ColliderGetWorldCenter(const Collider* collider) {
     return collider ? collider->GetWorldCenter() : DirectX::XMFLOAT3{0.0f, 0.0f, 0.0f};
 }
@@ -464,6 +470,7 @@ const ScriptRuntimeApi g_scriptRuntimeApi = {
     &Host_ThirdPersonCameraSetMagnetMode,
     &Host_ThirdPersonCameraSetMagnetTarget,
     &Host_BillboardAddUv,
+    &Host_GameObjectRemoveIgnoreCollisionTag,
 };
 #else
 using GetApiFn = const ScriptRuntimeApi* (*)();
@@ -715,6 +722,12 @@ void ScriptApi_GameObjectAddIgnoreCollisionTag(engine::GameObject& object, Tag t
     const ScriptRuntimeApi* api = ScriptRuntimeApi_GetHost();
     if (api && api->gameObjectAddIgnoreCollisionTag)
         api->gameObjectAddIgnoreCollisionTag(&object, tag);
+}
+
+void ScriptApi_GameObjectRemoveIgnoreCollisionTag(engine::GameObject& object, Tag tag) {
+    const ScriptRuntimeApi* api = ScriptRuntimeApi_GetHost();
+    if (api && api->gameObjectRemoveIgnoreCollisionTag)
+        api->gameObjectRemoveIgnoreCollisionTag(&object, tag);
 }
 
 DirectX::XMFLOAT3 ScriptApi_GetColliderWorldCenter(const Collider& collider) {

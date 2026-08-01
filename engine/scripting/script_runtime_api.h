@@ -172,6 +172,9 @@ struct ScriptRuntimeApi {
                            bool groundAligned,
                            DirectX::XMFLOAT2 uvOffset,
                            DirectX::XMFLOAT2 uvScale);
+
+    // Appended for ABI safety — always add new host hooks at the end.
+    void (*gameObjectRemoveIgnoreCollisionTag)(GameObject* object, Tag tag);
 };
 
 const ScriptRuntimeApi* ScriptRuntimeApi_GetHost();
@@ -191,6 +194,7 @@ BoxCollider* ScriptApi_CreateBoxCollider(engine::GameObject& object,
                                          DirectX::XMFLOAT3 center);
 void ScriptApi_DestroyCollider(engine::GameObject& object);
 void ScriptApi_GameObjectAddIgnoreCollisionTag(engine::GameObject& object, Tag tag);
+void ScriptApi_GameObjectRemoveIgnoreCollisionTag(engine::GameObject& object, Tag tag);
 DirectX::XMFLOAT3 ScriptApi_GetColliderWorldCenter(const Collider& collider);
 DirectX::XMFLOAT3 ScriptApi_GetBoxColliderSize(const BoxCollider& collider);
 void ScriptApi_SetBoxColliderSize(BoxCollider& collider, DirectX::XMFLOAT3 size);

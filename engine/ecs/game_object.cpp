@@ -14,7 +14,15 @@ using namespace DirectX;
 void GameObject::AddIgnoreCollisionTag(Tag tag) {
     // Must live in the EXE .cpp so /MT script DLLs do not allocate this vector
     // on the DLL heap (destroying the GameObject in the EXE would then assert).
+    if (ShouldIgnoreCollisionWith(tag))
+        return;
     m_ignoreCollisionTags.push_back(tag);
+}
+
+void GameObject::RemoveIgnoreCollisionTag(Tag tag) {
+    m_ignoreCollisionTags.erase(
+        std::remove(m_ignoreCollisionTags.begin(), m_ignoreCollisionTags.end(), tag),
+        m_ignoreCollisionTags.end());
 }
 
 engine::Transform* GameObject::GetTransform() {
