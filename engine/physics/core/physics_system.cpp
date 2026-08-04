@@ -186,6 +186,25 @@ namespace {
 				// through the floor.
 				if (IsDynamic(a)) ca->ResolveCollision(cb);
 				if (bDynamic)      cb->ResolveCollision(ca);
+
+				// Floor-slide: mid-path ground overlap (gravity dip into the floor while
+				// moving fast) aborts at t<1 and truncates horizontal travel so dash
+				// displacement matches walk speed. Contact slop leaves CheckCollision
+				// true even after a pure-Y resolve, so gate on vertical push instead:
+				// if depenetration was floor-like, complete intended XZ then re-resolve.
+				if (step < nSteps) {
+					const XMFLOAT3 resolved = a->GetPosition();
+					const float pushX = resolved.x - testPos.x;
+					const float pushZ = resolved.z - testPos.z;
+					const float pushY = resolved.y - testPos.y;
+					const float horizPushSq = pushX * pushX + pushZ * pushZ;
+					const bool floorLike = pushY > 1e-5f && horizPushSq < 1e-6f;
+					if (floorLike) {
+						a->SetPosition({ curPos.x, resolved.y, curPos.z });
+						if (IsDynamic(a)) ca->ResolveCollision(cb);
+						if (bDynamic)      cb->ResolveCollision(ca);
+					}
+				}
 				return; // Stop at the first (earliest) collision along the path
 			}
 		}

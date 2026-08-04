@@ -1007,12 +1007,36 @@ void CapsuleCollider::ResolveCollision(Collider* other) {
         XMFLOAT3 cA = GetWorldCenter();
         XMFLOAT3 cB = s->GetWorldCenter();
         float rA = m_radius, rB = s->GetRadius();
-        XMFLOAT3 n{ cA.x - cB.x, cA.y - cB.y, cA.z - cB.z };
+
+        // Match CheckCollision: closest point on capsule segment ↔ sphere center.
+        // Center-only spheres miss head/feet hits (centerPen<=0 while segPen>0),
+        // and swept narrow-phase returns after that failed resolve → tunneling.
+        float halfH = m_height * 0.5f;
+        XMFLOAT3 rotA = m_owner->GetRotation();
+        XMMATRIX rm = XMMatrixRotationRollPitchYaw(
+            XMConvertToRadians(rotA.x), XMConvertToRadians(rotA.y), XMConvertToRadians(rotA.z));
+        XMVECTOR axis = XMVector3Normalize(XMVector3TransformNormal(XMVectorSet(0, 1, 0, 0), rm));
+        XMFLOAT3 af; XMStoreFloat3(&af, axis);
+        XMFLOAT3 p1{ cA.x - af.x * halfH, cA.y - af.y * halfH, cA.z - af.z * halfH };
+        XMFLOAT3 p2{ cA.x + af.x * halfH, cA.y + af.y * halfH, cA.z + af.z * halfH };
+        XMVECTOR vP1 = Load(p1), vP2 = Load(p2);
+        XMVECTOR vDir = vP2 - vP1;
+        float lenA = XMVectorGetX(XMVector3Length(vDir));
+        XMFLOAT3 closest = p1;
+        if (lenA >= 1e-4f) {
+            XMVECTOR vT = XMVectorClamp(
+                XMVectorDivide(XMVector3Dot(Load(cB) - vP1, vDir), XMVectorReplicate(lenA * lenA)),
+                XMVectorZero(), XMVectorReplicate(1.0f));
+            XMStoreFloat3(&closest, vP1 + XMVectorMultiply(vDir, vT));
+        }
+
+        XMFLOAT3 n{ closest.x - cB.x, closest.y - cB.y, closest.z - cB.z };
         float d2 = n.x * n.x + n.y * n.y + n.z * n.z;
         if (d2 < 1e-12f) { n = { 0, 1, 0 }; d2 = 1.0f; }
         float d = std::sqrt(d2);
         n.x /= d; n.y /= d; n.z /= d;
         float pen = (rA + rB) - d;
+
         if (pen > 0.0f) ResolveContact(m_owner, other->GetOwner(), n, pen);
         break;
     }
