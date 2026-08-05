@@ -32,6 +32,7 @@ private:
 	float m_mass = 1.0f;
 	float m_drag = 0.05f;
 	float m_restitution = 0.0f;
+	float m_friction = 0.0f;
 	DirectX::XMFLOAT3 m_velocity = {0, 0, 0};
 	DirectX::XMFLOAT3 m_forceAccum = {0, 0, 0};
 
@@ -54,6 +55,13 @@ public:
 		m_restitution = restitution < 0.0f ? 0.0f : restitution;
 	}
 	float GetRestitution() const { return m_restitution; }
+
+	// Surface friction [0..]. Combined as min(self, other) in ResolveContact so a
+	// body with friction 0 (e.g. player) never gets tangential grip from the floor.
+	void SetFriction(float friction) {
+		m_friction = friction < 0.0f ? 0.0f : friction;
+	}
+	float GetFriction() const { return m_friction; }
 
 	void SetVelocity(const DirectX::XMFLOAT3& v) { m_velocity = v; }
 	DirectX::XMFLOAT3 GetVelocity() const { return m_velocity; }

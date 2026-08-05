@@ -2872,6 +2872,12 @@ void EngineGUI_Draw() {
                     runtimeDirty = true;
                 }
 
+                float friction = rb.GetFriction();
+                if (ImGui::DragFloat("Friction", &friction, 0.01f, 0.0f, 10.0f)) {
+                    rb.SetFriction(friction);
+                    runtimeDirty = true;
+                }
+
                 if (ImGui::Button("Remove Rigidbody")) {
                     g_selNode->RemoveComponent<RigidbodyComponent>();
                     runtimeDirty = true;
