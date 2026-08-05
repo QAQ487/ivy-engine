@@ -1175,6 +1175,7 @@ static void DrawEditorPopups() {
             SceneLoader_RefreshSceneAssets();
 
         ImGui::Text("Default Scene");
+        ImGui::TextDisabled("Stored in project.json (defaultScene)");
         ImGui::TextDisabled("Current: %s", SceneLoader_GetDefaultSceneDisplayName().c_str());
         ImGui::Separator();
 
@@ -1192,6 +1193,10 @@ static void DrawEditorPopups() {
                 if (ImGui::Selectable(label.c_str(), selected)) {
                     SceneLoader_SetDefaultSceneFileName(fileName, true);
                     ProjectManager::Instance().SetDefaultScene(fileName);
+                    // Persist immediately (same pattern as GravityPopup); otherwise
+                    // project.json keeps the old defaultScene and wins on next open.
+                    if (ProjectManager::Instance().IsOpen())
+                        ProjectManager::Instance().SaveProjectFile(nullptr);
                 }
                 if (selected)
                     ImGui::SetItemDefaultFocus();

@@ -419,7 +419,21 @@ bool ProjectManager::LoadProjectFile(const std::string& rootPath, ProjectData* o
 
         if (out->defaultScene.empty())
             out->defaultScene = ReadDefaultSceneFileName(rootPath);
-        if (out->lastOpenedScene.empty())
+
+        // Prefer a scene that actually exists. Stale project.json entries used to
+        // override a valid default_scene.txt and make "Set Default Scene" look broken.
+        auto sceneExists = [&](const std::string& fileName) -> bool {
+            if (fileName.empty())
+                return false;
+            return fs::exists(fs::path(rootPath) / "rom" / "scene" / fileName);
+        };
+        if (!sceneExists(out->defaultScene)) {
+            const std::string fromTxt = ReadDefaultSceneFileName(rootPath);
+            if (sceneExists(fromTxt))
+                out->defaultScene = fromTxt;
+        }
+
+        if (out->lastOpenedScene.empty() || !sceneExists(out->lastOpenedScene))
             out->lastOpenedScene = out->defaultScene;
         return true;
     }
