@@ -418,9 +418,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 		break;
 
 	case WM_KEYDOWN: // key pressed
-		if (wParam == VK_ESCAPE) { // if ESC pressed, request close
-			SendMessage(hWnd, WM_CLOSE, 0, 0);
-		}
+		// Escape is reserved for in-game pause; quit via the window close button.
 		Keyboard_ProcessMessage(uMsg, wParam, lParam);
 		break;
 
