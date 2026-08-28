@@ -104,7 +104,10 @@ public:
         comp->owner = this;
         comp->OnAttach();
         T* ptr = comp.get();
-        m_components[std::type_index(typeid(T))] = std::move(comp);
+        std::type_index key(typeid(T));
+        auto it = m_components.find(key);
+        if (it != m_components.end()) it->second->OnDetach();
+        m_components[key] = std::move(comp);
         return ptr;
     }
 
@@ -115,6 +118,8 @@ public:
         std::type_index key(typeid(*comp));
         comp->owner = this;
         comp->OnAttach();
+        auto it = m_components.find(key);
+        if (it != m_components.end()) it->second->OnDetach();
         m_components[key] = std::move(comp);
     }
 
@@ -339,7 +344,7 @@ public:
         const DirectX::XMFLOAT3& size,
         const DirectX::XMFLOAT3& center = {0.0f, 0.0f, 0.0f})
     {
-        delete m_collider;
+        if (m_collider && !m_colliderOwnedByHost) delete m_collider;
         m_colliderOwnedByHost = false;
         auto* box = new BoxCollider(this);
         box->SetSize(size);
@@ -352,7 +357,7 @@ public:
         float radius,
         const DirectX::XMFLOAT3& center = {0.0f, 0.0f, 0.0f})
     {
-        delete m_collider;
+        if (m_collider && !m_colliderOwnedByHost) delete m_collider;
         m_colliderOwnedByHost = false;
         auto* sphere = new SphereCollider(this);
         sphere->SetRadius(radius);
@@ -365,7 +370,7 @@ public:
         float radius, float height,
         const DirectX::XMFLOAT3& center = {0.0f, 0.0f, 0.0f})
     {
-        delete m_collider;
+        if (m_collider && !m_colliderOwnedByHost) delete m_collider;
         m_colliderOwnedByHost = false;
         auto* capsule = new CapsuleCollider(this);
         capsule->SetRadius(radius);
@@ -379,7 +384,7 @@ public:
         float radius, float height,
         const DirectX::XMFLOAT3& center = {0.0f, 0.0f, 0.0f})
     {
-        delete m_collider;
+        if (m_collider && !m_colliderOwnedByHost) delete m_collider;
         m_colliderOwnedByHost = false;
         auto* cylinder = new CylinderCollider(this);
         cylinder->SetRadius(radius);
@@ -397,7 +402,7 @@ public:
         const DirectX::XMFLOAT3& center = {0.0f, 0.0f, 0.0f},
         float sizePadding = 0.0f)
     {
-        delete m_collider;
+        if (m_collider && !m_colliderOwnedByHost) delete m_collider;
         m_colliderOwnedByHost = false;
         auto* mesh = new MeshCollider(this);
         mesh->SetCenter(center);

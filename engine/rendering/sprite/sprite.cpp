@@ -75,6 +75,7 @@ void Sprite_Finalize(void) {
 	if (g_pVertexBuffer) { g_pVertexBuffer->Release(); g_pVertexBuffer = nullptr; }
 	if (g_pIndexBuffer) { g_pIndexBuffer->Release(); g_pIndexBuffer = nullptr; }
 	if (g_pRadialVertexBuffer) { g_pRadialVertexBuffer->Release(); g_pRadialVertexBuffer = nullptr; }
+	if (g_pRadialIndexBuffer) { g_pRadialIndexBuffer->Release(); g_pRadialIndexBuffer = nullptr; }
 }
 
 void Sprite_Draw(int texid, float X, float Y, XMFLOAT4 color) {
@@ -94,6 +95,7 @@ void Sprite_Draw(int texid, float X, float Y, float width, float height, int tx,
 	// �e�N�X�`���T�C�Y
 	auto texWidth = (float) TextureGetWidth(texid);
 	auto texHeight = (float) TextureGetHeight(texid);
+	if (texWidth <= 0.0f || texHeight <= 0.0f) return;
 
 	// UV���W�v�Z
 	float u0 = (float) tx / texWidth;
@@ -178,6 +180,7 @@ void Sprite_DrawRadialFill(int texid, float X, float Y, float width, float heigh
 	// Texture and UV setup
 	auto texWidth = (float) TextureGetWidth(texid);
 	auto texHeight = (float) TextureGetHeight(texid);
+	if (texWidth <= 0.0f || texHeight <= 0.0f) return;
 	float u0 = (float) tx / texWidth;
 	float v0 = (float) ty / texHeight;
 	float u1 = (float) (tx + tw) / texWidth;
@@ -256,6 +259,9 @@ void Sprite_DrawRadialFill(int texid, float X, float Y, float width, float heigh
 	auto last = std::unique(renderAngles.begin(), renderAngles.end(),
 		[] (float a, float b) { return std::abs(a - b) < 0.001f; });
 	renderAngles.erase(last, renderAngles.end());
+
+	// Need at least 2 perimeter points to form a triangle fan.
+	if (renderAngles.size() < 2) return;
 
 	// --- 2. Buffer Management ---
 	int numVertices = (int) renderAngles.size() + 1; // +1 for Center

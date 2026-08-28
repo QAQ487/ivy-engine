@@ -62,9 +62,9 @@ void Rigidbody::ClearAllForces() {
 }
 
 void Rigidbody::ClearVelocity(DirectX::XMFLOAT3 clear_flag) {
-	clear_flag.x ? 0 : m_velocity.x = 0;
-	clear_flag.y ? 0 : m_velocity.y = 0;
-	clear_flag.z ? 0 : m_velocity.z = 0;
+	if (clear_flag.x) m_velocity.x = 0.0f;
+	if (clear_flag.y) m_velocity.y = 0.0f;
+	if (clear_flag.z) m_velocity.z = 0.0f;
 }
 
 void Rigidbody::Integrate(DirectX::XMFLOAT3& position, double elapsed_time) {
@@ -72,6 +72,8 @@ void Rigidbody::Integrate(DirectX::XMFLOAT3& position, double elapsed_time) {
 
 	float dt = static_cast<float>(elapsed_time);
 	if (dt <= 0.0f) return;
+	// Clamp to avoid huge integration steps after debugger breaks / hitches / tab-out.
+	if (dt > (1.0f / 30.0f)) dt = 1.0f / 30.0f;
 
 	if (m_useGravity && !m_gravityOverridden) {
 		m_forceAccum.y -= Physics_GetGravity() * m_mass;

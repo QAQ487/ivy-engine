@@ -153,7 +153,7 @@ void TextureAllRelease() {
 }
 
 void TextureSetTexture(int texture_id) {
-	if (texture_id < 0) {
+	if (texture_id < 0 || texture_id >= MAX_TEXTURES) {
 		hal::dout << "textureSetTexture() : �����ȃe�N�X�`��ID�ł�" << std::endl;
 		return; // ������ID�̏ꍇ�͉�����Ȃ�
 	}
@@ -162,14 +162,19 @@ void TextureSetTexture(int texture_id) {
 }
 
 DirectX::XMUINT2 TextureGetSize(int texture_id) {
+	if (texture_id < 0 || texture_id >= MAX_TEXTURES) return { 0, 0 };
 	return { g_textures[texture_id].m_width, g_textures[texture_id].m_height };
 }
 
 const unsigned int& TextureGetWidth(int texture_id) {
+	static const unsigned int kZero = 0;
+	if (texture_id < 0 || texture_id >= MAX_TEXTURES) return kZero;
 	return g_textures[texture_id].m_width;
 }
 
 const unsigned int& TextureGetHeight(int texture_id) {
+	static const unsigned int kZero = 0;
+	if (texture_id < 0 || texture_id >= MAX_TEXTURES) return kZero;
 	return g_textures[texture_id].m_height;
 }
 

@@ -1281,8 +1281,11 @@ void MeshCollider::BuildFromModel(const Model3D& model) {
     }
 
     if (m_indices.empty() && !m_vertices.empty()) {
-        m_indices.reserve(m_vertices.size());
-        for (size_t i = 0; i < m_vertices.size(); ++i) {
+        // Only emit complete triangles; a trailing partial triangle would otherwise
+        // cause out-of-bounds reads (m_indices[i+1]/[i+2]) in the triangle-iteration loops below.
+        const size_t triVertCount = (m_vertices.size() / 3) * 3;
+        m_indices.reserve(triVertCount);
+        for (size_t i = 0; i < triVertCount; ++i) {
             m_indices.push_back(static_cast<unsigned int>(i));
         }
     }

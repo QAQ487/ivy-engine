@@ -52,6 +52,12 @@ void GameObject::SyncComponentsFromLegacyTransform() {
 void GameObject::ReparentChild(GameObject* child, GameObject& newParent) {
     if (!child || child == &newParent) return;
 
+    // Reject reparenting under one of the child's own descendants: that would
+    // create a hierarchy cycle and infinite-recurse Update()/Draw().
+    for (GameObject* p = &newParent; p != nullptr; p = p->GetParent()) {
+        if (p == child) return;
+    }
+
     GameObject* oldParent = child->GetParent();
     if (!oldParent) return;
 

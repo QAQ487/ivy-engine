@@ -91,6 +91,8 @@ void SystemTimer_Advance(void)
 // Œv‘ªŠÔ‚ğæ“¾
 double SystemTimer_GetTime(void)
 {
+	if (g_TicksPerSec == 0) return 0.0;
+
 	LARGE_INTEGER time = GetAdjustedCurrentTime();
 
 	return (double)(time.QuadPart - g_BaseTime) / (double)g_TicksPerSec;
@@ -99,6 +101,8 @@ double SystemTimer_GetTime(void)
 // Œ»İ‚ÌŠÔ‚ğæ“¾
 double SystemTimer_GetAbsoluteTime(void)
 {
+	if (g_TicksPerSec == 0) return 0.0;
+
 	LARGE_INTEGER time = { 0 };
 	QueryPerformanceCounter(&time);
 
@@ -108,6 +112,8 @@ double SystemTimer_GetAbsoluteTime(void)
 // Œo‰ßŠÔ‚Ìæ“¾
 float SystemTimer_GetElapsedTime(void)
 {
+	if (g_TicksPerSec == 0) return 0.0f;
+
 	LARGE_INTEGER time = GetAdjustedCurrentTime();
 
 	double elapsed_time = (float)((double)(time.QuadPart - g_LastElapsedTime) / (double)g_TicksPerSec);

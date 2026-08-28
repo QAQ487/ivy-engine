@@ -2,6 +2,9 @@
 #include <filesystem>
 
 void ScriptWatcher::Start(const std::string& watchDir, Callback onChange) {
+    // Avoid orphaning a previous thread/event handle if Start() is called twice.
+    Stop();
+
     m_running = true;
     m_stopEvent = CreateEventA(nullptr, TRUE, FALSE, nullptr);
 
@@ -17,6 +20,7 @@ void ScriptWatcher::Start(const std::string& watchDir, Callback onChange) {
         char buf[4096];
         OVERLAPPED ov = {};
         ov.hEvent = CreateEvent(nullptr, TRUE, FALSE, nullptr);
+        if (!ov.hEvent) { CloseHandle(hDir); return; }
         HANDLE handles[2] = { ov.hEvent, m_stopEvent };
 
         while (m_running) {

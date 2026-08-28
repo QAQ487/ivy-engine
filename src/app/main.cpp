@@ -291,6 +291,7 @@ void Finalize(void) {
 	EffectSystem::Finalize();
 	Sprite_Finalize();
 	Texture_Finalize();
+	ModelUtil_ReleaseTextureCache();
 	Shader_Finalize();
 	UninitRenderer();
 	AudioManager::Instance().Finalize();

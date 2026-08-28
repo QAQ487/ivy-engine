@@ -31,6 +31,16 @@ using namespace fbxsdk;
 // テクスチャSRVキャッシュ（パス -> SRV）
 static std::unordered_map<std::wstring, ID3D11ShaderResourceView*> g_srvCache;
 
+// Releases the cache's AddRef'd reference on every cached SRV. Must be called
+// before the D3D11 device is destroyed (e.g. from the app's shutdown sequence),
+// otherwise every model texture ever loaded stays alive for the process lifetime.
+void ModelUtil_ReleaseTextureCache() {
+	for (auto& kv : g_srvCache) {
+		if (kv.second) kv.second->Release();
+	}
+	g_srvCache.clear();
+}
+
 // 文字列ユーティリティ
 void Trim(std::string& s) {
 	auto notspace = [] (int ch) { return !std::isspace(ch); };

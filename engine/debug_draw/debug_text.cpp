@@ -204,7 +204,9 @@ namespace hal
 		if (m_pTextureView) {
 			m_pTexture->Release();
 			if(!m_pTextureView->Release()) {
-				m_TextureMap.erase(m_TextureMap.find(m_FileName));
+				auto it = m_TextureMap.find(m_FileName);
+				if (it != m_TextureMap.end())
+					m_TextureMap.erase(it);
 			}
 		}
 	}

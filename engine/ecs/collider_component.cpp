@@ -11,7 +11,11 @@ using json = nlohmann::json;
 
 void ColliderComponent::ClearFromOwner() {
     if (!owner) return;
-    delete owner->m_collider;
+    // Host-owned colliders were allocated by the EXE on behalf of a script DLL;
+    // deleting them here (potentially from a different module's heap) is unsafe.
+    // Mirror GameObject::~GameObject()'s ownership check instead of unconditionally deleting.
+    if (owner->m_collider && !owner->m_colliderOwnedByHost)
+        delete owner->m_collider;
     owner->m_collider = nullptr;
     owner->m_colliderOwnedByHost = false;
 }

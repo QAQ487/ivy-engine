@@ -38,6 +38,14 @@ public:
     Model3D();
     ~Model3D();
 
+    // Owns raw D3D/FBX resource pointers released in Release()/~Model3D();
+    // a compiler-generated copy/move would shallow-copy them and cause
+    // double-release or use-after-free. Use CreateAnimInstanceFrom() instead.
+    Model3D(const Model3D&) = delete;
+    Model3D& operator=(const Model3D&) = delete;
+    Model3D(Model3D&&) = delete;
+    Model3D& operator=(Model3D&&) = delete;
+
     struct VertexPNTC {
         DirectX::XMFLOAT3 Position;
         DirectX::XMFLOAT3 Normal;

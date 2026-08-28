@@ -237,10 +237,10 @@ namespace Shadow {
 			rd.DepthBiasClamp = cfg.depthBiasClamp;
 
 			rd.CullMode = D3D11_CULL_FRONT;
-			if (FAILED(g_dev->CreateRasterizerState(&rd, &g_rsShadowFront))) return false;
+			if (FAILED(g_dev->CreateRasterizerState(&rd, &g_rsShadowFront))) { Finalize(); return false; }
 
 			rd.CullMode = D3D11_CULL_BACK;
-			if (FAILED(g_dev->CreateRasterizerState(&rd, &g_rsShadowBack))) return false;
+			if (FAILED(g_dev->CreateRasterizerState(&rd, &g_rsShadowBack))) { Finalize(); return false; }
 		}
 
 		g_cascades.resize(cascadeCount);
@@ -254,18 +254,20 @@ namespace Shadow {
 			td.SampleDesc.Count = 1;
 			td.Usage = D3D11_USAGE_DEFAULT;
 			td.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE;
-			if (FAILED(g_dev->CreateTexture2D(&td, nullptr, &C.tex))) return false;
+			// On failure, release any cascades already created in earlier loop iterations
+			// (Finalize() also tears down the rasterizer states created just above).
+			if (FAILED(g_dev->CreateTexture2D(&td, nullptr, &C.tex))) { Finalize(); return false; }
 
 			D3D11_DEPTH_STENCIL_VIEW_DESC dsvd {};
 			dsvd.Format = g_dsvFormat;
 			dsvd.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
-			if (FAILED(g_dev->CreateDepthStencilView(C.tex, &dsvd, &C.dsv))) return false;
+			if (FAILED(g_dev->CreateDepthStencilView(C.tex, &dsvd, &C.dsv))) { Finalize(); return false; }
 
 			D3D11_SHADER_RESOURCE_VIEW_DESC srvd {};
 			srvd.Format = g_srvFormat;
 			srvd.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
 			srvd.Texture2D.MipLevels = 1;
-			if (FAILED(g_dev->CreateShaderResourceView(C.tex, &srvd, &C.srv))) return false;
+			if (FAILED(g_dev->CreateShaderResourceView(C.tex, &srvd, &C.srv))) { Finalize(); return false; }
 		}
 
 		g_currentRenderingCascade = -1;

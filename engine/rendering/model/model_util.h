@@ -51,6 +51,10 @@ bool IsAbsolutePathW(const std::wstring& p);
 bool LoadTextureWIC_SRV(const wchar_t* texPath, ID3D11ShaderResourceView** outSRV);
 ID3D11ShaderResourceView* CreateSolidWhiteSRV();
 
+// Releases all SRVs held by the internal texture cache. Call once during
+// shutdown, before the D3D11 device is destroyed.
+void ModelUtil_ReleaseTextureCache();
+
 // 任意色/ピンク/青の 1x1 テクスチャ作成
 ID3D11ShaderResourceView* CreateSolidColorSRV(uint8_t r, uint8_t g, uint8_t b, uint8_t a = 255);
 ID3D11ShaderResourceView* CreateSolidPinkSRV();
