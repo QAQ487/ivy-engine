@@ -98,6 +98,7 @@ public:
     void UpdateAttachedScript(double elapsed_time);
     void InvokeAttachedScriptOnClick();
     void TeardownAttachedScript();
+    void HotReloadAttachedScript();
 };
 
 // Scale from design (1920x1080) space to the active render viewport.

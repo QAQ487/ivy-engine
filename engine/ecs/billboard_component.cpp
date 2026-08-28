@@ -73,7 +73,7 @@ void BillboardComponent::SubmitNodeBillboards(GameObject* node) {
         if (bc->enabled) {
             if (const engine::Transform* t = node->GetComponent<engine::Transform>()) {
                 Billboard::Add(
-                    t->localPosition,
+                    t->GetWorldPosition(),
                     {bc->sizeX, bc->sizeY},
                     bc->color,
                     bc->GetTextureSRV(),

@@ -22,6 +22,11 @@ public:
     void InvokeOnClick(UIElement& owner);
     void Teardown(UIElement& owner);
 
+    // Tears down the current script instance and recreates it via the
+    // factory (which by then points at the freshly reloaded DLL code).
+    // Mirrors ScriptComponent::HotReload for GameObject scripts.
+    void HotReload(UIElement& owner);
+
 private:
     void CreateScript();
 

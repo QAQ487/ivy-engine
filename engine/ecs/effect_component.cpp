@@ -160,7 +160,16 @@ bool EffectComponent::LoadEffect() {
 void EffectComponent::SyncTransform() {
     if (!owner || m_handle < 0) return;
 
-    EffectSystem::SetLocation(m_handle, owner->GetPosition());
-    EffectSystem::SetRotationEulerDeg(m_handle, owner->GetRotation());
-    EffectSystem::SetScale(m_handle, owner->GetScale());
+    DirectX::XMFLOAT3 worldPos, worldRot, worldScale;
+    if (const engine::Transform* t = owner->GetTransform()) {
+        t->GetWorldPositionRotationScale(worldPos, worldRot, worldScale);
+    } else {
+        worldPos = owner->GetPosition();
+        worldRot = owner->GetRotation();
+        worldScale = owner->GetScale();
+    }
+
+    EffectSystem::SetLocation(m_handle, worldPos);
+    EffectSystem::SetRotationEulerDeg(m_handle, worldRot);
+    EffectSystem::SetScale(m_handle, worldScale);
 }

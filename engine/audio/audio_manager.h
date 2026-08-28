@@ -56,6 +56,14 @@ public:
      */
     void SetListener(GameObject* gameObject);
 
+    /**
+     * Called by GameObject's destructor. Clears the listener pointer and any
+     * per-source emitter pointers that reference this object, so a currently
+     * playing/tracked sound never dereferences a freed GameObject on the next
+     * Update(). You should not need to call this directly.
+     */
+    void OnGameObjectDestroyed(GameObject* gameObject);
+
     // --- Playback API ---
     void PlayBGM(const std::string& id, const std::string& path, float volume = 1.0f, bool loop = true);
     void PlaySFX(const std::string& id, const std::string& path, float volume = 1.0f, bool loop = false);

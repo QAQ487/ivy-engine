@@ -98,3 +98,15 @@ void UIElementScriptHost::Teardown(UIElement& owner) {
         m_scriptCreated = false;
     }
 }
+
+void UIElementScriptHost::HotReload(UIElement& owner) {
+    Teardown(owner);
+    m_script.reset();   // destructor runs against the (still-pinned) old DLL
+
+    // CreateScript() calls UICanvasScriptFactory::Create(), which by now
+    // resolves to the newly loaded DLL's creator for this class name.
+    CreateScript();
+
+    // OnCreate fires naturally on the next Update()/InvokeOnClick() via the
+    // existing lazy-init (m_scriptCreated) path.
+}

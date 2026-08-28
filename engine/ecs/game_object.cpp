@@ -5,11 +5,27 @@
 #include "collider_component.h"
 #include "engine/scene/render_settings.h"
 #include "engine/rendering/d3d11/shader.h"
+#include "engine/audio/audio_manager.h"
 
 #include <DirectXMath.h>
 #include <algorithm>
 
 using namespace DirectX;
+
+GameObject::~GameObject() {
+    // Clears any AudioManager listener/emitter tracking pointers that still
+    // reference this object, so a playing sound's next Update() can't
+    // dereference a freed GameObject.
+    AudioManager::Instance().OnGameObjectDestroyed(this);
+
+    for (auto& kv : m_components)
+        kv.second->OnDetach();
+    // Colliders created via ScriptApi/Host must be freed in the EXE heap.
+    if (m_collider && !m_colliderOwnedByHost)
+        delete m_collider;
+    m_collider = nullptr;
+    m_colliderOwnedByHost = false;
+}
 
 void GameObject::AddIgnoreCollisionTag(Tag tag) {
     // Must live in the EXE .cpp so /MT script DLLs do not allocate this vector
@@ -75,9 +91,7 @@ void GameObject::GetWorldPose(XMFLOAT3& position,
                               XMFLOAT3& rotation,
                               XMFLOAT3& scale) const {
     if (const engine::Transform* t = GetTransform()) {
-        position = t->localPosition;
-        rotation = t->localRotation;
-        scale    = t->localScale;
+        t->GetWorldPositionRotationScale(position, rotation, scale);
     } else {
         position = m_position;
         rotation = m_rotation;
@@ -130,9 +144,11 @@ void GameObject::DrawVisual(bool useRealModel) {
                     }
                 }
 
-                model->SetPosition(t->localPosition);
-                model->SetRotateEulerDeg(t->localRotation);
-                model->SetScale(t->localScale);
+                XMFLOAT3 worldPos, worldRot, worldScale;
+                t->GetWorldPositionRotationScale(worldPos, worldRot, worldScale);
+                model->SetPosition(worldPos);
+                model->SetRotateEulerDeg(worldRot);
+                model->SetScale(worldScale);
                 model->Draw();
                 model->SetTextureOverride(nullptr);
                 model->ClearMaterialOverride();

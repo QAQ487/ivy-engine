@@ -228,6 +228,21 @@ void PhysicsSystem_SavePositions() {
 	}
 }
 
+namespace {
+	// Per-object cached data for the sweep-and-prune X-axis pre-filter below.
+	// minX/maxX cover the object's full swept extent this frame (current and,
+	// for dynamic objects, previous collider center) plus its approximate
+	// bounding radius, doubled as an extra safety margin against mid-pass
+	// position corrections nudging it slightly outside the precomputed range.
+	struct BroadPhaseEntry {
+		GameObject* obj;
+		Collider*   collider;
+		bool        isDynamic;
+		XMFLOAT3    prevCenter; // only meaningful when isDynamic
+		float       minX, maxX;
+	};
+}
+
 // 衝突判定・解決パス（速度積分なし）。
 // m_previousPosition から現在位置までのスウェプトブロードフェーズを使用し、
 // 大きな変位に対してはサブステップナローフェーズで解決する。
@@ -238,30 +253,90 @@ void PhysicsSystem_ResolveCollisions() {
 	const auto& objs = scene->GetObjects();
 	if (objs.empty()) return;
 
-	// ペア生成（動的ボディ vs 全オブジェクト）
-	std::vector<GameObject*> dynamics;
-	dynamics.reserve(objs.size());
+	// Build a single sweep-and-prune list covering every collidable object
+	// (dynamic and static). Pairs are only ever accepted below if their
+	// X-extents overlap here, but since BroadPhasePassSwept independently
+	// requires overlap on X too, this list can only ever produce a superset
+	// of the pairs the exact broad phase would accept anyway; it only changes
+	// how many candidate pairs get tested (perf), never collision outcomes.
+	std::vector<BroadPhaseEntry> entries;
+	entries.reserve(objs.size());
+	bool anyDynamic = false;
 	for (auto* o : objs) {
-		if (!o || !o->IsActive() || !o->GetCollider()) continue;
-		if (IsDynamic(o)) dynamics.push_back(o);
+		if (!o || !o->IsActive()) continue;
+		Collider* c = o->GetCollider();
+		if (!c) continue;
+
+		BroadPhaseEntry e;
+		e.obj = o;
+		e.collider = c;
+		e.isDynamic = IsDynamic(o);
+		anyDynamic = anyDynamic || e.isDynamic;
+
+		const float radius = GetApproxRadius(c);
+		const XMFLOAT3 curCenter = c->GetWorldCenter();
+		float minX = curCenter.x - radius;
+		float maxX = curCenter.x + radius;
+
+		if (e.isDynamic) {
+			// Same previous-collider-center approximation as BroadPhasePassSwept
+			// uses today: previous origin plus this frame's local-to-world
+			// center offset (rotation assumed roughly unchanged since last frame).
+			const XMFLOAT3 curPos = o->GetPosition();
+			e.prevCenter = {
+				o->m_previousPosition.x + (curCenter.x - curPos.x),
+				o->m_previousPosition.y + (curCenter.y - curPos.y),
+				o->m_previousPosition.z + (curCenter.z - curPos.z)
+			};
+			minX = (std::min)(minX, e.prevCenter.x - radius);
+			maxX = (std::max)(maxX, e.prevCenter.x + radius);
+		} else {
+			e.prevCenter = curCenter;
+		}
+
+		// Extra safety margin (one more radius) to hedge against a's position
+		// being nudged by an earlier resolution this same pass.
+		e.minX = minX - radius;
+		e.maxX = maxX + radius;
+		entries.push_back(e);
 	}
+	if (!anyDynamic || entries.size() < 2) return;
 
-	// 衝突判定と解決（スウェプトAABB）
-	for (auto* a : dynamics) {
-		if (!a || !a->IsActive()) continue;
-		Collider* ca = a->GetCollider();
-		if (!ca) continue;
+	std::sort(entries.begin(), entries.end(),
+		[](const BroadPhaseEntry& l, const BroadPhaseEntry& r) { return l.minX < r.minX; });
 
-		const XMFLOAT3 prevCenterA = a->m_previousPosition;
+	for (size_t i = 0; i < entries.size(); ++i) {
+		for (size_t j = i + 1; j < entries.size() && entries[j].minX <= entries[i].maxX; ++j) {
+			const BroadPhaseEntry& e1 = entries[i];
+			const BroadPhaseEntry& e2 = entries[j];
+			if (!e1.isDynamic && !e2.isDynamic) continue;
 
-		for (auto* b : objs) {
-			if (!b || b == a || !b->IsActive()) continue;
-			Collider* cb = b->GetCollider();
-			if (!cb) continue;
+			// Re-derive the exact same (a, b, bDynamic) roles the original
+			// nested loop used: a is always the dynamic side; when both are
+			// dynamic, the lower-address object is "a" so each dynamic/dynamic
+			// pair still only gets resolved once (mirrors the old `b < a` skip).
+			GameObject* a; GameObject* b;
+			Collider* ca; Collider* cb;
+			XMFLOAT3 prevCenterA;
+			bool bDynamic;
+			if (e1.isDynamic && e2.isDynamic) {
+				const bool e1First = e1.obj < e2.obj;
+				const BroadPhaseEntry& ea = e1First ? e1 : e2;
+				const BroadPhaseEntry& eb = e1First ? e2 : e1;
+				a = ea.obj; ca = ea.collider; prevCenterA = ea.prevCenter;
+				b = eb.obj; cb = eb.collider;
+				bDynamic = true;
+			} else if (e1.isDynamic) {
+				a = e1.obj; ca = e1.collider; prevCenterA = e1.prevCenter;
+				b = e2.obj; cb = e2.collider;
+				bDynamic = false;
+			} else {
+				a = e2.obj; ca = e2.collider; prevCenterA = e2.prevCenter;
+				b = e1.obj; cb = e1.collider;
+				bDynamic = false;
+			}
 
-			const bool bDynamic = IsDynamic(b);
-			// 動的同士の組み合わせは一度だけ処理
-			if (bDynamic && b < a) continue;
+			if (!a->IsActive() || !b->IsActive()) continue;
 
 			// ペアの衝突可否（チーム/タグ/レイヤーのルール）を確認
 			if (!a->CanCollideWith(b) || !b->CanCollideWith(a)) continue;

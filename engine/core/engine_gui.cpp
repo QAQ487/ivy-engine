@@ -1881,6 +1881,16 @@ void EngineGUI_Update(double elapsed_time) {
                     };
                 for (const auto& root : g_sceneNodes)
                     visit(root.get());
+
+                if (UICanvas* canvas = SceneCanvas_GetCanvas()) {
+                    for (const auto& element : canvas->GetElements()) {
+                        if (element && element->GetScriptClass() == name) {
+                            element->HotReloadAttachedScript();
+                            ++reloadedCount;
+                        }
+                    }
+                }
+
                 g_scriptReloadStatus = "Reloaded script: " + name
                     + " on " + std::to_string(reloadedCount) + " component(s)";
             });

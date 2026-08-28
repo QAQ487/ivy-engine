@@ -19,6 +19,8 @@ static double g_hold_time[256] = {};
 static double g_last_press_time[256] = {};
 static double g_last_repeat_time[256] = {};
 static double g_current_time = 0.0;
+static double g_last_update_time = 0.0;
+static bool g_has_last_update_time = false;
 
 void KeyLogger_Initialize() {
 	Keyboard_Initialize();
@@ -32,6 +34,13 @@ void KeyLogger_Initialize() {
 void KeyLogger_Update(double now_time) {
 	const Keyboard_State* state = Keyboard_GetState();
 	g_current_time = now_time;  // 渡された時間を使う！
+
+	// Real frame delta instead of an assumed 60FPS, so hold-time accumulates
+	// correctly at any frame rate (falls back to 1/60s on the very first call).
+	double dt = g_has_last_update_time ? (now_time - g_last_update_time) : (1.0 / 60.0);
+	if (dt < 0.0) dt = 0.0;
+	g_last_update_time = now_time;
+	g_has_last_update_time = true;
 
 	// LPBYTE : unsigned char*
 	LPBYTE pt = (LPBYTE)&g_trigger_state;
@@ -57,7 +66,7 @@ void KeyLogger_Update(double now_time) {
 		bool is_trigger = Keyboard_IsKeyDown((Keyboard_Keys)k, &g_trigger_state);
 
 		if (is_down) {
-			g_hold_time[k] += 1.0 / 60.0; // 60FPS想定
+			g_hold_time[k] += dt;
 		}
 		else {
 			g_hold_time[k] = 0.0;

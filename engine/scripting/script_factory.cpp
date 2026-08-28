@@ -69,17 +69,27 @@ nlohmann::json ScriptFactory::SerializeScriptProperties(
     if (dllIt == m_dllApis.end() || !dllIt->second.serialize)
         return script->Serialize();
 
-    std::vector<char> buffer(16 * 1024);
-    if (!dllIt->second.serialize(script, buffer.data(), static_cast<int>(buffer.size())))
-        return nlohmann::json::object();
+    // SerializeScript reports failure (without indicating the required size)
+    // when the buffer is too small, so retry with a growing buffer instead of
+    // silently truncating/dropping properties that exceed a fixed cap.
+    constexpr size_t kMaxBufferSize = 16 * 1024 * 1024; // 16MB hard ceiling
+    for (size_t bufferSize = 16 * 1024; bufferSize <= kMaxBufferSize; bufferSize *= 4) {
+        std::vector<char> buffer(bufferSize);
+        if (!dllIt->second.serialize(script, buffer.data(), static_cast<int>(buffer.size())))
+            continue;
 
-    try {
-        return nlohmann::json::parse(buffer.data());
-    } catch (...) {
-        OutputDebugStringA(("[ScriptFactory] Script Serialize returned invalid JSON: "
-            + name + "\n").c_str());
-        return nlohmann::json::object();
+        try {
+            return nlohmann::json::parse(buffer.data());
+        } catch (...) {
+            OutputDebugStringA(("[ScriptFactory] Script Serialize returned invalid JSON: "
+                + name + "\n").c_str());
+            return nlohmann::json::object();
+        }
     }
+
+    OutputDebugStringA(("[ScriptFactory] Script properties exceed "
+        + std::to_string(kMaxBufferSize) + " bytes, giving up: " + name + "\n").c_str());
+    return nlohmann::json::object();
 }
 
 void ScriptFactory::DeserializeScriptProperties(
@@ -201,7 +211,10 @@ bool ScriptFactory::LoadScriptDll(const std::string& name,
         OutputDebugStringA(("[ScriptFactory] Loaded: " + scriptName + "\n").c_str());
     }
 
-    UICanvasScriptFactory::Instance().LoadFromModule(h, name);
+    // Pass the same shared_ptr<DllEntry> that pins this module alive for
+    // regular scripts, so UI canvas scripts loaded from this DLL keep it
+    // mapped for exactly as long as needed too (see LoadFromModule comment).
+    UICanvasScriptFactory::Instance().LoadFromModule(h, name, module);
     return true;
 }
 

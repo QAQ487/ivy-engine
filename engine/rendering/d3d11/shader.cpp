@@ -428,11 +428,40 @@ void Shader_Finalize() {
 	g_pContext = nullptr;
 }
 
+namespace {
+	bool XMMatrixExactEqual(const DirectX::XMMATRIX& a, const DirectX::XMMATRIX& b) {
+		for (int i = 0; i < 4; ++i) {
+			if (!DirectX::XMVector4Equal(a.r[i], b.r[i]))
+				return false;
+		}
+		return true;
+	}
+}
+
+// Every drawn model calls Shader_SetProjectionMatrix/Shader_SetViewMatrix with
+// the same camera matrices before setting its own world matrix, so without
+// this cache the (identical) view/proj GPU constant buffer upload happens
+// again per model, only to be immediately superseded by Shader_SetWorldMatrix's
+// own upload. Skipping the no-op case cuts that down to once per camera change.
 void Shader_SetProjectionMatrix(const DirectX::XMMATRIX& matrix) {
+	static DirectX::XMMATRIX s_lastProj;
+	static bool s_hasLastProj = false;
+	if (s_hasLastProj && XMMatrixExactEqual(matrix, s_lastProj))
+		return;
+	s_lastProj = matrix;
+	s_hasLastProj = true;
+
 	s_Proj2D = matrix; Update2D_VP();
 	s_Proj3D = matrix; Update3D_WVP();
 }
 void Shader_SetViewMatrix(const DirectX::XMMATRIX& matrix) {
+	static DirectX::XMMATRIX s_lastView;
+	static bool s_hasLastView = false;
+	if (s_hasLastView && XMMatrixExactEqual(matrix, s_lastView))
+		return;
+	s_lastView = matrix;
+	s_hasLastView = true;
+
 	s_View2D = matrix; Update2D_VP();
 	s_View3D = matrix; Update3D_WVP();
 }

@@ -42,6 +42,19 @@ public:
     DirectX::XMMATRIX GetWorldMatrix() const;
     void SetFromLocalMatrix(DirectX::XMMATRIX m);
 
+    // World-space position only (cheap: no decompose needed, translation is
+    // read directly out of the composed matrix).
+    DirectX::XMFLOAT3 GetWorldPosition() const;
+
+    // Full world-space pose (position/rotation/scale), decomposed from
+    // GetWorldMatrix(). Use this instead of localPosition/localRotation/
+    // localScale for anything that renders or otherwise needs the object's
+    // true placement in the scene (children under a rotated/scaled/moved
+    // parent are NOT at their local coordinates in world space).
+    void GetWorldPositionRotationScale(DirectX::XMFLOAT3& outPosition,
+                                        DirectX::XMFLOAT3& outRotation,
+                                        DirectX::XMFLOAT3& outScale) const;
+
     // ── Serialization ─────────────────────────────────────────────────────
     std::string Serialize()                        const override;
     void        Deserialize(const std::string& json)    override;

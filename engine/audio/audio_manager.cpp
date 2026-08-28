@@ -122,30 +122,54 @@ bool AudioManager::LoadWav(const std::string& path, AudioSource* outSource) {
 
     MMCKINFO riffChunk = { 0 };
     riffChunk.fccType = mmioFOURCC('W', 'A', 'V', 'E');
-    mmioDescend(hmmio, &riffChunk, nullptr, MMIO_FINDRIFF);
+    if (mmioDescend(hmmio, &riffChunk, nullptr, MMIO_FINDRIFF) != MMSYSERR_NOERROR) {
+        mmioClose(hmmio, 0);
+        return false;
+    }
 
     MMCKINFO chunk = { 0 };
     chunk.ckid = mmioFOURCC('f', 'm', 't', ' ');
-    mmioDescend(hmmio, &chunk, &riffChunk, MMIO_FINDCHUNK);
+    if (mmioDescend(hmmio, &chunk, &riffChunk, MMIO_FINDCHUNK) != MMSYSERR_NOERROR) {
+        mmioClose(hmmio, 0);
+        return false;
+    }
 
     if (chunk.cksize >= sizeof(WAVEFORMATEX)) {
-        mmioRead(hmmio, (HPSTR)&outSource->wfx, sizeof(WAVEFORMATEX));
+        if (mmioRead(hmmio, (HPSTR)&outSource->wfx, sizeof(WAVEFORMATEX)) == -1) {
+            mmioClose(hmmio, 0);
+            return false;
+        }
     }
-    else {
+    else if (chunk.cksize >= sizeof(PCMWAVEFORMAT)) {
         PCMWAVEFORMAT pcm = { 0 };
-        mmioRead(hmmio, (HPSTR)&pcm, sizeof(PCMWAVEFORMAT));
+        if (mmioRead(hmmio, (HPSTR)&pcm, sizeof(PCMWAVEFORMAT)) == -1) {
+            mmioClose(hmmio, 0);
+            return false;
+        }
         memset(&outSource->wfx, 0, sizeof(WAVEFORMATEX));
         memcpy(&outSource->wfx, &pcm, sizeof(PCMWAVEFORMAT));
         outSource->wfx.cbSize = 0;
     }
+    else {
+        // fmt chunk too small to hold any recognizable WAVEFORMAT variant.
+        mmioClose(hmmio, 0);
+        return false;
+    }
     mmioAscend(hmmio, &chunk, 0);
 
     chunk.ckid = mmioFOURCC('d', 'a', 't', 'a');
-    mmioDescend(hmmio, &chunk, &riffChunk, MMIO_FINDCHUNK);
+    if (mmioDescend(hmmio, &chunk, &riffChunk, MMIO_FINDCHUNK) != MMSYSERR_NOERROR) {
+        mmioClose(hmmio, 0);
+        return false;
+    }
 
     // Resize vector to hold data
     outSource->audioData.resize(chunk.cksize);
-    mmioRead(hmmio, (HPSTR)outSource->audioData.data(), chunk.cksize);
+    if (mmioRead(hmmio, (HPSTR)outSource->audioData.data(), chunk.cksize) == -1) {
+        outSource->audioData.clear();
+        mmioClose(hmmio, 0);
+        return false;
+    }
     mmioClose(hmmio, 0);
 
     return true;
@@ -714,6 +738,22 @@ void AudioManager::SetListener(const DirectX::XMFLOAT3& pos, const DirectX::XMFL
 
 void AudioManager::SetListener(GameObject* gameObject) {
     m_listenerObject = gameObject;
+}
+
+void AudioManager::OnGameObjectDestroyed(GameObject* gameObject) {
+    if (!gameObject) return;
+
+    if (m_listenerObject == gameObject)
+        m_listenerObject = nullptr;
+
+    for (auto& pair : m_sources) {
+        if (pair.second && pair.second->gameObject == gameObject)
+            pair.second->gameObject = nullptr;
+    }
+    for (auto& pair : m_loadedAudio) {
+        if (pair.second && pair.second->gameObject == gameObject)
+            pair.second->gameObject = nullptr;
+    }
 }
 
 void AudioManager::SetVolume(const std::string& id, float volume) {

@@ -76,15 +76,14 @@ public:
     explicit GameObject(std::string name = "GameObject")
         : m_name(std::move(name)) {}
 
-    virtual ~GameObject() {
-        for (auto& kv : m_components)
-            kv.second->OnDetach();
-        // Colliders created via ScriptApi/Host must be freed in the EXE heap.
-        if (m_collider && !m_colliderOwnedByHost)
-            delete m_collider;
-        m_collider = nullptr;
-        m_colliderOwnedByHost = false;
-    }
+    // Defined out-of-line in game_object.cpp (EXE-only translation unit) so
+    // it can safely notify EXE-only singletons like AudioManager. Must NOT
+    // move back into this header: /MT script DLLs also compile this header,
+    // and a copy of the destructor body living in the DLL could end up
+    // touching a separate AudioManager instance (or the DLL heap) instead of
+    // the EXE's, the same class of bug AddIgnoreCollisionTag was split out
+    // to avoid.
+    virtual ~GameObject();
 
     // ── Identity ──────────────────────────────────────────────────────────
     const std::string& GetName()  const { return m_name; }
@@ -307,7 +306,17 @@ public:
     const Rigidbody& GetRigidbody() const {
         if (const RigidbodyComponent* rc = GetComponent<RigidbodyComponent>())
             return rc->Body();
-        static const Rigidbody s_fallback;
+        // Objects with a collider but no explicit RigidbodyComponent (e.g.
+        // script-created colliders that never called the non-const
+        // GetRigidbody()) should read as static/kinematic by default, to
+        // match ColliderComponent::ApplyToOwner()'s auto-added rigidbody
+        // convention. Rigidbody defaults to non-kinematic/mass=1, which would
+        // otherwise make these objects look "dynamic" to IsDynamic() checks.
+        static const Rigidbody s_fallback = [] {
+            Rigidbody rb;
+            rb.SetIsKinematic(true);
+            return rb;
+        }();
         return s_fallback;
     }
 

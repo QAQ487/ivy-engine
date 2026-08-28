@@ -44,7 +44,8 @@ std::vector<std::string> UICanvasScriptFactory::GetRegisteredNames() const {
     return names;
 }
 
-void UICanvasScriptFactory::LoadFromModule(HMODULE module, const std::string& fallbackName) {
+void UICanvasScriptFactory::LoadFromModule(HMODULE module, const std::string& fallbackName,
+                                            std::shared_ptr<void> keepAlive) {
     if (!module)
         return;
 
@@ -75,9 +76,9 @@ void UICanvasScriptFactory::LoadFromModule(HMODULE module, const std::string& fa
         if (scriptName.empty())
             continue;
 
-        Register(scriptName, [createFn, destroyFn, scriptName]() {
+        Register(scriptName, [createFn, destroyFn, scriptName, keepAlive]() {
             UICanvasScript* script = createFn(scriptName.c_str());
-            return ScriptPtr(script, [destroyFn](UICanvasScript* s) {
+            return ScriptPtr(script, [destroyFn, keepAlive](UICanvasScript* s) {
                 if (s)
                     destroyFn(s);
             });

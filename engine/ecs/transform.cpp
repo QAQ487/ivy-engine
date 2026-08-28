@@ -91,6 +91,33 @@ XMMATRIX Transform::GetWorldMatrix() const {
     return local * parentXform->GetWorldMatrix();
 }
 
+XMFLOAT3 Transform::GetWorldPosition() const {
+    XMFLOAT3 pos;
+    XMStoreFloat3(&pos, GetWorldMatrix().r[3]);
+    return pos;
+}
+
+void Transform::GetWorldPositionRotationScale(XMFLOAT3& outPosition,
+                                               XMFLOAT3& outRotation,
+                                               XMFLOAT3& outScale) const {
+    const GameObject* parent = owner ? owner->GetParent() : nullptr;
+    if (!parent || !parent->GetComponent<Transform>()) {
+        // No parent transform in the chain, so world pose equals local pose;
+        // skip the decompose.
+        outPosition = localPosition;
+        outRotation = localRotation;
+        outScale    = localScale;
+        return;
+    }
+
+    XMVECTOR scale, rotQuat, translation;
+    XMMatrixDecompose(&scale, &rotQuat, &translation, GetWorldMatrix());
+
+    XMStoreFloat3(&outPosition, translation);
+    XMStoreFloat3(&outScale, scale);
+    outRotation = EulerZyxDegreesFromRotationMatrix(XMMatrixRotationQuaternion(rotQuat));
+}
+
 void Transform::SetFromLocalMatrix(XMMATRIX m) {
     XMVECTOR scale, rotQuat, translation;
     XMMatrixDecompose(&scale, &rotQuat, &translation, m);

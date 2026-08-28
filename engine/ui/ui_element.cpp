@@ -96,6 +96,11 @@ void UIElement::TeardownAttachedScript() {
         m_scriptHost->Teardown(*this);
 }
 
+void UIElement::HotReloadAttachedScript() {
+    if (m_scriptHost)
+        m_scriptHost->HotReload(*this);
+}
+
 DirectX::XMFLOAT2 UIGetDesignSize() {
     return {
         static_cast<float>(SCREEN_WIDTH),
