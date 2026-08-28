@@ -1,6 +1,6 @@
 #include "ui_element_script_host.h"
 #include "ui_element.h"
-#include "../core/engine_gui.h"
+#include "engine/core/engine_gui.h"
 #include <Windows.h>
 
 void UIElementScriptHost::SetScriptClass(const std::string& scriptClass) {
