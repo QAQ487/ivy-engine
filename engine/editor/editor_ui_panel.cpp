@@ -21,6 +21,7 @@ namespace {
 namespace fs = std::filesystem;
 
 static const char* kTextureExts[] = { ".png", ".jpg", ".jpeg", ".dds", ".tga" };
+static const char* kFontExts[] = { ".ttf", ".otf", ".png" };
 
 std::string LowerAssetExtension(const char* path) {
     if (!path) return "";
@@ -52,6 +53,30 @@ bool AcceptTexturePathDrop(std::string& outPath) {
         ImGui::EndDragDropTarget();
     }
     return accepted;
+}
+
+bool AssetPathHasFontExtension(const char* path) {
+    const std::string ext = LowerAssetExtension(path);
+    for (const char* fontExt : kFontExts) {
+        if (ext == fontExt)
+            return true;
+    }
+    return false;
+}
+
+bool DrawFontPathInput(const char* id, char* buf, size_t bufSize) {
+    bool changed = ImGui::InputText(id, buf, bufSize, ImGuiInputTextFlags_EnterReturnsTrue);
+    if (ImGui::BeginDragDropTarget()) {
+        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ASSET_PATH")) {
+            const char* path = static_cast<const char*>(payload->Data);
+            if (path && AssetPathHasFontExtension(path)) {
+                strncpy_s(buf, bufSize, path, _TRUNCATE);
+                changed = true;
+            }
+        }
+        ImGui::EndDragDropTarget();
+    }
+    return changed;
 }
 
 bool DrawTexturePathInput(const char* id, char* buf, size_t bufSize) {
@@ -117,7 +142,7 @@ UIText* CreateCanvasText() {
     UICanvas* canvas = SceneCanvas_GetCanvas();
     if (!canvas) return nullptr;
     UIText* text = canvas->AddText("Text", { 0.0f, 0.0f }, UIAnchor::CENTER, "Text");
-    text->SetFontPath("rom/texture/consolab_ascii_512.png", 32.0f, 32.0f, 16);
+    text->SetFontPath("rom/font/LemonSlice.ttf", 32.0f, 32.0f, 16);
     text->SetFontSize(1.5f);
     text->SetCharacterSpacing(32.0f);
     text->SetAlignment(TextAlign::CENTER);
@@ -320,10 +345,11 @@ void DrawCanvasElementProperties(UIElement*& selectedUiElement) {
         fontChanged |= ImGui::DragFloat("##UITextCharH", &charHeight, 1.0f, 1.0f, 256.0f);
         ImGui::Text("Per Row:"); ImGui::SameLine(90);
         fontChanged |= ImGui::InputInt("##UITextCharsRow", &charsPerRow);
-        ImGui::Text("Font Texture Path");
+        ImGui::Text("Font Path");
         ImGui::SetNextItemWidth(-1);
-        if (DrawTexturePathInput("##TextFont", s_fontPathBuf, sizeof(s_fontPathBuf)))
+        if (DrawFontPathInput("##TextFont", s_fontPathBuf, sizeof(s_fontPathBuf)))
             fontChanged = true;
+        ImGui::TextDisabled("TTF uses glyph advances; char W/H/row apply to PNG atlases only.");
         if (fontChanged && s_fontPathBuf[0] != '\0')
             text->SetFontPath(s_fontPathBuf, charWidth, charHeight, charsPerRow);
         DirectX::XMFLOAT4 color = text->GetColor();
@@ -381,10 +407,11 @@ void DrawCanvasElementProperties(UIElement*& selectedUiElement) {
         fontChanged |= ImGui::DragFloat("##UIButtonCharH", &charHeight, 1.0f, 1.0f, 256.0f);
         ImGui::Text("Per Row:"); ImGui::SameLine(90);
         fontChanged |= ImGui::InputInt("##UIButtonCharsRow", &charsPerRow);
-        ImGui::Text("Font Texture Path");
+        ImGui::Text("Font Path");
         ImGui::SetNextItemWidth(-1);
-        if (DrawTexturePathInput("##ButtonFont", s_fontPathBuf, sizeof(s_fontPathBuf)))
+        if (DrawFontPathInput("##ButtonFont", s_fontPathBuf, sizeof(s_fontPathBuf)))
             fontChanged = true;
+        ImGui::TextDisabled("TTF uses glyph advances; char W/H/row apply to PNG atlases only.");
         if (fontChanged && s_fontPathBuf[0] != '\0')
             UIButton::SetFontPath(s_fontPathBuf, charWidth, charHeight, charsPerRow);
 

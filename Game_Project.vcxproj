@@ -286,6 +286,7 @@ exit /b 0</Command>
     <ClInclude Include="engine\ui\ui_element_script_host.h" />
     <ClInclude Include="engine\ui\ui_sprite.h" />
     <ClInclude Include="engine\ui\ui_text.h" />
+    <ClInclude Include="engine\ui\ui_font.h" />
     <ClInclude Include="engine\ui\ui_text_renderer.h" />
     <ClInclude Include="engine\ui\scene_canvas.h" />
     <ClInclude Include="src\app\rendering\fade.h" />
@@ -390,6 +391,7 @@ exit /b 0</Command>
     <ClCompile Include="engine\ui\ui_element_script_host.cpp" />
     <ClCompile Include="engine\ui\ui_sprite.cpp" />
     <ClCompile Include="engine\ui\ui_text.cpp" />
+    <ClCompile Include="engine\ui\ui_font.cpp" />
     <ClCompile Include="engine\ui\ui_text_renderer.cpp" />
     <ClCompile Include="engine\ui\scene_canvas.cpp" />
     <ClCompile Include="src\app\rendering\fade.cpp" />

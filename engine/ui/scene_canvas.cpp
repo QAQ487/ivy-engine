@@ -311,7 +311,7 @@ void SceneCanvas_Initialize()
 	EnsureDefaultButtonActions();
 	g_canvas = std::make_unique<UICanvas>("scene");
 	g_canvas->Initialize();
-	UIButton::SetFontPath("rom/texture/consolab_ascii_512.png", 32.0f, 32.0f, 16);
+	UIButton::SetFontPath("rom/font/LemonSlice.ttf", 32.0f, 32.0f, 16);
 	BindSceneHudElements();
 }
 

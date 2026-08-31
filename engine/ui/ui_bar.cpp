@@ -39,10 +39,10 @@ void UIBar::Initialize() {
 	// Create text renderer
 	m_textRenderer = std::make_unique<UITextRenderer>();
 	m_textRenderer->Initialize(
-		L"rom/texture/consolab_ascii_512.png",
-		32.0f,   // Character width in texture
-		32.0f,   // Character height in texture
-		16       // Characters per row in texture
+		L"rom/font/LemonSlice.ttf",
+		32.0f,
+		32.0f,
+		16
 	);
 	m_textRenderer->SetCharacterSpacing(m_characterSpacing);
 }

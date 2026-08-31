@@ -123,7 +123,7 @@ bool UIText::GetScreenRect(UIScreenRect& out) const {
 	const DirectX::XMFLOAT2 layoutScale = UIGetLayoutScale();
 	const float drawFontSize = m_fontSize * layoutScale.x;
 	const float textWidth = m_textRenderer.GetTextWidth(m_text, drawFontSize);
-	const float textHeight = m_fontCharHeight * drawFontSize;
+	const float textHeight = m_textRenderer.GetLineHeight(drawFontSize);
 
 	float alignmentOffset = 0.0f;
 	switch (m_alignment) {

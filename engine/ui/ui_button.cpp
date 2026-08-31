@@ -127,11 +127,9 @@ void UIButton::Draw() {
 	// Draw text if set and text renderer is initialized
 	if (!m_text.empty() && s_textRendererInitialized) {
 		const float textScale = m_textScale * layoutScale.x;
-		// Calculate text dimensions using UITextRenderer with scale
 		float textWidth = s_textRenderer.GetTextWidth(m_text, textScale);
-		float textHeight = s_textRenderer.GetCharacterSpacing() * textScale;
+		float textHeight = s_textRenderer.GetLineHeight(textScale);
 
-		// Center text on button (accounting for scale)
 		float textX = screenPos.x + drawWidth * 0.5f - textWidth * 0.5f;
 		float textY = screenPos.y + drawHeight * 0.5f - textHeight * 0.5f;
 

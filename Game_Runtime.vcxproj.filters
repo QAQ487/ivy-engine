@@ -261,6 +261,9 @@
     <ClInclude Include="engine\ui\ui_text.h">
       <Filter>engine\ui</Filter>
     </ClInclude>
+    <ClInclude Include="engine\ui\ui_font.h">
+      <Filter>engine\ui</Filter>
+    </ClInclude>
     <ClInclude Include="engine\ui\ui_text_renderer.h">
       <Filter>engine\ui</Filter>
     </ClInclude>
@@ -450,6 +453,9 @@
       <Filter>engine\ui</Filter>
     </ClCompile>
     <ClCompile Include="engine\ui\ui_text.cpp">
+      <Filter>engine\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\ui\ui_font.cpp">
       <Filter>engine\ui</Filter>
     </ClCompile>
     <ClCompile Include="engine\ui\ui_text_renderer.cpp">

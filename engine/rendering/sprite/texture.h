@@ -20,6 +20,7 @@ void Texture_Finalize();
 // b_mipmap : ミップマップを生成するかどうか
 // 戻り値 : テクスチャの管理番号（読み込めなかった場合は-1）
 int  TextureLoad(const wchar_t* ptr_file_name, bool mipmap = true);
+int  TextureCreateFromRGBA(const wchar_t* name, const unsigned char* rgba, int width, int height);
 int  TextureGetWhiteTexture();
 void TextureAllRelease();
 void TextureSetTexture(int texture_id);

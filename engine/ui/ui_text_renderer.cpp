@@ -1,14 +1,12 @@
-﻿/**===========================================================================
- File   :  [ui_text_renderer.cpp]
- Author : Copilot Agent
- Date   : 2025/11/02
- Brief  : Implementation of simple text renderer for UI
- ===========================================================================**/
-
-#include "ui_text_renderer.h"
+﻿#include "ui_text_renderer.h"
+#include "ui_font.h"
 #include "../rendering/sprite/sprite.h"
 #include "../rendering/sprite/texture.h"
 #include <algorithm>
+
+namespace {
+	constexpr float kLegacyCellPx = 32.0f;
+}
 
 UITextRenderer::UITextRenderer()
 	: m_fontTextureId(-1)
@@ -16,7 +14,21 @@ UITextRenderer::UITextRenderer()
 	, m_characterHeight(32.0f)
 	, m_characterSpacing(16.0f)
 	, m_charactersPerRow(16)
+	, m_isTtf(false)
+	, m_ttfFont(nullptr)
 {
+}
+
+float UITextRenderer::DrawScale(float scale) const {
+	if (!m_isTtf || !m_ttfFont || m_ttfFont->bakeSize <= 0.0f)
+		return scale;
+	return scale * (kLegacyCellPx / m_ttfFont->bakeSize);
+}
+
+const UIGlyph* UITextRenderer::GlyphFor(unsigned char c) const {
+	if (!m_ttfFont || c < 32 || c > 126)
+		return nullptr;
+	return &m_ttfFont->glyphs[c - 32];
 }
 
 void UITextRenderer::Initialize(const wchar_t* fontTexturePath,
@@ -25,10 +37,23 @@ void UITextRenderer::Initialize(const wchar_t* fontTexturePath,
 	int charsPerRow) {
 	m_characterWidth = charWidth;
 	m_characterHeight = charHeight;
-	m_characterSpacing = charWidth; // Default spacing = character width
+	m_characterSpacing = charWidth;
 	m_charactersPerRow = charsPerRow;
+	m_ttfFont = nullptr;
+	m_isTtf = false;
+	m_fontTextureId = -1;
 
-	// Load font texture
+	if (!fontTexturePath || !fontTexturePath[0])
+		return;
+
+	if (UIFont_IsTrueTypePath(fontTexturePath)) {
+		m_isTtf = true;
+		m_ttfFont = UIFont_Get(fontTexturePath);
+		if (m_ttfFont)
+			m_fontTextureId = m_ttfFont->textureId;
+		return;
+	}
+
 	m_fontTextureId = TextureLoad(fontTexturePath, false);
 }
 
@@ -36,6 +61,42 @@ void UITextRenderer::Draw(const std::string& text,
 	float x, float y,
 	float scale, const DirectX::XMFLOAT4& color) {
 	if (m_fontTextureId < 0) return;
+
+	if (m_isTtf && m_ttfFont) {
+		const float drawScale = DrawScale(scale);
+		const float lineHeight = m_ttfFont->lineHeight * drawScale;
+		float currentX = x;
+		float baseline = y + m_ttfFont->ascent * drawScale;
+
+		for (char ch : text) {
+			if (ch == '\n' || ch == '\r') {
+				if (ch == '\n') {
+					currentX = x;
+					baseline += lineHeight;
+				}
+				continue;
+			}
+
+			const UIGlyph* glyph = GlyphFor(static_cast<unsigned char>(ch));
+			if (!glyph) {
+				if (ch == ' ')
+					currentX += m_ttfFont->glyphs[0].xadvance * drawScale;
+				continue;
+			}
+
+			if (glyph->srcW > 0 && glyph->srcH > 0) {
+				Sprite_Draw(m_fontTextureId,
+					currentX + glyph->xoff * drawScale,
+					baseline + glyph->yoff * drawScale,
+					static_cast<float>(glyph->srcW) * drawScale,
+					static_cast<float>(glyph->srcH) * drawScale,
+					glyph->srcX, glyph->srcY, glyph->srcW, glyph->srcH,
+					color);
+			}
+			currentX += glyph->xadvance * drawScale;
+		}
+		return;
+	}
 
 	const float lineHeight = m_characterHeight * scale;
 	float currentX = x;
@@ -74,6 +135,27 @@ void UITextRenderer::Draw(const std::string& text,
 }
 
 float UITextRenderer::GetTextWidth(const std::string& text, float scale) const {
+	if (m_isTtf && m_ttfFont) {
+		const float drawScale = DrawScale(scale);
+		float maxWidth = 0.0f;
+		float lineWidth = 0.0f;
+		for (char ch : text) {
+			if (ch == '\n' || ch == '\r') {
+				if (ch == '\n') {
+					maxWidth = (std::max)(maxWidth, lineWidth);
+					lineWidth = 0.0f;
+				}
+				continue;
+			}
+			const UIGlyph* glyph = GlyphFor(static_cast<unsigned char>(ch));
+			if (glyph)
+				lineWidth += glyph->xadvance * drawScale;
+			else if (ch == ' ')
+				lineWidth += m_ttfFont->glyphs[0].xadvance * drawScale;
+		}
+		return (std::max)(maxWidth, lineWidth);
+	}
+
 	float maxWidth = 0.0f;
 	float lineWidth = 0.0f;
 
@@ -94,7 +176,14 @@ float UITextRenderer::GetTextWidth(const std::string& text, float scale) const {
 	return (std::max)(maxWidth, lineWidth);
 }
 
+float UITextRenderer::GetLineHeight(float scale) const {
+	if (m_isTtf && m_ttfFont)
+		return m_ttfFont->lineHeight * DrawScale(scale);
+	return m_characterHeight * scale;
+}
+
 void UITextRenderer::Finalize() {
-	// Texture is managed externally
 	m_fontTextureId = -1;
+	m_ttfFont = nullptr;
+	m_isTtf = false;
 }

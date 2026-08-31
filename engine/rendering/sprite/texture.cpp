@@ -6,6 +6,7 @@
  Brief  :
  ===========================================================================**/
 #include "texture.h"
+#include "engine/ui/ui_font.h"
 #include <string>
 #include <cstdio>
 #include <Windows.h>
@@ -105,6 +106,50 @@ int TextureLoad(const wchar_t* ptr_file_name, bool mipmap) {
 	return -1;
 }
 
+int TextureCreateFromRGBA(const wchar_t* name, const unsigned char* rgba, int width, int height) {
+	if (!name || !rgba || width <= 0 || height <= 0 || !g_pDevice)
+		return -1;
+
+	for (int i = 0; i < MAX_TEXTURES; i++) {
+		if (!g_textures[i].m_ptr_Texture) continue;
+		if (g_textures[i].m_filename == name)
+			return i;
+	}
+
+	for (int i = 0; i < MAX_TEXTURES; i++) {
+		if (g_textures[i].m_ptr_Texture) continue;
+
+		D3D11_TEXTURE2D_DESC desc = {};
+		desc.Width = static_cast<UINT>(width);
+		desc.Height = static_cast<UINT>(height);
+		desc.MipLevels = 1;
+		desc.ArraySize = 1;
+		desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		desc.SampleDesc.Count = 1;
+		desc.Usage = D3D11_USAGE_DEFAULT;
+		desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+
+		D3D11_SUBRESOURCE_DATA initData = {};
+		initData.pSysMem = rgba;
+		initData.SysMemPitch = static_cast<UINT>(width * 4);
+
+		ID3D11Texture2D* texture = nullptr;
+		HRESULT hr = g_pDevice->CreateTexture2D(&desc, &initData, &texture);
+		if (FAILED(hr)) return -1;
+
+		hr = g_pDevice->CreateShaderResourceView(texture, nullptr, &g_textures[i].m_ptr_Texture);
+		SAFE_RELEASE(texture);
+		if (FAILED(hr)) return -1;
+
+		g_textures[i].m_filename = name;
+		g_textures[i].m_width = static_cast<unsigned int>(width);
+		g_textures[i].m_height = static_cast<unsigned int>(height);
+		return i;
+	}
+
+	return -1;
+}
+
 int TextureGetWhiteTexture() {
 	if (g_whiteTextureId >= 0 && g_textures[g_whiteTextureId].m_ptr_Texture)
 		return g_whiteTextureId;
@@ -146,6 +191,7 @@ int TextureGetWhiteTexture() {
 }
 
 void TextureAllRelease() {
+	UIFont_ClearCache();
 	for (Texture& t : g_textures) {
 		SAFE_RELEASE(t.m_ptr_Texture); // �e�N�X�`���̉��
 	}
