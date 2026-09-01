@@ -20,6 +20,14 @@ public:
         float gravity = 9.81f;
     };
 
+    struct AudioSettings {
+        float masterVolume = 1.0f;
+        float bgmVolume = 1.0f;
+        float sfxVolume = 1.0f;
+        float voiceVolume = 1.0f;
+        std::string uiClickSound;
+    };
+
     struct ProjectData {
         std::string name;
         int version = kSchemaVersion;
@@ -27,6 +35,7 @@ public:
         std::string defaultScene;
         EditorSettings editor;
         PhysicsSettings physics;
+        AudioSettings audio;
     };
 
     static ProjectManager& Instance();
@@ -51,6 +60,9 @@ public:
     int GetEditorUiZoomPercent() const { return m_data.editor.uiZoomPercent; }
     void SetPhysicsGravity(float gravity);
     float GetPhysicsGravity() const { return m_data.physics.gravity; }
+    void SetAudioBuses(float master, float bgm, float sfx, float voice);
+    void SetUiClickSound(const std::string& path);
+    const AudioSettings& GetAudioSettings() const { return m_data.audio; }
 
     // Absolute path or rom/scene-relative filename suitable for EngineGUI_LoadFromFile.
     std::string ResolveSceneToLoad() const;

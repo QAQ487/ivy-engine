@@ -17,13 +17,14 @@
 #include "engine/physics/collider/collider.h"
 #include "engine/ecs/prefab_runtime.h"
 #include "engine/ecs/effect_component.h"
+#include "engine/ecs/audio_component.h"
 #include "engine/ecs/visual_component.h"
 
 #include <Windows.h>
 #include <string>
 
 namespace {
-constexpr std::uint32_t kScriptRuntimeApiVersion = 31;
+constexpr std::uint32_t kScriptRuntimeApiVersion = 32;
 
 template <typename T>
 T* FindComponentByTypeName(GameObject& object, const char* typeName) {
@@ -312,6 +313,16 @@ void Host_EffectPlay(EffectComponent* component) {
         component->Play();
 }
 
+void Host_AudioPlay(AudioComponent* component) {
+    if (component)
+        component->Play();
+}
+
+void Host_AudioStop(AudioComponent* component) {
+    if (component)
+        component->Stop();
+}
+
 void Host_ThirdPersonCameraSetMagnetMode(int mode) {
     ThirdPersonCamera_SetMagnetMode(static_cast<ThirdPersonMagnetMode>(mode));
 }
@@ -471,6 +482,8 @@ const ScriptRuntimeApi g_scriptRuntimeApi = {
     &Host_ThirdPersonCameraSetMagnetTarget,
     &Host_BillboardAddUv,
     &Host_GameObjectRemoveIgnoreCollisionTag,
+    &Host_AudioPlay,
+    &Host_AudioStop,
 };
 #else
 using GetApiFn = const ScriptRuntimeApi* (*)();
@@ -695,6 +708,22 @@ void ScriptApi_Effect_Play(EffectComponent* component) {
     const ScriptRuntimeApi* api = ScriptRuntimeApi_GetHost();
     if (api && api->effectPlay)
         api->effectPlay(component);
+}
+
+AudioComponent* ScriptApi_FindAudioComponent(engine::GameObject& object) {
+    return FindComponentByTypeName<AudioComponent>(object, "Audio");
+}
+
+void ScriptApi_Audio_Play(AudioComponent* component) {
+    const ScriptRuntimeApi* api = ScriptRuntimeApi_GetHost();
+    if (api && api->audioPlay)
+        api->audioPlay(component);
+}
+
+void ScriptApi_Audio_Stop(AudioComponent* component) {
+    const ScriptRuntimeApi* api = ScriptRuntimeApi_GetHost();
+    if (api && api->audioStop)
+        api->audioStop(component);
 }
 
 void ScriptApi_ApplyColliderComponent(ColliderComponent& component) {

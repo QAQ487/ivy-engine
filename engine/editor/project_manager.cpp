@@ -1,5 +1,6 @@
 #include "project_manager.h"
 
+#include "engine/audio/audio_manager.h"
 #include "engine/physics/core/rigidbody.h"
 #include "libraries/nlohmann/json.hpp"
 
@@ -417,6 +418,16 @@ bool ProjectManager::LoadProjectFile(const std::string& rootPath, ProjectData* o
         if (!(out->physics.gravity > 0.0f))
             out->physics.gravity = GRAVITY;
 
+        out->audio = AudioSettings{};
+        if (j.contains("audio") && j["audio"].is_object()) {
+            const auto& a = j["audio"];
+            out->audio.masterVolume = a.value("masterVolume", 1.0f);
+            out->audio.bgmVolume = a.value("bgmVolume", 1.0f);
+            out->audio.sfxVolume = a.value("sfxVolume", 1.0f);
+            out->audio.voiceVolume = a.value("voiceVolume", 1.0f);
+            out->audio.uiClickSound = a.value("uiClickSound", std::string{});
+        }
+
         if (out->defaultScene.empty())
             out->defaultScene = ReadDefaultSceneFileName(rootPath);
 
@@ -456,6 +467,12 @@ bool ProjectManager::WriteProjectFile(const std::string& rootPath, const Project
         j["editor"]["uiZoomPercent"] = data.editor.uiZoomPercent;
         j["physics"] = json::object();
         j["physics"]["gravity"] = data.physics.gravity;
+        j["audio"] = json::object();
+        j["audio"]["masterVolume"] = data.audio.masterVolume;
+        j["audio"]["bgmVolume"] = data.audio.bgmVolume;
+        j["audio"]["sfxVolume"] = data.audio.sfxVolume;
+        j["audio"]["voiceVolume"] = data.audio.voiceVolume;
+        j["audio"]["uiClickSound"] = data.audio.uiClickSound;
 
         const fs::path filePath = fs::path(rootPath) / kProjectFileName;
         std::ofstream file(filePath, std::ios::trunc);
@@ -533,6 +550,11 @@ bool ProjectManager::ActivateRoot(const std::string& rootPath, std::string* erro
     m_data = std::move(data);
     m_open = true;
     Physics_SetGravity(m_data.physics.gravity);
+    AudioManager::Instance().SetMasterVolume(m_data.audio.masterVolume);
+    AudioManager::Instance().SetBGMVolume(m_data.audio.bgmVolume);
+    AudioManager::Instance().SetSFXVolume(m_data.audio.sfxVolume);
+    AudioManager::Instance().SetVoiceVolume(m_data.audio.voiceVolume);
+    AudioManager::Instance().SetUiClickSound(m_data.audio.uiClickSound);
     TouchRecent(m_rootPath);
     return true;
 }
@@ -667,6 +689,18 @@ void ProjectManager::SetPhysicsGravity(float gravity) {
     m_data.physics.gravity = (gravity > 0.0f) ? gravity : GRAVITY;
     if (m_open)
         Physics_SetGravity(m_data.physics.gravity);
+}
+
+void ProjectManager::SetAudioBuses(float master, float bgm, float sfx, float voice) {
+    m_data.audio.masterVolume = master;
+    m_data.audio.bgmVolume = bgm;
+    m_data.audio.sfxVolume = sfx;
+    m_data.audio.voiceVolume = voice;
+}
+
+void ProjectManager::SetUiClickSound(const std::string& path) {
+    m_data.audio.uiClickSound = path;
+    AudioManager::Instance().SetUiClickSound(path);
 }
 
 std::string ProjectManager::ResolveSceneToLoad() const {

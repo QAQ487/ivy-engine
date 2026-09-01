@@ -319,6 +319,9 @@ xcopy /y /d /e "$(ProjectDir)rom\*" "$(OutDir)rom\"</Command>
     <ClInclude Include="engine\core\game_object.h" />
     <ClInclude Include="engine\ecs\collider_component.h" />
     <ClInclude Include="engine\ecs\effect_component.h" />
+    <ClInclude Include="engine\ecs\audio_component.h" />
+    <ClInclude Include="engine\ecs\audio_listener_component.h" />
+    <ClInclude Include="engine\audio\audio_listener_sync.h" />
     <ClInclude Include="engine\ecs\game_object.h" />
     <ClInclude Include="engine\ecs\tag_registry.h" />
     <ClInclude Include="engine\ecs\model_asset_cache.h" />
@@ -361,6 +364,7 @@ xcopy /y /d /e "$(ProjectDir)rom\*" "$(OutDir)rom\"</Command>
     <ClInclude Include="engine\rendering\sprite\texture.h" />
     <ClInclude Include="engine\ui\ui_bar.h" />
     <ClInclude Include="engine\ui\ui_button.h" />
+    <ClInclude Include="engine\ui\ui_button_pointer.h" />
     <ClInclude Include="engine\ui\ui_canvas.h" />
     <ClInclude Include="engine\ui\ui_element.h" />
     <ClInclude Include="engine\ui\ui_element_script_host.h" />
@@ -405,6 +409,9 @@ xcopy /y /d /e "$(ProjectDir)rom\*" "$(OutDir)rom\"</Command>
     <ClCompile Include="engine\rendering\lighting\shadow.cpp" />
     <ClCompile Include="engine\ecs\collider_component.cpp" />
     <ClCompile Include="engine\ecs\effect_component.cpp" />
+    <ClCompile Include="engine\ecs\audio_component.cpp" />
+    <ClCompile Include="engine\ecs\audio_listener_component.cpp" />
+    <ClCompile Include="engine\audio\audio_listener_sync.cpp" />
     <ClCompile Include="engine\ecs\game_object.cpp" />
     <ClCompile Include="engine\ecs\tag_registry.cpp" />
     <ClCompile Include="engine\ecs\model_asset_cache.cpp" />

@@ -4,6 +4,9 @@
 #include "engine/ecs/component_factory.h"
 #include "engine/ecs/collider_component.h"
 #include "engine/ecs/effect_component.h"
+#include "engine/audio/audio_manager.h"
+#include "engine/ecs/audio_component.h"
+#include "engine/ecs/audio_listener_component.h"
 #include "engine/ecs/prefab_serializer.h"
 #include "engine/ecs/tag_registry.h"
 #include "engine/scene/scene_runtime.h"
@@ -204,6 +207,14 @@ void SceneLoader_RegisterComponentTypes() {
     ComponentFactory::Instance().Register("Camera",
         []() -> std::unique_ptr<Component> {
             return std::make_unique<CameraComponent>();
+        });
+    ComponentFactory::Instance().Register("Audio",
+        []() -> std::unique_ptr<Component> {
+            return std::make_unique<AudioComponent>();
+        });
+    ComponentFactory::Instance().Register("AudioListener",
+        []() -> std::unique_ptr<Component> {
+            return std::make_unique<AudioListenerComponent>();
         });
 }
 
@@ -612,6 +623,7 @@ void TeardownScenePlaySession(bool resetTransforms) {
     TeardownAllScripts();
     PrefabRuntime_DestroyAllSpawnedChildren();
     InvokeGameplaySessionReset();
+    AudioManager::Instance().StopSceneInstances();
 
     if (resetTransforms) {
         for (auto& node : g_sceneNodes)

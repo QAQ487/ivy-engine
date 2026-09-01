@@ -12,6 +12,7 @@
 #include "engine/ecs/game_object.h"
 #include "engine/ecs/collider_component.h"
 #include "engine/ecs/effect_component.h"
+#include "engine/ecs/audio_component.h"
 #include "engine/scene/scene_node.h"
 #include "engine/ecs/transform.h"
 #include "engine/ecs/visual_component.h"
@@ -175,6 +176,8 @@ struct ScriptRuntimeApi {
 
     // Appended for ABI safety — always add new host hooks at the end.
     void (*gameObjectRemoveIgnoreCollisionTag)(GameObject* object, Tag tag);
+    void (*audioPlay)(AudioComponent* component);
+    void (*audioStop)(AudioComponent* component);
 };
 
 const ScriptRuntimeApi* ScriptRuntimeApi_GetHost();
@@ -187,6 +190,9 @@ EffectComponent* ScriptApi_FindEffectComponent(engine::GameObject& object);
 VisualComponent* ScriptApi_FindVisualComponent(engine::GameObject& object);
 void ScriptApi_Visual_PlayClip(VisualComponent* component, const char* clipName);
 void ScriptApi_Effect_Play(EffectComponent* component);
+AudioComponent* ScriptApi_FindAudioComponent(engine::GameObject& object);
+void ScriptApi_Audio_Play(AudioComponent* component);
+void ScriptApi_Audio_Stop(AudioComponent* component);
 
 void ScriptApi_ApplyColliderComponent(ColliderComponent& component);
 BoxCollider* ScriptApi_CreateBoxCollider(engine::GameObject& object,

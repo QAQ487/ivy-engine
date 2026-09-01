@@ -6,15 +6,20 @@
 #include "audio_manager.h"
 #include "engine/ecs/game_object.h"
 #include "engine/debug_draw/debug_drawer.h"
+#include "libraries/nlohmann/json.hpp"
 #include <algorithm>
+#include <cmath>
+#include <fstream>
+#include <filesystem>
 
  // Internal structure to hold all data for a single sound
-struct AudioSource {
+struct Playback {
     AudioType type;
     bool      is3D;
     bool      isLooping;
     float     baseVolume; // The volume set by Play()
     bool      isLoaded = false; // True if loaded but not yet playing
+    bool      persistAcrossScene = false;
     GameObject* gameObject = nullptr; // GameObject to track for position/orientation
 
     // XAudio2 Data
@@ -67,6 +72,31 @@ void AudioManager::Initialize() {
     m_listener.Velocity = { 0, 0, 0 };
 }
 
+namespace {
+constexpr const char* kUiClickLoadedId = "__engine_ui_click";
+
+float Clamp01(float v) {
+    if (v < 0.0f) return 0.0f;
+    if (v > 1.0f) return 1.0f;
+    return v;
+}
+
+void DestroyPlaybackVoice(Playback* playback) {
+    if (!playback || !playback->sourceVoice) return;
+    playback->sourceVoice->Stop();
+    playback->sourceVoice->DestroyVoice();
+    playback->sourceVoice = nullptr;
+}
+
+bool VoiceHasFinished(Playback* playback) {
+    if (!playback || !playback->sourceVoice) return true;
+    if (playback->isLooping) return false;
+    XAUDIO2_VOICE_STATE state = {};
+    playback->sourceVoice->GetState(&state);
+    return state.BuffersQueued == 0;
+}
+}
+
 void AudioManager::Finalize() {
     StopAll();
     if (m_masterVoice) {
@@ -78,45 +108,42 @@ void AudioManager::Finalize() {
 }
 
 void AudioManager::Update() {
-    // Update listener from GameObject if set
-    // NOTE: Caller must ensure m_listenerObject remains valid while set
     if (m_listenerObject) {
         DirectX::XMFLOAT3 pos = m_listenerObject->GetPosition();
         DirectX::XMFLOAT3 rot = m_listenerObject->GetRotation();
-        
-        // Calculate forward vector from rotation (Y-axis rotation in degrees)
-        // Assumes right-handed coordinate system with Y-up
+
         float yawRad = DirectX::XMConvertToRadians(rot.y);
         DirectX::XMFLOAT3 forward = {
-            std::sinf(yawRad),  // x
-            0.0f,               // y
-            std::cosf(yawRad)   // z
+            std::sinf(yawRad),
+            0.0f,
+            std::cosf(yawRad)
         };
         DirectX::XMFLOAT3 up = { 0.0f, 1.0f, 0.0f };
-        
+
         m_listener.Position = pos;
         m_listener.OrientFront = forward;
         m_listener.OrientTop = up;
     }
-    
-    // Update emitters and apply 3D audio
-    for (auto& pair : m_sources) {
-        if (pair.second->is3D) {
-            // Update emitter position from GameObject if set
-            // NOTE: Caller must ensure GameObject remains valid while set
+
+    auto applyEmitters = [this](auto& map) {
+        for (auto& pair : map) {
+            if (!pair.second || !pair.second->is3D) continue;
             if (pair.second->gameObject) {
                 pair.second->position = pair.second->gameObject->GetPosition();
                 pair.second->emitter.Position = pair.second->position;
             }
             Apply3DAudio(pair.second.get());
         }
-    }
+    };
+    applyEmitters(m_sources);
+    applyEmitters(m_instances);
+    SweepFinishedInstances();
 }
 
 // ---------------------------------------------------------------------------
 // Helper: Load WAV from disk
 // ---------------------------------------------------------------------------
-bool AudioManager::LoadWav(const std::string& path, AudioSource* outSource) {
+bool AudioManager::LoadWav(const std::string& path, Playback* outSource) {
     HMMIO hmmio = mmioOpenA(const_cast<LPSTR>(path.c_str()), nullptr, MMIO_READ);
     if (!hmmio) return false;
 
@@ -181,7 +208,7 @@ bool AudioManager::LoadWav(const std::string& path, AudioSource* outSource) {
 void AudioManager::PlaySFX3D(const std::string& id, const std::string& path, const DirectX::XMFLOAT3& position, float volume, bool loop) {
     Stop(id); // Replace if exists
 
-    auto source = std::make_unique<AudioSource>();
+    auto source = std::make_unique<Playback>();
     if (!LoadWav(path, source.get())) return;
 
     source->type = AudioType::SFX;
@@ -229,7 +256,7 @@ void AudioManager::PlaySFX3D(const std::string& id, const std::string& path, con
 void AudioManager::PlaySFX(const std::string& id, const std::string& path, float volume, bool loop) {
     Stop(id);
 
-    auto source = std::make_unique<AudioSource>();
+    auto source = std::make_unique<Playback>();
     if (!LoadWav(path, source.get())) return;
 
     source->type = AudioType::SFX;
@@ -253,7 +280,7 @@ void AudioManager::PlaySFX(const std::string& id, const std::string& path, float
 
 void AudioManager::PlayBGM(const std::string& id, const std::string& path, float volume, bool loop) {
     Stop(id);
-    auto source = std::make_unique<AudioSource>();
+    auto source = std::make_unique<Playback>();
     if (!LoadWav(path, source.get())) return;
 
     source->type = AudioType::BGM;
@@ -277,7 +304,7 @@ void AudioManager::PlayBGM(const std::string& id, const std::string& path, float
 
 void AudioManager::PlayVoice(const std::string& id, const std::string& path, float volume) {
     Stop(id);
-    auto source = std::make_unique<AudioSource>();
+    auto source = std::make_unique<Playback>();
     if (!LoadWav(path, source.get())) return;
 
     source->type = AudioType::VOICE;
@@ -305,7 +332,7 @@ void AudioManager::LoadBGM(const std::string& id, const std::string& path) {
     // Remove any existing loaded source with this ID
     m_loadedAudio.erase(id);
     
-    auto source = std::make_unique<AudioSource>();
+    auto source = std::make_unique<Playback>();
     if (!LoadWav(path, source.get())) return;
     
     source->type = AudioType::BGM;
@@ -328,8 +355,8 @@ void AudioManager::PlayBGM(const std::string& id, float volume, bool loop) {
     Stop(id); // Stop any currently playing instance
     
     // Create a new source and perform deep copy of loaded data
-    auto source = std::make_unique<AudioSource>();
-    const AudioSource* loaded = it->second.get();
+    auto source = std::make_unique<Playback>();
+    const Playback* loaded = it->second.get();
     
     // Copy basic properties
     source->type = loaded->type;
@@ -362,7 +389,7 @@ void AudioManager::LoadSFX(const std::string& id, const std::string& path) {
     // Remove any existing loaded source with this ID
     m_loadedAudio.erase(id);
     
-    auto source = std::make_unique<AudioSource>();
+    auto source = std::make_unique<Playback>();
     if (!LoadWav(path, source.get())) return;
     
     source->type = AudioType::SFX;
@@ -385,8 +412,8 @@ void AudioManager::PlaySFX(const std::string& id, float volume, bool loop) {
     Stop(id); // Stop any currently playing instance
     
     // Create a new source and perform deep copy of loaded data
-    auto source = std::make_unique<AudioSource>();
-    const AudioSource* loaded = it->second.get();
+    auto source = std::make_unique<Playback>();
+    const Playback* loaded = it->second.get();
     
     // Copy basic properties
     source->type = loaded->type;
@@ -419,7 +446,7 @@ void AudioManager::LoadVoice(const std::string& id, const std::string& path) {
     // Remove any existing loaded source with this ID
     m_loadedAudio.erase(id);
     
-    auto source = std::make_unique<AudioSource>();
+    auto source = std::make_unique<Playback>();
     if (!LoadWav(path, source.get())) return;
     
     source->type = AudioType::VOICE;
@@ -442,8 +469,8 @@ void AudioManager::PlayVoice(const std::string& id, float volume) {
     Stop(id); // Stop any currently playing instance
     
     // Create a new source and perform deep copy of loaded data
-    auto source = std::make_unique<AudioSource>();
-    const AudioSource* loaded = it->second.get();
+    auto source = std::make_unique<Playback>();
+    const Playback* loaded = it->second.get();
     
     // Copy basic properties
     source->type = loaded->type;
@@ -476,7 +503,7 @@ void AudioManager::Load3DSFX(const std::string& id, const std::string& path) {
     // Remove any existing loaded source with this ID
     m_loadedAudio.erase(id);
     
-    auto source = std::make_unique<AudioSource>();
+    auto source = std::make_unique<Playback>();
     if (!LoadWav(path, source.get())) return;
     
     source->type = AudioType::SFX;
@@ -516,8 +543,8 @@ void AudioManager::PlaySFX3D(const std::string& id, float volume, bool loop) {
     Stop(id); // Stop any currently playing instance
     
     // Create a new source and perform deep copy of loaded data
-    auto source = std::make_unique<AudioSource>();
-    const AudioSource* loaded = it->second.get();
+    auto source = std::make_unique<Playback>();
+    const Playback* loaded = it->second.get();
     
     // Copy basic properties
     source->type = loaded->type;
@@ -565,8 +592,8 @@ void AudioManager::PlaySFX3D(const std::string& id, float volume, bool loop) {
 // ---------------------------------------------------------------------------
 // 3D Calculation (The optimized logic)
 // ---------------------------------------------------------------------------
-void AudioManager::Apply3DAudio(AudioSource* source) {
-    if (!source || !source->is3D) return;
+void AudioManager::Apply3DAudio(Playback* source) {
+    if (!source || !source->is3D || !source->sourceVoice) return;
 
     // 1. Update Emitter Position
     source->emitter.Position = source->position;
@@ -643,14 +670,10 @@ void AudioManager::Stop(const std::string& id) {
 }
 
 void AudioManager::StopAll() {
-    for (auto& pair : m_sources) {
-        if (pair.second->sourceVoice) {
-            pair.second->sourceVoice->Stop();
-            pair.second->sourceVoice->DestroyVoice();
-            pair.second->sourceVoice = nullptr;
-        }
-    }
+    for (auto& pair : m_sources)
+        DestroyPlaybackVoice(pair.second.get());
     m_sources.clear();
+    StopAllInstances();
 }
 
 void AudioManager::StopAllByType(AudioType type) {
@@ -728,6 +751,11 @@ void AudioManager::SetListenerStereoBalance(bool centerBalance) {
             Apply3DAudio(pair.second.get());
         }
     }
+    for (auto& pair : m_instances) {
+        if (pair.second && pair.second->is3D) {
+            Apply3DAudio(pair.second.get());
+        }
+    }
 }
 
 void AudioManager::SetListener(const DirectX::XMFLOAT3& pos, const DirectX::XMFLOAT3& fwd, const DirectX::XMFLOAT3& up) {
@@ -754,6 +782,10 @@ void AudioManager::OnGameObjectDestroyed(GameObject* gameObject) {
         if (pair.second && pair.second->gameObject == gameObject)
             pair.second->gameObject = nullptr;
     }
+    for (auto& pair : m_instances) {
+        if (pair.second && pair.second->gameObject == gameObject)
+            pair.second->gameObject = nullptr;
+    }
 }
 
 void AudioManager::SetVolume(const std::string& id, float volume) {
@@ -764,17 +796,29 @@ void AudioManager::SetVolume(const std::string& id, float volume) {
     }
 }
 
-void AudioManager::UpdateVolume(AudioSource* source) {
+void AudioManager::UpdateVolume(Playback* source) {
+    if (!source || !source->sourceVoice) return;
     float typeVol = (source->type == AudioType::BGM) ? m_bgmVol :
         (source->type == AudioType::SFX) ? m_sfxVol : m_voiceVol;
     source->sourceVoice->SetVolume(m_masterVol * typeVol * source->baseVolume);
 }
 
-// Global Volume Setters
-void AudioManager::SetMasterVolume(float v) { m_masterVol = v; for (auto& s : m_sources) UpdateVolume(s.second.get()); }
-void AudioManager::SetBGMVolume(float v) { m_bgmVol = v;    for (auto& s : m_sources) if (s.second->type == AudioType::BGM) UpdateVolume(s.second.get()); }
-void AudioManager::SetSFXVolume(float v) { m_sfxVol = v;    for (auto& s : m_sources) if (s.second->type == AudioType::SFX) UpdateVolume(s.second.get()); }
-void AudioManager::SetVoiceVolume(float v) { m_voiceVol = v;  for (auto& s : m_sources) if (s.second->type == AudioType::VOICE) UpdateVolume(s.second.get()); }
+void AudioManager::ReapplyAllVolumes() {
+    auto apply = [this](auto& map) {
+        for (auto& pair : map) {
+            if (!pair.second) continue;
+            if (pair.second->is3D) Apply3DAudio(pair.second.get());
+            else UpdateVolume(pair.second.get());
+        }
+    };
+    apply(m_sources);
+    apply(m_instances);
+}
+
+void AudioManager::SetMasterVolume(float v) { m_masterVol = Clamp01(v); ReapplyAllVolumes(); }
+void AudioManager::SetBGMVolume(float v) { m_bgmVol = Clamp01(v); ReapplyAllVolumes(); }
+void AudioManager::SetSFXVolume(float v) { m_sfxVol = Clamp01(v); ReapplyAllVolumes(); }
+void AudioManager::SetVoiceVolume(float v) { m_voiceVol = Clamp01(v); ReapplyAllVolumes(); }
 
 // Debug
 void AudioManager::DrawDebug() {
@@ -785,7 +829,12 @@ void AudioManager::DrawDebug() {
     if (!init) { drawer.Initialize(); init = true; }
 
     for (const auto& pair : m_sources) {
-        if (pair.second->is3D) {
+        if (pair.second && pair.second->is3D) {
+            drawer.DrawSphere(pair.second->position, { 0,0,0 }, pair.second->emitter.CurveDistanceScaler, { 0,0,0 });
+        }
+    }
+    for (const auto& pair : m_instances) {
+        if (pair.second && pair.second->is3D) {
             drawer.DrawSphere(pair.second->position, { 0,0,0 }, pair.second->emitter.CurveDistanceScaler, { 0,0,0 });
         }
     }
@@ -804,7 +853,7 @@ bool AudioManager::GetDebugInfo(
         return false;
     }
 
-    const AudioSource* source = it->second.get();
+    const Playback* source = it->second.get();
 
     // 2. Calculate distance from listener to emitter
     // Use m_listener (class member)
@@ -847,4 +896,227 @@ bool AudioManager::GetDebugInfo(
     }
 
     return true;
+}
+
+void AudioManager::Setup3DEmitter(Playback* source, const DirectX::XMFLOAT3& position, float distanceScale) {
+    if (!source) return;
+    source->emitter = { 0 };
+    source->emitter.ChannelCount = 1;
+    source->emitter.CurveDistanceScaler = (distanceScale > 0.0f) ? distanceScale : 20.0f;
+    source->emitter.DopplerScaler = 1.0f;
+    source->emitter.pVolumeCurve = &g_linearCurve;
+    source->emitter.Position = position;
+    source->dspSettings = { 0 };
+    source->dspSettings.SrcChannelCount = 1;
+    source->dspSettings.DstChannelCount = m_deviceChannels;
+    source->matrixCoefficients.resize(
+        source->dspSettings.SrcChannelCount * source->dspSettings.DstChannelCount, 0.0f);
+    source->dspSettings.pMatrixCoefficients = source->matrixCoefficients.data();
+}
+
+bool AudioManager::SubmitAndStart(Playback* source, bool loop) {
+    if (!source || !m_xaudio) return false;
+    if (FAILED(m_xaudio->CreateSourceVoice(&source->sourceVoice, &source->wfx)))
+        return false;
+
+    XAUDIO2_BUFFER buffer = { 0 };
+    buffer.AudioBytes = (UINT32)source->audioData.size();
+    buffer.pAudioData = source->audioData.data();
+    buffer.LoopCount = loop ? XAUDIO2_LOOP_INFINITE : 0;
+    source->sourceVoice->SubmitSourceBuffer(&buffer);
+    source->sourceVoice->Start();
+    return true;
+}
+
+void AudioManager::SweepFinishedInstances() {
+    auto it = m_instances.begin();
+    while (it != m_instances.end()) {
+        if (VoiceHasFinished(it->second.get())) {
+            DestroyPlaybackVoice(it->second.get());
+            it = m_instances.erase(it);
+        }
+        else {
+            ++it;
+        }
+    }
+}
+
+AudioPlaybackId AudioManager::StartInstance(const std::string& path,
+    AudioType type,
+    float volume,
+    bool loop,
+    bool is3D,
+    const DirectX::XMFLOAT3& position,
+    float distanceScale)
+{
+    if (!m_xaudio || path.empty())
+        return kInvalidAudioPlaybackId;
+
+    auto playback = std::make_unique<Playback>();
+    if (!LoadWav(path, playback.get()))
+        return kInvalidAudioPlaybackId;
+
+    playback->type = type;
+    playback->is3D = is3D;
+    playback->isLooping = loop;
+    playback->baseVolume = Clamp01(volume);
+    playback->isLoaded = false;
+    playback->position = position;
+
+    if (is3D)
+        Setup3DEmitter(playback.get(), position, distanceScale);
+
+    if (!SubmitAndStart(playback.get(), loop))
+        return kInvalidAudioPlaybackId;
+
+    if (is3D)
+        Apply3DAudio(playback.get());
+    else
+        UpdateVolume(playback.get());
+
+    const AudioPlaybackId id = m_nextInstanceId++;
+    if (m_nextInstanceId == kInvalidAudioPlaybackId)
+        m_nextInstanceId = 1;
+    m_instances[id] = std::move(playback);
+    return id;
+}
+
+AudioPlaybackId AudioManager::StartInstanceFromLoaded(const std::string& loadedId, float volume,
+    bool persistAcrossScene)
+{
+    if (!m_xaudio || loadedId.empty())
+        return kInvalidAudioPlaybackId;
+
+    auto it = m_loadedAudio.find(loadedId);
+    if (it == m_loadedAudio.end() || !it->second)
+        return kInvalidAudioPlaybackId;
+
+    const Playback* loaded = it->second.get();
+    auto playback = std::make_unique<Playback>();
+    playback->type = loaded->type;
+    playback->is3D = loaded->is3D;
+    playback->isLooping = false;
+    playback->baseVolume = Clamp01(volume);
+    playback->isLoaded = false;
+    playback->persistAcrossScene = persistAcrossScene;
+    playback->audioData = loaded->audioData;
+    playback->wfx = loaded->wfx;
+    playback->position = loaded->position;
+
+    if (playback->is3D)
+        Setup3DEmitter(playback.get(), playback->position, loaded->emitter.CurveDistanceScaler);
+
+    if (!SubmitAndStart(playback.get(), false))
+        return kInvalidAudioPlaybackId;
+
+    if (playback->is3D)
+        Apply3DAudio(playback.get());
+    else
+        UpdateVolume(playback.get());
+
+    const AudioPlaybackId id = m_nextInstanceId++;
+    if (m_nextInstanceId == kInvalidAudioPlaybackId)
+        m_nextInstanceId = 1;
+    m_instances[id] = std::move(playback);
+    return id;
+}
+
+void AudioManager::SetUiClickSound(const std::string& path) {
+    m_loadedAudio.erase(kUiClickLoadedId);
+    if (path.empty())
+        return;
+    LoadSFX(kUiClickLoadedId, path);
+}
+
+void AudioManager::PlayUiClick(float volume) {
+    StartInstanceFromLoaded(kUiClickLoadedId, volume, true);
+}
+
+void AudioManager::StopInstance(AudioPlaybackId id) {
+    if (id == kInvalidAudioPlaybackId) return;
+    auto it = m_instances.find(id);
+    if (it == m_instances.end()) return;
+    DestroyPlaybackVoice(it->second.get());
+    m_instances.erase(it);
+}
+
+bool AudioManager::IsInstancePlaying(AudioPlaybackId id) const {
+    if (id == kInvalidAudioPlaybackId) return false;
+    auto it = m_instances.find(id);
+    if (it == m_instances.end()) return false;
+    return !VoiceHasFinished(it->second.get());
+}
+
+void AudioManager::SetInstancePosition(AudioPlaybackId id, const DirectX::XMFLOAT3& position) {
+    auto it = m_instances.find(id);
+    if (it == m_instances.end() || !it->second || !it->second->is3D) return;
+    it->second->position = position;
+    it->second->emitter.Position = position;
+}
+
+void AudioManager::SetInstanceDistanceScale(AudioPlaybackId id, float scale) {
+    auto it = m_instances.find(id);
+    if (it == m_instances.end() || !it->second || !it->second->is3D) return;
+    if (scale < 0.0f) scale = 0.0f;
+    it->second->emitter.CurveDistanceScaler = scale;
+}
+
+void AudioManager::SetInstanceVolume(AudioPlaybackId id, float volume) {
+    auto it = m_instances.find(id);
+    if (it == m_instances.end() || !it->second) return;
+    it->second->baseVolume = Clamp01(volume);
+    if (it->second->is3D) Apply3DAudio(it->second.get());
+    else UpdateVolume(it->second.get());
+}
+
+void AudioManager::StopAllInstances() {
+    for (auto& pair : m_instances)
+        DestroyPlaybackVoice(pair.second.get());
+    m_instances.clear();
+}
+
+void AudioManager::StopSceneInstances() {
+    auto it = m_instances.begin();
+    while (it != m_instances.end()) {
+        if (it->second && it->second->persistAcrossScene) {
+            ++it;
+            continue;
+        }
+        DestroyPlaybackVoice(it->second.get());
+        it = m_instances.erase(it);
+    }
+}
+
+bool AudioManager::LoadBusVolumesFromProjectFile(const std::string& projectJsonPath) {
+    try {
+        std::ifstream file(projectJsonPath);
+        if (!file.is_open())
+            return false;
+        nlohmann::json j;
+        file >> j;
+        if (!j.contains("audio") || !j["audio"].is_object())
+            return false;
+        const auto& audio = j["audio"];
+        SetMasterVolume(audio.value("masterVolume", 1.0f));
+        SetBGMVolume(audio.value("bgmVolume", 1.0f));
+        SetSFXVolume(audio.value("sfxVolume", 1.0f));
+        SetVoiceVolume(audio.value("voiceVolume", 1.0f));
+        SetUiClickSound(audio.value("uiClickSound", std::string{}));
+        return true;
+    }
+    catch (...) {
+        return false;
+    }
+}
+
+void AudioManager::TryLoadBusVolumesFromNearbyProject() {
+    namespace fs = std::filesystem;
+    if (LoadBusVolumesFromProjectFile("project.json"))
+        return;
+
+    wchar_t exePath[MAX_PATH] = {};
+    if (GetModuleFileNameW(nullptr, exePath, MAX_PATH) == 0)
+        return;
+    const fs::path nearby = fs::path(exePath).parent_path() / "project.json";
+    LoadBusVolumesFromProjectFile(nearby.string());
 }

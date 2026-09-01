@@ -11,6 +11,7 @@
 #include "../input/mouse.h"
 #include "../ecs/string_utils.h"
 #include "../core/engine_gui.h"
+#include "../audio/audio_manager.h"
 
 // Static text renderer for all buttons
 UITextRenderer UIButton::s_textRenderer;
@@ -40,7 +41,6 @@ UIButton::UIButton(const std::string& name,
 	, m_isHovered(false)
 	, m_isPressed(false)
 	, m_isSelected(false)
-	, m_wasMouseDown(false)
 	, m_onClick(nullptr)
 	, m_actionPlayOnLoad(false)
 	, m_nextUp(nullptr)
@@ -73,14 +73,18 @@ void UIButton::Update(double elapsed_time) {
 	m_isHovered = ContainsPoint(viewportX, viewportY);
 
 	const bool mouseDown = Mouse_IsLeftDown();
-	const bool mouseReleased = !mouseDown && m_wasMouseDown;
-	const bool mouseClicked = m_isHovered && mouseReleased;
 	m_isPressed = m_isHovered && mouseDown;
-	m_wasMouseDown = mouseDown;
-
-	if (mouseClicked) {
+	if (UIButtonPollClick(m_pointerState, m_isHovered, mouseDown))
 		Activate();
+}
+
+void UIButton::SetVisible(bool visible) {
+	if (m_isVisible != visible) {
+		UIButtonResetPointerState(m_pointerState);
+		m_isHovered = false;
+		m_isPressed = false;
 	}
+	UIElement::SetVisible(visible);
 }
 
 void UIButton::Draw() {
@@ -202,6 +206,7 @@ void UIButton::Activate() {
 	if (!EngineGUI_IsPlaying()) return;
 
 	m_isPressed = true;
+	AudioManager::Instance().PlayUiClick();
 
 	// Builtin / registered action callback (LoadScene, ExitGame, custom binders)
 	if (m_onClick) {

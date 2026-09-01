@@ -114,6 +114,15 @@
     <ClInclude Include="engine\ecs\effect_component.h">
       <Filter>engine\ecs</Filter>
     </ClInclude>
+    <ClInclude Include="engine\ecs\audio_component.h">
+      <Filter>engine\ecs</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\ecs\audio_listener_component.h">
+      <Filter>engine\ecs</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\audio\audio_listener_sync.h">
+      <Filter>engine\audio</Filter>
+    </ClInclude>
     <ClInclude Include="engine\ecs\component.h">
       <Filter>engine\ecs</Filter>
     </ClInclude>
@@ -246,6 +255,9 @@
     <ClInclude Include="engine\ui\ui_button.h">
       <Filter>engine\ui</Filter>
     </ClInclude>
+    <ClInclude Include="engine\ui\ui_button_pointer.h">
+      <Filter>engine\ui</Filter>
+    </ClInclude>
     <ClInclude Include="engine\ui\ui_canvas.h">
       <Filter>engine\ui</Filter>
     </ClInclude>
@@ -322,6 +334,15 @@
     </ClCompile>
     <ClCompile Include="engine\ecs\effect_component.cpp">
       <Filter>engine\ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\ecs\audio_component.cpp">
+      <Filter>engine\ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\ecs\audio_listener_component.cpp">
+      <Filter>engine\ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\audio\audio_listener_sync.cpp">
+      <Filter>engine\audio</Filter>
     </ClCompile>
     <ClCompile Include="engine\ecs\component_factory.cpp">
       <Filter>engine\ecs</Filter>
