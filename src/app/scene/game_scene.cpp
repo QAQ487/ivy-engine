@@ -138,11 +138,15 @@ void GameScene::Finalize() {
 }
 
 void GameScene::Update(double elapsed_time) {
-	PhysicsSystem_Update(elapsed_time);
+	// Edit mode must not simulate: gravity, velocity, and collision resolution
+	// would move authored poses (Unity keeps objects parked until Play).
+	if (EngineGUI_IsPlaying())
+		PhysicsSystem_Update(elapsed_time);
 
 	// Snapshot dynamic object positions before running scripts.
 	// This captures the post-physics (pre-orbit) position so the swept collision
 	// pass below can detect tunneling caused by orbit and other script-driven moves.
+	// Also run in edit mode so the first Play frame sweeps from the authored pose.
 	PhysicsSystem_SavePositions();
 
 	Billboard::ClearDrawList();
@@ -151,7 +155,8 @@ void GameScene::Update(double elapsed_time) {
 
 	// Post-script swept collision pass: catches collisions missed during script-driven
 	// position changes (e.g. the player orbiting through a pole or dummy player).
-	PhysicsSystem_ResolveCollisions();
+	if (EngineGUI_IsPlaying())
+		PhysicsSystem_ResolveCollisions();
 
 	PrefabRuntime_FlushDestroyed();
 

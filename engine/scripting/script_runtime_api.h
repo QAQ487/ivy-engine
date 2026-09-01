@@ -178,6 +178,13 @@ struct ScriptRuntimeApi {
     void (*gameObjectRemoveIgnoreCollisionTag)(GameObject* object, Tag tag);
     void (*audioPlay)(AudioComponent* component);
     void (*audioStop)(AudioComponent* component);
+    bool (*visualTryGetBoneWorld)(VisualComponent* component,
+                                  const char* boneName,
+                                  DirectX::XMFLOAT3* outPos,
+                                  DirectX::XMFLOAT3* outRotDeg);
+    void (*visualPlayClipLoop)(VisualComponent* component, const char* clipName, int loop);
+    float (*visualGetClipDuration)(VisualComponent* component);
+    void (*visualSetAnimSpeed)(VisualComponent* component, float speed);
 };
 
 const ScriptRuntimeApi* ScriptRuntimeApi_GetHost();
@@ -189,6 +196,13 @@ ColliderComponent* ScriptApi_FindColliderComponent(engine::GameObject& object);
 EffectComponent* ScriptApi_FindEffectComponent(engine::GameObject& object);
 VisualComponent* ScriptApi_FindVisualComponent(engine::GameObject& object);
 void ScriptApi_Visual_PlayClip(VisualComponent* component, const char* clipName);
+bool ScriptApi_Visual_TryGetBoneWorld(VisualComponent* component,
+                                      const char* boneName,
+                                      DirectX::XMFLOAT3& outPos,
+                                      DirectX::XMFLOAT3& outRotDeg);
+void ScriptApi_Visual_PlayClipLoop(VisualComponent* component, const char* clipName, bool loop);
+float ScriptApi_Visual_GetClipDuration(VisualComponent* component);
+void ScriptApi_Visual_SetAnimSpeed(VisualComponent* component, float speed);
 void ScriptApi_Effect_Play(EffectComponent* component);
 AudioComponent* ScriptApi_FindAudioComponent(engine::GameObject& object);
 void ScriptApi_Audio_Play(AudioComponent* component);

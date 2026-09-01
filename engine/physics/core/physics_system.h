@@ -13,6 +13,8 @@
 
 // Full physics tick: save previous positions, integrate velocity, detect and
 // resolve collisions (swept AABB broad phase + sub-stepped narrow phase).
+// The scene loop should call this only while playing; edit mode must not
+// integrate gravity or resolve contacts.
 void PhysicsSystem_Update(double elapsed_time);
 
 // Snapshot current positions of all dynamic objects into m_previousPosition.

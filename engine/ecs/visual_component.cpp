@@ -62,6 +62,9 @@ Model3D* VisualComponent::GetRealModel() const {
     if (!playAnimation)
         return GetFromCache(modelPath);
 
+    if (m_animInstance && m_animationsLoaded)
+        return m_animInstance.get();
+
     auto* self = const_cast<VisualComponent*>(this);
     self->EnsureAnimationsLoaded();
     return m_animInstance.get();
@@ -101,6 +104,7 @@ void VisualComponent::OnDetach() {
 void VisualComponent::OnReset() {
     m_animInstance.reset();
     m_animationsLoaded = false;
+    m_triedAnimClips.clear();
     ReleaseSurfaceFxTexture();
 }
 
@@ -112,10 +116,15 @@ void VisualComponent::EnsureAnimationsLoaded() {
     for (const auto& [name, path] : animationPaths) {
         if (name.empty() || path.empty())
             continue;
-        if (!shared->HasAnimation(name)) {
-            shared->EnsureAnimation(name, path.c_str());
+        if (shared->HasAnimation(name))
+            continue;
+        // A missing FBX used to retry Import every frame and rebuild the
+        // skinned instance — that cut FPS in half after adding pickup.
+        if (!m_triedAnimClips.insert(name).second)
+            continue;
+        shared->EnsureAnimation(name, path.c_str());
+        if (shared->HasAnimation(name))
             addedAny = true;
-        }
     }
 
     // Anim-instance m_animScenes is a snapshot of shared at create time.
@@ -131,6 +140,13 @@ void VisualComponent::EnsureAnimationsLoaded() {
                 break;
             }
         }
+    }
+
+    // Another component may have loaded clips onto the shared asset after this
+    // instance was created. Merge without a full instance rebuild (BakeSkinning).
+    if (instanceMissingClip && m_animInstance && m_animationsLoaded && !addedAny) {
+        m_animInstance->MergeAnimScenesFrom(*shared);
+        instanceMissingClip = false;
     }
 
     const bool needInstance =
@@ -159,6 +175,10 @@ void VisualComponent::EnsureAnimationsLoaded() {
 }
 
 void VisualComponent::PlayClip(const std::string& clipName) {
+    PlayClip(clipName, true);
+}
+
+void VisualComponent::PlayClip(const std::string& clipName, bool loop) {
     EnsureAnimationsLoaded();
 
     const std::string resolvedClip =
@@ -168,20 +188,45 @@ void VisualComponent::PlayClip(const std::string& clipName) {
     Model3D* model = GetRealModel();
     if (!model) return;
 
+    model->SetLoop(loop);
+
     const bool hasAnim = resolvedClip.empty() ? true : model->HasAnimation(resolvedClip);
     if (model->GetActiveClip() == resolvedClip)
         return;
+
+    m_lastAnimSpeed = 0.0f;
 
     if (resolvedClip.empty())
         model->PlayAnimation("");
     else if (hasAnim)
         model->PlayAnimation(resolvedClip);
+
+    model->SetLoop(loop);
+}
+
+float VisualComponent::GetActiveClipDuration() const {
+    Model3D* model = GetRealModel();
+    if (!model)
+        return 0.0f;
+    return static_cast<float>(model->GetAnimDurationSec());
+}
+
+void VisualComponent::SetAnimationSpeed(float speed) {
+    if (speed == m_lastAnimSpeed)
+        return;
+    m_lastAnimSpeed = speed;
+
+    Model3D* model = GetRealModel();
+    if (!model)
+        return;
+    model->SetAnimationSpeed(static_cast<double>(speed));
 }
 
 void VisualComponent::Update(double elapsed_time) {
     if (!playAnimation) return;
 
-    EnsureAnimationsLoaded();
+    if (!m_animInstance || !m_animationsLoaded)
+        EnsureAnimationsLoaded();
 
     Model3D* model = GetRealModel();
     if (!model) return;
@@ -270,6 +315,7 @@ void VisualComponent::Deserialize(const std::string& jsonStr) {
             hasSurfaceFx = true;
 
         m_animationsLoaded = false;
+        m_triedAnimClips.clear();
         m_animInstance.reset();
     } catch (...) {
         OutputDebugStringA("[VisualComponent] Deserialize: JSON parse error.\n");

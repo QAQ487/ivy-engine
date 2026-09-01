@@ -55,6 +55,8 @@ void Model3D::Release() {
 		m_subsets.clear();
 		m_baseScene = nullptr;
 		m_animScenes.clear();
+		m_bakedClips.clear();
+		m_meshXformScratch.clear();
 		m_mesh = nullptr;
 		m_meshNode = nullptr;
 		m_isAnimInstance = false;
@@ -107,6 +109,8 @@ void Model3D::Release() {
 	m_skinWeightScratch.clear();
 	m_vertexGeoIndex.clear();
 	m_rigidBake.clear();
+	m_bakedClips.clear();
+	m_meshXformScratch.clear();
 
 	m_diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 	m_hasTexture = false;
@@ -902,6 +906,46 @@ fbxsdk::FbxNode* Model3D::FindBone(const wchar_t* name) const {
 	return search(m_baseScene->GetRootNode());
 }
 
+bool Model3D::TryGetBoneLocalMatrix(const char* boneName, DirectX::XMMATRIX& out) const {
+	if (!boneName || !*boneName)
+		return false;
+
+	if (m_boneXformScratch.size() == m_skinBones.size() && !m_skinBones.empty()) {
+		for (size_t i = 0; i < m_skinBones.size(); ++i) {
+			const FbxNode* node = m_skinBones[i].animBone ? m_skinBones[i].animBone : m_skinBones[i].baseBone;
+			if (!node || strcmp(node->GetName(), boneName) != 0)
+				continue;
+			const FbxAMatrix& m = m_boneXformScratch[i];
+			out = XMMatrixSet(
+				(float)m.Get(0, 0), (float)m.Get(0, 1), (float)m.Get(0, 2), (float)m.Get(0, 3),
+				(float)m.Get(1, 0), (float)m.Get(1, 1), (float)m.Get(1, 2), (float)m.Get(1, 3),
+				(float)m.Get(2, 0), (float)m.Get(2, 1), (float)m.Get(2, 2), (float)m.Get(2, 3),
+				(float)m.Get(3, 0), (float)m.Get(3, 1), (float)m.Get(3, 2), (float)m.Get(3, 3));
+			return true;
+		}
+	}
+
+	FbxScene* scene = m_currentAnimScene ? m_currentAnimScene : m_baseScene;
+	if (!scene)
+		return false;
+
+	FbxNode* bone = scene->FindNodeByName(boneName);
+	if (!bone && m_baseScene && scene != m_baseScene)
+		bone = m_baseScene->FindNodeByName(boneName);
+	if (!bone)
+		return false;
+
+	FbxTime t;
+	t.SetSecondDouble(m_animTimeSec);
+	const FbxAMatrix m = bone->EvaluateGlobalTransform(t);
+	out = XMMatrixSet(
+		(float)m.Get(0, 0), (float)m.Get(0, 1), (float)m.Get(0, 2), (float)m.Get(0, 3),
+		(float)m.Get(1, 0), (float)m.Get(1, 1), (float)m.Get(1, 2), (float)m.Get(1, 3),
+		(float)m.Get(2, 0), (float)m.Get(2, 1), (float)m.Get(2, 2), (float)m.Get(2, 3),
+		(float)m.Get(3, 0), (float)m.Get(3, 1), (float)m.Get(3, 2), (float)m.Get(3, 3));
+	return true;
+}
+
 void Model3D::ScaleBoneAndChildren(fbxsdk::FbxNode* bone, const fbxsdk::FbxDouble3& scale) {
 	if (!bone) return;
 	// 現在のスケールを取得し、掛け合わせたい場合は以下
@@ -1339,18 +1383,256 @@ void Model3D::InitAnimationInfo() {
 	if (m_animDurationSec < 0.0) m_animDurationSec = 0.0;
 }
 
+namespace {
+
+FbxAMatrix LerpFbxAMatrix(const FbxAMatrix& a, const FbxAMatrix& b, double t) {
+	if (t <= 0.0) return a;
+	if (t >= 1.0) return b;
+	const double s = 1.0 - t;
+	const FbxVector4 ta = a.GetT();
+	const FbxVector4 tb = b.GetT();
+	const FbxVector4 ra = a.GetR();
+	const FbxVector4 rb = b.GetR();
+	const FbxVector4 sa = a.GetS();
+	const FbxVector4 sb = b.GetS();
+	return FbxAMatrix(
+		FbxVector4(ta[0] * s + tb[0] * t, ta[1] * s + tb[1] * t, ta[2] * s + tb[2] * t, 1.0),
+		FbxVector4(ra[0] * s + rb[0] * t, ra[1] * s + rb[1] * t, ra[2] * s + rb[2] * t, 1.0),
+		FbxVector4(sa[0] * s + sb[0] * t, sa[1] * s + sb[1] * t, sa[2] * s + sb[2] * t, 1.0));
+}
+
+} // namespace
+
+void Model3D::EnsureClipBaked(const std::string& animName) {
+	if (!m_hasSkin || m_skinBones.empty() || m_skinBake.empty())
+		return;
+
+	BakedAnimClip& clip = m_bakedClips[animName];
+	if (clip.ready)
+		return;
+
+	FbxScene* scene = nullptr;
+	if (animName.empty()) {
+		scene = m_baseScene;
+	} else {
+		auto it = m_animScenes.find(animName);
+		if (it != m_animScenes.end())
+			scene = it->second;
+	}
+	if (!scene) {
+		clip.ready = true;
+		return;
+	}
+
+	FbxScene* prevScene = m_currentAnimScene;
+	m_currentAnimScene = scene;
+	InitAnimationInfo();
+
+	clip.startSec = m_animStartSec;
+	clip.durationSec = m_animDurationSec;
+	clip.sampleDt = 1.0 / 60.0;
+
+	int nSamples = 1;
+	if (clip.durationSec > 0.0 && clip.sampleDt > 0.0)
+		nSamples = (std::max)(1, (int)std::lround(clip.durationSec / clip.sampleDt) + 1);
+
+	FbxAnimEvaluator* animEval = scene->GetAnimationEvaluator();
+	FbxAnimEvaluator* baseEval = m_baseScene ? m_baseScene->GetAnimationEvaluator() : animEval;
+	if (!animEval) {
+		m_currentAnimScene = prevScene;
+		clip.ready = true;
+		return;
+	}
+
+	const size_t nBones = m_skinBones.size();
+	std::vector<FbxNode*> animBones(nBones, nullptr);
+	std::vector<FbxAnimEvaluator*> boneEvals(nBones, animEval);
+	for (size_t i = 0; i < nBones; ++i) {
+		FbxNode* baseBone = m_skinBones[i].baseBone;
+		FbxNode* node = nullptr;
+		if (baseBone)
+			node = scene->FindNodeByName(baseBone->GetName());
+		if (!node)
+			node = baseBone;
+		animBones[i] = node;
+		if (node && m_baseScene && node->GetScene() == m_baseScene && baseEval)
+			boneEvals[i] = baseEval;
+	}
+
+	std::vector<FbxNode*> meshNodes(m_skinBake.size(), nullptr);
+	std::vector<FbxAnimEvaluator*> meshEvals(m_skinBake.size(), animEval);
+	for (size_t mi = 0; mi < m_skinBake.size(); ++mi) {
+		FbxNode* meshNode = m_skinBake[mi].meshNode;
+		FbxNode* node = nullptr;
+		if (meshNode)
+			node = scene->FindNodeByName(meshNode->GetName());
+		if (!node)
+			node = meshNode;
+		meshNodes[mi] = node;
+		if (node && m_baseScene && node->GetScene() == m_baseScene && baseEval)
+			meshEvals[mi] = baseEval;
+	}
+
+	clip.samples.resize((size_t)nSamples);
+	for (int s = 0; s < nSamples; ++s) {
+		double tSec = clip.startSec + (double)s * clip.sampleDt;
+		const double endSec = clip.startSec + clip.durationSec;
+		if (clip.durationSec > 0.0 && tSec > endSec)
+			tSec = endSec;
+
+		FbxTime t;
+		t.SetSecondDouble(tSec);
+
+		BakedAnimPose& pose = clip.samples[(size_t)s];
+		pose.boneGlobals.resize(nBones);
+		for (size_t i = 0; i < nBones; ++i) {
+			FbxNode* node = animBones[i];
+			FbxAnimEvaluator* eval = boneEvals[i];
+			pose.boneGlobals[i] = (node && eval) ? eval->GetNodeGlobalTransform(node, t) : FbxAMatrix();
+		}
+		pose.meshGlobals.resize(meshNodes.size());
+		for (size_t mi = 0; mi < meshNodes.size(); ++mi) {
+			FbxNode* node = meshNodes[mi];
+			FbxAnimEvaluator* eval = meshEvals[mi];
+			pose.meshGlobals[mi] = (node && eval) ? eval->GetNodeGlobalTransform(node, t) : FbxAMatrix();
+		}
+	}
+
+	clip.ready = true;
+	m_currentAnimScene = prevScene;
+}
+
+bool Model3D::SampleBakedClip() {
+	auto it = m_bakedClips.find(m_activeClip);
+	if (it == m_bakedClips.end() || !it->second.ready || it->second.samples.empty())
+		return false;
+
+	const BakedAnimClip& clip = it->second;
+	double t = m_animTimeSec;
+	if (t < 0.0)
+		t = 0.0;
+	if (clip.durationSec > 0.0) {
+		if (m_loop) {
+			t = std::fmod(t, clip.durationSec);
+			if (t < 0.0)
+				t += clip.durationSec;
+		} else if (t > clip.durationSec) {
+			t = clip.durationSec;
+		}
+	}
+
+	const double u = (clip.sampleDt > 0.0) ? (t / clip.sampleDt) : 0.0;
+	const int n = (int)clip.samples.size();
+	int i0 = (int)u;
+	if (i0 < 0) i0 = 0;
+	if (i0 >= n) i0 = n - 1;
+	int i1 = i0 + 1;
+	if (i1 >= n)
+		i1 = m_loop ? 0 : i0;
+	const double a = u - (double)((int)u);
+
+	const BakedAnimPose& p0 = clip.samples[(size_t)i0];
+	const BakedAnimPose& p1 = clip.samples[(size_t)i1];
+	const size_t nb = p0.boneGlobals.size();
+	m_boneXformScratch.resize(nb);
+	for (size_t i = 0; i < nb; ++i) {
+		const FbxAMatrix& b1 = (i < p1.boneGlobals.size()) ? p1.boneGlobals[i] : p0.boneGlobals[i];
+		m_boneXformScratch[i] = LerpFbxAMatrix(p0.boneGlobals[i], b1, a);
+	}
+	const size_t nm = p0.meshGlobals.size();
+	m_meshXformScratch.resize(nm);
+	for (size_t i = 0; i < nm; ++i) {
+		const FbxAMatrix& m1 = (i < p1.meshGlobals.size()) ? p1.meshGlobals[i] : p0.meshGlobals[i];
+		m_meshXformScratch[i] = LerpFbxAMatrix(p0.meshGlobals[i], m1, a);
+	}
+	return true;
+}
+
+void Model3D::SkinFromScratch() {
+	const bool hasSkinning = m_hasSkin && !m_skinBake.empty() && !m_skinPosBuf.empty();
+	if (!hasSkinning)
+		return;
+
+	std::fill(m_skinPosBuf.begin(), m_skinPosBuf.end(), XMFLOAT3(0, 0, 0));
+	std::fill(m_skinWeightScratch.begin(), m_skinWeightScratch.end(), 0.0);
+
+	for (size_t mi = 0; mi < m_skinBake.size(); ++mi) {
+		const SkinnedMeshBake& bake = m_skinBake[mi];
+		if (!bake.mesh || bake.cpCount <= 0)
+			continue;
+
+		const FbxVector4* cp = bake.mesh->GetControlPoints();
+		const FbxAMatrix meshGlobal = (mi < m_meshXformScratch.size())
+			? m_meshXformScratch[mi]
+			: FbxAMatrix();
+		const FbxAMatrix toLocal = meshGlobal.Inverse();
+		XMFLOAT3* outPos = m_skinPosBuf.data() + (size_t)bake.cpOffset;
+		double* weightSum = m_skinWeightScratch.data() + (size_t)bake.cpOffset;
+
+		for (const SkinClusterBake& cluster : bake.clusters) {
+			if (cluster.boneIndex < 0 || cluster.indexCount <= 0 || !cluster.indices || !cluster.weights)
+				continue;
+			if ((size_t)cluster.boneIndex >= m_boneXformScratch.size())
+				continue;
+
+			const FbxAMatrix clusterM = m_boneXformScratch[(size_t)cluster.boneIndex] * cluster.bindOffset;
+			for (int k = 0; k < cluster.indexCount; ++k) {
+				const int cpi = cluster.indices[k];
+				if (cpi < 0 || cpi >= bake.cpCount)
+					continue;
+				const double w = cluster.weights[k];
+				if (w <= 0.0)
+					continue;
+
+				const FbxVector4 pLoc = toLocal.MultT(clusterM.MultT(cp[cpi]));
+				outPos[cpi].x += (float)(pLoc[0] * w);
+				outPos[cpi].y += (float)(pLoc[1] * w);
+				outPos[cpi].z += (float)(pLoc[2] * w);
+				weightSum[cpi] += w;
+			}
+		}
+
+		for (int i = 0; i < bake.cpCount; ++i) {
+			const double remain = 1.0 - weightSum[i];
+			if (remain > 0.0) {
+				outPos[i].x += (float)(cp[i][0] * remain);
+				outPos[i].y += (float)(cp[i][1] * remain);
+				outPos[i].z += (float)(cp[i][2] * remain);
+			}
+		}
+	}
+
+	updateDynamicVBFromCP(m_skinPosBuf);
+}
+
 // アニメを進める (スキンありのときは CPU スキニングして VB 更新)
 void Model3D::UpdateAnimation(double dtSec) {
-	if (!m_baseScene || !m_currentAnimScene) return;
+	if (!m_baseScene && m_bakedClips.empty()) return;
 
 	const bool hasSkinning = m_hasSkin && !m_skinBake.empty() && !m_skinPosBuf.empty();
 	const bool hasRigidAnim = !m_rigidBake.empty();
 	if (!hasSkinning && !hasRigidAnim) return;
 
 	m_animTimeSec += dtSec * m_animSpeed;
-	if (m_animDurationSec > 0.0 && m_loop) {
-		while (m_animTimeSec >= m_animDurationSec) m_animTimeSec -= m_animDurationSec;
+	if (m_animDurationSec > 0.0) {
+		if (m_loop) {
+			while (m_animTimeSec >= m_animDurationSec) m_animTimeSec -= m_animDurationSec;
+			while (m_animTimeSec < 0.0) m_animTimeSec += m_animDurationSec;
+		} else if (m_animSpeed >= 0.0) {
+			if (m_animTimeSec > m_animDurationSec) m_animTimeSec = m_animDurationSec;
+			if (m_animTimeSec < 0.0) m_animTimeSec = 0.0;
+		} else {
+			if (m_animTimeSec < 0.0) m_animTimeSec = 0.0;
+			if (m_animTimeSec > m_animDurationSec) m_animTimeSec = m_animDurationSec;
+		}
 	}
+
+	if (hasSkinning && SampleBakedClip()) {
+		SkinFromScratch();
+		return;
+	}
+
+	if (!m_baseScene || !m_currentAnimScene) return;
 
 	const double evalTimeSec = m_animStartSec + m_animTimeSec;
 	FbxTime t;
@@ -1368,48 +1650,18 @@ void Model3D::UpdateAnimation(double dtSec) {
 			m_boneXformScratch[bi] = (node && eval) ? eval->GetNodeGlobalTransform(node, t) : FbxAMatrix();
 		}
 
-		std::fill(m_skinPosBuf.begin(), m_skinPosBuf.end(), XMFLOAT3(0, 0, 0));
-		std::fill(m_skinWeightScratch.begin(), m_skinWeightScratch.end(), 0.0);
-
-		for (const SkinnedMeshBake& bake : m_skinBake) {
-			if (!bake.mesh || !bake.meshNode || bake.cpCount <= 0) continue;
-
-			const FbxVector4* cp = bake.mesh->GetControlPoints();
+		m_meshXformScratch.resize(m_skinBake.size());
+		for (size_t mi = 0; mi < m_skinBake.size(); ++mi) {
+			const SkinnedMeshBake& bake = m_skinBake[mi];
 			FbxAnimEvaluator* meshEval = animEval;
 			if (m_baseScene && m_currentAnimScene != m_baseScene)
 				meshEval = baseEval;
-			const FbxAMatrix toLocal = meshEval->GetNodeGlobalTransform(bake.meshNode, t).Inverse();
-			XMFLOAT3* outPos = m_skinPosBuf.data() + (size_t)bake.cpOffset;
-			double* weightSum = m_skinWeightScratch.data() + (size_t)bake.cpOffset;
-
-			for (const SkinClusterBake& cluster : bake.clusters) {
-				if (cluster.boneIndex < 0 || cluster.indexCount <= 0 || !cluster.indices || !cluster.weights)
-					continue;
-
-				const FbxAMatrix clusterM = m_boneXformScratch[(size_t)cluster.boneIndex] * cluster.bindOffset;
-				for (int k = 0; k < cluster.indexCount; ++k) {
-					const int cpi = cluster.indices[k];
-					if (cpi < 0 || cpi >= bake.cpCount) continue;
-					const double w = cluster.weights[k];
-					if (w <= 0.0) continue;
-
-					const FbxVector4 pLoc = toLocal.MultT(clusterM.MultT(cp[cpi]));
-					outPos[cpi].x += (float)(pLoc[0] * w);
-					outPos[cpi].y += (float)(pLoc[1] * w);
-					outPos[cpi].z += (float)(pLoc[2] * w);
-					weightSum[cpi] += w;
-				}
-			}
-
-			for (int i = 0; i < bake.cpCount; ++i) {
-				const double remain = 1.0 - weightSum[i];
-				if (remain > 0.0) {
-					outPos[i].x += (float)(cp[i][0] * remain);
-					outPos[i].y += (float)(cp[i][1] * remain);
-					outPos[i].z += (float)(cp[i][2] * remain);
-				}
-			}
+			m_meshXformScratch[mi] = (bake.meshNode && meshEval)
+				? meshEval->GetNodeGlobalTransform(bake.meshNode, t)
+				: FbxAMatrix();
 		}
+
+		SkinFromScratch();
 	}
 
 	if (hasRigidAnim) {
@@ -1433,12 +1685,9 @@ void Model3D::UpdateAnimation(double dtSec) {
 				m_verticesCPU[vi].Normal = TransformNormal_IT(invTrans, rb.restNormal[i]);
 			}
 		}
+		if (!hasSkinning)
+			uploadVertexBufferFromCPU();
 	}
-
-	if (hasSkinning)
-		updateDynamicVBFromCP(m_skinPosBuf);
-	else if (hasRigidAnim)
-		uploadVertexBufferFromCPU();
 }
 
 
@@ -1446,10 +1695,29 @@ bool Model3D::HasAnimation(const std::string& animName) const {
 	return m_animScenes.find(animName) != m_animScenes.end();
 }
 
+void Model3D::MergeAnimScenesFrom(const Model3D& shared) {
+	for (const auto& [name, scene] : shared.m_animScenes) {
+		if (!scene || HasAnimation(name))
+			continue;
+		m_animScenes.emplace(name, scene);
+	}
+	for (const auto& [name, clip] : shared.m_bakedClips) {
+		if (!clip.ready)
+			continue;
+		BakedAnimClip& dst = m_bakedClips[name];
+		if (!dst.ready)
+			dst = clip;
+	}
+}
+
 void Model3D::EnsureAnimation(const std::string& animName, const char* fileName) {
 	if (animName.empty() || !fileName || !fileName[0]) return;
-	if (HasAnimation(animName)) return;
+	if (HasAnimation(animName)) {
+		EnsureClipBaked(animName);
+		return;
+	}
 	AddAnimation(animName, fileName);
+	EnsureClipBaked(animName);
 }
 
 void Model3D::AddAnimation(const std::string& animName, const char* fileName)
@@ -1461,6 +1729,12 @@ void Model3D::AddAnimation(const std::string& animName, const char* fileName)
 	std::string path_utf8 = fileName;
 
 	if (!importer->Initialize(path_utf8.c_str(), -1, shared.mgr->GetIOSettings())) {
+		std::string msg = "[Model3D] Failed to load animation '";
+		msg += animName;
+		msg += "' from '";
+		msg += path_utf8;
+		msg += "'\n";
+		OutputDebugStringA(msg.c_str());
 		importer->Destroy();
 		return; // Handle Error
 	}
@@ -1482,6 +1756,14 @@ void Model3D::PlayAnimation(const std::string& animName) {
 	if (animName.empty() || animName == "base") {
 		m_activeClip = "";
 		m_currentAnimScene = m_baseScene;
+		EnsureClipBaked("");
+		auto it = m_bakedClips.find("");
+		if (it != m_bakedClips.end() && it->second.ready) {
+			m_animStartSec = it->second.startSec;
+			m_animDurationSec = it->second.durationSec;
+			m_animTimeSec = 0.0;
+			return;
+		}
 		InitAnimationInfo();
 		BakeSkinningData();
 		BakeRigidMeshData();
@@ -1489,14 +1771,23 @@ void Model3D::PlayAnimation(const std::string& animName) {
 	}
 
 	auto it = m_animScenes.find(animName);
-	if (it != m_animScenes.end()) {
-		m_activeClip = animName;
-		m_currentAnimScene = it->second;
-		m_animTimeSec = 0.0;
-		InitAnimationInfo();
-		BakeSkinningData();
-		BakeRigidMeshData();
+	if (it == m_animScenes.end())
+		return;
+
+	m_activeClip = animName;
+	m_currentAnimScene = it->second;
+	m_animTimeSec = 0.0;
+	EnsureClipBaked(animName);
+	auto baked = m_bakedClips.find(animName);
+	if (baked != m_bakedClips.end() && baked->second.ready) {
+		m_animStartSec = baked->second.startSec;
+		m_animDurationSec = baked->second.durationSec;
+		return;
 	}
+
+	InitAnimationInfo();
+	BakeSkinningData();
+	BakeRigidMeshData();
 }
 
 // CP 配列から展開済み頂点へ反映 -> 動的 VB を Map して書き戻し
@@ -1565,6 +1856,7 @@ std::unique_ptr<Model3D> Model3D::CreateAnimInstanceFrom(const Model3D& shared) 
 	inst->m_skinBake = shared.m_skinBake;
 	inst->m_skinBones = shared.m_skinBones;
 	inst->m_rigidBake = shared.m_rigidBake;
+	inst->m_bakedClips = shared.m_bakedClips;
 
 	// Per-instance deformed mesh.
 	inst->m_verticesCPU = shared.m_verticesCPU;
@@ -1588,9 +1880,9 @@ std::unique_ptr<Model3D> Model3D::CreateAnimInstanceFrom(const Model3D& shared) 
 	inst->m_boneXformScratch.resize(shared.m_skinBones.size());
 
 	inst->InitAnimationInfo();
-	if (inst->m_hasSkin)
+	if (inst->m_hasSkin && inst->m_bakedClips.empty())
 		inst->BakeSkinningData();
-	if (!inst->m_rigidBake.empty())
+	if (!inst->m_rigidBake.empty() && inst->m_bakedClips.empty())
 		inst->BakeRigidMeshData();
 
 	return inst;

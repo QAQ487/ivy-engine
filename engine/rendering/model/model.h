@@ -59,6 +59,8 @@ public:
     fbxsdk::FbxNode* FindBone(const char* name) const;
     fbxsdk::FbxNode* FindBone(const wchar_t* name) const;
     void ScaleBoneAndChildren(fbxsdk::FbxNode* bone, const fbxsdk::FbxDouble3& scale);
+    // Animated bone matrix in model space at the current clip time.
+    bool TryGetBoneLocalMatrix(const char* boneName, DirectX::XMMATRIX& out) const;
 
     void Release();
 	bool Released() const { return m_pVB == nullptr && m_pIB == nullptr; }
@@ -116,8 +118,10 @@ public:
     void AddAnimation(const std::string& animName, const char* fileName);
     void EnsureAnimation(const std::string& animName, const char* fileName);
     bool HasAnimation(const std::string& animName) const;
+    void MergeAnimScenesFrom(const Model3D& shared);
     void PlayAnimation(const std::string& animName);
     const std::string& GetActiveClip() const { return m_activeClip; }
+    double GetAnimDurationSec() const { return m_animDurationSec; }
 
     // Per-draw playback instance sharing mesh/clip data from a cached asset.
     static std::unique_ptr<Model3D> CreateAnimInstanceFrom(const Model3D& shared);
@@ -232,8 +236,25 @@ private:
     void  InitAnimationInfo();
     void  BakeSkinningData();
     void  BakeRigidMeshData();
+    void  EnsureClipBaked(const std::string& animName);
+    bool  SampleBakedClip();
+    void  SkinFromScratch();
     void  updateDynamicVBFromCP(const std::vector<DirectX::XMFLOAT3>& cpPos);
     void  uploadVertexBufferFromCPU();
+
+    struct BakedAnimPose {
+        std::vector<fbxsdk::FbxAMatrix> boneGlobals;
+        std::vector<fbxsdk::FbxAMatrix> meshGlobals;
+    };
+    struct BakedAnimClip {
+        double startSec = 0.0;
+        double durationSec = 0.0;
+        double sampleDt = 1.0 / 60.0;
+        std::vector<BakedAnimPose> samples;
+        bool ready = false;
+    };
+    std::map<std::string, BakedAnimClip> m_bakedClips;
+    std::vector<fbxsdk::FbxAMatrix> m_meshXformScratch;
 
     const SkinMeshGeo* FindGeoForCP(int cpi) const;
     static DirectX::XMFLOAT3 ApplyGeoPosition(const fbxsdk::FbxAMatrix& geo, const DirectX::XMFLOAT3& p);

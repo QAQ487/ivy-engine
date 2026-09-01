@@ -27,6 +27,7 @@
 #pragma once
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <memory>
 #include <DirectXMath.h>
 #include "component.h"
@@ -63,6 +64,9 @@ public:
     void OnReset() override;
     void Update(double elapsed_time) override;
     void PlayClip(const std::string& clipName);
+    void PlayClip(const std::string& clipName, bool loop);
+    float GetActiveClipDuration() const;
+    void SetAnimationSpeed(float speed);
 
     // ── Model access ──────────────────────────────────────────────────────
     // Both methods look up the shared model cache.
@@ -88,6 +92,8 @@ private:
 
     mutable std::unique_ptr<Model3D> m_animInstance;
     bool m_animationsLoaded = false;
+    std::unordered_set<std::string> m_triedAnimClips;
+    float m_lastAnimSpeed = 0.0f;
 
     ID3D11ShaderResourceView* m_surfaceFxSRV = nullptr;
     std::string m_surfaceFxLoadedPath;

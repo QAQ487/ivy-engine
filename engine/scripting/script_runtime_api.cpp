@@ -21,10 +21,11 @@
 #include "engine/ecs/visual_component.h"
 
 #include <Windows.h>
+#include <cmath>
 #include <string>
 
 namespace {
-constexpr std::uint32_t kScriptRuntimeApiVersion = 32;
+constexpr std::uint32_t kScriptRuntimeApiVersion = 35;
 
 template <typename T>
 T* FindComponentByTypeName(GameObject& object, const char* typeName) {
@@ -305,7 +306,88 @@ void Host_PrefabSetBeforeDestroyCallback(void (*callback)(GameObject* obj)) {
 
 void Host_VisualPlayClip(VisualComponent* component, const char* clipName) {
     if (component && clipName)
-        component->PlayClip(clipName);
+        component->PlayClip(clipName, true);
+}
+
+void Host_VisualPlayClipLoop(VisualComponent* component, const char* clipName, int loop) {
+    if (component && clipName)
+        component->PlayClip(clipName, loop != 0);
+}
+
+float Host_VisualGetClipDuration(VisualComponent* component) {
+    return component ? component->GetActiveClipDuration() : 0.0f;
+}
+
+void Host_VisualSetAnimSpeed(VisualComponent* component, float speed) {
+    if (component)
+        component->SetAnimationSpeed(speed);
+}
+
+bool Host_VisualTryGetBoneWorld(VisualComponent* component,
+                                const char* boneName,
+                                DirectX::XMFLOAT3* outPos,
+                                DirectX::XMFLOAT3* outRotDeg) {
+    if (!component || !boneName || !*boneName || !outPos || !outRotDeg)
+        return false;
+
+    Model3D* model = component->GetRealModel();
+    if (!model)
+        return false;
+
+    DirectX::XMMATRIX boneLocal;
+    if (!model->TryGetBoneLocalMatrix(boneName, boneLocal))
+        return false;
+
+    DirectX::XMMATRIX world = DirectX::XMMatrixIdentity();
+    if (GameObject* owner = component->owner) {
+        if (engine::Transform* t = owner->GetTransform())
+            world = t->GetWorldMatrix();
+        else {
+            const DirectX::XMFLOAT3 p = owner->GetPosition();
+            const DirectX::XMFLOAT3 r = owner->GetRotation();
+            const DirectX::XMFLOAT3 s = owner->GetScale();
+            const DirectX::XMMATRIX S = DirectX::XMMatrixScaling(s.x, s.y, s.z);
+            const DirectX::XMMATRIX R = DirectX::XMMatrixRotationRollPitchYaw(
+                DirectX::XMConvertToRadians(r.x),
+                DirectX::XMConvertToRadians(r.y),
+                DirectX::XMConvertToRadians(r.z));
+            const DirectX::XMMATRIX T = DirectX::XMMatrixTranslation(p.x, p.y, p.z);
+            world = S * R * T;
+        }
+    }
+
+    const DirectX::XMMATRIX boneWorld = boneLocal * world;
+    DirectX::XMVECTOR scaleV, rotQuat, translation;
+    if (!DirectX::XMMatrixDecompose(&scaleV, &rotQuat, &translation, boneWorld))
+        return false;
+
+    DirectX::XMStoreFloat3(outPos, translation);
+
+    const DirectX::XMMATRIX rotMat = DirectX::XMMatrixRotationQuaternion(rotQuat);
+    const float r00 = rotMat.r[0].m128_f32[0];
+    const float r10 = rotMat.r[1].m128_f32[0];
+    const float r20 = rotMat.r[2].m128_f32[0];
+    const float r21 = rotMat.r[2].m128_f32[1];
+    const float r22 = rotMat.r[2].m128_f32[2];
+    const float r11 = rotMat.r[1].m128_f32[1];
+    const float r12 = rotMat.r[1].m128_f32[2];
+    const float sy = sqrtf(r00 * r00 + r10 * r10);
+    float rotX, rotY, rotZ;
+    if (sy > 1e-6f) {
+        rotX = atan2f(r21, r22);
+        rotY = atan2f(-r20, sy);
+        rotZ = atan2f(r10, r00);
+    } else {
+        rotX = atan2f(-r12, r11);
+        rotY = atan2f(-r20, sy);
+        rotZ = 0.0f;
+    }
+    *outRotDeg = {
+        DirectX::XMConvertToDegrees(rotX),
+        DirectX::XMConvertToDegrees(rotY),
+        DirectX::XMConvertToDegrees(rotZ)
+    };
+    return true;
 }
 
 void Host_EffectPlay(EffectComponent* component) {
@@ -484,6 +566,10 @@ const ScriptRuntimeApi g_scriptRuntimeApi = {
     &Host_GameObjectRemoveIgnoreCollisionTag,
     &Host_AudioPlay,
     &Host_AudioStop,
+    &Host_VisualTryGetBoneWorld,
+    &Host_VisualPlayClipLoop,
+    &Host_VisualGetClipDuration,
+    &Host_VisualSetAnimSpeed,
 };
 #else
 using GetApiFn = const ScriptRuntimeApi* (*)();
@@ -702,6 +788,37 @@ void ScriptApi_Visual_PlayClip(VisualComponent* component, const char* clipName)
     const ScriptRuntimeApi* api = ScriptRuntimeApi_GetHost();
     if (api && api->visualPlayClip)
         api->visualPlayClip(component, clipName);
+}
+
+bool ScriptApi_Visual_TryGetBoneWorld(VisualComponent* component,
+                                      const char* boneName,
+                                      DirectX::XMFLOAT3& outPos,
+                                      DirectX::XMFLOAT3& outRotDeg) {
+    const ScriptRuntimeApi* api = ScriptRuntimeApi_GetHost();
+    if (!api || !api->visualTryGetBoneWorld)
+        return false;
+    return api->visualTryGetBoneWorld(component, boneName, &outPos, &outRotDeg);
+}
+
+void ScriptApi_Visual_PlayClipLoop(VisualComponent* component, const char* clipName, bool loop) {
+    const ScriptRuntimeApi* api = ScriptRuntimeApi_GetHost();
+    if (api && api->visualPlayClipLoop)
+        api->visualPlayClipLoop(component, clipName, loop ? 1 : 0);
+    else
+        ScriptApi_Visual_PlayClip(component, clipName);
+}
+
+float ScriptApi_Visual_GetClipDuration(VisualComponent* component) {
+    const ScriptRuntimeApi* api = ScriptRuntimeApi_GetHost();
+    if (api && api->visualGetClipDuration)
+        return api->visualGetClipDuration(component);
+    return 0.0f;
+}
+
+void ScriptApi_Visual_SetAnimSpeed(VisualComponent* component, float speed) {
+    const ScriptRuntimeApi* api = ScriptRuntimeApi_GetHost();
+    if (api && api->visualSetAnimSpeed)
+        api->visualSetAnimSpeed(component, speed);
 }
 
 void ScriptApi_Effect_Play(EffectComponent* component) {
