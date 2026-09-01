@@ -9,6 +9,7 @@
 #include "engine/input/controller.h"
 #include "engine/rendering/d3d11/renderer.h"
 #include "engine/ecs/camera_component.h"
+#include "engine/ecs/audio_listener_component.h"
 #include "engine/ecs/game_object.h"
 #include "engine/ecs/transform.h"
 #include "engine/core/easing.h"
@@ -133,11 +134,13 @@ void DesiredFaceAnglesToTarget(const XMFLOAT3& player, const XMFLOAT3& target,
 }
 
 void EnsureFollowCamNode() {
-	if (s_followCamNode)
-		return;
-	s_followCamNode = std::make_unique<GameObject>("PlayerFollowCam");
-	s_followCamNode->AddComponent<engine::Transform>();
-	s_followCamNode->AddComponent<CameraComponent>();
+	if (!s_followCamNode) {
+		s_followCamNode = std::make_unique<GameObject>("PlayerFollowCam");
+		s_followCamNode->AddComponent<engine::Transform>();
+		s_followCamNode->AddComponent<CameraComponent>();
+	}
+	if (!s_followCamNode->GetComponent<AudioListenerComponent>())
+		s_followCamNode->AddComponent<AudioListenerComponent>();
 }
 
 void WriteFollowPose(const CameraPose& pose) {
@@ -395,4 +398,8 @@ bool ThirdPersonCamera_TryGetFollowPose(CameraPose& outPose) {
 		return false;
 	outPose = s_followPose;
 	return true;
+}
+
+GameObject* ThirdPersonCamera_GetFollowCamNode() {
+	return s_followCamNode.get();
 }

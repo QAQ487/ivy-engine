@@ -9,6 +9,7 @@
 #define UI_BUTTON_H
 
 #include "ui_element.h"
+#include "ui_button_pointer.h"
 #include "ui_text_renderer.h"
 #include <DirectXMath.h>
 #include <functional>
@@ -41,7 +42,7 @@ private:
     bool m_isHovered;
     bool m_isPressed;
     bool m_isSelected;  // For keyboard/controller navigation
-    bool m_wasMouseDown;
+    UIButtonPointerState m_pointerState;
     CallbackFunction m_onClick;
     std::string m_action;
     std::string m_actionScene;
@@ -72,6 +73,7 @@ public:
     void Update(double elapsed_time) override;
     void Draw() override;
     void Finalize() override;
+    void SetVisible(bool visible) override;
     
     // Set textures for different button states
     void SetTexture(int textureId) { m_textureId = textureId; }
@@ -117,6 +119,9 @@ public:
     const std::string& GetAction() const { return m_action; }
     const std::string& GetActionScene() const { return m_actionScene; }
     bool GetActionPlayOnLoad() const { return m_actionPlayOnLoad; }
+
+    // Trigger the button action (called when activated via keyboard/controller)
+    void Activate();
     
     // Manual navigation setup
     void SetNextUp(UIButton* button) { m_nextUp = button; }
@@ -134,9 +139,6 @@ public:
     bool IsSelected() const { return m_isSelected; }
     bool IsHovered() const { return m_isHovered; }
     bool IsPressed() const { return m_isPressed; }
-    
-    // Trigger the button action (called when activated via keyboard/controller)
-    void Activate();
     
     bool GetScreenRect(UIScreenRect& out) const override;
     bool ContainsPoint(float x, float y) const;

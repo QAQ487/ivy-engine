@@ -68,7 +68,7 @@ public:
     virtual void Finalize() = 0;
     
     // Getters and setters
-    void SetVisible(bool visible) { m_isVisible = visible; }
+    virtual void SetVisible(bool visible) { m_isVisible = visible; }
     bool IsVisible() const { return m_isVisible; }
     
     void SetPosition(const DirectX::XMFLOAT2& position) { m_position = position; }

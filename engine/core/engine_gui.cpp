@@ -57,6 +57,7 @@
 #include "engine/editor/editor_ui_panel.h"
 #include "engine/editor/project_asset_index.h"
 #include "engine/editor/project_manager.h"
+#include "engine/audio/audio_manager.h"
 #include "engine/editor/transform_gizmo.h"
 #include "engine/editor/ui_gizmo.h"
 #include "engine/ecs/visual_component.h"
@@ -71,6 +72,8 @@
 #include "engine/editor/camera_gizmo.h"
 #include "engine/ecs/collider_component.h"
 #include "engine/ecs/effect_component.h"
+#include "engine/ecs/audio_component.h"
+#include "engine/ecs/audio_listener_component.h"
 #include "engine/ecs/model_asset_cache.h"
 #include "engine/scene/scene_runtime.h"
 #include "engine/ecs/prefab_runtime.h"
@@ -109,6 +112,7 @@ static bool  g_showDeleteTagPopup = false;
 static int   g_pendingDeleteTagId = -1;
 static bool  g_showDefaultScenePopup = false;
 static bool  g_showGravityPopup = false;
+static bool  g_showAudioPopup = false;
 static bool  g_showUiOverlay = true;
 static bool  g_showNewProjectPopup = false;
 static char  g_newProjectName[128] = "NewProject";
@@ -433,6 +437,7 @@ static std::unique_ptr<GameObject> CreateCameraObject() {
     t->localPosition = { 0.0f, 20.0f, -20.0f };
     t->localRotation = { 35.0f, 0.0f, 0.0f };
     node->AddComponent<CameraComponent>();
+    node->AddComponent<AudioListenerComponent>();
     return node;
 }
 
@@ -913,6 +918,8 @@ static void DrawEditorMenuBar() {
             g_showDefaultScenePopup = true;
         if (ImGui::MenuItem("Gravity...", nullptr, false, ProjectManager::Instance().IsOpen()))
             g_showGravityPopup = true;
+        if (ImGui::MenuItem("Audio...", nullptr, false, ProjectManager::Instance().IsOpen()))
+            g_showAudioPopup = true;
         ImGui::EndMenu();
     }
 
@@ -1241,6 +1248,86 @@ static void DrawEditorPopups() {
         ImGui::EndPopup();
     }
     if (gravityPopupWasOpen && !g_showGravityPopup)
+        ProjectManager::Instance().SaveProjectFile(nullptr);
+
+    if (g_showAudioPopup)
+        ImGui::OpenPopup("AudioPopup");
+    ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+    const bool audioPopupWasOpen = g_showAudioPopup;
+    if (ImGui::BeginPopupModal("AudioPopup", &g_showAudioPopup, ImGuiWindowFlags_AlwaysAutoResize)) {
+        ImGui::Text("Project Audio");
+        ImGui::TextDisabled("Stored in project.json (audio.*)");
+        ImGui::Separator();
+
+        auto& audio = AudioManager::Instance();
+        float master = audio.GetMasterVolume();
+        float bgm = audio.GetBGMVolume();
+        float sfx = audio.GetSFXVolume();
+        float voice = audio.GetVoiceVolume();
+        auto saveBuses = [&]() {
+            ProjectManager::Instance().SetAudioBuses(
+                audio.GetMasterVolume(), audio.GetBGMVolume(),
+                audio.GetSFXVolume(), audio.GetVoiceVolume());
+            ProjectManager::Instance().SaveProjectFile(nullptr);
+        };
+        ImGui::SetNextItemWidth(200.0f);
+        if (ImGui::SliderFloat("Master", &master, 0.0f, 1.0f, "%.2f")) {
+            audio.SetMasterVolume(master);
+            ProjectManager::Instance().SetAudioBuses(master, bgm, sfx, voice);
+        }
+        if (ImGui::IsItemDeactivatedAfterEdit()) saveBuses();
+        ImGui::SetNextItemWidth(200.0f);
+        if (ImGui::SliderFloat("BGM", &bgm, 0.0f, 1.0f, "%.2f")) {
+            audio.SetBGMVolume(bgm);
+            ProjectManager::Instance().SetAudioBuses(master, bgm, sfx, voice);
+        }
+        if (ImGui::IsItemDeactivatedAfterEdit()) saveBuses();
+        ImGui::SetNextItemWidth(200.0f);
+        if (ImGui::SliderFloat("SFX", &sfx, 0.0f, 1.0f, "%.2f")) {
+            audio.SetSFXVolume(sfx);
+            ProjectManager::Instance().SetAudioBuses(master, bgm, sfx, voice);
+        }
+        if (ImGui::IsItemDeactivatedAfterEdit()) saveBuses();
+        ImGui::SetNextItemWidth(200.0f);
+        if (ImGui::SliderFloat("Voice", &voice, 0.0f, 1.0f, "%.2f")) {
+            audio.SetVoiceVolume(voice);
+            ProjectManager::Instance().SetAudioBuses(master, bgm, sfx, voice);
+        }
+        if (ImGui::IsItemDeactivatedAfterEdit()) saveBuses();
+
+        ImGui::Separator();
+        ImGui::Text("UI Click Sound");
+        ImGui::TextDisabled("WAV played when a UI button activates");
+        char clickBuf[256];
+        strncpy_s(clickBuf, ProjectManager::Instance().GetAudioSettings().uiClickSound.c_str(),
+            sizeof(clickBuf) - 1);
+        clickBuf[sizeof(clickBuf) - 1] = '\0';
+        ImGui::SetNextItemWidth(280.0f);
+        if (ImGui::InputText("##UiClickSound", clickBuf, sizeof(clickBuf)))
+            ProjectManager::Instance().SetUiClickSound(clickBuf);
+        if (ImGui::IsItemDeactivatedAfterEdit())
+            ProjectManager::Instance().SaveProjectFile(nullptr);
+        {
+            const char* wavExts[] = { ".wav" };
+            std::string droppedPath;
+            if (AcceptAssetPathDrop(wavExts, IM_ARRAYSIZE(wavExts), droppedPath)) {
+                ProjectManager::Instance().SetUiClickSound(droppedPath);
+                ProjectManager::Instance().SaveProjectFile(nullptr);
+            }
+        }
+
+        ImGui::Separator();
+        if (ImGui::Button("Close", ImVec2(120, 0))) {
+            ProjectManager::Instance().SetAudioBuses(
+                audio.GetMasterVolume(), audio.GetBGMVolume(),
+                audio.GetSFXVolume(), audio.GetVoiceVolume());
+            ProjectManager::Instance().SaveProjectFile(nullptr);
+            g_showAudioPopup = false;
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::EndPopup();
+    }
+    if (audioPopupWasOpen && !g_showAudioPopup)
         ProjectManager::Instance().SaveProjectFile(nullptr);
 
     if (g_showUnsavedChangesPopup)
@@ -3031,6 +3118,85 @@ void EngineGUI_Draw() {
                 ImGui::Spacing();
             }
 
+            if (AudioComponent* ac = g_selNode->GetComponent<AudioComponent>()) {
+                ImGui::Separator();
+                ImGui::Text("Audio");
+
+                std::string path = ac->clipPath;
+                char buf[256];
+                strncpy_s(buf, path.c_str(), sizeof(buf) - 1);
+                buf[sizeof(buf) - 1] = '\0';
+                ImGui::Text("Clip"); ImGui::SameLine(80);
+                if (ImGui::InputText("##AudioClip", buf, sizeof(buf))) {
+                    ac->SetClipPath(buf);
+                    runtimeDirty = true;
+                }
+                {
+                    const char* wavExts[] = { ".wav" };
+                    std::string droppedPath;
+                    if (AcceptAssetPathDrop(wavExts, IM_ARRAYSIZE(wavExts), droppedPath)) {
+                        ac->SetClipPath(droppedPath);
+                        runtimeDirty = true;
+                    }
+                }
+
+                const char* busPreview = "SFX";
+                if (ac->bus == AudioType::BGM) busPreview = "BGM";
+                else if (ac->bus == AudioType::VOICE) busPreview = "Voice";
+                ImGui::Text("Bus"); ImGui::SameLine(80);
+                if (ImGui::BeginCombo("##AudioBus", busPreview)) {
+                    if (ImGui::Selectable("BGM", ac->bus == AudioType::BGM)) {
+                        ac->bus = AudioType::BGM;
+                        runtimeDirty = true;
+                    }
+                    if (ImGui::Selectable("SFX", ac->bus == AudioType::SFX)) {
+                        ac->bus = AudioType::SFX;
+                        runtimeDirty = true;
+                    }
+                    if (ImGui::Selectable("Voice", ac->bus == AudioType::VOICE)) {
+                        ac->bus = AudioType::VOICE;
+                        runtimeDirty = true;
+                    }
+                    ImGui::EndCombo();
+                }
+
+                ImGui::Text("Volume"); ImGui::SameLine(80);
+                if (ImGui::SliderFloat("##AudioVol", &ac->volume, 0.0f, 1.0f, "%.2f")) {
+                    ac->ApplyLiveSettings();
+                    runtimeDirty = true;
+                }
+
+                if (ImGui::Checkbox("Loop", &ac->loop))
+                    runtimeDirty = true;
+                if (ImGui::Checkbox("Play On Awake", &ac->autoPlay))
+                    runtimeDirty = true;
+                if (ImGui::Checkbox("3D", &ac->spatial))
+                    runtimeDirty = true;
+                if (ac->spatial) {
+                    ImGui::Text("Range"); ImGui::SameLine(80);
+                    if (ImGui::DragFloat("##AudioRange", &ac->distanceScale, 0.5f, 0.1f, 500.0f, "%.1f")) {
+                        ac->ApplyLiveSettings();
+                        runtimeDirty = true;
+                    }
+                }
+
+                if (ImGui::Button("Play##Audio"))
+                    ac->Play();
+                ImGui::SameLine();
+                if (ImGui::Button("Stop##Audio"))
+                    ac->Stop();
+
+                ImGui::Spacing();
+            }
+
+            if (AudioListenerComponent* alc = g_selNode->GetComponent<AudioListenerComponent>()) {
+                (void)alc;
+                ImGui::Separator();
+                ImGui::Text("AudioListener");
+                ImGui::TextDisabled("3D ear. Active camera's listener is used.");
+                ImGui::Spacing();
+            }
+
             // Script property editor
             if (ScriptComponent* sc = g_selNode->GetComponent<ScriptComponent>()) {
                 Script* script = sc->GetScript();
@@ -3087,6 +3253,14 @@ void EngineGUI_Draw() {
             }
             if (!g_selNode->GetComponent<EffectComponent>() && ImGui::Button("Add Effect")) {
                 g_selNode->AddComponent<EffectComponent>();
+                runtimeDirty = true;
+            }
+            if (!g_selNode->GetComponent<AudioComponent>() && ImGui::Button("Add Audio")) {
+                g_selNode->AddComponent<AudioComponent>();
+                runtimeDirty = true;
+            }
+            if (!g_selNode->GetComponent<AudioListenerComponent>() && ImGui::Button("Add AudioListener")) {
+                g_selNode->AddComponent<AudioListenerComponent>();
                 runtimeDirty = true;
             }
             ImGui::Spacing();

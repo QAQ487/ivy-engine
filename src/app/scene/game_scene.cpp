@@ -55,6 +55,8 @@
 #include <vector>
 
 #include "engine/ui/scene_canvas.h"
+#include "engine/audio/audio_manager.h"
+#include "engine/audio/audio_listener_sync.h"
 void GameScene::Initialize() {
 	srand((unsigned int)time(nullptr));
 
@@ -87,6 +89,7 @@ void GameScene::Initialize() {
 			EngineGUI_LoadFromFile(scenePath.c_str());
 		}
 #else
+		AudioManager::Instance().TryLoadBusVolumesFromNearbyProject();
 		EngineGUI_LoadFromFile(EngineGUI_GetDefaultScenePath().c_str());
 #endif
 	}
@@ -178,6 +181,7 @@ void GameScene::Update(double elapsed_time) {
 		CameraDirector_Update(elapsed_time, SceneLoader_GetSceneNodes());
 
 	DebugCamera_Update(elapsed_time);
+	AudioListenerSync_Tick(SceneLoader_GetSceneNodes());
 
 	Billboard::Update(elapsed_time);
 	if (EngineGUI_IsPlaying())

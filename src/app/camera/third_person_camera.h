@@ -8,6 +8,8 @@
 #include "camera_pose.h"
 #include <DirectXMath.h>
 
+class GameObject;
+
 enum class ThirdPersonMagnetMode {
 	Normal = 0,
 	Push   = 1,
@@ -36,5 +38,6 @@ bool ThirdPersonCamera_IsCursorVisible();
 void ThirdPersonCamera_SetMagnetMode(ThirdPersonMagnetMode mode);
 void ThirdPersonCamera_SetMagnetTarget(const DirectX::XMFLOAT3& targetPos);
 bool ThirdPersonCamera_TryGetFollowPose(CameraPose& outPose);
+GameObject* ThirdPersonCamera_GetFollowCamNode();
 
 #endif // !THIRD_PERSON_CAMERA_H
