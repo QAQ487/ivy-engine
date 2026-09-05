@@ -498,8 +498,10 @@ void ProjectManager::EnsureEngineAssets(const std::string& rootPath) const {
     std::error_code ec;
 
     // Engine builtins required after SetCurrentDirectory(projectRoot).
-    const char* folders[] = { "shader", "font", "texture" };
-    for (const char* folder : folders) {
+    // Shaders always overlay: a non-empty rom/shader is often a stale .cso
+    // snapshot, and the host binds those at boot.
+    const char* fillIfEmpty[] = { "font", "texture" };
+    for (const char* folder : fillIfEmpty) {
         const fs::path src = exeRom / folder;
         const fs::path dst = projectRom / folder;
         if (!fs::exists(src, ec))
@@ -508,6 +510,11 @@ void ProjectManager::EnsureEngineAssets(const std::string& rootPath) const {
             continue;
         CopyDirectoryRecursive(src, dst, nullptr);
     }
+
+    const fs::path shaderSrc = exeRom / "shader";
+    const fs::path shaderDst = projectRom / "shader";
+    if (fs::exists(shaderSrc, ec))
+        CopyDirectoryRecursive(shaderSrc, shaderDst, nullptr);
 }
 
 bool ProjectManager::ActivateRoot(const std::string& rootPath, std::string* errorOut) {

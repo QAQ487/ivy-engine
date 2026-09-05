@@ -317,6 +317,16 @@ bool AssemblePackage(const Request& request, const fs::path& engineRoot,
     if (!CopyDirectoryRecursive(content / "rom", dest / "rom", errorOut))
         return false;
 
+    // Content rom/shader is often a stale snapshot. The host loads .cso from
+    // dest/rom/shader at boot, so overlay the shaders just compiled with this
+    // Game_Runtime or the engine repo will skin with the wrong Bind.
+    const fs::path engineShaders = engineOut / "rom" / "shader";
+    const fs::path destShaders = dest / "rom" / "shader";
+    if (fs::exists(engineShaders, ec)) {
+        if (!CopyDirectoryRecursive(engineShaders, destShaders, errorOut))
+            return false;
+    }
+
     const fs::path scriptsBin = dest / "game" / "scripts" / "bin";
     if (!CopyOneFile(content / "game" / "scripts" / "bin" / "GameScripts.dll",
                      scriptsBin / "GameScripts.dll", errorOut))

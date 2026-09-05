@@ -16,6 +16,9 @@ static const float GRAVITY = 9.81f;
 
 float Physics_GetGravity();
 void Physics_SetGravity(float gravity);
+// Runtime host does not open the editor project; load physics.gravity from
+// cwd or exe-adjacent project.json (same lookup as audio buses).
+void Physics_TryLoadGravityFromNearbyProject();
 
 enum class ForceMode {
 	Force,          // Add a continuous force. Mass-dependent.

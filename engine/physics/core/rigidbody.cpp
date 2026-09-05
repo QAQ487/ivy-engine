@@ -9,8 +9,32 @@
  ===========================================================================**/
 #include "rigidbody.h"
 
+#include "libraries/nlohmann/json.hpp"
+
+#include <Windows.h>
+#include <fstream>
+#include <filesystem>
+
 namespace {
 	float g_worldGravity = GRAVITY;
+
+	bool LoadGravityFromProjectFile(const std::string& path) {
+		try {
+			std::ifstream file(path);
+			if (!file.is_open())
+				return false;
+			nlohmann::json j;
+			file >> j;
+			if (!j.contains("physics") || !j["physics"].is_object())
+				return false;
+			const float gravity = j["physics"].value("gravity", GRAVITY);
+			Physics_SetGravity(gravity);
+			return true;
+		}
+		catch (...) {
+			return false;
+		}
+	}
 }
 
 float Physics_GetGravity() {
@@ -19,6 +43,18 @@ float Physics_GetGravity() {
 
 void Physics_SetGravity(float gravity) {
 	g_worldGravity = (gravity > 0.0f) ? gravity : GRAVITY;
+}
+
+void Physics_TryLoadGravityFromNearbyProject() {
+	namespace fs = std::filesystem;
+	if (LoadGravityFromProjectFile("project.json"))
+		return;
+
+	wchar_t exePath[MAX_PATH] = {};
+	if (GetModuleFileNameW(nullptr, exePath, MAX_PATH) == 0)
+		return;
+	const fs::path nearby = fs::path(exePath).parent_path() / "project.json";
+	LoadGravityFromProjectFile(nearby.string());
 }
 
 void Rigidbody::AddForce(const DirectX::XMFLOAT3& force, ForceMode mode) {

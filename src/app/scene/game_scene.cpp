@@ -16,6 +16,7 @@
 #include "engine/scene/render_settings.h"
 #include "engine/rendering/lighting/shadow.h"
 #include "engine/physics/core/physics_system.h"
+#include "engine/physics/core/rigidbody.h"
 #include "engine/rendering/lighting/lighting.h"
 #include "engine/rendering/sprite/texture.h"
 #include "engine/input/key_logger.h"
@@ -90,6 +91,7 @@ void GameScene::Initialize() {
 		}
 #else
 		AudioManager::Instance().TryLoadBusVolumesFromNearbyProject();
+		Physics_TryLoadGravityFromNearbyProject();
 		EngineGUI_LoadFromFile(EngineGUI_GetDefaultScenePath().c_str());
 #endif
 	}
