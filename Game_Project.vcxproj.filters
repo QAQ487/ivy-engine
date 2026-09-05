@@ -188,6 +188,9 @@
     <ClInclude Include="engine\editor\project_manager.h">
       <Filter>engine\editor</Filter>
     </ClInclude>
+    <ClInclude Include="engine\editor\playable_package_builder.h">
+      <Filter>engine\editor</Filter>
+    </ClInclude>
     <ClInclude Include="engine\editor\editor_project_browser.h">
       <Filter>engine\editor</Filter>
     </ClInclude>
@@ -506,6 +509,9 @@
       <Filter>engine\editor</Filter>
     </ClCompile>
     <ClCompile Include="engine\editor\project_manager.cpp">
+      <Filter>engine\editor</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\editor\playable_package_builder.cpp">
       <Filter>engine\editor</Filter>
     </ClCompile>
     <ClCompile Include="engine\editor\editor_project_browser.cpp">

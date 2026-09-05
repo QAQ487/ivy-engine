@@ -24,6 +24,18 @@ _Avoid_: listener object, SetListener as the authoring model
 Editor playback of the loaded scene (F3), using the same components as runtime.
 _Avoid_: preview, simulate
 
+**Content project**:
+A directory that owns one game's assets, scripts, and `project.json`. The editor has at most one open.
+_Avoid_: project (unqualified), Game_Runtime, Game_Project
+
+**Runtime host**:
+The editor-less executable that plays a content project.
+_Avoid_: Game_Runtime as a content project, runtime project
+
+**Playable package**:
+A folder that contains the runtime host, `project.json`, one content project's rom, and that project's scripts, in the layout the host can launch.
+_Avoid_: build folder, export, ship
+
 **UI click sound**:
 Project-wide SFX played when a UIButton activates. Path lives in `project.json` as `audio.uiClickSound`. It keeps playing across a scene load so LoadScene buttons can still be heard.
 _Avoid_: per-button clip, PlaySFX string-id for menu clicks

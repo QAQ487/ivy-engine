@@ -57,6 +57,7 @@
 #include "engine/editor/editor_ui_panel.h"
 #include "engine/editor/project_asset_index.h"
 #include "engine/editor/project_manager.h"
+#include "engine/editor/playable_package_builder.h"
 #include "engine/audio/audio_manager.h"
 #include "engine/editor/transform_gizmo.h"
 #include "engine/editor/ui_gizmo.h"
@@ -118,8 +119,13 @@ static bool  g_showNewProjectPopup = false;
 static char  g_newProjectName[128] = "NewProject";
 static std::string g_newProjectParentDir;
 static std::string g_projectStatusMessage;
-enum class PendingFolderPickAction { None = 0, NewProject, OpenProject };
+enum class PendingFolderPickAction { None = 0, NewProject, OpenProject, BuildOutput };
 static PendingFolderPickAction g_pendingFolderPick = PendingFolderPickAction::None;
+static bool g_showBuildUnsavedPopup = false;
+static bool g_showBuildPreflight = false;
+static bool g_showBuildLog = false;
+static char g_buildDest[1024] = {};
+static int g_buildConfigIndex = 0;
 static EditorEditMode g_editMode = EditorEditMode::Scene3D;
 
 static constexpr float kToolbarHeight = 36.0f;
@@ -272,6 +278,8 @@ static bool SwitchToOpenedProject();
 static void RequestOpenProject(const std::string& rootPath);
 static void BeginNewProjectFlow();
 static void BeginOpenProjectFlow();
+static void OpenBuildPreflight();
+static void RequestBuildCurrentProject();
 
 static void RemapNodeTagsAfterDelete(GameObject* node, int deletedId) {
     if (!node)
@@ -790,6 +798,34 @@ static void BeginOpenProjectFlow() {
     RequestOpenProject(folder);
 }
 
+static void SetBuildDestBuffer(const std::string& path) {
+    strncpy_s(g_buildDest, path.c_str(), _TRUNCATE);
+}
+
+static void OpenBuildPreflight() {
+    auto& project = ProjectManager::Instance();
+    if (!project.IsOpen())
+        return;
+
+    PlayablePackage::Prefs prefs;
+    PlayablePackage::LoadPrefs(project.GetRootPath(), &prefs);
+    SetBuildDestBuffer(prefs.destination);
+    g_buildConfigIndex = (prefs.configuration == PlayablePackage::Configuration::Release) ? 1 : 0;
+    g_showBuildPreflight = true;
+}
+
+static void RequestBuildCurrentProject() {
+    if (!ProjectManager::Instance().IsOpen() || PlayablePackage::IsBuildRunning())
+        return;
+
+    if (EngineGUI_IsSceneDirty()) {
+        g_showBuildUnsavedPopup = true;
+        return;
+    }
+
+    OpenBuildPreflight();
+}
+
 static void BeginNewProjectFlow() {
     std::string folder;
     if (!ProjectManager::PickFolder(GetWindowHandle(), L"Select Parent Folder for New Project",
@@ -858,6 +894,14 @@ static void DrawEditorMenuBar() {
                 }
             }
             ImGui::EndMenu();
+        }
+
+        ImGui::Separator();
+        {
+            const bool canBuild = ProjectManager::Instance().IsOpen() &&
+                                  !PlayablePackage::IsBuildRunning();
+            if (ImGui::MenuItem("Build Current Project...", nullptr, false, canBuild))
+                RequestBuildCurrentProject();
         }
 
         ImGui::Separator();
@@ -1373,6 +1417,129 @@ static void DrawEditorPopups() {
         }
 
         ImGui::EndPopup();
+    }
+
+    if (g_showBuildUnsavedPopup)
+        ImGui::OpenPopup("BuildUnsavedPopup");
+    ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+    if (ImGui::BeginPopupModal("BuildUnsavedPopup", &g_showBuildUnsavedPopup, ImGuiWindowFlags_AlwaysAutoResize)) {
+        ImGui::Text("You have unsaved scene changes.");
+        ImGui::TextDisabled("Save the scene before building a playable package.");
+        ImGui::Separator();
+        if (ImGui::Button("Save", ImVec2(120, 0))) {
+            SaveScene();
+            if (EngineGUI_IsSceneDirty()) {
+                MessageBoxA(GetWindowHandle(),
+                            "Could not save the scene. Save it from File first, then build.",
+                            "Build Current Project", MB_OK | MB_ICONWARNING);
+            }
+            else {
+                g_showBuildUnsavedPopup = false;
+                ImGui::CloseCurrentPopup();
+                OpenBuildPreflight();
+            }
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Cancel", ImVec2(120, 0))) {
+            g_showBuildUnsavedPopup = false;
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::EndPopup();
+    }
+
+    if (g_showBuildPreflight)
+        ImGui::OpenPopup("BuildPreflightPopup");
+    ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+    if (ImGui::BeginPopupModal("BuildPreflightPopup", &g_showBuildPreflight, ImGuiWindowFlags_AlwaysAutoResize)) {
+        ImGui::Text("Build playable package");
+        ImGui::TextDisabled("%s", ProjectManager::Instance().GetRootPath().c_str());
+        ImGui::Separator();
+
+        ImGui::SetNextItemWidth(420.0f);
+        ImGui::InputText("Output folder", g_buildDest, IM_ARRAYSIZE(g_buildDest));
+        ImGui::SameLine();
+        if (ImGui::Button("Browse..."))
+            g_pendingFolderPick = PendingFolderPickAction::BuildOutput;
+
+        const char* configs[] = { "Debug", "Release" };
+        ImGui::SetNextItemWidth(160.0f);
+        ImGui::Combo("Configuration", &g_buildConfigIndex, configs, IM_ARRAYSIZE(configs));
+        ImGui::TextDisabled("Debug shows the bottom-left FPS overlay. Release does not.");
+
+        const std::string destReason = PlayablePackage::DestinationRefusalReason(
+            ProjectManager::Instance().GetRootPath(), g_buildDest);
+        if (!destReason.empty())
+            ImGui::TextColored(ImVec4(0.95f, 0.45f, 0.35f, 1.0f), "%s", destReason.c_str());
+
+        ImGui::Separator();
+        const bool canStart = destReason.empty() && !PlayablePackage::IsBuildRunning();
+        if (!canStart)
+            ImGui::BeginDisabled();
+        if (ImGui::Button("Build", ImVec2(120, 0))) {
+            PlayablePackage::Prefs prefs;
+            prefs.destination = g_buildDest;
+            prefs.configuration = (g_buildConfigIndex == 1)
+                ? PlayablePackage::Configuration::Release
+                : PlayablePackage::Configuration::Debug;
+            PlayablePackage::SavePrefs(ProjectManager::Instance().GetRootPath(), prefs);
+
+            PlayablePackage::Request request;
+            request.contentRoot = ProjectManager::Instance().GetRootPath();
+            request.destination = g_buildDest;
+            request.configuration = prefs.configuration;
+            if (PlayablePackage::StartBuild(request)) {
+                g_showBuildPreflight = false;
+                ImGui::CloseCurrentPopup();
+                g_showBuildLog = true;
+            }
+        }
+        if (!canStart)
+            ImGui::EndDisabled();
+        ImGui::SameLine();
+        if (ImGui::Button("Cancel", ImVec2(120, 0))) {
+            g_showBuildPreflight = false;
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::EndPopup();
+    }
+
+    if (g_showBuildLog)
+        ImGui::OpenPopup("BuildLogPopup");
+    ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+    {
+        const bool buildDone = PlayablePackage::IsBuildFinished();
+        ImGuiWindowFlags logFlags = ImGuiWindowFlags_AlwaysAutoResize;
+        bool* logOpen = buildDone ? &g_showBuildLog : nullptr;
+        if (ImGui::BeginPopupModal("BuildLogPopup", logOpen, logFlags)) {
+            if (!buildDone)
+                ImGui::Text("Building playable package...");
+            else if (PlayablePackage::LastBuildSucceeded())
+                ImGui::Text("Build succeeded.");
+            else
+                ImGui::Text("Build failed.");
+
+            std::string log;
+            PlayablePackage::CopyLog(&log);
+            ImGui::BeginChild("##BuildLogText", ImVec2(640, 280), true);
+            ImGui::TextUnformatted(log.empty() ? "(no output yet)" : log.c_str());
+            if (!buildDone)
+                ImGui::SetScrollHereY(1.0f);
+            ImGui::EndChild();
+
+            if (buildDone) {
+                const std::string result = PlayablePackage::LastBuildResultMessage();
+                if (!result.empty())
+                    ImGui::TextWrapped("%s", result.c_str());
+                if (ImGui::Button("OK", ImVec2(120, 0))) {
+                    g_showBuildLog = false;
+                    ImGui::CloseCurrentPopup();
+                }
+            }
+            else {
+                ImGui::TextDisabled("This window stays open until MSBuild finishes.");
+            }
+            ImGui::EndPopup();
+        }
     }
 }
 
@@ -3335,5 +3502,11 @@ void EngineGUI_Draw() {
             BeginNewProjectFlow();
         else if (action == PendingFolderPickAction::OpenProject)
             BeginOpenProjectFlow();
+        else if (action == PendingFolderPickAction::BuildOutput) {
+            std::string folder;
+            if (ProjectManager::PickFolder(GetWindowHandle(), L"Playable Package Folder",
+                                           &folder, g_buildDest))
+                SetBuildDestBuffer(folder);
+        }
     }
 }

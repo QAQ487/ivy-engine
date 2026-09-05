@@ -186,27 +186,6 @@ bool WriteContentBuildScriptsBat(const fs::path& root, std::string* errorOut) {
     return true;
 }
 
-fs::path FindEngineRepoRoot() {
-    // Walk up from cwd and exe dir looking for the external content template.
-    std::vector<fs::path> seeds;
-    seeds.push_back(fs::current_path());
-    seeds.push_back(fs::path(ProjectManager::GetExecutableDirectory()));
-
-    for (const fs::path& seed : seeds) {
-        fs::path cur = seed;
-        for (int i = 0; i < 8; ++i) {
-            if (fs::exists(cur / "external_content_template") &&
-                fs::exists(cur / "Game_Project.sln")) {
-                return cur;
-            }
-            if (!cur.has_parent_path() || cur == cur.parent_path())
-                break;
-            cur = cur.parent_path();
-        }
-    }
-    return {};
-}
-
 const char* kBlankSceneJson = R"({
     "version": 4,
     "settings": {
@@ -288,6 +267,27 @@ std::string ProjectManager::GetExecutableDirectory() {
     if (len == 0 || len >= MAX_PATH)
         return {};
     return Utf8FromWide(fs::path(buf).parent_path().wstring());
+}
+
+std::string ProjectManager::FindEngineRepoRoot() {
+    // Walk up from cwd and exe dir looking for the external content template.
+    std::vector<fs::path> seeds;
+    seeds.push_back(fs::current_path());
+    seeds.push_back(fs::path(GetExecutableDirectory()));
+
+    for (const fs::path& seed : seeds) {
+        fs::path cur = seed;
+        for (int i = 0; i < 8; ++i) {
+            if (fs::exists(cur / "external_content_template") &&
+                fs::exists(cur / "Game_Project.sln")) {
+                return cur.string();
+            }
+            if (!cur.has_parent_path() || cur == cur.parent_path())
+                break;
+            cur = cur.parent_path();
+        }
+    }
+    return {};
 }
 
 std::string ProjectManager::RecentListPath() {
@@ -589,7 +589,7 @@ bool ProjectManager::ScaffoldNewProjectTree(const std::string& rootPath,
     EnsureEngineAssets(rootPath);
 
     // Prefer copying GameScripts template from the engine repo when available.
-    const fs::path engineRoot = FindEngineRepoRoot();
+    const fs::path engineRoot = ProjectManager::FindEngineRepoRoot();
     if (!engineRoot.empty()) {
         const fs::path templateRoot = engineRoot / "external_content_template";
         const fs::path scriptsSrc = templateRoot / "game" / "scripts";
@@ -770,7 +770,8 @@ void ProjectManager::UpdateWindowTitle(HWND hwnd) const {
     SetWindowTextW(hwnd, WideFromUtf8(title).c_str());
 }
 
-bool ProjectManager::PickFolder(HWND owner, const wchar_t* title, std::string* outPath) {
+bool ProjectManager::PickFolder(HWND owner, const wchar_t* title, std::string* outPath,
+                                const char* startFolder) {
     if (!outPath)
         return false;
     outPath->clear();
@@ -786,8 +787,11 @@ bool ProjectManager::PickFolder(HWND owner, const wchar_t* title, std::string* o
     } result;
 
     const std::wstring titleCopy = title ? std::wstring(title) : std::wstring{};
+    const std::wstring startCopy = (startFolder && startFolder[0])
+        ? WideFromUtf8(startFolder)
+        : std::wstring{};
 
-    std::thread staThread([&result, titleCopy]() {
+    std::thread staThread([&result, titleCopy, startCopy]() {
         result.hrInit = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
         const bool needUninit = (result.hrInit == S_OK);
         if (FAILED(result.hrInit) && result.hrInit != RPC_E_CHANGED_MODE) {
@@ -805,6 +809,16 @@ bool ProjectManager::PickFolder(HWND owner, const wchar_t* title, std::string* o
         dialog->SetOptions(options | FOS_PICKFOLDERS | FOS_FORCEFILESYSTEM);
         if (!titleCopy.empty())
             dialog->SetTitle(titleCopy.c_str());
+
+        if (!startCopy.empty()) {
+            IShellItem* startItem = nullptr;
+            if (SUCCEEDED(SHCreateItemFromParsingName(startCopy.c_str(), nullptr,
+                                                      IID_PPV_ARGS(&startItem))) &&
+                startItem) {
+                dialog->SetFolder(startItem);
+                startItem->Release();
+            }
+        }
 
         const HRESULT hrShow = dialog->Show(nullptr);
         if (SUCCEEDED(hrShow)) {
