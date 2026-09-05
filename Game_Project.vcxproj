@@ -185,6 +185,7 @@ exit /b 0</Command>
     <None Include="shaders\VertexShader2D.hlsl" />
     <None Include="shaders\VertexShaderUnlit.hlsl" />
     <None Include="shaders\VertexShader3D.hlsl" />
+    <None Include="shaders\VertexShader3DSkinned.hlsl" />
     <None Include="shaders\PixelShader3D.hlsl" />
     <None Include="shaders\PixelShader3D_Hemisphere.hlsl" />
     <None Include="shaders\PixelShader3D_Rim.hlsl" />

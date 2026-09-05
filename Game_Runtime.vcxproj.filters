@@ -529,6 +529,9 @@
     <FxCompile Include="shaders\VertexShader3D.hlsl">
       <Filter>shaders</Filter>
     </FxCompile>
+    <FxCompile Include="shaders\VertexShader3DSkinned.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
     <FxCompile Include="shaders\VertexShaderUnlit.hlsl">
       <Filter>shaders</Filter>
     </FxCompile>

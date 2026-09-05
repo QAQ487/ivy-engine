@@ -5,10 +5,13 @@ void main(
     in float3 inNormal   : NORMAL0,
     in float4 inDiffuse  : COLOR0,
     in float2 inTexCoord : TEXCOORD0,
+    in uint4  inBlendIndices : BLENDINDICES0,
+    in float4 inBlendWeights : BLENDWEIGHT0,
 
     out float4 outPosition : SV_POSITION)
 {
-    float4 posCS = mul(float4(inPosition, 1.0f), WorldViewProjection);
+    const float3 skinned = SkinPositionOS(inPosition, inBlendIndices, inBlendWeights);
+    float4 posCS = mul(float4(skinned, 1.0f), WorldViewProjection);
     // Clip-space normal approximation — screen-consistent outline width
     float4 nCS = mul(float4(inNormal, 0.0f), WorldViewProjection);
     float2 nXY = nCS.xy;

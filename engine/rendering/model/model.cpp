@@ -22,6 +22,7 @@
 #include <cstring>
 #include <functional>
 #include <cmath>
+#include <cstdio>
 
 #include "engine/rendering/d3d11/renderer.h"
 #include "camera.h"
@@ -31,12 +32,18 @@
 using namespace DirectX;
 using namespace fbxsdk;
 
+#ifndef MODEL3D_CPU_SKIN_ORACLE
+#define MODEL3D_CPU_SKIN_ORACLE 0
+#endif
+
 Model3D::Model3D() {}
 Model3D::~Model3D() { Release(); }
 
 void Model3D::Release() {
 	if (m_isAnimInstance) {
-		if (m_pVB) { m_pVB->Release(); m_pVB = nullptr; }
+		if (m_pVB && !m_sharesCachedVB) { m_pVB->Release(); }
+		m_pVB = nullptr;
+		m_sharesCachedVB = false;
 		m_verticesCPU.clear();
 		m_cpIndexOfVertex.clear();
 		m_skinPosBuf.clear();
@@ -111,6 +118,11 @@ void Model3D::Release() {
 	m_rigidBake.clear();
 	m_bakedClips.clear();
 	m_meshXformScratch.clear();
+	m_boneBindOffset.clear();
+	m_gpuPalette.clear();
+	m_gpuSkinEligible = false;
+	m_gpuBindConflict = false;
+	m_sharesCachedVB = false;
 
 	m_diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 	m_hasTexture = false;
@@ -685,7 +697,7 @@ bool Model3D::LoadFBX(const wchar_t* fbxPath, const wchar_t* /*fallbackTex*/) {
 							mesh->GetPolygonVertices()[pvBase + i + 1]
 						};
 
-						VertexPNTC tri[3];
+						VertexPNTC tri[3] {};
 						// 位置（ジオメトリ的補正）
 						for (int c = 0; c < 3; ++c) {
 							FbxVector4 p0 = mesh->GetControlPoints()[cpIdxTri[c]];
@@ -863,6 +875,29 @@ bool Model3D::LoadFBX(const wchar_t* fbxPath, const wchar_t* /*fallbackTex*/) {
 		m_meshCpOffset = cpBase;
 		BakeSkinningData();
 		BakeRigidMeshData();
+		BakeVertexBoneWeights();
+		const size_t gpuSlots = m_skinBake.size() * m_skinBones.size();
+		m_gpuSkinEligible =
+			!m_skinBake.empty()
+			&& !m_skinBones.empty()
+			&& gpuSlots > 0
+			&& gpuSlots <= (size_t)SHADER_MAX_BONES
+			&& m_rigidBake.empty()
+			&& !m_gpuBindConflict
+			&& m_boneBindOffset.size() == gpuSlots;
+		{
+			char msg[256];
+			snprintf(msg, sizeof(msg),
+				"[Model3D] gpuSkin meshes=%zu bones=%zu slots=%zu verts=%zu eligible=%d conflict=%d\n",
+				m_skinBake.size(), m_skinBones.size(), gpuSlots,
+				m_verticesCPU.size(), m_gpuSkinEligible ? 1 : 0, m_gpuBindConflict ? 1 : 0);
+			OutputDebugStringA(msg);
+		}
+		if (m_gpuSkinEligible) {
+			m_vbDynamic = false;
+			RecreateVertexBufferFromCPU();
+			FillBindPoseScratch();
+		}
 	}
 
 	// : matSRVキャッシュのクリーンアップ
@@ -1076,6 +1111,11 @@ void Model3D::Draw() {
 		Shader_CommitSurfaceFX();
 	}
 
+	if (CanGpuSkin())
+		Shader_SetSkinPalette(m_gpuPalette.data(), (int)m_gpuPalette.size(), true);
+	else
+		Shader_SetSkinPalette(nullptr, 0, false);
+
 	UINT stride = sizeof(VertexPNTC);
 	UINT offset = 0;
 	GetDeviceContext()->IASetVertexBuffers(0, 1, &m_pVB, &stride, &offset);
@@ -1106,6 +1146,8 @@ void Model3D::Draw() {
 	}
 
 	Shader3D_Begin(m_shaderVariant);
+	if (CanGpuSkin())
+		Shader3D_UseGpuSkin();
 
 	const bool bindNormal =
 		m_materialOverride.enabled
@@ -1167,6 +1209,190 @@ const Model3D::SkinMeshGeo* Model3D::FindGeoForCP(int cpi) const {
 XMFLOAT3 Model3D::ApplyGeoPosition(const FbxAMatrix& geo, const XMFLOAT3& p) {
 	const FbxVector4 out = geo.MultT(FbxVector4(p.x, p.y, p.z, 1.0));
 	return XMFLOAT3((float)out[0], (float)out[1], (float)out[2]);
+}
+
+namespace {
+
+XMMATRIX FbxToXM(const FbxAMatrix& m) {
+	return XMMatrixSet(
+		(float)m.Get(0, 0), (float)m.Get(0, 1), (float)m.Get(0, 2), (float)m.Get(0, 3),
+		(float)m.Get(1, 0), (float)m.Get(1, 1), (float)m.Get(1, 2), (float)m.Get(1, 3),
+		(float)m.Get(2, 0), (float)m.Get(2, 1), (float)m.Get(2, 2), (float)m.Get(2, 3),
+		(float)m.Get(3, 0), (float)m.Get(3, 1), (float)m.Get(3, 2), (float)m.Get(3, 3));
+}
+
+} // namespace
+
+bool Model3D::CanGpuSkin() const {
+	const size_t slots = m_skinBake.size() * m_skinBones.size();
+	return m_gpuSkinEligible
+		&& !m_gpuBindConflict
+		&& slots > 0
+		&& slots <= (size_t)SHADER_MAX_BONES
+		&& m_gpuPalette.size() == slots
+		&& m_boneBindOffset.size() == slots
+		&& !m_skinBones.empty();
+}
+
+void Model3D::RecreateVertexBufferFromCPU() {
+	if (m_sharesCachedVB || m_verticesCPU.empty())
+		return;
+	if (m_pVB) {
+		m_pVB->Release();
+		m_pVB = nullptr;
+	}
+
+	D3D11_BUFFER_DESC bd {};
+	bd.Usage = m_vbDynamic ? D3D11_USAGE_DYNAMIC : D3D11_USAGE_DEFAULT;
+	bd.ByteWidth = static_cast<UINT>(m_verticesCPU.size() * sizeof(VertexPNTC));
+	bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	bd.CPUAccessFlags = m_vbDynamic ? D3D11_CPU_ACCESS_WRITE : 0;
+
+	D3D11_SUBRESOURCE_DATA init {};
+	init.pSysMem = m_verticesCPU.data();
+	GetDevice()->CreateBuffer(&bd, &init, &m_pVB);
+}
+
+void Model3D::BakeVertexBoneWeights() {
+	for (VertexPNTC& v : m_verticesCPU) {
+		v.BlendIndices = { 0, 0, 0, 0 };
+		v.BlendWeights = { 0.0f, 0.0f, 0.0f, 0.0f };
+	}
+	if (m_skinBake.empty() || m_cpIndexOfVertex.size() != m_verticesCPU.size())
+		return;
+
+	int totalCP = 0;
+	for (const SkinnedMeshBake& bake : m_skinBake)
+		totalCP = (std::max)(totalCP, bake.cpOffset + bake.cpCount);
+	if (totalCP <= 0)
+		return;
+
+	const int nBones = (int)m_skinBones.size();
+	struct Infl { int bone = 0; double w = 0.0; };
+	std::vector<std::vector<Infl>> perCp((size_t)totalCP);
+	for (size_t mi = 0; mi < m_skinBake.size(); ++mi) {
+		const SkinnedMeshBake& bake = m_skinBake[mi];
+		const int boneBase = (nBones > 0) ? (int)mi * nBones : 0;
+		for (const SkinClusterBake& cluster : bake.clusters) {
+			if (cluster.boneIndex < 0 || cluster.indexCount <= 0 || !cluster.indices || !cluster.weights)
+				continue;
+			for (int k = 0; k < cluster.indexCount; ++k) {
+				const int local = cluster.indices[k];
+				if (local < 0 || local >= bake.cpCount)
+					continue;
+				const int cpi = bake.cpOffset + local;
+				if (cpi < 0 || cpi >= totalCP)
+					continue;
+				const double w = cluster.weights[k];
+				if (w <= 0.0)
+					continue;
+				perCp[(size_t)cpi].push_back({ boneBase + cluster.boneIndex, w });
+			}
+		}
+	}
+
+	std::vector<XMUINT4> cpIdx((size_t)totalCP, XMUINT4{ 0, 0, 0, 0 });
+	std::vector<XMFLOAT4> cpW((size_t)totalCP, XMFLOAT4{ 0, 0, 0, 0 });
+	for (int i = 0; i < totalCP; ++i) {
+		auto& list = perCp[(size_t)i];
+		if (list.empty())
+			continue;
+		std::sort(list.begin(), list.end(), [](const Infl& a, const Infl& b) { return a.w > b.w; });
+		// Merge identical bones after sort (keep first N unique).
+		Infl top[4] {};
+		int n = 0;
+		for (const Infl& in : list) {
+			int found = -1;
+			for (int t = 0; t < n; ++t) {
+				if (top[t].bone == in.bone) { found = t; break; }
+			}
+			if (found >= 0) {
+				top[found].w += in.w;
+				continue;
+			}
+			if (n < 4)
+				top[n++] = in;
+		}
+		float w[4] = {};
+		uint32_t idx[4] = {};
+		for (int t = 0; t < n; ++t) {
+			idx[t] = (uint32_t)top[t].bone;
+			w[t] = (float)top[t].w;
+		}
+		cpIdx[(size_t)i] = XMUINT4{ idx[0], idx[1], idx[2], idx[3] };
+		cpW[(size_t)i] = XMFLOAT4{ w[0], w[1], w[2], w[3] };
+	}
+
+	for (size_t vi = 0; vi < m_verticesCPU.size(); ++vi) {
+		const int cpi = m_cpIndexOfVertex[vi];
+		if (cpi < 0 || cpi >= totalCP)
+			continue;
+		m_verticesCPU[vi].BlendIndices = cpIdx[(size_t)cpi];
+		m_verticesCPU[vi].BlendWeights = cpW[(size_t)cpi];
+	}
+}
+
+void Model3D::FillBindPoseScratch() {
+	if (m_skinBones.empty() || !m_baseScene)
+		return;
+
+	FbxTime t;
+	t.SetSecondDouble(m_animStartSec);
+	FbxAnimEvaluator* eval = m_baseScene->GetAnimationEvaluator();
+	if (!eval)
+		return;
+
+	m_boneXformScratch.resize(m_skinBones.size());
+	for (size_t i = 0; i < m_skinBones.size(); ++i) {
+		FbxNode* node = m_skinBones[i].baseBone;
+		m_boneXformScratch[i] = (node && eval) ? eval->GetNodeGlobalTransform(node, t) : FbxAMatrix();
+	}
+	m_meshXformScratch.resize(m_skinBake.size());
+	for (size_t i = 0; i < m_skinBake.size(); ++i) {
+		FbxNode* node = m_skinBake[i].meshNode;
+		m_meshXformScratch[i] = (node && eval) ? eval->GetNodeGlobalTransform(node, t) : FbxAMatrix();
+	}
+	UpdateGpuSkinPalette();
+}
+
+void Model3D::UpdateGpuSkinPalette() {
+	const size_t nBones = m_skinBones.size();
+	const size_t nMeshes = m_skinBake.size();
+	const size_t slots = nMeshes * nBones;
+	if (!m_gpuSkinEligible || m_gpuBindConflict || slots == 0
+		|| m_boneXformScratch.size() != nBones
+		|| m_boneBindOffset.size() != slots)
+		return;
+
+	m_gpuPalette.resize(slots);
+	for (size_t mi = 0; mi < nMeshes; ++mi) {
+		FbxAMatrix geo;
+		geo.SetIdentity();
+		if (mi < m_skinBake.size() && m_skinBake[mi].mesh) {
+			for (const SkinMeshGeo& g : m_skinMeshGeo) {
+				if (g.cpBase == m_skinBake[mi].cpOffset) {
+					geo = g.geo;
+					break;
+				}
+			}
+		}
+		const FbxAMatrix geoInv = geo.Inverse();
+
+		FbxAMatrix meshGlobal;
+		meshGlobal.SetIdentity();
+		if (mi < m_meshXformScratch.size())
+			meshGlobal = m_meshXformScratch[mi];
+		const FbxAMatrix toLocal = meshGlobal.Inverse();
+
+		for (size_t bi = 0; bi < nBones; ++bi) {
+			const size_t slot = mi * nBones + bi;
+			const FbxAMatrix palette =
+				geo * toLocal * m_boneXformScratch[bi] * m_boneBindOffset[slot] * geoInv;
+			// MultT is row-vector * matrix (same as DirectXMath). Shader_SetSkinPalette
+			// transposes for HLSL like WVP — do not transpose here.
+			XMStoreFloat4x4(&m_gpuPalette[slot], FbxToXM(palette));
+		}
+	}
 }
 
 namespace {
@@ -1287,6 +1513,8 @@ FbxAnimStack* PickBestAnimStack(FbxScene* animScene, FbxScene* baseScene,
 void Model3D::BakeSkinningData() {
 	m_skinBake.clear();
 	m_skinBones.clear();
+	m_boneBindOffset.clear();
+	m_gpuBindConflict = false;
 	if (!m_hasSkin || m_skinnedMeshCache.empty()) return;
 
 	std::unordered_map<FbxNode*, int> boneIndex;
@@ -1345,6 +1573,33 @@ void Model3D::BakeSkinningData() {
 		}
 
 		m_skinBake.push_back(std::move(bake));
+	}
+
+	const size_t nBones = m_skinBones.size();
+	const size_t nMeshes = m_skinBake.size();
+	const size_t slots = nMeshes * nBones;
+	m_boneBindOffset.assign(slots, FbxAMatrix());
+	std::vector<char> haveBind(slots, 0);
+	for (size_t mi = 0; mi < nMeshes; ++mi) {
+		for (const SkinClusterBake& cluster : m_skinBake[mi].clusters) {
+			if (cluster.boneIndex < 0 || (size_t)cluster.boneIndex >= nBones)
+				continue;
+			const size_t slot = mi * nBones + (size_t)cluster.boneIndex;
+			if (!haveBind[slot]) {
+				m_boneBindOffset[slot] = cluster.bindOffset;
+				haveBind[slot] = 1;
+				continue;
+			}
+			const FbxAMatrix& prev = m_boneBindOffset[slot];
+			for (int r = 0; r < 4 && !m_gpuBindConflict; ++r) {
+				for (int c = 0; c < 4; ++c) {
+					if (fabs(prev.Get(r, c) - cluster.bindOffset.Get(r, c)) > 1e-4) {
+						m_gpuBindConflict = true;
+						break;
+					}
+				}
+			}
+		}
 	}
 }
 
@@ -1628,7 +1883,14 @@ void Model3D::UpdateAnimation(double dtSec) {
 	}
 
 	if (hasSkinning && SampleBakedClip()) {
+#if MODEL3D_CPU_SKIN_ORACLE
 		SkinFromScratch();
+#else
+		if (m_gpuSkinEligible && !m_gpuBindConflict)
+			UpdateGpuSkinPalette();
+		else
+			SkinFromScratch();
+#endif
 		return;
 	}
 
@@ -1661,7 +1923,14 @@ void Model3D::UpdateAnimation(double dtSec) {
 				: FbxAMatrix();
 		}
 
+#if MODEL3D_CPU_SKIN_ORACLE
 		SkinFromScratch();
+#else
+		if (m_gpuSkinEligible && !m_gpuBindConflict)
+			UpdateGpuSkinPalette();
+		else
+			SkinFromScratch();
+#endif
 	}
 
 	if (hasRigidAnim) {
@@ -1857,12 +2126,21 @@ std::unique_ptr<Model3D> Model3D::CreateAnimInstanceFrom(const Model3D& shared) 
 	inst->m_skinBones = shared.m_skinBones;
 	inst->m_rigidBake = shared.m_rigidBake;
 	inst->m_bakedClips = shared.m_bakedClips;
+	inst->m_gpuSkinEligible = shared.m_gpuSkinEligible;
+	inst->m_gpuBindConflict = shared.m_gpuBindConflict;
+	inst->m_boneBindOffset = shared.m_boneBindOffset;
+	inst->m_gpuPalette = shared.m_gpuPalette;
 
-	// Per-instance deformed mesh.
+	// Per-instance playback. GPU skin shares the cached bind-pose VB.
 	inst->m_verticesCPU = shared.m_verticesCPU;
-	const bool needsAnimatedVB = inst->m_hasSkin || !inst->m_rigidBake.empty();
-	inst->m_vbDynamic = needsAnimatedVB ? true : shared.m_vbDynamic;
-	if (!inst->m_verticesCPU.empty()) {
+	const bool shareVB = inst->m_gpuSkinEligible && inst->m_rigidBake.empty();
+	inst->m_sharesCachedVB = shareVB;
+	if (shareVB) {
+		inst->m_pVB = shared.m_pVB;
+		inst->m_vbDynamic = false;
+	} else if (!inst->m_verticesCPU.empty()) {
+		const bool needsAnimatedVB = inst->m_hasSkin || !inst->m_rigidBake.empty();
+		inst->m_vbDynamic = needsAnimatedVB ? true : shared.m_vbDynamic;
 		D3D11_BUFFER_DESC bd {};
 		bd.Usage = inst->m_vbDynamic ? D3D11_USAGE_DYNAMIC : D3D11_USAGE_DEFAULT;
 		bd.ByteWidth = static_cast<UINT>(inst->m_verticesCPU.size() * sizeof(VertexPNTC));

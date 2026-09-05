@@ -51,6 +51,8 @@ public:
         DirectX::XMFLOAT3 Normal;
         DirectX::XMFLOAT4 Diffuse;
         DirectX::XMFLOAT2 TexCoord;
+        DirectX::XMUINT4 BlendIndices = { 0, 0, 0, 0 };
+        DirectX::XMFLOAT4 BlendWeights = { 0.0f, 0.0f, 0.0f, 0.0f };
     };
 
     bool LoadOBJ(const wchar_t* objPath, const wchar_t* fallbackTex = nullptr);
@@ -128,6 +130,9 @@ public:
 
 private:
     bool m_isAnimInstance = false;
+    bool m_sharesCachedVB = false;
+    bool m_gpuSkinEligible = false;
+    bool m_gpuBindConflict = false;
     ID3D11Buffer* m_pVB = nullptr;
     ID3D11Buffer* m_pIB = nullptr;
     UINT          m_indexCount = 0;
@@ -239,6 +244,11 @@ private:
     void  EnsureClipBaked(const std::string& animName);
     bool  SampleBakedClip();
     void  SkinFromScratch();
+    void  BakeVertexBoneWeights();
+    void  RecreateVertexBufferFromCPU();
+    void  FillBindPoseScratch();
+    void  UpdateGpuSkinPalette();
+    bool  CanGpuSkin() const;
     void  updateDynamicVBFromCP(const std::vector<DirectX::XMFLOAT3>& cpPos);
     void  uploadVertexBufferFromCPU();
 
@@ -255,6 +265,8 @@ private:
     };
     std::map<std::string, BakedAnimClip> m_bakedClips;
     std::vector<fbxsdk::FbxAMatrix> m_meshXformScratch;
+    std::vector<fbxsdk::FbxAMatrix> m_boneBindOffset;
+    std::vector<DirectX::XMFLOAT4X4> m_gpuPalette;
 
     const SkinMeshGeo* FindGeoForCP(int cpi) const;
     static DirectX::XMFLOAT3 ApplyGeoPosition(const fbxsdk::FbxAMatrix& geo, const DirectX::XMFLOAT3& p);

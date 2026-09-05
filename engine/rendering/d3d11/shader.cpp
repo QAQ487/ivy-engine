@@ -53,10 +53,12 @@ static XMMATRIX s_World2D = XMMatrixIdentity();
 // 3D
 ---------------------------------------------------------------------------**/
 static ID3D11VertexShader* g_pVS3D = nullptr;
+static ID3D11VertexShader* g_pVS3DSkinned = nullptr;
 static ID3D11VertexShader* g_pVS3DOutline = nullptr;
 static ID3D11PixelShader* g_pPS3DOutline = nullptr;
 static ID3D11PixelShader* g_pPS3DVariants[static_cast<int>(Shader3DVariant::Count)] = {};
 static ID3D11InputLayout* g_pIL3D = nullptr;
+static ID3D11InputLayout* g_pIL3DSkinned = nullptr;
 static ID3D11InputLayout* g_pIL3DOutline = nullptr;
 
 struct Shader3DVariantInfo {
@@ -92,6 +94,15 @@ static bool LoadPixelShaderFromFile(const char* path, ID3D11PixelShader** outPS)
 static ID3D11Buffer* g_pCB3D_WVP = nullptr;
 static ID3D11Buffer* g_pCB3D_Material = nullptr;
 static ID3D11Buffer* g_pCB3D_SurfaceFX = nullptr;
+static ID3D11Buffer* g_pCB3D_Skin = nullptr;
+
+struct SKIN_CB {
+	XMFLOAT4X4 Bones[SHADER_MAX_BONES];
+	int SkinEnabled;
+	int SkinBoneCount;
+	float SkinPad[2];
+};
+static_assert(sizeof(SKIN_CB) % 16 == 0, "SKIN_CB must be 16-byte aligned");
 
 struct SURFACE_FX_CB {
 	XMFLOAT4 Color1;
@@ -279,6 +290,32 @@ bool Shader_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext) {
 		hr = g_pDevice->CreateInputLayout(layout3D, ARRAYSIZE(layout3D), vsData.data(), vsData.size(), &g_pIL3D);
 		if (FAILED(hr)) return false;
 
+		{
+			std::ifstream vsSkinned("rom/shader/VertexShader3DSkinned.cso", std::ios::binary);
+			if (!vsSkinned) {
+				MessageBox(nullptr, "Cannot open rom/shader/VertexShader3DSkinned.cso\nPlease build the project to generate .cso files.", "3D Skinned VS Load Error", MB_OK | MB_ICONERROR);
+				return false;
+			}
+			vsSkinned.seekg(0, std::ios::end);
+			std::vector<char> vsSkinnedData(static_cast<size_t>(vsSkinned.tellg()));
+			vsSkinned.seekg(0, std::ios::beg);
+			vsSkinned.read(vsSkinnedData.data(), static_cast<std::streamsize>(vsSkinnedData.size()));
+
+			hr = g_pDevice->CreateVertexShader(vsSkinnedData.data(), vsSkinnedData.size(), nullptr, &g_pVS3DSkinned);
+			if (FAILED(hr)) return false;
+
+			D3D11_INPUT_ELEMENT_DESC layoutSkinned[] = {
+				{"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
+				{"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
+				{"COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
+				{"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
+				{"BLENDINDICES", 0, DXGI_FORMAT_R32G32B32A32_UINT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
+				{"BLENDWEIGHT", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0}
+			};
+			hr = g_pDevice->CreateInputLayout(layoutSkinned, ARRAYSIZE(layoutSkinned), vsSkinnedData.data(), vsSkinnedData.size(), &g_pIL3DSkinned);
+			if (FAILED(hr)) return false;
+		}
+
 		for (const auto& info : kShader3DVariants) {
 			const int idx = static_cast<int>(info.variant);
 			if (!LoadPixelShaderFromFile(info.csoFile, &g_pPS3DVariants[idx])) {
@@ -309,7 +346,9 @@ bool Shader_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext) {
 				{"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
 				{"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
 				{"COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
-				{"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0}
+				{"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
+				{"BLENDINDICES", 0, DXGI_FORMAT_R32G32B32A32_UINT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
+				{"BLENDWEIGHT", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0}
 			};
 			hr = g_pDevice->CreateInputLayout(layoutOutline, ARRAYSIZE(layoutOutline), vsOutlineData.data(), vsOutlineData.size(), &g_pIL3DOutline);
 			if (FAILED(hr)) return false;
@@ -325,6 +364,8 @@ bool Shader_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext) {
 	if (!CreateBuffer(&g_pCB2D_VP, sizeof(XMFLOAT4X4))) return false;
 	if (!CreateBuffer(&g_pCB2D_World, sizeof(XMFLOAT4X4))) return false;
 	if (!CreateBuffer(&g_pCB3D_WVP, sizeof(XMFLOAT4X4))) return false;
+	if (!CreateBuffer(&g_pCB3D_Skin, sizeof(SKIN_CB))) return false;
+	Shader_SetSkinPalette(nullptr, 0, false);
 
 	{
 		D3D11_BUFFER_DESC md {};
@@ -415,13 +456,16 @@ void Shader_Finalize() {
 
 	SAFE_RELEASE(g_pCB3D_Material);
 	SAFE_RELEASE(g_pCB3D_SurfaceFX);
+	SAFE_RELEASE(g_pCB3D_Skin);
 	SAFE_RELEASE(g_pCB3D_WVP);
 	SAFE_RELEASE(g_pIL3DOutline);
+	SAFE_RELEASE(g_pIL3DSkinned);
 	SAFE_RELEASE(g_pIL3D);
 	for (int i = 0; i < static_cast<int>(Shader3DVariant::Count); ++i)
 		SAFE_RELEASE(g_pPS3DVariants[i]);
 	SAFE_RELEASE(g_pPS3DOutline);
 	SAFE_RELEASE(g_pVS3DOutline);
+	SAFE_RELEASE(g_pVS3DSkinned);
 	SAFE_RELEASE(g_pVS3D);
 
 	g_pDevice = nullptr;
@@ -476,6 +520,28 @@ void Shader_SetColor(const DirectX::XMFLOAT4& color) {
 		g_pContext->UpdateSubresource(g_pCB2D_Color, 0, nullptr, &color, 0, 0);
 	}
 }
+void Shader_SetSkinPalette(const DirectX::XMFLOAT4X4* bones, int boneCount, bool enabled) {
+	if (!g_pContext || !g_pCB3D_Skin)
+		return;
+
+	SKIN_CB cb {};
+	cb.SkinEnabled = enabled ? 1 : 0;
+	cb.SkinBoneCount = 0;
+	if (enabled && bones && boneCount > 0) {
+		cb.SkinBoneCount = (boneCount > SHADER_MAX_BONES) ? SHADER_MAX_BONES : boneCount;
+		for (int i = 0; i < cb.SkinBoneCount; ++i) {
+			const XMMATRIX m = XMLoadFloat4x4(&bones[i]);
+			XMStoreFloat4x4(&cb.Bones[i], XMMatrixTranspose(m));
+		}
+	} else {
+		const XMMATRIX id = XMMatrixIdentity();
+		XMFLOAT4X4 idT;
+		XMStoreFloat4x4(&idT, id);
+		cb.Bones[0] = idT;
+	}
+	g_pContext->UpdateSubresource(g_pCB3D_Skin, 0, nullptr, &cb, 0, 0);
+}
+
 void Shader_SetMaterial(const MATERIAL& material) {
 	if (g_pContext && g_pCB3D_Material) {
 		g_pContext->UpdateSubresource(g_pCB3D_Material, 0, nullptr, &material, 0, 0);
@@ -648,6 +714,7 @@ void Shader3D_Begin(Shader3DVariant variant) {
 
 	g_pContext->VSSetConstantBuffers(0, 1, &g_pCB3D_WVP);
 	g_pContext->VSSetConstantBuffers(1, 1, &g_pCB3D_Material);
+	g_pContext->VSSetConstantBuffers(5, 1, &g_pCB3D_Skin);
 	g_pContext->PSSetConstantBuffers(1, 1, &g_pCB3D_Material);
 
 	g_pContext->VSSetConstantBuffers(2, 1, &g_pCB3D_Shadow);
@@ -692,6 +759,14 @@ void Shader3D_Begin(Shader3DVariant variant) {
 	}
 }
 
+void Shader3D_UseGpuSkin() {
+	if (!g_pContext || !g_pVS3DSkinned || !g_pIL3DSkinned)
+		return;
+	g_pContext->VSSetShader(g_pVS3DSkinned, nullptr, 0);
+	g_pContext->IASetInputLayout(g_pIL3DSkinned);
+	g_pContext->VSSetConstantBuffers(5, 1, &g_pCB3D_Skin);
+}
+
 void Shader3D_BeginOutline() {
 	g_pContext->VSSetShader(g_pVS3DOutline, nullptr, 0);
 	g_pContext->PSSetShader(g_pPS3DOutline, nullptr, 0);
@@ -699,5 +774,6 @@ void Shader3D_BeginOutline() {
 
 	g_pContext->VSSetConstantBuffers(0, 1, &g_pCB3D_WVP);
 	g_pContext->VSSetConstantBuffers(1, 1, &g_pCB3D_Material);
+	g_pContext->VSSetConstantBuffers(5, 1, &g_pCB3D_Skin);
 	g_pContext->PSSetConstantBuffers(1, 1, &g_pCB3D_Material);
 }

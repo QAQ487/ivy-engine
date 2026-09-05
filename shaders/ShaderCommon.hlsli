@@ -5,10 +5,43 @@
 #define SHADER_COMMON_HLSLI
 
 #define MAX_LIGHTS 4
+#define SHADER_MAX_BONES 128
 
 cbuffer ConstantBuffer : register(b0)
 {
     matrix WorldViewProjection;
+}
+
+cbuffer SkinBuffer : register(b5)
+{
+    float4x4 SkinBones[SHADER_MAX_BONES];
+    int SkinEnabled;
+    int SkinBoneCount;
+    float2 SkinPad;
+}
+
+float3 SkinPositionOS(float3 p, uint4 indices, float4 weights)
+{
+    if (SkinEnabled == 0)
+        return p;
+
+    const float4 hp = float4(p, 1.0f);
+    float4 acc = 0.0f;
+    float wsum = 0.0f;
+    [unroll]
+    for (int i = 0; i < 4; ++i)
+    {
+        const float w = weights[i];
+        if (w <= 0.0f)
+            continue;
+        const uint idx = indices[i];
+        if (idx >= (uint)SkinBoneCount)
+            continue;
+        acc += w * mul(hp, SkinBones[idx]);
+        wsum += w;
+    }
+    acc += (1.0f - wsum) * hp;
+    return acc.xyz;
 }
 
 cbuffer MaterialBuffer : register(b1)

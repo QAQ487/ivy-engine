@@ -17,6 +17,7 @@
 #include "renderer.h"
 
 constexpr int SHADER_MAX_LIGHTS = 4;
+constexpr int SHADER_MAX_BONES = 128;
 
 enum class Shader3DVariant {
 	Standard,
@@ -55,6 +56,7 @@ void Shader_SetViewMatrix(const DirectX::XMMATRIX& matrix);
 void Shader_SetWorldMatrix(const DirectX::XMMATRIX& matrix);
 void Shader_SetColor(const DirectX::XMFLOAT4& color);
 void Shader_SetMaterial(const MATERIAL& material);
+void Shader_SetSkinPalette(const DirectX::XMFLOAT4X4* bones, int boneCount, bool enabled);
 
 void Shader_SetSurfaceFXParams(const SURFACE_FX_PARAMS& params);
 void Shader_SetSurfaceFXMeshRadius(float radiusOS);
@@ -77,6 +79,7 @@ bool Shader_IsExternalVP();
 void Shader2D_Begin();
 void Shader3D_Begin(Shader3DVariant variant = Shader3DVariant::Standard);
 void Shader3D_BeginOutline();
+void Shader3D_UseGpuSkin();
 
 Shader3DVariant Shader3DVariantFromId(const std::string& id);
 const char* Shader3DVariantLabel(Shader3DVariant v);

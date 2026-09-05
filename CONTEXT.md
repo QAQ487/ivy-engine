@@ -39,3 +39,25 @@ _Avoid_: build folder, export, ship
 **UI click sound**:
 Project-wide SFX played when a UIButton activates. Path lives in `project.json` as `audio.uiClickSound`. It keeps playing across a scene load so LoadScene buttons can still be heard.
 _Avoid_: per-button clip, PlaySFX string-id for menu clicks
+
+### Visuals
+
+**Visual**:
+The scene component that binds a mesh path and clips to a GameObject.
+_Avoid_: ModelComponent, SkinnedMesh, model (when you mean the component), the Script that picks clips
+
+**Clip**:
+A named animation a Visual can play (idle, run, jump, catch, pickup, throw).
+_Avoid_: animation (unqualified), skin animation, anim FBX as the component
+
+**Anim instance**:
+The per-Visual playback copy: its own clip time and deformed vertices. The mesh asset is shared; the instance is not.
+_Avoid_: skinned animation model, cloned model, skinned model (when you mean the instance)
+
+**Skin**:
+A Visual's mesh bound to bones so a Clip can deform it. Skin is the bind, not the playback and not the Script.
+_Avoid_: skin animation, GPU skin / CPU skin as the component name
+
+**Bind**:
+The rest pose of a Skin: the bone and mesh matrices that make `bindOffset`. If Bind is wrong, posed vertices scatter and do not form the mesh.
+_Avoid_: T-pose (one authored Bind), deform (playback)

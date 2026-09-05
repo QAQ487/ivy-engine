@@ -23,6 +23,9 @@
     <HlslShader Include="shaders\VertexShader3D.hlsl">
       <ShaderTarget>vs_5_0</ShaderTarget>
     </HlslShader>
+    <HlslShader Include="shaders\VertexShader3DSkinned.hlsl">
+      <ShaderTarget>vs_5_0</ShaderTarget>
+    </HlslShader>
     <HlslShader Include="shaders\PixelShader3D.hlsl">
       <ShaderTarget>ps_5_0</ShaderTarget>
     </HlslShader>
