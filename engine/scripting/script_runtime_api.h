@@ -185,6 +185,9 @@ struct ScriptRuntimeApi {
     void (*visualPlayClipLoop)(VisualComponent* component, const char* clipName, int loop);
     float (*visualGetClipDuration)(VisualComponent* component);
     void (*visualSetAnimSpeed)(VisualComponent* component, float speed);
+    void (*thirdPersonCameraSetDistance)(float distance);
+    void (*thirdPersonCameraSetHeight)(float height);
+    void (*thirdPersonCameraSetLookAtHeight)(float height);
 };
 
 const ScriptRuntimeApi* ScriptRuntimeApi_GetHost();

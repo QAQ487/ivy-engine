@@ -25,7 +25,7 @@
 #include <string>
 
 namespace {
-constexpr std::uint32_t kScriptRuntimeApiVersion = 35;
+constexpr std::uint32_t kScriptRuntimeApiVersion = 36;
 
 template <typename T>
 T* FindComponentByTypeName(GameObject& object, const char* typeName) {
@@ -570,6 +570,9 @@ const ScriptRuntimeApi g_scriptRuntimeApi = {
     &Host_VisualPlayClipLoop,
     &Host_VisualGetClipDuration,
     &Host_VisualSetAnimSpeed,
+    &ThirdPersonCamera_SetDistance,
+    &ThirdPersonCamera_SetHeight,
+    &ThirdPersonCamera_SetLookAtHeight,
 };
 #else
 using GetApiFn = const ScriptRuntimeApi* (*)();
@@ -710,6 +713,24 @@ void ThirdPersonCamera_SetMagnetTarget(const DirectX::XMFLOAT3& targetPos) {
     const ScriptRuntimeApi* api = ScriptRuntimeApi_GetHost();
     if (api && api->thirdPersonCameraSetMagnetTarget)
         api->thirdPersonCameraSetMagnetTarget(targetPos);
+}
+
+void ThirdPersonCamera_SetDistance(float distance) {
+    const ScriptRuntimeApi* api = ScriptRuntimeApi_GetHost();
+    if (api && api->thirdPersonCameraSetDistance)
+        api->thirdPersonCameraSetDistance(distance);
+}
+
+void ThirdPersonCamera_SetHeight(float height) {
+    const ScriptRuntimeApi* api = ScriptRuntimeApi_GetHost();
+    if (api && api->thirdPersonCameraSetHeight)
+        api->thirdPersonCameraSetHeight(height);
+}
+
+void ThirdPersonCamera_SetLookAtHeight(float height) {
+    const ScriptRuntimeApi* api = ScriptRuntimeApi_GetHost();
+    if (api && api->thirdPersonCameraSetLookAtHeight)
+        api->thirdPersonCameraSetLookAtHeight(height);
 }
 
 bool EngineGUI_IsPlaying() {

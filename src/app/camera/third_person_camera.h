@@ -26,6 +26,7 @@ void ThirdPersonCamera_SetTarget(DirectX::XMFLOAT3* positionPtr, float* yawPtr);
 
 void ThirdPersonCamera_SetDistance(float distance);
 void ThirdPersonCamera_SetHeight(float height);
+void ThirdPersonCamera_SetLookAtHeight(float height);
 void ThirdPersonCamera_SetMouseSensitivity(float sensitivity);
 void ThirdPersonCamera_SetControllerSensitivity(float sensitivity);
 void ThirdPersonCamera_SetPitchLimits(float minPitch, float maxPitch);

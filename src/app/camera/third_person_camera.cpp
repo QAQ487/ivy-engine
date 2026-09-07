@@ -43,6 +43,7 @@ XMFLOAT3* s_targetPos = nullptr;
 float*    s_targetYaw = nullptr;
 float s_distance = kBaseDistance;
 float s_height = kBaseHeight;
+float s_lookAtHeight = kLookAtHeight;
 float s_pitch = 15.0f;
 float s_mouseSensitivity = 0.2f;
 float s_controllerSensitivity = 120.0f;
@@ -120,7 +121,7 @@ bool IsPullOrPushMode(ThirdPersonMagnetMode mode) {
 void DesiredFaceAnglesToTarget(const XMFLOAT3& player, const XMFLOAT3& target,
 	float& outYawDeg, float& outPitchDeg) {
 	const float dx = target.x - player.x;
-	const float dy = target.y - (player.y + kLookAtHeight);
+	const float dy = target.y - (player.y + s_lookAtHeight);
 	const float dz = target.z - player.z;
 	const float horiz = sqrtf(dx * dx + dz * dz);
 
@@ -229,6 +230,7 @@ void ThirdPersonCamera_Initialize() {
 	s_hasFollowPose = false;
 	s_distance = kBaseDistance;
 	s_height = kBaseHeight;
+	s_lookAtHeight = kLookAtHeight;
 }
 
 void ThirdPersonCamera_Update(double elapsed_time) {
@@ -318,7 +320,7 @@ void ThirdPersonCamera_Update(double elapsed_time) {
 	idealEye.y = headPos.y + dirY * safeDistance;
 	idealEye.z = headPos.z + dirZ * safeDistance;
 
-	XMFLOAT3 lookAt = { playerPos.x, playerPos.y + kLookAtHeight, playerPos.z };
+	XMFLOAT3 lookAt = { playerPos.x, playerPos.y + s_lookAtHeight, playerPos.z };
 
 	if (!s_hasSmoothedEye) {
 		s_smoothedEye = idealEye;
@@ -351,6 +353,10 @@ void ThirdPersonCamera_SetDistance(float distance) {
 
 void ThirdPersonCamera_SetHeight(float height) {
 	s_height = height;
+}
+
+void ThirdPersonCamera_SetLookAtHeight(float height) {
+	s_lookAtHeight = height;
 }
 
 void ThirdPersonCamera_SetMouseSensitivity(float sensitivity) {
