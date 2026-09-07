@@ -188,6 +188,9 @@ struct ScriptRuntimeApi {
     void (*thirdPersonCameraSetDistance)(float distance);
     void (*thirdPersonCameraSetHeight)(float height);
     void (*thirdPersonCameraSetLookAtHeight)(float height);
+    void (*gameObjectAddIgnoreCollisionObject)(GameObject* object, GameObject* other);
+    void (*gameObjectRemoveIgnoreCollisionObject)(GameObject* object, GameObject* other);
+    void (*gameObjectClearIgnoreCollisionObjects)(GameObject* object);
 };
 
 const ScriptRuntimeApi* ScriptRuntimeApi_GetHost();
@@ -218,6 +221,9 @@ BoxCollider* ScriptApi_CreateBoxCollider(engine::GameObject& object,
 void ScriptApi_DestroyCollider(engine::GameObject& object);
 void ScriptApi_GameObjectAddIgnoreCollisionTag(engine::GameObject& object, Tag tag);
 void ScriptApi_GameObjectRemoveIgnoreCollisionTag(engine::GameObject& object, Tag tag);
+void ScriptApi_GameObjectAddIgnoreCollisionObject(engine::GameObject& object, engine::GameObject& other);
+void ScriptApi_GameObjectRemoveIgnoreCollisionObject(engine::GameObject& object, engine::GameObject& other);
+void ScriptApi_GameObjectClearIgnoreCollisionObjects(engine::GameObject& object);
 DirectX::XMFLOAT3 ScriptApi_GetColliderWorldCenter(const Collider& collider);
 DirectX::XMFLOAT3 ScriptApi_GetBoxColliderSize(const BoxCollider& collider);
 void ScriptApi_SetBoxColliderSize(BoxCollider& collider, DirectX::XMFLOAT3 size);

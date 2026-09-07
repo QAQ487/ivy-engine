@@ -36,6 +36,11 @@ void GetOwnerPose(const GameObject* owner, XMFLOAT3& pos, XMFLOAT3& rot, XMFLOAT
     scale = owner->GetScale();
 }
 
+bool CollisionPairIgnored(const GameObject* a, const GameObject* b) {
+    if (!a || !b) return true;
+    return a->IgnoresCollisionWith(b) || b->IgnoresCollisionWith(a);
+}
+
 // A world-space sphere becomes an ellipsoid in mesh-local space under non-uniform scale.
 // Use the smallest scale axis so the local test sphere conservatively encloses that ellipsoid.
 float MeshLocalTestRadius(float worldRadius, const XMFLOAT3& effScale) {
@@ -562,8 +567,7 @@ void BoxCollider::ResolveCollision(Collider* other) {
         other->GetOwner()->OnCollision(m_owner);
         return;
     }
-    if (m_owner->ShouldIgnoreCollisionWith(other->GetOwner()->GetTag()) ||
-        other->GetOwner()->ShouldIgnoreCollisionWith(m_owner->GetTag())) return;
+    if (CollisionPairIgnored(m_owner, other->GetOwner())) return;
 
     XMFLOAT3 sizeA = GetSize(); // world-space size (m_size * owner scale)
 
@@ -772,8 +776,7 @@ void SphereCollider::ResolveCollision(Collider* other) {
         other->GetOwner()->OnCollision(m_owner);
         return;
     }
-    if (m_owner->ShouldIgnoreCollisionWith(other->GetOwner()->GetTag()) ||
-        other->GetOwner()->ShouldIgnoreCollisionWith(m_owner->GetTag())) return;
+    if (CollisionPairIgnored(m_owner, other->GetOwner())) return;
 
     switch (other->GetType()) {
     case ColliderType::SPHERE:
@@ -1019,8 +1022,7 @@ void CapsuleCollider::ResolveCollision(Collider* other) {
         other->GetOwner()->OnCollision(m_owner);
         return;
     }
-    if (m_owner->ShouldIgnoreCollisionWith(other->GetOwner()->GetTag()) ||
-        other->GetOwner()->ShouldIgnoreCollisionWith(m_owner->GetTag())) return;
+    if (CollisionPairIgnored(m_owner, other->GetOwner())) return;
 
     switch (other->GetType()) {
     case ColliderType::BOX:
@@ -1194,8 +1196,7 @@ void CylinderCollider::ResolveCollision(Collider* other) {
         other->GetOwner()->OnCollision(m_owner);
         return;
     }
-    if (m_owner->ShouldIgnoreCollisionWith(other->GetOwner()->GetTag()) ||
-        other->GetOwner()->ShouldIgnoreCollisionWith(m_owner->GetTag())) return;
+    if (CollisionPairIgnored(m_owner, other->GetOwner())) return;
 
     const CylinderWorldFrame frame = BuildCylinderWorldFrame(this);
 
@@ -1537,8 +1538,7 @@ void MeshCollider::ResolveCollision(Collider* other) {
         return;
     }
 
-    if (m_owner->ShouldIgnoreCollisionWith(otherObj->GetTag()) ||
-        otherObj->ShouldIgnoreCollisionWith(m_owner->GetTag())) return;
+    if (CollisionPairIgnored(m_owner, otherObj)) return;
 
     // Mesh is typically static object, only resolve with dynamic objects
     Rigidbody& otherRB = otherObj->GetRigidbody();

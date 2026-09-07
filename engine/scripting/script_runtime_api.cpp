@@ -25,7 +25,7 @@
 #include <string>
 
 namespace {
-constexpr std::uint32_t kScriptRuntimeApiVersion = 36;
+constexpr std::uint32_t kScriptRuntimeApiVersion = 37;
 
 template <typename T>
 T* FindComponentByTypeName(GameObject& object, const char* typeName) {
@@ -235,6 +235,24 @@ void Host_GameObjectRemoveIgnoreCollisionTag(GameObject* object, Tag tag) {
     if (!object)
         return;
     object->RemoveIgnoreCollisionTag(tag);
+}
+
+void Host_GameObjectAddIgnoreCollisionObject(GameObject* object, GameObject* other) {
+    if (!object || !other)
+        return;
+    object->AddIgnoreCollisionObject(other);
+}
+
+void Host_GameObjectRemoveIgnoreCollisionObject(GameObject* object, GameObject* other) {
+    if (!object || !other)
+        return;
+    object->RemoveIgnoreCollisionObject(other);
+}
+
+void Host_GameObjectClearIgnoreCollisionObjects(GameObject* object) {
+    if (!object)
+        return;
+    object->ClearIgnoreCollisionObjects();
 }
 
 DirectX::XMFLOAT3 Host_ColliderGetWorldCenter(const Collider* collider) {
@@ -573,6 +591,9 @@ const ScriptRuntimeApi g_scriptRuntimeApi = {
     &ThirdPersonCamera_SetDistance,
     &ThirdPersonCamera_SetHeight,
     &ThirdPersonCamera_SetLookAtHeight,
+    &Host_GameObjectAddIgnoreCollisionObject,
+    &Host_GameObjectRemoveIgnoreCollisionObject,
+    &Host_GameObjectClearIgnoreCollisionObjects,
 };
 #else
 using GetApiFn = const ScriptRuntimeApi* (*)();
@@ -895,6 +916,24 @@ void ScriptApi_GameObjectRemoveIgnoreCollisionTag(engine::GameObject& object, Ta
     const ScriptRuntimeApi* api = ScriptRuntimeApi_GetHost();
     if (api && api->gameObjectRemoveIgnoreCollisionTag)
         api->gameObjectRemoveIgnoreCollisionTag(&object, tag);
+}
+
+void ScriptApi_GameObjectAddIgnoreCollisionObject(engine::GameObject& object, engine::GameObject& other) {
+    const ScriptRuntimeApi* api = ScriptRuntimeApi_GetHost();
+    if (api && api->gameObjectAddIgnoreCollisionObject)
+        api->gameObjectAddIgnoreCollisionObject(&object, &other);
+}
+
+void ScriptApi_GameObjectRemoveIgnoreCollisionObject(engine::GameObject& object, engine::GameObject& other) {
+    const ScriptRuntimeApi* api = ScriptRuntimeApi_GetHost();
+    if (api && api->gameObjectRemoveIgnoreCollisionObject)
+        api->gameObjectRemoveIgnoreCollisionObject(&object, &other);
+}
+
+void ScriptApi_GameObjectClearIgnoreCollisionObjects(engine::GameObject& object) {
+    const ScriptRuntimeApi* api = ScriptRuntimeApi_GetHost();
+    if (api && api->gameObjectClearIgnoreCollisionObjects)
+        api->gameObjectClearIgnoreCollisionObjects(&object);
 }
 
 DirectX::XMFLOAT3 ScriptApi_GetColliderWorldCenter(const Collider& collider) {

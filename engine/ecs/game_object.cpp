@@ -41,6 +41,38 @@ void GameObject::RemoveIgnoreCollisionTag(Tag tag) {
         m_ignoreCollisionTags.end());
 }
 
+void GameObject::AddIgnoreCollisionObject(GameObject* other) {
+    if (!other || other == this)
+        return;
+    for (GameObject* existing : m_ignoreCollisionObjects) {
+        if (existing == other)
+            return;
+    }
+    m_ignoreCollisionObjects.push_back(other);
+}
+
+void GameObject::RemoveIgnoreCollisionObject(GameObject* other) {
+    m_ignoreCollisionObjects.erase(
+        std::remove(m_ignoreCollisionObjects.begin(), m_ignoreCollisionObjects.end(), other),
+        m_ignoreCollisionObjects.end());
+}
+
+void GameObject::ClearIgnoreCollisionObjects() {
+    m_ignoreCollisionObjects.clear();
+}
+
+bool GameObject::IgnoresCollisionWith(const GameObject* other) const {
+    if (!other)
+        return true;
+    if (ShouldIgnoreCollisionWith(other->m_tag))
+        return true;
+    for (GameObject* existing : m_ignoreCollisionObjects) {
+        if (existing == other)
+            return true;
+    }
+    return false;
+}
+
 engine::Transform* GameObject::GetTransform() {
     return GetComponent<engine::Transform>();
 }

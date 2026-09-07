@@ -71,6 +71,7 @@ public:
     bool              m_debugCollider    = false;
 
     std::vector<Tag>  m_ignoreCollisionTags;
+    std::vector<GameObject*> m_ignoreCollisionObjects;
 
     // ── Constructor / Destructor ──────────────────────────────────────────
     explicit GameObject(std::string name = "GameObject")
@@ -249,8 +250,8 @@ public:
 
     virtual bool CanCollideWith(GameObject* other) const {
         if (!other) return false;
-        if (ShouldIgnoreCollisionWith(other->m_tag)) return false;
-        if (other->ShouldIgnoreCollisionWith(m_tag)) return false;
+        if (IgnoresCollisionWith(other)) return false;
+        if (other->IgnoresCollisionWith(this)) return false;
         return true;
     }
 
@@ -342,11 +343,15 @@ public:
     // ── Collision ignore ──────────────────────────────────────────────────
     void AddIgnoreCollisionTag(Tag tag);
     void RemoveIgnoreCollisionTag(Tag tag);
+    void AddIgnoreCollisionObject(GameObject* other);
+    void RemoveIgnoreCollisionObject(GameObject* other);
+    void ClearIgnoreCollisionObjects();
     bool ShouldIgnoreCollisionWith(Tag otherTag) const {
         for (const auto& t : m_ignoreCollisionTags)
             if (t == otherTag) return true;
         return false;
     }
+    bool IgnoresCollisionWith(const GameObject* other) const;
 
     // ── Collider factories ────────────────────────────────────────────────
     BoxCollider* CreateBoxCollider(
