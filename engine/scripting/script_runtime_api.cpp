@@ -18,6 +18,7 @@
 #include "engine/ecs/prefab_runtime.h"
 #include "engine/ecs/effect_component.h"
 #include "engine/ecs/audio_component.h"
+#include "engine/audio/audio_manager.h"
 #include "engine/ecs/visual_component.h"
 
 #include <Windows.h>
@@ -25,7 +26,7 @@
 #include <string>
 
 namespace {
-constexpr std::uint32_t kScriptRuntimeApiVersion = 37;
+constexpr std::uint32_t kScriptRuntimeApiVersion = 38;
 
 template <typename T>
 T* FindComponentByTypeName(GameObject& object, const char* typeName) {
@@ -423,6 +424,24 @@ void Host_AudioStop(AudioComponent* component) {
         component->Stop();
 }
 
+void Host_AudioSetMasterVolume(float volume) {
+    AudioManager::Instance().SetMasterVolume(volume);
+}
+
+float Host_AudioGetMasterVolume() {
+    return AudioManager::Instance().GetMasterVolume();
+}
+
+void Host_MouseGetPosition(int* x, int* y) {
+    int px = 0;
+    int py = 0;
+    Mouse_GetPosition(px, py);
+    if (x)
+        *x = px;
+    if (y)
+        *y = py;
+}
+
 void Host_ThirdPersonCameraSetMagnetMode(int mode) {
     ThirdPersonCamera_SetMagnetMode(static_cast<ThirdPersonMagnetMode>(mode));
 }
@@ -594,6 +613,9 @@ const ScriptRuntimeApi g_scriptRuntimeApi = {
     &Host_GameObjectAddIgnoreCollisionObject,
     &Host_GameObjectRemoveIgnoreCollisionObject,
     &Host_GameObjectClearIgnoreCollisionObjects,
+    &Host_AudioSetMasterVolume,
+    &Host_AudioGetMasterVolume,
+    &Host_MouseGetPosition,
 };
 #else
 using GetApiFn = const ScriptRuntimeApi* (*)();
@@ -883,6 +905,27 @@ void ScriptApi_Audio_Stop(AudioComponent* component) {
     const ScriptRuntimeApi* api = ScriptRuntimeApi_GetHost();
     if (api && api->audioStop)
         api->audioStop(component);
+}
+
+void ScriptApi_AudioSetMasterVolume(float volume) {
+    const ScriptRuntimeApi* api = ScriptRuntimeApi_GetHost();
+    if (api && api->audioSetMasterVolume)
+        api->audioSetMasterVolume(volume);
+}
+
+float ScriptApi_AudioGetMasterVolume() {
+    const ScriptRuntimeApi* api = ScriptRuntimeApi_GetHost();
+    return api && api->audioGetMasterVolume ? api->audioGetMasterVolume() : 1.0f;
+}
+
+void ScriptApi_MouseGetPosition(int& x, int& y) {
+    const ScriptRuntimeApi* api = ScriptRuntimeApi_GetHost();
+    if (api && api->mouseGetPosition) {
+        api->mouseGetPosition(&x, &y);
+        return;
+    }
+    x = 0;
+    y = 0;
 }
 
 void ScriptApi_ApplyColliderComponent(ColliderComponent& component) {
