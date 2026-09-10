@@ -20,6 +20,7 @@
 #include "engine/ecs/audio_component.h"
 #include "engine/audio/audio_manager.h"
 #include "engine/ecs/visual_component.h"
+#include "engine/ecs/material_component.h"
 
 #include <Windows.h>
 #include <cmath>
@@ -846,6 +847,10 @@ EffectComponent* ScriptApi_FindEffectComponent(engine::GameObject& object) {
 
 VisualComponent* ScriptApi_FindVisualComponent(engine::GameObject& object) {
     return FindComponentByTypeName<VisualComponent>(object, "visual");
+}
+
+MaterialComponent* ScriptApi_FindMaterialComponent(engine::GameObject& object) {
+    return FindComponentByTypeName<MaterialComponent>(object, "Material");
 }
 
 void ScriptApi_Visual_PlayClip(VisualComponent* component, const char* clipName) {

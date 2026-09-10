@@ -16,6 +16,7 @@
 #include "engine/scene/scene_node.h"
 #include "engine/ecs/transform.h"
 #include "engine/ecs/visual_component.h"
+#include "engine/ecs/material_component.h"
 #include "engine/ui/ui_canvas.h"
 #include "engine/ui/ui_element.h"
 #include "engine/ui/ui_sprite.h"
@@ -204,6 +205,7 @@ const engine::Transform* ScriptApi_FindTransform(const engine::GameObject& objec
 ColliderComponent* ScriptApi_FindColliderComponent(engine::GameObject& object);
 EffectComponent* ScriptApi_FindEffectComponent(engine::GameObject& object);
 VisualComponent* ScriptApi_FindVisualComponent(engine::GameObject& object);
+MaterialComponent* ScriptApi_FindMaterialComponent(engine::GameObject& object);
 void ScriptApi_Visual_PlayClip(VisualComponent* component, const char* clipName);
 bool ScriptApi_Visual_TryGetBoneWorld(VisualComponent* component,
                                       const char* boneName,
