@@ -17,6 +17,7 @@
 #include "engine/scene/scene_loader.h"
 #include "engine/scene/render_settings.h"
 #include "engine/rendering/d3d11/shader.h"
+#include "engine/core/job_system.h"
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_win32.h"
 #include "imgui/imgui_impl_dx11.h"
@@ -3487,6 +3488,8 @@ void EngineGUI_Draw() {
         && g_selUiElement && g_showUiOverlay) {
         UiGizmo::Draw(g_selUiElement);
     }
+
+    JobSystem_DebugDraw();
 
     ImGui::Render();
     ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());

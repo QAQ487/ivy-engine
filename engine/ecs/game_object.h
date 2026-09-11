@@ -280,6 +280,9 @@ public:
         if (engine::Transform* t = GetComponent<engine::Transform>())
             t->localPosition = p;
     }
+    // Live pose. Own-object reads are fine during Update. Neighbor/other-object
+    // reads during a parallel Update batch are unsafe - use
+    // FrameTransformSnapshot_Find from host C++ instead (no new script API).
     DirectX::XMFLOAT3 GetPosition() const         { return m_position; }
 
     void SetRotation(const DirectX::XMFLOAT3& r) {
@@ -287,6 +290,7 @@ public:
         if (engine::Transform* t = GetComponent<engine::Transform>())
             t->localRotation = r;
     }
+    // See GetPosition - same parallel-batch neighbor-read caveat.
     DirectX::XMFLOAT3 GetRotation() const         { return m_rotation; }
 
     void SetScale(const DirectX::XMFLOAT3& s) {

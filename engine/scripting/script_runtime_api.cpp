@@ -343,6 +343,10 @@ void Host_VisualSetAnimSpeed(VisualComponent* component, float speed) {
         component->SetAnimationSpeed(speed);
 }
 
+// Live owner transform / bone world. Safe for the calling object's own pose.
+// Reading another object's live GameObject transform during a parallel Update
+// batch is unsafe - host code should use FrameTransformSnapshot_Find instead.
+// No by-name neighbor transform API exists; do not invent a new script surface.
 bool Host_VisualTryGetBoneWorld(VisualComponent* component,
                                 const char* boneName,
                                 DirectX::XMFLOAT3* outPos,

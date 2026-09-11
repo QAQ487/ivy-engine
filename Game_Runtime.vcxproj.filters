@@ -90,6 +90,12 @@
     <ClInclude Include="engine\core\easing.h">
       <Filter>engine\core</Filter>
     </ClInclude>
+    <ClInclude Include="engine\core\job_system.h">
+      <Filter>engine\core</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\core\frame_transform_snapshot.h">
+      <Filter>engine\core</Filter>
+    </ClInclude>
     <ClInclude Include="engine\core\engine_gui.h">
       <Filter>engine\core</Filter>
     </ClInclude>
@@ -312,6 +318,12 @@
       <Filter>engine\audio</Filter>
     </ClCompile>
     <ClCompile Include="engine\core\easing.cpp">
+      <Filter>engine\core</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\core\job_system.cpp">
+      <Filter>engine\core</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\core\frame_transform_snapshot.cpp">
       <Filter>engine\core</Filter>
     </ClCompile>
     <ClCompile Include="engine\core\engine_gui_runtime.cpp">

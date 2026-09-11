@@ -10,6 +10,7 @@
 #define _CRTDBG_MAP_ALLOC // enable CRT memory leak checking
 #include <stdlib.h>       // for _CrtDumpMemoryLeaks, getenv
 #include <crtdbg.h>       // for _CrtDumpMemoryLeaks
+#include <thread>
 
 #include "main.h"
 
@@ -27,6 +28,7 @@
 #include "fade.h"
 #include "scene_transition.h"
 #include "engine/core/system_timer.h"
+#include "engine/core/job_system.h"
 #include "engine/input/mouse.h"
 #include "engine/input/controller.h"
 #include "debug_camera.h"
@@ -262,6 +264,13 @@ HRESULT	Initialize(HINSTANCE hInstance, HWND hWnd, BOOL bWindow) {
 	AudioManager::Instance().Initialize();
 	AudioManager::Instance().SetMasterVolume(0.3f);
 
+	{
+		unsigned int hc = std::thread::hardware_concurrency();
+		int workers = (hc > 1) ? static_cast<int>(hc) - 1 : 1;
+		if (workers > 8) workers = 8;
+		JobSystem_Init(workers);
+	}
+
 	// Start the initial scene (Editor-first: start directly in GameScene)
 	SceneManager::Instance().ChangeScene(new GameScene());
 	Fade_Initialize(); // initialize fade system
@@ -280,6 +289,8 @@ HRESULT	Initialize(HINSTANCE hInstance, HWND hWnd, BOOL bWindow) {
    Finalize and release subsystems
 ===========================================================================**/
 void Finalize(void) {
+	JobSystem_Shutdown();
+
 	// Tear down the active scene while D3D/UI subsystems are still valid.
 	// Without this, ~SceneManager runs after UninitRenderer() and corrupts the heap.
 	SceneManager::Instance().SetDeleteSceneAfterFinalize(false);

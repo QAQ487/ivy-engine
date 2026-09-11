@@ -37,6 +37,8 @@
 #endif
 #include "engine/scene/scene_runtime.h"
 #include "engine/ecs/prefab_runtime.h"
+#include "engine/core/job_system.h"
+#include "engine/core/frame_transform_snapshot.h"
 #include "third_person_camera.h"
 #include "engine/rendering/d3d11/renderer.h"
 #include "engine/rendering/billboard/billboard.h"
@@ -166,11 +168,34 @@ void GameScene::Update(double elapsed_time) {
 		// Copy m_objects to guard against iterator invalidation from any
 		// object removals during the update loop.
 		const std::vector<GameObject*> activeObjects = m_objects;
-		for (auto* obj : activeObjects) {
-			if (!obj || !obj->IsActive()) continue;
-			if (obj->GetTag() != Tag::TAG_PLAYER) continue;
-			if (EngineGUI_IsSceneGraphObject(obj)) continue;
-			obj->Update(elapsed_time);
+
+		// Read-only pose snapshot for neighbor reads (players + disc/TAG_BULLET).
+		FrameTransformSnapshot_Capture(activeObjects);
+
+		// found-racy-globals: GameObject::Update is not worker-safe yet
+		// (VisualComponent->D3D11 Map, AudioComponent->AudioManager,
+		// EffectComponent->EffectSystem, script PrefabRuntime/singletons).
+		// Keep sequential regardless of JobSystem_UseParallel(). Enable the
+		// Submit path only after those component Updates are main-thread-only.
+		constexpr bool kParallelPlayerUpdates = false;
+		if (kParallelPlayerUpdates && JobSystem_UseParallel()) {
+			for (auto* obj : activeObjects) {
+				if (!obj || !obj->IsActive()) continue;
+				if (obj->GetTag() != Tag::TAG_PLAYER) continue;
+				if (EngineGUI_IsSceneGraphObject(obj)) continue;
+				JobSystem_Submit([obj, elapsed_time]() {
+					obj->Update(elapsed_time);
+				});
+			}
+			JobSystem_WaitAll();
+		}
+		else {
+			for (auto* obj : activeObjects) {
+				if (!obj || !obj->IsActive()) continue;
+				if (obj->GetTag() != Tag::TAG_PLAYER) continue;
+				if (EngineGUI_IsSceneGraphObject(obj)) continue;
+				obj->Update(elapsed_time);
+			}
 		}
 
 		engine::ParticleSystem::Instance().Tick(static_cast<float>(elapsed_time));
