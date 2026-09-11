@@ -201,7 +201,7 @@ void GameScene::Update(double elapsed_time) {
 
 		// Phase B infra demo: no-op dependency graph (default off). Proves
 		// SubmitDep + WaitAll without touching gameplay Updates.
-		constexpr bool kJobGraphDemo = false;
+		constexpr bool kJobGraphDemo = true;
 		if (kJobGraphDemo) {
 			JobHandle h0 = JobSystem_Submit([] {});
 			JobSystem_SubmitDep([] {}, { h0 });
