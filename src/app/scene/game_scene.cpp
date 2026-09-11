@@ -175,8 +175,9 @@ void GameScene::Update(double elapsed_time) {
 		// found-racy-globals: GameObject::Update is not worker-safe yet
 		// (VisualComponent->D3D11 Map, AudioComponent->AudioManager,
 		// EffectComponent->EffectSystem, script PrefabRuntime/singletons).
-		// Keep sequential regardless of JobSystem_UseParallel(). Enable the
-		// Submit path only after those component Updates are main-thread-only.
+		// Keep sequential regardless of JobSystem_UseParallel(). Phase B adds
+		// SubmitDep/WaitFor/WaitAll frame-graph API; enable player Submit only
+		// after those component Updates are main-thread-only.
 		constexpr bool kParallelPlayerUpdates = false;
 		if (kParallelPlayerUpdates && JobSystem_UseParallel()) {
 			for (auto* obj : activeObjects) {
@@ -196,6 +197,15 @@ void GameScene::Update(double elapsed_time) {
 				if (EngineGUI_IsSceneGraphObject(obj)) continue;
 				obj->Update(elapsed_time);
 			}
+		}
+
+		// Phase B infra demo: no-op dependency graph (default off). Proves
+		// SubmitDep + WaitAll without touching gameplay Updates.
+		constexpr bool kJobGraphDemo = false;
+		if (kJobGraphDemo) {
+			JobHandle h0 = JobSystem_Submit([] {});
+			JobSystem_SubmitDep([] {}, { h0 });
+			JobSystem_WaitAll();
 		}
 
 		engine::ParticleSystem::Instance().Tick(static_cast<float>(elapsed_time));
