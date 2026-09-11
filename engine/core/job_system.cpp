@@ -34,8 +34,8 @@ std::atomic<bool> g_running{ false };
 std::atomic<bool> g_useParallel{ true };
 std::atomic<bool> g_initialized{ false };
 
-HANDLE g_wakeEvent = nullptr; // auto-reset: one wake per submitted job
-HANDLE g_doneEvent = nullptr; // manual-reset: signaled when pending hits 0
+HANDLE g_wakeSemaphore = nullptr; // one count per submitted job (no lost wakeups)
+HANDLE g_doneEvent = nullptr;     // manual-reset: signaled when pending hits 0
 HANDLE g_stopEvent = nullptr;
 
 std::vector<std::thread> g_workers;
@@ -53,9 +53,11 @@ void RecordTimeline(int workerIndex, LONGLONG startQpc, LONGLONG endQpc) {
 }
 
 void WorkerMain(int workerIndex) {
-	HANDLE waits[2] = { g_wakeEvent, g_stopEvent };
+	HANDLE waits[2] = { g_wakeSemaphore, g_stopEvent };
 	while (g_running.load(std::memory_order_acquire)) {
 		const DWORD wait = WaitForMultipleObjects(2, waits, FALSE, INFINITE);
+		if (wait == WAIT_OBJECT_0 + 1)
+			break; // stop
 		if (wait != WAIT_OBJECT_0)
 			break;
 
@@ -93,9 +95,9 @@ void JobSystem_Init(int workerCount) {
 	if (workerCount > kMaxWorkers)
 		workerCount = kMaxWorkers;
 
-	g_wakeEvent = CreateEventA(nullptr, FALSE, FALSE, nullptr); // auto-reset
-	g_doneEvent = CreateEventA(nullptr, TRUE, TRUE, nullptr);   // manual-reset, start signaled
-	g_stopEvent = CreateEventA(nullptr, TRUE, FALSE, nullptr);  // manual-reset
+	g_wakeSemaphore = CreateSemaphoreA(nullptr, 0, 0x7FFFFFFF, nullptr);
+	g_doneEvent = CreateEventA(nullptr, TRUE, TRUE, nullptr);  // manual-reset, start signaled
+	g_stopEvent = CreateEventA(nullptr, TRUE, FALSE, nullptr); // manual-reset
 
 	g_pending.store(0, std::memory_order_release);
 	g_running.store(true, std::memory_order_release);
@@ -113,13 +115,7 @@ void JobSystem_Shutdown() {
 
 	g_running.store(false, std::memory_order_release);
 	if (g_stopEvent)
-		SetEvent(g_stopEvent);
-
-	// Wake any idle workers so they can observe stop.
-	for (int i = 0; i < g_workerCount; ++i) {
-		if (g_wakeEvent)
-			SetEvent(g_wakeEvent);
-	}
+		SetEvent(g_stopEvent); // wakes all workers waiting on the stop handle
 
 	for (auto& t : g_workers) {
 		if (t.joinable())
@@ -135,7 +131,7 @@ void JobSystem_Shutdown() {
 	}
 	g_pending.store(0, std::memory_order_release);
 
-	if (g_wakeEvent) { CloseHandle(g_wakeEvent); g_wakeEvent = nullptr; }
+	if (g_wakeSemaphore) { CloseHandle(g_wakeSemaphore); g_wakeSemaphore = nullptr; }
 	if (g_doneEvent) { CloseHandle(g_doneEvent); g_doneEvent = nullptr; }
 	if (g_stopEvent) { CloseHandle(g_stopEvent); g_stopEvent = nullptr; }
 
@@ -158,7 +154,7 @@ JobHandle JobSystem_Submit(std::function<void()> job) {
 			ResetEvent(g_doneEvent);
 		g_queue.push(std::move(job));
 	}
-	SetEvent(g_wakeEvent);
+	ReleaseSemaphore(g_wakeSemaphore, 1, nullptr);
 	return 0;
 }
 
