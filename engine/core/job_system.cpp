@@ -176,12 +176,39 @@ void JobSystem_SetUseParallel(bool enabled) {
 	g_useParallel.store(enabled, std::memory_order_release);
 }
 
+#ifndef GAME_RUNTIME
+namespace {
+bool g_debugWindowVisible = false; // default hidden; F8 toggles in editor
+}
+#endif
+
+void JobSystem_SetDebugWindowVisible(bool visible) {
+#ifndef GAME_RUNTIME
+	g_debugWindowVisible = visible;
+#else
+	(void)visible;
+#endif
+}
+
+bool JobSystem_IsDebugWindowVisible() {
+#ifndef GAME_RUNTIME
+	return g_debugWindowVisible;
+#else
+	return false;
+#endif
+}
+
+void JobSystem_ToggleDebugWindow() {
+#ifndef GAME_RUNTIME
+	g_debugWindowVisible = !g_debugWindowVisible;
+#endif
+}
+
 void JobSystem_DebugDraw() {
 #ifndef GAME_RUNTIME
-	static bool s_open = true;
-	if (!s_open)
+	if (!g_debugWindowVisible)
 		return;
-	if (!ImGui::Begin("Job System", &s_open)) {
+	if (!ImGui::Begin("Job System", &g_debugWindowVisible)) {
 		ImGui::End();
 		return;
 	}
@@ -190,6 +217,7 @@ void JobSystem_DebugDraw() {
 		g_workerCount,
 		JobSystem_UseParallel() ? "on" : "off",
 		g_pending.load(std::memory_order_relaxed));
+	ImGui::TextUnformatted("Toggle: F8");
 	if (ImGui::Button(JobSystem_UseParallel() ? "Disable Parallel" : "Enable Parallel"))
 		JobSystem_SetUseParallel(!JobSystem_UseParallel());
 

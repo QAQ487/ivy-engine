@@ -2182,8 +2182,12 @@ void EngineGUI_Update(double elapsed_time) {
             node->Update(elapsed_time);
     }
 
-    if (KeyLogger_IsTrigger(KK_F8))
+    if (KeyLogger_IsTrigger(KK_F7))
         ThirdPersonCamera_ShowCursor(!ThirdPersonCamera_IsCursorVisible());
+
+    // Editor-only: F8 toggles Job System debug overlay (also works while playing).
+    if (KeyLogger_IsTrigger(KK_F8))
+        JobSystem_ToggleDebugWindow();
 
     if (!g_enabled) return;
 
@@ -2431,7 +2435,33 @@ void EngineGUI_OnBackbufferResized() {
 }
 
 void EngineGUI_Draw() {
-    if (!g_enabled) return;
+    // Play mode sets g_enabled=false (hides editor chrome). Still draw the
+    // Job System overlay when F8 has opened it so it survives play.
+    if (!g_enabled) {
+        if (!JobSystem_IsDebugWindowVisible() || !g_imguiInitialized)
+            return;
+
+        ImGuiIO& io = ImGui::GetIO();
+        ImGui_ImplDX11_NewFrame();
+        ImGui_ImplWin32_NewFrame();
+        Renderer_UpdateClientSize();
+        io.DisplaySize = ImVec2(GetClientWidth(), GetClientHeight());
+        const float bbW = GetBackBufferWidth();
+        const float bbH = GetBackBufferHeight();
+        if (bbW > 0.0f && bbH > 0.0f) {
+            io.DisplayFramebufferScale = ImVec2(GetClientWidth() / bbW, GetClientHeight() / bbH);
+        }
+        else {
+            io.DisplayFramebufferScale = ImVec2(1.0f, 1.0f);
+        }
+        ImGui::NewFrame();
+        JobSystem_DebugDraw();
+        ImGui::Render();
+        ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+        if (ImGui::GetIO().WantCaptureMouse)
+            Mouse_ClearWheel();
+        return;
+    }
 
     ImGuiIO& io = ImGui::GetIO();
     ImGui_ImplDX11_NewFrame();

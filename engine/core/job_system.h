@@ -21,5 +21,8 @@ void JobSystem_WaitAll();
 bool JobSystem_UseParallel();
 void JobSystem_SetUseParallel(bool enabled);
 
-// Tiny ImGui timeline (editor). No-op in GAME_RUNTIME / when window closed.
+// Editor-only debug overlay (compiled out of GAME_RUNTIME / deploy).
+void JobSystem_SetDebugWindowVisible(bool visible);
+bool JobSystem_IsDebugWindowVisible();
+void JobSystem_ToggleDebugWindow();
 void JobSystem_DebugDraw();
