@@ -195,6 +195,7 @@ struct ScriptRuntimeApi {
     void (*audioSetMasterVolume)(float volume);
     float (*audioGetMasterVolume)();
     void (*mouseGetPosition)(int* x, int* y);
+    void (*postFxBurst)(float rgbShift, float durationSeconds);
 };
 
 const ScriptRuntimeApi* ScriptRuntimeApi_GetHost();
@@ -221,6 +222,7 @@ void ScriptApi_Audio_Stop(AudioComponent* component);
 void ScriptApi_AudioSetMasterVolume(float volume);
 float ScriptApi_AudioGetMasterVolume();
 void ScriptApi_MouseGetPosition(int& x, int& y);
+void ScriptApi_PostFX_Burst(float rgbShift, float durationSeconds);
 
 void ScriptApi_ApplyColliderComponent(ColliderComponent& component);
 BoxCollider* ScriptApi_CreateBoxCollider(engine::GameObject& object,

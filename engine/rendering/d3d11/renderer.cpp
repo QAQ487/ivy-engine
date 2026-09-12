@@ -22,6 +22,10 @@ static IDXGISwapChain* g_SwapChain = nullptr;
 static ID3D11RenderTargetView* g_RenderTargetView = nullptr;
 static ID3D11DepthStencilView* g_DepthStencilView = nullptr;
 
+static ID3D11Texture2D* g_PostRTTexture = nullptr;
+static ID3D11RenderTargetView* g_PostRTV = nullptr;
+static ID3D11ShaderResourceView* g_PostSRV = nullptr;
+
 static ID3D11RasterizerState* g_RasterizerState = nullptr;
 static ID3D11RasterizerState* g_RasterizerStateCullFront = nullptr;
 static ID3D11BlendState* g_BlendState = nullptr;
@@ -92,6 +96,92 @@ static HRESULT CreateRenderTargetFromSwapChain() {
 	hr = g_D3DDevice->CreateRenderTargetView(pBackBuffer, nullptr, &g_RenderTargetView);
 	pBackBuffer->Release();
 	return hr;
+}
+
+static void PostRT_ReleaseResources() {
+	if (g_PostSRV) { g_PostSRV->Release(); g_PostSRV = nullptr; }
+	if (g_PostRTV) { g_PostRTV->Release(); g_PostRTV = nullptr; }
+	if (g_PostRTTexture) { g_PostRTTexture->Release(); g_PostRTTexture = nullptr; }
+}
+
+HRESULT PostRT_Resize(UINT w, UINT h) {
+	if (!g_D3DDevice || !g_SwapChain || w == 0 || h == 0)
+		return E_INVALIDARG;
+
+	PostRT_ReleaseResources();
+
+	ID3D11Texture2D* pBackBuffer = nullptr;
+	HRESULT hr = g_SwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&pBackBuffer);
+	if (FAILED(hr) || !pBackBuffer)
+		return FAILED(hr) ? hr : E_FAIL;
+
+	D3D11_TEXTURE2D_DESC bbDesc = {};
+	pBackBuffer->GetDesc(&bbDesc);
+	pBackBuffer->Release();
+
+	D3D11_TEXTURE2D_DESC td = {};
+	td.Width = w;
+	td.Height = h;
+	td.MipLevels = 1;
+	td.ArraySize = 1;
+	td.Format = bbDesc.Format;
+	td.SampleDesc.Count = 1;
+	td.SampleDesc.Quality = 0;
+	td.Usage = D3D11_USAGE_DEFAULT;
+	td.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+
+	hr = g_D3DDevice->CreateTexture2D(&td, nullptr, &g_PostRTTexture);
+	if (FAILED(hr) || !g_PostRTTexture)
+		return hr;
+
+	hr = g_D3DDevice->CreateRenderTargetView(g_PostRTTexture, nullptr, &g_PostRTV);
+	if (FAILED(hr) || !g_PostRTV) {
+		PostRT_ReleaseResources();
+		return hr;
+	}
+
+	hr = g_D3DDevice->CreateShaderResourceView(g_PostRTTexture, nullptr, &g_PostSRV);
+	if (FAILED(hr) || !g_PostSRV) {
+		PostRT_ReleaseResources();
+		return hr;
+	}
+
+	return S_OK;
+}
+
+HRESULT PostRT_Initialize() {
+	return PostRT_Resize((UINT)g_BackBufferWidth, (UINT)g_BackBufferHeight);
+}
+
+void PostRT_Shutdown() {
+	PostRT_ReleaseResources();
+}
+
+ID3D11RenderTargetView* PostRT_GetRTV() {
+	return g_PostRTV;
+}
+
+ID3D11ShaderResourceView* PostRT_GetSRV() {
+	return g_PostSRV;
+}
+
+void Renderer_BindPostTarget() {
+	if (!g_ImmediateContext || !g_PostRTV)
+		return;
+
+	g_ImmediateContext->OMSetRenderTargets(1, &g_PostRTV, g_DepthStencilView);
+
+	const DirectX::XMFLOAT4& cc = RenderSettings_GetConst().clearColor;
+	const float clearColor[4] = { cc.x, cc.y, cc.z, cc.w };
+	g_ImmediateContext->ClearRenderTargetView(g_PostRTV, clearColor);
+	if (g_DepthStencilView)
+		g_ImmediateContext->ClearDepthStencilView(g_DepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+}
+
+void Renderer_BindBackBuffer() {
+	if (!g_ImmediateContext || !g_RenderTargetView)
+		return;
+	g_ImmediateContext->OMSetRenderTargets(1, &g_RenderTargetView, g_DepthStencilView);
 }
 
 static void ReadClientSize(HWND hWnd, UINT& width, UINT& height) {
@@ -202,6 +292,7 @@ HRESULT Renderer_ResizeBuffers(UINT width, UINT height) {
 
 	// Must release all views that reference swap-chain buffers before ResizeBuffers
 	// (DXGI_ERROR_INVALID_CALL / 0x887A0001 if outstanding refs remain).
+	PostRT_ReleaseResources();
 	if (g_RenderTargetView) {
 		g_RenderTargetView->Release();
 		g_RenderTargetView = nullptr;
@@ -216,6 +307,7 @@ HRESULT Renderer_ResizeBuffers(UINT width, UINT height) {
 		// Recover previous-size views so OM is not left unbound.
 		CreateRenderTargetFromSwapChain();
 		CreateDepthBuffer((UINT)g_BackBufferWidth, (UINT)g_BackBufferHeight);
+		PostRT_Resize((UINT)g_BackBufferWidth, (UINT)g_BackBufferHeight);
 		if (g_RenderTargetView)
 			g_ImmediateContext->OMSetRenderTargets(1, &g_RenderTargetView, g_DepthStencilView);
 		return hr;
@@ -228,6 +320,9 @@ HRESULT Renderer_ResizeBuffers(UINT width, UINT height) {
 	if (FAILED(hr)) return hr;
 
 	hr = CreateDepthBuffer(width, height);
+	if (FAILED(hr)) return hr;
+
+	hr = PostRT_Resize(width, height);
 	if (FAILED(hr)) return hr;
 
 	g_ImmediateContext->OMSetRenderTargets(1, &g_RenderTargetView, g_DepthStencilView);
@@ -439,6 +534,12 @@ HRESULT InitRenderer(HINSTANCE /*hInstance*/, HWND hWnd, BOOL bWindow) {
 		return hr;
 	}
 
+	hr = PostRT_Initialize();
+	if (FAILED(hr) || !g_PostRTV) {
+		MessageBox(NULL, "PostRTの作成に失敗しました", "Error", MB_OK | MB_ICONERROR);
+		return hr;
+	}
+
 	g_ImmediateContext->OMSetRenderTargets(1, &g_RenderTargetView, g_DepthStencilView);
 	ResetRenderViewport();
 
@@ -514,6 +615,7 @@ void UninitRenderer(void) {
 
 	if (g_DepthStencilView) { g_DepthStencilView->Release();  g_DepthStencilView = nullptr; }
 	if (g_RenderTargetView) { g_RenderTargetView->Release();  g_RenderTargetView = nullptr; }
+	PostRT_Shutdown();
 	if (g_SwapChain) { g_SwapChain->Release();         g_SwapChain = nullptr; }
 
 	if (g_ImmediateContext) { g_ImmediateContext->Release();  g_ImmediateContext = nullptr; }

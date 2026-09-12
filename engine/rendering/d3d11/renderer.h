@@ -83,6 +83,15 @@ void    ResetRenderViewport();
 float   GetRenderViewportWidth();
 float   GetRenderViewportHeight();
 
+// Offscreen post-process color target (matches swapchain format/size).
+HRESULT PostRT_Initialize();
+void    PostRT_Shutdown();
+HRESULT PostRT_Resize(UINT w, UINT h);
+ID3D11RenderTargetView* PostRT_GetRTV();
+ID3D11ShaderResourceView* PostRT_GetSRV();
+void    Renderer_BindPostTarget();
+void    Renderer_BindBackBuffer();
+
 // �E�B���h�E�n���h���擾
 HWND    GetWindowHandle();
 

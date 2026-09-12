@@ -21,13 +21,14 @@
 #include "engine/audio/audio_manager.h"
 #include "engine/ecs/visual_component.h"
 #include "engine/ecs/material_component.h"
+#include "engine/rendering/d3d11/post_process.h"
 
 #include <Windows.h>
 #include <cmath>
 #include <string>
 
 namespace {
-constexpr std::uint32_t kScriptRuntimeApiVersion = 38;
+constexpr std::uint32_t kScriptRuntimeApiVersion = 39;
 
 template <typename T>
 T* FindComponentByTypeName(GameObject& object, const char* typeName) {
@@ -447,6 +448,10 @@ void Host_MouseGetPosition(int* x, int* y) {
         *y = py;
 }
 
+void Host_PostFxBurst(float rgbShift, float durationSeconds) {
+    PostProcess_TriggerBurst(rgbShift, durationSeconds);
+}
+
 void Host_ThirdPersonCameraSetMagnetMode(int mode) {
     ThirdPersonCamera_SetMagnetMode(static_cast<ThirdPersonMagnetMode>(mode));
 }
@@ -621,6 +626,7 @@ const ScriptRuntimeApi g_scriptRuntimeApi = {
     &Host_AudioSetMasterVolume,
     &Host_AudioGetMasterVolume,
     &Host_MouseGetPosition,
+    &Host_PostFxBurst,
 };
 #else
 using GetApiFn = const ScriptRuntimeApi* (*)();
@@ -935,6 +941,12 @@ void ScriptApi_MouseGetPosition(int& x, int& y) {
     }
     x = 0;
     y = 0;
+}
+
+void ScriptApi_PostFX_Burst(float rgbShift, float durationSeconds) {
+    const ScriptRuntimeApi* api = ScriptRuntimeApi_GetHost();
+    if (api && api->postFxBurst)
+        api->postFxBurst(rgbShift, durationSeconds);
 }
 
 void ScriptApi_ApplyColliderComponent(ColliderComponent& component) {

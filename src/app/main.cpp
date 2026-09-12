@@ -17,6 +17,7 @@
 #include "engine/audio/audio_manager.h"
 #include "engine/rendering/d3d11/renderer.h"
 #include "engine/rendering/d3d11/shader.h"
+#include "engine/rendering/d3d11/post_process.h"
 #include "engine/rendering/sprite/texture.h"
 #include "engine/rendering/sprite/sprite.h"
 #include "engine/rendering/model/model_util.h"
@@ -274,6 +275,7 @@ HRESULT	Initialize(HINSTANCE hInstance, HWND hWnd, BOOL bWindow) {
 	// Start the initial scene (Editor-first: start directly in GameScene)
 	SceneManager::Instance().ChangeScene(new GameScene());
 	Fade_Initialize(); // initialize fade system
+	PostProcess_Initialize();
 	SceneTransition_Initialize();
 	EffectSystem::Initialize();
 
@@ -298,6 +300,7 @@ void Finalize(void) {
 
 	SceneTransition_Finalize();
 	Fade_Finalize();
+	PostProcess_Shutdown();
 	Controller_Finalize();
 	EffectSystem::Finalize();
 	Sprite_Finalize();
@@ -332,6 +335,19 @@ void Update(double current_time, double elapsed_time) {
 	if (elapsed_time > max_dt) elapsed_time = max_dt;
 	if (elapsed_time < 0.0)   elapsed_time = 0.0;
 
+	PostProcess_Update(static_cast<float>(elapsed_time));
+
+	// PostFX showcase hotkeys (no script dependency):
+	// F9 = GOAL-strength RGB burst, F10 = toggle mosaic showcase
+	if (KeyLogger_IsTrigger(KK_F9))
+		PostProcess_TriggerBurst(0.012f, 0.45f);
+	if (KeyLogger_IsTrigger(KK_F10)) {
+		float rgb = 0.0f;
+		float mosaic = 0.0f;
+		PostProcess_GetEffects(rgb, mosaic);
+		PostProcess_SetEffects(rgb, (mosaic > 0.0f) ? 0.0f : 40.0f);
+	}
+
 	SceneTransition_Update(elapsed_time);
 
 	if (Fade_IsFadeEnd() && !SceneTransition_BlocksSceneUpdate()) {
@@ -349,21 +365,8 @@ void Draw(void) {
 	// Clear the backbuffer and depth/stencil
 	Clear();
 
-	// Draw the current scene
+	// Draw the current scene (includes Effekseer + post-process resolve before UI)
 	SceneManager::Instance().Draw();
-
-	// Effekseer effects are batched by EffectSystem and need an explicit draw pass.
-#ifndef GAME_RUNTIME
-	{
-		float vx, vy, vw, vh;
-		EngineGUI_GetGameViewportRect(vx, vy, vw, vh);
-		SetRenderViewport(vx, vy, vw, vh);
-	}
-#endif
-	EffectSystem::Draw3D();
-#ifndef GAME_RUNTIME
-	ResetRenderViewport();
-#endif
 
 	// Draw fade overlay on top of scene
 	Fade_Draw();

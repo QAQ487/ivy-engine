@@ -198,6 +198,8 @@ exit /b 0</Command>
     <None Include="shaders\PixelShader3D_Outline.hlsl" />
     <None Include="shaders\SkyboxPS.hlsl" />
     <None Include="shaders\SkyboxVS.hlsl" />
+    <None Include="shaders\FullscreenVS.hlsl" />
+    <None Include="shaders\PostProcessPS.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\ShaderCommon.hlsli" />
@@ -226,6 +228,7 @@ exit /b 0</Command>
     <ClInclude Include="engine\input\mouse.h" />
     <ClInclude Include="engine\rendering\d3d11\renderer.h" />
     <ClInclude Include="engine\rendering\d3d11\shader.h" />
+    <ClInclude Include="engine\rendering\d3d11\post_process.h" />
     <ClInclude Include="engine\rendering\effect\effect_object.h" />
     <ClInclude Include="engine\rendering\effect\effect_system.h" />
     <ClInclude Include="engine\core\engine_gui.h" />
@@ -343,6 +346,7 @@ exit /b 0</Command>
     <ClCompile Include="engine\input\mouse.cpp" />
     <ClCompile Include="engine\rendering\d3d11\renderer.cpp" />
     <ClCompile Include="engine\rendering\d3d11\shader.cpp" />
+    <ClCompile Include="engine\rendering\d3d11\post_process.cpp" />
     <ClCompile Include="engine\rendering\effect\effect_object.cpp" />
     <ClCompile Include="engine\rendering\effect\effect_system.cpp" />
     <ClCompile Include="engine\core\engine_gui.cpp" />

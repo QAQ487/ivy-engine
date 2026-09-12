@@ -242,6 +242,9 @@
     <ClInclude Include="engine\rendering\d3d11\renderer.h">
       <Filter>engine\rendering\d3d11</Filter>
     </ClInclude>
+    <ClInclude Include="engine\rendering\d3d11\post_process.h">
+      <Filter>engine\rendering\d3d11</Filter>
+    </ClInclude>
     <ClInclude Include="engine\rendering\d3d11\shader.h">
       <Filter>engine\rendering\d3d11</Filter>
     </ClInclude>
@@ -574,6 +577,9 @@
     <ClCompile Include="engine\rendering\d3d11\shader.cpp">
       <Filter>engine\rendering\d3d11</Filter>
     </ClCompile>
+    <ClCompile Include="engine\rendering\d3d11\post_process.cpp">
+      <Filter>engine\rendering\d3d11</Filter>
+    </ClCompile>
     <ClCompile Include="engine\rendering\effect\effect_object.cpp">
       <Filter>engine\rendering\effect</Filter>
     </ClCompile>
@@ -779,6 +785,12 @@
       <Filter>shaders</Filter>
     </None>
     <None Include="shaders\SkyboxVS.hlsl">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\FullscreenVS.hlsl">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\PostProcessPS.hlsl">
       <Filter>shaders</Filter>
     </None>
     <None Include="shaders\VertexShader2D.hlsl">

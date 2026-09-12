@@ -41,9 +41,11 @@
 #include "engine/core/frame_transform_snapshot.h"
 #include "third_person_camera.h"
 #include "engine/rendering/d3d11/renderer.h"
+#include "engine/rendering/d3d11/post_process.h"
 #include "engine/rendering/billboard/billboard.h"
 #include "engine/rendering/particle/particle_system.h"
 #include "engine/rendering/environment/skybox.h"
+#include "engine/rendering/effect/effect_system.h"
 #include "engine/ecs/billboard_component.h"
 #include "engine/ecs/directional_light_component.h"
 #include "engine/scene/scene_lighting.h"
@@ -249,6 +251,16 @@ void GameScene::Draw() {
 	SetRenderViewport(vx, vy, vw, vh);
 
 	Object_Draw();
+
+	// Effekseer into PostRT (same game viewport as the 3D scene).
+	SetRenderViewport(vx, vy, vw, vh);
+	EffectSystem::Draw3D();
+
+	PostProcess_Draw();
+
+	// Post resolve leaves the game viewport bound; re-assert for UI overlays.
+	SetRenderViewport(vx, vy, vw, vh);
+
 #ifndef GAME_RUNTIME
 	EngineGUI_DrawSelectionIndicator();
 #endif
@@ -324,6 +336,9 @@ void GameScene::Object_Draw() {
 		Shader_SetUseExternalVP(false);
 		Shadow::End();
 	}
+
+	// Camera pass into offscreen PostRT (shadows use their own DSVs).
+	Renderer_BindPostTarget();
 
 	// Camera pass
 	{

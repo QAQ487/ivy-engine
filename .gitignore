@@ -387,3 +387,5 @@ FodyWeavers.xsd
 /rom/shader/ParticlePS.cso
 /rom/shader/ParticleVS.cso
 /rom/shader/VertexShader3DSkinned.cso
+/rom/shader/FullscreenVS.cso
+/rom/shader/PostProcessPS.cso

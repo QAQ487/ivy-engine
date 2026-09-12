@@ -17,6 +17,7 @@
 #include "engine/scene/scene_loader.h"
 #include "engine/scene/render_settings.h"
 #include "engine/rendering/d3d11/shader.h"
+#include "engine/rendering/d3d11/post_process.h"
 #include "engine/core/job_system.h"
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_win32.h"
@@ -108,6 +109,7 @@ static float g_scrollSensitivity = 1.0f;
 static char  g_newSceneName[128] = "new_scene";
 static char  g_newTagName[64] = "";
 static bool  g_showRenderingSettings = false;
+static bool  g_showPostFxShowcase = false;
 static bool  g_showNewScenePopup = false;
 static bool  g_showAddTagPopup = false;
 static bool  g_showDeleteTagPopup = false;
@@ -613,6 +615,71 @@ static bool DrawScriptPropertyField(GameObject* editNode,
     return false;
 }
 
+static void DrawPostFxShowcaseWindow(bool* open) {
+    if (!open || !*open) return;
+
+    ImGui::SetNextWindowSize(ImVec2(380.0f, 0.0f), ImGuiCond_FirstUseEver);
+    if (!ImGui::Begin("PostFX Showcase", open, ImGuiWindowFlags_AlwaysAutoResize)) {
+        ImGui::End();
+        return;
+    }
+
+    static float s_rgb = 0.0f;
+    static float s_mosaic = 0.0f;
+    static bool s_synced = false;
+    if (!s_synced) {
+        PostProcess_GetEffects(s_rgb, s_mosaic);
+        s_synced = true;
+    }
+
+    ImGui::TextWrapped(
+        "Live post-process over the game viewport. "
+        "Use this to verify RGB shift / mosaic without a match GOAL.");
+    ImGui::Separator();
+
+    if (ImGui::SliderFloat("RGB Shift", &s_rgb, 0.0f, 0.04f, "%.4f"))
+        PostProcess_SetEffects(s_rgb, s_mosaic);
+    if (ImGui::SliderFloat("Mosaic Blocks", &s_mosaic, 0.0f, 80.0f, "%.0f"))
+        PostProcess_SetEffects(s_rgb, s_mosaic);
+
+    ImGui::Spacing();
+    if (ImGui::Button("Apply Passthrough (clear)")) {
+        s_rgb = 0.0f;
+        s_mosaic = 0.0f;
+        PostProcess_SetEffects(0.0f, 0.0f);
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Preset: Mild RGB")) {
+        s_rgb = 0.008f;
+        s_mosaic = 0.0f;
+        PostProcess_SetEffects(s_rgb, s_mosaic);
+    }
+    if (ImGui::Button("Preset: Mosaic")) {
+        s_rgb = 0.0f;
+        s_mosaic = 40.0f;
+        PostProcess_SetEffects(s_rgb, s_mosaic);
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Preset: Combined")) {
+        s_rgb = 0.01f;
+        s_mosaic = 32.0f;
+        PostProcess_SetEffects(s_rgb, s_mosaic);
+    }
+
+    ImGui::Separator();
+    ImGui::Text("Bursts (temporary RGB punch)");
+    if (ImGui::Button("GOAL Burst (0.012 / 0.45s)"))
+        PostProcess_TriggerBurst(0.012f, 0.45f);
+    ImGui::SameLine();
+    if (ImGui::Button("Strong Burst (0.025 / 0.6s)"))
+        PostProcess_TriggerBurst(0.025f, 0.6f);
+
+    ImGui::Spacing();
+    ImGui::TextDisabled("Hotkeys: F9 = GOAL burst, F10 = toggle mosaic");
+
+    ImGui::End();
+}
+
 static void DrawRenderingSettingsWindow(bool* open) {
     if (!open || !*open) return;
 
@@ -955,6 +1022,8 @@ static void DrawEditorMenuBar() {
     if (ImGui::BeginMenu("Window")) {
         if (ImGui::MenuItem("Rendering Settings", nullptr, g_showRenderingSettings))
             g_showRenderingSettings = !g_showRenderingSettings;
+        if (ImGui::MenuItem("PostFX Showcase", nullptr, g_showPostFxShowcase))
+            g_showPostFxShowcase = !g_showPostFxShowcase;
         ImGui::EndMenu();
     }
 
@@ -2501,6 +2570,7 @@ void EngineGUI_Draw() {
 
     DrawEditorPopups();
     DrawRenderingSettingsWindow(&g_showRenderingSettings);
+    DrawPostFxShowcaseWindow(&g_showPostFxShowcase);
 
     // ── Toolbar ───────────────────────────────────────────────────────────────
     ImGui::SetNextWindowPos(ImVec2(0, menuBarHeight));

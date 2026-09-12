@@ -62,6 +62,12 @@
     <HlslShader Include="shaders\SkyboxVS.hlsl">
       <ShaderTarget>vs_5_0</ShaderTarget>
     </HlslShader>
+    <HlslShader Include="shaders\FullscreenVS.hlsl">
+      <ShaderTarget>vs_5_0</ShaderTarget>
+    </HlslShader>
+    <HlslShader Include="shaders\PostProcessPS.hlsl">
+      <ShaderTarget>ps_5_0</ShaderTarget>
+    </HlslShader>
   </ItemGroup>
 
   <PropertyGroup>

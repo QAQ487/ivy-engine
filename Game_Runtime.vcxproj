@@ -290,6 +290,18 @@ xcopy /y /d /e "$(ProjectDir)rom\*" "$(OutDir)rom\"</Command>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
     </FxCompile>
+    <FxCompile Include="shaders\FullscreenVS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
+    </FxCompile>
+    <FxCompile Include="shaders\PostProcessPS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\ShaderCommon.hlsli" />
@@ -316,6 +328,7 @@ xcopy /y /d /e "$(ProjectDir)rom\*" "$(OutDir)rom\"</Command>
     <ClInclude Include="engine\input\mouse.h" />
     <ClInclude Include="engine\rendering\d3d11\renderer.h" />
     <ClInclude Include="engine\rendering\d3d11\shader.h" />
+    <ClInclude Include="engine\rendering\d3d11\post_process.h" />
     <ClInclude Include="engine\debug_draw\debug_drawer.h" />
     <ClInclude Include="engine\debug_draw\debug_ofstream.h" />
     <ClInclude Include="engine\debug_draw\debug_text.h" />
@@ -409,6 +422,7 @@ xcopy /y /d /e "$(ProjectDir)rom\*" "$(OutDir)rom\"</Command>
     <ClCompile Include="engine\input\mouse.cpp" />
     <ClCompile Include="engine\rendering\d3d11\renderer.cpp" />
     <ClCompile Include="engine\rendering\d3d11\shader.cpp" />
+    <ClCompile Include="engine\rendering\d3d11\post_process.cpp" />
     <ClCompile Include="engine\debug_draw\debug_drawer.cpp" />
     <ClCompile Include="engine\debug_draw\debug_ofstream.cpp" />
     <ClCompile Include="engine\debug_draw\debug_text.cpp" />
