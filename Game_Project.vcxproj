@@ -239,6 +239,9 @@ exit /b 0</Command>
     <ClInclude Include="engine\ecs\collider_component.h" />
     <ClInclude Include="engine\ecs\effect_component.h" />
     <ClInclude Include="engine\ecs\audio_component.h" />
+    <ClInclude Include="engine\ecs\audio_system.h" />
+    <ClInclude Include="engine\ecs\effect_system_flush.h" />
+    <ClInclude Include="engine\ecs\visual_system.h" />
     <ClInclude Include="engine\ecs\audio_listener_component.h" />
     <ClInclude Include="engine\audio\audio_listener_sync.h" />
     <ClInclude Include="engine\ecs\game_object.h" />
@@ -356,6 +359,9 @@ exit /b 0</Command>
     <ClCompile Include="engine\ecs\collider_component.cpp" />
     <ClCompile Include="engine\ecs\effect_component.cpp" />
     <ClCompile Include="engine\ecs\audio_component.cpp" />
+    <ClCompile Include="engine\ecs\audio_system.cpp" />
+    <ClCompile Include="engine\ecs\effect_system_flush.cpp" />
+    <ClCompile Include="engine\ecs\visual_system.cpp" />
     <ClCompile Include="engine\ecs\audio_listener_component.cpp" />
     <ClCompile Include="engine\audio\audio_listener_sync.cpp" />
     <ClCompile Include="engine\ecs\game_object.cpp" />

@@ -1,6 +1,8 @@
 #include "effect_component.h"
+#include "effect_system_flush.h"
 
 #include "engine/ecs/game_object.h"
+#include "engine/ecs/transform.h"
 #include "engine/rendering/effect/effect_system.h"
 
 #include "libraries/nlohmann/json.hpp"
@@ -39,33 +41,29 @@ std::wstring Utf8ToWide(const std::string& value) {
 } // namespace
 
 void EffectComponent::OnAttach() {
+    EffectSystem_RegisterComponent(this);
     LoadEffect();
 }
 
 void EffectComponent::OnDetach() {
-    Stop();
+    EffectSystem_UnregisterComponent(this);
+    ApplyStopImmediate();
+    m_cmdPlay = m_cmdStop = m_cmdSync = m_cmdCheckExists = false;
+    m_pendingAutoDestroy = false;
 }
 
 void EffectComponent::Update(double /*elapsed_time*/) {
     if (!owner || !owner->IsActive()) return;
 
-    if (m_handle >= 0 && !EffectSystem::Exists(m_handle)) {
-        m_handle = -1;
-        if (autoDestroy) {
-            owner->SetActive(false);
-            return;
-        }
-    }
+    m_cmdCheckExists = true;
 
     if (autoPlay && !m_hasAutoPlayed) {
         Play();
         m_hasAutoPlayed = true;
     }
 
-    if (m_handle >= 0) {
-        SyncTransform();
-        EffectSystem::SetSpeed(m_handle, speed);
-    }
+    if (m_handle >= 0 || m_cmdPlay)
+        m_cmdSync = true;
 }
 
 void EffectComponent::OnReset() {
@@ -104,30 +102,22 @@ void EffectComponent::Deserialize(const std::string& jsonStr) {
 }
 
 void EffectComponent::Play() {
-    if (m_effectId < 0 && !LoadEffect()) return;
-    if (m_effectId < 0 || !owner) return;
-
-    if (m_handle >= 0) {
-        EffectSystem::Stop(m_handle);
-        m_handle = -1;
-    }
-
-    const DirectX::XMFLOAT3 pos = owner->GetPosition();
-    m_handle = EffectSystem::Play(m_effectId, pos);
-    if (m_handle >= 0) {
-        SyncTransform();
-        EffectSystem::SetSpeed(m_handle, speed);
-    }
+    m_cmdStop = true;
+    m_cmdPlay = true;
+    if (!GameObject::IsInsideUpdate())
+        FlushCommands();
 }
 
 void EffectComponent::Stop() {
-    if (m_handle >= 0) {
-        EffectSystem::Stop(m_handle);
-        m_handle = -1;
-    }
+    m_cmdPlay = false;
+    m_cmdStop = true;
+    if (!GameObject::IsInsideUpdate())
+        FlushCommands();
 }
 
 bool EffectComponent::IsPlaying() const {
+    if (m_cmdPlay)
+        return true;
     return m_handle >= 0 && EffectSystem::Exists(m_handle);
 }
 
@@ -139,6 +129,58 @@ void EffectComponent::SetEffectPath(const std::string& path) {
     m_effectId = -1;
     m_hasAutoPlayed = false;
     LoadEffect();
+}
+
+void EffectComponent::ApplyStopImmediate() {
+    if (m_handle >= 0) {
+        EffectSystem::Stop(m_handle);
+        m_handle = -1;
+    }
+}
+
+void EffectComponent::FlushCommands() {
+    if (m_cmdStop) {
+        ApplyStopImmediate();
+        m_cmdStop = false;
+    }
+
+    if (m_cmdCheckExists) {
+        m_cmdCheckExists = false;
+        if (m_handle >= 0 && !EffectSystem::Exists(m_handle)) {
+            m_handle = -1;
+            if (autoDestroy)
+                m_pendingAutoDestroy = true;
+        }
+    }
+
+    if (m_cmdPlay) {
+        m_cmdPlay = false;
+        if (m_effectId < 0)
+            LoadEffect();
+        if (m_effectId >= 0 && owner) {
+            ApplyStopImmediate();
+            const DirectX::XMFLOAT3 pos = owner->GetPosition();
+            m_handle = EffectSystem::Play(m_effectId, pos);
+            if (m_handle >= 0) {
+                SyncTransformImmediate();
+                EffectSystem::SetSpeed(m_handle, speed);
+            }
+        }
+    }
+
+    if (m_cmdSync) {
+        m_cmdSync = false;
+        if (m_handle >= 0) {
+            SyncTransformImmediate();
+            EffectSystem::SetSpeed(m_handle, speed);
+        }
+    }
+
+    if (m_pendingAutoDestroy) {
+        m_pendingAutoDestroy = false;
+        if (owner)
+            owner->SetActive(false);
+    }
 }
 
 bool EffectComponent::LoadEffect() {
@@ -157,7 +199,7 @@ bool EffectComponent::LoadEffect() {
     return true;
 }
 
-void EffectComponent::SyncTransform() {
+void EffectComponent::SyncTransformImmediate() {
     if (!owner || m_handle < 0) return;
 
     DirectX::XMFLOAT3 worldPos, worldRot, worldScale;

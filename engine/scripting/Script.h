@@ -47,6 +47,10 @@ public:
     // 'dt' is the elapsed time in seconds since the previous frame.
     virtual void OnUpdate(engine::GameObject& self, float dt) {}
 
+    // Conservative default: unaudited scripts never run on workers.
+    // Override to return true only after an explicit parallel-safety audit.
+    virtual bool Update_IsParallelSafe() const { return false; }
+
     // Called once just before the script is destroyed (scene reset or entity
     // removal).  Use this to release runtime resources and undo OnCreate work.
     virtual void OnDestroy(engine::GameObject& self) {}

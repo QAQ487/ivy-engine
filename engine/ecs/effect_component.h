@@ -3,6 +3,7 @@
 #include "component.h"
 
 #include <string>
+#include <DirectXMath.h>
 
 class EffectComponent : public Component {
 public:
@@ -10,7 +11,7 @@ public:
     bool autoPlay = true;
     bool autoDestroy = false;
     float speed = 1.0f;
-    float lifetimeOverride = -1.0f;  // -1 = use effekseer default
+    float lifetimeOverride = -1.0f;
     float randomStartOffset = 0.0f;
 
     const char* GetTypeName() const override { return "Effect"; }
@@ -28,11 +29,21 @@ public:
     bool IsPlaying() const;
     void SetEffectPath(const std::string& path);
 
+    // Main thread only.
+    void FlushCommands();
+
 private:
     int m_effectId = -1;
     int m_handle = -1;
     bool m_hasAutoPlayed = false;
 
+    bool m_cmdPlay = false;
+    bool m_cmdStop = false;
+    bool m_cmdSync = false;
+    bool m_cmdCheckExists = false;
+    bool m_pendingAutoDestroy = false;
+
     bool LoadEffect();
-    void SyncTransform();
+    void SyncTransformImmediate();
+    void ApplyStopImmediate();
 };

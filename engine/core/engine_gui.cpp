@@ -2247,8 +2247,13 @@ void EngineGUI_Update(double elapsed_time) {
             if (node)
                 rootsToUpdate.push_back(node.get());
         }
-        for (GameObject* node : rootsToUpdate)
+        // TAG_PLAYER roots are updated by GameScene's player batch (after
+        // FrameTransformSnapshot_Capture) so they can run on workers.
+        for (GameObject* node : rootsToUpdate) {
+            if (!node || node->GetTag() == Tag::TAG_PLAYER)
+                continue;
             node->Update(elapsed_time);
+        }
     }
 
     if (KeyLogger_IsTrigger(KK_F7))

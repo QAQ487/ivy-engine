@@ -1,4 +1,5 @@
 #include "audio_component.h"
+#include "audio_system.h"
 
 #include "engine/ecs/game_object.h"
 #include "engine/ecs/transform.h"
@@ -29,27 +30,28 @@ AudioType BusFromString(const std::string& value) {
 } // namespace
 
 void AudioComponent::OnAttach() {
+    AudioSystem_Register(this);
 }
 
 void AudioComponent::OnDetach() {
-    Stop();
+    AudioSystem_Unregister(this);
+    ApplyStopImmediate();
+    m_cmdPlay = m_cmdStop = m_cmdSyncPosition = false;
+    m_cmdCheckFinished = m_cmdApplySettings = false;
 }
 
 void AudioComponent::Update(double /*elapsed_time*/) {
     if (!owner || !owner->IsActive()) return;
 
-    if (m_playbackId != kInvalidAudioPlaybackId &&
-        !AudioManager::Instance().IsInstancePlaying(m_playbackId)) {
-        m_playbackId = kInvalidAudioPlaybackId;
-    }
+    m_cmdCheckFinished = true;
 
     if (autoPlay && !m_hasAutoPlayed) {
         Play();
         m_hasAutoPlayed = true;
     }
 
-    if (spatial && m_playbackId != kInvalidAudioPlaybackId)
-        AudioManager::Instance().SetInstancePosition(m_playbackId, OwnerPosition());
+    if (spatial)
+        m_cmdSyncPosition = true;
 }
 
 void AudioComponent::OnReset() {
@@ -88,27 +90,24 @@ void AudioComponent::Deserialize(const std::string& jsonStr) {
 }
 
 void AudioComponent::Play() {
-    Stop();
-    if (clipPath.empty()) return;
-
-    m_playbackId = AudioManager::Instance().StartInstance(
-        clipPath,
-        bus,
-        volume,
-        loop,
-        spatial,
-        OwnerPosition(),
-        distanceScale);
+    m_cmdStop = true;
+    m_cmdPlay = true;
+    if (!GameObject::IsInsideUpdate())
+        FlushCommands();
 }
 
 void AudioComponent::Stop() {
-    if (m_playbackId == kInvalidAudioPlaybackId) return;
-    AudioManager::Instance().StopInstance(m_playbackId);
-    m_playbackId = kInvalidAudioPlaybackId;
+    m_cmdPlay = false;
+    m_cmdStop = true;
+    if (!GameObject::IsInsideUpdate())
+        FlushCommands();
 }
 
 bool AudioComponent::IsPlaying() const {
-    if (m_playbackId == kInvalidAudioPlaybackId) return false;
+    if (m_cmdPlay && !m_cmdStop)
+        return true;
+    if (m_playbackId == kInvalidAudioPlaybackId)
+        return false;
     return AudioManager::Instance().IsInstancePlaying(m_playbackId);
 }
 
@@ -120,11 +119,61 @@ void AudioComponent::SetClipPath(const std::string& path) {
 }
 
 void AudioComponent::ApplyLiveSettings() {
+    m_cmdApplySettings = true;
+    if (!GameObject::IsInsideUpdate())
+        FlushCommands();
+}
+
+void AudioComponent::ApplyStopImmediate() {
     if (m_playbackId == kInvalidAudioPlaybackId) return;
+    AudioManager::Instance().StopInstance(m_playbackId);
+    m_playbackId = kInvalidAudioPlaybackId;
+}
+
+void AudioComponent::FlushCommands() {
     auto& audio = AudioManager::Instance();
-    audio.SetInstanceVolume(m_playbackId, volume);
-    if (spatial)
-        audio.SetInstanceDistanceScale(m_playbackId, distanceScale);
+
+    if (m_cmdStop) {
+        ApplyStopImmediate();
+        m_cmdStop = false;
+    }
+
+    if (m_cmdPlay) {
+        m_cmdPlay = false;
+        if (!clipPath.empty()) {
+            m_playbackId = audio.StartInstance(
+                clipPath,
+                bus,
+                volume,
+                loop,
+                spatial,
+                OwnerPosition(),
+                distanceScale);
+        }
+    }
+
+    if (m_cmdCheckFinished) {
+        m_cmdCheckFinished = false;
+        if (m_playbackId != kInvalidAudioPlaybackId &&
+            !audio.IsInstancePlaying(m_playbackId)) {
+            m_playbackId = kInvalidAudioPlaybackId;
+        }
+    }
+
+    if (m_cmdApplySettings) {
+        m_cmdApplySettings = false;
+        if (m_playbackId != kInvalidAudioPlaybackId) {
+            audio.SetInstanceVolume(m_playbackId, volume);
+            if (spatial)
+                audio.SetInstanceDistanceScale(m_playbackId, distanceScale);
+        }
+    }
+
+    if (m_cmdSyncPosition) {
+        m_cmdSyncPosition = false;
+        if (spatial && m_playbackId != kInvalidAudioPlaybackId)
+            audio.SetInstancePosition(m_playbackId, OwnerPosition());
+    }
 }
 
 DirectX::XMFLOAT3 AudioComponent::OwnerPosition() const {

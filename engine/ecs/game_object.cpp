@@ -3,14 +3,59 @@
 #include "visual_component.h"
 #include "material_component.h"
 #include "collider_component.h"
+#include "engine/scripting/script_component.h"
 #include "engine/scene/render_settings.h"
 #include "engine/rendering/d3d11/shader.h"
 #include "engine/audio/audio_manager.h"
 
 #include <DirectXMath.h>
 #include <algorithm>
+#include <atomic>
 
 using namespace DirectX;
+
+namespace {
+std::atomic<int> g_gameObjectUpdateDepth{ 0 };
+}
+
+bool GameObject::IsInsideUpdate() {
+    return g_gameObjectUpdateDepth.load(std::memory_order_relaxed) > 0;
+}
+
+void GameObject::Update(double elapsed_time) {
+    if (!m_isActive) return;
+
+    g_gameObjectUpdateDepth.fetch_add(1, std::memory_order_relaxed);
+
+    for (auto& kv : m_components)
+        kv.second->Update(elapsed_time);
+
+    LogicUpdate(elapsed_time);
+    IntegratePhysics(elapsed_time);
+
+    for (auto& child : m_children)
+        if (child) child->Update(elapsed_time);
+
+    g_gameObjectUpdateDepth.fetch_sub(1, std::memory_order_relaxed);
+}
+
+bool GameObject::Update_IsParallelSafe() const {
+    for (const auto& kv : m_components) {
+        const ScriptComponent* sc =
+            dynamic_cast<const ScriptComponent*>(kv.second.get());
+        if (!sc) continue;
+        const Script* script = sc->GetScript();
+        if (!script) {
+            // Script not created yet but class requested — treat as unsafe.
+            if (!sc->GetScriptClass().empty())
+                return false;
+            continue;
+        }
+        if (!script->Update_IsParallelSafe())
+            return false;
+    }
+    return true;
+}
 
 GameObject::~GameObject() {
     // Clears any AudioManager listener/emitter tracking pointers that still

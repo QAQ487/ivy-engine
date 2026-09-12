@@ -119,7 +119,10 @@ void Model3D::Release() {
 	m_bakedClips.clear();
 	m_meshXformScratch.clear();
 	m_boneBindOffset.clear();
-	m_gpuPalette.clear();
+	m_gpuPaletteWrite.clear();
+	m_gpuPaletteFront.clear();
+	m_gpuPaletteDirty = false;
+	m_vbUploadDirty = false;
 	m_gpuSkinEligible = false;
 	m_gpuBindConflict = false;
 	m_sharesCachedVB = false;
@@ -1112,7 +1115,7 @@ void Model3D::Draw() {
 	}
 
 	if (CanGpuSkin())
-		Shader_SetSkinPalette(m_gpuPalette.data(), (int)m_gpuPalette.size(), true);
+		Shader_SetSkinPalette(m_gpuPaletteFront.data(), (int)m_gpuPaletteFront.size(), true);
 	else
 		Shader_SetSkinPalette(nullptr, 0, false);
 
@@ -1229,7 +1232,7 @@ bool Model3D::CanGpuSkin() const {
 		&& !m_gpuBindConflict
 		&& slots > 0
 		&& slots <= (size_t)SHADER_MAX_BONES
-		&& m_gpuPalette.size() == slots
+		&& m_gpuPaletteFront.size() == slots
 		&& m_boneBindOffset.size() == slots
 		&& !m_skinBones.empty();
 }
@@ -1353,6 +1356,7 @@ void Model3D::FillBindPoseScratch() {
 		m_meshXformScratch[i] = (node && eval) ? eval->GetNodeGlobalTransform(node, t) : FbxAMatrix();
 	}
 	UpdateGpuSkinPalette();
+	PublishSkinPalette();
 }
 
 void Model3D::UpdateGpuSkinPalette() {
@@ -1364,7 +1368,7 @@ void Model3D::UpdateGpuSkinPalette() {
 		|| m_boneBindOffset.size() != slots)
 		return;
 
-	m_gpuPalette.resize(slots);
+	m_gpuPaletteWrite.resize(slots);
 	for (size_t mi = 0; mi < nMeshes; ++mi) {
 		FbxAMatrix geo;
 		geo.SetIdentity();
@@ -1390,9 +1394,29 @@ void Model3D::UpdateGpuSkinPalette() {
 				geo * toLocal * m_boneXformScratch[bi] * m_boneBindOffset[slot] * geoInv;
 			// MultT is row-vector * matrix (same as DirectXMath). Shader_SetSkinPalette
 			// transposes for HLSL like WVP — do not transpose here.
-			XMStoreFloat4x4(&m_gpuPalette[slot], FbxToXM(palette));
+			XMStoreFloat4x4(&m_gpuPaletteWrite[slot], FbxToXM(palette));
 		}
 	}
+	m_gpuPaletteDirty = true;
+}
+
+void Model3D::PublishSkinPalette() {
+	if (!m_gpuPaletteDirty)
+		return;
+	m_gpuPaletteFront = m_gpuPaletteWrite;
+	m_gpuPaletteDirty = false;
+}
+
+void Model3D::UploadSkinnedVerticesIfDirty() {
+	if (m_vbUploadDirty) {
+		uploadVertexBufferFromCPU();
+		m_vbUploadDirty = false;
+	}
+	PublishSkinPalette();
+}
+
+void Model3D::markVertexUploadDirty() {
+	m_vbUploadDirty = true;
 }
 
 namespace {
@@ -1955,7 +1979,7 @@ void Model3D::UpdateAnimation(double dtSec) {
 			}
 		}
 		if (!hasSkinning)
-			uploadVertexBufferFromCPU();
+			markVertexUploadDirty();
 	}
 }
 
@@ -2081,7 +2105,7 @@ void Model3D::updateDynamicVBFromCP(const std::vector<XMFLOAT3>& cpPos) {
 		m_verticesCPU[i].Position = pos;
 	}
 
-	uploadVertexBufferFromCPU();
+	markVertexUploadDirty();
 }
 
 void Model3D::uploadVertexBufferFromCPU() {
@@ -2129,7 +2153,10 @@ std::unique_ptr<Model3D> Model3D::CreateAnimInstanceFrom(const Model3D& shared) 
 	inst->m_gpuSkinEligible = shared.m_gpuSkinEligible;
 	inst->m_gpuBindConflict = shared.m_gpuBindConflict;
 	inst->m_boneBindOffset = shared.m_boneBindOffset;
-	inst->m_gpuPalette = shared.m_gpuPalette;
+	inst->m_gpuPaletteWrite = shared.m_gpuPaletteWrite;
+	inst->m_gpuPaletteFront = shared.m_gpuPaletteFront;
+	inst->m_gpuPaletteDirty = false;
+	inst->m_vbUploadDirty = false;
 
 	// Per-instance playback. GPU skin shares the cached bind-pose VB.
 	inst->m_verticesCPU = shared.m_verticesCPU;

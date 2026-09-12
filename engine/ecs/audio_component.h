@@ -25,15 +25,26 @@ public:
     std::string Serialize() const override;
     void Deserialize(const std::string& jsonStr) override;
 
+    // Enqueue play/stop; AudioSystem_FlushCommands applies on main thread.
     void Play();
     void Stop();
     bool IsPlaying() const;
     void SetClipPath(const std::string& path);
     void ApplyLiveSettings();
 
+    // Main thread only.
+    void FlushCommands();
+
 private:
     AudioPlaybackId m_playbackId = kInvalidAudioPlaybackId;
     bool m_hasAutoPlayed = false;
 
+    bool m_cmdPlay = false;
+    bool m_cmdStop = false;
+    bool m_cmdSyncPosition = false;
+    bool m_cmdCheckFinished = false;
+    bool m_cmdApplySettings = false;
+
     DirectX::XMFLOAT3 OwnerPosition() const;
+    void ApplyStopImmediate();
 };

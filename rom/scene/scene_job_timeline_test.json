@@ -1,0 +1,271 @@
+{
+    "canvas": {
+        "elements": [
+            {
+                "alignment": "LEFT",
+                "anchor": "TOP_LEFT",
+                "characterSpacing": 18.0,
+                "color": {
+                    "a": 0.95,
+                    "b": 1.0,
+                    "g": 1.0,
+                    "r": 1.0
+                },
+                "font": {
+                    "charHeight": 32.0,
+                    "charWidth": 32.0,
+                    "charsPerRow": 16,
+                    "texture": "rom/texture/consolab_ascii_512.png"
+                },
+                "fontSize": 1.0,
+                "name": "Hint",
+                "position": {
+                    "x": 24.0,
+                    "y": 24.0
+                },
+                "text": "Job timeline test: Play, then F8. Enable Parallel. 8 TAG_PLAYER spins.",
+                "type": "text",
+                "visible": true
+            }
+        ],
+        "name": "scene"
+    },
+    "nodes": [
+        {
+            "children": [],
+            "components": {
+                "DirectionalLight": {
+                    "castShadows": true,
+                    "color": [1.0, 0.97, 0.92],
+                    "enabled": true,
+                    "intensity": 1.1,
+                    "specColor": [1.0, 1.0, 1.0],
+                    "specPower": 32.0
+                },
+                "SceneTransform": {
+                    "posX": 0.0,
+                    "posY": 10.0,
+                    "posZ": 0.0,
+                    "rotX": 45.0,
+                    "rotY": -30.0,
+                    "rotZ": 0.0,
+                    "scaleX": 1.0,
+                    "scaleY": 1.0,
+                    "scaleZ": 1.0
+                }
+            },
+            "name": "Directional Light",
+            "tag": 0
+        },
+        {
+            "children": [],
+            "components": {
+                "Collider": {
+                    "colliderCenter": { "x": 0.0, "y": 0.0, "z": 0.0 },
+                    "colliderType": 1,
+                    "halfExtents": { "x": 20.0, "y": 0.5, "z": 20.0 },
+                    "height": 1.0,
+                    "meshSizePadding": 0.0,
+                    "radius": 0.5,
+                    "showDebugCollider": false
+                },
+                "SceneTransform": {
+                    "posX": 0.0,
+                    "posY": -0.5,
+                    "posZ": 0.0,
+                    "rotX": 0.0,
+                    "rotY": 0.0,
+                    "rotZ": 0.0,
+                    "scaleX": 40.0,
+                    "scaleY": 1.0,
+                    "scaleZ": 40.0
+                },
+                "visual": {
+                    "model": "rom/model/object/Box_Brown.fbx",
+                    "shader": "standard"
+                }
+            },
+            "name": "Ground",
+            "tag": 2
+        },
+        {
+            "children": [],
+            "components": {
+                "SceneTransform": {
+                    "posX": -6.0, "posY": 1.0, "posZ": 0.0,
+                    "rotX": 0.0, "rotY": 0.0, "rotZ": 0.0,
+                    "scaleX": 1.0, "scaleY": 1.0, "scaleZ": 1.0
+                },
+                "Script": {
+                    "properties": { "degreesPerSecond": 40.0, "busyMillis": 1.5 },
+                    "scriptClass": "SampleSpinScript"
+                },
+                "visual": {
+                    "model": "rom/model/object/Box_Blue.fbx",
+                    "shader": "standard"
+                }
+            },
+            "name": "WorkerSpin_0",
+            "tag": 5
+        },
+        {
+            "children": [],
+            "components": {
+                "SceneTransform": {
+                    "posX": -4.0, "posY": 1.0, "posZ": 2.0,
+                    "rotX": 0.0, "rotY": 0.0, "rotZ": 0.0,
+                    "scaleX": 1.0, "scaleY": 1.0, "scaleZ": 1.0
+                },
+                "Script": {
+                    "properties": { "degreesPerSecond": 55.0, "busyMillis": 1.5 },
+                    "scriptClass": "SampleSpinScript"
+                },
+                "visual": {
+                    "model": "rom/model/object/Box_Green.fbx",
+                    "shader": "standard"
+                }
+            },
+            "name": "WorkerSpin_1",
+            "tag": 5
+        },
+        {
+            "children": [],
+            "components": {
+                "SceneTransform": {
+                    "posX": -2.0, "posY": 1.0, "posZ": 0.0,
+                    "rotX": 0.0, "rotY": 0.0, "rotZ": 0.0,
+                    "scaleX": 1.0, "scaleY": 1.0, "scaleZ": 1.0
+                },
+                "Script": {
+                    "properties": { "degreesPerSecond": 70.0, "busyMillis": 1.5 },
+                    "scriptClass": "SampleSpinScript"
+                },
+                "visual": {
+                    "model": "rom/model/object/Box_Blue.fbx",
+                    "shader": "standard"
+                }
+            },
+            "name": "WorkerSpin_2",
+            "tag": 5
+        },
+        {
+            "children": [],
+            "components": {
+                "SceneTransform": {
+                    "posX": 0.0, "posY": 1.0, "posZ": 2.0,
+                    "rotX": 0.0, "rotY": 0.0, "rotZ": 0.0,
+                    "scaleX": 1.0, "scaleY": 1.0, "scaleZ": 1.0
+                },
+                "Script": {
+                    "properties": { "degreesPerSecond": 85.0, "busyMillis": 1.5 },
+                    "scriptClass": "SampleSpinScript"
+                },
+                "visual": {
+                    "model": "rom/model/object/Box_Green.fbx",
+                    "shader": "standard"
+                }
+            },
+            "name": "WorkerSpin_3",
+            "tag": 5
+        },
+        {
+            "children": [],
+            "components": {
+                "SceneTransform": {
+                    "posX": 2.0, "posY": 1.0, "posZ": 0.0,
+                    "rotX": 0.0, "rotY": 0.0, "rotZ": 0.0,
+                    "scaleX": 1.0, "scaleY": 1.0, "scaleZ": 1.0
+                },
+                "Script": {
+                    "properties": { "degreesPerSecond": 100.0, "busyMillis": 1.5 },
+                    "scriptClass": "SampleSpinScript"
+                },
+                "visual": {
+                    "model": "rom/model/object/Box_Blue.fbx",
+                    "shader": "standard"
+                }
+            },
+            "name": "WorkerSpin_4",
+            "tag": 5
+        },
+        {
+            "children": [],
+            "components": {
+                "SceneTransform": {
+                    "posX": 4.0, "posY": 1.0, "posZ": 2.0,
+                    "rotX": 0.0, "rotY": 0.0, "rotZ": 0.0,
+                    "scaleX": 1.0, "scaleY": 1.0, "scaleZ": 1.0
+                },
+                "Script": {
+                    "properties": { "degreesPerSecond": 115.0, "busyMillis": 1.5 },
+                    "scriptClass": "SampleSpinScript"
+                },
+                "visual": {
+                    "model": "rom/model/object/Box_Green.fbx",
+                    "shader": "standard"
+                }
+            },
+            "name": "WorkerSpin_5",
+            "tag": 5
+        },
+        {
+            "children": [],
+            "components": {
+                "SceneTransform": {
+                    "posX": 6.0, "posY": 1.0, "posZ": 0.0,
+                    "rotX": 0.0, "rotY": 0.0, "rotZ": 0.0,
+                    "scaleX": 1.0, "scaleY": 1.0, "scaleZ": 1.0
+                },
+                "Script": {
+                    "properties": { "degreesPerSecond": 130.0, "busyMillis": 1.5 },
+                    "scriptClass": "SampleSpinScript"
+                },
+                "visual": {
+                    "model": "rom/model/object/Box_Blue.fbx",
+                    "shader": "standard"
+                }
+            },
+            "name": "WorkerSpin_6",
+            "tag": 5
+        },
+        {
+            "children": [],
+            "components": {
+                "SceneTransform": {
+                    "posX": 0.0, "posY": 1.0, "posZ": -3.0,
+                    "rotX": 0.0, "rotY": 0.0, "rotZ": 0.0,
+                    "scaleX": 1.0, "scaleY": 1.0, "scaleZ": 1.0
+                },
+                "Script": {
+                    "properties": { "degreesPerSecond": 145.0, "busyMillis": 1.5 },
+                    "scriptClass": "SampleSpinScript"
+                },
+                "visual": {
+                    "model": "rom/model/object/Box_Green.fbx",
+                    "shader": "standard"
+                }
+            },
+            "name": "WorkerSpin_7",
+            "tag": 5
+        }
+    ],
+    "settings": {
+        "render": {
+            "clearColor": [0.69, 0.77, 0.87, 1.0],
+            "defaultShader": "standard",
+            "fogColor": [0.69, 0.77, 0.87],
+            "fogDensity": 0.02,
+            "fogEnabled": false,
+            "fogHeight": 5.0,
+            "fogHeightFalloff": 0.15,
+            "fogStart": 10.0,
+            "shadowQuality": "medium",
+            "skyboxCubemap": "rom/skybox/MySkybox.dds",
+            "skyboxEnabled": true,
+            "skyboxExposure": 1.0,
+            "skyboxRotationYDeg": 0.0,
+            "skyboxTint": [1.0, 1.0, 1.0, 1.0]
+        }
+    },
+    "version": 4
+}

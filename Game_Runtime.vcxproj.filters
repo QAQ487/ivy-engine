@@ -353,6 +353,15 @@
     <ClCompile Include="engine\ecs\audio_component.cpp">
       <Filter>engine\ecs</Filter>
     </ClCompile>
+    <ClCompile Include="engine\ecs\audio_system.cpp">
+      <Filter>engine\ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\ecs\effect_system_flush.cpp">
+      <Filter>engine\ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\ecs\visual_system.cpp">
+      <Filter>engine\ecs</Filter>
+    </ClCompile>
     <ClCompile Include="engine\ecs\audio_listener_component.cpp">
       <Filter>engine\ecs</Filter>
     </ClCompile>

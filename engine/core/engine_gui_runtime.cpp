@@ -60,8 +60,13 @@ void EngineGUI_Update(double elapsed_time) {
 
     // In the editor build, engine_gui.cpp owns updating the scene graph while playing.
     // The runtime host must do the same so scripts/components run.
-    for (auto& node : SceneLoader_GetSceneNodes())
-        if (node) node->Update(elapsed_time);
+    // TAG_PLAYER roots are updated by GameScene's player batch (after
+    // FrameTransformSnapshot_Capture) so they can run on workers.
+    for (auto& node : SceneLoader_GetSceneNodes()) {
+        if (!node || node->GetTag() == Tag::TAG_PLAYER)
+            continue;
+        node->Update(elapsed_time);
+    }
 }
 
 void EngineGUI_Draw() {

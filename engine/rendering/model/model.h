@@ -114,6 +114,8 @@ public:
     void Draw();
 
     void UpdateAnimation(double dtSec = 1.0 / 60.0);
+    // Main thread only: Map dirty CPU VBs + publish GPU palette front buffer.
+    void UploadSkinnedVerticesIfDirty();
     void SetAnimationSpeed(double speed) { m_animSpeed = speed; }
     void SetLoop(bool loop) { m_loop = loop; }
 
@@ -248,9 +250,11 @@ private:
     void  RecreateVertexBufferFromCPU();
     void  FillBindPoseScratch();
     void  UpdateGpuSkinPalette();
+    void  PublishSkinPalette();
     bool  CanGpuSkin() const;
     void  updateDynamicVBFromCP(const std::vector<DirectX::XMFLOAT3>& cpPos);
     void  uploadVertexBufferFromCPU();
+    void  markVertexUploadDirty();
 
     struct BakedAnimPose {
         std::vector<fbxsdk::FbxAMatrix> boneGlobals;
@@ -266,7 +270,12 @@ private:
     std::map<std::string, BakedAnimClip> m_bakedClips;
     std::vector<fbxsdk::FbxAMatrix> m_meshXformScratch;
     std::vector<fbxsdk::FbxAMatrix> m_boneBindOffset;
-    std::vector<DirectX::XMFLOAT4X4> m_gpuPalette;
+    // Double-buffered bone palette: workers write back; Draw reads front
+    // after VisualSystem_UploadSkinning publishes (post WaitAll).
+    std::vector<DirectX::XMFLOAT4X4> m_gpuPaletteWrite;
+    std::vector<DirectX::XMFLOAT4X4> m_gpuPaletteFront;
+    bool m_gpuPaletteDirty = false;
+    bool m_vbUploadDirty = false;
 
     const SkinMeshGeo* FindGeoForCP(int cpi) const;
     static DirectX::XMFLOAT3 ApplyGeoPosition(const fbxsdk::FbxAMatrix& geo, const DirectX::XMFLOAT3& p);

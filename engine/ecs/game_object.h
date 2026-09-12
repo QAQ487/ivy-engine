@@ -177,26 +177,17 @@ public:
     virtual void Finalize()   {}
 
     // Per-frame update: ticks all components, then integrates physics,
-    // then recurses into children.
+    // Tick attached components, LogicUpdate, physics, then children.
     // NOTE: LogicUpdate() is kept for backwards compatibility with existing
     // subclasses.  New code should use Component::Update() instead.
-    void Update(double elapsed_time) {
-        if (!m_isActive) return;
+    void Update(double elapsed_time);
 
-        // Tick attached components first.
-        for (auto& kv : m_components)
-            kv.second->Update(elapsed_time);
+    // True while any GameObject::Update is on the call stack (any thread).
+    static bool IsInsideUpdate();
 
-        // Subclass per-frame logic (legacy hook).
-        LogicUpdate(elapsed_time);
-
-        // Physics integration.
-        IntegratePhysics(elapsed_time);
-
-        // Recurse into children.
-        for (auto& child : m_children)
-            if (child) child->Update(elapsed_time);
-    }
+    // Worker-safe Update: true when every attached Script returns
+    // Update_IsParallelSafe (or there is no Script). Default scripts are false.
+    bool Update_IsParallelSafe() const;
 
     // Restore runtime state to pre-play defaults.
     // Calls OnReset() on all components, then recurses into children.

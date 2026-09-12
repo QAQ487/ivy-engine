@@ -25,5 +25,6 @@ GameObject* PrefabRuntime_Instantiate(const char* prefabPath,
 
 void PrefabRuntime_Destroy(GameObject* obj);
 void PrefabRuntime_DestroyAllSpawnedChildren();
+void PrefabRuntime_FlushSpawned();
 void PrefabRuntime_FlushDestroyed();
 void PrefabRuntime_ResetSessionState();

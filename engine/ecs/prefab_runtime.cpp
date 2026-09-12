@@ -7,6 +7,8 @@
 #include "../scene/scene_loader.h"
 #include "scene_manager.h"
 #include <algorithm>
+#include <mutex>
+#include <string>
 #include <unordered_set>
 #include <utility>
 
@@ -18,6 +20,17 @@ PrefabRuntimeBeforeDestroyFn g_beforeDestroyCallback = nullptr;
 GameObject* g_spawnRoot = nullptr;
 std::vector<GameObject*> g_pendingDestroy;
 std::unordered_set<GameObject*> g_pendingDestroySet;
+
+struct PendingSpawn {
+    std::string prefabPath;
+    XMFLOAT3 worldPos{};
+    XMFLOAT3 worldRot{};
+    GameObject* parent = nullptr;
+    bool startActive = true;
+};
+
+std::mutex g_pendingMutex;
+std::vector<PendingSpawn> g_pendingSpawn;
 
 void CollectSubtree(GameObject* node, std::vector<GameObject*>& out) {
     if (!node) return;
@@ -119,11 +132,11 @@ GameObject* PrefabRuntime_EnsureSpawnRoot() {
     return g_spawnRoot;
 }
 
-GameObject* PrefabRuntime_Instantiate(const char* prefabPath,
-                                      const XMFLOAT3& worldPos,
-                                      const XMFLOAT3& worldRot,
-                                      GameObject* parent,
-                                      bool startActive)
+GameObject* PrefabRuntime_InstantiateImmediate(const char* prefabPath,
+                                               const XMFLOAT3& worldPos,
+                                               const XMFLOAT3& worldRot,
+                                               GameObject* parent,
+                                               bool startActive)
 {
     if (!prefabPath || !prefabPath[0]) return nullptr;
 
@@ -152,8 +165,53 @@ GameObject* PrefabRuntime_Instantiate(const char* prefabPath,
     return raw;
 }
 
+GameObject* PrefabRuntime_Instantiate(const char* prefabPath,
+                                      const XMFLOAT3& worldPos,
+                                      const XMFLOAT3& worldRot,
+                                      GameObject* parent,
+                                      bool startActive)
+{
+    // Defer during GameObject::Update so workers / mid-iteration never
+    // mutate the scene graph. Spawned objects appear at FlushSpawned.
+    if (GameObject::IsInsideUpdate()) {
+        if (!prefabPath || !prefabPath[0]) return nullptr;
+        PendingSpawn req;
+        req.prefabPath = prefabPath;
+        req.worldPos = worldPos;
+        req.worldRot = worldRot;
+        req.parent = parent;
+        req.startActive = startActive;
+        {
+            std::lock_guard<std::mutex> lock(g_pendingMutex);
+            g_pendingSpawn.push_back(std::move(req));
+        }
+        return nullptr;
+    }
+
+    return PrefabRuntime_InstantiateImmediate(
+        prefabPath, worldPos, worldRot, parent, startActive);
+}
+
+void PrefabRuntime_FlushSpawned() {
+    std::vector<PendingSpawn> toSpawn;
+    {
+        std::lock_guard<std::mutex> lock(g_pendingMutex);
+        toSpawn.swap(g_pendingSpawn);
+    }
+    for (const PendingSpawn& req : toSpawn) {
+        PrefabRuntime_InstantiateImmediate(
+            req.prefabPath.c_str(),
+            req.worldPos,
+            req.worldRot,
+            req.parent,
+            req.startActive);
+    }
+}
+
 void PrefabRuntime_Destroy(GameObject* obj) {
     if (!obj || PrefabRuntime_IsSpawnRoot(obj)) return;
+
+    std::lock_guard<std::mutex> lock(g_pendingMutex);
     if (g_pendingDestroySet.count(obj)) return;
 
     obj->SetActive(false);
@@ -186,18 +244,24 @@ void PrefabRuntime_DestroyAllSpawnedChildren() {
 void PrefabRuntime_ResetSessionState() {
     g_beforeDestroyCallback = nullptr;
     g_spawnRoot = nullptr;
-    g_pendingDestroy.clear();
-    g_pendingDestroySet.clear();
+    {
+        std::lock_guard<std::mutex> lock(g_pendingMutex);
+        g_pendingDestroy.clear();
+        g_pendingDestroySet.clear();
+        g_pendingSpawn.clear();
+    }
 }
 
 void PrefabRuntime_FlushDestroyed() {
-    if (g_pendingDestroy.empty()) return;
+    std::vector<GameObject*> toFlush;
+    {
+        std::lock_guard<std::mutex> lock(g_pendingMutex);
+        if (g_pendingDestroy.empty()) return;
+        toFlush.swap(g_pendingDestroy);
+        g_pendingDestroySet.clear();
+    }
 
     SceneBase* scene = SceneManager::Instance().GetCurrentScene();
-
-    std::vector<GameObject*> toFlush;
-    toFlush.swap(g_pendingDestroy);
-    g_pendingDestroySet.clear();
 
     for (GameObject* obj : toFlush) {
         if (!obj) continue;

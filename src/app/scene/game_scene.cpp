@@ -37,6 +37,9 @@
 #endif
 #include "engine/scene/scene_runtime.h"
 #include "engine/ecs/prefab_runtime.h"
+#include "engine/ecs/visual_system.h"
+#include "engine/ecs/audio_system.h"
+#include "engine/ecs/effect_system_flush.h"
 #include "engine/core/job_system.h"
 #include "engine/core/frame_transform_snapshot.h"
 #include "third_person_camera.h"
@@ -157,14 +160,9 @@ void GameScene::Update(double elapsed_time) {
 
 	Billboard::ClearDrawList();
 
+	// Non-player scene roots. TAG_PLAYER roots are updated in the player batch
+	// below (EngineGUI skips them so snapshot → jobs → flushes can own them).
 	EngineGUI_Update(elapsed_time);
-
-	// Post-script swept collision pass: catches collisions missed during script-driven
-	// position changes (e.g. the player orbiting through a pole or dummy player).
-	if (EngineGUI_IsPlaying())
-		PhysicsSystem_ResolveCollisions();
-
-	PrefabRuntime_FlushDestroyed();
 
 	if (EngineGUI_IsPlaying()) {
 		// Copy m_objects to guard against iterator invalidation from any
@@ -174,41 +172,53 @@ void GameScene::Update(double elapsed_time) {
 		// Read-only pose snapshot for neighbor reads (players + disc/TAG_BULLET).
 		FrameTransformSnapshot_Capture(activeObjects);
 
-		// found-racy-globals: GameObject::Update is not worker-safe yet
-		// (VisualComponent->D3D11 Map, AudioComponent->AudioManager,
-		// EffectComponent->EffectSystem, script PrefabRuntime/singletons).
-		// Keep sequential regardless of JobSystem_UseParallel(). Phase B adds
-		// SubmitDep/WaitFor/WaitAll frame-graph API; enable player Submit only
-		// after those component Updates are main-thread-only.
-		constexpr bool kParallelPlayerUpdates = false;
-		if (kParallelPlayerUpdates && JobSystem_UseParallel()) {
-			for (auto* obj : activeObjects) {
-				if (!obj || !obj->IsActive()) continue;
-				if (obj->GetTag() != Tag::TAG_PLAYER) continue;
-				if (EngineGUI_IsSceneGraphObject(obj)) continue;
-				JobSystem_Submit([obj, elapsed_time]() {
-					obj->Update(elapsed_time);
-				});
+		// Collect TAG_PLAYER from m_objects and scene roots (roots without
+		// colliders are not in m_objects but still need Update).
+		std::vector<GameObject*> players;
+		players.reserve(activeObjects.size());
+		auto pushPlayer = [&players](GameObject* obj) {
+			if (!obj || !obj->IsActive()) return;
+			if (obj->GetTag() != Tag::TAG_PLAYER) return;
+			for (GameObject* existing : players) {
+				if (existing == obj) return;
+			}
+			players.push_back(obj);
+		};
+		for (auto* obj : activeObjects)
+			pushPlayer(obj);
+		for (auto& node : SceneLoader_GetSceneNodes())
+			pushPlayer(node.get());
+
+		// Parallel-safe players on workers; WaitAll before sequential players
+		// so main-thread scripts never read mid-update neighbor state.
+		if (JobSystem_UseParallel()) {
+			for (GameObject* obj : players) {
+				if (obj->Update_IsParallelSafe()) {
+					JobSystem_Submit([obj, elapsed_time]() {
+						obj->Update(elapsed_time);
+					});
+				}
 			}
 			JobSystem_WaitAll();
+			for (GameObject* obj : players) {
+				if (!obj->Update_IsParallelSafe())
+					obj->Update(elapsed_time);
+			}
 		}
 		else {
-			for (auto* obj : activeObjects) {
-				if (!obj || !obj->IsActive()) continue;
-				if (obj->GetTag() != Tag::TAG_PLAYER) continue;
-				if (EngineGUI_IsSceneGraphObject(obj)) continue;
+			for (GameObject* obj : players)
 				obj->Update(elapsed_time);
-			}
 		}
 
-		// Phase B infra demo: no-op dependency graph (default off). Proves
-		// SubmitDep + WaitAll without touching gameplay Updates.
-		constexpr bool kJobGraphDemo = false;
-		if (kJobGraphDemo) {
-			JobHandle h0 = JobSystem_Submit([] {});
-			JobSystem_SubmitDep([] {}, { h0 });
-			JobSystem_WaitAll();
-		}
+		// Main-thread flushes after the player batch (run every frame).
+		VisualSystem_UploadSkinning();
+		AudioSystem_FlushCommands();
+		EffectSystem_FlushCommands();
+		PrefabRuntime_FlushSpawned();
+		PrefabRuntime_FlushDestroyed();
+
+		// Post-script swept collision: after all scripts (EngineGUI + players).
+		PhysicsSystem_ResolveCollisions();
 
 		engine::ParticleSystem::Instance().Tick(static_cast<float>(elapsed_time));
 
@@ -218,6 +228,7 @@ void GameScene::Update(double elapsed_time) {
 			ThirdPersonCamera_Update(elapsed_time);
 	}
 	else {
+		PrefabRuntime_FlushDestroyed();
 		engine::ParticleSystem::Instance().Reset();
 	}
 
