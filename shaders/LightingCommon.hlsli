@@ -492,4 +492,96 @@ float EvalLightFacingRim(float3 N, float3 V, float3 posOS, float rimStrength, fl
     return fresnel * lightAlign * saturate(rimStrength);
 }
 
+// ---------------------------------------------------------------------------
+// Cook-Torrance PBR (additive; unused by existing variants)
+// G = Schlick-GGX / Smith with k = (roughness+1)^2 / 8 (direct lighting).
+// ---------------------------------------------------------------------------
+
+static const float kPBR_PI = 3.14159265f;
+
+float D_GGX(float NoH, float a)
+{
+    float a2 = a * a;
+    float d = NoH * NoH * (a2 - 1.0f) + 1.0f;
+    return a2 / (kPBR_PI * d * d + 1e-7f);
+}
+
+float G_SchlickSmith(float NoV, float NoL, float roughness)
+{
+    float r = roughness + 1.0f;
+    float k = (r * r) / 8.0f;
+    float gv = NoV / (NoV * (1.0f - k) + k);
+    float gl = NoL / (NoL * (1.0f - k) + k);
+    return gv * gl;
+}
+
+float3 F_Schlick(float VoH, float3 F0)
+{
+    return F0 + (1.0f - F0) * pow(saturate(1.0f - VoH), 5.0f);
+}
+
+float3 EvalCookTorrance(
+    float3 N, float3 V, float3 L,
+    float3 baseColor, float roughness, float metallic,
+    float3 lightRGB, float atten)
+{
+    float r = max(roughness, 0.045f);
+    float3 H = normalize(L + V);
+    float NoV = max(dot(N, V), 1e-4f);
+    float NoL = saturate(dot(N, L));
+    float NoH = saturate(dot(N, H));
+    float VoH = saturate(dot(V, H));
+
+    float3 F0 = lerp(float3(0.04f, 0.04f, 0.04f), baseColor, metallic);
+    float a = r * r;
+    float D = D_GGX(NoH, a);
+    float G = G_SchlickSmith(NoV, NoL, r);
+    float3 F = F_Schlick(VoH, F0);
+
+    float3 spec = (D * G * F) / (4.0f * NoV * NoL + 1e-4f) * NoL;
+    float3 diffuse = (baseColor / kPBR_PI) * (1.0f - F) * (1.0f - metallic) * NoL;
+    return (diffuse + spec) * lightRGB * atten;
+}
+
+float3 EvalDirectionalPBR(LightParam light, float3 N, float3 V, float3 baseColor, float roughness, float metallic)
+{
+    float3 L = normalize(light.DirOS);
+    return EvalCookTorrance(N, V, L, baseColor, roughness, metallic, light.Color.rgb, 1.0f);
+}
+
+float3 EvalPointPBR(LightParam light, float3 N, float3 V, float3 inPosOS, float3 baseColor, float roughness, float metallic)
+{
+    float3 toLight = light.PosOS - inPosOS;
+    float dist = length(toLight);
+    float3 L = (dist > 1e-6f) ? (toLight / dist) : float3(0, 0, 1);
+
+    float kc = light.Atten.x;
+    float kl = light.Atten.y;
+    float kq = light.Atten.z;
+    float atten = 1.0f / max(kc + kl * dist + kq * dist * dist, 1e-4f);
+    if (light.Range > 0.0f)
+        atten *= saturate(1.0f - dist / light.Range);
+
+    return EvalCookTorrance(N, V, L, baseColor, roughness, metallic, light.Color.rgb, atten);
+}
+
+float3 EvalSpotPBR(LightParam light, float3 N, float3 V, float3 inPosOS, float3 baseColor, float roughness, float metallic)
+{
+    float3 toLight = light.PosOS - inPosOS;
+    float dist = length(toLight);
+    float3 L = (dist > 1e-6f) ? (toLight / dist) : float3(0, 0, 1);
+
+    float3 coneDir = normalize(light.DirOS);
+    float cosTheta = dot(-L, coneDir);
+    float t = saturate((cosTheta - light.OuterCos) / max(light.InnerCos - light.OuterCos, 1e-4f));
+
+    float kc = light.Atten.x;
+    float kl = light.Atten.y;
+    float kq = light.Atten.z;
+    float atten = 1.0f / max(kc + kl * dist + kq * dist * dist, 1e-4f);
+    float spotAtten = atten * t;
+
+    return EvalCookTorrance(N, V, L, baseColor, roughness, metallic, light.Color.rgb, spotAtten);
+}
+
 #endif // LIGHTING_COMMON_HLSLI

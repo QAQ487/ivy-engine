@@ -734,6 +734,10 @@ static void DrawRenderingSettingsWindow(bool* open) {
             }
             ImGui::EndCombo();
         }
+        ImGui::TextDisabled(
+            "PBR (Cook-Torrance): assign via this Default Shader or a VisualComponent Shader override. "
+            "Tune Material Roughness (0.1 vs 0.8) and Metallic (0 vs 1); compare side-by-side with Toon. "
+            "Open rom/scene/scene_pbr_showcase.json for a ready grid.");
     }
 
     ImGui::Spacing();

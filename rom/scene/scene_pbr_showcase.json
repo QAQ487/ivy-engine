@@ -1,0 +1,278 @@
+{
+    "version": 4,
+    "settings": {
+        "render": {
+            "clearColor": [0.12, 0.14, 0.18, 1.0],
+            "defaultShader": "pbr",
+            "fogEnabled": false,
+            "fogColor": [0.12, 0.14, 0.18],
+            "fogDensity": 0.02,
+            "fogStart": 20.0,
+            "fogHeight": 5.0,
+            "fogHeightFalloff": 0.15,
+            "shadowQuality": "medium",
+            "skyboxCubemap": "rom/skybox/MySkybox.dds",
+            "skyboxEnabled": true,
+            "skyboxExposure": 1.0,
+            "skyboxRotationYDeg": 0.0,
+            "skyboxTint": [1.0, 1.0, 1.0, 1.0]
+        },
+        "debugCamera": {
+            "mode": "orbit",
+            "enabledOnPlay": true,
+            "position": { "x": 0.0, "y": 1.0, "z": 0.0 },
+            "yawDeg": 25.0,
+            "pitchDeg": -18.0
+        }
+    },
+    "nodes": [
+        {
+            "name": "Directional Light",
+            "tag": 0,
+            "children": [],
+            "components": {
+                "SceneTransform": {
+                    "posX": 0.0, "posY": 10.0, "posZ": 0.0,
+                    "rotX": 40.0, "rotY": -35.0, "rotZ": 0.0,
+                    "scaleX": 1.0, "scaleY": 1.0, "scaleZ": 1.0
+                },
+                "DirectionalLight": {
+                    "enabled": true,
+                    "castShadows": true,
+                    "color": [1.0, 0.97, 0.92],
+                    "intensity": 1.25,
+                    "specColor": [1.0, 1.0, 1.0],
+                    "specPower": 32.0
+                }
+            }
+        },
+        {
+            "name": "Fill Point Light",
+            "tag": 0,
+            "children": [],
+            "components": {
+                "SceneTransform": {
+                    "posX": -3.0, "posY": 2.5, "posZ": -2.0,
+                    "rotX": 0.0, "rotY": 0.0, "rotZ": 0.0,
+                    "scaleX": 1.0, "scaleY": 1.0, "scaleZ": 1.0
+                },
+                "PointLight": {
+                    "enabled": true,
+                    "color": [0.55, 0.7, 1.0],
+                    "intensity": 1.8,
+                    "range": 12.0,
+                    "specColor": [0.8, 0.9, 1.0],
+                    "specPower": 32.0
+                }
+            }
+        },
+        {
+            "name": "Showcase Camera",
+            "tag": 0,
+            "children": [],
+            "components": {
+                "SceneTransform": {
+                    "posX": 0.0, "posY": 3.2, "posZ": -8.5,
+                    "rotX": 12.0, "rotY": 0.0, "rotZ": 0.0,
+                    "scaleX": 1.0, "scaleY": 1.0, "scaleZ": 1.0
+                },
+                "Camera": {
+                    "enabled": true,
+                    "fov": 45.0,
+                    "nearClip": 0.5,
+                    "farClip": 500.0
+                }
+            }
+        },
+        {
+            "name": "Ground",
+            "tag": 2,
+            "children": [],
+            "components": {
+                "SceneTransform": {
+                    "posX": 0.0, "posY": -0.5, "posZ": 0.0,
+                    "rotX": 0.0, "rotY": 0.0, "rotZ": 0.0,
+                    "scaleX": 24.0, "scaleY": 1.0, "scaleZ": 24.0
+                },
+                "visual": {
+                    "model": "rom/model/object/Box_Brown.fbx",
+                    "shader": "pbr"
+                },
+                "Material": {
+                    "color": [0.35, 0.32, 0.28],
+                    "roughness": 0.85,
+                    "metallic": 0.0
+                }
+            }
+        },
+        {
+            "name": "PBR_Dielectric_Smooth",
+            "tag": 5,
+            "children": [],
+            "components": {
+                "SceneTransform": {
+                    "posX": -2.2, "posY": 1.0, "posZ": -1.2,
+                    "rotX": 0.0, "rotY": 20.0, "rotZ": 0.0,
+                    "scaleX": 1.4, "scaleY": 1.4, "scaleZ": 1.4
+                },
+                "visual": {
+                    "model": "rom/model/object/Box_Blue.fbx",
+                    "shader": "pbr"
+                },
+                "Material": {
+                    "color": [0.2, 0.45, 0.9],
+                    "roughness": 0.1,
+                    "metallic": 0.0
+                },
+                "Script": {
+                    "scriptClass": "SampleSpinScript",
+                    "properties": { "degreesPerSecond": 18.0 }
+                }
+            }
+        },
+        {
+            "name": "PBR_Dielectric_Rough",
+            "tag": 5,
+            "children": [],
+            "components": {
+                "SceneTransform": {
+                    "posX": 2.2, "posY": 1.0, "posZ": -1.2,
+                    "rotX": 0.0, "rotY": -20.0, "rotZ": 0.0,
+                    "scaleX": 1.4, "scaleY": 1.4, "scaleZ": 1.4
+                },
+                "visual": {
+                    "model": "rom/model/object/Box_Blue.fbx",
+                    "shader": "pbr"
+                },
+                "Material": {
+                    "color": [0.2, 0.45, 0.9],
+                    "roughness": 0.8,
+                    "metallic": 0.0
+                },
+                "Script": {
+                    "scriptClass": "SampleSpinScript",
+                    "properties": { "degreesPerSecond": 18.0 }
+                }
+            }
+        },
+        {
+            "name": "PBR_Metal_Smooth",
+            "tag": 5,
+            "children": [],
+            "components": {
+                "SceneTransform": {
+                    "posX": -2.2, "posY": 1.0, "posZ": 1.8,
+                    "rotX": 0.0, "rotY": 20.0, "rotZ": 0.0,
+                    "scaleX": 1.4, "scaleY": 1.4, "scaleZ": 1.4
+                },
+                "visual": {
+                    "model": "rom/model/object/Box_Sand.fbx",
+                    "shader": "pbr"
+                },
+                "Material": {
+                    "color": [0.95, 0.72, 0.28],
+                    "roughness": 0.1,
+                    "metallic": 1.0
+                },
+                "Script": {
+                    "scriptClass": "SampleSpinScript",
+                    "properties": { "degreesPerSecond": 18.0 }
+                }
+            }
+        },
+        {
+            "name": "PBR_Metal_Rough",
+            "tag": 5,
+            "children": [],
+            "components": {
+                "SceneTransform": {
+                    "posX": 2.2, "posY": 1.0, "posZ": 1.8,
+                    "rotX": 0.0, "rotY": -20.0, "rotZ": 0.0,
+                    "scaleX": 1.4, "scaleY": 1.4, "scaleZ": 1.4
+                },
+                "visual": {
+                    "model": "rom/model/object/Box_Sand.fbx",
+                    "shader": "pbr"
+                },
+                "Material": {
+                    "color": [0.95, 0.72, 0.28],
+                    "roughness": 0.8,
+                    "metallic": 1.0
+                },
+                "Script": {
+                    "scriptClass": "SampleSpinScript",
+                    "properties": { "degreesPerSecond": 18.0 }
+                }
+            }
+        },
+        {
+            "name": "Toon_Compare",
+            "tag": 5,
+            "children": [],
+            "components": {
+                "SceneTransform": {
+                    "posX": 0.0, "posY": 1.0, "posZ": 4.2,
+                    "rotX": 0.0, "rotY": 0.0, "rotZ": 0.0,
+                    "scaleX": 1.4, "scaleY": 1.4, "scaleZ": 1.4
+                },
+                "visual": {
+                    "model": "rom/model/object/Box_Green.fbx",
+                    "shader": "toon"
+                },
+                "Material": {
+                    "color": [0.35, 0.85, 0.4],
+                    "roughness": 0.5,
+                    "metallic": 0.0,
+                    "shadeSteps": 3.0,
+                    "shadeSmoothness": 0.05,
+                    "rimStrength": 0.35
+                },
+                "Script": {
+                    "scriptClass": "SampleSpinScript",
+                    "properties": { "degreesPerSecond": 18.0 }
+                }
+            }
+        }
+    ],
+    "canvas": {
+        "name": "pbr_showcase",
+        "elements": [
+            {
+                "type": "text",
+                "name": "Title",
+                "anchor": "TOP_LEFT",
+                "alignment": "LEFT",
+                "position": { "x": 24.0, "y": 24.0 },
+                "text": "PBR Cook-Torrance Showcase",
+                "fontSize": 1.2,
+                "characterSpacing": 20.0,
+                "color": { "r": 1.0, "g": 1.0, "b": 1.0, "a": 0.95 },
+                "font": {
+                    "texture": "rom/texture/consolab_ascii_512.png",
+                    "charWidth": 32.0,
+                    "charHeight": 32.0,
+                    "charsPerRow": 16
+                },
+                "visible": true
+            },
+            {
+                "type": "text",
+                "name": "Hint",
+                "anchor": "TOP_LEFT",
+                "alignment": "LEFT",
+                "position": { "x": 24.0, "y": 64.0 },
+                "text": "Front: dielectric r0.1 / r0.8  |  Back: metal r0.1 / r0.8  |  Far: Toon",
+                "fontSize": 0.85,
+                "characterSpacing": 16.0,
+                "color": { "r": 0.8, "g": 0.85, "b": 0.95, "a": 0.9 },
+                "font": {
+                    "texture": "rom/texture/consolab_ascii_512.png",
+                    "charWidth": 32.0,
+                    "charHeight": 32.0,
+                    "charsPerRow": 16
+                },
+                "visible": true
+            }
+        ]
+    }
+}

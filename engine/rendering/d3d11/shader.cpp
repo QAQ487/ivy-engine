@@ -75,6 +75,7 @@ static const Shader3DVariantInfo kShader3DVariants[] = {
 	{ Shader3DVariant::Rim,              "rim",               "Rim",                   "rom/shader/PixelShader3D_Rim.cso",             true },
 	{ Shader3DVariant::SurfaceFX,        "surface_fx",        "Surface FX",            "rom/shader/PixelShader3D_SurfaceFX.cso",       true },
 	{ Shader3DVariant::Toon,             "toon",              "Toon",                  "rom/shader/PixelShader3D_Toon.cso",            true },
+	{ Shader3DVariant::PBR,              "pbr",               "PBR (Cook-Torrance)",   "rom/shader/PixelShader3D_PBR.cso",             true },
 	{ Shader3DVariant::DirectionalPixel, "directional_pixel", "Directional (Pixel)",   "rom/shader/PixelShader3D_DirectionalPixel.cso", false },
 	{ Shader3DVariant::PointPixel,       "point_pixel",       "Point (Pixel)",         "rom/shader/PixelShader3D_PointPixel.cso",       false },
 	{ Shader3DVariant::SpotPixel,        "spot_pixel",        "Spot (Pixel)",          "rom/shader/PixelShader3D_SpotPixel.cso",        false },

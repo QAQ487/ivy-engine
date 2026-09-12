@@ -25,6 +25,7 @@ enum class Shader3DVariant {
 	Rim,
 	SurfaceFX,
 	Toon,
+	PBR,
 	DirectionalPixel,
 	PointPixel,
 	SpotPixel,

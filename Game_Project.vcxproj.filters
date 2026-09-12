@@ -823,6 +823,9 @@
     <None Include="shaders\PixelShader3D_Toon.hlsl">
       <Filter>shaders</Filter>
     </None>
+    <None Include="shaders\PixelShader3D_PBR.hlsl">
+      <Filter>shaders</Filter>
+    </None>
     <None Include="shaders\PixelShader3D_Outline.hlsl">
       <Filter>shaders</Filter>
     </None>

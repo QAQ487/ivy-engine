@@ -194,6 +194,7 @@ exit /b 0</Command>
     <None Include="shaders\PixelShader3D_SpotPixel.hlsl" />
     <None Include="shaders\PixelShader3D_SurfaceFX.hlsl" />
     <None Include="shaders\PixelShader3D_Toon.hlsl" />
+    <None Include="shaders\PixelShader3D_PBR.hlsl" />
     <None Include="shaders\VertexShader3D_Outline.hlsl" />
     <None Include="shaders\PixelShader3D_Outline.hlsl" />
     <None Include="shaders\SkyboxPS.hlsl" />
