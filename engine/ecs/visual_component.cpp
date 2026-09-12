@@ -54,6 +54,8 @@ void VisualComponent::EnsureAnimInstance() {
         return;
 
     m_animInstance = Model3D::CreateAnimInstanceFrom(*shared);
+    if (m_animInstance)
+        m_animInstancePath = modelPath;
 }
 
 Model3D* VisualComponent::GetRealModel() const {
@@ -61,6 +63,15 @@ Model3D* VisualComponent::GetRealModel() const {
         return nullptr;
     if (!playAnimation)
         return GetFromCache(modelPath);
+
+    // Stale per-instance copy after modelPath change (e.g. editor mesh swap).
+    if (m_animInstance && m_animationsLoaded && modelPath != m_animInstancePath) {
+        auto* self = const_cast<VisualComponent*>(this);
+        self->m_animInstance.reset();
+        self->m_animationsLoaded = false;
+        self->m_triedAnimClips.clear();
+        self->m_animInstancePath.clear();
+    }
 
     if (m_animInstance && m_animationsLoaded)
         return m_animInstance.get();
@@ -98,11 +109,13 @@ ID3D11ShaderResourceView* VisualComponent::GetSurfaceFxSRV() {
 
 void VisualComponent::OnDetach() {
     m_animInstance.reset();
+    m_animInstancePath.clear();
     ReleaseSurfaceFxTexture();
 }
 
 void VisualComponent::OnReset() {
     m_animInstance.reset();
+    m_animInstancePath.clear();
     m_animationsLoaded = false;
     m_triedAnimClips.clear();
     ReleaseSurfaceFxTexture();

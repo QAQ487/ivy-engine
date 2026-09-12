@@ -91,6 +91,7 @@ private:
     void ReleaseSurfaceFxTexture();
 
     mutable std::unique_ptr<Model3D> m_animInstance;
+    std::string m_animInstancePath;   // modelPath the anim instance was built from
     bool m_animationsLoaded = false;
     std::unordered_set<std::string> m_triedAnimClips;
     float m_lastAnimSpeed = 0.0f;
