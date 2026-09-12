@@ -286,3 +286,15 @@ std::vector<ProjectAssetIndex::ProjectEntry> ProjectAssetIndex::GetFolderContent
 
     return contents;
 }
+
+std::vector<ProjectAssetIndex::ProjectEntry> ProjectAssetIndex::GetFilesOfKind(Kind kind) const
+{
+    std::vector<ProjectEntry> result;
+    for (const auto& pair : m_filesByFolder) {
+        for (const auto& entry : pair.second) {
+            if (entry.kind == kind)
+                result.push_back(entry);
+        }
+    }
+    return result;
+}

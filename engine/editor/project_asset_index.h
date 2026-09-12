@@ -37,6 +37,7 @@ public:
     void Refresh();
     const ProjectFolderNode& GetFolderTree() const { return m_folderTree; }
     std::vector<ProjectEntry> GetFolderContents(const std::string& folderRelativePath) const;
+    std::vector<ProjectEntry> GetFilesOfKind(Kind kind) const;
 
     static const char* AssetRootPath() { return "rom"; }
 
