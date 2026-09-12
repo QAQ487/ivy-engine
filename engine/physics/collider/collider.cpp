@@ -284,6 +284,226 @@ XMFLOAT3 BoxCollider::GetSize() const {
     return m_size;
 }
 
+bool Collider::RayIntersect(const DirectX::XMFLOAT3& /*origin*/,
+	const DirectX::XMFLOAT3& /*dir*/, float /*maxDistance*/,
+	float& /*outT*/, DirectX::XMFLOAT3& /*outNormal*/) const {
+	return false;
+}
+
+namespace {
+bool RayIntersectSphereWorld(const XMFLOAT3& origin, const XMFLOAT3& dir,
+	const XMFLOAT3& center, float radius, float maxDistance,
+	float& outT, XMFLOAT3& outNormal) {
+	if (radius <= 0.0f || maxDistance <= 0.0f) return false;
+	const float ox = origin.x - center.x;
+	const float oy = origin.y - center.y;
+	const float oz = origin.z - center.z;
+	const float a = dir.x * dir.x + dir.y * dir.y + dir.z * dir.z;
+	if (a < 1e-12f) return false;
+	const float b = 2.0f * (ox * dir.x + oy * dir.y + oz * dir.z);
+	const float c = ox * ox + oy * oy + oz * oz - radius * radius;
+	const float disc = b * b - 4.0f * a * c;
+	if (disc < 0.0f) return false;
+	const float sqrtD = std::sqrt(disc);
+	const float inv2a = 0.5f / a;
+	float t0 = (-b - sqrtD) * inv2a;
+	float t1 = (-b + sqrtD) * inv2a;
+	float t = t0;
+	if (t <= 1e-6f) t = t1;
+	if (t <= 1e-6f || t > maxDistance) return false;
+	outT = t;
+	XMFLOAT3 hit = {
+		origin.x + dir.x * t,
+		origin.y + dir.y * t,
+		origin.z + dir.z * t
+	};
+	XMVECTOR n = XMVector3Normalize(XMVectorSet(
+		hit.x - center.x, hit.y - center.y, hit.z - center.z, 0.0f));
+	XMStoreFloat3(&outNormal, n);
+	return true;
+}
+} // namespace
+
+bool SphereCollider::RayIntersect(const DirectX::XMFLOAT3& origin,
+	const DirectX::XMFLOAT3& dir, float maxDistance,
+	float& outT, DirectX::XMFLOAT3& outNormal) const {
+	return RayIntersectSphereWorld(origin, dir, GetWorldCenter(), m_radius,
+		maxDistance, outT, outNormal);
+}
+
+bool BoxCollider::RayIntersect(const DirectX::XMFLOAT3& origin,
+	const DirectX::XMFLOAT3& dir, float maxDistance,
+	float& outT, DirectX::XMFLOAT3& outNormal) const {
+	if (!m_owner || maxDistance <= 0.0f) return false;
+
+	const XMFLOAT3 center = GetWorldCenter();
+	const XMFLOAT3 size = GetSize();
+	const XMFLOAT3 half = { size.x * 0.5f, size.y * 0.5f, size.z * 0.5f };
+	const XMFLOAT3 rot = m_owner->GetRotation();
+
+	XMMATRIX R = XMMatrixRotationRollPitchYaw(
+		XMConvertToRadians(rot.x),
+		XMConvertToRadians(rot.y),
+		XMConvertToRadians(rot.z));
+	XMMATRIX InvR = XMMatrixTranspose(R);
+
+	XMVECTOR vOrig = XMLoadFloat3(&origin);
+	XMVECTOR vC = XMLoadFloat3(&center);
+	XMVECTOR localO = XMVector3TransformCoord(XMVectorSubtract(vOrig, vC), InvR);
+	XMVECTOR localD = XMVector3TransformNormal(XMLoadFloat3(&dir), InvR);
+	XMFLOAT3 o, d;
+	XMStoreFloat3(&o, localO);
+	XMStoreFloat3(&d, localD);
+
+	float tMin = 0.0f;
+	float tMax = maxDistance;
+	int hitAxis = -1;
+	float hitSign = 1.0f;
+
+	auto slab = [&](float oComp, float dComp, float h, int axis) -> bool {
+		if (std::fabs(dComp) < 1e-8f) {
+			return oComp >= -h && oComp <= h;
+		}
+		const float invD = 1.0f / dComp;
+		float t1 = (-h - oComp) * invD;
+		float t2 = ( h - oComp) * invD;
+		float signNear = -1.0f;
+		if (t1 > t2) {
+			std::swap(t1, t2);
+			signNear = 1.0f;
+		} else {
+			signNear = -1.0f;
+		}
+		if (t1 > tMin) {
+			tMin = t1;
+			hitAxis = axis;
+			hitSign = signNear;
+		}
+		if (t2 < tMax) tMax = t2;
+		return tMin <= tMax;
+	};
+
+	if (!slab(o.x, d.x, half.x, 0)) return false;
+	if (!slab(o.y, d.y, half.y, 1)) return false;
+	if (!slab(o.z, d.z, half.z, 2)) return false;
+	if (tMin <= 1e-6f || tMin > maxDistance) return false;
+
+	outT = tMin;
+	XMFLOAT3 localN = { 0, 0, 0 };
+	if (hitAxis == 0) localN.x = hitSign;
+	else if (hitAxis == 1) localN.y = hitSign;
+	else localN.z = hitSign;
+	XMVECTOR worldN = XMVector3Normalize(XMVector3TransformNormal(XMLoadFloat3(&localN), R));
+	XMStoreFloat3(&outNormal, worldN);
+	return true;
+}
+
+bool CapsuleCollider::RayIntersect(const DirectX::XMFLOAT3& origin,
+	const DirectX::XMFLOAT3& dir, float maxDistance,
+	float& outT, DirectX::XMFLOAT3& outNormal) const {
+	if (!m_owner || maxDistance <= 0.0f || m_radius <= 0.0f) return false;
+
+	const XMFLOAT3 center = GetWorldCenter();
+	const float halfHeight = m_height * 0.5f;
+	const XMFLOAT3 rot = m_owner->GetRotation();
+	XMMATRIX rotM = XMMatrixRotationRollPitchYaw(
+		XMConvertToRadians(rot.x),
+		XMConvertToRadians(rot.y),
+		XMConvertToRadians(rot.z));
+	XMVECTOR axis = XMVector3Normalize(
+		XMVector3TransformNormal(XMVectorSet(0, 1, 0, 0), rotM));
+	XMFLOAT3 axisF;
+	XMStoreFloat3(&axisF, axis);
+
+	XMFLOAT3 pa = {
+		center.x - axisF.x * halfHeight,
+		center.y - axisF.y * halfHeight,
+		center.z - axisF.z * halfHeight
+	};
+	XMFLOAT3 pb = {
+		center.x + axisF.x * halfHeight,
+		center.y + axisF.y * halfHeight,
+		center.z + axisF.z * halfHeight
+	};
+
+	// Inigo Quilez-style ray–capsule (body cylinder + end caps).
+	XMVECTOR ba = XMVectorSubtract(XMLoadFloat3(&pb), XMLoadFloat3(&pa));
+	XMVECTOR oa = XMVectorSubtract(XMLoadFloat3(&origin), XMLoadFloat3(&pa));
+	XMVECTOR rd = XMLoadFloat3(&dir);
+	const float baba = XMVectorGetX(XMVector3Dot(ba, ba));
+	const float bard = XMVectorGetX(XMVector3Dot(ba, rd));
+	const float baoa = XMVectorGetX(XMVector3Dot(ba, oa));
+	const float rdoa = XMVectorGetX(XMVector3Dot(rd, oa));
+	const float oaoa = XMVectorGetX(XMVector3Dot(oa, oa));
+	const float ra = m_radius;
+	const float a = baba - bard * bard;
+	float bestT = maxDistance + 1.0f;
+	bool hit = false;
+	XMFLOAT3 bestN{};
+
+	auto considerT = [&](float t, const XMFLOAT3& n) {
+		if (t > 1e-6f && t <= maxDistance && t < bestT) {
+			bestT = t;
+			bestN = n;
+			hit = true;
+		}
+	};
+
+	if (std::fabs(a) > 1e-8f) {
+		const float b = baba * rdoa - baoa * bard;
+		const float c = baba * oaoa - baoa * baoa - ra * ra * baba;
+		const float h = b * b - a * c;
+		if (h >= 0.0f) {
+			const float t = (-b - std::sqrt(h)) / a;
+			const float y = baoa + t * bard;
+			if (y > 0.0f && y < baba && t > 1e-6f && t <= maxDistance) {
+				XMFLOAT3 hitPt = {
+					origin.x + dir.x * t,
+					origin.y + dir.y * t,
+					origin.z + dir.z * t
+				};
+				const float s = y / baba;
+				XMFLOAT3 axisPt = {
+					pa.x + (pb.x - pa.x) * s,
+					pa.y + (pb.y - pa.y) * s,
+					pa.z + (pb.z - pa.z) * s
+				};
+				XMVECTOR n = XMVector3Normalize(XMVectorSet(
+					hitPt.x - axisPt.x, hitPt.y - axisPt.y, hitPt.z - axisPt.z, 0.0f));
+				XMFLOAT3 nf;
+				XMStoreFloat3(&nf, n);
+				considerT(t, nf);
+			}
+		}
+	}
+
+	float tCap = 0.0f;
+	XMFLOAT3 nCap{};
+	if (RayIntersectSphereWorld(origin, dir, pa, ra, maxDistance, tCap, nCap))
+		considerT(tCap, nCap);
+	if (RayIntersectSphereWorld(origin, dir, pb, ra, maxDistance, tCap, nCap))
+		considerT(tCap, nCap);
+
+	if (!hit) return false;
+	outT = bestT;
+	outNormal = bestN;
+	return true;
+}
+
+bool MeshCollider::RayIntersect(const DirectX::XMFLOAT3& origin,
+	const DirectX::XMFLOAT3& dir, float maxDistance,
+	float& outT, DirectX::XMFLOAT3& outNormal) const {
+	XMFLOAT3 hitPt{}, hitN{};
+	if (!Raycast(origin, dir, maxDistance, hitPt, hitN))
+		return false;
+	outT = std::sqrt(
+		(hitPt.x - origin.x) * (hitPt.x - origin.x) +
+		(hitPt.y - origin.y) * (hitPt.y - origin.y) +
+		(hitPt.z - origin.z) * (hitPt.z - origin.z));
+	outNormal = hitN;
+	return outT > 1e-6f && outT <= maxDistance;
+}
+
 //-----------------------------------------------
 // Collision resolution (normal: other -> self)
 //-----------------------------------------------
@@ -563,8 +783,6 @@ bool BoxCollider::CheckCollision(const Collider* other) const {
 void BoxCollider::ResolveCollision(Collider* other) {
     if (!other || !m_owner || !other->GetOwner()) return;
     if (m_isTrigger || other->IsTrigger()) {
-        m_owner->OnCollision(other->GetOwner());
-        other->GetOwner()->OnCollision(m_owner);
         return;
     }
     if (CollisionPairIgnored(m_owner, other->GetOwner())) return;
@@ -772,8 +990,6 @@ bool SphereCollider::CheckCollision(const Collider* other) const {
 void SphereCollider::ResolveCollision(Collider* other) {
     if (!other || !m_owner || !other->GetOwner()) return;
     if (m_isTrigger || other->IsTrigger()) {
-        m_owner->OnCollision(other->GetOwner());
-        other->GetOwner()->OnCollision(m_owner);
         return;
     }
     if (CollisionPairIgnored(m_owner, other->GetOwner())) return;
@@ -1018,8 +1234,6 @@ bool CapsuleCollider::CheckCollision(const Collider* other) const {
 void CapsuleCollider::ResolveCollision(Collider* other) {
     if (!other || !m_owner || !other->GetOwner()) return;
     if (m_isTrigger || other->IsTrigger()) {
-        m_owner->OnCollision(other->GetOwner());
-        other->GetOwner()->OnCollision(m_owner);
         return;
     }
     if (CollisionPairIgnored(m_owner, other->GetOwner())) return;
@@ -1192,8 +1406,6 @@ bool CylinderCollider::CheckCollision(const Collider* other) const {
 void CylinderCollider::ResolveCollision(Collider* other) {
     if (!other || !m_owner || !other->GetOwner()) return;
     if (m_isTrigger || other->IsTrigger()) {
-        m_owner->OnCollision(other->GetOwner());
-        other->GetOwner()->OnCollision(m_owner);
         return;
     }
     if (CollisionPairIgnored(m_owner, other->GetOwner())) return;
@@ -1534,7 +1746,6 @@ void MeshCollider::ResolveCollision(Collider* other) {
 
     GameObject* otherObj = other->GetOwner();
     if (!otherObj || m_isTrigger || other->IsTrigger()) {
-        if (otherObj) { m_owner->OnCollision(otherObj); otherObj->OnCollision(m_owner); }
         return;
     }
 

@@ -6,6 +6,7 @@
 #include "transform.h"
 #include "../scene/scene_loader.h"
 #include "scene_manager.h"
+#include "engine/physics/core/physics_system.h"
 #include <algorithm>
 #include <mutex>
 #include <string>
@@ -270,6 +271,7 @@ void PrefabRuntime_FlushDestroyed() {
         CollectSubtree(obj, subtree);
 
         for (GameObject* node : subtree) {
+            PhysicsSystem_NotifyObjectDestroyed(node);
             if (ScriptComponent* sc = node->GetComponent<ScriptComponent>())
                 sc->Teardown();
         }

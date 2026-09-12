@@ -7,6 +7,7 @@
 #include "engine/scene/render_settings.h"
 #include "engine/rendering/d3d11/shader.h"
 #include "engine/audio/audio_manager.h"
+#include "engine/physics/core/physics_system.h"
 
 #include <DirectXMath.h>
 #include <algorithm>
@@ -62,6 +63,7 @@ GameObject::~GameObject() {
     // reference this object, so a playing sound's next Update() can't
     // dereference a freed GameObject.
     AudioManager::Instance().OnGameObjectDestroyed(this);
+    PhysicsSystem_NotifyObjectDestroyed(this);
 
     for (auto& kv : m_components)
         kv.second->OnDetach();
@@ -70,6 +72,20 @@ GameObject::~GameObject() {
         delete m_collider;
     m_collider = nullptr;
     m_colliderOwnedByHost = false;
+}
+
+void GameObject::OnTriggerEnter(GameObject* other) {
+    if (ScriptComponent* sc = GetComponent<ScriptComponent>()) {
+        if (Script* script = sc->GetScript())
+            script->OnTriggerEnter(*this, other);
+    }
+}
+
+void GameObject::OnTriggerExit(GameObject* other) {
+    if (ScriptComponent* sc = GetComponent<ScriptComponent>()) {
+        if (Script* script = sc->GetScript())
+            script->OnTriggerExit(*this, other);
+    }
 }
 
 void GameObject::AddIgnoreCollisionTag(Tag tag) {

@@ -22,13 +22,14 @@
 #include "engine/ecs/visual_component.h"
 #include "engine/ecs/material_component.h"
 #include "engine/rendering/d3d11/post_process.h"
+#include "engine/physics/core/physics_system.h"
 
 #include <Windows.h>
 #include <cmath>
 #include <string>
 
 namespace {
-constexpr std::uint32_t kScriptRuntimeApiVersion = 39;
+constexpr std::uint32_t kScriptRuntimeApiVersion = 40;
 
 template <typename T>
 T* FindComponentByTypeName(GameObject& object, const char* typeName) {
@@ -452,6 +453,19 @@ void Host_PostFxBurst(float rgbShift, float durationSeconds) {
     PostProcess_TriggerBurst(rgbShift, durationSeconds);
 }
 
+bool Host_PhysicsRaycast(const DirectX::XMFLOAT3* origin, const DirectX::XMFLOAT3* dir,
+    float maxDistance, DirectX::XMFLOAT3* outPoint, DirectX::XMFLOAT3* outNormal,
+    float* outDistance) {
+    if (!origin || !dir) return false;
+    RayHit hit{};
+    if (!PhysicsSystem_Raycast(*origin, *dir, maxDistance, hit, false))
+        return false;
+    if (outPoint) *outPoint = hit.point;
+    if (outNormal) *outNormal = hit.normal;
+    if (outDistance) *outDistance = hit.distance;
+    return true;
+}
+
 void Host_ThirdPersonCameraSetMagnetMode(int mode) {
     ThirdPersonCamera_SetMagnetMode(static_cast<ThirdPersonMagnetMode>(mode));
 }
@@ -627,6 +641,7 @@ const ScriptRuntimeApi g_scriptRuntimeApi = {
     &Host_AudioGetMasterVolume,
     &Host_MouseGetPosition,
     &Host_PostFxBurst,
+    &Host_PhysicsRaycast,
 };
 #else
 using GetApiFn = const ScriptRuntimeApi* (*)();
@@ -947,6 +962,16 @@ void ScriptApi_PostFX_Burst(float rgbShift, float durationSeconds) {
     const ScriptRuntimeApi* api = ScriptRuntimeApi_GetHost();
     if (api && api->postFxBurst)
         api->postFxBurst(rgbShift, durationSeconds);
+}
+
+bool ScriptApi_Physics_Raycast(const DirectX::XMFLOAT3& origin,
+    const DirectX::XMFLOAT3& dir, float maxDistance,
+    DirectX::XMFLOAT3* outPoint, DirectX::XMFLOAT3* outNormal,
+    float* outDistance) {
+    const ScriptRuntimeApi* api = ScriptRuntimeApi_GetHost();
+    if (!api || !api->physicsRaycast)
+        return false;
+    return api->physicsRaycast(&origin, &dir, maxDistance, outPoint, outNormal, outDistance);
 }
 
 void ScriptApi_ApplyColliderComponent(ColliderComponent& component) {

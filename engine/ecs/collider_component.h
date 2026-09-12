@@ -13,6 +13,7 @@ public:
     float height         = 2.0f;
     float meshSizePadding = 0.0f;
     bool showDebugCollider = true;
+    bool isTrigger = false;
 
     const char* GetTypeName() const override { return "Collider"; }
 

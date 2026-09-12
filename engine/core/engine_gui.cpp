@@ -3213,6 +3213,9 @@ void EngineGUI_Draw() {
                     g_selNode->m_debugCollider = cc->showDebugCollider;
                     runtimeDirty = true;
                 }
+                if (ImGui::Checkbox("Is Trigger", &cc->isTrigger)) {
+                    runtimeDirty = true;
+                }
                 ImGui::Spacing();
             }
 

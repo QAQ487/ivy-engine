@@ -57,6 +57,9 @@ void ColliderComponent::ApplyToOwner() {
         break;
     }
 
+    if (owner->m_collider)
+        owner->m_collider->SetIsTrigger(isTrigger);
+
     // Static colliders default to kinematic. Authored RigidbodyComponent keeps
     // its own isKinematic / mass / drag from the scene (do not overwrite).
     const bool hadRigidbody = owner->HasComponent<RigidbodyComponent>();
@@ -73,6 +76,7 @@ std::string ColliderComponent::Serialize() const {
     j["height"] = height;
     j["meshSizePadding"] = meshSizePadding;
     j["showDebugCollider"] = showDebugCollider;
+    j["isTrigger"] = isTrigger;
     return j.dump();
 }
 
@@ -94,6 +98,7 @@ void ColliderComponent::Deserialize(const std::string& jsonStr) {
         height = j.value("height", 2.0f);
         meshSizePadding = j.value("meshSizePadding", 0.0f);
         showDebugCollider = j.value("showDebugCollider", true);
+        isTrigger = j.value("isTrigger", false);
     } catch (...) {
         OutputDebugStringA("[ColliderComponent] Deserialize failed.\n");
     }

@@ -11,6 +11,10 @@
 #ifndef PHYSICS_SYSTEM_H
 #define PHYSICS_SYSTEM_H
 
+#include <DirectXMath.h>
+
+class GameObject;
+
 // Full physics tick: save previous positions, integrate velocity, detect and
 // resolve collisions (swept AABB broad phase + sub-stepped narrow phase).
 // The scene loop should call this only while playing; edit mode must not
@@ -28,5 +32,24 @@ void PhysicsSystem_SavePositions();
 // displacements to prevent tunneling through thin objects.
 void PhysicsSystem_ResolveCollisions();
 
-#endif // PHYSICS_SYSTEM_H
+// Clear trigger enter/exit pair tracking (no callbacks). Call on scene change.
+void PhysicsSystem_ClearTriggerPairs();
 
+// While obj is still alive: fire OnTriggerExit for pairs involving obj, then
+// erase those pairs from tracking so the next pass cannot touch freed pointers.
+void PhysicsSystem_NotifyObjectDestroyed(GameObject* obj);
+
+struct RayHit {
+	GameObject* object = nullptr;
+	DirectX::XMFLOAT3 point{};
+	DirectX::XMFLOAT3 normal{};
+	float distance = 0.0f;
+};
+
+// Nearest-hit raycast against active scene colliders. skipTriggers defaults false
+// (raycast hits triggers unless the caller opts out).
+bool PhysicsSystem_Raycast(const DirectX::XMFLOAT3& origin,
+	const DirectX::XMFLOAT3& dir, float maxDistance, RayHit& outHit,
+	bool skipTriggers = false);
+
+#endif // PHYSICS_SYSTEM_H

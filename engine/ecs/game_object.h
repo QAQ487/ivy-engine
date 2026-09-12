@@ -238,6 +238,8 @@ public:
     // ── Collision ─────────────────────────────────────────────────────────
     virtual void OnCollision(GameObject* /*other*/)     {}
     virtual void OnCollisionExit(GameObject* /*other*/) {}
+    virtual void OnTriggerEnter(GameObject* other);
+    virtual void OnTriggerExit(GameObject* other);
 
     virtual bool CanCollideWith(GameObject* other) const {
         if (!other) return false;

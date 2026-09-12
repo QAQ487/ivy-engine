@@ -14,11 +14,45 @@
 #include <vector>
 #include <cmath>
 #include <algorithm>
+#include <set>
+#include <utility>
 #include <type_traits>
 #include "engine/physics/collider/collider.h"
 
 namespace {
 	using namespace DirectX;
+
+	std::set<std::pair<GameObject*, GameObject*>> g_triggerPairsPrev;
+	std::set<std::pair<GameObject*, GameObject*>> g_triggerPairsCurrent;
+	SceneBase* g_lastTriggerScene = nullptr;
+
+	void InsertTriggerPair(GameObject* a, GameObject* b) {
+		if (!a || !b || a == b) return;
+		if (b < a) std::swap(a, b);
+		g_triggerPairsCurrent.insert({ a, b });
+	}
+
+	void DiffAndDispatchTriggerEvents() {
+		// Enters first (current - prev), then exits (prev - current).
+		for (const auto& pair : g_triggerPairsCurrent) {
+			if (g_triggerPairsPrev.count(pair) == 0) {
+				GameObject* a = pair.first;
+				GameObject* b = pair.second;
+				if (a) a->OnTriggerEnter(b);
+				if (b) b->OnTriggerEnter(a);
+			}
+		}
+		for (const auto& pair : g_triggerPairsPrev) {
+			if (g_triggerPairsCurrent.count(pair) == 0) {
+				GameObject* a = pair.first;
+				GameObject* b = pair.second;
+				if (a) a->OnTriggerExit(b);
+				if (b) b->OnTriggerExit(a);
+			}
+		}
+		g_triggerPairsPrev.swap(g_triggerPairsCurrent);
+		g_triggerPairsCurrent.clear();
+	}
 
 	// 動的剛体かどうかを判定（キネマティックでなく、質量がある）
 	inline bool IsDynamic(const GameObject* obj) {
@@ -121,6 +155,15 @@ namespace {
 		return cdist2 <= (r * r);
 	}
 
+	// Static/static (or any non-swept) trigger overlap: CheckCollision + insert only.
+	void DoTriggerOverlapCheck(GameObject* a, Collider* ca,
+	                           GameObject* b, Collider* cb) {
+		if (!a || !b || !ca || !cb) return;
+		if (!BroadPhasePass(ca, cb)) return;
+		if (ca->CheckCollision(cb))
+			InsertTriggerPair(a, b);
+	}
+
 	// スウェプトナローフェーズ: A が prevPos から現在位置まで移動した経路を
 	// サブステップに分割して衝突判定する。衝突が検出された最初のサブステップ位置
 	// (testPos) で ResolveCollision を呼び出し、位置補正と速度のキャンセルを行う。
@@ -130,6 +173,7 @@ namespace {
 	                        bool bDynamic) {
 		const XMFLOAT3 prevPos = a->m_previousPosition;
 		const XMFLOAT3 curPos  = a->GetPosition();
+		const bool isTriggerPair = ca->IsTrigger() || cb->IsTrigger();
 
 		// Thin mesh walls: discrete CheckCollision at sub-steps often misses when
 		// a fast sphere jumps past zero-thickness triangles. Sphere↔Mesh
@@ -140,6 +184,11 @@ namespace {
 			ca->GetType() == ColliderType::MESH && cb->GetType() == ColliderType::SPHERE;
 		if (sphereVsMesh || meshVsSphere) {
 			a->SetPosition(curPos);
+			if (isTriggerPair) {
+				if (ca->CheckCollision(cb))
+					InsertTriggerPair(a, b);
+				return;
+			}
 			if (IsDynamic(a))
 				ca->ResolveCollision(cb);
 			if (bDynamic)
@@ -176,6 +225,12 @@ namespace {
 			if (!BroadPhasePass(ca, cb)) continue;
 
 			if (ca->CheckCollision(cb)) {
+				if (isTriggerPair) {
+					InsertTriggerPair(a, b);
+					a->SetPosition(curPos);
+					return;
+				}
+
 				// Collision found at testPos (A is penetrating B here).
 				// Resolve from this position so that ResolveCollision can detect
 				// the actual penetration depth, push A out, and zero the velocity
@@ -211,6 +266,39 @@ namespace {
 
 		// No collision detected along the entire path – restore intended position.
 		a->SetPosition(curPos);
+	}
+}
+
+void PhysicsSystem_ClearTriggerPairs() {
+	g_triggerPairsPrev.clear();
+	g_triggerPairsCurrent.clear();
+	g_lastTriggerScene = nullptr;
+}
+
+void PhysicsSystem_NotifyObjectDestroyed(GameObject* obj) {
+	if (!obj) return;
+
+	std::vector<std::pair<GameObject*, GameObject*>> toNotify;
+	auto collect = [&](std::set<std::pair<GameObject*, GameObject*>>& s) {
+		for (const auto& pair : s) {
+			if (pair.first == obj || pair.second == obj)
+				toNotify.push_back(pair);
+		}
+	};
+	collect(g_triggerPairsPrev);
+	collect(g_triggerPairsCurrent);
+
+	// Dedup (pair may be in both sets).
+	std::sort(toNotify.begin(), toNotify.end());
+	toNotify.erase(std::unique(toNotify.begin(), toNotify.end()), toNotify.end());
+
+	for (const auto& pair : toNotify) {
+		GameObject* a = pair.first;
+		GameObject* b = pair.second;
+		if (a) a->OnTriggerExit(b);
+		if (b) b->OnTriggerExit(a);
+		g_triggerPairsPrev.erase(pair);
+		g_triggerPairsCurrent.erase(pair);
 	}
 }
 
@@ -250,6 +338,11 @@ void PhysicsSystem_ResolveCollisions() {
 	SceneBase* scene = SceneManager::Instance().GetCurrentScene();
 	if (!scene) return;
 
+	if (scene != g_lastTriggerScene) {
+		PhysicsSystem_ClearTriggerPairs();
+		g_lastTriggerScene = scene;
+	}
+
 	const auto& objs = scene->GetObjects();
 	if (objs.empty()) return;
 
@@ -262,6 +355,7 @@ void PhysicsSystem_ResolveCollisions() {
 	std::vector<BroadPhaseEntry> entries;
 	entries.reserve(objs.size());
 	bool anyDynamic = false;
+	bool anyTrigger = false;
 	for (auto* o : objs) {
 		if (!o || !o->IsActive()) continue;
 		Collider* c = o->GetCollider();
@@ -272,6 +366,7 @@ void PhysicsSystem_ResolveCollisions() {
 		e.collider = c;
 		e.isDynamic = IsDynamic(o);
 		anyDynamic = anyDynamic || e.isDynamic;
+		anyTrigger = anyTrigger || c->IsTrigger();
 
 		const float radius = GetApproxRadius(c);
 		const XMFLOAT3 curCenter = c->GetWorldCenter();
@@ -300,7 +395,10 @@ void PhysicsSystem_ResolveCollisions() {
 		e.maxX = maxX + radius;
 		entries.push_back(e);
 	}
-	if (!anyDynamic || entries.size() < 2) return;
+	if (entries.size() < 2) return;
+	if (!anyDynamic && !anyTrigger) return;
+
+	g_triggerPairsCurrent.clear();
 
 	std::sort(entries.begin(), entries.end(),
 		[](const BroadPhaseEntry& l, const BroadPhaseEntry& r) { return l.minX < r.minX; });
@@ -309,7 +407,19 @@ void PhysicsSystem_ResolveCollisions() {
 		for (size_t j = i + 1; j < entries.size() && entries[j].minX <= entries[i].maxX; ++j) {
 			const BroadPhaseEntry& e1 = entries[i];
 			const BroadPhaseEntry& e2 = entries[j];
-			if (!e1.isDynamic && !e2.isDynamic) continue;
+
+			const bool eitherTrigger =
+				e1.collider->IsTrigger() || e2.collider->IsTrigger();
+
+			// Static–static: only process when a trigger is involved (cheap overlap).
+			if (!e1.isDynamic && !e2.isDynamic) {
+				if (!eitherTrigger) continue;
+				if (!e1.obj->IsActive() || !e2.obj->IsActive()) continue;
+				if (!e1.obj->CanCollideWith(e2.obj) || !e2.obj->CanCollideWith(e1.obj))
+					continue;
+				DoTriggerOverlapCheck(e1.obj, e1.collider, e2.obj, e2.collider);
+				continue;
+			}
 
 			// Re-derive the exact same (a, b, bDynamic) roles the original
 			// nested loop used: a is always the dynamic side; when both are
@@ -350,6 +460,78 @@ void PhysicsSystem_ResolveCollisions() {
 			DoSweptNarrowPhase(a, ca, b, cb, bDynamic);
 		}
 	}
+
+	DiffAndDispatchTriggerEvents();
+}
+
+bool PhysicsSystem_Raycast(const DirectX::XMFLOAT3& origin,
+	const DirectX::XMFLOAT3& dir, float maxDistance, RayHit& outHit,
+	bool skipTriggers) {
+	outHit = {};
+	if (maxDistance <= 0.0f) return false;
+
+	SceneBase* scene = SceneManager::Instance().GetCurrentScene();
+	if (!scene) return false;
+
+	using namespace DirectX;
+	XMVECTOR vDir = XMLoadFloat3(&dir);
+	float dirLen = XMVectorGetX(XMVector3Length(vDir));
+	if (dirLen < 1e-8f) return false;
+	XMVECTOR vDirN = XMVectorScale(vDir, 1.0f / dirLen);
+	XMFLOAT3 dirN;
+	XMStoreFloat3(&dirN, vDirN);
+
+	float bestT = maxDistance;
+	bool hit = false;
+	RayHit best{};
+
+	for (auto* obj : scene->GetObjects()) {
+		if (!obj || !obj->IsActive()) continue;
+		Collider* c = obj->GetCollider();
+		if (!c) continue;
+		if (skipTriggers && c->IsTrigger()) continue;
+
+		const XMFLOAT3 center = c->GetWorldCenter();
+		const float radius = GetApproxRadius(c);
+		// Closest point on ray to sphere center; cull if beyond radius + maxDistance.
+		XMVECTOR vOrig = XMLoadFloat3(&origin);
+		XMVECTOR vC = XMLoadFloat3(&center);
+		XMVECTOR toC = XMVectorSubtract(vC, vOrig);
+		float tClosest = XMVectorGetX(XMVector3Dot(toC, vDirN));
+		if (tClosest + radius < 0.0f) continue;
+		if (tClosest - radius > bestT) continue;
+		XMVECTOR closest = XMVectorAdd(vOrig, XMVectorScale(vDirN, tClosest));
+		XMVECTOR diff = XMVectorSubtract(closest, vC);
+		float dist2 = XMVectorGetX(XMVector3LengthSq(diff));
+		if (dist2 > (radius + 0.05f) * (radius + 0.05f) &&
+			(tClosest < 0.0f || tClosest > bestT)) {
+			// Still allow RayIntersect if sphere could clip the segment — use
+			// conservative: only skip when clearly outside enlarged sphere of segment.
+			float segR = radius + 0.05f;
+			if (dist2 > segR * segR) continue;
+		}
+
+		float t = 0.0f;
+		XMFLOAT3 normal{};
+		if (!c->RayIntersect(origin, dirN, bestT, t, normal))
+			continue;
+		if (t <= 0.0f || t > bestT) continue;
+
+		bestT = t;
+		hit = true;
+		best.object = obj;
+		best.distance = t;
+		best.normal = normal;
+		best.point = {
+			origin.x + dirN.x * t,
+			origin.y + dirN.y * t,
+			origin.z + dirN.z * t
+		};
+	}
+
+	if (hit)
+		outHit = best;
+	return hit;
 }
 
 // 物理システム更新

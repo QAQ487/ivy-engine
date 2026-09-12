@@ -62,6 +62,11 @@ public:
     // World space center (considers owner's scale, rotation, position)
     DirectX::XMFLOAT3 GetWorldCenter() const;
 
+    // Ray vs collider. dir should be normalized. Returns nearest hit in (0, maxDistance].
+    virtual bool RayIntersect(const DirectX::XMFLOAT3& origin,
+        const DirectX::XMFLOAT3& dir, float maxDistance,
+        float& outT, DirectX::XMFLOAT3& outNormal) const;
+
     // Collision interface
     virtual bool CheckCollision(const Collider* other) const = 0;
     virtual void ResolveCollision(Collider* other) = 0;
@@ -83,6 +88,9 @@ public:
 
     bool CheckCollision(const Collider* other) const override;
     void ResolveCollision(Collider* other) override;
+    bool RayIntersect(const DirectX::XMFLOAT3& origin,
+        const DirectX::XMFLOAT3& dir, float maxDistance,
+        float& outT, DirectX::XMFLOAT3& outNormal) const override;
 
     void DebugDraw(const DirectX::XMFLOAT4& color = { 0.0f, 1.0f, 0.0f, 1.0f }) override;
 };
@@ -101,6 +109,9 @@ public:
 
     bool CheckCollision(const Collider* other) const override;
     void ResolveCollision(Collider* other) override;
+    bool RayIntersect(const DirectX::XMFLOAT3& origin,
+        const DirectX::XMFLOAT3& dir, float maxDistance,
+        float& outT, DirectX::XMFLOAT3& outNormal) const override;
 
     void DebugDraw(const DirectX::XMFLOAT4& color = { 0.0f, 1.0f, 0.0f, 1.0f }) override;
 };
@@ -123,6 +134,9 @@ public:
 
     bool CheckCollision(const Collider* other) const override;
     void ResolveCollision(Collider* other) override;
+    bool RayIntersect(const DirectX::XMFLOAT3& origin,
+        const DirectX::XMFLOAT3& dir, float maxDistance,
+        float& outT, DirectX::XMFLOAT3& outNormal) const override;
 
     void DebugDraw(const DirectX::XMFLOAT4& color = { 0.0f, 1.0f, 0.0f, 1.0f }) override;
 };
@@ -194,6 +208,9 @@ public:
 
     bool CheckCollision(const Collider* other) const override;
     void ResolveCollision(Collider* other) override;
+    bool RayIntersect(const DirectX::XMFLOAT3& origin,
+        const DirectX::XMFLOAT3& dir, float maxDistance,
+        float& outT, DirectX::XMFLOAT3& outNormal) const override;
     void DebugDraw(const DirectX::XMFLOAT4& color = { 0.0f, 1.0f, 0.0f, 1.0f }) override;
 
 private:

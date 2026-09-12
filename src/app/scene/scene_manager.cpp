@@ -8,6 +8,7 @@
 
  ===========================================================================**/
 #include "scene_manager.h"
+#include "engine/physics/core/physics_system.h"
 
  /**===========================================================================
 	???V???O???g???C???X?^???X??????
@@ -43,6 +44,7 @@ void SceneManager::DestroyCurrentScene() {
 }
 
 void SceneManager::ChangeScene(SceneBase* pNextScene) {
+	PhysicsSystem_ClearTriggerPairs();
 	DestroyCurrentScene();
 	m_CurrentScene = pNextScene;
 	if (m_CurrentScene) m_CurrentScene->Initialize();

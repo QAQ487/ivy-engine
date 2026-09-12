@@ -55,6 +55,17 @@ public:
     // removal).  Use this to release runtime resources and undo OnCreate work.
     virtual void OnDestroy(engine::GameObject& self) {}
 
+    // Trigger volume enter/exit (forwarded from GameObject when either collider
+    // is marked IsTrigger). Defaults are no-ops.
+    virtual void OnTriggerEnter(engine::GameObject& self, engine::GameObject* other) {
+        (void)self;
+        (void)other;
+    }
+    virtual void OnTriggerExit(engine::GameObject& self, engine::GameObject* other) {
+        (void)self;
+        (void)other;
+    }
+
     // Optional physics body used while playing (e.g. a runtime collider proxy).
     // Editor selection overlay uses this for collider placement during play.
     virtual GameObject* GetRuntimePhysicsProxy(const GameObject& self) const {
