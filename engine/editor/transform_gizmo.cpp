@@ -3,6 +3,7 @@
 #include "engine/core/engine_gui.h"
 #include "engine/ecs/game_object.h"
 #include "engine/ecs/transform.h"
+#include "engine/editor/editor_undo.h"
 #include "camera.h"
 #include "engine/input/mouse.h"
 #include "imgui/imgui.h"
@@ -11,6 +12,7 @@
 
 #include <cmath>
 #include <cstring>
+#include <string>
 
 using namespace DirectX;
 
@@ -333,6 +335,14 @@ void Draw(GameObject* selected) {
             transform->localScale, matrix);
     }
 
+    static bool s_wasUsing = false;
+    static std::string s_beforeJson;
+    static GameObject* s_dragNode = nullptr;
+
+    // While idle, keep a fresh pre-edit snapshot so the rising edge is correct.
+    if (!s_wasUsing)
+        s_beforeJson = transform->Serialize();
+
     const bool changed = ImGuizmo::Manipulate(
         view, proj, g_operation, g_mode, matrix);
 
@@ -341,6 +351,20 @@ void Draw(GameObject* selected) {
         transform->SnapshotStartState();
         EngineGUI_MarkSceneDirty();
     }
+
+    const bool usingNow = ImGuizmo::IsUsing();
+    if (usingNow && !s_wasUsing)
+        s_dragNode = selected;
+
+    if (!usingNow && s_wasUsing) {
+        if (s_dragNode == selected && !EngineGUI_IsPlaying()) {
+            const std::string afterJson = transform->Serialize();
+            EditorUndo_PushTransform(selected, s_beforeJson, afterJson);
+        }
+        s_beforeJson.clear();
+        s_dragNode = nullptr;
+    }
+    s_wasUsing = usingNow;
 }
 
 } // namespace TransformGizmo

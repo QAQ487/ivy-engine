@@ -1,5 +1,6 @@
 ﻿#include "editor_ui_panel.h"
 #include "engine/core/engine_gui.h"
+#include "engine/editor/editor_undo.h"
 
 #include "imgui/imgui.h"
 #include "../ui/scene_canvas.h"
@@ -267,17 +268,24 @@ void DrawCanvasElementProperties(UIElement*& selectedUiElement) {
 
     if (UICanvas* canvas = SceneCanvas_GetCanvas()) {
         ImGui::Text("Draw Order");
+        auto undoableMove = [&](bool (UICanvas::*moveFn)(UIElement*)) {
+            const int oldIndex = canvas->GetElementIndex(element);
+            if ((canvas->*moveFn)(element)) {
+                EditorUndo_PushUiReorder(element, oldIndex, canvas->GetElementIndex(element));
+                EngineGUI_MarkSceneDirty();
+            }
+        };
         if (ImGui::Button("Back", ImVec2(70, 0)))
-            canvas->MoveElementToBack(element);
+            undoableMove(&UICanvas::MoveElementToBack);
         ImGui::SameLine();
         if (ImGui::Button("Down", ImVec2(70, 0)))
-            canvas->MoveElementBackward(element);
+            undoableMove(&UICanvas::MoveElementBackward);
         ImGui::SameLine();
         if (ImGui::Button("Up", ImVec2(70, 0)))
-            canvas->MoveElementForward(element);
+            undoableMove(&UICanvas::MoveElementForward);
         ImGui::SameLine();
         if (ImGui::Button("Top", ImVec2(70, 0)))
-            canvas->MoveElementToFront(element);
+            undoableMove(&UICanvas::MoveElementToFront);
         ImGui::TextDisabled("Later elements draw on top.");
     }
 
@@ -514,10 +522,13 @@ void DrawCanvasElementProperties(UIElement*& selectedUiElement) {
 
     ImGui::Separator();
     if (ImGui::Button("Delete UI Element", ImVec2(-1, 30))) {
+        EditorUndo_DiscardUiEdit();
+        EditorUndo_PushUiDelete(element);
         if (UICanvas* canvas = SceneCanvas_GetCanvas())
             canvas->RemoveElement(element);
         selectedUiElement = nullptr;
         s_uiEditElement = nullptr;
+        EngineGUI_MarkSceneDirty();
     }
 }
 

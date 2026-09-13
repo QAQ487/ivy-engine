@@ -1,7 +1,9 @@
 #include "ui_gizmo.h"
 
 #include "engine/core/engine_gui.h"
+#include "engine/editor/editor_undo.h"
 #include "engine/input/mouse.h"
+#include "engine/ui/scene_canvas.h"
 #include "engine/ui/ui_bar.h"
 #include "engine/ui/ui_button.h"
 #include "engine/ui/ui_element.h"
@@ -10,6 +12,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <string>
 
 namespace {
 
@@ -51,6 +54,8 @@ DirectX::XMFLOAT2 g_startSize = {};
 float g_dragStartLocalX = 0.0f;
 float g_dragStartLocalY = 0.0f;
 bool g_prevLDown = false;
+std::string g_beforeJson;
+UIElement* g_dragElement = nullptr;
 
 void ViewportLocalToWindow(float& x, float& y) {
     float vx = 0.0f, vy = 0.0f, vw = 0.0f, vh = 0.0f;
@@ -358,8 +363,16 @@ void HandleInput(UIElement* selected) {
     g_prevLDown = lDown;
 
     if (!mouseInViewport || ImGui::GetIO().WantCaptureMouse) {
-        if (released)
+        if (released && g_interacting && g_dragElement) {
+            const std::string afterJson = SceneCanvas_SerializeElement(*g_dragElement);
+            EditorUndo_PushUiEdit(g_dragElement, g_beforeJson, afterJson);
+            g_beforeJson.clear();
+            g_dragElement = nullptr;
             g_interacting = false;
+            g_activeHandle = GizmoHandle::None;
+        } else if (released) {
+            g_interacting = false;
+        }
         return;
     }
 
@@ -373,6 +386,8 @@ void HandleInput(UIElement* selected) {
             GetElementSize(selected, g_startSize.x, g_startSize.y);
             g_dragStartLocalX = localMouseX;
             g_dragStartLocalY = localMouseY;
+            g_beforeJson = SceneCanvas_SerializeElement(*selected);
+            g_dragElement = selected;
         }
     }
 
@@ -388,6 +403,12 @@ void HandleInput(UIElement* selected) {
     }
 
     if (released) {
+        if (g_interacting && g_dragElement) {
+            const std::string afterJson = SceneCanvas_SerializeElement(*g_dragElement);
+            EditorUndo_PushUiEdit(g_dragElement, g_beforeJson, afterJson);
+            g_beforeJson.clear();
+            g_dragElement = nullptr;
+        }
         g_interacting = false;
         g_activeHandle = GizmoHandle::None;
     }

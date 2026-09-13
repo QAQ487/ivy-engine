@@ -73,11 +73,14 @@ public:
     
     // Generic add element method
     void AddElement(std::unique_ptr<UIElement> element);
+    void InsertElementAt(std::unique_ptr<UIElement> element, int index);
     void ClearElements();
     
     // Remove an element by name
     void RemoveElement(const std::string& name);
     void RemoveElement(UIElement* element);
+    int GetElementIndex(const UIElement* element) const;
+    bool MoveElementToIndex(UIElement* element, int index);
 
     // Draw order helpers. Later elements draw on top of earlier elements.
     bool MoveElement(UIElement* element, int offset);

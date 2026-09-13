@@ -26,6 +26,13 @@ UICanvas* SceneCanvas_GetCanvas();
 void SceneCanvas_ClearSceneCanvas();
 void SceneCanvas_LoadSceneCanvas(const nlohmann::json& canvasJson);
 nlohmann::json SceneCanvas_SaveSceneCanvas();
+
+// Single-element JSON helpers for editor undo (Phase 2).
+std::string SceneCanvas_SerializeElement(const UIElement& element);
+UIElement* SceneCanvas_InsertElementJson(const std::string& elementJson, int index);
+int SceneCanvas_GetElementIndex(const UIElement* element);
+void SceneCanvas_RemoveElementInternal(UIElement* element);
+
 using SceneCanvasButtonActionBinder = std::function<void(UIButton*)>;
 void SceneCanvas_RegisterButtonAction(const std::string& scriptName, SceneCanvasButtonActionBinder binder);
 void SceneCanvas_BindButtonAction(UIButton* button);

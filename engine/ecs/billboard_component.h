@@ -46,6 +46,11 @@ public:
 
     ID3D11ShaderResourceView* GetTextureSRV();
 
+    void InvalidateTextureCache() {
+        m_textureId = -1;
+        m_textureSrv = nullptr;
+    }
+
     static void SubmitSceneBillboards(
         const std::vector<std::unique_ptr<GameObject>>& roots);
 

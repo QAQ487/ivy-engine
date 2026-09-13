@@ -139,6 +139,43 @@ void UICanvas::AddElement(std::unique_ptr<UIElement> element) {
     m_elements.push_back(std::move(element));
 }
 
+void UICanvas::InsertElementAt(std::unique_ptr<UIElement> element, int index) {
+    if (!element) return;
+    UIButton* selectedButton = GetSelectedButton();
+    const int clamped = std::clamp(index, 0, static_cast<int>(m_elements.size()));
+    m_elements.insert(m_elements.begin() + clamped, std::move(element));
+    RebuildButtonList(selectedButton);
+}
+
+int UICanvas::GetElementIndex(const UIElement* element) const {
+    if (!element) return -1;
+    for (int i = 0; i < static_cast<int>(m_elements.size()); ++i) {
+        if (m_elements[i].get() == element)
+            return i;
+    }
+    return -1;
+}
+
+bool UICanvas::MoveElementToIndex(UIElement* element, int index) {
+    if (!element) return false;
+    auto it = std::find_if(m_elements.begin(), m_elements.end(),
+        [element](const std::unique_ptr<UIElement>& owned) {
+            return owned.get() == element;
+        });
+    if (it == m_elements.end()) return false;
+
+    const int from = static_cast<int>(std::distance(m_elements.begin(), it));
+    const int clamped = std::clamp(index, 0, static_cast<int>(m_elements.size()) - 1);
+    if (from == clamped) return false;
+
+    UIButton* selectedButton = GetSelectedButton();
+    auto owned = std::move(*it);
+    m_elements.erase(it);
+    m_elements.insert(m_elements.begin() + clamped, std::move(owned));
+    RebuildButtonList(selectedButton);
+    return true;
+}
+
 void UICanvas::ClearElements() {
     for (auto& element : m_elements) {
         if (element)

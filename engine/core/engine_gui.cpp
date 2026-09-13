@@ -64,6 +64,7 @@
 #include "engine/audio/audio_manager.h"
 #include "engine/editor/transform_gizmo.h"
 #include "engine/editor/ui_gizmo.h"
+#include "engine/editor/editor_undo.h"
 #include "engine/ecs/visual_component.h"
 #include "engine/ecs/billboard_component.h"
 #include "engine/ecs/material_component.h"
@@ -463,6 +464,7 @@ static void SpawnRootGameObject(std::unique_ptr<GameObject> node) {
     g_sceneNodes.push_back(std::move(node));
     g_selNode = raw;
     g_selUiElement = nullptr;
+    EditorUndo_PushCreate(raw, nullptr, static_cast<int>(g_sceneNodes.size()) - 1);
     EngineGUI_MarkSceneDirty();
     SyncSceneRuntime();
 }
@@ -474,6 +476,8 @@ static void SpawnChildGameObject(GameObject* parent) {
     parent->AddChild(std::move(node));
     g_selNode = raw;
     g_selUiElement = nullptr;
+    const int index = static_cast<int>(parent->GetChildren().size()) - 1;
+    EditorUndo_PushCreate(raw, parent, index);
     EngineGUI_MarkSceneDirty();
     SyncSceneRuntime();
 }
@@ -488,18 +492,26 @@ static void SpawnDuplicate(GameObject* source) {
     if (!dup) return;
     dup->SetName(source->GetName() + " (Copy)");
     GameObject* raw = dup.get();
-    if (GameObject* parent = source->GetParent())
+    GameObject* parent = source->GetParent();
+    int index = 0;
+    if (parent) {
         parent->AddChild(std::move(dup));
-    else
+        index = static_cast<int>(parent->GetChildren().size()) - 1;
+    } else {
         g_sceneNodes.push_back(std::move(dup));
+        index = static_cast<int>(g_sceneNodes.size()) - 1;
+    }
     g_selNode = raw;
     g_selUiElement = nullptr;
+    EditorUndo_PushCreate(raw, parent, index);
     EngineGUI_MarkSceneDirty();
     SyncSceneRuntime();
 }
 
-static void DeleteGameObject(GameObject* toDelete) {
+static void DeleteGameObject(GameObject* toDelete, bool recordUndo = true) {
     if (!toDelete) return;
+    if (recordUndo)
+        EditorUndo_PushDelete(toDelete);
     ClearSceneRuntime();
     if (g_selNode == toDelete)
         g_selNode = nullptr;
@@ -527,6 +539,7 @@ static void ClearScene() {
     g_selNode = nullptr;
     g_selUiElement = nullptr;
     SceneCanvas_ClearSceneCanvas();
+    EditorUndo_Clear();
     EngineGUI_MarkSceneDirty();
     SyncSceneRuntime();
 }
@@ -992,6 +1005,37 @@ static void DrawEditorMenuBar() {
         ImGui::EndMenu();
     }
 
+    if (ImGui::BeginMenu("Edit")) {
+        const bool canEdit = !g_isPlaying && !EngineGUI_IsSceneAssetPreloadActive();
+        auto& undoStack = EditorUndoStack::Instance();
+        const std::string undoDesc = undoStack.TopUndoDescribe();
+        const std::string redoDesc = undoStack.TopRedoDescribe();
+        char undoLabel[256];
+        char redoLabel[256];
+        if (undoDesc.empty())
+            snprintf(undoLabel, sizeof(undoLabel), "Undo");
+        else
+            snprintf(undoLabel, sizeof(undoLabel), "Undo %s", undoDesc.c_str());
+        if (redoDesc.empty())
+            snprintf(redoLabel, sizeof(redoLabel), "Redo");
+        else
+            snprintf(redoLabel, sizeof(redoLabel), "Redo %s", redoDesc.c_str());
+
+        if (ImGui::MenuItem(undoLabel, "Ctrl+Z", false, canEdit && undoStack.CanUndo())) {
+            if (EditorUndo_Undo()) {
+                EngineGUI_MarkSceneDirty();
+                SyncSceneRuntime();
+            }
+        }
+        if (ImGui::MenuItem(redoLabel, "Ctrl+Y", false, canEdit && undoStack.CanRedo())) {
+            if (EditorUndo_Redo()) {
+                EngineGUI_MarkSceneDirty();
+                SyncSceneRuntime();
+            }
+        }
+        ImGui::EndMenu();
+    }
+
     if (ImGui::BeginMenu("GameObject")) {
         if (ImGui::MenuItem("Create Empty"))
             SpawnRootGameObject(CreateEmptyGameObject());
@@ -1010,18 +1054,34 @@ static void DrawEditorMenuBar() {
             if (ImGui::MenuItem("Button")) {
                 g_selUiElement = EngineGUIUI::CreateUiElement(EngineGUIUI::UiCreateType::Button);
                 g_selNode = nullptr;
+                if (g_selUiElement) {
+                    EditorUndo_PushUiCreate(g_selUiElement);
+                    EngineGUI_MarkSceneDirty();
+                }
             }
             if (ImGui::MenuItem("Text")) {
                 g_selUiElement = EngineGUIUI::CreateUiElement(EngineGUIUI::UiCreateType::Text);
                 g_selNode = nullptr;
+                if (g_selUiElement) {
+                    EditorUndo_PushUiCreate(g_selUiElement);
+                    EngineGUI_MarkSceneDirty();
+                }
             }
             if (ImGui::MenuItem("Sprite")) {
                 g_selUiElement = EngineGUIUI::CreateUiElement(EngineGUIUI::UiCreateType::Sprite);
                 g_selNode = nullptr;
+                if (g_selUiElement) {
+                    EditorUndo_PushUiCreate(g_selUiElement);
+                    EngineGUI_MarkSceneDirty();
+                }
             }
             if (ImGui::MenuItem("Bar")) {
                 g_selUiElement = EngineGUIUI::CreateUiElement(EngineGUIUI::UiCreateType::Bar);
                 g_selNode = nullptr;
+                if (g_selUiElement) {
+                    EditorUndo_PushUiCreate(g_selUiElement);
+                    EngineGUI_MarkSceneDirty();
+                }
             }
             ImGui::EndMenu();
         }
@@ -1654,6 +1714,7 @@ static void NewScene() {
     SceneLoader_ClearSceneNodes();
     g_selNode = nullptr;
     g_selUiElement = nullptr;
+    EditorUndo_Clear();
 
     SceneLoader_CopySceneFileName(sceneFile);
     SaveScene();
@@ -1789,6 +1850,7 @@ void EngineGUI_FlushSceneLoadPending() {
     g_selUiElement = nullptr;
     EngineGUI_SetEditMode(EditorEditMode::Scene3D);
     EngineGUI_ClearSceneDirty();
+    EditorUndo_Clear();
 
     if (ProjectManager::Instance().IsOpen()) {
         const std::filesystem::path filePath(path);
@@ -2522,6 +2584,31 @@ static bool MoveNodeToFront(GameObject* node) {
     return MoveNodeOrder(node, distance);
 }
 
+static int GetNodeSiblingIndexLocal(GameObject* node) {
+    if (!node) return -1;
+    if (GameObject* parent = node->GetParent()) {
+        const auto& ch = parent->GetChildren();
+        for (int i = 0; i < (int)ch.size(); ++i)
+            if (ch[i].get() == node) return i;
+        return -1;
+    }
+    for (int i = 0; i < (int)g_sceneNodes.size(); ++i)
+        if (g_sceneNodes[i].get() == node) return i;
+    return -1;
+}
+
+static bool UndoableReorderNode(GameObject* node, bool (*moveFn)(GameObject*)) {
+    if (!node || !moveFn) return false;
+    GameObject* parent = node->GetParent();
+    const int oldIndex = GetNodeSiblingIndexLocal(node);
+    if (oldIndex < 0 || !moveFn(node))
+        return false;
+    const int newIndex = GetNodeSiblingIndexLocal(node);
+    if (oldIndex != newIndex)
+        EditorUndo_PushReparent(node, parent, oldIndex, parent, newIndex);
+    return true;
+}
+
 static void DrawSceneNodeHierarchy(GameObject* node, GameObject* rootOwner) {
     if (!node) return;
 
@@ -2565,6 +2652,16 @@ static void DrawSceneNodeHierarchy(GameObject* node, GameObject* rootOwner) {
         if (const ImGuiPayload* pl = ImGui::AcceptDragDropPayload("HIERARCHY_GO")) {
             GameObject* dragged = *static_cast<GameObject**>(pl->Data);
             if (dragged && dragged != node) {
+                GameObject* oldParent = dragged->GetParent();
+                int oldIndex = -1;
+                if (oldParent) {
+                    const auto& ch = oldParent->GetChildren();
+                    for (int i = 0; i < (int)ch.size(); ++i)
+                        if (ch[i].get() == dragged) { oldIndex = i; break; }
+                } else {
+                    for (int i = 0; i < (int)g_sceneNodes.size(); ++i)
+                        if (g_sceneNodes[i].get() == dragged) { oldIndex = i; break; }
+                }
                 GameObject* dragParent = dragged->GetParent();
                 if (dragParent) {
                     dragParent->ReparentChild(dragged, *node);
@@ -2579,13 +2676,24 @@ static void DrawSceneNodeHierarchy(GameObject* node, GameObject* rootOwner) {
                         node->AddChild(std::move(owned));
                     }
                 }
+                const int newIndex = (int)node->GetChildren().size() - 1;
+                EditorUndo_PushReparent(dragged, oldParent, oldIndex, node, newIndex);
+                EngineGUI_MarkSceneDirty();
+                SyncSceneRuntime();
                 if (g_selNode == dragged) g_selNode = nullptr;
             }
         }
         if (const ImGuiPayload* pl = ImGui::AcceptDragDropPayload("ASSET_PREFAB")) {
             std::string path(static_cast<const char*>(pl->Data));
             auto prefabNode = PrefabSerializer::LoadFromFile(path);
-            if (prefabNode) node->AddChild(std::move(prefabNode));
+            if (prefabNode) {
+                GameObject* raw = prefabNode.get();
+                node->AddChild(std::move(prefabNode));
+                const int idx = (int)node->GetChildren().size() - 1;
+                EditorUndo_PushCreate(raw, node, idx);
+                EngineGUI_MarkSceneDirty();
+                SyncSceneRuntime();
+            }
         }
         ImGui::EndDragDropTarget();
     }
@@ -2670,6 +2778,22 @@ void EngineGUI_Draw() {
             SaveScene();
         if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiMod_Shift | ImGuiKey_S))
             SaveProject();
+        // RouteAlways: default RouteFocused fails when focus is on the game viewport.
+        if (!g_isPlaying && !ImGui::GetIO().WantTextInput) {
+            if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_Z, ImGuiInputFlags_RouteAlways)) {
+                if (EditorUndo_Undo()) {
+                    EngineGUI_MarkSceneDirty();
+                    SyncSceneRuntime();
+                }
+            }
+            if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_Y, ImGuiInputFlags_RouteAlways) ||
+                ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiMod_Shift | ImGuiKey_Z, ImGuiInputFlags_RouteAlways)) {
+                if (EditorUndo_Redo()) {
+                    EngineGUI_MarkSceneDirty();
+                    SyncSceneRuntime();
+                }
+            }
+        }
     }
 
     if (ImGui::BeginMainMenuBar()) {
@@ -2717,7 +2841,35 @@ void EngineGUI_Draw() {
             SaveScene();
 
         ImGui::SameLine();
-        if (ImGui::Button(ICON_FA_ROTATE_RIGHT, ImVec2(Ui(28.0f), 0.0f)))
+        {
+            const bool canEditUndo = !g_isPlaying && !sceneLoadBusy;
+            if (!canEditUndo || !EditorUndoStack::Instance().CanUndo())
+                ImGui::BeginDisabled();
+            const bool undoPressed = ToolbarIconButton(ICON_FA_ROTATE_LEFT, "Undo (Ctrl+Z)");
+            if (!canEditUndo || !EditorUndoStack::Instance().CanUndo())
+                ImGui::EndDisabled();
+            if (undoPressed) {
+                if (EditorUndo_Undo()) {
+                    EngineGUI_MarkSceneDirty();
+                    SyncSceneRuntime();
+                }
+            }
+            ImGui::SameLine();
+            if (!canEditUndo || !EditorUndoStack::Instance().CanRedo())
+                ImGui::BeginDisabled();
+            const bool redoPressed = ToolbarIconButton(ICON_FA_ROTATE_RIGHT, "Redo (Ctrl+Y)");
+            if (!canEditUndo || !EditorUndoStack::Instance().CanRedo())
+                ImGui::EndDisabled();
+            if (redoPressed) {
+                if (EditorUndo_Redo()) {
+                    EngineGUI_MarkSceneDirty();
+                    SyncSceneRuntime();
+                }
+            }
+        }
+
+        ImGui::SameLine();
+        if (ImGui::Button(ICON_FA_ARROWS_ROTATE, ImVec2(Ui(28.0f), 0.0f)))
             SceneLoader_ScanScriptDllsForChanges(true);
         if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort))
             ImGui::SetTooltip("Reload Scripts\n%s", g_scriptReloadStatus.c_str());
@@ -2819,7 +2971,10 @@ void EngineGUI_Draw() {
                     GameObject* dragged = *static_cast<GameObject**>(pl->Data);
                     if (dragged && dragged->GetParent()) {
                         GameObject* oldParent = dragged->GetParent();
+                        int oldIndex = -1;
                         auto& siblings = oldParent->GetChildren();
+                        for (int i = 0; i < (int)siblings.size(); ++i)
+                            if (siblings[i].get() == dragged) { oldIndex = i; break; }
                         auto it = std::find_if(siblings.begin(), siblings.end(),
                             [dragged](const std::unique_ptr<GameObject>& c) { return c.get() == dragged; });
                         if (it != siblings.end()) {
@@ -2827,7 +2982,10 @@ void EngineGUI_Draw() {
                             siblings.erase(it);
                             owned->SetParent(nullptr);
                             g_sceneNodes.push_back(std::move(owned));
+                            const int newIndex = (int)g_sceneNodes.size() - 1;
+                            EditorUndo_PushReparent(dragged, oldParent, oldIndex, nullptr, newIndex);
                             EngineGUI_MarkSceneDirty();
+                            SyncSceneRuntime();
                         }
                     }
                 }
@@ -2835,8 +2993,11 @@ void EngineGUI_Draw() {
                     std::string path(static_cast<const char*>(pl->Data));
                     auto prefabNode = PrefabSerializer::LoadFromFile(path);
                     if (prefabNode) {
+                        GameObject* raw = prefabNode.get();
                         g_sceneNodes.push_back(std::move(prefabNode));
+                        EditorUndo_PushCreate(raw, nullptr, (int)g_sceneNodes.size() - 1);
                         EngineGUI_MarkSceneDirty();
+                        SyncSceneRuntime();
                     }
                 }
                 ImGui::EndDragDropTarget();
@@ -2865,6 +3026,7 @@ void EngineGUI_Draw() {
             static GameObject* s_lastSelNode = nullptr;
             static char nodeNameBuf[128] = {};
             if (g_selNode != s_lastSelNode) {
+                EditorUndo_DiscardComponentEdit();
                 s_lastSelNode = g_selNode;
                 strncpy_s(nodeNameBuf, g_selNode->GetName().c_str(), sizeof(nodeNameBuf) - 1);
             }
@@ -2879,7 +3041,10 @@ void EngineGUI_Draw() {
             ImGui::SetNextItemWidth(-1);
             if (ImGui::InputText("##NodeName", nodeNameBuf, sizeof(nodeNameBuf),
                 ImGuiInputTextFlags_EnterReturnsTrue)) {
-                g_selNode->SetName(std::string(nodeNameBuf));
+                const std::string oldName = g_selNode->GetName();
+                const std::string newName(nodeNameBuf);
+                g_selNode->SetName(newName);
+                EditorUndo_PushRename(g_selNode, oldName, newName);
                 EngineGUI_MarkSceneDirty();
             }
             ImGui::Spacing();
@@ -2887,26 +3052,30 @@ void EngineGUI_Draw() {
             ImGui::Text("Hierarchy Order");
             if (ImGui::Button("Back", ImVec2(70, 0)))
             {
-                MoveNodeToBack(g_selNode);
-                runtimeDirty = true;
+                if (UndoableReorderNode(g_selNode, MoveNodeToBack))
+                    runtimeDirty = true;
             }
             ImGui::SameLine();
             if (ImGui::Button("Down", ImVec2(70, 0)))
             {
-                MoveNodeOrder(g_selNode, -1);
-                runtimeDirty = true;
+                if (UndoableReorderNode(g_selNode, [](GameObject* n) {
+                    return MoveNodeOrder(n, -1);
+                }))
+                    runtimeDirty = true;
             }
             ImGui::SameLine();
             if (ImGui::Button("Up", ImVec2(70, 0)))
             {
-                MoveNodeOrder(g_selNode, 1);
-                runtimeDirty = true;
+                if (UndoableReorderNode(g_selNode, [](GameObject* n) {
+                    return MoveNodeOrder(n, 1);
+                }))
+                    runtimeDirty = true;
             }
             ImGui::SameLine();
             if (ImGui::Button("Top", ImVec2(70, 0)))
             {
-                MoveNodeToFront(g_selNode);
-                runtimeDirty = true;
+                if (UndoableReorderNode(g_selNode, MoveNodeToFront))
+                    runtimeDirty = true;
             }
             ImGui::TextDisabled("Later items draw later; UI later items appear on top.");
             ImGui::Spacing();
@@ -2915,6 +3084,7 @@ void EngineGUI_Draw() {
             if (engine::Transform* t = g_selNode->GetComponent<engine::Transform>()) {
                 ImGui::Text("Transform");
                 ImGui::Separator();
+                EditorUndo_BeginComponentEdit(g_selNode, "SceneTransform");
                 ImGui::Text("Position");
                 ImGui::Text("X:"); ImGui::SameLine(40);
                 runtimeDirty |= ImGui::DragFloat("##NPX", &t->localPosition.x, 0.1f);
@@ -2949,6 +3119,7 @@ void EngineGUI_Draw() {
                 runtimeDirty |= ScrollValue(&t->localScale.z);
                 ImGui::Spacing();
                 g_selNode->SyncLegacyTransformFromComponents();
+                EditorUndo_EndComponentEdit(g_selNode, "SceneTransform");
             }
 
             ImGui::Text("Scroll Sensitivity");
@@ -2982,7 +3153,9 @@ void EngineGUI_Draw() {
                                 ImGui::GetContentRegionAvail().x - removeW - spacing;
                             if (ImGui::Selectable(name, selected, 0,
                                     ImVec2((labelW > 1.0f) ? labelW : 1.0f, 0.0f))) {
+                                const int oldTag = g_selNode->GetTagId();
                                 g_selNode->SetTag(i);
+                                EditorUndo_PushTag(g_selNode, oldTag, i);
                                 runtimeDirty = true;
                             }
                             if (selected)
@@ -3014,7 +3187,9 @@ void EngineGUI_Draw() {
                         }
                         else {
                             if (ImGui::Selectable(name, selected)) {
+                                const int oldTag = g_selNode->GetTagId();
                                 g_selNode->SetTag(i);
+                                EditorUndo_PushTag(g_selNode, oldTag, i);
                                 runtimeDirty = true;
                             }
                             if (selected)
@@ -3036,6 +3211,7 @@ void EngineGUI_Draw() {
 
             ImGui::Separator();
             ImGui::Text("Visual");
+            EditorUndo_BeginComponentEdit(g_selNode, "visual");
 
             ImGui::Text("Mesh");
             {
@@ -3168,12 +3344,14 @@ void EngineGUI_Draw() {
                     ImGui::TextDisabled("Detail texture scrolls; not Material normal map.");
                 }
             }
+            EditorUndo_EndComponentEdit(g_selNode, "visual");
 
             ImGui::Spacing();
 
             if (DirectionalLightComponent* dl = g_selNode->GetComponent<DirectionalLightComponent>()) {
                 ImGui::Separator();
                 ImGui::Text("Directional Light");
+                EditorUndo_BeginComponentEdit(g_selNode, "DirectionalLight");
                 if (ImGui::Checkbox("Enabled", &dl->enabled))
                     runtimeDirty = true;
                 if (ImGui::ColorEdit3("Color", &dl->color.x))
@@ -3193,12 +3371,14 @@ void EngineGUI_Draw() {
                     ImGui::TextDisabled("Rotate Transform to aim light (+Z forward).");
                 }
                 ImGui::TextDisabled("Shader: Directional (Pixel) on Visual component.");
+                EditorUndo_EndComponentEdit(g_selNode, "DirectionalLight");
                 ImGui::Spacing();
             }
 
             if (CameraComponent* cam = g_selNode->GetComponent<CameraComponent>()) {
                 ImGui::Separator();
                 ImGui::Text("Camera");
+                EditorUndo_BeginComponentEdit(g_selNode, "Camera");
                 if (ImGui::Checkbox("Enabled", &cam->enabled))
                     runtimeDirty = true;
                 if (ImGui::DragFloat("FOV", &cam->fov, 0.5f, 1.0f, 179.0f))
@@ -3217,12 +3397,14 @@ void EngineGUI_Draw() {
                     ImGui::TextDisabled("Wire: blue=fwd green=up red=right. Aim with Transform (+Z).");
                     ImGui::TextDisabled("View uses world-up bank (no upside-down past 90 pitch).");
                 }
+                EditorUndo_EndComponentEdit(g_selNode, "Camera");
                 ImGui::Spacing();
             }
 
             if (PointLightComponent* pl = g_selNode->GetComponent<PointLightComponent>()) {
                 ImGui::Separator();
                 ImGui::Text("Point Light");
+                EditorUndo_BeginComponentEdit(g_selNode, "PointLight");
                 if (ImGui::Checkbox("Enabled", &pl->enabled)) runtimeDirty = true;
                 if (ImGui::ColorEdit3("Color", &pl->color.x)) runtimeDirty = true;
                 if (ImGui::DragFloat("Intensity", &pl->intensity, 0.05f, 0.0f, 10.0f)) runtimeDirty = true;
@@ -3232,12 +3414,14 @@ void EngineGUI_Draw() {
                 ImGui::Text("Attenuation (kc, kl, kq)");
                 if (ImGui::DragFloat3("##PtAtten", &pl->attenuation.x, 0.01f, 0.0f, 10.0f)) runtimeDirty = true;
                 ImGui::TextDisabled("Shader: Point (Pixel) on Visual component.");
+                EditorUndo_EndComponentEdit(g_selNode, "PointLight");
                 ImGui::Spacing();
             }
 
             if (SpotLightComponent* sl = g_selNode->GetComponent<SpotLightComponent>()) {
                 ImGui::Separator();
                 ImGui::Text("Spot Light");
+                EditorUndo_BeginComponentEdit(g_selNode, "SpotLight");
                 if (ImGui::Checkbox("Enabled", &sl->enabled)) runtimeDirty = true;
                 if (ImGui::ColorEdit3("Color", &sl->color.x)) runtimeDirty = true;
                 if (ImGui::DragFloat("Intensity", &sl->intensity, 0.05f, 0.0f, 10.0f)) runtimeDirty = true;
@@ -3255,12 +3439,14 @@ void EngineGUI_Draw() {
                     ImGui::TextDisabled("Rotate Transform to aim spot (+Z forward).");
                 }
                 ImGui::TextDisabled("Shader: Spot (Pixel) on Visual component.");
+                EditorUndo_EndComponentEdit(g_selNode, "SpotLight");
                 ImGui::Spacing();
             }
 
             if (ColliderComponent* cc = g_selNode->GetComponent<ColliderComponent>()) {
                 ImGui::Separator();
                 ImGui::Text("Collider");
+                EditorUndo_BeginComponentEdit(g_selNode, "Collider");
                 const char* colTypes[] = { "NONE","BOX","SPHERE","CAPSULE","MESH","CYLINDER" };
                 int ct = static_cast<int>(cc->colliderType);
                 ImGui::SameLine(80);
@@ -3316,12 +3502,19 @@ void EngineGUI_Draw() {
                 if (ImGui::Checkbox("Is Trigger", &cc->isTrigger)) {
                     runtimeDirty = true;
                 }
+                EditorUndo_EndComponentEdit(g_selNode, "Collider");
+                if (ImGui::Button("Remove Collider")) {
+                    EditorUndo_PushRemoveComponent(g_selNode, "Collider");
+                    g_selNode->RemoveComponent<ColliderComponent>();
+                    runtimeDirty = true;
+                }
                 ImGui::Spacing();
             }
 
             if (RigidbodyComponent* rbc = g_selNode->GetComponent<RigidbodyComponent>()) {
                 ImGui::Separator();
                 ImGui::Text("Rigidbody");
+                EditorUndo_BeginComponentEdit(g_selNode, "Rigidbody");
                 Rigidbody& rb = rbc->Body();
 
                 bool useGravity = rb.UseGravity();
@@ -3360,7 +3553,9 @@ void EngineGUI_Draw() {
                     runtimeDirty = true;
                 }
 
+                EditorUndo_EndComponentEdit(g_selNode, "Rigidbody");
                 if (ImGui::Button("Remove Rigidbody")) {
+                    EditorUndo_PushRemoveComponent(g_selNode, "Rigidbody");
                     g_selNode->RemoveComponent<RigidbodyComponent>();
                     runtimeDirty = true;
                 }
@@ -3371,6 +3566,7 @@ void EngineGUI_Draw() {
             if (MaterialComponent* mc = g_selNode->GetComponent<MaterialComponent>()) {
                 ImGui::Separator();
                 ImGui::Text("Material");
+                EditorUndo_BeginComponentEdit(g_selNode, "Material");
 
                 if (ImGui::ColorEdit3("Color", &mc->color.x))
                     runtimeDirty = true;
@@ -3444,7 +3640,9 @@ void EngineGUI_Draw() {
                     }
                 }
 
+                EditorUndo_EndComponentEdit(g_selNode, "Material");
                 if (ImGui::Button("Remove Material")) {
+                    EditorUndo_PushRemoveComponent(g_selNode, "Material");
                     g_selNode->RemoveComponent<MaterialComponent>();
                     runtimeDirty = true;
                 }
@@ -3455,6 +3653,7 @@ void EngineGUI_Draw() {
             if (EffectComponent* ec = g_selNode->GetComponent<EffectComponent>()) {
                 ImGui::Separator();
                 ImGui::Text("Effect");
+                EditorUndo_BeginComponentEdit(g_selNode, "Effect");
 
                 std::string path = ec->effectPath;
                 char buf[256];
@@ -3495,12 +3694,19 @@ void EngineGUI_Draw() {
                     ec->Stop();
                 }
 
+                EditorUndo_EndComponentEdit(g_selNode, "Effect");
+                if (ImGui::Button("Remove Effect")) {
+                    EditorUndo_PushRemoveComponent(g_selNode, "Effect");
+                    g_selNode->RemoveComponent<EffectComponent>();
+                    runtimeDirty = true;
+                }
                 ImGui::Spacing();
             }
 
             if (AudioComponent* ac = g_selNode->GetComponent<AudioComponent>()) {
                 ImGui::Separator();
                 ImGui::Text("Audio");
+                EditorUndo_BeginComponentEdit(g_selNode, "Audio");
 
                 std::string path = ac->clipPath;
                 char buf[256];
@@ -3566,6 +3772,12 @@ void EngineGUI_Draw() {
                 if (ImGui::Button("Stop##Audio"))
                     ac->Stop();
 
+                EditorUndo_EndComponentEdit(g_selNode, "Audio");
+                if (ImGui::Button("Remove Audio")) {
+                    EditorUndo_PushRemoveComponent(g_selNode, "Audio");
+                    g_selNode->RemoveComponent<AudioComponent>();
+                    runtimeDirty = true;
+                }
                 ImGui::Spacing();
             }
 
@@ -3574,16 +3786,22 @@ void EngineGUI_Draw() {
                 ImGui::Separator();
                 ImGui::Text("AudioListener");
                 ImGui::TextDisabled("3D ear. Active camera's listener is used.");
+                if (ImGui::Button("Remove AudioListener")) {
+                    EditorUndo_PushRemoveComponent(g_selNode, "AudioListener");
+                    g_selNode->RemoveComponent<AudioListenerComponent>();
+                    runtimeDirty = true;
+                }
                 ImGui::Spacing();
             }
 
             // Script property editor
             if (ScriptComponent* sc = g_selNode->GetComponent<ScriptComponent>()) {
                 Script* script = sc->GetScript();
+                ImGui::Separator();
+                ImGui::TextColored(ImVec4(0.3f, 0.8f, 1.0f, 1.0f),
+                    "Script: %s", sc->GetScriptClass().c_str());
                 if (script) {
-                    ImGui::Separator();
-                    ImGui::TextColored(ImVec4(0.3f, 0.8f, 1.0f, 1.0f),
-                        "Script: %s", sc->GetScriptClass().c_str());
+                    EditorUndo_BeginComponentEdit(g_selNode, "Script");
                     nlohmann::json props = sc->GetEditableProperties();
                     if (props.is_object() && !props.empty()) {
                         bool changed = false;
@@ -3599,8 +3817,62 @@ void EngineGUI_Draw() {
                     else {
                         ImGui::TextDisabled("(no editable properties)");
                     }
-                    ImGui::Spacing();
+                    EditorUndo_EndComponentEdit(g_selNode, "Script");
                 }
+                else {
+                    ImGui::TextDisabled("(script not loaded)");
+                }
+                if (ImGui::Button("Remove Script")) {
+                    EditorUndo_PushRemoveComponent(g_selNode, "Script");
+                    g_selNode->RemoveComponent<ScriptComponent>();
+                    runtimeDirty = true;
+                }
+                ImGui::Spacing();
+            }
+
+            if (BillboardComponent* bbc = g_selNode->GetComponent<BillboardComponent>()) {
+                ImGui::Separator();
+                ImGui::Text("Billboard");
+                EditorUndo_BeginComponentEdit(g_selNode, "Billboard");
+
+                char texBuf[256];
+                strncpy_s(texBuf, bbc->texturePath.c_str(), sizeof(texBuf) - 1);
+                texBuf[sizeof(texBuf) - 1] = '\0';
+                ImGui::Text("Texture");
+                if (ImGui::InputText("##BillboardTex", texBuf, sizeof(texBuf))) {
+                    bbc->texturePath = texBuf;
+                    bbc->InvalidateTextureCache();
+                    runtimeDirty = true;
+                }
+                {
+                    const char* texExts[] = { ".png", ".jpg", ".jpeg", ".tga", ".bmp", ".dds" };
+                    std::string droppedPath;
+                    if (AcceptAssetPathDrop(texExts, IM_ARRAYSIZE(texExts), droppedPath)) {
+                        bbc->texturePath = droppedPath;
+                        bbc->InvalidateTextureCache();
+                        runtimeDirty = true;
+                    }
+                }
+                if (ImGui::DragFloat("Size X", &bbc->sizeX, 0.05f, 0.01f, 1000.0f))
+                    runtimeDirty = true;
+                if (ImGui::DragFloat("Size Y", &bbc->sizeY, 0.05f, 0.01f, 1000.0f))
+                    runtimeDirty = true;
+                if (ImGui::ColorEdit4("Color##Billboard", &bbc->color.x))
+                    runtimeDirty = true;
+                if (ImGui::DragFloat("Rotation##Billboard", &bbc->rotation, 0.5f))
+                    runtimeDirty = true;
+                if (ImGui::Checkbox("Ground Aligned", &bbc->groundAligned))
+                    runtimeDirty = true;
+                if (ImGui::Checkbox("Enabled##Billboard", &bbc->enabled))
+                    runtimeDirty = true;
+
+                EditorUndo_EndComponentEdit(g_selNode, "Billboard");
+                if (ImGui::Button("Remove Billboard")) {
+                    EditorUndo_PushRemoveComponent(g_selNode, "Billboard");
+                    g_selNode->RemoveComponent<BillboardComponent>();
+                    runtimeDirty = true;
+                }
+                ImGui::Spacing();
             }
 
             ImGui::Separator();
@@ -3609,38 +3881,47 @@ void EngineGUI_Draw() {
                 ImGui::BulletText("%s", kv.second->GetTypeName());
             if (!g_selNode->GetComponent<engine::Transform>() && ImGui::Button("Add Transform")) {
                 g_selNode->AddComponent<engine::Transform>();
+                EditorUndo_PushAddComponent(g_selNode, "SceneTransform");
                 runtimeDirty = true;
             }
             if (!g_selNode->GetComponent<BillboardComponent>() && ImGui::Button("Add Billboard")) {
                 g_selNode->AddComponent<BillboardComponent>();
+                EditorUndo_PushAddComponent(g_selNode, "Billboard");
                 runtimeDirty = true;
             }
             if (!g_selNode->GetComponent<MaterialComponent>() && ImGui::Button("Add Material")) {
                 g_selNode->AddComponent<MaterialComponent>();
+                EditorUndo_PushAddComponent(g_selNode, "Material");
                 runtimeDirty = true;
             }
             if (!g_selNode->GetComponent<RigidbodyComponent>() && ImGui::Button("Add Rigidbody")) {
                 g_selNode->AddComponent<RigidbodyComponent>();
+                EditorUndo_PushAddComponent(g_selNode, "Rigidbody");
                 runtimeDirty = true;
             }
             if (!g_selNode->GetComponent<ColliderComponent>() && ImGui::Button("Add Collider")) {
                 g_selNode->AddComponent<ColliderComponent>();
+                EditorUndo_PushAddComponent(g_selNode, "Collider");
                 runtimeDirty = true;
             }
             if (!g_selNode->GetComponent<ScriptComponent>() && ImGui::Button("Add Script")) {
                 g_selNode->AddComponent<ScriptComponent>();
+                EditorUndo_PushAddComponent(g_selNode, "Script");
                 runtimeDirty = true;
             }
             if (!g_selNode->GetComponent<EffectComponent>() && ImGui::Button("Add Effect")) {
                 g_selNode->AddComponent<EffectComponent>();
+                EditorUndo_PushAddComponent(g_selNode, "Effect");
                 runtimeDirty = true;
             }
             if (!g_selNode->GetComponent<AudioComponent>() && ImGui::Button("Add Audio")) {
                 g_selNode->AddComponent<AudioComponent>();
+                EditorUndo_PushAddComponent(g_selNode, "Audio");
                 runtimeDirty = true;
             }
             if (!g_selNode->GetComponent<AudioListenerComponent>() && ImGui::Button("Add AudioListener")) {
                 g_selNode->AddComponent<AudioListenerComponent>();
+                EditorUndo_PushAddComponent(g_selNode, "AudioListener");
                 runtimeDirty = true;
             }
             ImGui::Spacing();
@@ -3662,12 +3943,16 @@ void EngineGUI_Draw() {
 
             ImGui::Separator();
             if (ImGui::Button("Delete Node", ImVec2(-1, 30))) {
+                EditorUndo_DiscardComponentEdit();
                 s_lastSelNode = nullptr;
                 DeleteGameObject(g_selNode);
             }
         }
         else if (g_selUiElement) {
+            EditorUndo_BeginUiEdit(g_selUiElement);
             EngineGUIUI::DrawCanvasElementProperties(g_selUiElement);
+            if (g_selUiElement)
+                EditorUndo_EndUiEdit(g_selUiElement);
         }
         else {
             DrawPropertiesEmptyState();
@@ -3687,6 +3972,12 @@ void EngineGUI_Draw() {
             if (!sceneLoadBusy) {
                 g_selNode = spawned;
                 g_selUiElement = nullptr;
+                const int idx = [&]() {
+                    for (int i = 0; i < (int)g_sceneNodes.size(); ++i)
+                        if (g_sceneNodes[i].get() == spawned) return i;
+                    return (int)g_sceneNodes.size() - 1;
+                }();
+                EditorUndo_PushCreate(spawned, nullptr, idx);
                 EngineGUI_MarkSceneDirty();
                 SyncSceneRuntime();
             }
@@ -3732,6 +4023,13 @@ void EngineGUI_Draw() {
             }
             ImGui::EndPopup();
         }
+    }
+
+    // Abandon unfinished inspector component-edit capture when no widget is active
+    // (e.g. user clicked the viewport mid-drag without DeactivatedAfterEdit).
+    if (!ImGui::IsAnyItemActive()) {
+        EditorUndo_DiscardComponentEdit();
+        EditorUndo_DiscardUiEdit();
     }
 
     ImGui::Render();

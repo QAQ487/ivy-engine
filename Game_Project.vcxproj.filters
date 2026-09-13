@@ -206,6 +206,9 @@
     <ClInclude Include="engine\editor\editor_ui_panel.h">
       <Filter>engine\editor</Filter>
     </ClInclude>
+    <ClInclude Include="engine\editor\editor_undo.h">
+      <Filter>engine\editor</Filter>
+    </ClInclude>
     <ClInclude Include="engine\editor\light_gizmo.h">
       <Filter>engine\editor</Filter>
     </ClInclude>
@@ -551,6 +554,9 @@
       <Filter>engine\editor</Filter>
     </ClCompile>
     <ClCompile Include="engine\editor\editor_ui_panel.cpp">
+      <Filter>engine\editor</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\editor\editor_undo.cpp">
       <Filter>engine\editor</Filter>
     </ClCompile>
     <ClCompile Include="engine\editor\light_gizmo.cpp">

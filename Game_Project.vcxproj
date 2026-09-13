@@ -266,6 +266,7 @@ exit /b 0</Command>
     <ClInclude Include="engine\editor\editor_project_browser.h" />
     <ClInclude Include="engine\editor\project_asset_ops.h" />
     <ClInclude Include="engine\editor\editor_ui_panel.h" />
+    <ClInclude Include="engine\editor\editor_undo.h" />
     <ClInclude Include="engine\ecs\prefab_serializer.h" />
     <ClInclude Include="engine\scene\scene_node.h" />
     <ClInclude Include="engine\ecs\transform.h" />
@@ -402,6 +403,7 @@ exit /b 0</Command>
     <ClCompile Include="engine\editor\editor_project_browser.cpp" />
     <ClCompile Include="engine\editor\project_asset_ops.cpp" />
     <ClCompile Include="engine\editor\editor_ui_panel.cpp" />
+    <ClCompile Include="engine\editor\editor_undo.cpp" />
     <ClCompile Include="engine\ecs\prefab_serializer.cpp" />
     <ClCompile Include="engine\ecs\transform.cpp" />
     <ClCompile Include="engine\scripting\script_factory.cpp" />

@@ -304,6 +304,87 @@ namespace {
 		item["visible"] = element.IsVisible();
 		return item;
 	}
+
+	json SerializeElementJson(const UIElement& element) {
+		if (const auto* sprite = dynamic_cast<const UISprite*>(&element)) {
+			json item = SerializeCommon(*sprite, "sprite");
+			item["size"] = { {"width", sprite->GetWidth()}, {"height", sprite->GetHeight()} };
+			item["texture"] = sprite->GetTexturePath();
+			item["color"] = WriteColor(sprite->GetColor());
+			item["rotation"] = sprite->GetRotation();
+			AppendElementScript(*sprite, item);
+			return item;
+		}
+		if (const auto* text = dynamic_cast<const UIText*>(&element)) {
+			json item = SerializeCommon(*text, "text");
+			item["text"] = text->GetText();
+			item["color"] = WriteColor(text->GetColor());
+			item["fontSize"] = text->GetFontSize();
+			item["alignment"] = TextAlignToString(text->GetAlignment());
+			item["characterSpacing"] = text->GetCharacterSpacing();
+			if (!text->GetFontPath().empty()) {
+				item["font"] = {
+					{"texture", text->GetFontPath()},
+					{"charWidth", text->GetFontCharWidth()},
+					{"charHeight", text->GetFontCharHeight()},
+					{"charsPerRow", text->GetFontCharsPerRow()}
+				};
+			}
+			AppendElementScript(*text, item);
+			return item;
+		}
+		if (const auto* button = dynamic_cast<const UIButton*>(&element)) {
+			json item = SerializeCommon(*button, "button");
+			item["size"] = { {"width", button->GetWidth()}, {"height", button->GetHeight()} };
+			item["text"] = button->GetText();
+			item["textScale"] = button->GetTextScale();
+			item["color"] = WriteColor(button->GetColor());
+			item["hoverColor"] = WriteColor(button->GetHoverColor());
+			item["pressedColor"] = WriteColor(button->GetPressedColor());
+			item["textColor"] = WriteColor(button->GetTextColor());
+			item["textHoverColor"] = WriteColor(button->GetTextHoverColor());
+			if (!button->GetTexturePath().empty()) item["texture"] = button->GetTexturePath();
+			if (!button->GetHoverTexturePath().empty()) item["hoverTexture"] = button->GetHoverTexturePath();
+			if (!button->GetPressedTexturePath().empty()) item["pressedTexture"] = button->GetPressedTexturePath();
+			if (!button->GetAction().empty()) {
+				item["onClick"] = {
+					{"script", button->GetAction()},
+					{"scene", button->GetActionScene()},
+					{"play", button->GetActionPlayOnLoad()}
+				};
+			}
+			if (!UIButton::GetFontPath().empty()) {
+				item["font"] = {
+					{"texture", UIButton::GetFontPath()},
+					{"charWidth", UIButton::GetFontCharWidth()},
+					{"charHeight", UIButton::GetFontCharHeight()},
+					{"charsPerRow", UIButton::GetFontCharsPerRow()}
+				};
+			}
+			AppendElementScript(*button, item);
+			return item;
+		}
+		if (const auto* bar = dynamic_cast<const UIBar*>(&element)) {
+			json item = SerializeCommon(*bar, "bar");
+			item["label"] = bar->GetLabel();
+			item["currentValue"] = bar->GetCurrentValue();
+			item["maxValue"] = bar->GetMaxValue();
+			item["size"] = { {"width", bar->GetBarWidth()}, {"height", bar->GetBarHeight()} };
+			item["textColor"] = WriteColor(bar->GetTextColor());
+			item["barColor"] = WriteColor(bar->GetBarColor());
+			item["backgroundColor"] = WriteColor(bar->GetBackgroundColor());
+			item["showText"] = bar->GetShowText();
+			item["showValue"] = bar->GetShowValue();
+			item["characterSpacing"] = bar->GetCharacterSpacing();
+			if (!bar->GetFillTexturePath().empty())
+				item["fillTexture"] = bar->GetFillTexturePath();
+			if (!bar->GetBackgroundTexturePath().empty())
+				item["backgroundTexture"] = bar->GetBackgroundTexturePath();
+			AppendElementScript(*bar, item);
+			return item;
+		}
+		return SerializeCommon(element, "unknown");
+	}
 }
 
 void SceneCanvas_Initialize()
@@ -400,87 +481,67 @@ nlohmann::json SceneCanvas_SaveSceneCanvas()
 
 	for (const auto& element : g_canvas->GetElements()) {
 		if (!element) continue;
-
-		if (const auto* sprite = dynamic_cast<const UISprite*>(element.get())) {
-			json item = SerializeCommon(*sprite, "sprite");
-			item["size"] = { {"width", sprite->GetWidth()}, {"height", sprite->GetHeight()} };
-			item["texture"] = sprite->GetTexturePath();
-			item["color"] = WriteColor(sprite->GetColor());
-			item["rotation"] = sprite->GetRotation();
-			AppendElementScript(*sprite, item);
-			canvas["elements"].push_back(item);
-		}
-		else if (const auto* text = dynamic_cast<const UIText*>(element.get())) {
-			json item = SerializeCommon(*text, "text");
-			item["text"] = text->GetText();
-			item["color"] = WriteColor(text->GetColor());
-			item["fontSize"] = text->GetFontSize();
-			item["alignment"] = TextAlignToString(text->GetAlignment());
-			item["characterSpacing"] = text->GetCharacterSpacing();
-			if (!text->GetFontPath().empty()) {
-				item["font"] = {
-					{"texture", text->GetFontPath()},
-					{"charWidth", text->GetFontCharWidth()},
-					{"charHeight", text->GetFontCharHeight()},
-					{"charsPerRow", text->GetFontCharsPerRow()}
-				};
-			}
-			AppendElementScript(*text, item);
-			canvas["elements"].push_back(item);
-		}
-		else if (const auto* button = dynamic_cast<const UIButton*>(element.get())) {
-			json item = SerializeCommon(*button, "button");
-			item["size"] = { {"width", button->GetWidth()}, {"height", button->GetHeight()} };
-			item["text"] = button->GetText();
-			item["textScale"] = button->GetTextScale();
-			item["color"] = WriteColor(button->GetColor());
-			item["hoverColor"] = WriteColor(button->GetHoverColor());
-			item["pressedColor"] = WriteColor(button->GetPressedColor());
-			item["textColor"] = WriteColor(button->GetTextColor());
-			item["textHoverColor"] = WriteColor(button->GetTextHoverColor());
-			if (!button->GetTexturePath().empty()) item["texture"] = button->GetTexturePath();
-			if (!button->GetHoverTexturePath().empty()) item["hoverTexture"] = button->GetHoverTexturePath();
-			if (!button->GetPressedTexturePath().empty()) item["pressedTexture"] = button->GetPressedTexturePath();
-			if (!button->GetAction().empty()) {
-				item["onClick"] = {
-					{"script", button->GetAction()},
-					{"scene", button->GetActionScene()},
-					{"play", button->GetActionPlayOnLoad()}
-				};
-			}
-			if (!UIButton::GetFontPath().empty()) {
-				item["font"] = {
-					{"texture", UIButton::GetFontPath()},
-					{"charWidth", UIButton::GetFontCharWidth()},
-					{"charHeight", UIButton::GetFontCharHeight()},
-					{"charsPerRow", UIButton::GetFontCharsPerRow()}
-				};
-			}
-			AppendElementScript(*button, item);
-			canvas["elements"].push_back(item);
-		}
-		else if (const auto* bar = dynamic_cast<const UIBar*>(element.get())) {
-			json item = SerializeCommon(*bar, "bar");
-			item["label"] = bar->GetLabel();
-			item["currentValue"] = bar->GetCurrentValue();
-			item["maxValue"] = bar->GetMaxValue();
-			item["size"] = { {"width", bar->GetBarWidth()}, {"height", bar->GetBarHeight()} };
-			item["textColor"] = WriteColor(bar->GetTextColor());
-			item["barColor"] = WriteColor(bar->GetBarColor());
-			item["backgroundColor"] = WriteColor(bar->GetBackgroundColor());
-			item["showText"] = bar->GetShowText();
-			item["showValue"] = bar->GetShowValue();
-			item["characterSpacing"] = bar->GetCharacterSpacing();
-			if (!bar->GetFillTexturePath().empty())
-				item["fillTexture"] = bar->GetFillTexturePath();
-			if (!bar->GetBackgroundTexturePath().empty())
-				item["backgroundTexture"] = bar->GetBackgroundTexturePath();
-			AppendElementScript(*bar, item);
-			canvas["elements"].push_back(item);
-		}
+		canvas["elements"].push_back(SerializeElementJson(*element));
 	}
 
 	return canvas;
+}
+
+std::string SceneCanvas_SerializeElement(const UIElement& element)
+{
+	return SerializeElementJson(element).dump();
+}
+
+UIElement* SceneCanvas_InsertElementJson(const std::string& elementJson, int index)
+{
+	if (!g_canvas) {
+		g_canvas = std::make_unique<UICanvas>("scene");
+		g_canvas->Initialize();
+	}
+
+	json item;
+	try {
+		item = json::parse(elementJson);
+	} catch (...) {
+		return nullptr;
+	}
+	if (!item.is_object()) return nullptr;
+
+	const size_t before = g_canvas->GetElementCount();
+	const std::string type = item.value("type", "");
+	if (type == "sprite")
+		LoadSpriteElement(item);
+	else if (type == "text")
+		LoadTextElement(item);
+	else if (type == "button")
+		LoadButtonElement(item);
+	else if (type == "bar")
+		LoadBarElement(item);
+	else
+		return nullptr;
+
+	if (g_canvas->GetElementCount() <= before)
+		return nullptr;
+
+	UIElement* created = g_canvas->GetElements().back().get();
+	if (created)
+		created->Initialize();
+	g_canvas->MoveElementToIndex(created, index);
+	BindSceneHudElements();
+	return created;
+}
+
+int SceneCanvas_GetElementIndex(const UIElement* element)
+{
+	if (!g_canvas || !element) return -1;
+	return g_canvas->GetElementIndex(element);
+}
+
+void SceneCanvas_RemoveElementInternal(UIElement* element)
+{
+	if (!g_canvas || !element) return;
+	g_canvas->RemoveElement(element);
+	BindSceneHudElements();
 }
 
 void SceneCanvas_BindButtonAction(UIButton* button)
