@@ -60,6 +60,17 @@ public:
     // Execute all queued sphere draws without depth testing and clear the queue.
     static void FlushSphereQueue();
 
+    // --- Deferred line queue (drawn during the Draw phase) ---
+    struct LineDrawRequest {
+        DirectX::XMFLOAT3 start;
+        DirectX::XMFLOAT3 end;
+        DirectX::XMFLOAT4 color;
+    };
+    static void QueueLine(const DirectX::XMFLOAT3& start,
+                          const DirectX::XMFLOAT3& end,
+                          const DirectX::XMFLOAT4& color);
+    static void FlushLineQueue();
+
     // Draw a wireframe capsule at the specified position, center, radius and height
     void DrawCapsule(const DirectX::XMFLOAT3& position, const DirectX::XMFLOAT3& center, float radius, float height, const DirectX::XMFLOAT3& rotation,
                      const DirectX::XMFLOAT4& color = { 0.0f, 1.0f, 0.0f, 1.0f });
@@ -110,6 +121,8 @@ private:
 
     // Queue of sphere draw requests accumulated during Update; flushed in Draw.
     static std::vector<SphereDrawRequest> s_sphereQueue;
+    // Queue of line draw requests accumulated during Update; flushed in Draw.
+    static std::vector<LineDrawRequest> s_lineQueue;
 
     // Persistent dynamic VB used by DrawLinesCached.
     // Grown (reallocated) only when capacity is exceeded; otherwise updated

@@ -30,6 +30,7 @@
 #include "component.h"
 #include "rigidbody_component.h"
 #include "transform.h"
+#include "engine/core/debug_system.h"
 
 namespace engine { class Transform; }
 
@@ -228,8 +229,13 @@ public:
     virtual void Draw() {
         if (!m_isActive) return;
 
+#if defined(GAME_RUNTIME)
+        if (m_debugCollider && m_collider && DebugSystem::CollisionVizEnabled())
+            m_collider->DebugDraw();
+#else
         if (m_debugCollider && m_collider)
             m_collider->DebugDraw();
+#endif
 
         for (auto& child : m_children)
             if (child) child->Draw();

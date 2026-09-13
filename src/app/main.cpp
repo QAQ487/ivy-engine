@@ -30,15 +30,16 @@
 #include "scene_transition.h"
 #include "engine/core/system_timer.h"
 #include "engine/core/job_system.h"
+#include "engine/core/debug_system.h"
 #include "engine/input/mouse.h"
 #include "engine/input/controller.h"
 #include "debug_camera.h"
 #include "engine/debug_draw/debug_text.h"
 #include "engine/debug_draw/debug_ofstream.h"
+#include "engine/core/engine_gui.h"
 
 #ifndef GAME_RUNTIME
 #include "imgui/imgui.h"
-#include "engine/core/engine_gui.h"
 #endif
 
  /**---------------------------------------------------------------------------
@@ -262,6 +263,7 @@ HRESULT	Initialize(HINSTANCE hInstance, HWND hWnd, BOOL bWindow) {
 	KeyLogger_Initialize(); // keyboard logger
 	Mouse_Initialize(); // mouse input
 	Controller_Initialize(); // controller input
+	DebugSystem::Init();
 	AudioManager::Instance().Initialize();
 	AudioManager::Instance().SetMasterVolume(0.3f);
 
@@ -292,6 +294,7 @@ HRESULT	Initialize(HINSTANCE hInstance, HWND hWnd, BOOL bWindow) {
 ===========================================================================**/
 void Finalize(void) {
 	JobSystem_Shutdown();
+	DebugSystem::Shutdown();
 
 	// Tear down the active scene while D3D/UI subsystems are still valid.
 	// Without this, ~SceneManager runs after UninitRenderer() and corrupts the heap.
@@ -321,6 +324,14 @@ void Update(double current_time, double elapsed_time) {
 	// Update controllers
 	Controller_Update();
 
+	// Debug hotkeys (F9/F10 remain PostFX below)
+	if (KeyLogger_IsTrigger(KK_F11))
+		DebugSystem::ToggleCollisionViz();
+	if (KeyLogger_IsTrigger(KK_F7))
+		DebugSystem::CycleTimeScale();
+	if (KeyLogger_IsTrigger(KK_F12))
+		DebugSystem::StepOneFrame();
+
 	// Update global effect system (uses elapsed_time)
 	EffectSystem::Update(elapsed_time);
 
@@ -335,7 +346,9 @@ void Update(double current_time, double elapsed_time) {
 	if (elapsed_time > max_dt) elapsed_time = max_dt;
 	if (elapsed_time < 0.0)   elapsed_time = 0.0;
 
-	PostProcess_Update(static_cast<float>(elapsed_time));
+	const float ts = DebugSystem::GetTimeScale();
+	const double scaled_dt = fixed_dt * static_cast<double>(ts);
+	PostProcess_Update(static_cast<float>(elapsed_time * static_cast<double>(ts)));
 
 	// PostFX showcase hotkeys (no script dependency):
 	// F9 = GOAL-strength RGB burst, F10 = toggle mosaic showcase
@@ -351,9 +364,18 @@ void Update(double current_time, double elapsed_time) {
 	SceneTransition_Update(elapsed_time);
 
 	if (Fade_IsFadeEnd() && !SceneTransition_BlocksSceneUpdate()) {
-		// Use a fixed dt for scene/physics update
-		SceneManager::Instance().Update(fixed_dt);
+		// Freeze skips sim Update, but deferred scene-load flush / preload tick
+		// lives inside EngineGUI_Update — keep that path alive while busy.
+		if (!DebugSystem::IsFrozen()) {
+			SceneManager::Instance().Update(scaled_dt);
+		} else if (DebugSystem::ConsumeFrameStep()) {
+			SceneManager::Instance().Update(fixed_dt);
+		} else if (EngineGUI_IsSceneAssetPreloadActive()) {
+			SceneManager::Instance().Update(0.0);
+		}
 	}
+
+	DebugSystem::RefreshOverlay();
 
 	AudioManager::Instance().Update();
 }
@@ -371,6 +393,31 @@ void Draw(void) {
 	// Draw fade overlay on top of scene
 	Fade_Draw();
 	SceneTransition_Draw();
+
+	// DebugSystem overlay (all builds, including Release GAME_RUNTIME)
+	{
+		const char* overlay = DebugSystem::GetOverlayText();
+		if (overlay && overlay[0]) {
+			const float screenWf = GetBackBufferWidth();
+			const float screenHf = GetBackBufferHeight();
+			const UINT screenW = static_cast<UINT>(screenWf);
+			const UINT screenH = static_cast<UINT>(screenHf);
+			constexpr float kCharSpacing = 12.0f;
+			constexpr float kLineSpacing = 14.0f;
+			constexpr float kMargin = 8.0f;
+
+			hal::DebugText dbg(GetDevice(), GetDeviceContext(),
+				L"rom/texture/consolab_ascii_512.png",
+				screenW, screenH,
+				0.0f, 0.0f,
+				0, 0,
+				kLineSpacing, kCharSpacing);
+			dbg.SetOffset(kMargin, kMargin);
+			dbg.SetText(overlay, DebugSystem::GetOverlayColor());
+			dbg.Draw();
+			dbg.Clear();
+		}
+	}
 
 	// FPS debug text (bottom-left, half default size)
 #if defined(DEBUG) || defined(_DEBUG)

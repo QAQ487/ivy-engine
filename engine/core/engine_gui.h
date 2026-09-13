@@ -24,6 +24,9 @@ void EngineGUI_DrawSelectionIndicator();
 bool EngineGUI_IsPlaying();
 bool EngineGUI_IsDebugCameraPlayInputActive();
 bool EngineGUI_IsOnStart();
+// True while playing, or during a play→play scene switch before StartPlay resumes.
+// Use for draw presentation only (not simulation).
+bool EngineGUI_PreferPlayVisuals();
 void EngineGUI_StartPlay();
 void EngineGUI_StopPlay();
 void EngineGUI_SetEnabled(bool enabled);

@@ -15,14 +15,14 @@ bool EngineGUI_LoadFromFileCore(const char* filename) {
     EngineGUI_QueueSceneLoad(filename);
 
     if (g_isPlaying)
-        ReturnToStart();
+        SoftStopPlayForSceneLoad();
 
     return true;
 }
 
 bool EngineGUI_LoadFromFile(const char* filename) {
     if (g_isPlaying)
-        ReturnToStart();
+        SoftStopPlayForSceneLoad();
 
     if (EngineGUI_IsSceneDirty()) {
         EngineGUI_QueueUnsavedLoad(filename);

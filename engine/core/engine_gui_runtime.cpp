@@ -3,6 +3,7 @@
 #include "engine/ecs/model_asset_cache.h"
 #include "engine/ecs/game_object.h"
 #include "engine/scripting/script_component.h"
+#include "engine/physics/core/physics_system.h"
 #include "src/app/camera/debug_camera.h"
 #include "src/app/camera/third_person_camera.h"
 #include "engine/rendering/d3d11/renderer.h"
@@ -36,6 +37,9 @@ static bool HasThirdPersonPlayer() {
 static void EnterRuntimePlay() {
     SnapshotSceneStartTransforms();
     SyncSceneRuntime();
+    // Match editor StartPlay: seed swept-collision previous poses so the first
+    // ResolveCollisions after a sync load does not sweep from (0,0,0).
+    PhysicsSystem_SavePositions();
     g_runtimePlaying = true;
     DebugCamera_SetEnabled(false);
     const bool hideCursor = (g_cameraMode == CameraMode::ThirdPerson) && HasThirdPersonPlayer();
@@ -79,6 +83,10 @@ void EngineGUI_DrawSelectionIndicator() {
 }
 
 bool EngineGUI_IsPlaying() {
+    return g_runtimePlaying;
+}
+
+bool EngineGUI_PreferPlayVisuals() {
     return g_runtimePlaying;
 }
 

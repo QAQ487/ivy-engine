@@ -48,6 +48,7 @@ UINT          DebugDrawer::m_linesVBCapacity  = 0;
 
 ID3D11DepthStencilState* DebugDrawer::m_depthNoTest = nullptr;
 std::vector<DebugDrawer::SphereDrawRequest> DebugDrawer::s_sphereQueue;
+std::vector<DebugDrawer::LineDrawRequest> DebugDrawer::s_lineQueue;
 
 DebugDrawer::~DebugDrawer() {
 	Release();
@@ -733,4 +734,25 @@ void DebugDrawer::FlushSphereQueue() {
 
 	// Restore default depth state after the no-depth draws.
 	SetDepthEnable(true);
+}
+
+void DebugDrawer::QueueLine(const DirectX::XMFLOAT3& start,
+                            const DirectX::XMFLOAT3& end,
+                            const DirectX::XMFLOAT4& color) {
+	s_lineQueue.push_back({ start, end, color });
+}
+
+void DebugDrawer::FlushLineQueue() {
+	if (s_lineQueue.empty()) return;
+
+	static DebugDrawer drawer;
+	if (!drawer.Initialize()) {
+		s_lineQueue.clear();
+		return;
+	}
+
+	for (const auto& req : s_lineQueue) {
+		drawer.DrawLine(req.start, req.end, req.color);
+	}
+	s_lineQueue.clear();
 }

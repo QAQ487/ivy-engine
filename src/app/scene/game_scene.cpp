@@ -23,11 +23,12 @@
 #include "engine/rendering/model/model.h"
 #include "camera.h"
 #include "debug_camera.h"
+#include "engine/core/engine_gui.h"
+#include <cstdio>
+#include <Windows.h>
 #ifndef GAME_RUNTIME
 #include "grid.h"
 #endif
-
-#include "engine/core/engine_gui.h"
 #include "engine/scene/scene_loader.h"
 #include "camera_director.h"
 #include "scene_transition.h"
@@ -284,7 +285,7 @@ void GameScene::Draw() {
 	if (!preloadActive)
 		EngineGUI_DrawSelectionIndicator();
 #endif
-	if (!preloadActive && (EngineGUI_IsPlaying() || EngineGUI_IsUiOverlayVisible()))
+	if (!preloadActive && (EngineGUI_PreferPlayVisuals() || EngineGUI_IsUiOverlayVisible()))
 		SceneCanvas_Draw();
 	if (!preloadActive && EngineGUI_IsPlaying())
 		GameSceneScript_Invoke("GameScene_PostUIDraw");
@@ -306,7 +307,7 @@ void GameScene::SetRenderObject(RENDER_OBJECT_TYPE type) {
 		break;
 	case RENDER_MAIN:
 #ifndef GAME_RUNTIME
-		if (!EngineGUI_IsPlaying())
+		if (!EngineGUI_PreferPlayVisuals())
 			Grid_Draw();
 #endif
 		for (auto* obj : m_objects) {
@@ -316,7 +317,7 @@ void GameScene::SetRenderObject(RENDER_OBJECT_TYPE type) {
 #ifdef GAME_RUNTIME
 		DrawSceneModels();
 #else
-		if (!EngineGUI_IsPlaying()) DrawEditorSceneProxies();
+		if (!EngineGUI_PreferPlayVisuals()) DrawEditorSceneProxies();
 		else DrawSceneModels();
 #endif
 		break;
@@ -401,7 +402,8 @@ void GameScene::Object_Draw() {
 			GameSceneScript_Invoke("GameScene_PostBillboardDraw");
 	}
 
-	// Debug sphere wire pass (deferred from scripts' OnUpdate to avoid being
-	// wiped by the Clear() call that precedes Draw()).
+	// Debug sphere / line / collider-wire pass (deferred from Update).
 	DebugDrawer::FlushSphereQueue();
+	DebugDrawer::FlushLineQueue();
+	PhysicsSystem_FlushDebugDraw();
 }

@@ -326,6 +326,7 @@ xcopy /y /d /e "$(ProjectDir)rom\*" "$(OutDir)rom\"</Command>
     <ClInclude Include="engine\physics\collider\collider.h" />
     <ClInclude Include="engine\core\easing.h" />
     <ClInclude Include="engine\core\job_system.h" />
+    <ClInclude Include="engine\core\debug_system.h" />
     <ClInclude Include="engine\core\frame_transform_snapshot.h" />
     <ClInclude Include="engine\core\system_timer.h" />
     <ClInclude Include="engine\input\controller.h" />
@@ -423,6 +424,7 @@ xcopy /y /d /e "$(ProjectDir)rom\*" "$(OutDir)rom\"</Command>
     <ClCompile Include="engine\physics\collider\collider.cpp" />
     <ClCompile Include="engine\core\easing.cpp" />
     <ClCompile Include="engine\core\job_system.cpp" />
+    <ClCompile Include="engine\core\debug_system.cpp" />
     <ClCompile Include="engine\core\frame_transform_snapshot.cpp" />
     <ClCompile Include="engine\core\system_timer.cpp" />
     <ClCompile Include="engine\input\controller.cpp" />

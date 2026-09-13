@@ -18,6 +18,8 @@
 #include <algorithm>
 #include "engine/debug_draw/debug_drawer.h"
 #include "engine/rendering/d3d11/renderer.h"
+#include "engine/core/debug_system.h"
+#include "engine/physics/core/physics_system.h"
 #include <cmath>
 #include <cfloat>
 
@@ -511,6 +513,39 @@ static void ResolveContact(GameObject* self, GameObject* other,
                            const XMFLOAT3& normal,
                            float penetration,
                            float slope = 0.0005f) {
+    PhysicsSystem_NotifyContactResolved();
+
+    if (DebugSystem::CollisionVizEnabled()) {
+        constexpr XMFLOAT4 kVizContact = { 1.0f, 0.0f, 0.0f, 1.0f };
+        constexpr XMFLOAT4 kVizSolid   = { 0.0f, 1.0f, 0.0f, 1.0f };
+
+        XMFLOAT3 cA = self->GetPosition();
+        XMFLOAT3 cB = other->GetPosition();
+        if (Collider* colA = self->GetCollider())
+            cA = colA->GetWorldCenter();
+        if (Collider* colB = other->GetCollider())
+            cB = colB->GetWorldCenter();
+
+        const XMFLOAT3 mid{
+            (cA.x + cB.x) * 0.5f,
+            (cA.y + cB.y) * 0.5f,
+            (cA.z + cB.z) * 0.5f
+        };
+        constexpr XMFLOAT3 kZero = { 0.0f, 0.0f, 0.0f };
+        DebugDrawer::QueueSphere(mid, kZero, 0.06f, kZero, kVizContact);
+        const XMFLOAT3 tip{
+            mid.x + normal.x * 0.35f,
+            mid.y + normal.y * 0.35f,
+            mid.z + normal.z * 0.35f
+        };
+        DebugDrawer::QueueLine(mid, tip, kVizContact);
+
+        if (Collider* colA = self->GetCollider())
+            PhysicsSystem_QueueDebugWire(colA, kVizSolid);
+        if (Collider* colB = other->GetCollider())
+            PhysicsSystem_QueueDebugWire(colB, kVizSolid);
+    }
+
     Rigidbody& rbA = self->GetRigidbody();
     Rigidbody& rbB = other->GetRigidbody();
 

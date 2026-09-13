@@ -18,18 +18,46 @@
 #include <utility>
 #include <type_traits>
 #include "engine/physics/collider/collider.h"
+#include "engine/core/debug_system.h"
 
 namespace {
 	using namespace DirectX;
+
+	constexpr XMFLOAT4 kVizTrigger = { 1.0f, 1.0f, 0.0f, 1.0f };
 
 	std::set<std::pair<GameObject*, GameObject*>> g_triggerPairsPrev;
 	std::set<std::pair<GameObject*, GameObject*>> g_triggerPairsCurrent;
 	SceneBase* g_lastTriggerScene = nullptr;
 
+	struct DebugWireRequest {
+		Collider* collider = nullptr;
+		XMFLOAT4 color{};
+	};
+}
+
+// File-scope so public PhysicsSystem_* APIs can read/write (not anonymous).
+static PhysicsDebugStats g_debugStats{};
+static std::vector<DebugWireRequest> g_debugWireQueue;
+
+namespace {
+	using namespace DirectX;
+
+	void QueueDebugWireBoth(Collider* ca, Collider* cb, const XMFLOAT4& color) {
+		if (!DebugSystem::CollisionVizEnabled()) return;
+		if (ca) g_debugWireQueue.push_back({ ca, color });
+		if (cb) g_debugWireQueue.push_back({ cb, color });
+	}
+
 	void InsertTriggerPair(GameObject* a, GameObject* b) {
 		if (!a || !b || a == b) return;
 		if (b < a) std::swap(a, b);
 		g_triggerPairsCurrent.insert({ a, b });
+		++g_debugStats.triggers;
+		if (DebugSystem::CollisionVizEnabled()) {
+			Collider* ca = a->GetCollider();
+			Collider* cb = b->GetCollider();
+			QueueDebugWireBoth(ca, cb, kVizTrigger);
+		}
 	}
 
 	void DiffAndDispatchTriggerEvents() {
@@ -160,8 +188,10 @@ namespace {
 	                           GameObject* b, Collider* cb) {
 		if (!a || !b || !ca || !cb) return;
 		if (!BroadPhasePass(ca, cb)) return;
-		if (ca->CheckCollision(cb))
+		if (ca->CheckCollision(cb)) {
+			++g_debugStats.pairs;
 			InsertTriggerPair(a, b);
+		}
 	}
 
 	// スウェプトナローフェーズ: A が prevPos から現在位置まで移動した経路を
@@ -185,8 +215,10 @@ namespace {
 		if (sphereVsMesh || meshVsSphere) {
 			a->SetPosition(curPos);
 			if (isTriggerPair) {
-				if (ca->CheckCollision(cb))
+				if (ca->CheckCollision(cb)) {
+					++g_debugStats.pairs;
 					InsertTriggerPair(a, b);
+				}
 				return;
 			}
 			if (IsDynamic(a))
@@ -225,6 +257,7 @@ namespace {
 			if (!BroadPhasePass(ca, cb)) continue;
 
 			if (ca->CheckCollision(cb)) {
+				++g_debugStats.pairs;
 				if (isTriggerPair) {
 					InsertTriggerPair(a, b);
 					a->SetPosition(curPos);
@@ -338,6 +371,9 @@ void PhysicsSystem_ResolveCollisions() {
 	SceneBase* scene = SceneManager::Instance().GetCurrentScene();
 	if (!scene) return;
 
+	g_debugStats = {};
+	g_debugWireQueue.clear();
+
 	if (scene != g_lastTriggerScene) {
 		PhysicsSystem_ClearTriggerPairs();
 		g_lastTriggerScene = scene;
@@ -395,6 +431,7 @@ void PhysicsSystem_ResolveCollisions() {
 		e.maxX = maxX + radius;
 		entries.push_back(e);
 	}
+	g_debugStats.colliders = static_cast<int>(entries.size());
 	if (entries.size() < 2) return;
 	if (!anyDynamic && !anyTrigger) return;
 
@@ -564,3 +601,26 @@ void PhysicsSystem_Update(double elapsed_time) {
 	// 3. 衝突判定と解決（スウェプトAABBを使用）
 	PhysicsSystem_ResolveCollisions();
 }
+
+PhysicsDebugStats PhysicsSystem_GetDebugStats() {
+	return g_debugStats;
+}
+
+void PhysicsSystem_NotifyContactResolved() {
+	++g_debugStats.contacts;
+}
+
+void PhysicsSystem_QueueDebugWire(Collider* collider, const DirectX::XMFLOAT4& color) {
+	if (!collider || !DebugSystem::CollisionVizEnabled()) return;
+	g_debugWireQueue.push_back({ collider, color });
+}
+
+void PhysicsSystem_FlushDebugDraw() {
+	if (g_debugWireQueue.empty()) return;
+	for (const auto& req : g_debugWireQueue) {
+		if (req.collider)
+			req.collider->DebugDraw(req.color);
+	}
+	g_debugWireQueue.clear();
+}
+

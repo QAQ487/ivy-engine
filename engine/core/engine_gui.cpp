@@ -20,6 +20,7 @@
 #include "engine/rendering/d3d11/shader.h"
 #include "engine/rendering/d3d11/post_process.h"
 #include "engine/core/job_system.h"
+#include "engine/core/debug_system.h"
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_win32.h"
 #include "imgui/imgui_impl_dx11.h"
@@ -44,6 +45,7 @@
 #include "engine/input/keyboard.h"
 #include "engine/rendering/d3d11/renderer.h"
 #include "engine/physics/collider/collider.h"
+#include "engine/physics/core/physics_system.h"
 #include "engine/ecs/game_object.h"          // unified ::GameObject
 #include "engine/ecs/tag_registry.h"
 #include "debug_camera.h"
@@ -103,6 +105,7 @@ using json = nlohmann::json;
 // ── State ─────────────────────────────────────────────────────────────────────
 static bool        g_enabled = true;
 bool              g_isPlaying = false;
+static bool        g_holdPlayVisuals = false;
 static bool        g_isOnStart = true;
 static bool        g_imguiInitialized = false;
 static SceneAssetPreloader g_sceneAssetPreloader;
@@ -116,6 +119,7 @@ static char  g_newSceneName[128] = "new_scene";
 static char  g_newTagName[64] = "";
 static bool  g_showRenderingSettings = false;
 static bool  g_showPostFxShowcase = false;
+static bool  g_showShortcutHints = false;
 static bool  g_showNewScenePopup = false;
 static bool  g_showAddTagPopup = false;
 static bool  g_showDeleteTagPopup = false;
@@ -698,6 +702,62 @@ static void DrawPostFxShowcaseWindow(bool* open) {
     ImGui::End();
 }
 
+static void DrawShortcutHintsWindow(bool* open) {
+    if (!open || !*open) return;
+
+    ImGui::SetNextWindowSize(ImVec2(420.0f, 0.0f), ImGuiCond_FirstUseEver);
+    if (!ImGui::Begin("Shortcut Hints", open)) {
+        ImGui::End();
+        return;
+    }
+
+    auto row = [](const char* keys, const char* desc) {
+        ImGui::TableNextRow();
+        ImGui::TableSetColumnIndex(0);
+        ImGui::TextUnformatted(keys);
+        ImGui::TableSetColumnIndex(1);
+        ImGui::TextWrapped("%s", desc);
+    };
+
+    if (ImGui::BeginTable("##ShortcutHints", 2,
+            ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_RowBg |
+            ImGuiTableFlags_SizingStretchProp)) {
+        ImGui::TableSetupColumn("Key", ImGuiTableColumnFlags_WidthFixed, 140.0f);
+        ImGui::TableSetupColumn("Action", ImGuiTableColumnFlags_WidthStretch);
+
+        ImGui::TableNextRow();
+        ImGui::TableSetColumnIndex(0);
+        ImGui::TextDisabled("Editor");
+        ImGui::TableSetColumnIndex(1);
+        ImGui::TextDisabled("");
+
+        row("F2", "Toggle editor GUI");
+        row("F3", "Play / stop");
+        row("F6", "Toggle third-person cursor");
+        row("F8", "Toggle job-system debug window");
+        row("F", "Focus selected object in scene view");
+        row("Ctrl+S", "Save scene");
+        row("Ctrl+Shift+S", "Save project");
+        row("Ctrl+Z / Ctrl+Y", "Undo / redo");
+
+        ImGui::TableNextRow();
+        ImGui::TableSetColumnIndex(0);
+        ImGui::TextDisabled("Play / Runtime");
+        ImGui::TableSetColumnIndex(1);
+        ImGui::TextDisabled("");
+
+        row("F7", "Cycle time scale (1.0 → 0.5 → 0.25 → freeze)");
+        row("F11", "Toggle collision visualizer");
+        row("F12", "Step one frame while frozen");
+        row("F9", "PostFX GOAL RGB burst");
+        row("F10", "Toggle PostFX mosaic showcase");
+
+        ImGui::EndTable();
+    }
+
+    ImGui::End();
+}
+
 static void DrawRenderingSettingsWindow(bool* open) {
     if (!open || !*open) return;
 
@@ -1119,6 +1179,8 @@ static void DrawEditorMenuBar() {
             }
             ImGui::EndMenu();
         }
+        if (ImGui::MenuItem("Shortcut Hints...", nullptr, g_showShortcutHints))
+            g_showShortcutHints = !g_showShortcutHints;
         ImGui::EndMenu();
     }
 }
@@ -1729,8 +1791,24 @@ void TeardownPlaySession(bool resetEditorState) {
     TeardownScenePlaySession(resetEditorState);
 }
 
+// Stop play simulation for an in-game scene switch without restoring editor
+// chrome. Keep the current world until Flush replaces it (runtime loads
+// atomically — clearing early caused a clear-color gap under the transition).
+void SoftStopPlayForSceneLoad() {
+    if (!g_isPlaying && g_holdPlayVisuals)
+        return;
+    g_isPlaying = false;
+    g_isOnStart = true;
+    g_holdPlayVisuals = true;
+    g_enabled = false;
+    DebugCamera_SetEnabled(false);
+    DebugSystem::ResetTimeScale();
+}
+
 void ReturnToStart() {
+    g_holdPlayVisuals = false;
     TeardownPlaySession(true);
+    DebugSystem::ResetTimeScale();
     g_enabled = true;
     g_editMode = EditorEditMode::Scene3D;
     DebugCamera_SetControlMode(DebugCameraControlMode::Orbit);
@@ -1795,11 +1873,16 @@ static void StartPlay() {
 
     SnapshotSceneStartTransforms();
     SyncSceneRuntime();
+    // Instant scene switches (cached preload) can StartPlay in the same frame as
+    // Load. Without prior SavePositions frames, m_previousPosition stays at
+    // (0,0,0) and the post-script swept resolve teleports dynamics from origin.
+    PhysicsSystem_SavePositions();
     // Create runtime spawn root before the play update loop so the first
     // PrefabInstantiate does not push_back into g_sceneNodes mid-iteration.
     PrefabRuntime_EnsureSpawnRoot();
     g_isOnStart = false;
     g_isPlaying = true;
+    g_holdPlayVisuals = false;
     if (ShouldUseDebugCameraDuringPlay()) {
         g_enabled = false;
         if (SceneLoader_DebugCameraEnabledOnPlay() && SceneLoader_DebugCameraFlyOnPlay())
@@ -1841,8 +1924,13 @@ void EngineGUI_FlushSceneLoadPending() {
     const std::string path = std::move(g_pendingSceneLoadPath);
     g_pendingSceneLoadPath.clear();
 
+    // Tear down the previous play world immediately before replacing nodes
+    // (SoftStop no longer clears early — matches runtime atomic load).
+    TeardownScenePlaySession(false);
+
     if (!SceneLoader_LoadFromFile(path.c_str())) {
         g_sceneLoadPending = false;
+        g_holdPlayVisuals = false;
         return;
     }
 
@@ -1859,6 +1947,13 @@ void EngineGUI_FlushSceneLoadPending() {
 
     EngineGUI_BeginSceneAssetPreload();
     g_sceneLoadPending = false;
+
+    // Empty preload never becomes Active, so Tick never resumes play.
+    // Match runtime: stay in / re-enter play immediately when deferred.
+    if (g_playWhenPreloadDone && !g_sceneAssetPreloader.IsActive()) {
+        g_playWhenPreloadDone = false;
+        StartPlay();
+    }
 }
 
 void EngineGUI_TickSceneAssetPreload() {
@@ -1959,6 +2054,7 @@ void EngineGUI_Finalize() {
 }
 
 bool EngineGUI_IsPlaying() { return g_isPlaying; }
+bool EngineGUI_PreferPlayVisuals() { return g_isPlaying || g_holdPlayVisuals; }
 bool EngineGUI_IsOnStart() { return g_isOnStart; }
 void EngineGUI_StartPlay() { StartPlay(); }
 void EngineGUI_StopPlay() { ReturnToStart(); }
@@ -2415,7 +2511,7 @@ void EngineGUI_Update(double elapsed_time) {
         }
     }
 
-    if (KeyLogger_IsTrigger(KK_F7))
+    if (KeyLogger_IsTrigger(KK_F6))
         ThirdPersonCamera_ShowCursor(!ThirdPersonCamera_IsCursorVisible());
 
     // Editor-only: F8 toggles Job System debug overlay (also works while playing).
@@ -2804,6 +2900,7 @@ void EngineGUI_Draw() {
     DrawEditorPopups();
     DrawRenderingSettingsWindow(&g_showRenderingSettings);
     DrawPostFxShowcaseWindow(&g_showPostFxShowcase);
+    DrawShortcutHintsWindow(&g_showShortcutHints);
 
     // ── Toolbar ───────────────────────────────────────────────────────────────
     ImGui::SetNextWindowPos(ImVec2(0, menuBarHeight));
@@ -2947,9 +3044,6 @@ void EngineGUI_Draw() {
                 ImGui::EndCombo();
             }
         }
-
-        ImGui::SameLine(screenW - 160.0f);
-        ImGui::TextDisabled("F2 toggle GUI  |  F3 play/stop");
     }
     ImGui::End();
 

@@ -22,6 +22,7 @@ void ApplyEditorColliders();
 void RestoreEditorDebugColliderFlags();
 void TeardownPlaySession(bool resetEditorState);
 void ReturnToStart();
+void SoftStopPlayForSceneLoad();
 
 // Loads a scene from disk without the unsaved-changes dirty gate.
 // Must be used only when caller already handled unsaved changes.

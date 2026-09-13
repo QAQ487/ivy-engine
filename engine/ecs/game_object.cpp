@@ -8,6 +8,7 @@
 #include "engine/rendering/d3d11/shader.h"
 #include "engine/audio/audio_manager.h"
 #include "engine/physics/core/physics_system.h"
+#include "engine/core/debug_system.h"
 
 #include <DirectXMath.h>
 #include <algorithm>
@@ -253,8 +254,13 @@ void GameObject::DrawVisual(bool useRealModel) {
     if (auto* cc = GetComponent<ColliderComponent>())
         m_debugCollider = cc->showDebugCollider;
 
+#if defined(GAME_RUNTIME)
+    if (m_debugCollider && m_collider && DebugSystem::CollisionVizEnabled())
+        m_collider->DebugDraw();
+#else
     if (m_debugCollider && m_collider)
         m_collider->DebugDraw();
+#endif
 
     for (const auto& child : m_children)
         if (child) child->DrawVisual(useRealModel);
