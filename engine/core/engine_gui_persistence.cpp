@@ -10,11 +10,16 @@ bool EngineGUI_SaveToFile(const char* filename) {
 }
 
 bool EngineGUI_LoadFromFileCore(const char* filename) {
+    // Dim/gate from the moment the switch starts (before JSON hitch).
+    g_sceneLoadPending = true;
+
     if (g_isPlaying)
         ReturnToStart();
 
-    if (!SceneLoader_LoadFromFile(filename))
+    if (!SceneLoader_LoadFromFile(filename)) {
+        g_sceneLoadPending = false;
         return false;
+    }
 
     g_selNode = nullptr;
     g_selUiElement = nullptr;
@@ -27,6 +32,7 @@ bool EngineGUI_LoadFromFileCore(const char* filename) {
     }
 
     EngineGUI_BeginSceneAssetPreload();
+    g_sceneLoadPending = false;
     return true;
 }
 

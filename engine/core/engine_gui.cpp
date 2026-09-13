@@ -106,6 +106,7 @@ static bool        g_isOnStart = true;
 static bool        g_imguiInitialized = false;
 static SceneAssetPreloader g_sceneAssetPreloader;
 static bool        g_playWhenPreloadDone = false;
+bool               g_sceneLoadPending = false;
 static CameraMode  g_cameraMode = CameraMode::ThirdPerson;
 static std::string g_activeCameraNode;
 static float g_scrollSensitivity = 1.0f;
@@ -1725,7 +1726,7 @@ bool EngineGUI_IsDebugCameraPlayInputActive() {
 }
 
 static void StartPlay() {
-    if (g_sceneAssetPreloader.IsActive()) {
+    if (g_sceneAssetPreloader.IsActive() || g_sceneLoadPending) {
         g_playWhenPreloadDone = true;
         return;
     }
@@ -1775,7 +1776,11 @@ void EngineGUI_TickSceneAssetPreload() {
 }
 
 bool EngineGUI_IsSceneAssetPreloadActive() {
-    return g_sceneAssetPreloader.IsActive();
+    return g_sceneAssetPreloader.IsActive() || g_sceneLoadPending;
+}
+
+static bool IsSceneLoadBusy() {
+    return g_sceneAssetPreloader.IsActive() || g_sceneLoadPending;
 }
 
 // ── Public API ────────────────────────────────────────────────────────────────
@@ -2257,15 +2262,16 @@ void EngineGUI_Update(double elapsed_time) {
             });
     }
 
-    // Time-sliced asset preload: advance budget, gate editor interaction.
-    if (g_sceneAssetPreloader.IsActive()) {
+    // Time-sliced asset preload / scene-switch busy: gate editor interaction.
+    if (IsSceneLoadBusy()) {
         if (KeyLogger_IsTrigger(KK_F3) && !g_isPlaying)
             g_playWhenPreloadDone = true;
         if (KeyLogger_IsTrigger(KK_F8))
             JobSystem_ToggleDebugWindow();
-        EngineGUI_TickSceneAssetPreload();
+        if (g_sceneAssetPreloader.IsActive())
+            EngineGUI_TickSceneAssetPreload();
         // Still loading, or deferred StartPlay just entered play — skip editors.
-        if (g_sceneAssetPreloader.IsActive() || g_isPlaying)
+        if (IsSceneLoadBusy() || g_isPlaying)
             return;
     }
 
@@ -2612,11 +2618,12 @@ void EngineGUI_Draw() {
     const float centerTop = layout.topChrome;
     const float centerH = layout.sidePanelH;
 
+    const bool sceneLoadBusy = IsSceneLoadBusy();
     const bool preloadActive = g_sceneAssetPreloader.IsActive();
-    if (preloadActive)
+    if (sceneLoadBusy)
         ImGui::OpenPopup("SceneAssetPreloadModal");
 
-    if (!preloadActive) {
+    if (!sceneLoadBusy) {
         if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_S))
             SaveScene();
         if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiMod_Shift | ImGuiKey_S))
@@ -3632,41 +3639,41 @@ void EngineGUI_Draw() {
     ImGui::Begin("Asset Browser", nullptr,
         ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
     {
-        if (preloadActive)
+        if (sceneLoadBusy)
             ImGui::BeginDisabled(true);
         if (GameObject* spawned = MapEditor::ProjectBrowserPanel(g_sceneNodes)) {
-            if (!preloadActive) {
+            if (!sceneLoadBusy) {
                 g_selNode = spawned;
                 g_selUiElement = nullptr;
                 EngineGUI_MarkSceneDirty();
                 SyncSceneRuntime();
             }
         }
-        if (preloadActive)
+        if (sceneLoadBusy)
             ImGui::EndDisabled();
     }
     ImGui::End();
 
-    if (!preloadActive && !g_isPlaying && g_editMode == EditorEditMode::Scene3D) {
+    if (!sceneLoadBusy && !g_isPlaying && g_editMode == EditorEditMode::Scene3D) {
         TransformGizmo::HandleHotkeys();
         if (g_selNode)
             TransformGizmo::Draw(g_selNode);
     }
 
-    if (!preloadActive && !g_isPlaying && g_editMode == EditorEditMode::UI
+    if (!sceneLoadBusy && !g_isPlaying && g_editMode == EditorEditMode::UI
         && g_selUiElement && g_showUiOverlay) {
         UiGizmo::Draw(g_selUiElement);
     }
 
     JobSystem_DebugDraw();
 
-    // Dimmed modal preload overlay; editor chrome stays visible underneath.
-    if (preloadActive) {
+    // Dimmed modal overlay from scene-switch pending through asset preload.
+    if (sceneLoadBusy) {
         const ImGuiViewport* viewport = ImGui::GetMainViewport();
         ImGui::GetBackgroundDrawList()->AddRectFilled(
             viewport->Pos,
             ImVec2(viewport->Pos.x + viewport->Size.x, viewport->Pos.y + viewport->Size.y),
-            IM_COL32(0, 0, 0, 0x88));
+            IM_COL32(0xF2, 0xF2, 0xF2, 0xA0));
 
         ImGui::SetNextWindowPos(viewport->GetCenter(), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
         ImGui::SetNextWindowSize(ImVec2(420.0f, 0.0f), ImGuiCond_Always);
@@ -3680,11 +3687,13 @@ void EngineGUI_Draw() {
             ImGuiWindowFlags_AlwaysAutoResize;
         if (ImGui::BeginPopupModal("SceneAssetPreloadModal", nullptr, loadFlags)) {
             ImGui::TextUnformatted("Loading scene...");
-            const std::string& label = g_sceneAssetPreloader.CurrentLabel();
-            if (!label.empty())
-                ImGui::TextUnformatted(label.c_str());
-            ImGui::Spacing();
-            ImGui::ProgressBar(g_sceneAssetPreloader.Progress01(), ImVec2(-1.0f, 0.0f));
+            if (preloadActive) {
+                const std::string& label = g_sceneAssetPreloader.CurrentLabel();
+                if (!label.empty())
+                    ImGui::TextUnformatted(label.c_str());
+                ImGui::Spacing();
+                ImGui::ProgressBar(g_sceneAssetPreloader.Progress01(), ImVec2(-1.0f, 0.0f));
+            }
             ImGui::EndPopup();
         }
         ImGui::PopStyleColor();

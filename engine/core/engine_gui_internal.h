@@ -14,6 +14,7 @@ class UIElement;
 #define g_sceneNodes SceneLoader_GetSceneNodes()
 
 extern bool g_isPlaying;
+extern bool g_sceneLoadPending;
 extern GameObject* g_selNode;
 extern UIElement* g_selUiElement;
 
