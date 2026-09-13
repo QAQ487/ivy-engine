@@ -2586,52 +2586,6 @@ void EngineGUI_Draw() {
         return;
     }
 
-    // Scene asset preload: ImGui overlay only (no panels / asset browser).
-    if (g_sceneAssetPreloader.IsActive()) {
-        ImGuiIO& io = ImGui::GetIO();
-        ImGui_ImplDX11_NewFrame();
-        ImGui_ImplWin32_NewFrame();
-        Renderer_UpdateClientSize();
-        io.DisplaySize = ImVec2(GetClientWidth(), GetClientHeight());
-        const float bbW = GetBackBufferWidth();
-        const float bbH = GetBackBufferHeight();
-        if (bbW > 0.0f && bbH > 0.0f) {
-            io.DisplayFramebufferScale = ImVec2(GetClientWidth() / bbW, GetClientHeight() / bbH);
-        }
-        else {
-            io.DisplayFramebufferScale = ImVec2(1.0f, 1.0f);
-        }
-        ImGui::NewFrame();
-
-        const ImGuiViewport* viewport = ImGui::GetMainViewport();
-        ImGui::SetNextWindowPos(viewport->GetCenter(), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
-        ImGui::SetNextWindowSize(ImVec2(420.0f, 0.0f), ImGuiCond_Always);
-        ImGuiWindowFlags flags =
-            ImGuiWindowFlags_NoResize |
-            ImGuiWindowFlags_NoCollapse |
-            ImGuiWindowFlags_NoMove |
-            ImGuiWindowFlags_NoSavedSettings |
-            ImGuiWindowFlags_AlwaysAutoResize;
-        if (ImGui::Begin("##SceneAssetPreloadOverlay", nullptr, flags)) {
-            ImGui::TextUnformatted("Loading scene...");
-            const std::string& label = g_sceneAssetPreloader.CurrentLabel();
-            if (!label.empty())
-                ImGui::TextUnformatted(label.c_str());
-            ImGui::Spacing();
-            ImGui::ProgressBar(g_sceneAssetPreloader.Progress01(), ImVec2(-1.0f, 0.0f));
-        }
-        ImGui::End();
-
-        if (JobSystem_IsDebugWindowVisible())
-            JobSystem_DebugDraw();
-
-        ImGui::Render();
-        ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
-        if (ImGui::GetIO().WantCaptureMouse)
-            Mouse_ClearWheel();
-        return;
-    }
-
     ImGuiIO& io = ImGui::GetIO();
     ImGui_ImplDX11_NewFrame();
     ImGui_ImplWin32_NewFrame();
@@ -2658,10 +2612,16 @@ void EngineGUI_Draw() {
     const float centerTop = layout.topChrome;
     const float centerH = layout.sidePanelH;
 
-    if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_S))
-        SaveScene();
-    if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiMod_Shift | ImGuiKey_S))
-        SaveProject();
+    const bool preloadActive = g_sceneAssetPreloader.IsActive();
+    if (preloadActive)
+        ImGui::OpenPopup("SceneAssetPreloadModal");
+
+    if (!preloadActive) {
+        if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_S))
+            SaveScene();
+        if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiMod_Shift | ImGuiKey_S))
+            SaveProject();
+    }
 
     if (ImGui::BeginMainMenuBar()) {
         DrawEditorMenuBar();
@@ -3672,27 +3632,63 @@ void EngineGUI_Draw() {
     ImGui::Begin("Asset Browser", nullptr,
         ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
     {
+        if (preloadActive)
+            ImGui::BeginDisabled(true);
         if (GameObject* spawned = MapEditor::ProjectBrowserPanel(g_sceneNodes)) {
-            g_selNode = spawned;
-            g_selUiElement = nullptr;
-            EngineGUI_MarkSceneDirty();
-            SyncSceneRuntime();
+            if (!preloadActive) {
+                g_selNode = spawned;
+                g_selUiElement = nullptr;
+                EngineGUI_MarkSceneDirty();
+                SyncSceneRuntime();
+            }
         }
+        if (preloadActive)
+            ImGui::EndDisabled();
     }
     ImGui::End();
 
-    if (!g_isPlaying && g_editMode == EditorEditMode::Scene3D) {
+    if (!preloadActive && !g_isPlaying && g_editMode == EditorEditMode::Scene3D) {
         TransformGizmo::HandleHotkeys();
         if (g_selNode)
             TransformGizmo::Draw(g_selNode);
     }
 
-    if (!g_isPlaying && g_editMode == EditorEditMode::UI
+    if (!preloadActive && !g_isPlaying && g_editMode == EditorEditMode::UI
         && g_selUiElement && g_showUiOverlay) {
         UiGizmo::Draw(g_selUiElement);
     }
 
     JobSystem_DebugDraw();
+
+    // Dimmed modal preload overlay; editor chrome stays visible underneath.
+    if (preloadActive) {
+        const ImGuiViewport* viewport = ImGui::GetMainViewport();
+        ImGui::GetBackgroundDrawList()->AddRectFilled(
+            viewport->Pos,
+            ImVec2(viewport->Pos.x + viewport->Size.x, viewport->Pos.y + viewport->Size.y),
+            IM_COL32(0, 0, 0, 0x88));
+
+        ImGui::SetNextWindowPos(viewport->GetCenter(), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
+        ImGui::SetNextWindowSize(ImVec2(420.0f, 0.0f), ImGuiCond_Always);
+        // Use our BackgroundDrawList dim; suppress ImGui's built-in modal dim.
+        ImGui::PushStyleColor(ImGuiCol_ModalWindowDimBg, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
+        const ImGuiWindowFlags loadFlags =
+            ImGuiWindowFlags_NoResize |
+            ImGuiWindowFlags_NoCollapse |
+            ImGuiWindowFlags_NoMove |
+            ImGuiWindowFlags_NoSavedSettings |
+            ImGuiWindowFlags_AlwaysAutoResize;
+        if (ImGui::BeginPopupModal("SceneAssetPreloadModal", nullptr, loadFlags)) {
+            ImGui::TextUnformatted("Loading scene...");
+            const std::string& label = g_sceneAssetPreloader.CurrentLabel();
+            if (!label.empty())
+                ImGui::TextUnformatted(label.c_str());
+            ImGui::Spacing();
+            ImGui::ProgressBar(g_sceneAssetPreloader.Progress01(), ImVec2(-1.0f, 0.0f));
+            ImGui::EndPopup();
+        }
+        ImGui::PopStyleColor();
+    }
 
     ImGui::Render();
     ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
