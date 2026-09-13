@@ -25,8 +25,11 @@ void ReturnToStart();
 
 // Loads a scene from disk without the unsaved-changes dirty gate.
 // Must be used only when caller already handled unsaved changes.
+// Queues the load so Draw can Present a dim frame before JSON/preload work.
 bool EngineGUI_LoadFromFileCore(const char* filename);
+void EngineGUI_QueueSceneLoad(const char* filename);
 
-// Editor scene-asset preload (time-sliced after LoadFromFileCore).
+// Editor scene-asset preload (time-sliced after queued load is flushed).
 void EngineGUI_BeginSceneAssetPreload();
 void EngineGUI_TickSceneAssetPreload();
+void EngineGUI_FlushSceneLoadPending();

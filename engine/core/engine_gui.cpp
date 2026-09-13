@@ -107,6 +107,7 @@ static bool        g_imguiInitialized = false;
 static SceneAssetPreloader g_sceneAssetPreloader;
 static bool        g_playWhenPreloadDone = false;
 bool               g_sceneLoadPending = false;
+static std::string g_pendingSceneLoadPath;
 static CameraMode  g_cameraMode = CameraMode::ThirdPerson;
 static std::string g_activeCameraNode;
 static float g_scrollSensitivity = 1.0f;
@@ -1754,12 +1755,48 @@ static void StartPlay() {
     }
 }
 
-void EngineGUI_BeginSceneAssetPreload() {
-    // Amendment 1: each scene load resets deferred play so a stale F3 cannot
-    // auto-play into the newly loaded scene.
+void EngineGUI_QueueSceneLoad(const char* filename) {
+    // Amendment 1: each new scene switch resets deferred play so a stale F3
+    // cannot auto-play into the wrong scene.
     g_playWhenPreloadDone = false;
+    g_sceneLoadPending = true;
+    g_pendingSceneLoadPath = filename ? filename : "";
+}
+
+void EngineGUI_BeginSceneAssetPreload() {
     const auto tasks = SceneAssetPreload_BuildTaskList(SceneLoader_GetSceneNodes());
     g_sceneAssetPreloader.Begin(tasks);
+}
+
+void EngineGUI_FlushSceneLoadPending() {
+    if (!g_sceneLoadPending)
+        return;
+
+    if (g_pendingSceneLoadPath.empty()) {
+        g_sceneLoadPending = false;
+        return;
+    }
+
+    const std::string path = std::move(g_pendingSceneLoadPath);
+    g_pendingSceneLoadPath.clear();
+
+    if (!SceneLoader_LoadFromFile(path.c_str())) {
+        g_sceneLoadPending = false;
+        return;
+    }
+
+    g_selNode = nullptr;
+    g_selUiElement = nullptr;
+    EngineGUI_SetEditMode(EditorEditMode::Scene3D);
+    EngineGUI_ClearSceneDirty();
+
+    if (ProjectManager::Instance().IsOpen()) {
+        const std::filesystem::path filePath(path);
+        ProjectManager::Instance().SetLastOpenedScene(filePath.filename().string());
+    }
+
+    EngineGUI_BeginSceneAssetPreload();
+    g_sceneLoadPending = false;
 }
 
 void EngineGUI_TickSceneAssetPreload() {
@@ -2228,6 +2265,11 @@ static void FocusSelectedObjectWithCamera(const engine::Transform* t) {
 // ── EngineGUI_Update ──────────────────────────────────────────────────────────
 
 void EngineGUI_Update(double elapsed_time) {
+
+    // Finish a queued scene switch (JSON + preload Begin) after the prior
+    // frame already Presented the dim-only overlay.
+    if (g_sceneLoadPending)
+        EngineGUI_FlushSceneLoadPending();
 
     if (!g_isPlaying) {
         SceneLoader_ScanScriptDllsForChanges(false);
