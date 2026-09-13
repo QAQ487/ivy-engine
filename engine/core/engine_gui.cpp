@@ -3667,18 +3667,12 @@ void EngineGUI_Draw() {
 
     JobSystem_DebugDraw();
 
-    // Dimmed modal overlay from scene-switch pending through asset preload.
+    // Whole-screen modal dim (same path as UnsavedChangesPopup) — not
+    // BackgroundDrawList, which sits under opaque panel windows.
     if (sceneLoadBusy) {
         const ImGuiViewport* viewport = ImGui::GetMainViewport();
-        ImGui::GetBackgroundDrawList()->AddRectFilled(
-            viewport->Pos,
-            ImVec2(viewport->Pos.x + viewport->Size.x, viewport->Pos.y + viewport->Size.y),
-            IM_COL32(0xF2, 0xF2, 0xF2, 0xA0));
-
         ImGui::SetNextWindowPos(viewport->GetCenter(), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
         ImGui::SetNextWindowSize(ImVec2(420.0f, 0.0f), ImGuiCond_Always);
-        // Use our BackgroundDrawList dim; suppress ImGui's built-in modal dim.
-        ImGui::PushStyleColor(ImGuiCol_ModalWindowDimBg, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
         const ImGuiWindowFlags loadFlags =
             ImGuiWindowFlags_NoResize |
             ImGuiWindowFlags_NoCollapse |
@@ -3696,7 +3690,6 @@ void EngineGUI_Draw() {
             }
             ImGui::EndPopup();
         }
-        ImGui::PopStyleColor();
     }
 
     ImGui::Render();
