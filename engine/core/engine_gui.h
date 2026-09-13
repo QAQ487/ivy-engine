@@ -60,6 +60,8 @@ void               EngineGUI_SetActiveCameraNodeName(const std::string& name);
 bool EngineGUI_IsUiOverlayVisible();
 void EngineGUI_SetUiOverlayVisible(bool visible);
 
+bool EngineGUI_IsSceneAssetPreloadActive();
+
 EditorEditMode EngineGUI_GetEditMode();
 void EngineGUI_SetEditMode(EditorEditMode mode);
 bool EngineGUI_IsUiEditMode();

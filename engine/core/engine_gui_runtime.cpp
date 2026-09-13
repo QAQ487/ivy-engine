@@ -82,6 +82,10 @@ bool EngineGUI_IsPlaying() {
     return g_runtimePlaying;
 }
 
+bool EngineGUI_IsSceneAssetPreloadActive() {
+    return false;
+}
+
 bool EngineGUI_IsDebugCameraPlayInputActive() {
     return false;
 }

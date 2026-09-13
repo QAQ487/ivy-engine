@@ -15,6 +15,7 @@
 #include "engine_gui.h"
 #include "engine_gui_internal.h"
 #include "engine/scene/scene_loader.h"
+#include "engine/scene/scene_asset_preload.h"
 #include "engine/scene/render_settings.h"
 #include "engine/rendering/d3d11/shader.h"
 #include "engine/rendering/d3d11/post_process.h"
@@ -103,6 +104,8 @@ static bool        g_enabled = true;
 bool              g_isPlaying = false;
 static bool        g_isOnStart = true;
 static bool        g_imguiInitialized = false;
+static SceneAssetPreloader g_sceneAssetPreloader;
+static bool        g_playWhenPreloadDone = false;
 static CameraMode  g_cameraMode = CameraMode::ThirdPerson;
 static std::string g_activeCameraNode;
 static float g_scrollSensitivity = 1.0f;
@@ -1722,6 +1725,11 @@ bool EngineGUI_IsDebugCameraPlayInputActive() {
 }
 
 static void StartPlay() {
+    if (g_sceneAssetPreloader.IsActive()) {
+        g_playWhenPreloadDone = true;
+        return;
+    }
+
     SnapshotSceneStartTransforms();
     SyncSceneRuntime();
     // Create runtime spawn root before the play update loop so the first
@@ -1743,6 +1751,31 @@ static void StartPlay() {
         const bool hideCursor = (g_cameraMode == CameraMode::ThirdPerson) && HasThirdPersonPlayer();
         ThirdPersonCamera_ShowCursor(!hideCursor);
     }
+}
+
+void EngineGUI_BeginSceneAssetPreload() {
+    // Amendment 1: each scene load resets deferred play so a stale F3 cannot
+    // auto-play into the newly loaded scene.
+    g_playWhenPreloadDone = false;
+    const auto tasks = SceneAssetPreload_BuildTaskList(SceneLoader_GetSceneNodes());
+    g_sceneAssetPreloader.Begin(tasks);
+}
+
+void EngineGUI_TickSceneAssetPreload() {
+    if (!g_sceneAssetPreloader.IsActive())
+        return;
+
+    if (!g_sceneAssetPreloader.Tick())
+        return;
+
+    if (g_playWhenPreloadDone) {
+        g_playWhenPreloadDone = false;
+        StartPlay();
+    }
+}
+
+bool EngineGUI_IsSceneAssetPreloadActive() {
+    return g_sceneAssetPreloader.IsActive();
 }
 
 // ── Public API ────────────────────────────────────────────────────────────────
@@ -2224,6 +2257,18 @@ void EngineGUI_Update(double elapsed_time) {
             });
     }
 
+    // Time-sliced asset preload: advance budget, gate editor interaction.
+    if (g_sceneAssetPreloader.IsActive()) {
+        if (KeyLogger_IsTrigger(KK_F3) && !g_isPlaying)
+            g_playWhenPreloadDone = true;
+        if (KeyLogger_IsTrigger(KK_F8))
+            JobSystem_ToggleDebugWindow();
+        EngineGUI_TickSceneAssetPreload();
+        // Still loading, or deferred StartPlay just entered play — skip editors.
+        if (g_sceneAssetPreloader.IsActive() || g_isPlaying)
+            return;
+    }
+
     if (KeyLogger_IsTrigger(KK_F2)) {
         g_enabled = !g_enabled;
         DebugCamera_SetEnabled(g_enabled);
@@ -2534,6 +2579,52 @@ void EngineGUI_Draw() {
         }
         ImGui::NewFrame();
         JobSystem_DebugDraw();
+        ImGui::Render();
+        ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+        if (ImGui::GetIO().WantCaptureMouse)
+            Mouse_ClearWheel();
+        return;
+    }
+
+    // Scene asset preload: ImGui overlay only (no panels / asset browser).
+    if (g_sceneAssetPreloader.IsActive()) {
+        ImGuiIO& io = ImGui::GetIO();
+        ImGui_ImplDX11_NewFrame();
+        ImGui_ImplWin32_NewFrame();
+        Renderer_UpdateClientSize();
+        io.DisplaySize = ImVec2(GetClientWidth(), GetClientHeight());
+        const float bbW = GetBackBufferWidth();
+        const float bbH = GetBackBufferHeight();
+        if (bbW > 0.0f && bbH > 0.0f) {
+            io.DisplayFramebufferScale = ImVec2(GetClientWidth() / bbW, GetClientHeight() / bbH);
+        }
+        else {
+            io.DisplayFramebufferScale = ImVec2(1.0f, 1.0f);
+        }
+        ImGui::NewFrame();
+
+        const ImGuiViewport* viewport = ImGui::GetMainViewport();
+        ImGui::SetNextWindowPos(viewport->GetCenter(), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
+        ImGui::SetNextWindowSize(ImVec2(420.0f, 0.0f), ImGuiCond_Always);
+        ImGuiWindowFlags flags =
+            ImGuiWindowFlags_NoResize |
+            ImGuiWindowFlags_NoCollapse |
+            ImGuiWindowFlags_NoMove |
+            ImGuiWindowFlags_NoSavedSettings |
+            ImGuiWindowFlags_AlwaysAutoResize;
+        if (ImGui::Begin("##SceneAssetPreloadOverlay", nullptr, flags)) {
+            ImGui::TextUnformatted("Loading scene...");
+            const std::string& label = g_sceneAssetPreloader.CurrentLabel();
+            if (!label.empty())
+                ImGui::TextUnformatted(label.c_str());
+            ImGui::Spacing();
+            ImGui::ProgressBar(g_sceneAssetPreloader.Progress01(), ImVec2(-1.0f, 0.0f));
+        }
+        ImGui::End();
+
+        if (JobSystem_IsDebugWindowVisible())
+            JobSystem_DebugDraw();
+
         ImGui::Render();
         ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
         if (ImGui::GetIO().WantCaptureMouse)

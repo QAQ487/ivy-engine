@@ -25,3 +25,7 @@ void ReturnToStart();
 // Loads a scene from disk without the unsaved-changes dirty gate.
 // Must be used only when caller already handled unsaved changes.
 bool EngineGUI_LoadFromFileCore(const char* filename);
+
+// Editor scene-asset preload (time-sliced after LoadFromFileCore).
+void EngineGUI_BeginSceneAssetPreload();
+void EngineGUI_TickSceneAssetPreload();

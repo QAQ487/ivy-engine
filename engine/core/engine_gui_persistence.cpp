@@ -25,6 +25,8 @@ bool EngineGUI_LoadFromFileCore(const char* filename) {
         const std::filesystem::path path(filename);
         ProjectManager::Instance().SetLastOpenedScene(path.filename().string());
     }
+
+    EngineGUI_BeginSceneAssetPreload();
     return true;
 }
 

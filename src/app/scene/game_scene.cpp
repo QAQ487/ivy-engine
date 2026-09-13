@@ -261,23 +261,32 @@ void GameScene::Draw() {
 	EngineGUI_GetGameViewportRect(vx, vy, vw, vh);
 	SetRenderViewport(vx, vy, vw, vh);
 
-	Object_Draw();
+#ifndef GAME_RUNTIME
+	const bool preloadActive = EngineGUI_IsSceneAssetPreloadActive();
+#else
+	const bool preloadActive = false;
+#endif
+	if (!preloadActive)
+		Object_Draw();
 
 	// Effekseer into PostRT (same game viewport as the 3D scene).
 	SetRenderViewport(vx, vy, vw, vh);
-	EffectSystem::Draw3D();
+	if (!preloadActive)
+		EffectSystem::Draw3D();
 
-	PostProcess_Draw();
+	if (!preloadActive)
+		PostProcess_Draw();
 
 	// Post resolve leaves the game viewport bound; re-assert for UI overlays.
 	SetRenderViewport(vx, vy, vw, vh);
 
 #ifndef GAME_RUNTIME
-	EngineGUI_DrawSelectionIndicator();
+	if (!preloadActive)
+		EngineGUI_DrawSelectionIndicator();
 #endif
-	if (EngineGUI_IsPlaying() || EngineGUI_IsUiOverlayVisible())
+	if (!preloadActive && (EngineGUI_IsPlaying() || EngineGUI_IsUiOverlayVisible()))
 		SceneCanvas_Draw();
-	if (EngineGUI_IsPlaying())
+	if (!preloadActive && EngineGUI_IsPlaying())
 		GameSceneScript_Invoke("GameScene_PostUIDraw");
 #ifndef GAME_RUNTIME
 	EngineGUI_Draw();
