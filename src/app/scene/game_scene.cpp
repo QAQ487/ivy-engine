@@ -403,6 +403,7 @@ void GameScene::Object_Draw() {
 	}
 
 	// Debug sphere / line / collider-wire pass (deferred from Update).
+	PhysicsSystem_PrepareContactFlashes();
 	DebugDrawer::FlushSphereQueue();
 	DebugDrawer::FlushLineQueue();
 	PhysicsSystem_FlushDebugDraw();

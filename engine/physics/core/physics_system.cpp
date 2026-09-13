@@ -19,45 +19,38 @@
 #include <type_traits>
 #include "engine/physics/collider/collider.h"
 #include "engine/core/debug_system.h"
+#include "engine/debug_draw/debug_drawer.h"
 
 namespace {
 	using namespace DirectX;
 
-	constexpr XMFLOAT4 kVizTrigger = { 1.0f, 1.0f, 0.0f, 1.0f };
-
 	std::set<std::pair<GameObject*, GameObject*>> g_triggerPairsPrev;
 	std::set<std::pair<GameObject*, GameObject*>> g_triggerPairsCurrent;
+	std::set<std::pair<GameObject*, GameObject*>> g_contactPairsPrev;
+	std::set<std::pair<GameObject*, GameObject*>> g_contactPairsCurrent;
 	SceneBase* g_lastTriggerScene = nullptr;
-
-	struct DebugWireRequest {
-		Collider* collider = nullptr;
-		XMFLOAT4 color{};
-	};
 }
 
 // File-scope so public PhysicsSystem_* APIs can read/write (not anonymous).
 static PhysicsDebugStats g_debugStats{};
-static std::vector<DebugWireRequest> g_debugWireQueue;
+
+struct ContactFlash {
+	DirectX::XMFLOAT3 point{};
+	DirectX::XMFLOAT3 tip{};
+	int framesLeft = 0;
+};
+static std::vector<ContactFlash> g_contactFlashes;
+constexpr int kContactFlashFrames = 18;
+constexpr float kContactFlashRadius = 0.2f;
 
 namespace {
 	using namespace DirectX;
-
-	void QueueDebugWireBoth(Collider* ca, Collider* cb, const XMFLOAT4& color) {
-		if (!DebugSystem::CollisionVizEnabled()) return;
-		if (ca) g_debugWireQueue.push_back({ ca, color });
-		if (cb) g_debugWireQueue.push_back({ cb, color });
-	}
 
 	void InsertTriggerPair(GameObject* a, GameObject* b) {
 		if (!a || !b || a == b) return;
 		if (b < a) std::swap(a, b);
 		g_triggerPairsCurrent.insert({ a, b });
 		++g_debugStats.triggers;
-		if (DebugSystem::CollisionVizEnabled()) {
-			Collider* ca = a->GetCollider();
-			Collider* cb = b->GetCollider();
-			QueueDebugWireBoth(ca, cb, kVizTrigger);
-		}
 	}
 
 	void DiffAndDispatchTriggerEvents() {
@@ -80,6 +73,11 @@ namespace {
 		}
 		g_triggerPairsPrev.swap(g_triggerPairsCurrent);
 		g_triggerPairsCurrent.clear();
+	}
+
+	void CommitContactPairs() {
+		g_contactPairsPrev.swap(g_contactPairsCurrent);
+		g_contactPairsCurrent.clear();
 	}
 
 	// 動的剛体かどうかを判定（キネマティックでなく、質量がある）
@@ -305,6 +303,8 @@ namespace {
 void PhysicsSystem_ClearTriggerPairs() {
 	g_triggerPairsPrev.clear();
 	g_triggerPairsCurrent.clear();
+	g_contactPairsPrev.clear();
+	g_contactPairsCurrent.clear();
 	g_lastTriggerScene = nullptr;
 }
 
@@ -333,6 +333,17 @@ void PhysicsSystem_NotifyObjectDestroyed(GameObject* obj) {
 		g_triggerPairsPrev.erase(pair);
 		g_triggerPairsCurrent.erase(pair);
 	}
+
+	auto eraseContact = [&](std::set<std::pair<GameObject*, GameObject*>>& s) {
+		for (auto it = s.begin(); it != s.end(); ) {
+			if (it->first == obj || it->second == obj)
+				it = s.erase(it);
+			else
+				++it;
+		}
+	};
+	eraseContact(g_contactPairsPrev);
+	eraseContact(g_contactPairsCurrent);
 }
 
 // ポジションスナップショット: 動的オブジェクトの現在位置を m_previousPosition に保存する。
@@ -372,7 +383,6 @@ void PhysicsSystem_ResolveCollisions() {
 	if (!scene) return;
 
 	g_debugStats = {};
-	g_debugWireQueue.clear();
 
 	if (scene != g_lastTriggerScene) {
 		PhysicsSystem_ClearTriggerPairs();
@@ -432,10 +442,14 @@ void PhysicsSystem_ResolveCollisions() {
 		entries.push_back(e);
 	}
 	g_debugStats.colliders = static_cast<int>(entries.size());
-	if (entries.size() < 2) return;
-	if (!anyDynamic && !anyTrigger) return;
+	if (entries.size() < 2 || (!anyDynamic && !anyTrigger)) {
+		g_contactPairsCurrent.clear();
+		CommitContactPairs();
+		return;
+	}
 
 	g_triggerPairsCurrent.clear();
+	g_contactPairsCurrent.clear();
 
 	std::sort(entries.begin(), entries.end(),
 		[](const BroadPhaseEntry& l, const BroadPhaseEntry& r) { return l.minX < r.minX; });
@@ -499,6 +513,7 @@ void PhysicsSystem_ResolveCollisions() {
 	}
 
 	DiffAndDispatchTriggerEvents();
+	CommitContactPairs();
 }
 
 bool PhysicsSystem_Raycast(const DirectX::XMFLOAT3& origin,
@@ -610,17 +625,57 @@ void PhysicsSystem_NotifyContactResolved() {
 	++g_debugStats.contacts;
 }
 
-void PhysicsSystem_QueueDebugWire(Collider* collider, const DirectX::XMFLOAT4& color) {
-	if (!collider || !DebugSystem::CollisionVizEnabled()) return;
-	g_debugWireQueue.push_back({ collider, color });
+bool PhysicsSystem_WasContactPairKnown(GameObject* a, GameObject* b) {
+	if (!a || !b || a == b) return false;
+	if (b < a) std::swap(a, b);
+	const std::pair<GameObject*, GameObject*> pair{ a, b };
+	const bool known = g_contactPairsPrev.count(pair) > 0;
+	g_contactPairsCurrent.insert(pair);
+	return known;
+}
+
+void PhysicsSystem_QueueContactFlash(const DirectX::XMFLOAT3& point,
+	const DirectX::XMFLOAT3& normalTip) {
+	if (!DebugSystem::CollisionVizEnabled()) return;
+	g_contactFlashes.push_back({ point, normalTip, kContactFlashFrames });
+}
+
+void PhysicsSystem_PrepareContactFlashes() {
+	if (!DebugSystem::CollisionVizEnabled()) {
+		g_contactFlashes.clear();
+		return;
+	}
+	constexpr DirectX::XMFLOAT4 kVizContact = { 1.0f, 0.0f, 0.0f, 1.0f };
+	constexpr DirectX::XMFLOAT3 kZero = { 0.0f, 0.0f, 0.0f };
+	for (auto it = g_contactFlashes.begin(); it != g_contactFlashes.end(); ) {
+		DebugDrawer::QueueSphere(it->point, kZero, kContactFlashRadius, kZero, kVizContact);
+		DebugDrawer::QueueLine(it->point, it->tip, kVizContact);
+		if (--it->framesLeft <= 0)
+			it = g_contactFlashes.erase(it);
+		else
+			++it;
+	}
+}
+
+void PhysicsSystem_ClearDebugDrawQueue() {
+	g_contactFlashes.clear();
 }
 
 void PhysicsSystem_FlushDebugDraw() {
-	if (g_debugWireQueue.empty()) return;
-	for (const auto& req : g_debugWireQueue) {
-		if (req.collider)
-			req.collider->DebugDraw(req.color);
+	// F11 draws every collider each frame so wires stay visible while airborne
+	// and solids stay green (triggers yellow — never paint solid mesh partners).
+	if (!DebugSystem::CollisionVizEnabled()) return;
+
+	SceneBase* scene = SceneManager::Instance().GetCurrentScene();
+	if (!scene) return;
+
+	constexpr DirectX::XMFLOAT4 kVizSolid = { 0.0f, 1.0f, 0.0f, 1.0f };
+	constexpr DirectX::XMFLOAT4 kVizTrig = { 1.0f, 1.0f, 0.0f, 1.0f };
+	for (GameObject* obj : scene->GetObjects()) {
+		if (!obj || !obj->IsActive()) continue;
+		Collider* col = obj->GetCollider();
+		if (!col) continue;
+		col->DebugDraw(col->IsTrigger() ? kVizTrig : kVizSolid);
 	}
-	g_debugWireQueue.clear();
 }
 

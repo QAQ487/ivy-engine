@@ -40,6 +40,11 @@ void PhysicsSystem_ClearTriggerPairs();
 // erase those pairs from tracking so the next pass cannot touch freed pointers.
 void PhysicsSystem_NotifyObjectDestroyed(GameObject* obj);
 
+// Solid-contact pair tracking for new-contact debug viz. Always records the
+// pair in the current ResolveCollisions pass set; returns true if the pair was
+// already contacting in the previous pass (sorted pair, order-independent).
+bool PhysicsSystem_WasContactPairKnown(GameObject* a, GameObject* b);
+
 struct PhysicsDebugStats {
 	int colliders = 0; // broad-phase entries
 	int pairs = 0;     // narrow/trigger CheckCollision true
@@ -50,8 +55,12 @@ struct PhysicsDebugStats {
 PhysicsDebugStats PhysicsSystem_GetDebugStats();
 void PhysicsSystem_NotifyContactResolved();
 
-// Deferred collider wireframes queued during Update; flush in Draw phase.
-void PhysicsSystem_QueueDebugWire(Collider* collider, const DirectX::XMFLOAT4& color);
+// Contact-flash + F11 collider wire helpers (flush in Draw phase).
+void PhysicsSystem_QueueContactFlash(const DirectX::XMFLOAT3& point,
+	const DirectX::XMFLOAT3& normalTip);
+// Re-queue active new-contact flashes for the Draw pass (call before FlushSphere/Line).
+void PhysicsSystem_PrepareContactFlashes();
+void PhysicsSystem_ClearDebugDrawQueue();
 void PhysicsSystem_FlushDebugDraw();
 
 struct RayHit {

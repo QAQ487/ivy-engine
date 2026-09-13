@@ -27,6 +27,7 @@
 #include "engine/ui/scene_canvas.h"
 #include "scene_manager.h"
 #include "debug_camera.h"
+#include "engine/physics/core/physics_system.h"
 
 #include <Windows.h>
 #include <algorithm>
@@ -619,6 +620,8 @@ void TeardownAllScripts() {
 }
 
 void TeardownScenePlaySession(bool resetTransforms) {
+    // Drop deferred Collider* wire draws before any object teardown (F11 viz).
+    PhysicsSystem_ClearDebugDrawQueue();
     PrefabRuntime_FlushDestroyed();
     TeardownAllScripts();
     PrefabRuntime_DestroyAllSpawnedChildren();

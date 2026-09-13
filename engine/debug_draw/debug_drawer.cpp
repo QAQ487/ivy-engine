@@ -336,7 +336,9 @@ void DebugDrawer::DrawBox(const DirectX::XMFLOAT3& position, const DirectX::XMFL
 	GetDeviceContext()->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
 
 	MATERIAL material{};
-	material.Diffuse = DirectX::XMFLOAT4(0, 1, 0, 0); // Green
+	// Vertex Diffuse carries the wire colour; material must stay white or
+	// SampleBaseColor (inDiffuse * Diffuse) zeros non-green channels.
+	material.Diffuse = DirectX::XMFLOAT4(1, 1, 1, 0);
 	Shader_SetMaterial(material);
 
 	GetDeviceContext()->DrawIndexed(24, 0, 0);
@@ -420,7 +422,9 @@ void DebugDrawer::DrawSphere(const DirectX::XMFLOAT3& position, const DirectX::X
 	GetDeviceContext()->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
 
 	MATERIAL material{};
-	material.Diffuse = XMFLOAT4(0, 1, 0, 0); // Green wireframe
+	// Vertex Diffuse carries the wire colour; material must stay white or
+	// SampleBaseColor (inDiffuse * Diffuse) zeros non-green channels.
+	material.Diffuse = XMFLOAT4(1, 1, 1, 0);
 	Shader_SetMaterial(material);
 
 	GetDeviceContext()->DrawIndexed(120, 0, 0);
@@ -473,7 +477,9 @@ void DebugDrawer::DrawCapsule(const DirectX::XMFLOAT3& position, const DirectX::
 	);
 
 	MATERIAL material{};
-	material.Diffuse = XMFLOAT4(0, 1, 0, 0); // Green
+	// Vertex Diffuse carries the wire colour; material must stay white or
+	// SampleBaseColor (inDiffuse * Diffuse) zeros non-green channels.
+	material.Diffuse = XMFLOAT4(1, 1, 1, 0);
 	Shader_SetMaterial(material);
 
 	// find top and bottom in local space
@@ -587,6 +593,17 @@ void DebugDrawer::DrawCylinder(const DirectX::XMFLOAT3& position, const DirectX:
 void DebugDrawer::DrawLine(const DirectX::XMFLOAT3& start, const DirectX::XMFLOAT3& end, const DirectX::XMFLOAT4& color) {
 	if (!m_initialized) return;
 
+	Shader3D_Begin();
+	SetDepthEnable(false);
+
+	Camera& cam = GetCamera();
+	Shader_SetProjectionMatrix(cam.GetProjMatrix(GetRenderViewportWidth(), GetRenderViewportHeight()));
+	Shader_SetViewMatrix(cam.GetViewMatrix());
+
+	MATERIAL material{};
+	material.Diffuse = DirectX::XMFLOAT4(1, 1, 1, 0);
+	Shader_SetMaterial(material);
+
 	// Create temporary vertex buffer for the line
 	VERTEX_3D lineVerts[2];
 	lineVerts[0].Position = start;
@@ -613,9 +630,6 @@ void DebugDrawer::DrawLine(const DirectX::XMFLOAT3& start, const DirectX::XMFLOA
 	HRESULT hr = GetDevice()->CreateBuffer(&bd, &sd, &lineVB);
 	if (FAILED(hr)) return;
 
-	// Set shader state
-	// Shader_SetTexture(m_debugTexture);
-
 	// Set identity world matrix (line vertices are already in world space)
 	XMMATRIX identity = XMMatrixIdentity();
 	Shader_SetWorldMatrix(identity);
@@ -629,6 +643,7 @@ void DebugDrawer::DrawLine(const DirectX::XMFLOAT3& start, const DirectX::XMFLOA
 
 	// Clean up
 	lineVB->Release();
+	SetDepthEnable(true);
 }
 
 void DebugDrawer::DrawLines(const std::vector<DirectX::XMFLOAT3>& lineVerts,
@@ -699,6 +714,10 @@ void DebugDrawer::DrawLinesCached(const std::vector<DirectX::XMFLOAT3>& lineVert
 		dst[i].TexCoord = { 0.0f, 0.0f };
 	}
 	GetDeviceContext()->Unmap(m_linesVB, 0);
+
+	MATERIAL material{};
+	material.Diffuse = DirectX::XMFLOAT4(1, 1, 1, 0);
+	Shader_SetMaterial(material);
 
 	XMMATRIX identity = XMMatrixIdentity();
 	Shader_SetWorldMatrix(identity);

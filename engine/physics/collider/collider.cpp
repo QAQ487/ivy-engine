@@ -515,35 +515,28 @@ static void ResolveContact(GameObject* self, GameObject* other,
                            float slope = 0.0005f) {
     PhysicsSystem_NotifyContactResolved();
 
-    if (DebugSystem::CollisionVizEnabled()) {
-        constexpr XMFLOAT4 kVizContact = { 1.0f, 0.0f, 0.0f, 1.0f };
-        constexpr XMFLOAT4 kVizSolid   = { 0.0f, 1.0f, 0.0f, 1.0f };
-
+    // Track contact pairs; red flash markers only on NEW contacts.
+    // Continuous green/yellow wires come from PhysicsSystem_FlushDebugDraw (F11).
+    const bool knownContact = PhysicsSystem_WasContactPairKnown(self, other);
+    if (DebugSystem::CollisionVizEnabled() && !knownContact) {
+        // Place near self toward other — midpoint of world centers is wrong
+        // for large mesh colliders (field) and sits far from the real hit.
         XMFLOAT3 cA = self->GetPosition();
-        XMFLOAT3 cB = other->GetPosition();
         if (Collider* colA = self->GetCollider())
             cA = colA->GetWorldCenter();
-        if (Collider* colB = other->GetCollider())
-            cB = colB->GetWorldCenter();
-
-        const XMFLOAT3 mid{
-            (cA.x + cB.x) * 0.5f,
-            (cA.y + cB.y) * 0.5f,
-            (cA.z + cB.z) * 0.5f
+        constexpr float kAlong = 0.4f;
+        constexpr float kNormalLen = 0.55f;
+        const XMFLOAT3 point{
+            cA.x - normal.x * kAlong,
+            cA.y - normal.y * kAlong,
+            cA.z - normal.z * kAlong
         };
-        constexpr XMFLOAT3 kZero = { 0.0f, 0.0f, 0.0f };
-        DebugDrawer::QueueSphere(mid, kZero, 0.06f, kZero, kVizContact);
         const XMFLOAT3 tip{
-            mid.x + normal.x * 0.35f,
-            mid.y + normal.y * 0.35f,
-            mid.z + normal.z * 0.35f
+            point.x + normal.x * kNormalLen,
+            point.y + normal.y * kNormalLen,
+            point.z + normal.z * kNormalLen
         };
-        DebugDrawer::QueueLine(mid, tip, kVizContact);
-
-        if (Collider* colA = self->GetCollider())
-            PhysicsSystem_QueueDebugWire(colA, kVizSolid);
-        if (Collider* colB = other->GetCollider())
-            PhysicsSystem_QueueDebugWire(colB, kVizSolid);
+        PhysicsSystem_QueueContactFlash(point, tip);
     }
 
     Rigidbody& rbA = self->GetRigidbody();
