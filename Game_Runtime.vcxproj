@@ -357,6 +357,7 @@ xcopy /y /d /e "$(ProjectDir)rom\*" "$(OutDir)rom\"</Command>
     <ClInclude Include="engine\ecs\tag_registry.h" />
     <ClInclude Include="engine\ecs\model_asset_cache.h" />
     <ClInclude Include="engine\scene\scene_loader.h" />
+    <ClInclude Include="engine\scene\scene_asset_preload.h" />
     <ClInclude Include="engine\scene\render_settings.h" />
     <ClInclude Include="engine\rendering\environment\skybox.h" />
     <ClInclude Include="engine\ecs\string_utils.h" />
@@ -454,6 +455,7 @@ xcopy /y /d /e "$(ProjectDir)rom\*" "$(OutDir)rom\"</Command>
     <ClCompile Include="engine\ecs\tag_registry.cpp" />
     <ClCompile Include="engine\ecs\model_asset_cache.cpp" />
     <ClCompile Include="engine\scene\scene_loader.cpp" />
+    <ClCompile Include="engine\scene\scene_asset_preload.cpp" />
     <ClCompile Include="engine\scene\render_settings.cpp" />
     <ClCompile Include="engine\rendering\environment\skybox.cpp" />
     <ClCompile Include="engine\scene\scene_runtime.cpp" />

@@ -1,7 +1,8 @@
 /**===========================================================================
  File   : scene_asset_preload.h
- Brief  : Editor-only time-sliced warming of shared models + animation clips
-          after scene JSON load. Main thread only (D3D11 / LoadFBX).
+ Brief  : Time-sliced warming of shared models + animation clips (main thread,
+          D3D11 / LoadFBX). Editor builds tasks from loaded GameObjects; GAME_RUNTIME
+          may also build tasks by scanning scene JSON files at boot.
  ===========================================================================**/
 #ifndef SCENE_ASSET_PRELOAD_H
 #define SCENE_ASSET_PRELOAD_H
@@ -23,8 +24,15 @@ struct SceneAssetPreloadTask {
 std::vector<SceneAssetPreloadTask> SceneAssetPreload_BuildTaskList(
 	const std::vector<std::unique_ptr<GameObject>>& roots);
 
+// Scan rom/scene (or given dir) *.json + prefabAssetPath targets; dedupe like BuildTaskList.
+std::vector<SceneAssetPreloadTask> SceneAssetPreload_BuildTaskListFromSceneFiles(
+	const std::string& sceneDirRelative = "rom/scene");
+
 class SceneAssetPreloader {
 public:
+	// Process-lifetime instance for GAME_RUNTIME boot preload (editor uses its own).
+	static SceneAssetPreloader& BootPreloader();
+
 	void Begin(const std::vector<SceneAssetPreloadTask>& tasks);
 	// Returns true when all tasks are done (or inactive). Call once per frame.
 	bool Tick();

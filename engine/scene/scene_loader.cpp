@@ -11,7 +11,6 @@
 #include "engine/ecs/tag_registry.h"
 #include "engine/scene/scene_runtime.h"
 #include "engine/ecs/prefab_runtime.h"
-#include <Windows.h>
 #include "engine/ecs/transform.h"
 #include "engine/ecs/visual_component.h"
 #include "engine/ecs/billboard_component.h"
@@ -492,7 +491,8 @@ static void SceneLoader_PrepareForSceneReload() {
 
 bool SceneLoader_LoadFromFile(const char* filename) {
     std::ifstream file(filename);
-    if (!file.is_open()) return false;
+    if (!file.is_open())
+		return false;
 
     SceneLoader_PrepareForSceneReload();
 

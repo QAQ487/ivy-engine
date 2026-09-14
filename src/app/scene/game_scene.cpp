@@ -66,6 +66,110 @@
 #include "engine/ui/scene_canvas.h"
 #include "engine/audio/audio_manager.h"
 #include "engine/audio/audio_listener_sync.h"
+
+#ifdef GAME_RUNTIME
+#include "engine/scene/scene_asset_preload.h"
+#include "engine/debug_draw/debug_text.h"
+#include "engine/core/debug_system.h"
+#include <filesystem>
+#include <string>
+
+namespace {
+
+void DrawBootLoadingScreen(float progress01, const std::string& label) {
+	ID3D11Device* device = GetDevice();
+	ID3D11DeviceContext* ctx = GetDeviceContext();
+	if (!device || !ctx)
+		return;
+
+	Renderer_BindBackBuffer();
+	ResetRenderViewport();
+
+	ID3D11RenderTargetView* rtv = nullptr;
+	ID3D11DepthStencilView* dsv = nullptr;
+	ctx->OMGetRenderTargets(1, &rtv, &dsv);
+	const float dark[4] = { 0.08f, 0.08f, 0.10f, 1.0f };
+	if (rtv)
+		ctx->ClearRenderTargetView(rtv, dark);
+	if (dsv)
+		ctx->ClearDepthStencilView(dsv, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+	if (rtv)
+		rtv->Release();
+	if (dsv)
+		dsv->Release();
+
+	const float screenW = GetBackBufferWidth();
+	const float screenH = GetBackBufferHeight();
+	const int pct = static_cast<int>(progress01 * 100.0f + 0.5f);
+	char line[512];
+	if (label.empty())
+		std::snprintf(line, sizeof(line), "Loading... %d%%", pct);
+	else
+		std::snprintf(line, sizeof(line), "Loading... %s %d%%", label.c_str(), pct);
+
+	hal::DebugText dbg(device, ctx,
+		L"rom/texture/consolab_ascii_512.png",
+		static_cast<UINT>(screenW), static_cast<UINT>(screenH),
+		0.0f, 0.0f,
+		0, 0,
+		24.0f, 12.0f);
+	float textW = 0.0f;
+	float textH = 0.0f;
+	dbg.MeasureText(line, textW, textH);
+	dbg.SetOffset((screenW - textW) * 0.5f, (screenH - textH) * 0.5f);
+	dbg.SetText(line, DirectX::XMFLOAT4(0.90f, 0.92f, 0.95f, 1.0f));
+	dbg.Draw();
+	dbg.Clear();
+}
+
+bool PumpBootMessages() {
+	MSG msg{};
+	while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
+		if (msg.message == WM_QUIT)
+			return false;
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
+	}
+	return true;
+}
+
+void RunBootAssetPreload() {
+	if (std::filesystem::exists("rom/skip_boot_preload"))
+		return;
+
+	const auto tasks = SceneAssetPreload_BuildTaskListFromSceneFiles("rom/scene");
+	if (tasks.empty())
+		return;
+
+	DebugSystem::ResetTimeScale();
+	if (DebugSystem::CollisionVizEnabled())
+		DebugSystem::ToggleCollisionViz();
+
+	SceneAssetPreloader& pre = SceneAssetPreloader::BootPreloader();
+	pre.Begin(tasks);
+	if (!pre.IsActive())
+		return;
+
+	HWND hwnd = GetWindowHandle();
+	if (hwnd) {
+		ShowWindow(hwnd, SW_SHOWDEFAULT);
+		UpdateWindow(hwnd);
+	}
+
+	while (pre.IsActive()) {
+		if (!PumpBootMessages()) {
+			pre.Cancel();
+			break;
+		}
+		pre.Tick();
+		DrawBootLoadingScreen(pre.Progress01(), pre.CurrentLabel());
+		Present();
+	}
+}
+
+} // namespace
+#endif // GAME_RUNTIME
+
 void GameScene::Initialize() {
 	srand((unsigned int)time(nullptr));
 
@@ -100,6 +204,7 @@ void GameScene::Initialize() {
 #else
 		AudioManager::Instance().TryLoadBusVolumesFromNearbyProject();
 		Physics_TryLoadGravityFromNearbyProject();
+		RunBootAssetPreload();
 		EngineGUI_LoadFromFile(EngineGUI_GetDefaultScenePath().c_str());
 #endif
 	}

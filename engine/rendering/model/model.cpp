@@ -7,7 +7,7 @@
  -----------------------------------------------------------------------------
 
  ===========================================================================**/
-#include "model.h"
+	#include "model.h"
 #include "model_util.h"
 
 #include <Windows.h>
@@ -1656,8 +1656,12 @@ void Model3D::InitAnimationInfo() {
 	if (!stack) return;
 
 	m_currentAnimScene->SetCurrentAnimationStack(stack);
-	if (m_baseScene && m_baseScene != m_currentAnimScene)
-		m_baseScene->SetCurrentAnimationStack(stack);
+	// Anim stacks are scene-owned. Never attach another scene's stack to m_baseScene —
+	// boot preload EnsureClipBaked was doing that and corrupting FBX evaluator state.
+	if (m_baseScene && m_baseScene != m_currentAnimScene) {
+		if (FbxAnimStack* baseStack = m_baseScene->FindSrcObject<FbxAnimStack>(stack->GetName()))
+			m_baseScene->SetCurrentAnimationStack(baseStack);
+	}
 
 	if (m_animDurationSec < 0.0) m_animDurationSec = 0.0;
 }
@@ -2184,7 +2188,10 @@ std::unique_ptr<Model3D> Model3D::CreateAnimInstanceFrom(const Model3D& shared) 
 	inst->m_skinWeightScratch = shared.m_skinWeightScratch;
 	inst->m_boneXformScratch.resize(shared.m_skinBones.size());
 
-	inst->InitAnimationInfo();
+	// When clips are already baked (boot/editor preload), skip InitAnimationInfo —
+	// it would mutate the shared base FbxScene; PlayAnimation sets timing from bake.
+	if (inst->m_bakedClips.empty())
+		inst->InitAnimationInfo();
 	if (inst->m_hasSkin && inst->m_bakedClips.empty())
 		inst->BakeSkinningData();
 	if (!inst->m_rigidBake.empty() && inst->m_bakedClips.empty())

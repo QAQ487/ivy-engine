@@ -225,6 +225,9 @@
     <ClInclude Include="engine\scene\scene_loader.h">
       <Filter>engine\scene</Filter>
     </ClInclude>
+    <ClInclude Include="engine\scene\scene_asset_preload.h">
+      <Filter>engine\scene</Filter>
+    </ClInclude>
     <ClInclude Include="engine\scene\scene_node.h">
       <Filter>engine\scene</Filter>
     </ClInclude>
@@ -462,6 +465,9 @@
       <Filter>engine\rendering\sprite</Filter>
     </ClCompile>
     <ClCompile Include="engine\scene\scene_loader.cpp">
+      <Filter>engine\scene</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\scene\scene_asset_preload.cpp">
       <Filter>engine\scene</Filter>
     </ClCompile>
     <ClCompile Include="engine\scene\scene_runtime.cpp">
