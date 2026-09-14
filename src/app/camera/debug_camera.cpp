@@ -298,10 +298,12 @@ void DebugCamera_SyncOrbitFromCurrentView()
 }
 
 void DebugCamera_Update(double dt) {
-	// F1 to toggle
+#ifndef GAME_RUNTIME
+	// Editor-only: F1 toggles free-fly / orbit debug camera
 	if (KeyLogger_IsTrigger(KK_F1)) {
 		DebugCamera_SetEnabled(!s_enabled);
 	}
+#endif
 	if (!s_enabled) return;
 
 	// If the mouse is over an ImGui window (like your Hierarchy or Properties),

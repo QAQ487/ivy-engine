@@ -324,13 +324,15 @@ void Update(double current_time, double elapsed_time) {
 	// Update controllers
 	Controller_Update();
 
-	// Debug hotkeys (F9/F10 remain PostFX below)
+#ifndef GAME_RUNTIME
+	// Editor-only debug hotkeys (never in Game_Runtime / shipped build)
 	if (KeyLogger_IsTrigger(KK_F11))
 		DebugSystem::ToggleCollisionViz();
 	if (KeyLogger_IsTrigger(KK_F7))
 		DebugSystem::CycleTimeScale();
 	if (KeyLogger_IsTrigger(KK_F12))
 		DebugSystem::StepOneFrame();
+#endif
 
 	// Update global effect system (uses elapsed_time)
 	EffectSystem::Update(elapsed_time);
@@ -350,8 +352,8 @@ void Update(double current_time, double elapsed_time) {
 	const double scaled_dt = fixed_dt * static_cast<double>(ts);
 	PostProcess_Update(static_cast<float>(elapsed_time * static_cast<double>(ts)));
 
-	// PostFX showcase hotkeys (no script dependency):
-	// F9 = GOAL-strength RGB burst, F10 = toggle mosaic showcase
+#ifndef GAME_RUNTIME
+	// Editor-only PostFX showcase: F9 = RGB burst, F10 = toggle mosaic
 	if (KeyLogger_IsTrigger(KK_F9))
 		PostProcess_TriggerBurst(0.012f, 0.45f);
 	if (KeyLogger_IsTrigger(KK_F10)) {
@@ -360,6 +362,7 @@ void Update(double current_time, double elapsed_time) {
 		PostProcess_GetEffects(rgb, mosaic);
 		PostProcess_SetEffects(rgb, (mosaic > 0.0f) ? 0.0f : 40.0f);
 	}
+#endif
 
 	SceneTransition_Update(elapsed_time);
 
