@@ -108,6 +108,29 @@ bool              g_isPlaying = false;
 static bool        g_holdPlayVisuals = false;
 static bool        g_isOnStart = true;
 static bool        g_imguiInitialized = false;
+
+// When the editor skips ImGui::NewFrame (play / F2-hide), stop queuing Win32
+// inputs into ImGui and flush any backlog so exit does not trickle-consume them.
+static void SyncImGuiInputAcceptance(bool willProcessImGuiFrame) {
+    if (!g_imguiInitialized)
+        return;
+    ImGuiIO& io = ImGui::GetIO();
+    if (willProcessImGuiFrame) {
+        if (!io.AppAcceptingEvents) {
+            io.ClearEventsQueue();
+            io.ClearInputKeys();
+            io.ClearInputMouse();
+            io.SetAppAcceptingEvents(true);
+        }
+    }
+    else if (io.AppAcceptingEvents) {
+        io.SetAppAcceptingEvents(false);
+        io.ClearEventsQueue();
+        io.ClearInputKeys();
+        io.ClearInputMouse();
+    }
+}
+
 static SceneAssetPreloader g_sceneAssetPreloader;
 static bool        g_playWhenPreloadDone = false;
 bool               g_sceneLoadPending = false;
@@ -1815,6 +1838,7 @@ void ReturnToStart() {
     DebugCamera_SetEnabled(true);
     ApplyEditorColliders();
     RestoreEditorDebugColliderFlags();
+    SyncImGuiInputAcceptance(true);
 }
 
 static bool HasThirdPersonPlayerNode(GameObject* node) {
@@ -1897,6 +1921,7 @@ static void StartPlay() {
         const bool hideCursor = (g_cameraMode == CameraMode::ThirdPerson) && HasThirdPersonPlayer();
         ThirdPersonCamera_ShowCursor(!hideCursor);
     }
+    SyncImGuiInputAcceptance(false);
 }
 
 void EngineGUI_QueueSceneLoad(const char* filename) {
@@ -2812,6 +2837,10 @@ void EngineGUI_OnBackbufferResized() {
 void EngineGUI_Draw() {
     // Play mode sets g_enabled=false (hides editor chrome). Still draw the
     // Job System overlay when F8 has opened it so it survives play.
+    const bool willProcessImGuiFrame =
+        g_enabled || (JobSystem_IsDebugWindowVisible() && g_imguiInitialized);
+    SyncImGuiInputAcceptance(willProcessImGuiFrame);
+
     if (!g_enabled) {
         if (!JobSystem_IsDebugWindowVisible() || !g_imguiInitialized)
             return;
