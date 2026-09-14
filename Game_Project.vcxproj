@@ -126,8 +126,10 @@
     <PostBuildEvent>
       <Command>xcopy /D /Y "$(ProjectDir)libraries\fbxsdk\dll\Debug\*.*" "$(OutDir)" /E /I /Q
 
-robocopy "$(ProjectDir)game" "$(OutDir)game" /MIR /NJH /NJS /NDL /NFL /NC /NS /NP
-if %ERRORLEVEL% GEQ 8 exit /b %ERRORLEVEL%
+if exist "$(ProjectDir)game\" (
+  robocopy "$(ProjectDir)game" "$(OutDir)game" /MIR /NJH /NJS /NDL /NFL /NC /NS /NP
+  if %ERRORLEVEL% GEQ 8 exit /b %ERRORLEVEL%
+)
 
 robocopy "$(ProjectDir)rom" "$(OutDir)rom" /MIR /NJH /NJS /NDL /NFL /NC /NS /NP
 if %ERRORLEVEL% GEQ 8 exit /b %ERRORLEVEL%
@@ -166,8 +168,10 @@ exit /b 0</Command>
     <PostBuildEvent>
       <Command>xcopy /D /Y "$(ProjectDir)libraries\fbxsdk\dll\Release\*.*" "$(OutDir)" /E /I /Q
 
-robocopy "$(ProjectDir)game" "$(OutDir)game" /MIR /NJH /NJS /NDL /NFL /NC /NS /NP
-if %ERRORLEVEL% GEQ 8 exit /b %ERRORLEVEL%
+if exist "$(ProjectDir)game\" (
+  robocopy "$(ProjectDir)game" "$(OutDir)game" /MIR /NJH /NJS /NDL /NFL /NC /NS /NP
+  if %ERRORLEVEL% GEQ 8 exit /b %ERRORLEVEL%
+)
 
 robocopy "$(ProjectDir)rom" "$(OutDir)rom" /MIR /NJH /NJS /NDL /NFL /NC /NS /NP
 if %ERRORLEVEL% GEQ 8 exit /b %ERRORLEVEL%

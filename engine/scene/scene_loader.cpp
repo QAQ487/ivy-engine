@@ -47,6 +47,7 @@ const std::string DEFAULT_SCENE_CONFIG = "rom/scene/default_scene.txt";
 static std::vector<std::unique_ptr<GameObject>> g_sceneNodes;
 static ScriptWatcher g_scriptWatcher;
 static std::string g_scriptBinDir = "game/scripts/bin/";
+static bool g_wantScriptWatcher = false;
 static std::unordered_map<std::string, fs::file_time_type> g_scriptDllWriteTimes;
 
 struct SceneAssetEntry {
@@ -334,10 +335,23 @@ void SceneLoader_LoadDefaultSceneSetting() {
         SceneLoader_SetDefaultSceneFileName(g_sceneAssets.front().fileName, false);
 }
 
+static void SceneLoader_StartScriptWatcherIfWanted() {
+    if (!g_wantScriptWatcher)
+        return;
+    g_scriptWatcher.Stop();
+    g_scriptWatcher.Start(g_scriptBinDir,
+        [](const std::string& name, const std::string& path) {
+            ScriptFactory::Instance().RequestReload(name, path);
+        });
+}
+
 void SceneLoader_LoadScriptDlls() {
     g_scriptBinDir = ResolveRuntimeScriptBinDir();
     std::error_code ec;
-    if (!fs::exists(g_scriptBinDir, ec)) return;
+    if (!fs::exists(g_scriptBinDir, ec)) {
+        SceneLoader_StartScriptWatcherIfWanted();
+        return;
+    }
 
     for (const auto& entry : fs::directory_iterator(g_scriptBinDir, ec)) {
         const std::string fileName = entry.path().filename().string();
@@ -349,9 +363,11 @@ void SceneLoader_LoadScriptDlls() {
                 fs::last_write_time(entry.path(), timeEc);
         }
     }
+    SceneLoader_StartScriptWatcherIfWanted();
 }
 
 void SceneLoader_UnloadScriptDlls() {
+    g_scriptWatcher.Stop();
     ScriptFactory::Instance().UnloadAllDlls();
 }
 
@@ -394,14 +410,17 @@ void SceneLoader_Initialize(bool enableScriptWatcher) {
     SceneLoader_RegisterComponentTypes();
     SceneLoader_RefreshSceneAssets();
     SceneLoader_LoadDefaultSceneSetting();
-    SceneLoader_LoadScriptDlls();
+    g_wantScriptWatcher = enableScriptWatcher;
 
-    if (enableScriptWatcher) {
-        g_scriptWatcher.Start(g_scriptBinDir,
-            [](const std::string& name, const std::string& path) {
-                ScriptFactory::Instance().RequestReload(name, path);
-            });
-    }
+#if defined(GAME_RUNTIME)
+    // Runtime always loads content scripts at boot.
+    SceneLoader_LoadScriptDlls();
+#else
+    // Editor: defer until a project is open (ApplyProjectSessionState).
+    // Loading leftover GameScripts.dll from the exe out-dir on the start
+    // screen pulls in content hooks (e.g. SceneTransition) that expect
+    // project-local textures.
+#endif
 }
 
 void SceneLoader_StopScriptWatcher() {

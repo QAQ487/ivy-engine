@@ -45,10 +45,12 @@ public:
     const std::string& GetName() const { return m_data.name; }
     const ProjectData& GetData() const { return m_data; }
 
-    // Resolve startup project: recent list, then cwd with rom/, then exe dir with rom/.
+    // Resolve startup project from the recent list only (no cwd/exe fallback —
+    // the editor build output has rom/ and must not auto-open as a project).
     bool BootstrapAtStartup();
 
     bool OpenProject(const std::string& rootPath, std::string* errorOut = nullptr);
+    void CloseProject();
     bool CreateProject(const std::string& parentDir, const std::string& projectName,
                        std::string* errorOut = nullptr);
     // Writes project.json from current in-memory state (does not save the scene file).

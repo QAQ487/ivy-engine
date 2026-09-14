@@ -278,6 +278,7 @@ enum class PendingEditorAction {
     NewScene,
     OpenProject,
     CreateProject,
+    CloseProject,
     Exit,
 };
 
@@ -312,10 +313,15 @@ static void SaveProject();
 static void ApplyProjectSessionState();
 static bool SwitchToOpenedProject();
 static void RequestOpenProject(const std::string& rootPath);
+static void RequestCloseProject();
+static void CloseOpenedProject();
 static void BeginNewProjectFlow();
 static void BeginOpenProjectFlow();
 static void OpenBuildPreflight();
 static void RequestBuildCurrentProject();
+static void ConsumePendingFolderPick();
+static void DrawEngineStartScreen();
+static void DrawEditorPopups();
 
 static void RemapNodeTagsAfterDelete(GameObject* node, int deletedId) {
     if (!node)
@@ -964,6 +970,43 @@ static void RequestOpenProject(const std::string& rootPath) {
     SwitchToOpenedProject();
 }
 
+static void CloseOpenedProject() {
+    if (!ProjectManager::Instance().IsOpen())
+        return;
+
+    if (g_isPlaying)
+        ReturnToStart();
+
+    ClearSceneRuntime();
+    g_sceneNodes.clear();
+    g_selNode = nullptr;
+    g_selUiElement = nullptr;
+    SceneCanvas_ClearSceneCanvas();
+    EditorUndo_Clear();
+    EngineGUI_ClearSceneDirty();
+    SyncSceneRuntime();
+
+    SceneLoader_UnloadScriptDlls();
+    ProjectManager::Instance().CloseProject();
+    ProjectManager::Instance().UpdateWindowTitle(GetWindowHandle());
+    g_projectStatusMessage.clear();
+}
+
+static void RequestCloseProject() {
+    if (!ProjectManager::Instance().IsOpen())
+        return;
+
+    if (EngineGUI_IsSceneDirty()) {
+        g_pendingEditorAction = PendingEditorAction::CloseProject;
+        g_pendingEditorSceneFile.clear();
+        g_pendingProjectPath.clear();
+        g_showUnsavedChangesPopup = true;
+        return;
+    }
+
+    CloseOpenedProject();
+}
+
 static void BeginOpenProjectFlow() {
     std::string folder;
     if (!ProjectManager::PickFolder(GetWindowHandle(), L"Open Project", &folder))
@@ -1040,12 +1083,122 @@ static void SaveProject() {
     g_projectStatusMessage = "Project saved.";
 }
 
+static void ConsumePendingFolderPick() {
+    // Run Win32 folder dialogs after ImGui finishes the frame (avoids menu reentrancy).
+    if (g_pendingFolderPick == PendingFolderPickAction::None)
+        return;
+
+    const PendingFolderPickAction action = g_pendingFolderPick;
+    g_pendingFolderPick = PendingFolderPickAction::None;
+    if (action == PendingFolderPickAction::NewProject)
+        BeginNewProjectFlow();
+    else if (action == PendingFolderPickAction::OpenProject)
+        BeginOpenProjectFlow();
+    else if (action == PendingFolderPickAction::BuildOutput) {
+        std::string folder;
+        if (ProjectManager::PickFolder(GetWindowHandle(), L"Playable Package Folder",
+                                       &folder, g_buildDest))
+            SetBuildDestBuffer(folder);
+    }
+}
+
+static void DrawEngineStartScreen() {
+    ImGuiViewport* viewport = ImGui::GetMainViewport();
+    ImGui::SetNextWindowPos(viewport->Pos);
+    ImGui::SetNextWindowSize(viewport->Size);
+    ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.06f, 0.07f, 0.09f, 1.0f));
+    ImGui::Begin("##EngineStartScreen", nullptr,
+                 ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
+                 ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar |
+                 ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoNav);
+    ImGui::PopStyleColor();
+
+    const ImVec2 cardSize(480.0f, 340.0f);
+    const ImVec2 cardPos(
+        viewport->Pos.x + (viewport->Size.x - cardSize.x) * 0.5f,
+        viewport->Pos.y + (viewport->Size.y - cardSize.y) * 0.5f);
+    ImGui::SetCursorScreenPos(cardPos);
+
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(36.0f, 30.0f));
+    ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 4.0f);
+    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.92f, 0.93f, 0.95f, 1.0f));
+    ImGui::BeginChild("##StartCard", cardSize, ImGuiChildFlags_Borders);
+
+    {
+        const char* title = "INTERACTIVE VISUAL ENGINE";
+        const float titleW = ImGui::CalcTextSize(title).x;
+        const float avail = ImGui::GetContentRegionAvail().x;
+        if (titleW < avail)
+            ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (avail - titleW) * 0.5f);
+        ImGui::TextUnformatted(title);
+    }
+    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.55f, 0.58f, 0.64f, 1.0f));
+    {
+        const char* subtitle = "Custom D3D11 game engine";
+        const float subW = ImGui::CalcTextSize(subtitle).x;
+        const float avail = ImGui::GetContentRegionAvail().x;
+        if (subW < avail)
+            ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (avail - subW) * 0.5f);
+        ImGui::TextUnformatted(subtitle);
+    }
+    ImGui::PopStyleColor();
+    ImGui::Dummy(ImVec2(0.0f, 16.0f));
+
+    const float btnW = ImGui::GetContentRegionAvail().x;
+    const float btnH = 44.0f;
+    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.18f, 0.55f, 0.32f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.22f, 0.65f, 0.38f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.14f, 0.45f, 0.26f, 1.0f));
+    if (ImGui::Button("Open Project...", ImVec2(btnW, btnH)))
+        g_pendingFolderPick = PendingFolderPickAction::OpenProject;
+    ImGui::PopStyleColor(3);
+
+    ImGui::Dummy(ImVec2(0.0f, 8.0f));
+    if (ImGui::Button("New Project...", ImVec2(btnW, btnH)))
+        g_pendingFolderPick = PendingFolderPickAction::NewProject;
+
+    ImGui::Dummy(ImVec2(0.0f, 18.0f));
+    ImGui::TextUnformatted("Recent projects");
+    ImGui::Separator();
+    ImGui::Dummy(ImVec2(0.0f, 4.0f));
+
+    const auto& recent = ProjectManager::Instance().GetRecentProjects();
+    if (recent.empty()) {
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.50f, 0.52f, 0.56f, 1.0f));
+        ImGui::TextUnformatted("(No recent projects)");
+        ImGui::PopStyleColor();
+    }
+    else {
+        const size_t count = (std::min)(recent.size(), size_t{5});
+        for (size_t i = 0; i < count; ++i) {
+            const std::string& path = recent[i];
+            const std::string leaf = fs::path(path).filename().string();
+            const std::string label = leaf.empty() ? path : leaf;
+            ImGui::PushID(static_cast<int>(i));
+            if (ImGui::SmallButton(label.c_str()))
+                RequestOpenProject(path);
+            if (ImGui::IsItemHovered())
+                ImGui::SetTooltip("%s", path.c_str());
+            ImGui::PopID();
+        }
+    }
+
+    ImGui::EndChild();
+    ImGui::PopStyleColor();
+    ImGui::PopStyleVar(2);
+
+    ImGui::End();
+}
+
 static void DrawEditorMenuBar() {
     if (ImGui::BeginMenu("File")) {
         if (ImGui::MenuItem("New Project..."))
             g_pendingFolderPick = PendingFolderPickAction::NewProject;
         if (ImGui::MenuItem("Open Project..."))
             g_pendingFolderPick = PendingFolderPickAction::OpenProject;
+        if (ImGui::MenuItem("Close Project", nullptr, false,
+                            ProjectManager::Instance().IsOpen()))
+            RequestCloseProject();
         if (ImGui::MenuItem("Save Project", "Ctrl+Shift+S"))
             SaveProject();
 
@@ -1265,6 +1418,10 @@ static void ExecutePendingEditorAction() {
                 SwitchToOpenedProject();
             }
         }
+        break;
+
+    case PendingEditorAction::CloseProject:
+        CloseOpenedProject();
         break;
 
     case PendingEditorAction::Exit:
@@ -2011,7 +2168,13 @@ void EngineGUI_Initialize(HWND hwnd, ID3D11Device* device,
 
     ModelAssetCache::Instance().RefreshAssetDirectory();
     SceneLoader_Initialize(true);
-    g_scriptReloadStatus = "Watching script DLLs";
+    if (ProjectManager::Instance().IsOpen()) {
+        SceneLoader_LoadScriptDlls();
+        g_scriptReloadStatus = "Watching script DLLs";
+    }
+    else {
+        g_scriptReloadStatus = "No project open";
+    }
 
     if (ProjectManager::Instance().IsOpen() &&
         !ProjectManager::Instance().GetData().defaultScene.empty()) {
@@ -2881,6 +3044,20 @@ void EngineGUI_Draw() {
         io.DisplayFramebufferScale = ImVec2(1.0f, 1.0f);
     }
     ImGui::NewFrame();
+
+    // No project open: product start screen only (folder-pick still runs after render).
+    if (!ProjectManager::Instance().IsOpen()) {
+        DrawEngineStartScreen();
+        // New Project name modal (and unsaved guard) live in DrawEditorPopups.
+        DrawEditorPopups();
+        ImGui::Render();
+        ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+        if (ImGui::GetIO().WantCaptureMouse)
+            Mouse_ClearWheel();
+        ConsumePendingFolderPick();
+        return;
+    }
+
     TransformGizmo::BeginFrame();
 
     const float screenW = io.DisplaySize.x;
@@ -4161,19 +4338,5 @@ void EngineGUI_Draw() {
     if (ImGui::GetIO().WantCaptureMouse)
         Mouse_ClearWheel();
 
-    // Run Win32 folder dialogs after ImGui finishes the frame (avoids menu reentrancy).
-    if (g_pendingFolderPick != PendingFolderPickAction::None) {
-        const PendingFolderPickAction action = g_pendingFolderPick;
-        g_pendingFolderPick = PendingFolderPickAction::None;
-        if (action == PendingFolderPickAction::NewProject)
-            BeginNewProjectFlow();
-        else if (action == PendingFolderPickAction::OpenProject)
-            BeginOpenProjectFlow();
-        else if (action == PendingFolderPickAction::BuildOutput) {
-            std::string folder;
-            if (ProjectManager::PickFolder(GetWindowHandle(), L"Playable Package Folder",
-                                           &folder, g_buildDest))
-                SetBuildDestBuffer(folder);
-        }
-    }
+    ConsumePendingFolderPick();
 }

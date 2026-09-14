@@ -739,30 +739,23 @@ bool ProjectManager::BootstrapAtStartup() {
 
     LoadRecentList();
 
-    auto tryOpen = [&](const std::string& path) -> bool {
-        if (path.empty())
-            return false;
-        std::error_code ec;
-        if (!fs::exists(fs::path(path) / "rom", ec))
-            return false;
-        return ActivateRoot(path, nullptr);
-    };
-
     for (const std::string& recent : m_recent) {
-        if (tryOpen(recent))
+        if (recent.empty())
+            continue;
+        std::error_code ec;
+        if (!fs::exists(fs::path(recent) / "rom", ec))
+            continue;
+        if (ActivateRoot(recent, nullptr))
             return true;
     }
 
-    std::error_code ec;
-    const std::string cwd = fs::current_path(ec).string();
-    if (!ec && tryOpen(cwd))
-        return true;
-
-    const std::string exeDir = GetExecutableDirectory();
-    if (tryOpen(exeDir))
-        return true;
-
     return false;
+}
+
+void ProjectManager::CloseProject() {
+    m_open = false;
+    m_rootPath.clear();
+    m_data = ProjectData{};
 }
 
 void ProjectManager::UpdateWindowTitle(HWND hwnd) const {

@@ -129,10 +129,11 @@
 
 xcopy /D /Y "$(ProjectDir)libraries\fbxsdk\dll\Debug\*.*" "$(ProjectDir)x64\Debug\" /E /I
 
-if not exist "$(OutDir)game" mkdir "$(OutDir)game"
 if not exist "$(OutDir)rom" mkdir "$(OutDir)rom"
-
-xcopy /y /d /e "$(ProjectDir)game\*" "$(OutDir)game\"
+if exist "$(ProjectDir)game\" (
+  if not exist "$(OutDir)game" mkdir "$(OutDir)game"
+  xcopy /y /d /e "$(ProjectDir)game\*" "$(OutDir)game\"
+)
 xcopy /y /d /e "$(ProjectDir)rom\*" "$(OutDir)rom\"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -162,10 +163,11 @@ xcopy /y /d /e "$(ProjectDir)rom\*" "$(OutDir)rom\"</Command>
 
 xcopy /D /Y "$(ProjectDir)libraries\fbxsdk\dll\Debug\*.*" "$(ProjectDir)x64\Debug\" /E /I
 
-if not exist "$(OutDir)game" mkdir "$(OutDir)game"
 if not exist "$(OutDir)rom" mkdir "$(OutDir)rom"
-
-xcopy /y /d /e "$(ProjectDir)game\*" "$(OutDir)game\"
+if exist "$(ProjectDir)game\" (
+  if not exist "$(OutDir)game" mkdir "$(OutDir)game"
+  xcopy /y /d /e "$(ProjectDir)game\*" "$(OutDir)game\"
+)
 xcopy /y /d /e "$(ProjectDir)rom\*" "$(OutDir)rom\"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>

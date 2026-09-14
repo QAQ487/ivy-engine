@@ -195,11 +195,12 @@ void GameScene::Initialize() {
 		EngineGUI_Initialize(GetWindowHandle(), GetDevice(), GetDeviceContext());
 		SceneCanvas_Initialize();
 #ifndef GAME_RUNTIME
-		{
+		if (ProjectManager::Instance().IsOpen()) {
 			std::string scenePath = EngineGUI_ResolveStartupScenePath();
 			if (scenePath.empty())
 				scenePath = EngineGUI_GetDefaultScenePath();
-			EngineGUI_LoadFromFile(scenePath.c_str());
+			if (!scenePath.empty())
+				EngineGUI_LoadFromFile(scenePath.c_str());
 		}
 #else
 		AudioManager::Instance().TryLoadBusVolumesFromNearbyProject();
