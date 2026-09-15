@@ -37,7 +37,7 @@ The engine and game content are fully decoupled:
 ### Build
 
 - Visual Studio 2022, Windows SDK, C++17
-- Open `Game_Project.sln` → `IvyEngine` (editor) / `IvyEngineRuntime` (deploy host)
+- Open `IvyEngine.sln` → `IvyEngine` (editor) / `IvyEngineRuntime` (deploy host)
 - Runtime builds are statically linked (`/MT`) — the deployed exe has no VC++ redist dependency
 
 ### Docs
@@ -74,7 +74,7 @@ The engine and game content are fully decoupled:
 ### ビルド
 
 - Visual Studio 2022、Windows SDK、C++17
-- `Game_Project.sln` を開く → `IvyEngine`（エディタ）/ `IvyEngineRuntime`（デプロイホスト）
+- `IvyEngine.sln` を開く → `IvyEngine`（エディタ）/ `IvyEngineRuntime`（デプロイホスト）
 - ランタイムはスタティックリンク（`/MT`）— 配布 exe は VC++ 再頒布パッケージ不要
 
 ### ドキュメント
