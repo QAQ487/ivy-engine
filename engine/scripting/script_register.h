@@ -1,13 +1,13 @@
-﻿/*****************************************************
+/*****************************************************
  * File: engine/scripting/ScriptRegistrar.h
  * Project: d3d11_engine
- * Author: Terry
+ * Author: Terry Yeung
  * Created: 2026-03-13
- * Description: ScriptRegistrar.h – convenience macro for self-registering a
+ * Description: ScriptRegistrar.h ? convenience macro for self-registering a
  *              Script subclass with ScriptFactory at static-init time.
  *
  * Usage: place REGISTER_SCRIPT(MyScript) in the script's .cpp file so it runs
- * before main() — no centralized registration list is needed.
+ * before main() ? no centralized registration list is needed.
  *
  *   // MyScript.cpp
  *   #include "MyScript.h"
@@ -22,7 +22,7 @@
 #pragma once
 #include "script_factory.h"
 
-// REGISTER_SCRIPT(TYPE) – self-registers TYPE with ScriptFactory under the
+// REGISTER_SCRIPT(TYPE) ? self-registers TYPE with ScriptFactory under the
 // stringified class name at static-init time.  Place once in the script's
 // .cpp file.
 #define REGISTER_SCRIPT(TYPE)                                               \

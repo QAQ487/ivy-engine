@@ -1,14 +1,14 @@
-﻿/**===========================================================================
+/**===========================================================================
  File   :  [controller.h]
- Author : Hayato Otsuki
+ Author : Terry Yeung
  Date   : 2025/11/5
 -----------------------------------------------------------------------------
- Xbox/PC コントローラー入力（XInput）ヘッダー
- - 初期化/更新
- - 接続状態
- - ボタンの押下/トリガ/リリース
- - アナログ入力（スティック/トリガ）正規化＆デッドゾーン
- - バイブレーション
+ Xbox/PC �R���g���[���[���́iXInput�j�w�b�_�[
+ - ������/�X�V
+ - �ڑ����
+ - �{�^���̉���/�g���K/�����[�X
+ - �A�i���O���́i�X�e�B�b�N/�g���K�j���K�����f�b�h�]�[��
+ - �o�C�u���[�V����
 ============================================================================**/
 #ifndef CONTROLLER_H
 #define CONTROLLER_H
@@ -16,10 +16,10 @@
 #include <windows.h>
 #include <DirectXMath.h>
 
-// 監視する最大コントローラー数（XInput は最大4）
+// �Ď�����ő�R���g���[���[���iXInput �͍ő�4�j
 constexpr int CONTROLLER_MAX = 4;
 
-// ボタン列挙（XINPUT_GAMEPAD_* に対応）
+// �{�^���񋓁iXINPUT_GAMEPAD_* �ɑΉ��j
 enum class ControllerButton : WORD {
     DPadUp = 0x0001, // XINPUT_GAMEPAD_DPAD_UP
     DPadDown = 0x0002, // XINPUT_GAMEPAD_DPAD_DOWN
@@ -39,36 +39,36 @@ enum class ControllerButton : WORD {
     Y = 0x8000  // XINPUT_GAMEPAD_Y
 };
 
-// 初期化/終了
+// ������/�I��
 void Controller_Initialize();
 void Controller_Finalize();
 
-// 1フレーム更新（毎フレーム呼ぶ）
+// 1�t���[���X�V�i���t���[���Ăԁj
 void Controller_Update();
 
-// 接続状態
+// �ڑ����
 bool Controller_IsConnected(int padIndex = 0);
 
-// ボタン状態
+// �{�^�����
 bool Controller_IsPressed(ControllerButton button, int padIndex = 0);
-bool Controller_IsTrigger(ControllerButton button, int padIndex = 0);  // 今フレームで押された
-bool Controller_IsRelease(ControllerButton button, int padIndex = 0);  // 今フレームで離された
+bool Controller_IsTrigger(ControllerButton button, int padIndex = 0);  // ���t���[���ŉ����ꂽ
+bool Controller_IsRelease(ControllerButton button, int padIndex = 0);  // ���t���[���ŗ����ꂽ
 
-// スティック（デッドゾーン適用・正規化済み）
-// 戻り値: [-1,1] 範囲。X: 右正、Y: 上正（DirectXMath に合わせて上正）
+// �X�e�B�b�N�i�f�b�h�]�[���K�p�E���K���ς݁j
+// �߂�l: [-1,1] �͈́BX: �E���AY: �㐳�iDirectXMath �ɍ��킹�ď㐳�j
 DirectX::XMFLOAT2 Controller_GetLeftStick(int padIndex = 0);
 DirectX::XMFLOAT2 Controller_GetRightStick(int padIndex = 0);
 
-// トリガ（デッドゾーン適用・正規化済み）
-// 戻り値: [0,1] 範囲
+// �g���K�i�f�b�h�]�[���K�p�E���K���ς݁j
+// �߂�l: [0,1] �͈�
 float Controller_GetLeftTrigger(int padIndex = 0);
 float Controller_GetRightTrigger(int padIndex = 0);
 
-// デッドゾーンの設定
+// �f�b�h�]�[���̐ݒ�
 void Controller_SetStickDeadzone(short left, short right);
 void Controller_SetTriggerDeadzone(BYTE trigger);
 
-// バイブレーション（0.0f〜1.0f）
+// �o�C�u���[�V�����i0.0f?1.0f�j
 void Controller_SetVibration(float leftMotor, float rightMotor, int padIndex = 0);
 
 #endif // CONTROLLER_H

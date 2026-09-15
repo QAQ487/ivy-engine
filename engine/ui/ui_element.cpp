@@ -1,6 +1,6 @@
 /**===========================================================================
  File   :  [ui_element.cpp]
- Author : Copilot Agent
+ Author : Terry Yeung
  Date   : 2025/11/02
  Brief  : Implementation of UIElement base class
  ===========================================================================**/

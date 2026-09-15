@@ -2,7 +2,7 @@
 
  File   :  [shadow.cpp]
 
- Author : Hayato Otsuki
+ Author : Terry Yeung
  Date   : 2025/11/9
  -----------------------------------------------------------------------------
  Cascaded shadow maps: practical splits, tight ortho fit, texel snapping.

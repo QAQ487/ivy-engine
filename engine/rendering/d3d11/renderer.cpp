@@ -2,7 +2,7 @@
 
  File   :  [renderer.cpp]
 
- Author : Hayato Otsuki
+ Author : Terry Yeung
  Date   : 2025/9/29
  -----------------------------------------------------------------------------
 
@@ -341,7 +341,7 @@ HRESULT Renderer_ResizeToClient() {
 #if defined(DEBUG) || defined(_DEBUG)
 	if (width != (UINT)g_BackBufferWidth || height != (UINT)g_BackBufferHeight) {
 		std::fprintf(stderr,
-			"Renderer: client/backbuffer mismatch %ux%u vs %ux%u — syncing\n",
+			"Renderer: client/backbuffer mismatch %ux%u vs %ux%u  Esyncing\n",
 			width, height,
 			(UINT)g_BackBufferWidth, (UINT)g_BackBufferHeight);
 	}
@@ -524,19 +524,19 @@ HRESULT InitRenderer(HINSTANCE /*hInstance*/, HWND hWnd, BOOL bWindow) {
 
 	hr = CreateRenderTargetFromSwapChain();
 	if (FAILED(hr) || !g_RenderTargetView) {
-		MessageBox(NULL, "RenderTargetViewの作成に失敗しました", "Error", MB_OK | MB_ICONERROR);
+		MessageBox(NULL, "RenderTargetViewの作�Eに失敗しました", "Error", MB_OK | MB_ICONERROR);
 		return hr;
 	}
 
 	hr = CreateDepthBuffer(clientW, clientH);
 	if (FAILED(hr) || !g_DepthStencilView) {
-		MessageBox(NULL, "DepthStencilViewの作成に失敗しました", "Error", MB_OK | MB_ICONERROR);
+		MessageBox(NULL, "DepthStencilViewの作�Eに失敗しました", "Error", MB_OK | MB_ICONERROR);
 		return hr;
 	}
 
 	hr = PostRT_Initialize();
 	if (FAILED(hr) || !g_PostRTV) {
-		MessageBox(NULL, "PostRTの作成に失敗しました", "Error", MB_OK | MB_ICONERROR);
+		MessageBox(NULL, "PostRTの作�Eに失敗しました", "Error", MB_OK | MB_ICONERROR);
 		return hr;
 	}
 
@@ -551,7 +551,7 @@ HRESULT InitRenderer(HINSTANCE /*hInstance*/, HWND hWnd, BOOL bWindow) {
 
 	hr = g_D3DDevice->CreateRasterizerState(&rd, &g_RasterizerState);
 	if (FAILED(hr)) {
-		MessageBox(NULL, "RasterizerStateの作成に失敗しました", "Error", MB_OK | MB_ICONERROR);
+		MessageBox(NULL, "RasterizerStateの作�Eに失敗しました", "Error", MB_OK | MB_ICONERROR);
 		return hr;
 	}
 	g_ImmediateContext->RSSetState(g_RasterizerState);
@@ -559,7 +559,7 @@ HRESULT InitRenderer(HINSTANCE /*hInstance*/, HWND hWnd, BOOL bWindow) {
 	rd.CullMode = D3D11_CULL_FRONT;
 	hr = g_D3DDevice->CreateRasterizerState(&rd, &g_RasterizerStateCullFront);
 	if (FAILED(hr)) {
-		MessageBox(NULL, "RasterizerState (front cull) の作成に失敗しました", "Error", MB_OK | MB_ICONERROR);
+		MessageBox(NULL, "RasterizerState (front cull) の作�Eに失敗しました", "Error", MB_OK | MB_ICONERROR);
 		return hr;
 	}
 
@@ -575,7 +575,7 @@ HRESULT InitRenderer(HINSTANCE /*hInstance*/, HWND hWnd, BOOL bWindow) {
 
 	hr = g_D3DDevice->CreateBlendState(&blendDesc, &g_BlendState);
 	if (FAILED(hr)) {
-		MessageBox(NULL, "BlendStateの作成に失敗しました", "Error", MB_OK | MB_ICONERROR);
+		MessageBox(NULL, "BlendStateの作�Eに失敗しました", "Error", MB_OK | MB_ICONERROR);
 		return hr;
 	}
 	const float blendFactor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };

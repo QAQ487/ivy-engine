@@ -2,7 +2,7 @@
 
  File   :  [camera.h]
 
- Author : Hayato Otsuki
+ Author : Terry Yeung
  Date   : 2025/9/29
  -----------------------------------------------------------------------------
 
@@ -35,7 +35,7 @@ public:
 	float farClip;
 };
 
-// ƒOƒ[ƒoƒ‹‚ÈƒJƒƒ‰ƒCƒ“ƒXƒ^ƒ“ƒX‚Ö‚ÌƒAƒNƒZƒXŠÖ”
+// ï¿½Oï¿½ï¿½ï¿½[ï¿½oï¿½ï¿½ï¿½ÈƒJï¿½ï¿½ï¿½ï¿½ï¿½Cï¿½ï¿½ï¿½Xï¿½^ï¿½ï¿½ï¿½Xï¿½Ö‚ÌƒAï¿½Nï¿½Zï¿½Xï¿½Öï¿½
 Camera& GetCamera();
 void SetCamera(const Camera& cam);
 

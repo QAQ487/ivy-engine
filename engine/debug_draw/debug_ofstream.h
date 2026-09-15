@@ -2,7 +2,7 @@
 
  File   :  [debug_ofstream.h]
 
- Author : Hayato Otsuki
+ Author : Terry Yeung
  Date   : 2025/11/16
  -----------------------------------------------------------------------------
 

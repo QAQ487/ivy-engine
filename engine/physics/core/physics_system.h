@@ -2,7 +2,7 @@
 
  File   :  [physics_system.h]
 
- Author : Hayato Otsuki
+ Author : Terry Yeung
  Date   : 2025/10/18
  -----------------------------------------------------------------------------
 

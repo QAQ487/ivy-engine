@@ -1,6 +1,0 @@
-<Project>
-  <PropertyGroup>
-    <EngineRoot Condition="'$(EngineRoot)'==''">C:\path\to\MagneticField_Prototype</EngineRoot>
-    <EngineOutDir>$(EngineRoot)x64\$(Configuration)\</EngineOutDir>
-  </PropertyGroup>
-</Project>

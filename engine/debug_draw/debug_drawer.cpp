@@ -2,7 +2,7 @@
 
  File   :  [debug_drawer.cpp]
 
- Author : Hayato Otsuki
+ Author : Terry Yeung
  Date   : 2025/10/24
  -----------------------------------------------------------------------------
 
@@ -703,7 +703,7 @@ void DebugDrawer::DrawLinesCached(const std::vector<DirectX::XMFLOAT3>& lineVert
 		m_linesVBCapacity = count;
 	}
 
-	// Upload vertex data via Map/Unmap — no allocation.
+	// Upload vertex data via Map/Unmap  Eno allocation.
 	D3D11_MAPPED_SUBRESOURCE mapped = {};
 	if (FAILED(GetDeviceContext()->Map(m_linesVB, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped))) return;
 	auto* dst = static_cast<VERTEX_3D*>(mapped.pData);

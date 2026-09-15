@@ -2,7 +2,7 @@
 
  File   :  [shadow.h]
 
- Author : Hayato Otsuki
+ Author : Terry Yeung
  Date   : 2025/10/29
  -----------------------------------------------------------------------------
  Cascaded directional shadow maps (camera-fitted ortho volumes + texel snap).

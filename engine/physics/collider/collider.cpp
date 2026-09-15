@@ -1,6 +1,6 @@
-﻿/**===========================================================================
+/**===========================================================================
  File   :  [collider.cpp]
- Author : Terry
+ Author : Terry Yeung
  Date   : 2025/10/29
  -----------------------------------------------------------------------------
  Class Summary (BoxCollider detailed collision):
@@ -46,7 +46,7 @@ bool CollisionPairIgnored(const GameObject* a, const GameObject* b) {
 // A world-space sphere becomes an ellipsoid in mesh-local space under non-uniform scale.
 // Use the smallest scale axis so the local test sphere conservatively encloses that ellipsoid.
 float MeshLocalTestRadius(float worldRadius, const XMFLOAT3& effScale) {
-    // Guard: clamp the *minimum axis* away from zero — do NOT include epsilon in std::min,
+    // Guard: clamp the *minimum axis* away from zero ? do NOT include epsilon in std::min,
     // or minScale is always 1e-6 and local radius becomes worldRadius*1e6 (player launched).
     const float minScale = (std::min)({ effScale.x, effScale.y, effScale.z });
     return worldRadius / (std::max)(minScale, 1e-6f);
@@ -428,7 +428,7 @@ bool CapsuleCollider::RayIntersect(const DirectX::XMFLOAT3& origin,
 		center.z + axisF.z * halfHeight
 	};
 
-	// Inigo Quilez-style ray–capsule (body cylinder + end caps).
+	// Inigo Quilez-style ray?capsule (body cylinder + end caps).
 	XMVECTOR ba = XMVectorSubtract(XMLoadFloat3(&pb), XMLoadFloat3(&pa));
 	XMVECTOR oa = XMVectorSubtract(XMLoadFloat3(&origin), XMLoadFloat3(&pa));
 	XMVECTOR rd = XMLoadFloat3(&dir);
@@ -519,7 +519,7 @@ static void ResolveContact(GameObject* self, GameObject* other,
     // Continuous green/yellow wires come from PhysicsSystem_FlushDebugDraw (F11).
     const bool knownContact = PhysicsSystem_WasContactPairKnown(self, other);
     if (DebugSystem::CollisionVizEnabled() && !knownContact) {
-        // Place near self toward other — midpoint of world centers is wrong
+        // Place near self toward other ? midpoint of world centers is wrong
         // for large mesh colliders (field) and sits far from the real hit.
         XMFLOAT3 cA = self->GetPosition();
         if (Collider* colA = self->GetCollider())
@@ -636,7 +636,7 @@ static void ResolveContact(GameObject* self, GameObject* other,
         } else {
             const float vtLen = std::sqrt(vtLenSq);
             const float jNAbs = std::fabs(jNormal);
-            // Strict Coulomb: |jt| <= mu * |jn|. No floor "full-cancel" boost —
+            // Strict Coulomb: |jt| <= mu * |jn|. No floor "full-cancel" boost ?
             // that made mu=0.5 wipe horizontal speed in a few frames.
             if (jNAbs > 1e-6f) {
                 const XMFLOAT3 tDir{ -vT.x / vtLen, -vT.y / vtLen, -vT.z / vtLen };
@@ -1314,9 +1314,9 @@ void CapsuleCollider::ResolveCollision(Collider* other) {
         XMFLOAT3 cB = s->GetWorldCenter();
         float rA = m_radius, rB = s->GetRadius();
 
-        // Match CheckCollision: closest point on capsule segment ↔ sphere center.
+        // Match CheckCollision: closest point on capsule segment ? sphere center.
         // Center-only spheres miss head/feet hits (centerPen<=0 while segPen>0),
-        // and swept narrow-phase returns after that failed resolve → tunneling.
+        // and swept narrow-phase returns after that failed resolve �� tunneling.
         float halfH = m_height * 0.5f;
         XMFLOAT3 rotA = m_owner->GetRotation();
         XMMATRIX rm = XMMatrixRotationRollPitchYaw(
@@ -1966,7 +1966,7 @@ void MeshCollider::DebugDraw(const XMFLOAT4& color) {
     }
 
     // Build flat edge-vertex list for a single batched draw call:
-    // 3 edges × 2 endpoints per triangle.
+    // 3 edges �~ 2 endpoints per triangle.
     std::vector<XMFLOAT3> lineVerts;
     lineVerts.reserve(m_indices.size() * 2);
     for (size_t i = 0; i < m_indices.size(); i += 3) {

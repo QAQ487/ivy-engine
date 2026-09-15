@@ -2,7 +2,7 @@
 
  File   :  [scene_manager.h]
 
- Author : Hayato Otsuki
+ Author : Terry Yeung
  Date   : 2025/9/19
  -----------------------------------------------------------------------------
 

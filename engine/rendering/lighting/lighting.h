@@ -2,7 +2,7 @@
 
  File   :  [lighting.h]
 
- Author : Hayato Otsuki
+ Author : Terry Yeung
  Date   : 2025/11/6
  -----------------------------------------------------------------------------
 

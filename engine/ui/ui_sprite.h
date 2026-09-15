@@ -1,6 +1,6 @@
 /**===========================================================================
  File   :  [ui_sprite.h]
- Author : Copilot Agent
+ Author : Terry Yeung
  Date   : 2025/11/02
  Brief  : UI element for displaying a sprite at a custom position
  ===========================================================================**/

@@ -1,7 +1,7 @@
-ï»¿/**===========================================================================
+/**===========================================================================
  File   : key_logger.cpp
  Title  :
- Author : Terry
+ Author : Terry Yeung
  Date   : 2025/6/27
  Brief  :
  ===========================================================================**/
@@ -33,7 +33,7 @@ void KeyLogger_Initialize() {
 
 void KeyLogger_Update(double now_time) {
 	const Keyboard_State* state = Keyboard_GetState();
-	g_current_time = now_time;  // æ¸¡ã•ã‚ŒãŸæ™‚é–“ã‚’ä½¿ã†ï¼
+	g_current_time = now_time;  // “n‚³‚ê‚½ŠÔ‚ğg‚¤I
 
 	// Real frame delta instead of an assumed 60FPS, so hold-time accumulates
 	// correctly at any frame rate (falls back to 1/60s on the very first call).
@@ -51,7 +51,7 @@ void KeyLogger_Update(double now_time) {
 	LPBYTE prp = (LPBYTE)&g_repeat_state;
 	LPBYTE plp = (LPBYTE)&g_longpress_state;
 
-	// ãƒˆãƒªã‚¬ãƒ¼ãªã©ã®ãƒ•ãƒ©ã‚°é…åˆ—åˆæœŸåŒ–
+	// ƒgƒŠƒK[‚È‚Ç‚Ìƒtƒ‰ƒO”z—ñ‰Šú‰»
 	for (int i = 0; i < sizeof(Keyboard_State); i++) {
 		pt[i] = (po[i] ^ pn[i]) & pn[i];
 		pr[i] = po[i] & ~pn[i];
@@ -60,7 +60,7 @@ void KeyLogger_Update(double now_time) {
 		plp[i] = 0;
 	}
 
-	// å„ã‚­ãƒ¼ã«å¯¾ã™ã‚‹æ™‚é–“åˆ¤å®š
+	// ŠeƒL[‚É‘Î‚·‚éŠÔ”»’è
 	for (int k = 0; k < 256; ++k) {
 		bool is_down = Keyboard_IsKeyDown((Keyboard_Keys)k, state);
 		bool is_trigger = Keyboard_IsKeyDown((Keyboard_Keys)k, &g_trigger_state);
@@ -76,22 +76,22 @@ void KeyLogger_Update(double now_time) {
 			double delta = g_current_time - g_last_press_time[k];
 
 			if (delta > 0.0 && delta < 0.3) {
-				// 0.3ç§’ä»¥å†…ãªã‚‰ãƒ€ãƒ–ãƒ«ã‚¿ãƒƒãƒ—
+				// 0.3•bˆÈ“à‚È‚çƒ_ƒuƒ‹ƒ^ƒbƒv
 				Keyboard_SetKeyDown(&g_double_tap_state, (Keyboard_Keys)k, true);
-				// æˆåŠŸã—ãŸã‚‰ã‚¿ã‚¤ãƒ ã‚¹ã‚¿ãƒ³ãƒ—ã‚’ãƒªã‚»ãƒƒãƒˆ
+				// ¬Œ÷‚µ‚½‚çƒ^ƒCƒ€ƒXƒ^ƒ“ƒv‚ğƒŠƒZƒbƒg
 				g_last_press_time[k] = 0.0;
 			}
 			else {
-				// 0.3ç§’ä»¥ä¸ŠçµŒã£ã¦ã„ãŸã‚‰ã€
-				// 1å›ç›®ã®ã‚¿ã‚¤ãƒ ã‚¹ã‚¿ãƒ³ãƒ—ã‚’ä»Šå›ã«æ›´æ–°ï¼ˆ2å›ç›®ã¨ã—ã¦ã¯èªã‚ãªã„ï¼‰
+				// 0.3•bˆÈãŒo‚Á‚Ä‚¢‚½‚çA
+				// 1‰ñ–Ú‚Ìƒ^ƒCƒ€ƒXƒ^ƒ“ƒv‚ğ¡‰ñ‚ÉXVi2‰ñ–Ú‚Æ‚µ‚Ä‚Í”F‚ß‚È‚¢j
 				g_last_press_time[k] = g_current_time;
 			}
 		}
 		else {
-			// æŠ¼ã•ã‚Œã¦ãªã„ã¨ãã«ã€ã‚¿ã‚¤ãƒ ã‚¢ã‚¦ãƒˆã§1å›ç›®ã‚’ç„¡åŠ¹ã«ã™ã‚‹
+			// ‰Ÿ‚³‚ê‚Ä‚È‚¢‚Æ‚«‚ÉAƒ^ƒCƒ€ƒAƒEƒg‚Å1‰ñ–Ú‚ğ–³Œø‚É‚·‚é
 			double delta = g_current_time - g_last_press_time[k];
 			if (delta >= 0.3) {
-				g_last_press_time[k] = 0.0; // æœ‰åŠ¹æœŸé™åˆ‡ã‚Œ
+				g_last_press_time[k] = 0.0; // —LŒøŠúŒÀØ‚ê
 			}
 		}
 

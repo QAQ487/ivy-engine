@@ -1,6 +1,6 @@
 /**===========================================================================
  File   :  [ui_bar.h]
- Author : Copilot
+ Author : Terry Yeung
  Date   : 2025/11/17
  Brief  : Universal UI progress bar element for HP, scraps, stamina, etc.
  ===========================================================================**/

@@ -1,7 +1,7 @@
 /*****************************************************
  * File: engine/ecs/material_component.cpp
  * Project: d3d11_engine
- * Author: Terry
+ * Author: Terry Yeung
  *****************************************************/
 #include "material_component.h"
 

@@ -1,7 +1,7 @@
-﻿/*****************************************************
+/*****************************************************
  * File: engine/components/visual_component.cpp
  * Project: d3d11_engine
- * Author: Terry
+ * Author: Terry Yeung
  * Created: 2026-03-13
  *****************************************************/
 
@@ -132,7 +132,7 @@ void VisualComponent::EnsureAnimationsLoaded() {
         if (shared->HasAnimation(name))
             continue;
         // A missing FBX used to retry Import every frame and rebuild the
-        // skinned instance — that cut FPS in half after adding pickup.
+        // skinned instance ? that cut FPS in half after adding pickup.
         if (!m_triedAnimClips.insert(name).second)
             continue;
         shared->EnsureAnimation(name, path.c_str());

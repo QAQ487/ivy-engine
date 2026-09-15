@@ -1,11 +1,11 @@
-ï»¿/******************************************************
+/******************************************************
  * File: engine_gui.cpp
  * Project: d3d11_engine
- * Author: Terry
+ * Author: Terry Yeung
  * Created: 2026-03-12
  * -----------------------------------------------------------------------------
  * REFACTOR (2026-03-13)
- *   - engine::GameObject â†’ ::GameObject throughout (alias, zero logic change).
+ *   - engine::GameObject ¨ ::GameObject throughout (alias, zero logic change).
  *   - Removed PrefabProxyLoader dependency.  DrawEditorSceneProxies() now
  *     reads the model path exclusively from VisualComponent (already in memory
  *     from deserialization), with Box_Blue.fbx as the absolute fallback.
@@ -92,7 +92,7 @@
 #include "engine/ui/scene_canvas.h"
 #include "engine/ui/ui_canvas.h"
 #include "engine/ui/ui_element.h"
-// â”€â”€ DLL hot-reload â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// „Ÿ„Ÿ DLL hot-reload „Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ
 #include "engine/scripting/script_factory.h"
 #include "engine/scripting/script_watcher.h"
 
@@ -103,7 +103,7 @@
 namespace fs = std::filesystem;
 using json = nlohmann::json;
 
-// â”€â”€ State â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// „Ÿ„Ÿ State „Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ
 static bool        g_enabled = true;
 bool              g_isPlaying = false;
 static bool        g_holdPlayVisuals = false;
@@ -578,7 +578,7 @@ static void ClearScene() {
     SyncSceneRuntime();
 }
 
-// â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// „Ÿ„Ÿ Helpers „Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ
 static bool ScrollValue(float* value, float baseSpeed = 1.0f) {
     if (ImGui::IsItemHovered()) {
         float wheel = ImGui::GetIO().MouseWheel;
@@ -776,7 +776,7 @@ static void DrawShortcutHintsWindow(bool* open) {
         ImGui::TableSetColumnIndex(1);
         ImGui::TextDisabled("");
 
-        row("F7", "Cycle time scale (1.0 â†’ 0.5 â†’ 0.25 â†’ freeze)");
+        row("F7", "Cycle time scale (1.0 ¨ 0.5 ¨ 0.25 ¨ freeze)");
         row("F11", "Toggle collision visualizer");
         row("F12", "Step one frame while frozen");
         row("F9", "PostFX GOAL RGB burst");
@@ -1925,7 +1925,7 @@ static void DrawEditorPopups() {
         if (ImGui::BeginPopupModal("BuildLogPopup", logOpen, logFlags)) {
             if (!buildDone) {
                 const std::string buildHeader =
-                    "Building " + ProjectManager::Instance().GetName() + " â€” Ivy Engine";
+                    "Building " + ProjectManager::Instance().GetName() + " ? Ivy Engine";
                 ImGui::SeparatorText(buildHeader.c_str());
             }
             else if (PlayablePackage::LastBuildSucceeded())
@@ -2007,7 +2007,7 @@ void TeardownPlaySession(bool resetEditorState) {
 
 // Stop play simulation for an in-game scene switch without restoring editor
 // chrome. Keep the current world until Flush replaces it (runtime loads
-// atomically â€” clearing early caused a clear-color gap under the transition).
+// atomically ? clearing early caused a clear-color gap under the transition).
 void SoftStopPlayForSceneLoad() {
     if (!g_isPlaying && g_holdPlayVisuals)
         return;
@@ -2141,7 +2141,7 @@ void EngineGUI_FlushSceneLoadPending() {
     g_pendingSceneLoadPath.clear();
 
     // Tear down the previous play world immediately before replacing nodes
-    // (SoftStop no longer clears early â€” matches runtime atomic load).
+    // (SoftStop no longer clears early ? matches runtime atomic load).
     TeardownScenePlaySession(false);
 
     if (!SceneLoader_LoadFromFile(path.c_str())) {
@@ -2193,7 +2193,7 @@ static bool IsSceneLoadBusy() {
     return g_sceneAssetPreloader.IsActive() || g_sceneLoadPending;
 }
 
-// â”€â”€ Public API â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// „Ÿ„Ÿ Public API „Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ
 
 void EngineGUI_Initialize(HWND hwnd, ID3D11Device* device,
     ID3D11DeviceContext* context)
@@ -2333,7 +2333,7 @@ bool EngineGUI_MouseToViewportLocal(float& x, float& y) {
     return x >= 0.0f && y >= 0.0f && x <= vw && y <= vh;
 }
 
-// â”€â”€ Ray helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// „Ÿ„Ÿ Ray helpers „Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ
 
 static float RaySphere(DirectX::XMVECTOR rayOrg, DirectX::XMVECTOR rayDir,
     const DirectX::XMFLOAT3& center, float radius)
@@ -2352,7 +2352,7 @@ static float RaySphere(DirectX::XMVECTOR rayOrg, DirectX::XMVECTOR rayDir,
     return (t >= 0.0f) ? t : -1.0f;
 }
 
-// MÃ¶llerâ€“Trumbore ray-triangle test (local/world space; t is along rayDir).
+// Moller?Trumbore ray-triangle test (local/world space; t is along rayDir).
 static bool RayIntersectsTriangle(const DirectX::XMFLOAT3& rayOrigin,
     const DirectX::XMFLOAT3& rayDir,
     const DirectX::XMFLOAT3& v0,
@@ -2455,7 +2455,7 @@ static bool BuildPickRay(int mx, int my,
     return true;
 }
 
-// â”€â”€ Wireframe highlight â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// „Ÿ„Ÿ Wireframe highlight „Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ
 
 static void DrawMeshWireframeHighlight(
     const std::vector<Model3D::VertexPNTC>& verts,
@@ -2642,7 +2642,7 @@ static void FocusSelectedObjectWithCamera(const engine::Transform* t) {
     DebugCamera_SyncOrbitFromCurrentView();
 }
 
-// â”€â”€ EngineGUI_Update â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// „Ÿ„Ÿ EngineGUI_Update „Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ
 
 void EngineGUI_Update(double elapsed_time) {
 
@@ -2692,7 +2692,7 @@ void EngineGUI_Update(double elapsed_time) {
             JobSystem_ToggleDebugWindow();
         if (g_sceneAssetPreloader.IsActive())
             EngineGUI_TickSceneAssetPreload();
-        // Still loading, or deferred StartPlay just entered play â€” skip editors.
+        // Still loading, or deferred StartPlay just entered play ? skip editors.
         if (IsSceneLoadBusy() || g_isPlaying)
             return;
     }
@@ -2840,7 +2840,7 @@ void EngineGUI_Update(double elapsed_time) {
     }
 }
 
-// â”€â”€ Proxy / scene drawing â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// „Ÿ„Ÿ Proxy / scene drawing „Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ
 
 static void DrawEditorSceneProxiesNode(GameObject* node) {
     if (!node) return;
@@ -2852,7 +2852,7 @@ void DrawEditorSceneProxies() {
         if (root) DrawEditorSceneProxiesNode(root.get());
 }
 
-// â”€â”€ Scene hierarchy ImGui helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// „Ÿ„Ÿ Scene hierarchy ImGui helpers „Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ
 
 static bool MoveNodeInList(std::vector<std::unique_ptr<GameObject>>& nodes,
                            GameObject* node,
@@ -3023,7 +3023,7 @@ static void DrawSceneNodeHierarchy(GameObject* node, GameObject* rootOwner) {
     }
 }
 
-// â”€â”€ EngineGUI_Draw â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// „Ÿ„Ÿ EngineGUI_Draw „Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ
 
 void EngineGUI_OnBackbufferResized() {
     if (!g_imguiInitialized) return;
@@ -3142,7 +3142,7 @@ void EngineGUI_Draw() {
     DrawPostFxShowcaseWindow(&g_showPostFxShowcase);
     DrawShortcutHintsWindow(&g_showShortcutHints);
 
-    // â”€â”€ Toolbar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // „Ÿ„Ÿ Toolbar „Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ
     ImGui::SetNextWindowPos(ImVec2(0, menuBarHeight));
     ImGui::SetNextWindowSize(ImVec2(screenW, Ui(kToolbarHeight)));
     ImGui::Begin("##Toolbar", nullptr,
@@ -3287,7 +3287,7 @@ void EngineGUI_Draw() {
     }
     ImGui::End();
 
-    // â”€â”€ Scene Hierarchy (left) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // „Ÿ„Ÿ Scene Hierarchy (left) „Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ
     ImGui::SetNextWindowPos(ImVec2(0, centerTop));
     ImGui::SetNextWindowSize(ImVec2(leftWidth, centerH));
     ImGui::Begin("Scene Hierarchy", nullptr,
@@ -3349,7 +3349,7 @@ void EngineGUI_Draw() {
     }
     ImGui::End();
 
-    // â”€â”€ Properties (right) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // „Ÿ„Ÿ Properties (right) „Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ
     ImGui::SetNextWindowPos(ImVec2(screenW - rightWidth, centerTop));
     ImGui::SetNextWindowSize(ImVec2(rightWidth, centerH));
     ImGui::Begin("Properties", nullptr,
@@ -4294,7 +4294,7 @@ void EngineGUI_Draw() {
     }
     ImGui::End();
 
-    // â”€â”€ Asset Browser (bottom) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // „Ÿ„Ÿ Asset Browser (bottom) „Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ
     ImGui::SetNextWindowPos(ImVec2(0, screenH - bottomHeight));
     ImGui::SetNextWindowSize(ImVec2(screenW, bottomHeight));
     ImGui::Begin("Asset Browser", nullptr,
@@ -4334,7 +4334,7 @@ void EngineGUI_Draw() {
 
     JobSystem_DebugDraw();
 
-    // Whole-screen modal dim (same path as UnsavedChangesPopup) â€” not
+    // Whole-screen modal dim (same path as UnsavedChangesPopup) ? not
     // BackgroundDrawList, which sits under opaque panel windows.
     if (sceneLoadBusy) {
         const ImGuiViewport* viewport = ImGui::GetMainViewport();

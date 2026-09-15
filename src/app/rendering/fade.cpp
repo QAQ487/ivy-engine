@@ -1,8 +1,8 @@
-﻿/**===========================================================================
+/**===========================================================================
 
  File   :  [fade.cpp]
 
- Author : Hayato Otsuki
+ Author : Terry Yeung
  Date   : 2025/9/19
  -----------------------------------------------------------------------------
 
@@ -13,9 +13,9 @@
 #include "scene_manager.h"
 
 static FADE fade;
-// フェードアウト完了時にシーン切り替えするか
+// �t�F�[�h�A�E�g�������ɃV�[���؂�ւ����邩
 static bool s_doSceneTransition = false;
-// 次のシーン（切り替え時にセット）
+// ���̃V�[���i�؂�ւ����ɃZ�b�g�j
 static SceneBase* s_nextScene = nullptr;
 
 void Fade_Initialize() {
@@ -45,7 +45,7 @@ void Fade_Update() {
 			fade.alpha = 1.0f;
 			fade.mode = MODE_FADE_IN;
 
-			// フェードアウト完了->シーン切り替え
+			// �t�F�[�h�A�E�g����->�V�[���؂�ւ�
 			if (s_doSceneTransition && s_nextScene) {
 				SceneManager::Instance().ChangeScene(s_nextScene);
 				s_nextScene = nullptr;
@@ -71,7 +71,7 @@ void Fade_Draw() {
 		(int)fade.size.x, (int)fade.size.y, draw_color);
 }
 
-// フェードアウト開始（必要なら次シーンを外部からセット）
+// �t�F�[�h�A�E�g�J�n�i�K�v�Ȃ玟�V�[����O������Z�b�g�j
 void Fade_SetOut(float r, float g, float b, float spd, bool changeScene) {
 	if (fade.mode == MODE_FADE_NONE) {
 		fade.speed = 1.0f / spd;
@@ -80,11 +80,11 @@ void Fade_SetOut(float r, float g, float b, float spd, bool changeScene) {
 		fade.alpha = 0.0f;
 		fade.use = true;
 		s_doSceneTransition = changeScene;
-		// s_nextSceneは外部からセットすること（例：Fade_SetNextScene(new GameScene()))
+		// s_nextScene�͊O������Z�b�g���邱�Ɓi��FFade_SetNextScene(new GameScene()))
 	}
 }
 
-// フェードイン開始
+// �t�F�[�h�C���J�n
 void Fade_SetIn(float spd) {
 	if (fade.mode == MODE_FADE_NONE) {
 		fade.speed = 1.0f / spd;
@@ -94,12 +94,12 @@ void Fade_SetIn(float spd) {
 	}
 }
 
-// 次シーン設定（フェードアウト後に切り替える）
+// ���V�[���ݒ�i�t�F�[�h�A�E�g��ɐ؂�ւ���j
 void Fade_SetNextScene(SceneBase* next) {
 	s_nextScene = next;
 }
 
-// 判定系
+// ����n
 bool Fade_IsFadeEnd() { return fade.mode == MODE_FADE_NONE; }
 bool Fade_IsOutEnd() { return fade.mode == MODE_FADE_IN && fade.alpha >= 1.0f; }
 bool Fade_IsInEnd() { return fade.mode == MODE_FADE_NONE && fade.alpha <= 0.0f; }

@@ -1,6 +1,6 @@
 /**===========================================================================
  File   :  [audio_manager.h]
- Author : Hayato Otsuki
+ Author : Terry Yeung
  Date   : 2025/11/19
  Brief  : Unified XAudio2 & X3DAudio Manager (Singleton)
           Handles 2D/3D playback, volume control, and resource management.

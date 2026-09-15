@@ -1,8 +1,8 @@
-ï»¿/**===========================================================================
+/**===========================================================================
 
  File   :  [model_util.cpp]
 
- Author : Terry
+ Author : Terry Yeung
  Date   : 2025/10/18
  -----------------------------------------------------------------------------
 
@@ -28,7 +28,7 @@
 using namespace DirectX;
 using namespace fbxsdk;
 
-// ãƒ†ã‚¯ã‚¹ãƒãƒ£SRVã‚­ãƒ£ãƒƒã‚·ãƒ¥ï¼ˆãƒ‘ã‚¹ -> SRVï¼‰
+// ƒeƒNƒXƒ`ƒƒSRVƒLƒƒƒbƒVƒ…iƒpƒX -> SRVj
 static std::unordered_map<std::wstring, ID3D11ShaderResourceView*> g_srvCache;
 
 // Releases the cache's AddRef'd reference on every cached SRV. Must be called
@@ -41,7 +41,7 @@ void ModelUtil_ReleaseTextureCache() {
 	g_srvCache.clear();
 }
 
-// æ–‡å­—åˆ—ãƒ¦ãƒ¼ãƒ†ã‚£ãƒªãƒ†ã‚£
+// •¶š—ñƒ†[ƒeƒBƒŠƒeƒB
 void Trim(std::string& s) {
 	auto notspace = [] (int ch) { return !std::isspace(ch); };
 	s.erase(s.begin(), std::find_if(s.begin(), s.end(), notspace));
@@ -87,12 +87,12 @@ bool IsAbsolutePathW(const std::wstring& p) {
 	return false;
 }
 
-// WIC ãƒ•ã‚¡ã‚¯ãƒˆãƒªã®ã‚·ãƒ³ã‚°ãƒ«ãƒˆãƒ³
+// WIC ƒtƒ@ƒNƒgƒŠ‚ÌƒVƒ“ƒOƒ‹ƒgƒ“
 static IWICImagingFactory* GetWICFactory() {
 	static IWICImagingFactory* s_factory = nullptr;
 	if (s_factory) return s_factory;
 
-	// CoInitializeï¼ˆå¤±æ•—ã—ã¦ã‚‚ç¶šè¡Œï¼‰
+	// CoInitializei¸”s‚µ‚Ä‚à‘±sj
 	HRESULT hrCI = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
 	(void) hrCI;
 
@@ -105,11 +105,11 @@ static IWICImagingFactory* GetWICFactory() {
 	return s_factory;
 }
 
-// ç”»åƒã‚’WICã§èª­ã¿è¾¼ã¿ã€RGBA8ã§D3D11ãƒ†ã‚¯ã‚¹ãƒãƒ£ï¼‹SRVã‚’ä½œã‚‹ï¼ˆå¯èƒ½ãªã‚‰GPUã§ãƒŸãƒƒãƒ—ç”Ÿæˆï¼‰
+// ‰æ‘œ‚ğWIC‚Å“Ç‚İ‚İARGBA8‚ÅD3D11ƒeƒNƒXƒ`ƒƒ{SRV‚ğì‚éi‰Â”\‚È‚çGPU‚Åƒ~ƒbƒv¶¬j
 static bool LoadTextureWIC_Internal(const wchar_t* path, ID3D11ShaderResourceView** outSRV) {
 	if (!path || !*path || !outSRV) return false;
 
-	// ã‚­ãƒ£ãƒƒã‚·ãƒ¥
+	// ƒLƒƒƒbƒVƒ…
 	{
 		std::wstring key(path);
 		auto it = g_srvCache.find(key);
@@ -136,7 +136,7 @@ static bool LoadTextureWIC_Internal(const wchar_t* path, ID3D11ShaderResourceVie
 	frame->GetSize(&width, &height);
 	if (width == 0 || height == 0) { frame->Release(); decoder->Release(); return false; }
 
-	// RGBA8ã¸å¤‰æ›
+	// RGBA8‚Ö•ÏŠ·
 	IWICFormatConverter* converter = nullptr;
 	hr = factory->CreateFormatConverter(&converter);
 	if (FAILED(hr) || !converter) { frame->Release(); decoder->Release(); return false; }
@@ -165,13 +165,13 @@ static bool LoadTextureWIC_Internal(const wchar_t* path, ID3D11ShaderResourceVie
 	ID3D11DeviceContext* ctx = GetDeviceContext();
 	if (!dev || !ctx) return false;
 
-	// ã¾ãšã¯ãƒŸãƒƒãƒ—ç”Ÿæˆå¯èƒ½ãªãƒ†ã‚¯ã‚¹ãƒãƒ£ã§è©¦ã™
+	// ‚Ü‚¸‚Íƒ~ƒbƒv¶¬‰Â”\‚ÈƒeƒNƒXƒ`ƒƒ‚Å‚·
 	ID3D11Texture2D* tex = nullptr;
 	{
 		D3D11_TEXTURE2D_DESC td {};
 		td.Width = width;
 		td.Height = height;
-		td.MipLevels = 0; // ï¿½Sï¿½ï¿½ï¿½ï¿½
+		td.MipLevels = 0; // ?S????
 		td.ArraySize = 1;
 		td.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 		td.SampleDesc.Count = 1;
@@ -180,16 +180,16 @@ static bool LoadTextureWIC_Internal(const wchar_t* path, ID3D11ShaderResourceVie
 		td.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS;
 
 		if (SUCCEEDED(dev->CreateTexture2D(&td, nullptr, &tex)) && tex) {
-			// ãƒ¬ãƒ™ãƒ«0ã«æ›¸ãè¾¼ã¿
+			// ƒŒƒxƒ‹0‚É‘‚«‚İ
 			ctx->UpdateSubresource(tex, 0, nullptr, pixels.data(), stride, stride * height);
 
-			// SRVä½œæˆï¼ˆãƒ‡ãƒ•ã‚©ãƒ«ãƒˆã§å…¨ãƒŸãƒƒãƒ—ï¼‰
+			// SRVì¬iƒfƒtƒHƒ‹ƒg‚Å‘Sƒ~ƒbƒvj
 			ID3D11ShaderResourceView* srv = nullptr;
 			if (SUCCEEDED(dev->CreateShaderResourceView(tex, nullptr, &srv)) && srv) {
-				// ãƒŸãƒƒãƒ—ç”Ÿæˆ
+				// ƒ~ƒbƒv¶¬
 				ctx->GenerateMips(srv);
 
-				// ã‚­ãƒ£ãƒƒã‚·ãƒ¥ã¸ï¼ˆAddRefã—ã¦ä¿ç®¡ï¼‰
+				// ƒLƒƒƒbƒVƒ…‚ÖiAddRef‚µ‚Ä•ÛŠÇj
 				srv->AddRef();
 				g_srvCache.emplace(std::wstring(path), srv);
 
@@ -203,7 +203,7 @@ static bool LoadTextureWIC_Internal(const wchar_t* path, ID3D11ShaderResourceVie
 		}
 	}
 
-	// ãƒ•ã‚©ãƒ¼ãƒ«ãƒãƒƒã‚¯ï¼šãƒŸãƒƒãƒ—ç„¡ã—ãƒ»åˆæœŸãƒ‡ãƒ¼ã‚¿ä»˜ã
+	// ƒtƒH[ƒ‹ƒoƒbƒNFƒ~ƒbƒv–³‚µE‰Šúƒf[ƒ^•t‚«
 	{
 		D3D11_TEXTURE2D_DESC td {};
 		td.Width = width;
@@ -229,7 +229,7 @@ static bool LoadTextureWIC_Internal(const wchar_t* path, ID3D11ShaderResourceVie
 			return false;
 		}
 
-		// ã‚­ãƒ£ãƒƒã‚·ãƒ¥ã¸ï¼ˆAddRefã—ã¦ä¿ç®¡ï¼‰
+		// ƒLƒƒƒbƒVƒ…‚ÖiAddRef‚µ‚Ä•ÛŠÇj
 		srv->AddRef();
 		g_srvCache.emplace(std::wstring(path), srv);
 
@@ -240,11 +240,11 @@ static bool LoadTextureWIC_Internal(const wchar_t* path, ID3D11ShaderResourceVie
 }
 
 bool LoadTextureWIC_SRV(const wchar_t* texPath, ID3D11ShaderResourceView** outSRV) {
-	// WIC ã®ã¿ã§èª­ã¿è¾¼ã‚€ï¼ˆDirectXTex ä¸ä½¿ç”¨ï¼‰
+	// WIC ‚Ì‚İ‚Å“Ç‚İ‚ŞiDirectXTex •sg—pj
 	return LoadTextureWIC_Internal(texPath, outSRV);
 }
 
-// ãƒ†ã‚¯ã‚¹ãƒãƒ£: å˜è‰²ã® 1x1 SRV ã‚’ä½œæˆ
+// ƒeƒNƒXƒ`ƒƒ: ’PF‚Ì 1x1 SRV ‚ğì¬
 ID3D11ShaderResourceView* CreateSolidColorSRV(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
 	ID3D11Device* dev = GetDevice();
 	if (!dev) return nullptr;
@@ -277,11 +277,11 @@ ID3D11ShaderResourceView* CreateSolidColorSRV(uint8_t r, uint8_t g, uint8_t b, u
 }
 
 ID3D11ShaderResourceView* CreateSolidPinkSRV() {
-	// ãƒ”ãƒ³ã‚¯ (255, 0, 255, 255)
+	// ƒsƒ“ƒN (255, 0, 255, 255)
 	return CreateSolidColorSRV(255, 0, 255, 255);
 }
 
-// ç™½
+// ”’
 ID3D11ShaderResourceView* CreateSolidWhiteSRV() {
 	ID3D11Device* dev = GetDevice();
 	if (!dev) return nullptr;
@@ -313,7 +313,7 @@ ID3D11ShaderResourceView* CreateSolidWhiteSRV() {
 	return SUCCEEDED(hr) ? srv : nullptr;
 }
 
-// MTL: map_Kd ã®æœ‰ç„¡ã¨ UV æŒ‡å®šã‚’å–å¾—ã€‚ãƒ†ã‚¯ã‚¹ãƒãƒ£ã®ãƒ­ãƒ¼ãƒ‰ã‚‚è©¦ã™ã€‚
+// MTL: map_Kd ‚Ì—L–³‚Æ UV w’è‚ğæ“¾BƒeƒNƒXƒ`ƒƒ‚Ìƒ[ƒh‚à‚·B
 bool TryLoadMTLTexture_SRV(
 	const std::wstring& mtlPath,
 	const std::wstring& baseDir,
@@ -354,7 +354,7 @@ bool TryLoadMTLTexture_SRV(
 				if (outClamp) *outClamp = (onoff == "on" || onoff == "1" || onoff == "true");
 			}
 			else if (!tk.empty() && tk[0] == '-') {
-				// ãã®ä»–ã®ãƒ•ãƒ©ã‚°ã¯ç„¡è¦–
+				// ‚»‚Ì‘¼‚Ìƒtƒ‰ƒO‚Í–³‹
 			}
 			else {
 				filename = tk;
@@ -368,16 +368,16 @@ bool TryLoadMTLTexture_SRV(
 				ID3D11ShaderResourceView* srv = nullptr;
 				if (LoadTextureWIC_SRV(full.c_str(), &srv)) {
 					*outSRV = srv;
-					return true; // èª­ã¿è¾¼ã¿æˆåŠŸ
+					return true; // “Ç‚İ‚İ¬Œ÷
 				}
 			}
-			return false; // map_Kd ã¯ã‚ã£ãŸãŒèª­ã¿è¾¼ã¿å¤±æ•—
+			return false; // map_Kd ‚Í‚ ‚Á‚½‚ª“Ç‚İ‚İ¸”s
 		}
 	}
-	return false; // map_Kd ãªã—
+	return false; // map_Kd ‚È‚µ
 }
 
-// FBX: æœ€åˆã«è¦‹ã¤ã‹ã£ãŸ Diffuse/BaseColor ã® FileTexture ã‚’æ¢ç´¢
+// FBX: Å‰‚ÉŒ©‚Â‚©‚Á‚½ Diffuse/BaseColor ‚Ì FileTexture ‚ğ’Tõ
 bool FindFirstDiffuseFileTexture(FbxNode* node, DiffuseTexInfo& out) {
 	if (!node) return false;
 
@@ -389,7 +389,7 @@ bool FindFirstDiffuseFileTexture(FbxNode* node, DiffuseTexInfo& out) {
 
 		out.path = (rel && *rel) ? Utf8ToWide(rel) : Utf8ToWide(abs);
 
-		// UV Scale / Offset / UVSet ã‚‚
+		// UV Scale / Offset / UVSet ‚à
 		FbxDouble2 sc = f->GetUVScaling();
 		FbxDouble2 tr = f->GetUVTranslation();
 		out.uvScale = DirectX::XMFLOAT2((float) sc[0], (float) sc[1]);
@@ -428,7 +428,7 @@ bool FindFirstDiffuseFileTexture(FbxNode* node, DiffuseTexInfo& out) {
 			}
 		}
 
-		// 2) ç›´æ¥ã® FbxFileTexture
+		// 2) ’¼Ú‚Ì FbxFileTexture
 		const int tcount = prop.GetSrcObjectCount<FbxTexture>();
 		for (int ti = 0; ti < tcount; ++ti) {
 			if (auto* tex = prop.GetSrcObject<FbxTexture>(ti)) {
@@ -440,13 +440,13 @@ bool FindFirstDiffuseFileTexture(FbxNode* node, DiffuseTexInfo& out) {
 		return false;
 	};
 
-	// ãƒãƒ¼ãƒ‰ã®ãƒãƒ†ãƒªã‚¢ãƒ«ã‚’æ¢ç´¢
+	// ƒm[ƒh‚Ìƒ}ƒeƒŠƒAƒ‹‚ğ’Tõ
 	const int mcount = node->GetMaterialCount();
 	for (int mi = 0; mi < mcount; ++mi) {
 		FbxSurfaceMaterial* mat = node->GetMaterial(mi);
 		if (!mat) continue;
 
-		// æ¢ç´¢ï¼ˆãƒ†ã‚¯ã‚¹ãƒãƒ£ãƒ—ãƒ­ãƒ‘ãƒ†ã‚£åã®ãƒãƒªã‚¨ãƒ¼ã‚·ãƒ§ãƒ³ã«å¯¾å¿œï¼‰
+		// ’TõiƒeƒNƒXƒ`ƒƒƒvƒƒpƒeƒB–¼‚ÌƒoƒŠƒG[ƒVƒ‡ƒ“‚É‘Î‰j
 		const char* kTexProps[] = {
 			FbxSurfaceMaterial::sDiffuse, "Diffuse",
 			"BaseColor", "Base Color", "baseColor", "base_color",
@@ -457,7 +457,7 @@ bool FindFirstDiffuseFileTexture(FbxNode* node, DiffuseTexInfo& out) {
 			if (tryProp(mat, name)) return true;
 		}
 
-		// ãƒ•ã‚©ãƒ¼ãƒ«ãƒãƒƒã‚¯A: ãƒãƒ†ãƒªã‚¢ãƒ«ç›´ä¸‹ã® FileTexture
+		// ƒtƒH[ƒ‹ƒoƒbƒNA: ƒ}ƒeƒŠƒAƒ‹’¼‰º‚Ì FileTexture
 		{
 			const int texCount = mat->GetSrcObjectCount<FbxFileTexture>();
 			for (int i = 0; i < texCount; ++i) {
@@ -466,7 +466,7 @@ bool FindFirstDiffuseFileTexture(FbxNode* node, DiffuseTexInfo& out) {
 				}
 			}
 		}
-		// ãƒ•ã‚©ãƒ¼ãƒ«ãƒãƒƒã‚¯B: LayeredTexture çµŒç”±
+		// ƒtƒH[ƒ‹ƒoƒbƒNB: LayeredTexture Œo—R
 		{
 			const int lcount = mat->GetSrcObjectCount<FbxLayeredTexture>();
 			for (int i = 0; i < lcount; ++i) {
@@ -484,14 +484,14 @@ bool FindFirstDiffuseFileTexture(FbxNode* node, DiffuseTexInfo& out) {
 		}
 	}
 
-	// å­ãƒãƒ¼ãƒ‰ã¸å†å¸°
+	// qƒm[ƒh‚ÖÄ‹A
 	for (int ci = 0; ci < node->GetChildCount(); ++ci) {
 		if (FindFirstDiffuseFileTexture(node->GetChild(ci), out)) return true;
 	}
 	return false;
 }
 
-// å¤‰æ›
+// •ÏŠ·
 DirectX::XMFLOAT3 TransformNormal_IT(const FbxAMatrix& invTrans, const DirectX::XMFLOAT3& nIn) {
 	FbxVector4 nn((double) nIn.x, (double) nIn.y, (double) nIn.z, 0.0);
 	FbxVector4 out = invTrans.MultT(nn);
@@ -502,7 +502,7 @@ DirectX::XMFLOAT3 TransformNormal_IT(const FbxAMatrix& invTrans, const DirectX::
 }
 bool HasNegativeDeterminant(const FbxAMatrix& m) { return m.Determinant() < 0.0; }
 
-// FBX å…±æœ‰
+// FBX ‹¤—L
 FbxShared::FbxShared() : mgr(nullptr), ios(nullptr) {
 	mgr = FbxManager::Create();
 	ios = FbxIOSettings::Create(mgr, IOSROOT);
@@ -514,7 +514,7 @@ FbxShared::~FbxShared() {
 }
 FbxShared& GetFbxShared() { static FbxShared s; return s; }
 
-// ã‚¹ã‚­ãƒ‹ãƒ³ã‚°åˆ—æŒ™
+// ƒXƒLƒjƒ“ƒO—ñ‹“
 void EnumerateSkinnedMeshes(FbxNode* root, std::vector<std::pair<FbxMesh*, FbxNode*>>& out) {
 	if (!root) return;
 	if (auto* m = root->GetMesh()) {
@@ -526,11 +526,11 @@ void EnumerateSkinnedMeshes(FbxNode* root, std::vector<std::pair<FbxMesh*, FbxNo
 	for (int i = 0; i < c; ++i) EnumerateSkinnedMeshes(root->GetChild(i), out);
 }
 
-// CPU ã‚¹ã‚­ãƒ‹ãƒ³ã‚°ï¼ˆå¿…è¦ã«å¿œã˜ã¦ç°¡ç•¥ï¼‰
+// CPU ƒXƒLƒjƒ“ƒOi•K—v‚É‰‚¶‚ÄŠÈ—ªj
 void ComputeSkinnedCP_ForMesh(FbxMesh* mesh, FbxNode* meshNode, double timeSec,
 	std::vector<DirectX::XMFLOAT3>& outPos, std::vector<DirectX::XMFLOAT3>& outNrm,
 	FbxScene* baseScene, FbxScene* animScene) {
-	// æ—¢å­˜å®Ÿè£…ãã®ã¾ã¾
+	// Šù‘¶À‘•‚»‚Ì‚Ü‚Ü
 	outPos.clear(); outNrm.clear();
 	if (!mesh || !meshNode) return;
 

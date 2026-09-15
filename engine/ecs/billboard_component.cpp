@@ -1,7 +1,7 @@
 /*****************************************************
  * File: engine/ecs/billboard_component.cpp
  * Project: d3d11_engine
- * Author: Terry
+ * Author: Terry Yeung
  * Created: 2026-06-07
  *****************************************************/
 #include "billboard_component.h"

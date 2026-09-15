@@ -2,7 +2,7 @@
 
  File   :  [post_process.h]
 
- Author : Terry
+ Author : Terry Yeung
  Date   : 2026/3/28
  -----------------------------------------------------------------------------
  Fullscreen post-process (RGB shift / mosaic) over the offscreen PostRT.

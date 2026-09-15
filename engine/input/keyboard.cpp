@@ -2,7 +2,7 @@
 
  File   :  [keyboard.cpp]
 
- Author : Hayato Otsuki
+ Author : Terry Yeung
  Date   : 2025/9/29
  -----------------------------------------------------------------------------
  http://go.microsoft.com/fwlink/?LinkId=248929
@@ -13,13 +13,13 @@
 #include <assert.h>
  //#include "debugPrintf.h"
 
-static_assert(sizeof(Keyboard_State) == 256 / 8, "ƒL[ƒ{[ƒhó‘Ô\‘¢‘Ì‚ÌƒTƒCƒY•sˆê’v");
+static_assert(sizeof(Keyboard_State) == 256 / 8, "ï¿½Lï¿½[ï¿½{ï¿½[ï¿½hï¿½ï¿½Ô\ï¿½ï¿½ï¿½Ì‚ÌƒTï¿½Cï¿½Yï¿½sï¿½ï¿½v");
 
 static Keyboard_State gState = {};
 static Keyboard_State gStateOld = {};
 
 void keycopy() {
-	gStateOld = gState; //‘O‰ñ‚ÌƒL[î•ñ‚ğ•Û‘¶
+	gStateOld = gState; //ï¿½Oï¿½ï¿½ÌƒLï¿½[ï¿½ï¿½ï¿½ï¿½Û‘ï¿½
 }
 
 static void keyDown(int key) {
@@ -52,7 +52,7 @@ bool Keyboard_IsKeyDown(Keyboard_Keys key, const Keyboard_State* pState) {
 	return false;
 }
 
-//ƒgƒŠƒK[”»’è
+//ï¿½gï¿½ï¿½ï¿½Kï¿½[ï¿½ï¿½ï¿½ï¿½
 bool Keyboard_IsKeyDownTrigger(Keyboard_Keys key) {
 	if (key <= 0xfe) {
 		unsigned int* p = (unsigned int*)&gState;
@@ -82,7 +82,7 @@ bool Keyboard_IsKeyUp(Keyboard_Keys key) {
 	return Keyboard_IsKeyUp(key, &gState);
 }
 
-// ƒL[ƒ{[ƒh‚ÌŒ»İ‚Ìó‘Ô‚ğæ“¾‚·‚é
+// ï¿½Lï¿½[ï¿½{ï¿½[ï¿½hï¿½ÌŒï¿½ï¿½İ‚Ìï¿½Ô‚ï¿½æ“¾ï¿½ï¿½ï¿½ï¿½
 const Keyboard_State* Keyboard_GetState(void) {
 	return &gState;
 }
@@ -95,7 +95,7 @@ void Keyboard_Reset(void) {
 	ZeroMemory(&gStateOld, sizeof(Keyboard_State));
 }
 
-// ƒL[ƒ{[ƒh§Œä‚Ì‚½‚ß‚ÌƒEƒHƒ“‚Ç‚¤ƒƒbƒZ[ƒWƒvƒƒV[ƒWƒƒƒtƒbƒNŠÖ”
+// ï¿½Lï¿½[ï¿½{ï¿½[ï¿½hï¿½ï¿½ï¿½ï¿½Ì‚ï¿½ï¿½ß‚ÌƒEï¿½Hï¿½ï¿½ï¿½Ç‚ï¿½ï¿½ï¿½ï¿½bï¿½Zï¿½[ï¿½Wï¿½vï¿½ï¿½ï¿½Vï¿½[ï¿½Wï¿½ï¿½ï¿½tï¿½bï¿½Nï¿½Öï¿½
 void Keyboard_ProcessMessage(UINT message, WPARAM wParam, LPARAM lParam) {
 	bool down = false;
 
@@ -122,7 +122,7 @@ void Keyboard_ProcessMessage(UINT message, WPARAM wParam, LPARAM lParam) {
 	case VK_SHIFT:
 		vk = (int)MapVirtualKey(((unsigned int)lParam & 0x00ff0000) >> 16u, MAPVK_VSC_TO_VK_EX);
 		if (!down) {
-			// ¶ƒVƒtƒg‚Æ‰EƒVƒtƒg‚Ì—¼•û‚ª“¯‚É‰Ÿ‚³‚ê‚½ê‡‚ÉƒNƒŠƒA‚³‚ê‚é‚æ‚¤‚É‚·‚é‚½‚ß‚Ì‰ñ”ğô
+			// ï¿½ï¿½ï¿½Vï¿½tï¿½gï¿½Æ‰Eï¿½Vï¿½tï¿½gï¿½Ì—ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É‰ï¿½ï¿½ï¿½ï¿½ê‚½ï¿½ê‡ï¿½ÉƒNï¿½ï¿½ï¿½Aï¿½ï¿½ï¿½ï¿½ï¿½æ‚¤ï¿½É‚ï¿½ï¿½é‚½ï¿½ß‚Ì‰ï¿½ï¿½ï¿½
 			keyUp(VK_LSHIFT);
 			keyUp(VK_RSHIFT);
 		}

@@ -1,19 +1,19 @@
-ï»¿/*****************************************************
+/*****************************************************
  * File: engine/scripting/Script.h
  * Project: d3d11_engine
- * Author: Terry
+ * Author: Terry Yeung
  * Created: 2026-03-13
- * Description: Script.h â€“ Lightweight base class for user-authored game
+ * Description: Script.h ? Lightweight base class for user-authored game
  *              scripts.  Script authors inherit this class and implement
  *              OnCreate / OnUpdate / OnDestroy exactly as they would have
  *              written a standalone player or enemy class before prefabs were
  *              introduced.
  *
  * Lifecycle summary:
- *   OnCreate  â€“ called once when the owning entity is initialised (analogous
+ *   OnCreate  ? called once when the owning entity is initialised (analogous
  *               to a constructor / Init function in the legacy style).
- *   OnUpdate  â€“ called every frame while the entity is active.
- *   OnDestroy â€“ called once when the entity is torn down (analogous to
+ *   OnUpdate  ? called every frame while the entity is active.
+ *   OnDestroy ? called once when the entity is torn down (analogous to
  *               Uninit / destructor cleanup).
  *
  * Serialization:
@@ -32,12 +32,12 @@
 
 #include "../scene/scene_node.h"
 
-// Script â€“ base class for all user-authored game scripts.
+// Script ? base class for all user-authored game scripts.
 class Script {
 public:
     virtual ~Script() = default;
 
-    // â”€â”€ Lifecycle â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // „Ÿ„Ÿ Lifecycle „Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ
     // Called once after the script is created and its properties have been
     // deserialized from the prefab.  Use this for one-time initialisation
     // (e.g. caching component pointers, spawning child objects).
@@ -73,7 +73,7 @@ public:
         return nullptr;
     }
 
-    // â”€â”€ Serialization â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // „Ÿ„Ÿ Serialization „Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ
     // Return a JSON object that captures the script's configurable state.
     // Only fields that should survive a save/load round-trip need to appear.
     // The default returns an empty object (no persisted fields).

@@ -1,7 +1,7 @@
-﻿/*****************************************************
+/*****************************************************
  * File: transform.cpp
  * Project: d3d11_engine
- * Author: Terry
+ * Author: Terry Yeung
  * -----------------------------------------------------------------------------
  * REFACTOR (2026-03-13)
  *   Includes game_object.h directly (scene_node.h is now just an alias).

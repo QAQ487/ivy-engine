@@ -1,11 +1,11 @@
-Ôªø/*****************************************************
+/*****************************************************
  * File: engine/editor_prefab_panel.cpp
  * Project: d3d11_engine
- * Author: Terry
+ * Author: Terry Yeung
  * Created: 2026-03-12
  * -----------------------------------------------------------------------------
  * REFACTOR (2026-03-13)
- *   engine::GameObject ‚Üí ::GameObject (alias, no logic change).
+ *   engine::GameObject Å® ::GameObject (alias, no logic change).
  *****************************************************/
 #include "editor_prefab_panel.h"
 

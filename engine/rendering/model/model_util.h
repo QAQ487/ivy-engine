@@ -1,8 +1,8 @@
-﻿/**===========================================================================
+/**===========================================================================
 
  File   :  [model_util.h]
 
- Author : Hayato Otsuki
+ Author : Terry Yeung
  Date   : 2025/10/18
  -----------------------------------------------------------------------------
 
@@ -38,7 +38,7 @@ struct PNTKeyHasher {
 	}
 };
 
-// 文字列/パスユーティリティ
+// ������/�p�X���[�e�B���e�B
 void Trim(std::string& s);
 std::vector<std::string> Split(const std::string& s, char sep);
 std::string WideToUTF8(const std::wstring& ws);
@@ -47,7 +47,7 @@ std::wstring DirnameW(const std::wstring& path);
 std::wstring JoinPathW(const std::wstring& dir, const std::wstring& file);
 bool IsAbsolutePathW(const std::wstring& p);
 
-// テクスチャ関連
+// �e�N�X�`���֘A
 bool LoadTextureWIC_SRV(const wchar_t* texPath, ID3D11ShaderResourceView** outSRV);
 ID3D11ShaderResourceView* CreateSolidWhiteSRV();
 
@@ -55,11 +55,11 @@ ID3D11ShaderResourceView* CreateSolidWhiteSRV();
 // shutdown, before the D3D11 device is destroyed.
 void ModelUtil_ReleaseTextureCache();
 
-// 任意色/ピンク/青の 1x1 テクスチャ作成
+// �C�ӐF/�s���N/�� 1x1 �e�N�X�`���쐬
 ID3D11ShaderResourceView* CreateSolidColorSRV(uint8_t r, uint8_t g, uint8_t b, uint8_t a = 255);
 ID3D11ShaderResourceView* CreateSolidPinkSRV();
 
-// MTL: map_Kd の有無を outHadMapKd で返す
+// MTL: map_Kd �̗L���� outHadMapKd �ŕԂ�
 bool TryLoadMTLTexture_SRV(
 	const std::wstring& mtlPath,
 	const std::wstring& baseDir,
@@ -69,7 +69,7 @@ bool TryLoadMTLTexture_SRV(
 	bool* outClamp,
 	bool* outHadMapKd = nullptr);
 
-// FBX: Diffuse テクスチャ探索
+// FBX: Diffuse �e�N�X�`���T��
 struct DiffuseTexInfo {
 	std::wstring path;
 	std::string uvSetName;
@@ -78,11 +78,11 @@ struct DiffuseTexInfo {
 };
 bool FindFirstDiffuseFileTexture(fbxsdk::FbxNode* node, DiffuseTexInfo& out);
 
-// 補助
+// �⏕
 DirectX::XMFLOAT3 TransformNormal_IT(const fbxsdk::FbxAMatrix& invTrans, const DirectX::XMFLOAT3& nIn);
 bool HasNegativeDeterminant(const fbxsdk::FbxAMatrix& m);
 
-// FBX SDK 共有
+// FBX SDK ���L
 struct FbxShared {
 	fbxsdk::FbxManager* mgr;
 	fbxsdk::FbxIOSettings* ios;
@@ -91,7 +91,7 @@ struct FbxShared {
 };
 FbxShared& GetFbxShared();
 
-// スキニング
+// �X�L�j���O
 void EnumerateSkinnedMeshes(fbxsdk::FbxNode* root, std::vector<std::pair<fbxsdk::FbxMesh*, fbxsdk::FbxNode*>>& out);
 void ComputeSkinnedCP_ForMesh(fbxsdk::FbxMesh* mesh, fbxsdk::FbxNode* meshNode, double timeSec,
 	std::vector<DirectX::XMFLOAT3>& outPos, std::vector<DirectX::XMFLOAT3>& outNrm,

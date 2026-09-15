@@ -1,8 +1,8 @@
-﻿/**===========================================================================
+/**===========================================================================
 
  File   :  [model.h]
 
- Author : Hayato Otsuki
+ Author : Terry Yeung
  Date   : 2025/10/21
  -----------------------------------------------------------------------------
 
@@ -78,7 +78,7 @@ public:
     void SetRotateEulerDeg(const DirectX::XMFLOAT3& rDeg);
     void SetScale(const DirectX::XMFLOAT3& s);
 
-    // Per-draw emission override – set to {0,0,0,0} for no glow, or a colour
+    // Per-draw emission override ? set to {0,0,0,0} for no glow, or a colour
     // to add a constant emissive term (shines regardless of lighting).
     void SetEmission(const DirectX::XMFLOAT4& emission) { m_emissionOverride = emission; }
     DirectX::XMFLOAT4 GetEmission() const { return m_emissionOverride; }
@@ -156,7 +156,7 @@ private:
 
     Shader3DVariant m_shaderVariant = Shader3DVariant::Standard;
 
-    // OBJ 用: 実テクスチャを読み込めたか（白1x1フォールバックは「なし」扱い）
+    // OBJ �p: ���e�N�X�`����ǂݍ��߂����i��1x1�t�H�[���o�b�N�́u�Ȃ��v�����j
     bool m_hasTexture = false;
 
     // --------- FBX ------------

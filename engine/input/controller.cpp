@@ -1,36 +1,36 @@
 /**===========================================================================
  File   :  [controller.cpp]
- Author : Hayato Otsuki
+ Author : Terry Yeung
  Date   : 2025/11/5
 -----------------------------------------------------------------------------
- Xbox/PC ƒRƒ“ƒgƒ[ƒ‰[“ü—ÍiXInputjÀ‘•
+ Xbox/PC ï¿½Rï¿½ï¿½ï¿½gï¿½ï¿½ï¿½[ï¿½ï¿½ï¿½[ï¿½ï¿½ï¿½ÍiXInputï¿½jï¿½ï¿½ï¿½ï¿½
 
- g‚¢•û:
-  - ‹N“®‚É Controller_Initialize()
-  - –ˆƒtƒŒ[ƒ€æ“ª‚Å Controller_Update()
-  - •K—v‚É‰‚¶‚Ä IsPressed/IsTrigger/IsRelease / GetLeftStick ‚È‚Ç‚ğQÆ
+ ï¿½gï¿½ï¿½ï¿½ï¿½:
+  - ï¿½Nï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Controller_Initialize()
+  - ï¿½ï¿½ï¿½tï¿½ï¿½ï¿½[ï¿½ï¿½ï¿½æ“ªï¿½ï¿½ Controller_Update()
+  - ï¿½Kï¿½vï¿½É‰ï¿½ï¿½ï¿½ï¿½ï¿½ IsPressed/IsTrigger/IsRelease / GetLeftStick ï¿½È‚Ç‚ï¿½Qï¿½ï¿½
 ============================================================================**/
 #include "controller.h"
 
 #include <Xinput.h>
-#pragma comment(lib, "xinput9_1_0.lib") // ŠÂ‹«‚É‚æ‚Á‚Ä‚Í XInput.lib ‚ª•K—v
+#pragma comment(lib, "xinput9_1_0.lib") // ï¿½Â‹ï¿½ï¿½É‚ï¿½ï¿½ï¿½Ä‚ï¿½ XInput.lib ï¿½ï¿½ï¿½Kï¿½v
 // #pragma comment(lib, "XInput.lib")
 
 using namespace DirectX;
 
 namespace {
-    // Œ»İ/‘OƒtƒŒ[ƒ€‚Ì XINPUT_STATE
+    // ï¿½ï¿½ï¿½ï¿½/ï¿½Oï¿½tï¿½ï¿½ï¿½[ï¿½ï¿½ï¿½ï¿½ XINPUT_STATE
     static XINPUT_STATE g_curr[CONTROLLER_MAX] {};
     static XINPUT_STATE g_prev[CONTROLLER_MAX] {};
     static bool         g_connected[CONTROLLER_MAX] {};
 
-    // ³‹K‰»Ï‚İƒAƒiƒƒO’l
+    // ï¿½ï¿½ï¿½Kï¿½ï¿½ï¿½Ï‚İƒAï¿½iï¿½ï¿½ï¿½Oï¿½l
     static XMFLOAT2 g_leftStick[CONTROLLER_MAX] {};
     static XMFLOAT2 g_rightStick[CONTROLLER_MAX] {};
     static float    g_leftTrigger[CONTROLLER_MAX] {};
     static float    g_rightTrigger[CONTROLLER_MAX] {};
 
-    // ƒfƒbƒhƒ][ƒ“
+    // ï¿½fï¿½bï¿½hï¿½]ï¿½[ï¿½ï¿½
     static short g_deadzoneLeftStick = XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE;   // 7849
     static short g_deadzoneRightStick = XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE;  // 8689
     static BYTE  g_deadzoneTrigger = XINPUT_GAMEPAD_TRIGGER_THRESHOLD;     // 30
@@ -39,23 +39,23 @@ namespace {
         return (buttons & static_cast<WORD>(btn)) != 0;
     }
 
-    // [-1,1] ³‹K‰» with ƒfƒbƒhƒ][ƒ“iÄƒ}ƒbƒvj
+    // [-1,1] ï¿½ï¿½ï¿½Kï¿½ï¿½ with ï¿½fï¿½bï¿½hï¿½]ï¿½[ï¿½ï¿½ï¿½iï¿½Äƒ}ï¿½bï¿½vï¿½j
     inline float NormalizeThumb(short v, short dz) {
         const int iv = static_cast<int>(v);
         const int ad = (iv >= 0) ? iv : -iv;
         if (ad <= dz) return 0.0f;
 
-        const int MAX_VAL = 32767; // SHORT ‚ÌÅ‘å
+        const int MAX_VAL = 32767; // SHORT ï¿½ÌÅ‘ï¿½
         const float sign = (iv >= 0) ? 1.0f : -1.0f;
-        const float norm = float(ad - dz) / float(MAX_VAL - dz); // ƒfƒbƒhƒ][ƒ“ŠO‚ğ 0..1 ‚ÉÄƒ}ƒbƒv
+        const float norm = float(ad - dz) / float(MAX_VAL - dz); // ï¿½fï¿½bï¿½hï¿½]ï¿½[ï¿½ï¿½ï¿½Oï¿½ï¿½ 0..1 ï¿½ÉÄƒ}ï¿½bï¿½v
         float out = norm * sign;
-        // ƒNƒ‰ƒ“ƒv
+        // ï¿½Nï¿½ï¿½ï¿½ï¿½ï¿½v
         if (out > 1.0f) out = 1.0f;
         if (out < -1.0f) out = -1.0f;
         return out;
     }
 
-    // [0,1] ³‹K‰» with ƒfƒbƒhƒ][ƒ“
+    // [0,1] ï¿½ï¿½ï¿½Kï¿½ï¿½ with ï¿½fï¿½bï¿½hï¿½]ï¿½[ï¿½ï¿½
     inline float NormalizeTrigger(BYTE v, BYTE dz) {
         if (v <= dz) return 0.0f;
         const float norm = float(v - dz) / float(255 - dz);
@@ -76,12 +76,12 @@ void Controller_Initialize() {
 }
 
 void Controller_Finalize() {
-    // Œ»óAXInput ‚Í–¾¦“I‚È‰ğ•ú•s—v
+    // ï¿½ï¿½ï¿½ï¿½AXInput ï¿½Í–ï¿½ï¿½ï¿½ï¿½Iï¿½È‰ï¿½ï¿½ï¿½sï¿½v
 }
 
 void Controller_Update() {
     for (DWORD i = 0; i < CONTROLLER_MAX; ++i) {
-        // ‘OƒtƒŒ[ƒ€‚ğ•Û‘¶
+        // ï¿½Oï¿½tï¿½ï¿½ï¿½[ï¿½ï¿½ï¿½ï¿½Û‘ï¿½
         g_prev[i] = g_curr[i];
 
         XINPUT_STATE st {};
@@ -90,7 +90,7 @@ void Controller_Update() {
             g_connected[i] = true;
             g_curr[i] = st;
 
-            // ƒAƒiƒƒO³‹K‰»
+            // ï¿½Aï¿½iï¿½ï¿½ï¿½Oï¿½ï¿½ï¿½Kï¿½ï¿½
             const XINPUT_GAMEPAD& gp = st.Gamepad;
             g_leftStick[i].x = NormalizeThumb(gp.sThumbLX, g_deadzoneLeftStick);
             g_leftStick[i].y = NormalizeThumb(gp.sThumbLY, g_deadzoneLeftStick);
@@ -101,7 +101,7 @@ void Controller_Update() {
             g_rightTrigger[i] = NormalizeTrigger(gp.bRightTrigger, g_deadzoneTrigger);
         }
         else {
-            // –¢Ú‘±/ƒGƒ‰[: Ø’fó‘Ô‚Æ‚µ‚Äƒ[ƒ‰»
+            // ï¿½ï¿½ï¿½Ú‘ï¿½/ï¿½Gï¿½ï¿½ï¿½[: ï¿½Ø’fï¿½ï¿½Ô‚Æ‚ï¿½ï¿½Äƒ[ï¿½ï¿½ï¿½ï¿½
             g_connected[i] = false;
             ZeroMemory(&g_curr[i], sizeof(XINPUT_STATE));
             g_leftStick[i] = XMFLOAT2(0, 0);
@@ -159,7 +159,7 @@ float Controller_GetRightTrigger(int padIndex) {
 }
 
 void Controller_SetStickDeadzone(short left, short right) {
-    // ”ÍˆÍƒNƒ‰ƒ“ƒv
+    // ï¿½ÍˆÍƒNï¿½ï¿½ï¿½ï¿½ï¿½v
     if (left < 0) left = 0;  if (left > 32767) left = 32767;
     if (right < 0) right = 0;  if (right > 32767) right = 32767;
     g_deadzoneLeftStick = left;

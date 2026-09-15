@@ -2,7 +2,7 @@
 
  File   :  [debug_text.h]
 
- Author : Hayato Otsuki
+ Author : Terry Yeung
  Date   : 2025/11/17
  -----------------------------------------------------------------------------
 
@@ -45,11 +45,11 @@ namespace hal {
 		void Draw();
 		void Clear();
 
-		// Œv‘ª—p API
+		// ï¿½vï¿½ï¿½ï¿½p API
 		float GetLineSpacing() const { return m_LineSpacing; }
 		float GetCharacterSpacing() const { return m_CharacterSpacing; }
 
-		// —^‚¦‚ç‚ê‚½•¶š—ñ‚Ì•E‚‚³is”~sŠÔ / Å‘å—ñ”~•¶šŠÔj‚ğŠTZæ“¾
+		// ï¿½^ï¿½ï¿½ï¿½ï¿½ê‚½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì•ï¿½ï¿½Eï¿½ï¿½ï¿½ï¿½ï¿½iï¿½sï¿½ï¿½ï¿½~ï¿½sï¿½ï¿½ / ï¿½Å‘ï¿½ñ”~ï¿½ï¿½ï¿½ï¿½ï¿½Ôjï¿½ï¿½Tï¿½Zï¿½æ“¾
 		void MeasureText(const char* text, float& outWidth, float& outHeight) const;
 
 	private:
@@ -79,7 +79,7 @@ namespace hal {
 		ULONG  m_CharacterCount = 0;
 		ULONG  m_BufferSourceCharacterCount = 0;
 
-		// Ã“I‹¤—LƒŠƒ\[ƒX
+		// ï¿½Ã“Iï¿½ï¿½ï¿½Lï¿½ï¿½ï¿½\ï¿½[ï¿½X
 		static std::unordered_map<std::wstring, std::tuple<ID3D11Resource*, ID3D11ShaderResourceView*>> m_TextureMap;
 		static Microsoft::WRL::ComPtr<ID3D11BlendState>       m_pBlendState;
 		static Microsoft::WRL::ComPtr<ID3D11DepthStencilState> m_pDepthStencilState;

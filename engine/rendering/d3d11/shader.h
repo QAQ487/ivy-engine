@@ -2,7 +2,7 @@
 
  File   :  [shader.h]
 
- Author : Hayato Otsuki
+ Author : Terry Yeung
  Date   : 2025/10/29
  -----------------------------------------------------------------------------
 

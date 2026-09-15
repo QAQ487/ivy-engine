@@ -1,7 +1,7 @@
 /*****************************************************
  * File: engine/ecs/material_component.h
  * Project: d3d11_engine
- * Author: Terry
+ * Author: Terry Yeung
  * -----------------------------------------------------------------------------
  * Per-object material params for standard lit meshes.
  * Registered with ComponentFactory as "Material".

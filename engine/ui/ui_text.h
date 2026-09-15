@@ -1,6 +1,6 @@
 /**===========================================================================
  File   :  [ui_text.h]
- Author : Copilot Agent
+ Author : Terry Yeung
  Date   : 2025/11/22
  Brief  : UI text element with alignment, font, size, and color control
  ===========================================================================**/

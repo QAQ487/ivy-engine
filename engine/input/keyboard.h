@@ -2,7 +2,7 @@
 
  File   :  [keyboard.h]
 
- Author : Hayato Otsuki
+ Author : Terry Yeung
  Date   : 2025/9/29
  -----------------------------------------------------------------------------
  http://go.microsoft.com/fwlink/?LinkId=248929
@@ -15,7 +15,7 @@
 #include <windows.h>
 #include <memory>
 
- // ƒL[—ñ‹“
+ // ï¿½Lï¿½[ï¿½ï¿½
 typedef enum Keyboard_Keys_tag
 {
 	KK_NONE = 0x0,
@@ -196,7 +196,7 @@ typedef enum Keyboard_Keys_tag
 	KK_OEMCLEAR = 0xfe,
 } Keyboard_Keys;
 
-// ƒL[ƒ{[ƒhó‘Ô\‘¢‘Ì
+// ï¿½Lï¿½[ï¿½{ï¿½[ï¿½hï¿½ï¿½Ô\ï¿½ï¿½ï¿½ï¿½
 typedef struct Keyboard_State_tag
 {
 	bool Reserved0 : 8;
@@ -385,28 +385,28 @@ typedef struct Keyboard_State_tag
 	bool Reserved26 : 1;
 } Keyboard_State;
 
-// ƒL[ƒ{[ƒhƒ‚ƒWƒ…[ƒ‹‚Ì‰Šú‰»
+// ï¿½Lï¿½[ï¿½{ï¿½[ï¿½hï¿½ï¿½ï¿½Wï¿½ï¿½ï¿½[ï¿½ï¿½ï¿½Ìï¿½ï¿½ï¿½ï¿½ï¿½
 void Keyboard_Initialize(void);
 
-// ƒL[ƒ{[ƒh‚ÌŒ»İ‚ÌƒL[–ˆ‚Ìó‘Ô‚ğæ“¾‚·‚é
+// ï¿½Lï¿½[ï¿½{ï¿½[ï¿½hï¿½ÌŒï¿½ï¿½İ‚ÌƒLï¿½[ï¿½ï¿½ï¿½Ìï¿½Ô‚ï¿½æ“¾ï¿½ï¿½ï¿½ï¿½
 bool Keyboard_IsKeyDown(Keyboard_Keys key);
 bool Keyboard_IsKeyUp(Keyboard_Keys key);
 
-// ƒL[ƒ{[ƒh‚ÌŒ»İ‚Ìó‘Ô‚ğæ“¾‚·‚é
+// ï¿½Lï¿½[ï¿½{ï¿½[ï¿½hï¿½ÌŒï¿½ï¿½İ‚Ìï¿½Ô‚ï¿½æ“¾ï¿½ï¿½ï¿½ï¿½
 const Keyboard_State* Keyboard_GetState(void);
 const Keyboard_State* Keyboard_GetStateOld(void);
 
-// ƒL[ƒ{[ƒh‚Ìó‘Ô‚©‚çƒL[–ˆ‚Ìó‘Ô‚ğæ“¾‚·‚é
+// ï¿½Lï¿½[ï¿½{ï¿½[ï¿½hï¿½Ìï¿½Ô‚ï¿½ï¿½ï¿½Lï¿½[ï¿½ï¿½ï¿½Ìï¿½Ô‚ï¿½æ“¾ï¿½ï¿½ï¿½ï¿½
 bool Keyboard_IsKeyDown(Keyboard_Keys key, const Keyboard_State* pState);
 bool Keyboard_IsKeyUp(Keyboard_Keys key, const Keyboard_State* pState);
 
-// ƒL[ƒ{[ƒh‚Ìó‘Ô‚ğƒŠƒZƒbƒg‚·‚é
+// ï¿½Lï¿½[ï¿½{ï¿½[ï¿½hï¿½Ìï¿½Ô‚ï¿½ï¿½ï¿½Zï¿½bï¿½gï¿½ï¿½ï¿½ï¿½
 void Keyboard_Reset(void);
 
-// ƒL[ƒ{[ƒh§Œä‚Ì‚½‚ß‚ÌƒEƒHƒ“‚Ç‚¤ƒƒbƒZ[ƒWƒvƒƒV[ƒWƒƒƒtƒbƒNŠÖ”
+// ï¿½Lï¿½[ï¿½{ï¿½[ï¿½hï¿½ï¿½ï¿½ï¿½Ì‚ï¿½ï¿½ß‚ÌƒEï¿½Hï¿½ï¿½ï¿½Ç‚ï¿½ï¿½ï¿½ï¿½bï¿½Zï¿½[ï¿½Wï¿½vï¿½ï¿½ï¿½Vï¿½[ï¿½Wï¿½ï¿½ï¿½tï¿½bï¿½Nï¿½Öï¿½
 void Keyboard_ProcessMessage(UINT message, WPARAM wParam, LPARAM lParam);
 
-//ƒgƒŠƒK[—p
+//ï¿½gï¿½ï¿½ï¿½Kï¿½[ï¿½p
 bool Keyboard_IsKeyDownTrigger(Keyboard_Keys key);
 void    keycopy();
 

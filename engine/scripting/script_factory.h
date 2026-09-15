@@ -1,9 +1,9 @@
-﻿/*****************************************************
+/*****************************************************
  * File: engine/scripting/ScriptFactory.h
  * Project: d3d11_engine
- * Author: Terry
+ * Author: Terry Yeung
  * Created: 2026-03-13
- * Description: ScriptFactory.h – Singleton registry that maps Script class
+ * Description: ScriptFactory.h ? Singleton registry that maps Script class
  *              name strings to creator functions, enabling JSON-driven script
  *              instantiation by class name without hard-coded switch/case logic.
  *
@@ -58,11 +58,11 @@ public:
                          std::vector<std::string>* loadedScripts = nullptr);
     void   UnloadScriptDll(const std::string& scriptName);
     void   UnloadAllDlls();
-    // Called from watcher thread — thread-safe, just queues the request.
+    // Called from watcher thread ? thread-safe, just queues the request.
     void RequestReload(const std::string& name, const std::string& dllPath);
     size_t PendingReloadCount() const;
 
-    // Called from main thread each frame — executes queued reloads.
+    // Called from main thread each frame ? executes queued reloads.
     // Calls onReloaded(name) for each script that was successfully reloaded.
     void DrainReloadQueue(const std::function<void(const std::string&)>& onReloaded);
 

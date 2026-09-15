@@ -1,7 +1,7 @@
-﻿/*****************************************************
+/*****************************************************
  * File: engine/scripting/ScriptFactory.cpp
  * Project: d3d11_engine
- * Author: Terry
+ * Author: Terry Yeung
  * Created: 2026-03-13
  * Description: ScriptFactory implementation.
  *****************************************************/

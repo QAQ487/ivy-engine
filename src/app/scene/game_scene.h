@@ -1,8 +1,8 @@
-﻿/**===========================================================================
+/**===========================================================================
  File   : game_scene.h
- Author : Terry
+ Author : Terry Yeung
  Date   : 2025/1/12
- Brief  : GameScene – manages the map, lighting, shadows, and the enemy pool
+ Brief  : GameScene ? manages the map, lighting, shadows, and the enemy pool
           drawn by EnemyManagerComponent / EnemySpawnComponent nodes added
           through the engine_gui Prefab tab.
  ===========================================================================**/

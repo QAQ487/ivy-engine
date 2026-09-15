@@ -1,11 +1,11 @@
 /*****************************************************
  * File: transform.h
  * Project: d3d11_engine
- * Author: Terry
+ * Author: Terry Yeung
  * -----------------------------------------------------------------------------
  * REFACTOR (2026-03-13)
  *   engine::Transform now lives on ::GameObject (via the Component system).
- *   No API changes – callers that did node->GetComponent<Transform>() still
+ *   No API changes  Ecallers that did node->GetComponent<Transform>() still
  *   work identically.
  *****************************************************/
 #pragma once

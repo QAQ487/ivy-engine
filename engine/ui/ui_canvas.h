@@ -1,6 +1,6 @@
 /**===========================================================================
  File   :  [ui_canvas.h]
- Author : Copilot Agent
+ Author : Terry Yeung
  Date   : 2025/11/17
  Brief  : Container for managing UI elements in a scene with easy API
  ===========================================================================**/

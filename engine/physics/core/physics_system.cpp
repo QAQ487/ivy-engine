@@ -1,8 +1,8 @@
-﻿/**===========================================================================
+/**===========================================================================
 
  File   :  [physics_system.cpp]
 
- Author : Hayato Otsuki
+ Author : Terry Yeung
  Date   : 2025/12/2
  -----------------------------------------------------------------------------
 
@@ -80,13 +80,13 @@ namespace {
 		g_contactPairsCurrent.clear();
 	}
 
-	// 動的剛体かどうかを判定（キネマティックでなく、質量がある）
+	// ���I���̂��ǂ����𔻒�i�L�l�}�e�B�b�N�łȂ��A���ʂ�����j
 	inline bool IsDynamic(const GameObject* obj) {
 		const Rigidbody& rb = obj->GetRigidbody();
 		return !rb.IsKinematic() && rb.GetMass() > 0.0f;
 	}
 
-	// 各コライダーの概算バウンディングスフィア半径（ブロードフェーズ用の近似値）
+	// �e�R���C�_�[�̊T�Z�o�E���f�B���O�X�t�B�A���a�i�u���[�h�t�F�[�Y�p�̋ߎ��l�j
 	inline float GetApproxRadius(const Collider* c) {
 		if (!c) return 0.0f;
 		switch (c->GetType()) {
@@ -99,13 +99,13 @@ namespace {
 			{
 				auto* b = static_cast<const BoxCollider*>(c);
 				const auto sz = b->GetSize();
-				// 対角線の半分を半径として近似
+				// �Ίp���̔����𔼌a�Ƃ��ċߎ�
 				return 0.5f * std::sqrt(sz.x * sz.x + sz.y * sz.y + sz.z * sz.z);
 			}
 			case ColliderType::CAPSULE:
 			{
 				auto* cp = static_cast<const CapsuleCollider*>(c);
-				// カプセルは「半径 + 高さ/2」を目安の半径に（少し大きめ）
+				// �J�v�Z���́u���a + ����/2�v��ڈ��̔��a�Ɂi�����傫�߁j
 				return cp->GetRadius() + 0.5f * cp->GetHeight();
 			}
 			case ColliderType::MESH:
@@ -124,7 +124,7 @@ namespace {
 		}
 	}
 
-	// ブロードフェーズ（概算距離判定）
+	// �u���[�h�t�F�[�Y�i�T�Z��������j
 	inline bool BroadPhasePass(const Collider* ca, const Collider* cb) {
 		if (!ca || !cb) return false;
 
@@ -137,13 +137,13 @@ namespace {
 
 		const float ra = GetApproxRadius(ca);
 		const float rb = GetApproxRadius(cb);
-		const float r = ra + rb + 0.05f; // 余裕マージンを少し追加
+		const float r = ra + rb + 0.05f; // �]�T�}�[�W��������ǉ�
 		return dist2 <= (r * r);
 	}
 
-	// スウェプトブロードフェーズ: コライダー A が prevCenterA から現在位置まで移動した
-	// 際にコライダー B と交差する可能性があるかをカプセル vs スフィアで判定する。
-	// これにより高速移動（軌道回転など）によるトンネリングを早期検出できる。
+	// �X�E�F�v�g�u���[�h�t�F�[�Y: �R���C�_�[ A �� prevCenterA ���猻�݈ʒu�܂ňړ�����
+	// �ۂɃR���C�_�[ B �ƌ������\�������邩��J�v�Z�� vs �X�t�B�A�Ŕ��肷��B
+	// ����ɂ�荂���ړ��i�O����]�Ȃǁj�ɂ��g���l�����O�𑁊����o�ł���B
 	inline bool BroadPhasePassSwept(const Collider* ca, const XMFLOAT3& prevCenterA,
 	                                 const Collider* cb) {
 		if (!ca || !cb) return false;
@@ -192,10 +192,10 @@ namespace {
 		}
 	}
 
-	// スウェプトナローフェーズ: A が prevPos から現在位置まで移動した経路を
-	// サブステップに分割して衝突判定する。衝突が検出された最初のサブステップ位置
-	// (testPos) で ResolveCollision を呼び出し、位置補正と速度のキャンセルを行う。
-	// 高速軌道回転でのトンネリング防止に使用する。
+	// �X�E�F�v�g�i���[�t�F�[�Y: A �� prevPos ���猻�݈ʒu�܂ňړ������o�H��
+	// �T�u�X�e�b�v�ɕ������ďՓ˔��肷��B�Փ˂����o���ꂽ�ŏ��̃T�u�X�e�b�v�ʒu
+	// (testPos) �� ResolveCollision ��Ăяo���A�ʒu�␳�Ƒ��x�̃L�����Z����s���B
+	// �����O����]�ł̃g���l�����O�h�~�Ɏg�p����B
 	void DoSweptNarrowPhase(GameObject* a, Collider* ca,
 	                        GameObject* b, Collider* cb,
 	                        bool bDynamic) {
@@ -204,8 +204,8 @@ namespace {
 		const bool isTriggerPair = ca->IsTrigger() || cb->IsTrigger();
 
 		// Thin mesh walls: discrete CheckCollision at sub-steps often misses when
-		// a fast sphere jumps past zero-thickness triangles. Sphere↔Mesh
-		// ResolveCollision already runs continuous raycast CCD along prev→cur.
+		// a fast sphere jumps past zero-thickness triangles. Sphere?Mesh
+		// ResolveCollision already runs continuous raycast CCD along prev��cur.
 		const bool sphereVsMesh =
 			ca->GetType() == ColliderType::SPHERE && cb->GetType() == ColliderType::MESH;
 		const bool meshVsSphere =
@@ -268,7 +268,7 @@ namespace {
 				// component directed into the surface.  Backing A up to the
 				// pre-collision step (safePos) would leave zero penetration, causing
 				// ResolveContact to skip both the position correction and the
-				// velocity impulse – which is the root cause of the player falling
+				// velocity impulse ? which is the root cause of the player falling
 				// through the floor.
 				if (IsDynamic(a)) ca->ResolveCollision(cb);
 				if (bDynamic)      cb->ResolveCollision(ca);
@@ -295,7 +295,7 @@ namespace {
 			}
 		}
 
-		// No collision detected along the entire path – restore intended position.
+		// No collision detected along the entire path ? restore intended position.
 		a->SetPosition(curPos);
 	}
 }
@@ -346,9 +346,9 @@ void PhysicsSystem_NotifyObjectDestroyed(GameObject* obj) {
 	eraseContact(g_contactPairsCurrent);
 }
 
-// ポジションスナップショット: 動的オブジェクトの現在位置を m_previousPosition に保存する。
-// スクリプト（軌道回転など）を実行する直前に呼び出すことで、スクリプト後の
-// スウェプト衝突パスが正確な変位を把握できるようにする。
+// �|�W�V�����X�i�b�v�V���b�g: ���I�I�u�W�F�N�g�̌��݈ʒu�� m_previousPosition �ɕۑ�����B
+// �X�N���v�g�i�O����]�Ȃǁj����s���钼�O�ɌĂяo�����ƂŁA�X�N���v�g���
+// �X�E�F�v�g�Փ˃p�X�����m�ȕψʂ�c���ł���悤�ɂ���B
 void PhysicsSystem_SavePositions() {
 	SceneBase* scene = SceneManager::Instance().GetCurrentScene();
 	if (!scene) return;
@@ -375,9 +375,9 @@ namespace {
 	};
 }
 
-// 衝突判定・解決パス（速度積分なし）。
-// m_previousPosition から現在位置までのスウェプトブロードフェーズを使用し、
-// 大きな変位に対してはサブステップナローフェーズで解決する。
+// �Փ˔���E����p�X�i���x�ϕ��Ȃ��j�B
+// m_previousPosition ���猻�݈ʒu�܂ł̃X�E�F�v�g�u���[�h�t�F�[�Y��g�p���A
+// �傫�ȕψʂɑ΂��Ă̓T�u�X�e�b�v�i���[�t�F�[�Y�ŉ������B
 void PhysicsSystem_ResolveCollisions() {
 	SceneBase* scene = SceneManager::Instance().GetCurrentScene();
 	if (!scene) return;
@@ -462,7 +462,7 @@ void PhysicsSystem_ResolveCollisions() {
 			const bool eitherTrigger =
 				e1.collider->IsTrigger() || e2.collider->IsTrigger();
 
-			// Static–static: only process when a trigger is involved (cheap overlap).
+			// Static?static: only process when a trigger is involved (cheap overlap).
 			if (!e1.isDynamic && !e2.isDynamic) {
 				if (!eitherTrigger) continue;
 				if (!e1.obj->IsActive() || !e2.obj->IsActive()) continue;
@@ -499,15 +499,15 @@ void PhysicsSystem_ResolveCollisions() {
 
 			if (!a->IsActive() || !b->IsActive()) continue;
 
-			// ペアの衝突可否（チーム/タグ/レイヤーのルール）を確認
+			// �y�A�̏Փˉہi�`�[��/�^�O/���C���[�̃��[���j��m�F
 			if (!a->CanCollideWith(b) || !b->CanCollideWith(a)) continue;
 
-			// スウェプトブロードフェーズ: 現在位置でのスフィアチェックに加え、
-			// 前フレームから現フレームへの経路全体をカプセルで包んで判定する。
+			// �X�E�F�v�g�u���[�h�t�F�[�Y: ���݈ʒu�ł̃X�t�B�A�`�F�b�N�ɉ����A
+			// �O�t���[�����猻�t���[���ւ̌o�H�S�̂�J�v�Z���ŕ��Ŕ��肷��B
 			const bool bpOk = BroadPhasePassSwept(ca, prevCenterA, cb);
 			if (!bpOk) continue;
 
-			// ナローフェーズ（スウェプト）: 変位が大きい場合はサブステップで判定する。
+			// �i���[�t�F�[�Y�i�X�E�F�v�g�j: �ψʂ��傫���ꍇ�̓T�u�X�e�b�v�Ŕ��肷��B
 			DoSweptNarrowPhase(a, ca, b, cb, bDynamic);
 		}
 	}
@@ -557,7 +557,7 @@ bool PhysicsSystem_Raycast(const DirectX::XMFLOAT3& origin,
 		float dist2 = XMVectorGetX(XMVector3LengthSq(diff));
 		if (dist2 > (radius + 0.05f) * (radius + 0.05f) &&
 			(tClosest < 0.0f || tClosest > bestT)) {
-			// Still allow RayIntersect if sphere could clip the segment — use
+			// Still allow RayIntersect if sphere could clip the segment ? use
 			// conservative: only skip when clearly outside enlarged sphere of segment.
 			float segR = radius + 0.05f;
 			if (dist2 > segR * segR) continue;
@@ -586,7 +586,7 @@ bool PhysicsSystem_Raycast(const DirectX::XMFLOAT3& origin,
 	return hit;
 }
 
-// 物理システム更新
+// �����V�X�e���X�V
 void PhysicsSystem_Update(double elapsed_time) {
 	SceneBase* scene = SceneManager::Instance().GetCurrentScene();
 	if (!scene) return;
@@ -594,7 +594,7 @@ void PhysicsSystem_Update(double elapsed_time) {
 	const auto& objs = scene->GetObjects();
 	if (objs.empty()) return;
 
-	// 1. 前フレーム位置の保存（スウェプト衝突検出用）
+	// 1. �O�t���[���ʒu�̕ۑ��i�X�E�F�v�g�Փˌ��o�p�j
 	for (auto* obj : objs) {
 		if (!obj || !obj->IsActive() || !obj->GetCollider()) continue;
 		if (IsDynamic(obj)) {
@@ -602,7 +602,7 @@ void PhysicsSystem_Update(double elapsed_time) {
 		}
 	}
 
-	// 2. 速度積分（動的ボディのみ）
+	// 2. ���x�ϕ��i���I�{�f�B�̂݁j
 	for (auto* obj : objs) {
 		if (!obj || !obj->IsActive() || !obj->GetCollider()) continue;
 		auto& rb = obj->GetRigidbody();
@@ -613,7 +613,7 @@ void PhysicsSystem_Update(double elapsed_time) {
 		}
 	}
 
-	// 3. 衝突判定と解決（スウェプトAABBを使用）
+	// 3. �Փ˔���Ɖ���i�X�E�F�v�gAABB��g�p�j
 	PhysicsSystem_ResolveCollisions();
 }
 
@@ -663,7 +663,7 @@ void PhysicsSystem_ClearDebugDrawQueue() {
 
 void PhysicsSystem_FlushDebugDraw() {
 	// F11 draws every collider each frame so wires stay visible while airborne
-	// and solids stay green (triggers yellow — never paint solid mesh partners).
+	// and solids stay green (triggers yellow ? never paint solid mesh partners).
 	if (!DebugSystem::CollisionVizEnabled()) return;
 
 	SceneBase* scene = SceneManager::Instance().GetCurrentScene();

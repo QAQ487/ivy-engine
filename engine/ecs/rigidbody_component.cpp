@@ -1,7 +1,7 @@
 /*****************************************************
  * File: engine/ecs/rigidbody_component.cpp
  * Project: d3d11_engine
- * Author: Terry
+ * Author: Terry Yeung
  *****************************************************/
 #include "rigidbody_component.h"
 

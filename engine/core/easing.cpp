@@ -2,7 +2,7 @@
 
  File   :  [easing.cpp]
 
- Author : Hayato Otsuki
+ Author : Terry Yeung
  Date   : 2025/10/31
  -----------------------------------------------------------------------------
 
@@ -50,7 +50,7 @@ double easeOutCubic(double t) {
 double easeInOutCubic(double t) {
 	if (t < 0.5)
 		return 4.0 * t * t * t;
-	// Correct ease-out half: 1 - ((-2t+2)^3)/2  (old formula used multiple --t → garbage/negative)
+	// Correct ease-out half: 1 - ((-2t+2)^3)/2  (old formula used multiple --t ↁEgarbage/negative)
 	const double u = -2.0 * t + 2.0;
 	return 1.0 - (u * u * u) / 2.0;
 }

@@ -1,6 +1,6 @@
 /**===========================================================================
  File   :  [ui_element.h]
- Author : Copilot Agent
+ Author : Terry Yeung
  Date   : 2025/11/02
  Brief  : Base class for UI elements that can be rendered as overlays
  ===========================================================================**/

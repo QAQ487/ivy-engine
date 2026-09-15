@@ -1,6 +1,6 @@
 /**===========================================================================
  File   :  [ui_button.h]
- Author : Copilot Agent
+ Author : Terry Yeung
  Date   : 2025/11/17
  Brief  : Interactive UI button element with keyboard and controller support
  ===========================================================================**/

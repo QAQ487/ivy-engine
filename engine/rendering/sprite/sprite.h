@@ -2,7 +2,7 @@
 
  File   :  [sprite.h]
 
- Author : Hayato Otsuki
+ Author : Terry Yeung
  Date   : 2025/9/29
  -----------------------------------------------------------------------------
 
@@ -17,8 +17,8 @@ void Sprite_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext);
 void Sprite_Finalize(void);
 
 /**---------------------------------------------------------------------------
- ƒƒXƒvƒ‰ƒCƒg•`‰æˆ—„
- * ˆø”@FIDA•`‰æˆÊ’u XEYA•A‚‚³AƒeƒNƒXƒ`ƒƒ¶ãÀ•W XEYAØ‚èo‚µ•E‚‚³A‰ñ“]Šp“xiƒ‰ƒWƒAƒ“jAF
+ ï¿½ï¿½ï¿½Xï¿½vï¿½ï¿½ï¿½Cï¿½gï¿½`ï¿½æˆï¿½ï¿½ï¿½ï¿½
+ * ï¿½ï¿½ï¿½ï¿½ï¿½@ï¿½FIDï¿½Aï¿½`ï¿½ï¿½Ê’u Xï¿½EYï¿½Aï¿½ï¿½ï¿½Aï¿½ï¿½ï¿½ï¿½ï¿½Aï¿½eï¿½Nï¿½Xï¿½`ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½W Xï¿½EYï¿½Aï¿½Ø‚ï¿½oï¿½ï¿½ï¿½ï¿½ï¿½Eï¿½ï¿½ï¿½ï¿½ï¿½Aï¿½ï¿½]ï¿½pï¿½xï¿½iï¿½ï¿½ï¿½Wï¿½Aï¿½ï¿½ï¿½jï¿½Aï¿½F
  ---------------------------------------------------------------------------**/
 void Sprite_Draw(int texid, float X, float Y, DirectX::XMFLOAT4 color = {1.0f, 1.0f, 1.0f, 1.0f});
 void Sprite_Draw(int texid, float X, float Y, float width, float height, int tx, int ty, int tw, int th, DirectX::XMFLOAT4 color = {1.0f, 1.0f, 1.0f, 1.0f});

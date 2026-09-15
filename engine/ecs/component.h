@@ -1,7 +1,7 @@
 /*****************************************************
  * File: component.h
  * Project: d3d11_engine
- * Author: Terry
+ * Author: Terry Yeung
  * -----------------------------------------------------------------------------
  * REFACTOR (2026-03-13)
  *   Forward declaration changed from engine::GameObject to ::GameObject,
@@ -27,11 +27,11 @@ public:
     virtual const char* GetTypeName() const = 0;
 
     // ── Lifecycle ──────────────────────────────────────────────────────────
-    // OnAttach  – allocate resources, reset flags (runs once on attach).
-    // OnDetach  – release all resources owned by this component.
-    // OnReset   – restore runtime state to pre-play defaults WITHOUT releasing
+    // OnAttach   Eallocate resources, reset flags (runs once on attach).
+    // OnDetach   Erelease all resources owned by this component.
+    // OnReset    Erestore runtime state to pre-play defaults WITHOUT releasing
     //             resources.  Called by GameObject::Reset() on Return-to-Start.
-    // Update    – per-frame logic.
+    // Update     Eper-frame logic.
     virtual void OnAttach() {}
     virtual void OnDetach() {}
     virtual void Update(double /*elapsed_time*/) {}

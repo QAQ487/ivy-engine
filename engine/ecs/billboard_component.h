@@ -1,9 +1,9 @@
 /*****************************************************
  * File: engine/ecs/billboard_component.h
  * Project: d3d11_engine
- * Author: Terry
+ * Author: Terry Yeung
  * Created: 2026-06-07
- * Description: BillboardComponent – declarative textured quad visuals
+ * Description: BillboardComponent  Edeclarative textured quad visuals
  *              separate from FBX-driven VisualComponent.
  *
  * Registered with ComponentFactory as "Billboard".

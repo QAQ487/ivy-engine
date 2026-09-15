@@ -1,7 +1,7 @@
-ï»¿/*****************************************************
+/*****************************************************
  * File: engine/components/visual_component.h
  * Project: d3d11_engine
- * Author: Terry
+ * Author: Terry Yeung
  * -----------------------------------------------------------------------------
  * REFACTOR (2026-03-13)
  *   - Removed internal m_model / m_realModel unique_ptrs.
@@ -12,8 +12,8 @@
  * Registered with ComponentFactory as "visual".
  *
  * Fields (mirroring the JSON schema):
- *   "model"       â€“ primary model path (required for runtime rendering)
- *   "proxy_model" â€“ optional lower-poly stand-in used in editor/paused mode
+ *   "model"       ? primary model path (required for runtime rendering)
+ *   "proxy_model" ? optional lower-poly stand-in used in editor/paused mode
  *
  * Usage:
  *   // Attach to any GameObject:
@@ -51,7 +51,7 @@ public:
     // Per-object shader override. Empty string uses scene default from RenderSettings.
     std::string shaderOverride;
 
-    // SurfaceFX (shader: "surface_fx") â€” JSON object "surface_fx".
+    // SurfaceFX (shader: "surface_fx") ? JSON object "surface_fx".
     std::string surfaceFxTexturePath;
     SURFACE_FX_PARAMS surfaceFx;
     bool hasSurfaceFx = false;
@@ -68,7 +68,7 @@ public:
     float GetActiveClipDuration() const;
     void SetAnimationSpeed(float speed);
 
-    // â”€â”€ Model access â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // „Ÿ„Ÿ Model access „Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ
     // Both methods look up the shared model cache.
     // They return nullptr when the path is empty or the model fails to load.
 

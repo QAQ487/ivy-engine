@@ -1,10 +1,10 @@
-Ôªø/**===========================================================================
+/**===========================================================================
 
  File   :  [game_scene.cpp]
 
- Author : Terry
+ Author : Terry Yeung
  Date   : 2025/1/12
- Description: GameScene ‚Äì manages the map, lighting, shadows, billboard, and
+ Description: GameScene ? manages the map, lighting, shadows, billboard, and
               the global enemy / player pools.  Enemies and player are spawned
               by prefab components (EnemySpawnComponent, PlayerSpawnComponent)
               added via the engine_gui Prefab tab.
@@ -106,7 +106,7 @@ void DrawBootLoadingScreen(float progress01, const std::string& label) {
 	const float screenW = GetBackBufferWidth();
 	const float screenH = GetBackBufferHeight();
 	// Intended on-screen green (#2b5843). PixelShader2D does vertex*tex*g_Color and
-	// Sprite_Draw sets both factors to the same value ‚Äî use sqrt so solids land on target.
+	// Sprite_Draw sets both factors to the same value ? use sqrt so solids land on target.
 	const float ivyR = 0x2b / 255.0f;
 	const float ivyG = 0x58 / 255.0f;
 	const float ivyB = 0x43 / 255.0f;
@@ -120,7 +120,7 @@ void DrawBootLoadingScreen(float progress01, const std::string& label) {
 	static bool s_logoLoadAttempted = false;
 	if (!s_logoLoadAttempted) {
 		s_logoLoadAttempted = true;
-		// TextureLoad pops a MessageBox on failure ‚Äî only call it when the
+		// TextureLoad pops a MessageBox on failure ? only call it when the
 		// branding file is present (content deploys may omit it until seeded).
 		if (std::filesystem::exists("rom/branding/ivy_logo.png"))
 			s_logoTex = TextureLoad(L"rom/branding/ivy_logo.png", false);
@@ -160,7 +160,7 @@ void DrawBootLoadingScreen(float progress01, const std::string& label) {
 	}
 
 	std::string displayLabel = label.empty() ? "Loading..." : label;
-	// ASCII font atlas has no Unicode ellipsis ‚Äî CurrentLabel uses U+2026.
+	// ASCII font atlas has no Unicode ellipsis ? CurrentLabel uses U+2026.
 	const std::string ellipsisUtf8 = "\xe2\x80\xa6";
 	for (size_t pos = 0; (pos = displayLabel.find(ellipsisUtf8, pos)) != std::string::npos; ) {
 		displayLabel.replace(pos, ellipsisUtf8.size(), "...");
@@ -386,7 +386,7 @@ void GameScene::Update(double elapsed_time) {
 	Billboard::ClearDrawList();
 
 	// Non-player scene roots. TAG_PLAYER roots are updated in the player batch
-	// below (EngineGUI skips them so snapshot ‚Üí jobs ‚Üí flushes can own them).
+	// below (EngineGUI skips them so snapshot Å® jobs Å® flushes can own them).
 	EngineGUI_Update(elapsed_time);
 
 	if (EngineGUI_IsPlaying()) {

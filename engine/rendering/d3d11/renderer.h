@@ -2,7 +2,7 @@
 
  File   :  [renderer.h]
 
- Author : Terry
+ Author : Terry Yeung
  Date   : 2025/9/29
  -----------------------------------------------------------------------------
 
@@ -12,10 +12,10 @@
 
 #include "main.h"
 
- // ï¿½Zï¿½[ï¿½tï¿½ï¿½ï¿½ï¿½ï¿½[ï¿½X
+ // E½ZE½[E½tE½E½E½E½E½[E½X
 #define SAFE_RELEASE(o) if (o) { (o)->Release(); o = NULL; }
 
-// ï¿½ï¿½ï¿½_ï¿½ï¿½ï¿½Cï¿½Aï¿½Eï¿½g
+// E½E½E½_E½E½E½CE½AE½EE½g
 struct VERTEX_3D {
 	XMFLOAT3 Position;
 	XMFLOAT3 Normal;
@@ -23,7 +23,7 @@ struct VERTEX_3D {
 	XMFLOAT2 TexCoord;
 };
 
-// ï¿½}ï¿½eï¿½ï¿½ï¿½Aï¿½ï¿½
+// E½}E½eE½E½E½AE½E½
 struct MATERIAL {
     XMFLOAT4    Ambient;
     XMFLOAT4    Diffuse;
@@ -46,26 +46,26 @@ struct MATERIAL {
     float       _padToon1;
 };
 
-// ï¿½è”ï¿½oï¿½bï¿½tï¿½@ï¿½Tï¿½Cï¿½Yï¿½ï¿½ 16 ï¿½oï¿½Cï¿½gï¿½ï¿½ï¿½Eï¿½ï¿½ï¿½ï¿½
+// E½è”ï¿½oE½bE½tE½@E½TE½CE½YE½E½ 16 E½oE½CE½gE½E½E½EE½E½E½E½
 static_assert(sizeof(MATERIAL) % 16 == 0, "MATERIAL must be 16-byte aligned.");
 
-// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½/ï¿½Iï¿½ï¿½
+// E½E½E½E½E½E½/E½IE½E½
 HRESULT InitRenderer(HINSTANCE hInstance, HWND hWnd, BOOL bWindow);
 void    UninitRenderer(void);
 
-// ï¿½ï¿½ï¿½tï¿½ï¿½ï¿½[ï¿½ï¿½
+// E½E½E½tE½E½E½[E½E½
 void    Clear(void);
 void    Present(void);
 
-// ï¿½fï¿½oï¿½Cï¿½Xï¿½æ“¾
+// E½fE½oE½CE½XE½æ“¾
 ID3D11Device* GetDevice(void);
 ID3D11DeviceContext* GetDeviceContext(void);
 
-// ï¿½[ï¿½xï¿½eï¿½Xï¿½gï¿½Ø‚ï¿½Ö‚ï¿½
+// E½[E½xE½eE½XE½gE½Ø‚ï¿½Ö‚ï¿½
 void    SetDepthEnable(bool Enable);
 void    SetCullFront(bool enable);
 
-// ï¿½ï¿½ÊƒTï¿½Cï¿½Y
+// E½E½ÊƒTE½CE½Y
 float   GetBackBufferWidth();
 float   GetBackBufferHeight();
 float   GetClientWidth();
@@ -92,7 +92,7 @@ ID3D11ShaderResourceView* PostRT_GetSRV();
 void    Renderer_BindPostTarget();
 void    Renderer_BindBackBuffer();
 
-// ï¿½Eï¿½Bï¿½ï¿½ï¿½hï¿½Eï¿½nï¿½ï¿½ï¿½hï¿½ï¿½ï¿½æ“¾
+// E½EE½BE½E½E½hE½EE½nE½E½E½hE½E½E½æ“¾
 HWND    GetWindowHandle();
 
 #endif // !RENDERER_H

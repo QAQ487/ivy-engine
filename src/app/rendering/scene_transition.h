@@ -2,7 +2,7 @@
 
  File   :  [scene_transition.h]
 
- Author : Terry
+ Author : Terry Yeung
  Date   : 2026/6/11
  -----------------------------------------------------------------------------
 

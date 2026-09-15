@@ -1,7 +1,7 @@
 /*****************************************************
  * File: engine/ecs/rigidbody_component.h
  * Project: d3d11_engine
- * Author: Terry
+ * Author: Terry Yeung
  * -----------------------------------------------------------------------------
  * Serialisable Rigidbody settings for physics bodies.
  * Registered with ComponentFactory as "Rigidbody".

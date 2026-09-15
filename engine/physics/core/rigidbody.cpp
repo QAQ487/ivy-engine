@@ -1,8 +1,8 @@
-﻿/**===========================================================================
+/**===========================================================================
 
  File   :  [rigidbody.cpp]
 
- Author : Hayato Otsuki
+ Author : Terry Yeung
  Date   : 2025/12/2
  -----------------------------------------------------------------------------
 
@@ -76,7 +76,7 @@ void Rigidbody::AddForce(const DirectX::XMFLOAT3& force, ForceMode mode) {
 			break;
 
 		case ForceMode::Impulse:
-			// Impulse is a change in momentum (p=mv), so ��v = impulse / mass
+			// Impulse is a change in momentum (p=mv), so ??v = impulse / mass
 			m_velocity.x += force.x / m_mass;
 			m_velocity.y += force.y / m_mass;
 			m_velocity.z += force.z / m_mass;

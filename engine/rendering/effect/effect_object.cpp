@@ -1,6 +1,6 @@
-ï»¿/**===========================================================================
+/**===========================================================================
  File   :  [effect_object.cpp]
- Author : Terry
+ Author : Terry Yeung
  Date   : 2025/10/24
 -----------------------------------------------------------------------------
 ===========================================================================**/
@@ -18,7 +18,7 @@ bool EffectObject::LoadFromFileW(const wchar_t* path) {
 EffectObject& EffectObject::WithScale(float uniform) {
     GameObject::SetScale({uniform, uniform, uniform});
     if (m_handle >= 0) {
-        // ä¸€æ§˜ã‚¹ã‚±ãƒ¼ãƒ«ã‚µãƒãƒ¼ãƒˆï¼ˆEffectSystem ã«ä¸€æ§˜ç‰ˆãŒã‚ã‚‹å ´åˆãã¡ã‚‰ã‚’å„ªå…ˆï¼‰
+        // ˆê—lƒXƒP[ƒ‹ƒTƒ|[ƒgiEffectSystem ‚Éˆê—l”Å‚ª‚ ‚éê‡‚»‚¿‚ç‚ğ—Dæj
         EffectSystem::SetScale(m_handle, XMFLOAT3 {uniform, uniform, uniform});
     }
     return *this;
@@ -40,7 +40,7 @@ void EffectObject::Initialize() {
     if (m_autoPlay && m_effectId >= 0 && m_handle < 0) {
         m_handle = EffectSystem::Play(m_effectId, m_position);
         if (m_handle >= 0) {
-            // åˆæœŸTransformã‚’åæ˜ 
+            // ‰ŠúTransform‚ğ”½‰f
             EffectSystem::SetLocation(m_handle, m_position);
             EffectSystem::SetRotationEulerDeg(m_handle, m_rotation);
             EffectSystem::SetScale(m_handle, m_scale);
@@ -57,19 +57,19 @@ void EffectObject::Finalize() {
 
 void EffectObject::LogicUpdate(double /*elapsed_time*/) {
     if (m_handle >= 0) {
-        // GameObject ã® Transform ã‚’ã‚¨ãƒ•ã‚§ã‚¯ãƒˆã¸åŒæœŸ
+        // GameObject ‚Ì Transform ‚ğƒGƒtƒFƒNƒg‚Ö“¯Šú
         EffectSystem::SetLocation(m_handle, m_position);
         EffectSystem::SetRotationEulerDeg(m_handle, m_rotation);
         EffectSystem::SetScale(m_handle, m_scale);
 
-        // 1ã‚·ãƒ§ãƒƒãƒˆçµ‚äº†æ™‚ã«è‡ªå‹•éã‚¢ã‚¯ãƒ†ã‚£ãƒ–åŒ–
+        // 1ƒVƒ‡ƒbƒgI—¹‚É©“®”ñƒAƒNƒeƒBƒu‰»
         if (m_autoDestroyOnEnd && !EffectSystem::Exists(m_handle)) {
             m_handle = -1;
             m_isActive = false;
         }
     }
     else {
-        // è‡ªå‹•å†ç”ŸONã§æœªå†ç”Ÿã‹ã¤æœ‰åŠ¹ãªã‚‰å†ç”Ÿã‚’è©¦ã¿ã‚‹
+        // ©“®Ä¶ON‚Å–¢Ä¶‚©‚Â—LŒø‚È‚çÄ¶‚ğ‚İ‚é
         if (m_autoPlay && m_effectId >= 0 && m_isActive) {
             m_handle = EffectSystem::Play(m_effectId, m_position);
             if (m_handle >= 0) {
@@ -82,7 +82,7 @@ void EffectObject::LogicUpdate(double /*elapsed_time*/) {
 }
 
 void EffectObject::Draw() {
-    // Effekseer ã®æç”»ã¯ EffectSystem::Draw3D() å´ã§ã¾ã¨ã‚ã¦å®Ÿæ–½
+    // Effekseer ‚Ì•`‰æ‚Í EffectSystem::Draw3D() ‘¤‚Å‚Ü‚Æ‚ß‚ÄÀ{
 }
 
 void EffectObject::Play() {

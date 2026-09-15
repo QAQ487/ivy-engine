@@ -2,7 +2,7 @@
 
  File   :  [main.h]
 
- Author : Hayato Otsuki
+ Author : Terry Yeung
  Date   : 2025/9/29
  -----------------------------------------------------------------------------
 
@@ -13,13 +13,13 @@
 #pragma warning(push)
 #pragma warning(disable:4005)
 
-#define _CRT_SECURE_NO_WARNINGS // scanf ‚Ìwarning–h~
+#define _CRT_SECURE_NO_WARNINGS // scanf ï¿½ï¿½warningï¿½hï¿½~
 #include <stdio.h>
 
 #include <d3d11.h>
 #include <d3dcompiler.h>
 
-#define DIRECTINPUT_VERSION 0x0800 // Œx‘Îˆ
+#define DIRECTINPUT_VERSION 0x0800 // ï¿½xï¿½ï¿½ï¿½Îï¿½
 #include "dinput.h"
 #include "mmsystem.h"
 
@@ -29,21 +29,21 @@
 using namespace DirectX;
 
 /**---------------------------------------------------------------------------
-  ƒƒ}ƒNƒ’è‹`„
+  ï¿½ï¿½ï¿½}ï¿½Nï¿½ï¿½ï¿½ï¿½`ï¿½ï¿½
 ---------------------------------------------------------------------------**/
-#define SCREEN_WIDTH	(1920) // ƒEƒCƒ“ƒhƒE‚Ì•
-#define SCREEN_HEIGHT	(1080) // ƒEƒCƒ“ƒhƒE‚Ì‚‚³
+#define SCREEN_WIDTH	(1920) // ï¿½Eï¿½Cï¿½ï¿½ï¿½hï¿½Eï¿½Ì•ï¿½
+#define SCREEN_HEIGHT	(1080) // ï¿½Eï¿½Cï¿½ï¿½ï¿½hï¿½Eï¿½Ìï¿½ï¿½ï¿½
 
-#define SCREEN_CENTER_X	(SCREEN_WIDTH / 2)  // ‰æ–Ê’†SXÀ•W
-#define SCREEN_CENTER_Y	(SCREEN_HEIGHT / 2) // ‰æ–Ê’†SYÀ•W
+#define SCREEN_CENTER_X	(SCREEN_WIDTH / 2)  // ï¿½ï¿½Ê’ï¿½ï¿½SXï¿½ï¿½ï¿½W
+#define SCREEN_CENTER_Y	(SCREEN_HEIGHT / 2) // ï¿½ï¿½Ê’ï¿½ï¿½SYï¿½ï¿½ï¿½W
 
-#define SCREEN_LEFT		(0)                 // ‰æ–Ê¶’[XÀ•W
-#define SCREEN_RIGHT	(SCREEN_WIDTH)      // ‰æ–Ê‰E’[XÀ•W
-#define SCREEN_TOP		(0)                 // ‰æ–Êã’[YÀ•W
-#define SCREEN_BOTTOM	(SCREEN_HEIGHT)     // ‰æ–Ê‰º’[YÀ•W
+#define SCREEN_LEFT		(0)                 // ï¿½ï¿½Êï¿½ï¿½[Xï¿½ï¿½ï¿½W
+#define SCREEN_RIGHT	(SCREEN_WIDTH)      // ï¿½ï¿½Ê‰Eï¿½[Xï¿½ï¿½ï¿½W
+#define SCREEN_TOP		(0)                 // ï¿½ï¿½Êï¿½[Yï¿½ï¿½ï¿½W
+#define SCREEN_BOTTOM	(SCREEN_HEIGHT)     // ï¿½ï¿½Ê‰ï¿½ï¿½[Yï¿½ï¿½ï¿½W
 
 /**---------------------------------------------------------------------------
-  ƒƒvƒƒgƒ^ƒCƒvéŒ¾„
+  ï¿½ï¿½ï¿½vï¿½ï¿½ï¿½gï¿½^ï¿½Cï¿½vï¿½éŒ¾ï¿½ï¿½
 ---------------------------------------------------------------------------**/
 
 #endif // !MAIN_H

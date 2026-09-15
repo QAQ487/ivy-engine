@@ -1,9 +1,9 @@
 /*****************************************************
  * File: component_factory.cpp
  * Project: d3d11_engine
- * Author: Terry
+ * Author: Terry Yeung
  * Created: 2026-03-12
- * Description: component_factory.cpp – ComponentFactory singleton
+ * Description: component_factory.cpp  EComponentFactory singleton
  *              implementation.
  *****************************************************/
 #include "component_factory.h"

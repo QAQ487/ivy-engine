@@ -1,6 +1,6 @@
 /**===========================================================================
  File   :  [effect_system.h]
- Author : Hayato Otsuki
+ Author : Terry Yeung
  Date   : 2025/10/24
  -----------------------------------------------------------------------------
 ===========================================================================**/
@@ -12,36 +12,36 @@
 #include <DirectXMath.h>
 
 namespace EffectSystem {
-    // ‰Šú‰»/I—¹
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½/ï¿½Iï¿½ï¿½
     bool Initialize();
     void Finalize();
 
-    // 1ƒtƒŒ[ƒ€XViŒo‰ß•bj
+    // 1ï¿½tï¿½ï¿½ï¿½[ï¿½ï¿½ï¿½Xï¿½Vï¿½iï¿½oï¿½ß•bï¿½j
     void Update(double deltaSeconds);
 
-    // 3DƒGƒtƒFƒNƒg•`‰æiŒ»İ‚ÌƒJƒƒ‰‚ğg—pj
+    // 3Dï¿½Gï¿½tï¿½Fï¿½Nï¿½gï¿½`ï¿½ï¿½iï¿½ï¿½ï¿½İ‚ÌƒJï¿½ï¿½ï¿½ï¿½ï¿½ï¿½gï¿½pï¿½j
     void Draw3D();
 
-    // ƒGƒtƒFƒNƒg“Ç‚İ‚İi–ß‚è’l‚ÍŠÇ—IDB-1‚Í¸”sj
+    // ï¿½Gï¿½tï¿½Fï¿½Nï¿½gï¿½Ç‚İï¿½ï¿½İiï¿½ß‚ï¿½lï¿½ÍŠÇ—ï¿½IDï¿½B-1ï¿½Íï¿½ï¿½sï¿½j
     int  Load(const char16_t* path);
     int  LoadW(const wchar_t* path);
     int  LoadCached(const wchar_t* path);
 
-    // Ä¶i–ß‚è’l‚ÍEffekseer‚Ìƒnƒ“ƒhƒ‹B-1‚Í¸”sj
+    // ï¿½Äï¿½ï¿½iï¿½ß‚ï¿½lï¿½ï¿½Effekseerï¿½Ìƒnï¿½ï¿½ï¿½hï¿½ï¿½ï¿½B-1ï¿½Íï¿½ï¿½sï¿½j
     int  Play(int effectId, const DirectX::XMFLOAT3& pos);
 
-    // ’â~/‘S’â~/‘¶İŠm”F
+    // ï¿½ï¿½~/ï¿½Sï¿½ï¿½~/ï¿½ï¿½ï¿½İŠmï¿½F
     void Stop(int handle);
     void StopAll();
     bool Exists(int handle);
 
-    // Transform ‘€ì
+    // Transform ï¿½ï¿½ï¿½ï¿½
     void SetLocation(int handle, const DirectX::XMFLOAT3& pos);
     void SetRotationEulerDeg(int handle, const DirectX::XMFLOAT3& rotDeg);
-    void SetScale(int handle, float uniform); // ˆê—lƒXƒP[ƒ‹
-    void SetScale(int handle, const DirectX::XMFLOAT3& scale); // XYZ ŒÂ•Ê
+    void SetScale(int handle, float uniform); // ï¿½ï¿½lï¿½Xï¿½Pï¿½[ï¿½ï¿½
+    void SetScale(int handle, const DirectX::XMFLOAT3& scale); // XYZ ï¿½Â•ï¿½
 
-    // Ä¶§Œä
+    // ï¿½Äï¿½ï¿½ï¿½ï¿½ï¿½
     void SetSpeed(int handle, float speed);
     void SetPaused(int handle, bool paused);
     void SetShown(int handle, bool shown);
