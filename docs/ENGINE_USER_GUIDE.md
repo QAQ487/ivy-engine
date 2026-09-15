@@ -50,15 +50,15 @@ You do not write a new engine every time you make a game. You:
 1. Put assets under `rom/`
 2. Build scenes / prefabs (editor or JSON)
 3. Write scripts in `game/scripts/`
-4. Press Play in the editor, or run `Game_Runtime`
+4. Press Play in the editor, or run `IvyEngineRuntime`
 
 ### The three Visual Studio projects
 
 | Project | What it is |
 |---------|------------|
-| **Game_Project** | Editor + development app. This is what you run day to day. |
+| **IvyEngine** | Editor + development app. This is what you run day to day. |
 | **GameScripts** | Your game logic DLL. Rebuild this when you change scripts. |
-| **Game_Runtime** | Player build without editor UI (`GAME_RUNTIME`). |
+| **IvyEngineRuntime** | Player build without editor UI (`GAME_RUNTIME`). |
 
 Open `Game_Project.sln` in Visual Studio 2022 (x64 Debug or Release).
 
@@ -76,9 +76,9 @@ Open `Game_Project.sln` in Visual Studio 2022 (x64 Debug or Release).
 
 1. Open `Game_Project.sln`.
 2. Set configuration to **Debug | x64** (or Release | x64).
-3. Build **Game_Project** (shaders compile as part of the project).
+3. Build **IvyEngine** (shaders compile as part of the project).
 4. Build **GameScripts**.
-5. Set **Game_Project** as the startup project and run it (F5).
+5. Set **IvyEngine** as the startup project and run it (F5).
 
 You should get a window (design size **1920×1080**). The editor opens a **content project** (folder with `rom/` and `project.json`). Startup prefers:
 
@@ -92,7 +92,7 @@ See [§20 Projects](#20-projects-new--open--save) for New / Open / Save Project.
 
 ### Try the sample pack
 
-1. Run **Game_Project**.
+1. Run **IvyEngine**.
 2. Press **F3** (or Play) on the sample menu.
 3. Click **Play** to load `scene_sample_playground.json`.
 4. Move with **WASD** / left stick. A blue box spins via `SampleSpinScript`.
@@ -182,7 +182,7 @@ On Play, the engine creates your class, deserializes properties, then calls:
 |------|----------------|
 | **Edit** | Place objects, tweak properties, save scenes. Scripts usually idle. |
 | **Play (F3)** | Scene runs with physics, scripts, cameras. Stop restores edit state. |
-| **Game_Runtime** | No editor panels; loads default scene and plays. |
+| **IvyEngineRuntime** | No editor panels; loads default scene and plays. |
 
 ---
 
@@ -825,11 +825,11 @@ Controller_SetVibration(0.5f, 0.5f, 0);
 
 Runtime still boots from `rom/scene/default_scene.txt` next to the exe (file name of the scene JSON). In the editor, **Project Settings → Default Scene** and **Save Project** keep that file aligned with `project.json` → `defaultScene`.
 
-### Shipping with Game_Runtime
+### Shipping with IvyEngineRuntime
 
-1. Build **Game_Runtime** and **GameScripts** (Release | x64 recommended).
+1. Build **IvyEngineRuntime** and **GameScripts** (Release | x64 recommended).
 2. Ensure `rom/` and `game/scripts/bin/GameScripts.dll` sit next to the exe as your deploy layout expects.
-3. For external content repos, follow [`CONTENT_PROJECT.md`](CONTENT_PROJECT.md) and `deploy\deploy.bat` — or create a project in the editor (**File → New Project**) which scaffolds a similar layout.
+3. For external content repos, follow [`CONTENT_PROJECT.md`](CONTENT_PROJECT.md) and `deploy\deploy.bat` — or create a project in the editor (**File → New Project**) which scaffolds a similar layout. Prefer **File → Build Current Project** for a playable package named `<GameName>.exe`.
 
 Runtime builds skip the ImGui editor; players never see F2 panels.
 
@@ -940,7 +940,7 @@ The editor calls `SetCurrentDirectory` on that folder so relative paths like `ro
 
 ### Sample vs your game
 
-- The **engine repo** includes a sample project (`project.json` + `rom/` + `game/`). After build, that layout is copied next to `Game_Project.exe`.
+- The **engine repo** includes a sample project (`project.json` + `rom/` + `game/`). After build, that layout is copied next to `IvyEngine.exe`.
 - **File → New Project** creates a separate game folder anywhere on disk. Scripts can still target the engine via `MagneticField.Engine.props` (same idea as [`CONTENT_PROJECT.md`](CONTENT_PROJECT.md)).
 
 ---

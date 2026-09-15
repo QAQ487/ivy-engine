@@ -13,7 +13,7 @@ if not exist "%OUT%" mkdir "%OUT%"
 if not exist "%OUT%\game\scripts\bin" mkdir "%OUT%\game\scripts\bin"
 if not exist "%OUT%\rom" mkdir "%OUT%\rom"
 
-copy /Y "%ENGINE_OUT%\Game_Runtime.exe" "%OUT%\"
+copy /Y "%ENGINE_OUT%\IvyEngineRuntime.exe" "%OUT%\"
 copy /Y "%ENGINE_OUT%\libfbxsdk.dll" "%OUT%\"
 copy /Y "%ROOT%\game\scripts\bin\GameScripts.dll" "%OUT%\game\scripts\bin\"
 if exist "%ROOT%\game\scripts\bin\GameScripts.pdb" copy /Y "%ROOT%\game\scripts\bin\GameScripts.pdb" "%OUT%\game\scripts\bin\"

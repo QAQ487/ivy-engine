@@ -1833,6 +1833,7 @@ static void DrawEditorPopups() {
         ImGui::OpenPopup("BuildUnsavedPopup");
     ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
     if (ImGui::BeginPopupModal("BuildUnsavedPopup", &g_showBuildUnsavedPopup, ImGuiWindowFlags_AlwaysAutoResize)) {
+        ImGui::Text("Build %s?", ProjectManager::Instance().GetName().c_str());
         ImGui::Text("You have unsaved scene changes.");
         ImGui::TextDisabled("Save the scene before building a playable package.");
         ImGui::Separator();
@@ -1861,7 +1862,7 @@ static void DrawEditorPopups() {
         ImGui::OpenPopup("BuildPreflightPopup");
     ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
     if (ImGui::BeginPopupModal("BuildPreflightPopup", &g_showBuildPreflight, ImGuiWindowFlags_AlwaysAutoResize)) {
-        ImGui::Text("Build playable package");
+        ImGui::Text("Build %s?", ProjectManager::Instance().GetName().c_str());
         ImGui::TextDisabled("%s", ProjectManager::Instance().GetRootPath().c_str());
         ImGui::Separator();
 
@@ -1896,6 +1897,7 @@ static void DrawEditorPopups() {
             PlayablePackage::Request request;
             request.contentRoot = ProjectManager::Instance().GetRootPath();
             request.destination = g_buildDest;
+            request.gameName = ProjectManager::Instance().GetName();
             request.configuration = prefs.configuration;
             if (PlayablePackage::StartBuild(request)) {
                 g_showBuildPreflight = false;
@@ -1921,8 +1923,11 @@ static void DrawEditorPopups() {
         ImGuiWindowFlags logFlags = ImGuiWindowFlags_AlwaysAutoResize;
         bool* logOpen = buildDone ? &g_showBuildLog : nullptr;
         if (ImGui::BeginPopupModal("BuildLogPopup", logOpen, logFlags)) {
-            if (!buildDone)
-                ImGui::Text("Building playable package...");
+            if (!buildDone) {
+                const std::string buildHeader =
+                    "Building " + ProjectManager::Instance().GetName() + " — Ivy Engine";
+                ImGui::SeparatorText(buildHeader.c_str());
+            }
             else if (PlayablePackage::LastBuildSucceeded())
                 ImGui::Text("Build succeeded.");
             else

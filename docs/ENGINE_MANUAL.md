@@ -39,8 +39,8 @@ Important source files:
 
 The repository contains an editor/application target, a runtime target, and a script DLL target.
 
-- `Game_Project.vcxproj` builds the main editor/application executable. It owns the windowed app target, shader build integration, editor GUI, and development-time runtime.
-- `Game_Runtime.vcxproj` builds the runtime executable with `GAME_RUNTIME` defined. Runtime builds reuse most engine and app code but replace editor GUI behavior with runtime shims.
+- `IvyEngine.vcxproj` builds the main editor/application executable (`IvyEngine.exe`). It owns the windowed app target, shader build integration, editor GUI, and development-time runtime.
+- `IvyEngineRuntime.vcxproj` builds the runtime host (`IvyEngineRuntime.exe`) with `GAME_RUNTIME` defined. Runtime builds reuse most engine and app code but replace editor GUI behavior with runtime shims.
 - `game/scripts/GameScripts/GameScripts.vcxproj` builds user-authored game scripts into `GameScripts.dll`.
 - `engine/` contains reusable engine systems: ECS, scene loading, scripting bridge, rendering, physics, UI, input, audio, effects, and editor helpers.
 - `src/app/` contains the Windows entry point, game loop, scene manager integration, camera helpers, and the main `GameScene`.

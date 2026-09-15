@@ -14,7 +14,7 @@ For day-to-day editing inside the engine editor, prefer **File → New Project /
 - `game/scripts/GameScripts/GameScripts.vcxproj`
 
 ## What stays in engine repo
-- `Game_Runtime.exe` / `Game_Project.exe`
+- `IvyEngineRuntime.exe` / `IvyEngine.exe`
 - engine sources/libraries
 - shader compilation pipeline
 
@@ -25,7 +25,7 @@ For day-to-day editing inside the engine editor, prefer **File → New Project /
 4. Put your game assets under `rom/` (include engine builtins: `rom/shader`, `rom/font`, `rom/texture` — New Project copies these automatically).
 5. Open `<ProjectName>.sln` (or run `build_scripts.bat`) and build **GameScripts** | x64.
 6. Run `deploy\deploy.bat Debug` (or `Release`).
-7. Launch `deploy\Game_Runtime.exe`.
+7. Launch `deploy\IvyEngineRuntime.exe` (bat path). Prefer **File → Build Current Project** in the editor for a playable package named `<GameName>.exe`.
 
 **File → New Project** also writes `<FolderName>.sln` and `build_scripts.bat` into the new content folder.
 
@@ -41,7 +41,7 @@ Engine samples use `scene_sample_menu.json` by default.
 ## Required runtime layout
 After deploy, this layout is produced:
 
-- `deploy/Game_Runtime.exe`
+- `deploy/IvyEngineRuntime.exe` (from `deploy.bat`; GUI packaging uses `<GameName>.exe`)
 - `deploy/libfbxsdk.dll`
 - `deploy/rom/**`
 - `deploy/game/scripts/bin/GameScripts.dll`
@@ -49,5 +49,5 @@ After deploy, this layout is produced:
 ## Notes
 - `GameScripts.vcxproj` references engine headers/libs through `$(EngineRoot)`.
 - Post-build copies `GameScripts.dll` to the content `game/scripts/bin/` **and** to `$(EngineOutDir)game/scripts/bin/` so the editor/runtime next to the engine exe can load it.
-- Build `Game_Runtime` in the engine repo first.
-- Opening the content folder with **File → Open Project** in `Game_Project` is the supported editor workflow for external games.
+- Build **IvyEngineRuntime** in the engine repo first.
+- Opening the content folder with **File → Open Project** in **IvyEngine** is the supported editor workflow for external games.

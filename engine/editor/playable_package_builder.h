@@ -30,6 +30,7 @@ std::string DestinationRefusalReason(const std::string& contentRoot,
 struct Request {
     std::string contentRoot;
     std::string destination;
+    std::string gameName;
     Configuration configuration = Configuration::Debug;
 };
 

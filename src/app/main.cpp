@@ -325,7 +325,7 @@ void Update(double current_time, double elapsed_time) {
 	Controller_Update();
 
 #ifndef GAME_RUNTIME
-	// Editor-only debug hotkeys (never in Game_Runtime / shipped build)
+	// Editor-only debug hotkeys (never in IvyEngineRuntime / shipped build)
 	if (KeyLogger_IsTrigger(KK_F11))
 		DebugSystem::ToggleCollisionViz();
 	if (KeyLogger_IsTrigger(KK_F7))

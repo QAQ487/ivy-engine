@@ -26,11 +26,11 @@ _Avoid_: preview, simulate
 
 **Content project**:
 A directory that owns one game's assets, scripts, and `project.json`. The editor has at most one open.
-_Avoid_: project (unqualified), Game_Runtime, Game_Project
+_Avoid_: project (unqualified), Game_Runtime, Game_Project (legacy VS names)
 
 **Runtime host**:
-The editor-less executable that plays a content project.
-_Avoid_: Game_Runtime as a content project, runtime project
+The editor-less executable that plays a content project (`IvyEngineRuntime.exe` in engine output; deployed as `<GameName>.exe` via GUI packaging).
+_Avoid_: treating the runtime host as a content project, runtime project
 
 **Playable package**:
 A folder that contains the runtime host, `project.json`, one content project's rom, and that project's scripts, in the layout the host can launch.

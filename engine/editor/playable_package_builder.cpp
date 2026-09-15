@@ -67,6 +67,23 @@ std::string TrimCopy(std::string value) {
     return value;
 }
 
+// Filesystem-safe exe stem from UI-supplied game name (worker must not touch ProjectManager).
+std::string SanitizeGameExeStem(std::string name) {
+    name = TrimCopy(std::move(name));
+    std::string out;
+    out.reserve(name.size());
+    for (unsigned char c : name) {
+        if (c == '<' || c == '>' || c == ':' || c == '"' || c == '/' || c == '\\' ||
+            c == '|' || c == '?' || c == '*')
+            continue;
+        out.push_back(static_cast<char>(c));
+    }
+    out = TrimCopy(std::move(out));
+    if (out.empty())
+        return "IvyEngine";
+    return out;
+}
+
 fs::path NormalizeForCompare(const fs::path& path) {
     std::error_code ec;
     fs::path abs = fs::absolute(path, ec);
@@ -307,7 +324,9 @@ bool AssemblePackage(const Request& request, const fs::path& engineRoot,
         return false;
     }
 
-    if (!CopyOneFile(engineOut / "Game_Runtime.exe", dest / "Game_Runtime.exe", errorOut))
+    const std::string exeStem = SanitizeGameExeStem(request.gameName);
+    const std::string exeFile = exeStem + ".exe";
+    if (!CopyOneFile(engineOut / "IvyEngineRuntime.exe", dest / exeFile, errorOut))
         return false;
     if (!CopyOneFile(engineOut / "libfbxsdk.dll", dest / "libfbxsdk.dll", errorOut))
         return false;
@@ -319,7 +338,7 @@ bool AssemblePackage(const Request& request, const fs::path& engineRoot,
 
     // Content rom/shader is often a stale snapshot. The host loads .cso from
     // dest/rom/shader at boot, so overlay the shaders just compiled with this
-    // Game_Runtime or the engine repo will skin with the wrong Bind.
+    // IvyEngineRuntime or the engine repo will skin with the wrong Bind.
     const fs::path engineShaders = engineOut / "rom" / "shader";
     const fs::path destShaders = dest / "rom" / "shader";
     if (fs::exists(engineShaders, ec)) {
@@ -397,11 +416,11 @@ void RunBuild(Request request) {
     const fs::path engineRoot = engineRootStr;
     AppendLogLine("Engine repo: " + engineRoot.string());
 
-    const fs::path runtimeProj = engineRoot / "Game_Runtime.vcxproj";
+    const fs::path runtimeProj = engineRoot / "IvyEngineRuntime.vcxproj";
     const fs::path scriptsProj = fs::path(request.contentRoot) / "game" / "scripts" /
                                  "GameScripts" / "GameScripts.vcxproj";
     if (!fs::exists(runtimeProj)) {
-        result = "Missing Game_Runtime.vcxproj in the engine repo.";
+        result = "Missing IvyEngineRuntime.vcxproj in the engine repo.";
         AppendLogLine(result);
         finish();
         return;
@@ -424,7 +443,7 @@ void RunBuild(Request request) {
 
     const DWORD runtimeCode = MsBuildProject(msbuild, runtimeProj, configName);
     if (runtimeCode != 0) {
-        result = "Game_Runtime MSBuild failed (exit " + std::to_string(runtimeCode) + ").";
+        result = "IvyEngineRuntime MSBuild failed (exit " + std::to_string(runtimeCode) + ").";
         AppendLogLine(result);
         finish();
         return;
@@ -447,8 +466,9 @@ void RunBuild(Request request) {
         return;
     }
 
+    const std::string exeFile = SanitizeGameExeStem(request.gameName) + ".exe";
     succeeded = true;
-    result = "Playable package written to " + request.destination;
+    result = "Assembled " + exeFile + " → " + request.destination;
     AppendLogLine(result);
     finish();
 }

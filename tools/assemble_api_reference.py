@@ -38,7 +38,7 @@ For external content-project setup, see [`CONTENT_PROJECT.md`](CONTENT_PROJECT.m
 ### Architecture
 
 - **Component–entity scene graph** on `GameObject` (not a sparse ECS).
-- **Editor** (`Game_Project`) vs **runtime** (`Game_Runtime`, `GAME_RUNTIME`).
+- **Editor** (`IvyEngine`) vs **runtime** (`IvyEngineRuntime`, `GAME_RUNTIME`).
 - **Game logic** in hot-reloadable `GameScripts.dll` via `Script` / `UICanvasScript`.
 - Dual transform: legacy `m_position` / `m_rotation` / `m_scale` + `engine::Transform` (`"SceneTransform"`).
 
@@ -46,8 +46,8 @@ For external content-project setup, see [`CONTENT_PROJECT.md`](CONTENT_PROJECT.m
 
 | Project | Role |
 |---------|------|
-| `Game_Project` | Editor / development executable |
-| `Game_Runtime` | Shipping-style runtime (`GAME_RUNTIME`) |
+| `IvyEngine` | Editor / development executable |
+| `IvyEngineRuntime` | Shipping-style runtime (`GAME_RUNTIME`) |
 | `GameScripts` | User scripts → `GameScripts.dll` |
 
 ### Folder map

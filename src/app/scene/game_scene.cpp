@@ -72,9 +72,11 @@
 #include "engine/debug_draw/debug_text.h"
 #include "engine/core/debug_system.h"
 #include "engine/rendering/sprite/sprite.h"
+#include "libraries/nlohmann/json.hpp"
 #include <algorithm>
 #include <cmath>
 #include <filesystem>
+#include <fstream>
 #include <string>
 
 namespace {
@@ -227,6 +229,61 @@ void RunBootAssetPreload() {
 	}
 }
 
+std::wstring WideFromUtf8Local(const std::string& utf8) {
+	if (utf8.empty())
+		return {};
+	const int size = MultiByteToWideChar(CP_UTF8, 0, utf8.c_str(), (int)utf8.size(), nullptr, 0);
+	if (size <= 0)
+		return {};
+	std::wstring out(static_cast<size_t>(size), L'\0');
+	MultiByteToWideChar(CP_UTF8, 0, utf8.c_str(), (int)utf8.size(), out.data(), size);
+	return out;
+}
+
+bool TryReadProjectName(const std::string& path, std::string* outName) {
+	if (!outName)
+		return false;
+	try {
+		std::ifstream file(path);
+		if (!file.is_open())
+			return false;
+		nlohmann::json j;
+		file >> j;
+		if (!j.contains("name") || !j["name"].is_string())
+			return false;
+		std::string name = j["name"].get<std::string>();
+		while (!name.empty() && (unsigned char)name.front() <= ' ')
+			name.erase(name.begin());
+		while (!name.empty() && (unsigned char)name.back() <= ' ')
+			name.pop_back();
+		if (name.empty())
+			return false;
+		*outName = std::move(name);
+		return true;
+	}
+	catch (...) {
+		return false;
+	}
+}
+
+void ApplyRuntimeWindowTitleFromNearbyProject() {
+	namespace fs = std::filesystem;
+	std::string name;
+	if (!TryReadProjectName("project.json", &name)) {
+		wchar_t exePath[MAX_PATH] = {};
+		if (GetModuleFileNameW(nullptr, exePath, MAX_PATH) != 0) {
+			const fs::path nearby = fs::path(exePath).parent_path() / "project.json";
+			TryReadProjectName(nearby.string(), &name);
+		}
+	}
+	if (name.empty())
+		name = "Ivy Engine";
+
+	HWND hwnd = GetWindowHandle();
+	if (hwnd)
+		SetWindowTextW(hwnd, WideFromUtf8Local(name).c_str());
+}
+
 } // namespace
 #endif // GAME_RUNTIME
 
@@ -264,6 +321,7 @@ void GameScene::Initialize() {
 		}
 #else
 		AudioManager::Instance().TryLoadBusVolumesFromNearbyProject();
+		ApplyRuntimeWindowTitleFromNearbyProject();
 		Physics_TryLoadGravityFromNearbyProject();
 		RunBootAssetPreload();
 		EngineGUI_LoadFromFile(EngineGUI_GetDefaultScenePath().c_str());

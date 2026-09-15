@@ -78,7 +78,8 @@
     <TargetName>GameScripts</TargetName>
     <!-- Local content-project copy (deploy.bat reads this). -->
     <RuntimeScriptBin>$(RepoRoot)game\scripts\bin\</RuntimeScriptBin>
-    <!-- Editor/runtime load DLL next to Game_Project.exe / Game_Runtime.exe. -->
+    <!-- Editor/runtime load DLL next to IvyEngine.exe / IvyEngineRuntime.exe
+         (and the deployed <GameName>.exe from GUI packaging). -->
     <EngineScriptBin>$(EngineOutDir)game\scripts\bin\</EngineScriptBin>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
