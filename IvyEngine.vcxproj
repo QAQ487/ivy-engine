@@ -497,7 +497,7 @@ exit /b 0</Command>
     </ClCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
-  <Import Project="Game_Project.Shaders.targets" />
+  <Import Project="IvyEngine.Shaders.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
 </Project>
