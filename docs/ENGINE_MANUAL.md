@@ -16,7 +16,7 @@ When asked to work on the engine, start here:
 - Content, assets, scenes, prefabs, and game scripts live in `rom/` and `game/scripts/`.
 - Do not change game content or game-specific scripts unless the user asks for game behavior changes.
 - Scene and prefab data are JSON files. Prefer preserving existing key names and component names exactly.
-- Component serialization names are case-sensitive: `SceneTransform`, `visual`, `Billboard`, `Script`, `Collider`, `DirectionalLight`, `PointLight`, `SpotLight`, `Camera`, `Material`, `Effect`.
+- Component serialization names are case-sensitive: `SceneTransform`, `visual`, `Billboard`, `Material`, `Rigidbody`, `Script`, `Collider`, `Effect`, `DirectionalLight`, `PointLight`, `SpotLight`, `Camera`, `Audio`, `AudioListener`.
 - User-authored scripts are loaded through the `GameScripts` DLL and referenced from JSON with `"scriptClass"`.
 - Third-person play follow looks for objects tagged `TAG_PLAYER` (not a hard-coded script class name).
 - UI buttons use builtin actions `LoadScene` / `ExitGame`, or a `UICanvasScript::OnClick` on the element — not game-specific engine binders.
@@ -83,6 +83,12 @@ A **content project** is a directory containing at least `rom/` and usually `pro
 | `lastOpenedScene` | string | Scene file name restored on open |
 | `defaultScene` | string | Default / play scene; mirrored to `rom/scene/default_scene.txt` |
 | `editor.uiZoomPercent` | int | ImGui scale percent |
+| `physics.gravity` | float | World gravity for play and runtime builds |
+| `audio.masterVolume` | float | Master bus (0–1) |
+| `audio.bgmVolume` | float | BGM bus |
+| `audio.sfxVolume` | float | SFX bus |
+| `audio.voiceVolume` | float | Voice bus |
+| `audio.uiClickSound` | string | WAV path for UIButton click SFX |
 
 Recent projects are stored outside the content tree in `%AppData%/GameEngine/recent_projects.json`.
 
@@ -506,6 +512,32 @@ Functions: `Serialize()`, `Deserialize()`.
 
 JSON keys: `enabled`, `color`, `intensity`, `specColor`, `specPower`, `range`, `attenuation`, `innerAngleDeg`, `outerAngleDeg`, `castShadows`.
 
+### Rigidbody
+
+Source: `engine/ecs/rigidbody_component.h`
+
+Purpose: JSON-authored rigidbody settings. Registered as `"Rigidbody"`. At runtime, `GameObject::IntegratePhysics()` still uses the legacy body on the object; the component serializes and restores those settings.
+
+JSON keys: `useGravity`, `isKinematic`, `mass`, `drag`, `restitution`, `friction`.
+
+### Audio
+
+Source: `engine/ecs/audio_component.h`, `engine/ecs/audio_system.h`
+
+Purpose: play one WAV clip on a node. Clips route through `AudioManager` buses (`BGM`, `SFX`, `VOICE`). Spatial clips follow the owner transform when `spatial` is true.
+
+Functions: `Play()`, `Stop()`, `IsPlaying()`, `SetClipPath()`, `ApplyLiveSettings()`, lifecycle hooks.
+
+JSON keys: `clipPath`, `bus` (`BGM` / `SFX` / `VOICE`), `volume`, `loop`, `autoPlay`, `spatial`, `distanceScale`.
+
+### AudioListener
+
+Source: `engine/ecs/audio_listener_component.h`
+
+Purpose: mark a node as the 3D listener (usually the active camera). `AudioListenerComponent` has no editable fields in v1; presence alone selects the listener.
+
+JSON keys: none (empty object `{}` is fine).
+
 ## Render Settings
 
 Source: `engine/scene/render_settings.h`
@@ -681,7 +713,6 @@ UI helpers:
 Billboard, lock-on, debug, and prefab helpers:
 
 - `ScriptApi_BillboardAdd(...)`
-- `ScriptApi_LockOnUI_SetTarget(GameObject*, bool onMagnetCooldown = false)`
 - `ScriptApi_DebugDrawSphereWire(...)`
 - `ScriptApi_PrefabInstantiate(const char*, DirectX::XMFLOAT3, DirectX::XMFLOAT3 rotation = {}, GameObject* parent = nullptr, bool startActive = true)`
 - `ScriptApi_PrefabDestroy(GameObject*)`
@@ -748,7 +779,7 @@ Source files:
 - `engine/physics/collider/collider.h`
 - `engine/ecs/collider_component.h`
 
-`Rigidbody` is stored directly on `GameObject` as `m_rigidbody`. `GameObject::IntegratePhysics()` moves non-kinematic objects using this body.
+Every `GameObject` still owns a legacy `m_rigidbody` used by `IntegratePhysics()`. Prefer the **Rigidbody** component (`engine/ecs/rigidbody_component.h`) for JSON-authored mass, gravity, drag, and kinematic flags; scripts can still call `GetRigidbody()` for runtime forces.
 
 Collider hierarchy:
 

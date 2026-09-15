@@ -5,10 +5,13 @@ ROOT = Path(__file__).resolve().parents[1]
 EXTRACT = ROOT / "docs" / "_api_extract.md"
 OUT = ROOT / "docs" / "ENGINE_API_REFERENCE.md"
 
-INTRO = r'''# Ivy Engine — Complete Ability & API Reference
+def header_count(extract_text: str) -> int:
+    return sum(1 for line in extract_text.splitlines() if line.startswith("### `"))
+
+INTRO_TEMPLATE = r'''# Ivy Engine — Complete Ability & API Reference
 
 Exhaustive catalog of **Ivy Engine** capabilities and public functions,
-scanned from every header under `engine/` and `src/app/` (88 headers).
+scanned from every header under `engine/` and `src/app/` ({header_count} headers).
 
 **Learning how to use the engine?** Start with [`ENGINE_USER_GUIDE.md`](ENGINE_USER_GUIDE.md).  
 For concepts, JSON schemas, and agent conventions, see [`ENGINE_MANUAL.md`](ENGINE_MANUAL.md).  
@@ -95,18 +98,34 @@ For external content-project setup, see [`CONTENT_PROJECT.md`](CONTENT_PROJECT.m
 | Audio | Yes | 2D + 3D XAudio2 |
 | UI | Yes | Canvas + scene JSON UI + UI scripts |
 | Scripting | Yes | C++ DLL scripts, hot reload, `ScriptRuntimeApi` |
-| Editor | Yes | ImGui, gizmos, prefab browser, play mode |
+| Editor | Yes | ImGui, gizmos, prefab browser, play mode, content projects, fixed-aspect viewport |
 | Runtime build | Yes | Editor stripped under `GAME_RUNTIME` |
 | Easing / timer | Yes | `easing.h`, `system_timer.h` |
 | Networking | **No** | |
 
 ### Registered component type names (JSON, case-sensitive)
 
-`SceneTransform`, `visual`, `Billboard`, `Material`, `Script`, `Collider`, `Effect`, `DirectionalLight`, `PointLight`, `SpotLight`, `Camera`
+`SceneTransform`, `visual`, `Billboard`, `Material`, `Rigidbody`, `Script`, `Collider`, `Effect`, `DirectionalLight`, `PointLight`, `SpotLight`, `Camera`, `Audio`, `AudioListener`
 
 ### `Tag` values
 
+Built-in C++ enum (`enum class Tag`) — stable indices for scripts/collision helpers:
+
 `TAG_NONE`, `TAG_SHADOW`, `TAG_GROUND`, `TAG_OBSTACLES`, `TAG_WALL`, `TAG_PLAYER`, `TAG_ENEMY`, `TAG_BULLET`, `TAG_SCLAP`, `TAG_MAX`
+
+Project tag list (`TagRegistry`, `rom/tags.json`) starts with those builtin **names** (`NONE`, `SHADOW`, …) and may append **custom** tags after `TAG_MAX`. Scene JSON `"tag"` is the registry index (not limited to the enum). See `engine/ecs/tag_registry.h`.
+
+### Content projects (`ProjectManager`)
+
+Header: `engine/editor/project_manager.h`
+
+- Open/create/save content roots with `project.json`
+- Recent list under `%AppData%/GameEngine/recent_projects.json`
+- Editor File menu: New / Open / Save Project (see user guide §20)
+
+### Editor viewport aspect
+
+The ImGui editor game viewport uses a **fixed aspect ratio** (fit-inside layout from the original 1920×1080 chrome). Projection and play use that viewport size; there is no separate aspect setting in render settings.
 
 ---
 
@@ -250,5 +269,7 @@ Vendor header `WICTextureLoader11.h` is omitted.
 '''
 
 extract = EXTRACT.read_text(encoding="utf-8")
-OUT.write_text(INTRO + extract, encoding="utf-8")
-print(f"Wrote {OUT} ({OUT.stat().st_size} bytes)")
+count = header_count(extract)
+intro = INTRO_TEMPLATE.format(header_count=count)
+OUT.write_text(intro + extract, encoding="utf-8")
+print(f"Wrote {OUT} ({OUT.stat().st_size} bytes, {count} headers)")

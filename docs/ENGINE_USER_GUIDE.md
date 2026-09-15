@@ -60,7 +60,7 @@ You do not write a new engine every time you make a game. You:
 | **GameScripts** | Your game logic DLL. Rebuild this when you change scripts. |
 | **IvyEngineRuntime** | Player build without editor UI (`GAME_RUNTIME`). |
 
-Open `Game_Project.sln` in Visual Studio 2022 (x64 Debug or Release).
+Open `IvyEngine.sln` in Visual Studio 2022 (x64 Debug or Release).
 
 ---
 
@@ -74,7 +74,7 @@ Open `Game_Project.sln` in Visual Studio 2022 (x64 Debug or Release).
 
 ### Build and run
 
-1. Open `Game_Project.sln`.
+1. Open `IvyEngine.sln`.
 2. Set configuration to **Debug | x64** (or Release | x64).
 3. Build **IvyEngine** (shaders compile as part of the project).
 4. Build **GameScripts**.
@@ -94,7 +94,7 @@ See [§20 Projects](#20-projects-new--open--save) for New / Open / Save Project.
 
 1. Run **IvyEngine**.
 2. Press **F3** (or Play) on the sample menu.
-3. Click **Play** to load `scene_sample_playground.json`.
+3. Click **Play** to load the playground scene (`samples/scenes/scene_sample_playground.json`, or copy it into `rom/scene/`).
 4. Move with **WASD** / left stick. A blue box spins via `SampleSpinScript`.
 5. Press **F3** again to stop Play mode in the editor.
 
@@ -152,10 +152,13 @@ Components are small data + behavior packs attached to an object. Important ones
 | `visual` | FBX/OBJ model, animations, shader |
 | `Material` | Color, roughness, metallic, toon params |
 | `Collider` | Box / sphere / capsule / cylinder / mesh |
+| `Rigidbody` | Gravity, mass, drag, kinematic flag (JSON-authored physics body) |
 | `Script` | Your C++ class by name (`scriptClass`) |
 | `Billboard` | Always-facing sprite in 3D |
 | `Effect` | Effekseer effect on the node |
 | `Camera` | Scene camera |
+| `Audio` | Play one WAV clip on this node (bus, loop, spatial 3D) |
+| `AudioListener` | Mark this node as the 3D ear (usually on the active camera) |
 | `DirectionalLight` / `PointLight` / `SpotLight` | Lights |
 
 Names are **case-sensitive**. Use exactly these strings in JSON.
@@ -564,19 +567,32 @@ With the editor running, rebuild **GameScripts**. The engine watches the DLL, qu
 
 ## 10. Physics and collision
 
-### Rigidbody (on every GameObject)
+### Rigidbody
+
+Every `GameObject` still owns a legacy `GetRigidbody()` body used at runtime. Prefer a **Rigidbody** component in JSON for authored settings:
+
+```json
+"Rigidbody": {
+  "useGravity": true,
+  "isKinematic": false,
+  "mass": 1.0,
+  "drag": 0.05,
+  "restitution": 0.0,
+  "friction": 0.0
+}
+```
+
+From scripts you can also tune the live body:
 
 ```cpp
 auto& rb = self.GetRigidbody();
 rb.SetUseGravity(true);
-rb.SetMass(1.0f);
-rb.SetIsKinematic(false);
 rb.AddForce({ 0, 5, 0 }, ForceMode::Impulse);
 ```
 
-Force modes: `Force`, `Acceleration`, `Impulse`, `VelocityChange`.
+Force modes: `Force`, `Acceleration`, `Impulse`, `VelocityChange`. Kinematic bodies are not integrated; move them yourself.
 
-Kinematic bodies are not integrated by physics; move them yourself.
+Project gravity defaults come from `project.json` → `physics.gravity` (Project Settings → Gravity).
 
 ### Colliders
 
@@ -714,27 +730,41 @@ In the editor, switch to **UI** edit mode to select and drag canvas elements wit
 
 ## 14. Audio
 
-Use the singleton `AudioManager`:
+### Scene components (preferred for authored content)
+
+Attach an **Audio** component for a clip on a node:
+
+```json
+"Audio": {
+  "clipPath": "rom/audio/sfx/hit.wav",
+  "bus": "SFX",
+  "volume": 1.0,
+  "loop": false,
+  "autoPlay": true,
+  "spatial": false,
+  "distanceScale": 20.0
+}
+```
+
+- `bus`: `BGM`, `SFX`, or `VOICE`
+- `spatial`: when true, position follows the node's transform for 3D attenuation
+- Put **AudioListener** on the active camera (or player) so spatial clips pan correctly
+
+Project-wide bus volumes and the UI click sound live in `project.json` → `audio` (see §20). Runtime and editor both apply those values at boot.
+
+### AudioManager (scripts and one-offs)
+
+For imperative playback from C++ scripts, use the singleton `AudioManager`:
 
 ```cpp
 auto& audio = AudioManager::Instance();
-
-// Preload once
-audio.LoadBGM("title", "rom/audio/bgm/title.wav");
 audio.LoadSFX("hit", "rom/audio/sfx/hit.wav");
-audio.Load3DSFX("explode", "rom/audio/sfx/explode.wav");
-
-// Play
-audio.PlayBGM("title", 0.8f, true);
 audio.PlaySFX("hit", 1.0f);
-audio.PlaySFX3D("explode", 1.0f); // after setting emitter
-
-audio.SetListener(playerObject);           // 3D listener tracks object
-audio.SetEmitter("explode", boomObject); // 3D emitter tracks object
+audio.SetListener(playerObject);
 audio.SetMasterVolume(1.0f);
 ```
 
-Call `Update()` every frame (the game loop already does this in app code). Stop sounds before destroying tracked GameObjects.
+Call `Update()` every frame (the game loop already does this). Stop sounds before destroying tracked GameObjects.
 
 ---
 
@@ -927,6 +957,16 @@ The editor calls `SetCurrentDirectory` on that folder so relative paths like `ro
   "defaultScene": "scene_main.json",
   "editor": {
     "uiZoomPercent": 100
+  },
+  "physics": {
+    "gravity": 9.81
+  },
+  "audio": {
+    "masterVolume": 1.0,
+    "bgmVolume": 1.0,
+    "sfxVolume": 1.0,
+    "voiceVolume": 1.0,
+    "uiClickSound": "rom/audio/ui_click.wav"
   }
 }
 ```
@@ -937,6 +977,9 @@ The editor calls `SetCurrentDirectory` on that folder so relative paths like `ro
 | `lastOpenedScene` | Scene file restored when the project opens |
 | `defaultScene` | Play / runtime default (also written to `rom/scene/default_scene.txt`) |
 | `editor.uiZoomPercent` | ImGui UI scale (100 / 125 / 150 / 175 / 200) |
+| `physics.gravity` | World gravity applied in play and runtime builds |
+| `audio.masterVolume` / `bgmVolume` / `sfxVolume` / `voiceVolume` | Bus levels (editor + runtime) |
+| `audio.uiClickSound` | WAV played when a UIButton activates (persists across scene loads) |
 
 ### Sample vs your game
 
