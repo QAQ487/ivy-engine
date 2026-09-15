@@ -64,7 +64,7 @@
   Window class and title
 ---------------------------------------------------------------------------**/
 #define	CLASS_NAME "HEW_Window"
-#define	WINDOW_CAPTION "3D_Game"
+#define	WINDOW_CAPTION "Ivy Engine"
 
 double g_fps = 0.0;
 

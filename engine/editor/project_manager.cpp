@@ -515,6 +515,13 @@ void ProjectManager::EnsureEngineAssets(const std::string& rootPath) const {
     const fs::path shaderDst = projectRom / "shader";
     if (fs::exists(shaderSrc, ec))
         CopyDirectoryRecursive(shaderSrc, shaderDst, nullptr);
+
+    // Engine branding (logo) — always overlay so playable packages / projects
+    // opened before branding existed still pick it up from the host exe rom.
+    const fs::path brandingSrc = exeRom / "branding";
+    const fs::path brandingDst = projectRom / "branding";
+    if (fs::exists(brandingSrc, ec))
+        CopyDirectoryRecursive(brandingSrc, brandingDst, nullptr);
 }
 
 bool ProjectManager::ActivateRoot(const std::string& rootPath, std::string* errorOut) {
@@ -761,7 +768,7 @@ void ProjectManager::CloseProject() {
 void ProjectManager::UpdateWindowTitle(HWND hwnd) const {
     if (!hwnd)
         return;
-    std::string title = "Game Project";
+    std::string title = "Ivy Engine";
     if (m_open) {
         title = m_data.name;
         title += " - ";

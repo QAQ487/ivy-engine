@@ -18,6 +18,10 @@ copy /Y "%ENGINE_OUT%\libfbxsdk.dll" "%OUT%\"
 copy /Y "%ROOT%\game\scripts\bin\GameScripts.dll" "%OUT%\game\scripts\bin\"
 if exist "%ROOT%\game\scripts\bin\GameScripts.pdb" copy /Y "%ROOT%\game\scripts\bin\GameScripts.pdb" "%OUT%\game\scripts\bin\"
 xcopy /Y /E /I "%ROOT%\rom\*" "%OUT%\rom\"
+if exist "%ENGINE_OUT%\rom\branding" (
+  if not exist "%OUT%\rom\branding" mkdir "%OUT%\rom\branding"
+  xcopy /Y /E /I "%ENGINE_OUT%\rom\branding\*" "%OUT%\rom\branding\"
+)
 
 echo Deploy complete: %OUT%
 endlocal

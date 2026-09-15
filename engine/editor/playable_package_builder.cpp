@@ -327,6 +327,15 @@ bool AssemblePackage(const Request& request, const fs::path& engineRoot,
             return false;
     }
 
+    // Engine branding is not part of content projects by default — overlay it
+    // so the runtime boot screen can find rom/branding/ivy_logo.png.
+    const fs::path engineBranding = engineOut / "rom" / "branding";
+    const fs::path destBranding = dest / "rom" / "branding";
+    if (fs::exists(engineBranding, ec)) {
+        if (!CopyDirectoryRecursive(engineBranding, destBranding, errorOut))
+            return false;
+    }
+
     const fs::path scriptsBin = dest / "game" / "scripts" / "bin";
     if (!CopyOneFile(content / "game" / "scripts" / "bin" / "GameScripts.dll",
                      scriptsBin / "GameScripts.dll", errorOut))

@@ -71,6 +71,9 @@
 #include "engine/scene/scene_asset_preload.h"
 #include "engine/debug_draw/debug_text.h"
 #include "engine/core/debug_system.h"
+#include "engine/rendering/sprite/sprite.h"
+#include <algorithm>
+#include <cmath>
 #include <filesystem>
 #include <string>
 
@@ -88,9 +91,9 @@ void DrawBootLoadingScreen(float progress01, const std::string& label) {
 	ID3D11RenderTargetView* rtv = nullptr;
 	ID3D11DepthStencilView* dsv = nullptr;
 	ctx->OMGetRenderTargets(1, &rtv, &dsv);
-	const float dark[4] = { 0.08f, 0.08f, 0.10f, 1.0f };
+	const float cream[4] = { 0.961f, 0.945f, 0.910f, 1.0f };
 	if (rtv)
-		ctx->ClearRenderTargetView(rtv, dark);
+		ctx->ClearRenderTargetView(rtv, cream);
 	if (dsv)
 		ctx->ClearDepthStencilView(dsv, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 	if (rtv)
@@ -100,13 +103,67 @@ void DrawBootLoadingScreen(float progress01, const std::string& label) {
 
 	const float screenW = GetBackBufferWidth();
 	const float screenH = GetBackBufferHeight();
-	const int pct = static_cast<int>(progress01 * 100.0f + 0.5f);
-	char line[512];
-	if (label.empty())
-		std::snprintf(line, sizeof(line), "Loading... %d%%", pct);
-	else
-		std::snprintf(line, sizeof(line), "Loading... %s %d%%", label.c_str(), pct);
+	// Intended on-screen green (#2b5843). PixelShader2D does vertex*tex*g_Color and
+	// Sprite_Draw sets both factors to the same value — use sqrt so solids land on target.
+	const float ivyR = 0x2b / 255.0f;
+	const float ivyG = 0x58 / 255.0f;
+	const float ivyB = 0x43 / 255.0f;
+	const DirectX::XMFLOAT4 ivyGreenText(ivyR, ivyG, ivyB, 1.0f);
+	const DirectX::XMFLOAT4 ivyGreenFill(
+		sqrtf(ivyR), sqrtf(ivyG), sqrtf(ivyB), 1.0f);
+	const DirectX::XMFLOAT4 ivyGreenTrack(
+		sqrtf(ivyR), sqrtf(ivyG), sqrtf(ivyB), sqrtf(0.2f));
 
+	static int s_logoTex = -1;
+	static bool s_logoLoadAttempted = false;
+	if (!s_logoLoadAttempted) {
+		s_logoLoadAttempted = true;
+		// TextureLoad pops a MessageBox on failure — only call it when the
+		// branding file is present (content deploys may omit it until seeded).
+		if (std::filesystem::exists("rom/branding/ivy_logo.png"))
+			s_logoTex = TextureLoad(L"rom/branding/ivy_logo.png", false);
+	}
+
+	float contentBottom = screenH * 0.42f;
+	if (s_logoTex >= 0) {
+		const float side = 0.33f * (std::min)(screenW, screenH);
+		const float logoX = (screenW - side) * 0.5f;
+		const float logoY = screenH * 0.42f - side * 0.5f;
+		const int texW = static_cast<int>(TextureGetWidth(s_logoTex));
+		const int texH = static_cast<int>(TextureGetHeight(s_logoTex));
+		// Logo PNG pixels are already #2b5843; white tint preserves them (1*tex*1).
+		Sprite_Draw(s_logoTex, logoX, logoY, side, side, 0, 0, texW, texH,
+			DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f));
+		contentBottom = logoY + side;
+	}
+
+	const float barW = 0.40f * screenW;
+	const float barH = 10.0f;
+	const float barX = (screenW - barW) * 0.5f;
+	const float barY = contentBottom + 24.0f;
+	const int white = TextureGetWhiteTexture();
+	if (white >= 0) {
+		const int whiteW = static_cast<int>(TextureGetWidth(white));
+		const int whiteH = static_cast<int>(TextureGetHeight(white));
+		Sprite_Draw(white, barX, barY, barW, barH, 0, 0, whiteW, whiteH, ivyGreenTrack);
+
+		float progress = progress01;
+		if (progress < 0.0f) progress = 0.0f;
+		if (progress > 1.0f) progress = 1.0f;
+		const float fillW = barW * progress;
+		if (fillW > 0.0f) {
+			Sprite_Draw(white, barX, barY, fillW, barH,
+				0, 0, static_cast<int>(progress * whiteW), whiteH, ivyGreenFill);
+		}
+	}
+
+	std::string displayLabel = label.empty() ? "Loading..." : label;
+	// ASCII font atlas has no Unicode ellipsis — CurrentLabel uses U+2026.
+	const std::string ellipsisUtf8 = "\xe2\x80\xa6";
+	for (size_t pos = 0; (pos = displayLabel.find(ellipsisUtf8, pos)) != std::string::npos; ) {
+		displayLabel.replace(pos, ellipsisUtf8.size(), "...");
+		pos += 3;
+	}
 	hal::DebugText dbg(device, ctx,
 		L"rom/texture/consolab_ascii_512.png",
 		static_cast<UINT>(screenW), static_cast<UINT>(screenH),
@@ -115,11 +172,14 @@ void DrawBootLoadingScreen(float progress01, const std::string& label) {
 		24.0f, 12.0f);
 	float textW = 0.0f;
 	float textH = 0.0f;
-	dbg.MeasureText(line, textW, textH);
-	dbg.SetOffset((screenW - textW) * 0.5f, (screenH - textH) * 0.5f);
-	dbg.SetText(line, DirectX::XMFLOAT4(0.90f, 0.92f, 0.95f, 1.0f));
+	dbg.MeasureText(displayLabel.c_str(), textW, textH);
+	const float textY = (white >= 0) ? (barY + barH + 16.0f) : (contentBottom + 24.0f);
+	dbg.SetOffset((screenW - textW) * 0.5f, textY);
+	dbg.SetText(displayLabel.c_str(), ivyGreenText);
 	dbg.Draw();
 	dbg.Clear();
+
+	SetDepthEnable(true);
 }
 
 bool PumpBootMessages() {

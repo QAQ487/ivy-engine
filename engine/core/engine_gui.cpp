@@ -44,6 +44,7 @@
 #include "engine/input/key_logger.h"
 #include "engine/input/keyboard.h"
 #include "engine/rendering/d3d11/renderer.h"
+#include "WICTextureLoader11.h"
 #include "engine/physics/collider/collider.h"
 #include "engine/physics/core/physics_system.h"
 #include "engine/ecs/game_object.h"          // unified ::GameObject
@@ -1102,6 +1103,25 @@ static void ConsumePendingFolderPick() {
     }
 }
 
+static ID3D11ShaderResourceView* GetIvyLogoSrv() {
+    static ID3D11ShaderResourceView* s_srv = nullptr;
+    static bool s_attempted = false;
+    if (!s_attempted) {
+        s_attempted = true;
+        ID3D11Device* device = GetDevice();
+        if (device) {
+            ID3D11Resource* tex = nullptr;
+            if (FAILED(DirectX::CreateWICTextureFromFile(
+                    device, L"rom/branding/ivy_logo.png", &tex, &s_srv))) {
+                s_srv = nullptr;
+            }
+            if (tex)
+                tex->Release();
+        }
+    }
+    return s_srv;
+}
+
 static void DrawEngineStartScreen() {
     ImGuiViewport* viewport = ImGui::GetMainViewport();
     ImGui::SetNextWindowPos(viewport->Pos);
@@ -1113,7 +1133,7 @@ static void DrawEngineStartScreen() {
                  ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoNav);
     ImGui::PopStyleColor();
 
-    const ImVec2 cardSize(480.0f, 340.0f);
+    const ImVec2 cardSize(480.0f, 520.0f);
     const ImVec2 cardPos(
         viewport->Pos.x + (viewport->Size.x - cardSize.x) * 0.5f,
         viewport->Pos.y + (viewport->Size.y - cardSize.y) * 0.5f);
@@ -1124,8 +1144,17 @@ static void DrawEngineStartScreen() {
     ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.92f, 0.93f, 0.95f, 1.0f));
     ImGui::BeginChild("##StartCard", cardSize, ImGuiChildFlags_Borders);
 
+    if (ID3D11ShaderResourceView* logoSrv = GetIvyLogoSrv()) {
+        const float logoSize = 160.0f;
+        const float avail = ImGui::GetContentRegionAvail().x;
+        if (logoSize < avail)
+            ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (avail - logoSize) * 0.5f);
+        ImGui::Image(ImTextureRef((ImTextureID)(intptr_t)logoSrv), ImVec2(logoSize, logoSize));
+        ImGui::Dummy(ImVec2(0.0f, 12.0f));
+    }
+
     {
-        const char* title = "INTERACTIVE VISUAL ENGINE";
+        const char* title = "Ivy Engine";
         const float titleW = ImGui::CalcTextSize(title).x;
         const float avail = ImGui::GetContentRegionAvail().x;
         if (titleW < avail)
