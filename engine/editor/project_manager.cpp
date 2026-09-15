@@ -279,7 +279,7 @@ std::string ProjectManager::FindEngineRepoRoot() {
         fs::path cur = seed;
         for (int i = 0; i < 8; ++i) {
             if (fs::exists(cur / "external_content_template") &&
-                fs::exists(cur / "Game_Project.sln")) {
+                (fs::exists(cur / "IvyEngine.sln") || fs::exists(cur / "Game_Project.sln"))) {
                 return cur.string();
             }
             if (!cur.has_parent_path() || cur == cur.parent_path())
@@ -635,7 +635,7 @@ bool ProjectManager::ScaffoldNewProjectTree(const std::string& rootPath,
     }
 
     // Always emit a content-project .sln + build helper so scripts build outside
-    // the engine repo without opening Game_Project.sln.
+    // the engine repo without opening IvyEngine.sln.
     if (!WriteContentProjectSolution(root, errorOut))
         return false;
     if (!WriteContentBuildScriptsBat(root, errorOut))

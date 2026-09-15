@@ -77,7 +77,7 @@ public:
     static bool PickFolder(HWND owner, const wchar_t* title, std::string* outPath,
                            const char* startFolder = nullptr);
     static std::string GetExecutableDirectory();
-    // Walks cwd and the editor exe directory for Game_Project.sln.
+    // Walks cwd and the editor exe directory for IvyEngine.sln (or legacy Game_Project.sln).
     static std::string FindEngineRepoRoot();
 
 private:
