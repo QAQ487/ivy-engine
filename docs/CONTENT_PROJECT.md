@@ -20,7 +20,7 @@ For day-to-day editing inside the engine editor, prefer **File → New Project /
 
 ## Setup
 1. Copy this `external_content_template` folder to a new repo, **or** use **File → New Project** in the editor.
-2. Edit `MagneticField.Engine.props` and set `EngineRoot` to your engine repo path.
+2. Edit `IvyEngine.props` and set `EngineRoot` to your engine repo path.
 3. Put your script `.cpp/.h` files under `game/scripts/` (for example `sample/` or your own folders) and add them to `GameScripts.vcxproj`.
 4. Put your game assets under `rom/` (include engine builtins: `rom/shader`, `rom/font`, `rom/texture` — New Project copies these automatically).
 5. Open `<ProjectName>.sln` (or run `build_scripts.bat`) and build **GameScripts** | x64.

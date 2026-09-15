@@ -613,7 +613,7 @@ bool ProjectManager::ScaffoldNewProjectTree(const std::string& rootPath,
         }
 
         // Point EngineRoot at the discovered engine repo.
-        const fs::path propsPath = root / "MagneticField.Engine.props";
+        const fs::path propsPath = root / "IvyEngine.props";
         std::ofstream props(propsPath, std::ios::trunc);
         if (props.is_open()) {
             props << "<Project>\n"

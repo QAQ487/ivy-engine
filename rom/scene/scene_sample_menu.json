@@ -42,7 +42,7 @@
                 "name": "Title",
                 "anchor": "CENTER",
                 "position": { "x": 0.0, "y": -180.0 },
-                "text": "MagneticField Engine",
+                "text": "Ivy Engine",
                 "fontSize": 2.0,
                 "characterSpacing": 28.0,
                 "alignment": "CENTER",

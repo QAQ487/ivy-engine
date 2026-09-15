@@ -53,7 +53,7 @@
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
-  <Import Project="$(MSBuildThisFileDirectory)..\..\..\MagneticField.Engine.props" Condition="exists('$(MSBuildThisFileDirectory)..\..\..\MagneticField.Engine.props')" />
+  <Import Project="$(MSBuildThisFileDirectory)..\..\..\IvyEngine.props" Condition="exists('$(MSBuildThisFileDirectory)..\..\..\IvyEngine.props')" />
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
   <ImportGroup Label="Shared">

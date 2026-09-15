@@ -1,0 +1,6 @@
+<Project>
+  <PropertyGroup>
+    <EngineRoot Condition="'$(EngineRoot)'==''">C:\path\to\ivy-engine\</EngineRoot>
+    <EngineOutDir>$(EngineRoot)x64\$(Configuration)\</EngineOutDir>
+  </PropertyGroup>
+</Project>

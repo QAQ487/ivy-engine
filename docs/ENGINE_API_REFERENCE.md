@@ -1,6 +1,6 @@
-# MagneticField Engine — Complete Ability & API Reference
+# Ivy Engine — Complete Ability & API Reference
 
-Exhaustive catalog of **MagneticField Engine** capabilities and public functions,
+Exhaustive catalog of **Ivy Engine** capabilities and public functions,
 scanned from every header under `engine/` and `src/app/` (88 headers).
 
 **Learning how to use the engine?** Start with [`ENGINE_USER_GUIDE.md`](ENGINE_USER_GUIDE.md).  
@@ -15,7 +15,7 @@ For external content-project setup, see [`CONTENT_PROJECT.md`](CONTENT_PROJECT.m
 
 | Aspect | Detail |
 |--------|--------|
-| Name | MagneticField Engine |
+| Name | Ivy Engine |
 | Language | C++ (MSVC / Visual Studio) |
 | Platform | Windows (Win32) |
 | Graphics | Direct3D 11 |

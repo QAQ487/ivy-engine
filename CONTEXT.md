@@ -1,4 +1,4 @@
-# MagneticField Engine
+# Ivy Engine
 
 The 3D runtime and ImGui editor that content projects load and play.
 

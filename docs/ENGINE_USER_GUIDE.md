@@ -1,4 +1,4 @@
-# MagneticField Engine — User Guide
+# Ivy Engine — User Guide
 
 A practical guide for humans: how to open the project, build scenes, attach components, write scripts, and ship a playable build.
 
@@ -37,7 +37,7 @@ For a content-only external repo, see [`CONTENT_PROJECT.md`](CONTENT_PROJECT.md)
 
 ## 1. What you are working with
 
-**MagneticField Engine** is a Windows / Direct3D 11 game engine with:
+**Ivy Engine** is a Windows / Direct3D 11 game engine with:
 
 - A **scene graph** of `GameObject` nodes
 - **Components** serialized to JSON (transform, mesh, lights, colliders, scripts, …)
@@ -941,7 +941,7 @@ The editor calls `SetCurrentDirectory` on that folder so relative paths like `ro
 ### Sample vs your game
 
 - The **engine repo** includes a sample project (`project.json` + `rom/` + `game/`). After build, that layout is copied next to `IvyEngine.exe`.
-- **File → New Project** creates a separate game folder anywhere on disk. Scripts can still target the engine via `MagneticField.Engine.props` (same idea as [`CONTENT_PROJECT.md`](CONTENT_PROJECT.md)).
+- **File → New Project** creates a separate game folder anywhere on disk. Scripts can still target the engine via `IvyEngine.props` (same idea as [`CONTENT_PROJECT.md`](CONTENT_PROJECT.md)).
 
 ---
 

@@ -2,7 +2,7 @@
 setlocal
 
 set ROOT=%~dp0..
-if "%ENGINE_ROOT%"=="" set ENGINE_ROOT=C:\path\to\MagneticField_Prototype
+if "%ENGINE_ROOT%"=="" set ENGINE_ROOT=C:\path\to\ivy-engine
 set CONFIG=Debug
 if not "%1"=="" set CONFIG=%1
 

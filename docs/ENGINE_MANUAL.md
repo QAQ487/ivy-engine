@@ -1,4 +1,4 @@
-# MagneticField Engine Manual
+# Ivy Engine Manual
 
 This file documents the reusable game engine in this repository. It is not a game design document and should not be treated as documentation for any one game built with the engine.
 

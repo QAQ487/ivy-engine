@@ -1,8 +1,8 @@
-Ôªø/**===========================================================================
+/**===========================================================================
 
  File   :  [main.cpp]
 
- Author : Terry
+ Author : Terry Yeung
  Date   : 2025/9/29
  -----------------------------------------------------------------------------
 
@@ -368,7 +368,7 @@ void Update(double current_time, double elapsed_time) {
 
 	if (Fade_IsFadeEnd() && !SceneTransition_BlocksSceneUpdate()) {
 		// Freeze skips sim Update, but deferred scene-load flush / preload tick
-		// lives inside EngineGUI_Update ‚Äî keep that path alive while busy.
+		// lives inside EngineGUI_Update ? keep that path alive while busy.
 		if (!DebugSystem::IsFrozen()) {
 			SceneManager::Instance().Update(scaled_dt);
 		} else if (DebugSystem::ConsumeFrameStep()) {
@@ -542,7 +542,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
 	case WM_CLOSE: // window close requested
 #ifdef _DEBUG
-		if (getenv("MAGNETIC_SKIP_CLOSE_CONFIRM")) {
+		if (getenv("IVY_SKIP_CLOSE_CONFIRM")) {
 			DestroyWindow(hWnd);
 			return 0;
 		}
@@ -553,7 +553,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 			return 0; // cancel close; unsaved popup handles decision
 		}
 #endif
-		if (MessageBox(hWnd, "Êú¨ÂΩì„Å´ÁµÇ‰∫Ü„Åó„Å¶„Çà„Çç„Åó„ÅÑ„Åß„Åô„ÅãÔºü", "Á¢∫Ë™ç",
+		if (MessageBox(hWnd, "ñ{ìñÇ…èIóπÇµÇƒÇÊÇÎÇµÇ¢Ç≈Ç∑Ç©ÅH", "ämîF",
 			MB_OKCANCEL | MB_DEFBUTTON2) == IDOK) {
 			DestroyWindow(hWnd);
 		}
