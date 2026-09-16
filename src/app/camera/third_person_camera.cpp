@@ -39,6 +39,13 @@ constexpr float kPushFollowSharpnessEnd = 18.0f;
 constexpr float kMagnetFaceSharpness = 10.0f;
 constexpr float kMagnetFacePitchBias = 12.0f;
 
+constexpr float kTraumaDecayRate = 1.4f;
+constexpr float kTraumaPosAmp = 0.25f;
+constexpr float kTraumaRollDeg = 3.0f;
+constexpr float kSpeedFovBoost = 18.0f;
+constexpr float kSpeedFovSmooth = 6.0f;
+constexpr float kFovEpsilon = 0.01f;
+
 XMFLOAT3* s_targetPos = nullptr;
 float*    s_targetYaw = nullptr;
 float s_distance = kBaseDistance;
@@ -69,6 +76,11 @@ float s_preOrbitPitch = 15.0f;
 
 bool s_hasFollowPose = false;
 CameraPose s_followPose;
+
+float s_trauma = 0.0f;
+float s_traumaShakeTime = 0.0f;
+float s_speedFactor01 = 0.0f;
+float s_speedFovCurrent = kBaseFov;
 
 std::unique_ptr<GameObject> s_followCamNode;
 
@@ -231,6 +243,10 @@ void ThirdPersonCamera_Initialize() {
 	s_distance = kBaseDistance;
 	s_height = kBaseHeight;
 	s_lookAtHeight = kLookAtHeight;
+	s_trauma = 0.0f;
+	s_traumaShakeTime = 0.0f;
+	s_speedFactor01 = 0.0f;
+	s_speedFovCurrent = kBaseFov;
 }
 
 void ThirdPersonCamera_Update(double elapsed_time) {
@@ -337,6 +353,39 @@ void ThirdPersonCamera_Update(double elapsed_time) {
 	pose.fov = s_currentFov;
 	pose.nearClip = 0.5f;
 	pose.farClip = 1000.0f;
+
+	// Trauma shake — final local offset only; never feeds back into follow state.
+	s_traumaShakeTime += dt;
+	if (s_trauma > 0.0f) {
+		s_trauma = fmaxf(0.0f, s_trauma - kTraumaDecayRate * dt);
+		const float shake = s_trauma * s_trauma;
+		const float t = s_traumaShakeTime;
+
+		XMVECTOR eye = XMLoadFloat3(&pose.eye);
+		XMVECTOR at = XMLoadFloat3(&pose.lookAt);
+		XMVECTOR up = XMLoadFloat3(&pose.up);
+		XMVECTOR forward = XMVector3Normalize(XMVectorSubtract(at, eye));
+		XMVECTOR right = XMVector3Normalize(XMVector3Cross(up, forward));
+		XMVECTOR camUp = XMVector3Normalize(XMVector3Cross(forward, right));
+
+		const float ox = sinf(t * 37.1f) * (kTraumaPosAmp * shake);
+		const float oy = sinf(t * 23.7f + 1.3f) * (kTraumaPosAmp * shake);
+		eye = XMVectorAdd(eye, XMVectorScale(right, ox));
+		eye = XMVectorAdd(eye, XMVectorScale(camUp, oy));
+		XMStoreFloat3(&pose.eye, eye);
+
+		const float rollRad = XMConvertToRadians(kTraumaRollDeg * shake * sinf(t * 31.3f));
+		XMMATRIX roll = XMMatrixRotationAxis(forward, rollRad);
+		camUp = XMVector3TransformNormal(camUp, roll);
+		XMStoreFloat3(&pose.up, XMVector3Normalize(camUp));
+	}
+
+	// Speed FOV — additive boost on top of push/base FOV; skip write if unchanged.
+	const float targetFov = s_currentFov + kSpeedFovBoost * s_speedFactor01;
+	s_speedFovCurrent = ExpSmoothToward(s_speedFovCurrent, targetFov, kSpeedFovSmooth, dt);
+	if (fabsf(pose.fov - s_speedFovCurrent) > kFovEpsilon)
+		pose.fov = s_speedFovCurrent;
+
 	WriteFollowPose(pose);
 }
 
@@ -408,4 +457,16 @@ bool ThirdPersonCamera_TryGetFollowPose(CameraPose& outPose) {
 
 GameObject* ThirdPersonCamera_GetFollowCamNode() {
 	return s_followCamNode.get();
+}
+
+void ThirdPersonCamera_AddTrauma(float amount01) {
+	s_trauma = Clampf(s_trauma + Clampf(amount01, 0.0f, 1.0f), 0.0f, 1.0f);
+}
+
+float ThirdPersonCamera_GetTrauma() {
+	return s_trauma;
+}
+
+void ThirdPersonCamera_SetSpeedFactor(float speed01) {
+	s_speedFactor01 = Clampf(speed01, 0.0f, 1.0f);
 }

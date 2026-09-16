@@ -199,6 +199,11 @@ struct ScriptRuntimeApi {
     bool (*physicsRaycast)(const DirectX::XMFLOAT3* origin, const DirectX::XMFLOAT3* dir,
         float maxDistance, DirectX::XMFLOAT3* outPoint, DirectX::XMFLOAT3* outNormal,
         float* outDistance);
+    void (*cameraAddTrauma)(float amount01);
+    void (*cameraSetSpeedFactor)(float speed01);
+    void (*debugPulseTimeScale)(float scale, unsigned durationMs);
+    void (*lineSpriteDraw)(const DirectX::XMFLOAT3* a, const DirectX::XMFLOAT3* b,
+        float thicknessWorld, const DirectX::XMFLOAT4* color);
 };
 
 const ScriptRuntimeApi* ScriptRuntimeApi_GetHost();
@@ -230,6 +235,11 @@ bool ScriptApi_Physics_Raycast(const DirectX::XMFLOAT3& origin,
     const DirectX::XMFLOAT3& dir, float maxDistance,
     DirectX::XMFLOAT3* outPoint, DirectX::XMFLOAT3* outNormal,
     float* outDistance);
+void ScriptApi_Camera_AddTrauma(float amount01);
+void ScriptApi_Camera_SetSpeedFactor(float speed01);
+void ScriptApi_Debug_PulseTimeScale(float scale, unsigned durationMs);
+void ScriptApi_LineSprite_Draw(const DirectX::XMFLOAT3& a, const DirectX::XMFLOAT3& b,
+    float thicknessWorld, const DirectX::XMFLOAT4& color);
 
 void ScriptApi_ApplyColliderComponent(ColliderComponent& component);
 BoxCollider* ScriptApi_CreateBoxCollider(engine::GameObject& object,

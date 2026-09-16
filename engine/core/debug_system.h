@@ -19,6 +19,13 @@ float GetTimeScale();
 void CycleTimeScale(); // 1.0 → 0.5 → 0.25 → 0.0 (freeze) → 1.0
 bool IsFrozen();       // timeScale == 0
 
+// main thread only. Freezes the world briefly for game-feel moments.
+// scale: 0.0–1.0 (typical 0.05). durationMs: real-time duration.
+// Ignored when F7 debug time-scale is not 1.0 (debug controls win).
+void PulseTimeScale(float scale, unsigned durationMs);
+// main thread only. Tick with unscaled wall-clock delta in milliseconds.
+void UpdateTimeScalePulse(float realDeltaMs);
+
 void StepOneFrame();   // request one Update while frozen
 bool FrameStepRequested();
 float StepAdvance();   // 1/60 if step pending (clears request), else 0

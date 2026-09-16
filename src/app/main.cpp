@@ -20,6 +20,7 @@
 #include "engine/rendering/d3d11/post_process.h"
 #include "engine/rendering/sprite/texture.h"
 #include "engine/rendering/sprite/sprite.h"
+#include "engine/rendering/sprite/line_sprite.h"
 #include "engine/rendering/model/model_util.h"
 #include "engine/rendering/effect/effect_system.h"
 #include "engine/input/keyboard.h"
@@ -257,6 +258,7 @@ HRESULT	Initialize(HINSTANCE hInstance, HWND hWnd, BOOL bWindow) {
 	else {
 		Texture_Initialize(GetDevice(), GetDeviceContext()); // initialize texture system
 		Sprite_Initialize(GetDevice(), GetDeviceContext());  // initialize sprite renderer
+		LineSprite_Initialize(GetDevice(), GetDeviceContext());
 	}
 
 	SystemTimer_Initialize();
@@ -306,6 +308,7 @@ void Finalize(void) {
 	PostProcess_Shutdown();
 	Controller_Finalize();
 	EffectSystem::Finalize();
+	LineSprite_Finalize();
 	Sprite_Finalize();
 	Texture_Finalize();
 	ModelUtil_ReleaseTextureCache();
@@ -348,6 +351,7 @@ void Update(double current_time, double elapsed_time) {
 	if (elapsed_time > max_dt) elapsed_time = max_dt;
 	if (elapsed_time < 0.0)   elapsed_time = 0.0;
 
+	DebugSystem::UpdateTimeScalePulse(static_cast<float>(elapsed_time * 1000.0));
 	const float ts = DebugSystem::GetTimeScale();
 	const double scaled_dt = fixed_dt * static_cast<double>(ts);
 	PostProcess_Update(static_cast<float>(elapsed_time * static_cast<double>(ts)));
@@ -553,7 +557,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 			return 0; // cancel close; unsaved popup handles decision
 		}
 #endif
-		if (MessageBox(hWnd, "本当に終了してよろしいですか？", "確認",
+		if (MessageBox(hWnd, "?{????I????????????????H", "?m?F",
 			MB_OKCANCEL | MB_DEFBUTTON2) == IDOK) {
 			DestroyWindow(hWnd);
 		}

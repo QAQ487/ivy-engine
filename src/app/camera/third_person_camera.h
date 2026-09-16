@@ -41,4 +41,10 @@ void ThirdPersonCamera_SetMagnetTarget(const DirectX::XMFLOAT3& targetPos);
 bool ThirdPersonCamera_TryGetFollowPose(CameraPose& outPose);
 GameObject* ThirdPersonCamera_GetFollowCamNode();
 
+// main thread only. Clamp amount to [0,1]; typically 0.2–0.6 per hit.
+void ThirdPersonCamera_AddTrauma(float amount01);
+float ThirdPersonCamera_GetTrauma();
+// main thread only. speed01 in [0,1]; smoothed internally into FOV boost.
+void ThirdPersonCamera_SetSpeedFactor(float speed01);
+
 #endif // !THIRD_PERSON_CAMERA_H

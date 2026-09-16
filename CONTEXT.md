@@ -61,3 +61,7 @@ _Avoid_: skin animation, GPU skin / CPU skin as the component name
 **Bind**:
 The rest pose of a Skin: the bone and mesh matrices that make `bindOffset`. If Bind is wrong, posed vertices scatter and do not form the mesh.
 _Avoid_: T-pose (one authored Bind), deform (playback)
+
+## Engine freeze
+
+2026-09: engine frozen at `engine-v1.0-lock` for swing-demo development; additive changes require explicit unfreeze.

@@ -22,6 +22,19 @@ bool s_holdingCursorForFreeze = false;
 char s_overlayText[512] = {};
 DirectX::XMFLOAT4 s_overlayColor = { 0.85f, 0.95f, 0.85f, 1.0f };
 
+struct TimeScalePulseState {
+	bool active = false;
+	float scale = 1.0f;
+	float remainingMs = 0.0f;
+};
+TimeScalePulseState s_pulse;
+
+void ClearPulse() {
+	s_pulse.active = false;
+	s_pulse.scale = 1.0f;
+	s_pulse.remainingMs = 0.0f;
+}
+
 void ApplyFreezeCursor(bool enteringFreeze) {
 	if (enteringFreeze) {
 		if (!s_holdingCursorForFreeze) {
@@ -46,6 +59,7 @@ void Init() {
 	s_holdingCursorForFreeze = false;
 	s_overlayText[0] = '\0';
 	s_overlayColor = { 0.85f, 0.95f, 0.85f, 1.0f };
+	ClearPulse();
 }
 
 void Shutdown() {
@@ -66,7 +80,34 @@ bool CollisionVizEnabled() {
 }
 
 float GetTimeScale() {
+	if (s_pulse.active && s_timeScale >= 0.999f)
+		return s_pulse.scale;
 	return s_timeScale;
+}
+
+void PulseTimeScale(float scale, unsigned durationMs) {
+	// Debug F7 time-scale always wins — ignore pulse when not at normal 1.0.
+	if (s_timeScale < 0.999f)
+		return;
+	if (durationMs == 0)
+		return;
+
+	if (scale < 0.0f) scale = 0.0f;
+	if (scale > 1.0f) scale = 1.0f;
+
+	s_pulse.active = true;
+	s_pulse.scale = scale;
+	s_pulse.remainingMs = static_cast<float>(durationMs);
+}
+
+void UpdateTimeScalePulse(float realDeltaMs) {
+	if (!s_pulse.active)
+		return;
+	if (realDeltaMs < 0.0f)
+		realDeltaMs = 0.0f;
+	s_pulse.remainingMs -= realDeltaMs;
+	if (s_pulse.remainingMs <= 0.0f)
+		ClearPulse();
 }
 
 void CycleTimeScale() {
@@ -172,6 +213,7 @@ void ResetTimeScale() {
 	const bool wasFrozen = (s_timeScale == 0.0f);
 	s_timeScale = 1.0f;
 	s_frameStepRequest = false;
+	ClearPulse();
 	if (wasFrozen)
 		ApplyFreezeCursor(false);
 }

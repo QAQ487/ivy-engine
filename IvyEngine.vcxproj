@@ -312,6 +312,7 @@ exit /b 0</Command>
     <ClInclude Include="engine\scripting\ui_canvas_script_register.h" />
     <ClInclude Include="engine\scripting\script_watcher.h" />
     <ClInclude Include="engine\rendering\sprite\sprite.h" />
+    <ClInclude Include="engine\rendering\sprite\line_sprite.h" />
     <ClInclude Include="engine\rendering\sprite\texture.h" />
     <ClInclude Include="engine\ui\ui_bar.h" />
     <ClInclude Include="engine\ui\ui_button.h" />
@@ -432,6 +433,7 @@ exit /b 0</Command>
     <ClCompile Include="engine\scripting\ui_canvas_script_factory.cpp" />
     <ClCompile Include="engine\scripting\script_watcher.cpp" />
     <ClCompile Include="engine\rendering\sprite\sprite.cpp" />
+    <ClCompile Include="engine\rendering\sprite\line_sprite.cpp" />
     <ClCompile Include="engine\rendering\sprite\texture.cpp" />
     <ClCompile Include="engine\ui\ui_bar.cpp" />
     <ClCompile Include="engine\ui\ui_button.cpp" />

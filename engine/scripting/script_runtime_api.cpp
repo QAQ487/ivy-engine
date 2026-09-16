@@ -14,6 +14,7 @@
 #include "engine/debug_draw/debug_drawer.h"
 #include "engine/core/engine_gui.h"
 #include "engine/rendering/sprite/texture.h"
+#include "engine/rendering/sprite/line_sprite.h"
 #include "engine/physics/collider/collider.h"
 #include "engine/ecs/prefab_runtime.h"
 #include "engine/ecs/effect_component.h"
@@ -23,13 +24,14 @@
 #include "engine/ecs/material_component.h"
 #include "engine/rendering/d3d11/post_process.h"
 #include "engine/physics/core/physics_system.h"
+#include "engine/core/debug_system.h"
 
 #include <Windows.h>
 #include <cmath>
 #include <string>
 
 namespace {
-constexpr std::uint32_t kScriptRuntimeApiVersion = 40;
+constexpr std::uint32_t kScriptRuntimeApiVersion = 41;
 
 template <typename T>
 T* FindComponentByTypeName(GameObject& object, const char* typeName) {
@@ -466,6 +468,25 @@ bool Host_PhysicsRaycast(const DirectX::XMFLOAT3* origin, const DirectX::XMFLOAT
     return true;
 }
 
+void Host_CameraAddTrauma(float amount01) {
+    ThirdPersonCamera_AddTrauma(amount01);
+}
+
+void Host_CameraSetSpeedFactor(float speed01) {
+    ThirdPersonCamera_SetSpeedFactor(speed01);
+}
+
+void Host_DebugPulseTimeScale(float scale, unsigned durationMs) {
+    DebugSystem::PulseTimeScale(scale, durationMs);
+}
+
+void Host_LineSpriteDraw(const DirectX::XMFLOAT3* a, const DirectX::XMFLOAT3* b,
+    float thicknessWorld, const DirectX::XMFLOAT4* color) {
+    if (!a || !b || !color)
+        return;
+    LineSprite_Draw(*a, *b, thicknessWorld, *color);
+}
+
 void Host_ThirdPersonCameraSetMagnetMode(int mode) {
     ThirdPersonCamera_SetMagnetMode(static_cast<ThirdPersonMagnetMode>(mode));
 }
@@ -642,6 +663,10 @@ const ScriptRuntimeApi g_scriptRuntimeApi = {
     &Host_MouseGetPosition,
     &Host_PostFxBurst,
     &Host_PhysicsRaycast,
+    &Host_CameraAddTrauma,
+    &Host_CameraSetSpeedFactor,
+    &Host_DebugPulseTimeScale,
+    &Host_LineSpriteDraw,
 };
 #else
 using GetApiFn = const ScriptRuntimeApi* (*)();
@@ -972,6 +997,31 @@ bool ScriptApi_Physics_Raycast(const DirectX::XMFLOAT3& origin,
     if (!api || !api->physicsRaycast)
         return false;
     return api->physicsRaycast(&origin, &dir, maxDistance, outPoint, outNormal, outDistance);
+}
+
+void ScriptApi_Camera_AddTrauma(float amount01) {
+    const ScriptRuntimeApi* api = ScriptRuntimeApi_GetHost();
+    if (api && api->cameraAddTrauma)
+        api->cameraAddTrauma(amount01);
+}
+
+void ScriptApi_Camera_SetSpeedFactor(float speed01) {
+    const ScriptRuntimeApi* api = ScriptRuntimeApi_GetHost();
+    if (api && api->cameraSetSpeedFactor)
+        api->cameraSetSpeedFactor(speed01);
+}
+
+void ScriptApi_Debug_PulseTimeScale(float scale, unsigned durationMs) {
+    const ScriptRuntimeApi* api = ScriptRuntimeApi_GetHost();
+    if (api && api->debugPulseTimeScale)
+        api->debugPulseTimeScale(scale, durationMs);
+}
+
+void ScriptApi_LineSprite_Draw(const DirectX::XMFLOAT3& a, const DirectX::XMFLOAT3& b,
+    float thicknessWorld, const DirectX::XMFLOAT4& color) {
+    const ScriptRuntimeApi* api = ScriptRuntimeApi_GetHost();
+    if (api && api->lineSpriteDraw)
+        api->lineSpriteDraw(&a, &b, thicknessWorld, &color);
 }
 
 void ScriptApi_ApplyColliderComponent(ColliderComponent& component) {
