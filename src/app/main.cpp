@@ -557,7 +557,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 			return 0; // cancel close; unsaved popup handles decision
 		}
 #endif
-		if (MessageBox(hWnd, "?{????I????????????????H", "?m?F",
+		if (MessageBox(hWnd, "Are you sure you want to exit?", "Confirm",
 			MB_OKCANCEL | MB_DEFBUTTON2) == IDOK) {
 			DestroyWindow(hWnd);
 		}

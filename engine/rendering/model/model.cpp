@@ -70,9 +70,9 @@ void Model3D::Release() {
 		return;
 	}
 
-	// ƒTƒuƒZƒbƒg“à‚Ì SRV ‚ğæ‚É‰ğ•úiƒƒCƒ“ SRV ‚Æ‚Ìd•¡ƒ`ƒFƒbƒNj
+	// ï¿½Tï¿½uï¿½Zï¿½bï¿½gï¿½ï¿½ï¿½ SRV ï¿½ï¿½ï¿½É‰ï¿½ï¿½ï¿½iï¿½ï¿½ï¿½Cï¿½ï¿½ SRV ï¿½Æ‚Ìdï¿½ï¿½ï¿½`ï¿½Fï¿½bï¿½Nï¿½j
 	for (auto& s : m_subsets) {
-		// ƒƒCƒ“SRV‚Æ“¯‚¶ƒ|ƒCƒ“ƒ^‚Ìê‡‚Í‰ğ•ú‚µ‚È‚¢i“ñd‰ğ•ú–h~j
+		// ï¿½ï¿½ï¿½Cï¿½ï¿½SRVï¿½Æ“ï¿½ï¿½ï¿½ï¿½|ï¿½Cï¿½ï¿½ï¿½^ï¿½Ìê‡ï¿½Í‰ï¿½ï¿½ï¿½ï¿½ï¿½È‚ï¿½ï¿½iï¿½ï¿½dï¿½ï¿½ï¿½ï¿½hï¿½~ï¿½j
 		if (s.pSRV && s.pSRV != m_pSRV) {
 			s.pSRV->Release();
 		}
@@ -80,13 +80,13 @@ void Model3D::Release() {
 	}
 	m_subsets.clear();
 
-	// D3D11ƒŠƒ\[ƒX‚ğ‰ğ•ú
+	// D3D11ï¿½ï¿½ï¿½\ï¿½[ï¿½Xï¿½ï¿½ï¿½ï¿½
 	if (m_pVB) { m_pVB->Release(); m_pVB = nullptr; }
 	if (m_pIB) { m_pIB->Release(); m_pIB = nullptr; }
 	if (m_pSRV) { m_pSRV->Release(); m_pSRV = nullptr; }
 	m_indexCount = 0;
 
-	// FBXŠÖ˜A‚Ìƒ|ƒCƒ“ƒ^‚ğƒNƒŠƒA
+	// FBXï¿½Ö˜Aï¿½Ìƒ|ï¿½Cï¿½ï¿½ï¿½^ï¿½ï¿½Nï¿½ï¿½ï¿½A
 	m_mesh = nullptr;
 	m_meshNode = nullptr;
 
@@ -132,15 +132,15 @@ void Model3D::Release() {
 }
 
 /**===========================================================================
-   ƒOBJ ƒ[ƒ_[„
+   ï¿½ï¿½OBJ ï¿½ï¿½ï¿½[ï¿½_ï¿½[ï¿½ï¿½
  ===========================================================================**/
 bool Model3D::LoadOBJ(const wchar_t* objPath, const wchar_t* fallbackTex) {
 	Release();
 
-	// OBJ ƒtƒ@ƒCƒ‹“Ç‚İ‚İ
+	// OBJ ï¿½tï¿½@ï¿½Cï¿½ï¿½ï¿½Ç‚İï¿½ï¿½ï¿½
 	std::ifstream ifs(WideToUTF8(objPath));
 	if (!ifs) {
-		MessageBoxA(nullptr, "OBJ ‚Ì“Ç‚İ‚İ‚É¸”s‚µ‚Ü‚µ‚½", "Error", MB_OK | MB_ICONERROR);
+		MessageBoxA(nullptr, "Failed to load OBJ file.", "Error", MB_OK | MB_ICONERROR);
 		return false;
 	}
 	std::wstring baseDirW = DirnameW(objPath);
@@ -159,7 +159,7 @@ bool Model3D::LoadOBJ(const wchar_t* objPath, const wchar_t* fallbackTex) {
 	std::string line;
 	std::wstring mtlFileW;
 
-	// MTL —R—ˆ‚Ì UV •ÏŠ·iŒã’i‚ÅˆêŠ‡“K—pj
+	// MTL ï¿½Rï¿½ï¿½ï¿½ï¿½ UV ï¿½ÏŠï¿½ï¿½iï¿½ï¿½iï¿½ÅˆêŠ‡ï¿½Kï¿½pï¿½j
 	XMFLOAT2 uvScale {1.0f, 1.0f};
 	XMFLOAT2 uvOffset {0.0f, 0.0f};
 	bool uvClamp = false;
@@ -183,7 +183,7 @@ bool Model3D::LoadOBJ(const wchar_t* objPath, const wchar_t* fallbackTex) {
 		}
 		else v.Normal = faceN;
 
-		// ‰Šú‚Í”’iŒã‚Å MTL Kd ‚ğ‘S’¸“_‚ÉˆêŠ‡”½‰fj
+		// ï¿½ï¿½ï¿½ï¿½ï¿½Í”ï¿½ï¿½iï¿½ï¿½ï¿½ MTL Kd ï¿½ï¿½Sï¿½ï¿½ï¿½_ï¿½ÉˆêŠ‡ï¿½ï¿½ï¿½fï¿½j
 		v.Diffuse = XMFLOAT4(1, 1, 1, 1);
 
 		uint32_t newIdx = static_cast<uint32_t>(vertices.size());
@@ -204,7 +204,7 @@ bool Model3D::LoadOBJ(const wchar_t* objPath, const wchar_t* fallbackTex) {
 		else if (line.rfind("vt ", 0) == 0) {
 			std::istringstream ss(line.substr(3));
 			float u, v; ss >> u >> v;
-			// DirectX Œn‚É‡‚í‚¹‚Ä v ‚ğ”½“]
+			// DirectX ï¿½nï¿½Éï¿½ï¿½í‚¹ï¿½ï¿½ v ï¿½ğ”½“]
 			texcoords.emplace_back(u, 1.0f - v);
 		}
 		else if (line.rfind("vn ", 0) == 0) {
@@ -228,7 +228,7 @@ bool Model3D::LoadOBJ(const wchar_t* objPath, const wchar_t* fallbackTex) {
 				return k;
 			};
 
-			// 1 ‰ñ‚¾‚¯ƒp[ƒX‚µ‚ÄÄ—˜—p
+			// 1 ï¿½ñ‚¾‚ï¿½ï¿½pï¿½[ï¿½Xï¿½ï¿½ï¿½ÄÄ—ï¿½ï¿½p
 			std::vector<PNTKey> keys;
 			keys.reserve(vtokens.size());
 			bool anyNoNormal = false;
@@ -238,7 +238,7 @@ bool Model3D::LoadOBJ(const wchar_t* objPath, const wchar_t* fallbackTex) {
 				keys.emplace_back(k);
 			}
 
-			// •K—v‚É–Ê–@ü‚ğZo
+			// ï¿½Kï¿½vï¿½ï¿½ï¿½É–Ê–@ï¿½ï¿½ï¿½ï¿½Zï¿½o
 			XMFLOAT3 faceN {0, 0, 1};
 			if (anyNoNormal) {
 				std::function<XMFLOAT3(int)> get_pos = [&] (int p) -> XMFLOAT3 {
@@ -256,7 +256,7 @@ bool Model3D::LoadOBJ(const wchar_t* objPath, const wchar_t* fallbackTex) {
 				XMStoreFloat3(&faceN, n);
 			}
 
-			// îŒ`•ªŠ„i‘½ŠpŒ`‚É‚à‘Î‰j
+			// ï¿½ï¿½`ï¿½ï¿½ï¿½ï¿½ï¿½iï¿½ï¿½ï¿½pï¿½`ï¿½É‚ï¿½Î‰ï¿½ï¿½j
 			for (size_t i = 1; i + 1 < keys.size(); ++i) {
 				const PNTKey& a = keys[0];
 				const PNTKey& b = keys[i];
@@ -282,32 +282,32 @@ bool Model3D::LoadOBJ(const wchar_t* objPath, const wchar_t* fallbackTex) {
 	}
 
 	if (vertices.empty() || indices.empty()) {
-		MessageBoxA(nullptr, "OBJ ‚É•`‰æ‰Â”\‚ÈƒWƒIƒƒgƒŠ‚ª‚ ‚è‚Ü‚¹‚ñ", "Error", MB_OK | MB_ICONERROR);
+		MessageBoxA(nullptr, "OBJ has no drawable geometry.", "Error", MB_OK | MB_ICONERROR);
 		return false;
 	}
 
-	// MTL ‚©‚çƒeƒNƒXƒ`ƒƒ/UV •ÏŠ·æ“¾ ‚Æ KdiŠgUFj‚Ì“Ç‚İæ‚è
+	// MTL ï¿½ï¿½ï¿½ï¿½eï¿½Nï¿½Xï¿½`ï¿½ï¿½/UV ï¿½ÏŠï¿½ï¿½æ“¾ ï¿½ï¿½ Kdï¿½iï¿½gï¿½Uï¿½Fï¿½jï¿½Ì“Ç‚İï¿½ï¿½
 	bool texOK = false;
 	if (!mtlFileW.empty()) {
-		// Kd “Ç‚İæ‚èi—ªj
-		// ƒeƒNƒXƒ`ƒƒ“Ç‚İ‚İ
+		// Kd ï¿½Ç‚İï¿½ï¿½iï¿½ï¿½ï¿½j
+		// ï¿½eï¿½Nï¿½Xï¿½`ï¿½ï¿½ï¿½Ç‚İï¿½ï¿½ï¿½
 		texOK = TryLoadMTLTexture_SRV(mtlFileW, baseDirW, &m_pSRV, &uvScale, &uvOffset, &uvClamp);
 	}
 
-	// ƒtƒH[ƒ‹ƒoƒbƒNƒeƒNƒXƒ`ƒƒi•K—v‚È‚çj
+	// ï¿½tï¿½Hï¿½[ï¿½ï¿½ï¿½oï¿½bï¿½Nï¿½eï¿½Nï¿½Xï¿½`ï¿½ï¿½ï¿½iï¿½Kï¿½vï¿½È‚ï¿½j
 	if (!texOK && fallbackTex && fallbackTex[0]) {
 		texOK = LoadTextureWIC_SRV(fallbackTex, &m_pSRV);
 	}
 
-	// OBJ ‚ÌuƒeƒNƒXƒ`ƒƒ—L–³vƒtƒ‰ƒO‚ğŠm’èi”’1x1‚Í–³‚µˆµ‚¢j
+	// OBJ ï¿½Ìuï¿½eï¿½Nï¿½Xï¿½`ï¿½ï¿½ï¿½Lï¿½ï¿½ï¿½vï¿½tï¿½ï¿½ï¿½Oï¿½ï¿½mï¿½ï¿½iï¿½ï¿½1x1ï¿½Í–ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½j
 	m_hasTexture = texOK;
 
-	// ‚Ç‚ÌŒo˜H‚Å‚àƒeƒNƒXƒ`ƒƒ‚ª“¾‚ç‚ê‚È‚¯‚ê‚Î 1x1 ”’‚ğŠ„‚è“–‚Äi•`‰æ—p‚Ìƒ_ƒ~[j
+	// ï¿½Ç‚ÌŒoï¿½Hï¿½Å‚ï¿½eï¿½Nï¿½Xï¿½`ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È‚ï¿½ï¿½ï¿½ï¿½ 1x1 ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½è“–ï¿½Äiï¿½`ï¿½ï¿½pï¿½Ìƒ_ï¿½~ï¿½[ï¿½j
 	if (!texOK || !m_pSRV) {
 		m_pSRV = CreateSolidWhiteSRV();
 	}
 
-	// UV ƒXƒP[ƒ‹/ƒIƒtƒZƒbƒg/ƒNƒ‰ƒ“ƒv‚ğ‘S’¸“_‚ÖˆêŠ‡“K—p
+	// UV ï¿½Xï¿½Pï¿½[ï¿½ï¿½/ï¿½Iï¿½tï¿½Zï¿½bï¿½g/ï¿½Nï¿½ï¿½ï¿½ï¿½ï¿½vï¿½ï¿½Sï¿½ï¿½ï¿½_ï¿½ÖˆêŠ‡ï¿½Kï¿½p
 	if (uvScale.x != 1.0f || uvScale.y != 1.0f || uvOffset.x != 0.0f || uvOffset.y != 0.0f || uvClamp) {
 		for (size_t i = 0; i < vertices.size(); ++i) {
 			vertices[i].TexCoord.x = vertices[i].TexCoord.x * uvScale.x + uvOffset.x;
@@ -319,12 +319,12 @@ bool Model3D::LoadOBJ(const wchar_t* objPath, const wchar_t* fallbackTex) {
 		}
 	}
 
-	// MTL ‚Ì KdiŠgUFj‚ğ’¸“_ƒJƒ‰[‚É‚à”½‰f
+	// MTL ï¿½ï¿½ Kdï¿½iï¿½gï¿½Uï¿½Fï¿½jï¿½ğ’¸“_ï¿½Jï¿½ï¿½ï¿½[ï¿½É‚ï¿½ï¿½ï¿½f
 	for (auto& v : vertices) {
 		v.Diffuse = m_diffuse;
 	}
 
-	// VB ì¬
+	// VB ï¿½ì¬
 	{
 		D3D11_BUFFER_DESC bd {};
 		bd.Usage = D3D11_USAGE_DEFAULT;
@@ -335,11 +335,11 @@ bool Model3D::LoadOBJ(const wchar_t* objPath, const wchar_t* fallbackTex) {
 		init.pSysMem = vertices.data();
 
 		if (FAILED(GetDevice()->CreateBuffer(&bd, &init, &m_pVB)) || !m_pVB) {
-			MessageBoxA(nullptr, "OBJ: VB ‚Ìì¬‚É¸”s", "Error", MB_OK | MB_ICONERROR);
+			MessageBoxA(nullptr, "OBJ: failed to create vertex buffer.", "Error", MB_OK | MB_ICONERROR);
 			return false;
 		}
 	}
-	// IB ì¬
+	// IB ï¿½ì¬
 	{
 		D3D11_BUFFER_DESC bd {};
 		bd.Usage = D3D11_USAGE_DEFAULT;
@@ -350,7 +350,7 @@ bool Model3D::LoadOBJ(const wchar_t* objPath, const wchar_t* fallbackTex) {
 		init.pSysMem = indices.data();
 
 		if (FAILED(GetDevice()->CreateBuffer(&bd, &init, &m_pIB)) || !m_pIB) {
-			MessageBoxA(nullptr, "OBJ: IB ‚Ìì¬‚É¸”s", "Error", MB_OK | MB_ICONERROR);
+			MessageBoxA(nullptr, "OBJ: failed to create index buffer.", "Error", MB_OK | MB_ICONERROR);
 			return false;
 		}
 		m_indexCount = static_cast<UINT>(indices.size());
@@ -360,7 +360,7 @@ bool Model3D::LoadOBJ(const wchar_t* objPath, const wchar_t* fallbackTex) {
 }
 
 /**===========================================================================
-   ƒFBX ƒ[ƒ_[„
+   ï¿½ï¿½FBX ï¿½ï¿½ï¿½[ï¿½_ï¿½[ï¿½ï¿½
  ===========================================================================**/
 bool Model3D::LoadFBX(const wchar_t* fbxPath, const wchar_t* /*fallbackTex*/) {
 	Release();
@@ -377,21 +377,21 @@ bool Model3D::LoadFBX(const wchar_t* fbxPath, const wchar_t* /*fallbackTex*/) {
 	}
 	if (!importer->Initialize(path_utf8.c_str(), -1, shared.mgr->GetIOSettings())) {
 		importer->Destroy();
-		MessageBoxA(nullptr, "FBX ƒtƒ@ƒCƒ‹‚ÌƒI[ƒvƒ“‚É¸”s", "Error", MB_OK | MB_ICONERROR);
+		MessageBoxA(nullptr, "Failed to open FBX file.", "Error", MB_OK | MB_ICONERROR);
 		return false;
 	}
 	m_baseScene = FbxScene::Create(shared.mgr, "scene");
 	if (!importer->Import(m_baseScene)) {
 		importer->Destroy();
 		if (m_baseScene) { m_baseScene->Destroy(); m_baseScene = nullptr; }
-		MessageBoxA(nullptr, "FBX ‚Ì“Ç‚İ‚İ‚É¸”s", "Error", MB_OK | MB_ICONERROR);
+		MessageBoxA(nullptr, "Failed to import FBX file.", "Error", MB_OK | MB_ICONERROR);
 		return false;
 	}
 	importer->Destroy();
 
 	m_currentAnimScene = m_baseScene;
 
-	// ²/’PˆÊ
+	// ï¿½ï¿½/ï¿½Pï¿½ï¿½
 	{
 		FbxAxisSystem axis = m_baseScene->GetGlobalSettings().GetAxisSystem();
 		if (!(axis == FbxAxisSystem::DirectX)) {
@@ -403,7 +403,7 @@ bool Model3D::LoadFBX(const wchar_t* fbxPath, const wchar_t* /*fallbackTex*/) {
 		}
 	}
 
-	// ƒXƒLƒ“ƒƒbƒVƒ…—ñ‹“
+	// ï¿½Xï¿½Lï¿½ï¿½ï¿½ï¿½ï¿½bï¿½Vï¿½ï¿½ï¿½ï¿½
 	std::vector<std::pair<FbxMesh*, FbxNode*>> skinnedList;
 	EnumerateSkinnedMeshes(m_baseScene->GetRootNode(), skinnedList);
 	std::unordered_map<FbxMesh*, int> cpBase;
@@ -417,7 +417,7 @@ bool Model3D::LoadFBX(const wchar_t* fbxPath, const wchar_t* /*fallbackTex*/) {
 	m_skinnedMeshCache = skinnedList;
 	m_meshCpOffset = cpBase;
 
-	// •`‰æ‘ÎÛƒƒbƒVƒ…‘I‘ğ
+	// ï¿½`ï¿½ï¿½ÎÛƒï¿½ï¿½bï¿½Vï¿½ï¿½ï¿½Iï¿½ï¿½
 	m_mesh = nullptr; m_meshNode = nullptr;
 	if (!skinnedList.empty()) { m_mesh = skinnedList[0].first; m_meshNode = skinnedList[0].second; }
 	else {
@@ -429,14 +429,14 @@ bool Model3D::LoadFBX(const wchar_t* fbxPath, const wchar_t* /*fallbackTex*/) {
 		pick(m_baseScene->GetRootNode());
 	}
 	if (!m_mesh || !m_meshNode) {
-		MessageBoxA(nullptr, "FBX: ƒƒbƒVƒ…‚ªŒ©‚Â‚©‚è‚Ü‚¹‚ñ", "Error", MB_OK | MB_ICONERROR);
+		MessageBoxA(nullptr, "FBX: mesh not found.", "Error", MB_OK | MB_ICONERROR);
 		return false;
 	}
 
-	// ƒx[ƒXƒfƒBƒŒƒNƒgƒŠ
+	// ï¿½xï¿½[ï¿½Xï¿½fï¿½Bï¿½ï¿½ï¿½Nï¿½gï¿½ï¿½
 	std::wstring baseDir = DirnameW(fbxPath);
 
-	// ƒ}ƒeƒŠƒAƒ‹–ˆ‚ÌƒeƒNƒXƒ`ƒƒSRV/ŠgUFƒLƒƒƒbƒVƒ…
+	// ï¿½}ï¿½eï¿½ï¿½ï¿½Aï¿½ï¿½ï¿½ï¿½ï¿½Ìƒeï¿½Nï¿½Xï¿½`ï¿½ï¿½SRV/ï¿½gï¿½Uï¿½Fï¿½Lï¿½ï¿½ï¿½bï¿½Vï¿½ï¿½
 	std::unordered_map<FbxSurfaceMaterial*, ID3D11ShaderResourceView*> matSRV;
 	std::unordered_map<FbxSurfaceMaterial*, XMFLOAT4>                 matColor;
 
@@ -449,22 +449,22 @@ bool Model3D::LoadFBX(const wchar_t* fbxPath, const wchar_t* /*fallbackTex*/) {
 		return sBlue;
 	};
 
-	// w’èƒ}ƒeƒŠƒAƒ‹‚©‚çDiffuce/BaseColor‚ÌFbxFileTexture‚ğ’Tõ‚µSRV¶¬i–³‚¯‚ê‚Înullptrj
+	// ï¿½wï¿½ï¿½}ï¿½eï¿½ï¿½ï¿½Aï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Diffuce/BaseColorï¿½ï¿½FbxFileTextureï¿½ï¿½Tï¿½ï¿½ï¿½ï¿½SRVï¿½ï¿½ï¿½ï¿½ï¿½iï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½nullptrï¿½j
 	auto LoadSRVFromMaterial = [&](FbxSurfaceMaterial* mat) -> ID3D11ShaderResourceView* {
 		if (!mat) return nullptr;
 
-		// Šù‚Éì‚Á‚Ä‚¢‚ê‚ÎÄ—˜—piAddRef‚µ‚Ä•Ô‚·j
+		// ï¿½ï¿½ï¿½Éï¿½ï¿½ï¿½Ä‚ï¿½ï¿½ï¿½ÎÄ—ï¿½ï¿½pï¿½iAddRefï¿½ï¿½ï¿½Ä•Ô‚ï¿½ï¿½j
 		if (auto it = matSRV.find(mat); it != matSRV.end()) {
 			if (it->second) it->second->AddRef();
 			return it->second;
 		}
 
-		// ƒvƒƒpƒeƒB‚ğ‘–¸iFileTexture‚ğ’T‚·FDiffuse/BaseColorŒnj
+		// ï¿½vï¿½ï¿½ï¿½pï¿½eï¿½Bï¿½ğ‘–ï¿½ï¿½iFileTextureï¿½ï¿½Tï¿½ï¿½ï¿½FDiffuse/BaseColorï¿½nï¿½j
 		auto tryPropForFile = [&] (const char* propName) -> FbxFileTexture* {
 			FbxProperty prop = mat->FindProperty(propName);
 			if (!prop.IsValid()) return nullptr;
 
-			// LayeredTexture Œo—R
+			// LayeredTexture ï¿½oï¿½R
 			const int layeredCount = prop.GetSrcObjectCount<FbxLayeredTexture>();
 			for (int li = 0; li < layeredCount; ++li) {
 				if (auto* layered = prop.GetSrcObject<FbxLayeredTexture>(li)) {
@@ -477,7 +477,7 @@ bool Model3D::LoadFBX(const wchar_t* fbxPath, const wchar_t* /*fallbackTex*/) {
 					}
 				}
 			}
-			// LayeredTexture Œo—R
+			// LayeredTexture ï¿½oï¿½R
 			const int tcount = prop.GetSrcObjectCount<FbxTexture>();
 			for (int ti = 0; ti < tcount; ++ti) {
 				if (auto* tex = prop.GetSrcObject<FbxTexture>(ti)) {
@@ -506,7 +506,7 @@ bool Model3D::LoadFBX(const wchar_t* fbxPath, const wchar_t* /*fallbackTex*/) {
 			const char* rel = fileTex->GetRelativeFileName();
 			const char* abs = fileTex->GetFileName();
 			std::wstring path = rel && *rel ? Utf8ToWide(rel) : Utf8ToWide(abs);
-			// Œó•â‰ğŒˆibaseDir/filename ‚È‚Çj
+			// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ibaseDir/filename ï¿½È‚Çj
 			size_t pos = path.find_last_of(L"/\\");
 			std::wstring justName = (pos == std::wstring::npos) ? path : path.substr(pos + 1);
 
@@ -527,13 +527,13 @@ bool Model3D::LoadFBX(const wchar_t* fbxPath, const wchar_t* /*fallbackTex*/) {
 			}
 		}
 
-		// ƒLƒƒƒbƒVƒ…inull‚Å‚à“ü‚ê‚éj
+		// ï¿½Lï¿½ï¿½ï¿½bï¿½Vï¿½ï¿½ï¿½inullï¿½Å‚ï¿½ï¿½ï¿½ï¿½ï¿½j
 		matSRV.emplace(mat, srv);
 		if (srv) srv->AddRef();
 		return srv;
 	};
 
-	// ƒ}ƒeƒŠƒAƒ‹ŠgUF‚Ìæ“¾i‚È‚¯‚ê‚Î”’j
+	// ï¿½}ï¿½eï¿½ï¿½ï¿½Aï¿½ï¿½ï¿½gï¿½Uï¿½Fï¿½Ìæ“¾ï¿½iï¿½È‚ï¿½ï¿½ï¿½Î”ï¿½ï¿½j
 	auto LoadDiffuseColorFromMaterial = [&] (FbxSurfaceMaterial* mat) -> XMFLOAT4 {
 		if (!mat) return XMFLOAT4(1, 1, 1, 1);
 		if (auto it = matColor.find(mat); it != matColor.end()) return it->second;
@@ -560,7 +560,7 @@ bool Model3D::LoadFBX(const wchar_t* fbxPath, const wchar_t* /*fallbackTex*/) {
 		return out;
 	};
 
-	// ’¸“_¶¬iƒTƒuƒZƒbƒg•ªŠ„j
+	// ï¿½ï¿½ï¿½_ï¿½ï¿½ï¿½ï¿½ï¿½iï¿½Tï¿½uï¿½Zï¿½bï¿½gï¿½ï¿½ï¿½ï¿½ï¿½j
 	m_verticesCPU.clear();
 	m_cpIndexOfVertex.clear();
 	m_subsets.clear();
@@ -607,7 +607,7 @@ bool Model3D::LoadFBX(const wchar_t* fbxPath, const wchar_t* /*fallbackTex*/) {
 					m_skinMeshGeo.emplace_back(geoInfo);
 				}
 
-				// –@üEUVƒZƒbƒg
+				// ï¿½@ï¿½ï¿½ï¿½EUVï¿½Zï¿½bï¿½g
 				const char* uvNameC = nullptr;
 				FbxStringList uvSets;
 				mesh->GetUVSetNames(uvSets);
@@ -617,7 +617,7 @@ bool Model3D::LoadFBX(const wchar_t* fbxPath, const wchar_t* /*fallbackTex*/) {
 				FbxLayerElement::EMappingMode nMap = nElem ? nElem->GetMappingMode() : FbxLayerElement::eNone;
 				FbxLayerElement::EReferenceMode nRef = nElem ? nElem->GetReferenceMode() : FbxLayerElement::eDirect;
 
-				// ƒ}ƒeƒŠƒAƒ‹Š„‚è“–‚Äiƒ|ƒŠƒSƒ“’PˆÊj
+				// ï¿½}ï¿½eï¿½ï¿½ï¿½Aï¿½ï¿½ï¿½ï¿½ï¿½è“–ï¿½Äiï¿½|ï¿½ï¿½ï¿½Sï¿½ï¿½ï¿½Pï¿½Êj
 				FbxLayerElementMaterial* mElem = mesh->GetElementMaterialCount() > 0 ? mesh->GetElementMaterial(0) : nullptr;
 				auto getPolygonMaterial = [&] (int p) -> FbxSurfaceMaterial* {
 					if (!mElem) return (n->GetMaterialCount() > 0 ? n->GetMaterial(0) : nullptr);
@@ -632,8 +632,8 @@ bool Model3D::LoadFBX(const wchar_t* fbxPath, const wchar_t* /*fallbackTex*/) {
 					return (n->GetMaterialCount() > 0 ? n->GetMaterial(0) : nullptr);
 				};
 
-				// ƒTƒuƒZƒbƒgì¬—p
-				UINT runningIndex = (UINT)m_verticesCPU.size(); // ‚±‚ê‚©‚ç‚·‚éÅ‰‚ÌƒCƒ“ƒfƒbƒNƒX
+				// ï¿½Tï¿½uï¿½Zï¿½bï¿½gï¿½ì¬ï¿½p
+				UINT runningIndex = (UINT)m_verticesCPU.size(); // ï¿½ï¿½ï¿½ê‚©ï¿½ç‚·ï¿½ï¿½Åï¿½ï¿½ÌƒCï¿½ï¿½ï¿½fï¿½bï¿½Nï¿½X
 				bool subsetOpen = false;
 				Subset curSubset {};
 
@@ -643,7 +643,7 @@ bool Model3D::LoadFBX(const wchar_t* fbxPath, const wchar_t* /*fallbackTex*/) {
 					curSubset.indexCount = 0;
 					curSubset.pSRV = srv;
 					if (!curSubset.pSRV) {
-						curSubset.pSRV = getOrCreateBlue(); // ƒeƒNƒXƒ`ƒƒ–³‚µ‚ÍÂ1x1
+						curSubset.pSRV = getOrCreateBlue(); // ï¿½eï¿½Nï¿½Xï¿½`ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Íï¿½1x1
 					}
 					curSubset.diffuse = col;
 					subsetOpen = true;
@@ -663,12 +663,12 @@ bool Model3D::LoadFBX(const wchar_t* fbxPath, const wchar_t* /*fallbackTex*/) {
 					int sz = mesh->GetPolygonSize(p);
 					if (sz < 3) continue;
 
-					// ‚±‚Ìƒ|ƒŠƒSƒ“‚Ìƒ}ƒeƒŠƒAƒ‹ -> SRV / Diffuse
+					// ï¿½ï¿½ï¿½Ìƒ|ï¿½ï¿½ï¿½Sï¿½ï¿½ï¿½Ìƒ}ï¿½eï¿½ï¿½ï¿½Aï¿½ï¿½ -> SRV / Diffuse
 					FbxSurfaceMaterial* fbxMat = getPolygonMaterial(p);
-					ID3D11ShaderResourceView* srv = LoadSRVFromMaterial(fbxMat); // AddRef Ï
+					ID3D11ShaderResourceView* srv = LoadSRVFromMaterial(fbxMat); // AddRef ï¿½ï¿½
 					XMFLOAT4 mcol = LoadDiffuseColorFromMaterial(fbxMat);
 
-					// ƒTƒuƒZƒbƒgØ‘ÖiˆÙ‚È‚éSRV‚È‚çVƒTƒuƒZƒbƒgŠJnj
+					// ï¿½Tï¿½uï¿½Zï¿½bï¿½gï¿½Ø‘Öiï¿½Ù‚È‚ï¿½SRVï¿½È‚ï¿½Vï¿½Tï¿½uï¿½Zï¿½bï¿½gï¿½Jï¿½nï¿½j
 					if (!subsetOpen) {
 						openSubset(srv, mcol);
 					}
@@ -684,8 +684,8 @@ bool Model3D::LoadFBX(const wchar_t* fbxPath, const wchar_t* /*fallbackTex*/) {
 							openSubset(srv, mcol);
 						}
 						else {
-							// “¯ˆê‚ÌSRV‚È‚ç¡‚ÌƒTƒuƒZƒbƒgŒp‘±
-							if (srv) srv->Release(); // openSubset ‚µ‚È‚¢ê‡‚Í—]•ª‚ÈQÆ‚ğ–ß‚·
+							// ï¿½ï¿½ï¿½ï¿½ï¿½SRVï¿½È‚ç¡ï¿½ÌƒTï¿½uï¿½Zï¿½bï¿½gï¿½pï¿½ï¿½
+							if (srv) srv->Release(); // openSubset ï¿½ï¿½ï¿½È‚ï¿½ï¿½ê‡ï¿½Í—]ï¿½ï¿½ï¿½ÈQï¿½Æ‚ï¿½ß‚ï¿½
 						}
 					}
 
@@ -701,7 +701,7 @@ bool Model3D::LoadFBX(const wchar_t* fbxPath, const wchar_t* /*fallbackTex*/) {
 						};
 
 						VertexPNTC tri[3] {};
-						// ˆÊ’uiƒWƒIƒƒgƒŠ“I•â³j
+						// ï¿½Ê’uï¿½iï¿½Wï¿½Iï¿½ï¿½ï¿½gï¿½ï¿½ï¿½Iï¿½â³ï¿½j
 						for (int c = 0; c < 3; ++c) {
 							FbxVector4 p0 = mesh->GetControlPoints()[cpIdxTri[c]];
 							FbxVector4 pl = finalM.MultT(p0);
@@ -754,7 +754,7 @@ bool Model3D::LoadFBX(const wchar_t* fbxPath, const wchar_t* /*fallbackTex*/) {
 							tri[c].TexCoord = XMFLOAT2(u, v);
 						}
 
-						// •ÏX“_: ƒ}ƒeƒŠƒAƒ‹‚ÌŠgUF‚ğ’¸“_ƒJƒ‰[‚Ö‚à”½‰f
+						// ï¿½ÏXï¿½_: ï¿½}ï¿½eï¿½ï¿½ï¿½Aï¿½ï¿½ï¿½ÌŠgï¿½Uï¿½Fï¿½ğ’¸“_ï¿½Jï¿½ï¿½ï¿½[ï¿½Ö‚ï¿½ï¿½ï¿½f
 						tri[0].Diffuse = mcol;
 						tri[1].Diffuse = mcol;
 						tri[2].Diffuse = mcol;
@@ -762,7 +762,7 @@ bool Model3D::LoadFBX(const wchar_t* fbxPath, const wchar_t* /*fallbackTex*/) {
 						int order[3] = {0, 1, 2};
 						if (invertWinding) { order[1] = 2; order[2] = 1; }
 
-						// ’¸“_ push
+						// ï¿½ï¿½ï¿½_ push
 						m_verticesCPU.emplace_back(tri[order[0]]);
 						m_verticesCPU.emplace_back(tri[order[1]]);
 						m_verticesCPU.emplace_back(tri[order[2]]);
@@ -779,12 +779,12 @@ bool Model3D::LoadFBX(const wchar_t* fbxPath, const wchar_t* /*fallbackTex*/) {
 							m_cpIndexOfVertex.emplace_back(-1);
 						}
 
-						// Œ»İ‚ÌƒTƒuƒZƒbƒg‚ÌƒCƒ“ƒfƒbƒNƒX”‚ğ‰ÁZi3’¸“_ = 3 indexj
+						// ï¿½ï¿½ï¿½İ‚ÌƒTï¿½uï¿½Zï¿½bï¿½gï¿½ÌƒCï¿½ï¿½ï¿½fï¿½bï¿½Nï¿½Xï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Zï¿½i3ï¿½ï¿½ï¿½_ = 3 indexï¿½j
 						curSubset.indexCount += 3;
 					}
 				}
 
-				// ÅIƒTƒuƒZƒbƒg‚ğŠm’è
+				// ï¿½ÅIï¿½Tï¿½uï¿½Zï¿½bï¿½gï¿½ï¿½mï¿½ï¿½
 				closeSubset();
 
 				if (m_hasSkin && !meshIsSkinned) {
@@ -811,11 +811,11 @@ bool Model3D::LoadFBX(const wchar_t* fbxPath, const wchar_t* /*fallbackTex*/) {
 	Traverse(m_baseScene->GetRootNode());
 
 	if (m_verticesCPU.empty() || m_cpIndexOfVertex.size() != m_verticesCPU.size()) {
-		MessageBoxA(nullptr, "FBX ‚É—LŒø‚Èƒ|ƒŠƒSƒ“‚ª‚ ‚è‚Ü‚¹‚ñ", "Error", MB_OK | MB_ICONERROR);
+		MessageBoxA(nullptr, "FBX has no valid polygons.", "Error", MB_OK | MB_ICONERROR);
 		return false;
 	}
 
-	// VB / IB ì¬
+	// VB / IB ï¿½ì¬
 	{
 		m_vbDynamic = m_hasSkin;
 		D3D11_BUFFER_DESC bd {};
@@ -827,7 +827,7 @@ bool Model3D::LoadFBX(const wchar_t* fbxPath, const wchar_t* /*fallbackTex*/) {
 		D3D11_SUBRESOURCE_DATA init {};
 		init.pSysMem = m_verticesCPU.data();
 		if (FAILED(GetDevice()->CreateBuffer(&bd, &init, &m_pVB)) || !m_pVB) {
-			MessageBoxA(nullptr, "FBX: VB ì¬‚É¸”s", "Error", MB_OK | MB_ICONERROR);
+			MessageBoxA(nullptr, "FBX: failed to create vertex buffer.", "Error", MB_OK | MB_ICONERROR);
 			return false;
 		}
 	}
@@ -844,7 +844,7 @@ bool Model3D::LoadFBX(const wchar_t* fbxPath, const wchar_t* /*fallbackTex*/) {
 		D3D11_SUBRESOURCE_DATA init {};
 		init.pSysMem = idx.data();
 		if (FAILED(GetDevice()->CreateBuffer(&bd, &init, &m_pIB)) || !m_pIB) {
-			MessageBoxA(nullptr, "FBX: IB ì¬‚É¸”s", "Error", MB_OK | MB_ICONERROR);
+			MessageBoxA(nullptr, "FBX: failed to create index buffer.", "Error", MB_OK | MB_ICONERROR);
 			return false;
 		}
 	}
@@ -903,9 +903,9 @@ bool Model3D::LoadFBX(const wchar_t* fbxPath, const wchar_t* /*fallbackTex*/) {
 		}
 	}
 
-	// : matSRVƒLƒƒƒbƒVƒ…‚ÌƒNƒŠ[ƒ“ƒAƒbƒv
-	// ƒTƒuƒZƒbƒg‚ÉˆÚ÷Ï‚İ‚ÌSRV‚ÍŠù‚ÉAddRef‚³‚ê‚Ä‚¢‚é‚½‚ßA
-	// ƒLƒƒƒbƒVƒ…‘¤‚ÌQÆ‚ğ‰ğ•ú‚·‚é
+	// : matSRVï¿½Lï¿½ï¿½ï¿½bï¿½Vï¿½ï¿½ï¿½ÌƒNï¿½ï¿½ï¿½[ï¿½ï¿½ï¿½Aï¿½bï¿½v
+	// ï¿½Tï¿½uï¿½Zï¿½bï¿½gï¿½ÉˆÚï¿½ï¿½Ï‚İ‚ï¿½SRVï¿½ÍŠï¿½ï¿½ï¿½AddRefï¿½ï¿½ï¿½ï¿½Ä‚ï¿½ï¿½é‚½ï¿½ßA
+	// ï¿½Lï¿½ï¿½ï¿½bï¿½Vï¿½ï¿½ï¿½ï¿½ï¿½ÌQï¿½Æ‚ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	for (auto& pair : matSRV) {
 		if (pair.second) {
 			pair.second->Release();
@@ -930,7 +930,7 @@ fbxsdk::FbxNode* Model3D::FindBone(const char* name) const {
 }
 
 fbxsdk::FbxNode* Model3D::FindBone(const wchar_t* name) const {
-	// UTF-8‚Å”äŠr‚µ‚½‚¢ê‡‚ÍWideToUTF8‚ğg‚¤
+	// UTF-8ï¿½Å”ï¿½rï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ê‡ï¿½ï¿½WideToUTF8ï¿½ï¿½gï¿½ï¿½
 	std::string nameUtf8 = WideToUTF8(name);
 	if (!m_baseScene || !name || !*name) return nullptr;
 	std::function<fbxsdk::FbxNode* (fbxsdk::FbxNode*)> search = [&] (fbxsdk::FbxNode* node) -> fbxsdk::FbxNode* {
@@ -986,11 +986,11 @@ bool Model3D::TryGetBoneLocalMatrix(const char* boneName, DirectX::XMMATRIX& out
 
 void Model3D::ScaleBoneAndChildren(fbxsdk::FbxNode* bone, const fbxsdk::FbxDouble3& scale) {
 	if (!bone) return;
-	// Œ»İ‚ÌƒXƒP[ƒ‹‚ğæ“¾‚µAŠ|‚¯‡‚í‚¹‚½‚¢ê‡‚ÍˆÈ‰º
+	// ï¿½ï¿½ï¿½İ‚ÌƒXï¿½Pï¿½[ï¿½ï¿½ï¿½ï¿½æ“¾ï¿½ï¿½ï¿½Aï¿½|ï¿½ï¿½ï¿½ï¿½ï¿½í‚¹ï¿½ï¿½ï¿½ï¿½ï¿½ê‡ï¿½ÍˆÈ‰ï¿½
 	//FbxDouble3 current = bone->LclScaling.Get();
 	//bone->LclScaling.Set(FbxDouble3(current[0]*scale[0], current[1]*scale[1], current[2]*scale[2]));
 
-	// ã‘‚«‚Ìê‡‚Í‚±‚¿‚çiˆê—á: 2”{‚ÉŠg‘åj
+	// ï¿½ã‘ï¿½ï¿½ï¿½Ìê‡ï¿½Í‚ï¿½ï¿½ï¿½ï¿½ï¿½iï¿½ï¿½ï¿½: 2ï¿½{ï¿½ÉŠgï¿½ï¿½j
 	bone->LclScaling.Set(scale);
 
 
@@ -1643,7 +1643,7 @@ void Model3D::BakeRigidMeshData() {
 	}
 }
 
-// Ä¶’·‚Ìæ“¾ (œƒ‚[ƒVƒ‡ƒ“ƒXƒRƒA‚Å AnimStack ‚ğ‘I‘ğ)
+// ï¿½Äï¿½ï¿½ï¿½ï¿½Ìæ“¾ (ï¿½ï¿½ï¿½ï¿½ï¿½[ï¿½Vï¿½ï¿½ï¿½ï¿½ï¿½Xï¿½Rï¿½Aï¿½ï¿½ AnimStack ï¿½ï¿½Iï¿½ï¿½)
 void Model3D::InitAnimationInfo() {
 	m_animTimeSec = 0.0;
 	m_animStartSec = 0.0;
@@ -1888,7 +1888,7 @@ void Model3D::SkinFromScratch() {
 	updateDynamicVBFromCP(m_skinPosBuf);
 }
 
-// ƒAƒjƒ‚ği‚ß‚é (ƒXƒLƒ“‚ ‚è‚Ì‚Æ‚«‚Í CPU ƒXƒLƒjƒ“ƒO‚µ‚Ä VB XV)
+// ï¿½Aï¿½jï¿½ï¿½ï¿½ï¿½iï¿½ß‚ï¿½ (ï¿½Xï¿½Lï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì‚Æ‚ï¿½ï¿½ï¿½ CPU ï¿½Xï¿½Lï¿½jï¿½ï¿½ï¿½Oï¿½ï¿½ï¿½ï¿½ VB ï¿½Xï¿½V)
 void Model3D::UpdateAnimation(double dtSec) {
 	if (!m_baseScene && m_bakedClips.empty()) return;
 
@@ -2087,7 +2087,7 @@ void Model3D::PlayAnimation(const std::string& animName) {
 	BakeRigidMeshData();
 }
 
-// CP ”z—ñ‚©‚ç“WŠJÏ‚İ’¸“_‚Ö”½‰f -> “®“I VB ‚ğ Map ‚µ‚Ä‘‚«–ß‚µ
+// CP ï¿½zï¿½ñ‚©‚ï¿½Wï¿½Jï¿½Ï‚İ’ï¿½ï¿½_ï¿½Ö”ï¿½ï¿½f -> ï¿½ï¿½ï¿½I VB ï¿½ï¿½ Map ï¿½ï¿½ï¿½Äï¿½ï¿½ï¿½ï¿½ß‚ï¿½
 void Model3D::updateDynamicVBFromCP(const std::vector<XMFLOAT3>& cpPos) {
 	if (!m_pVB || !m_vbDynamic) return;
 	if (cpPos.empty() || m_cpIndexOfVertex.size() != m_verticesCPU.size()) return;

@@ -42,7 +42,7 @@ namespace hal
 		}
 		else {
 			if (FAILED(CreateWICTextureFromFile(pDevice, pFontTextureFileName, &m_pTexture, &m_pTextureView))) {
-				MessageBoxW(nullptr, L"?t?H???g?e?N?X?`????????????s???????", pFontTextureFileName, MB_OK | MB_ICONERROR);
+				MessageBoxW(nullptr, L"Failed to load font texture.", pFontTextureFileName, MB_OK | MB_ICONERROR);
 				return;
 			}
 
