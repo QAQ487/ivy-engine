@@ -390,3 +390,4 @@ FodyWeavers.xsd
 /rom/shader/VertexShader3DSkinned.cso
 /rom/shader/FullscreenVS.cso
 /rom/shader/PostProcessPS.cso
+/interactive-visual-engine.code-workspace
