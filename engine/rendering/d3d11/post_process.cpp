@@ -25,21 +25,37 @@ ID3D11SamplerState* s_sampler = nullptr;
 
 float s_baseRgbShift = 0.0f;
 float s_baseMosaicBlocks = 0.0f;
+float s_basePosterize = 0.0f;
+float s_baseNoise = 0.0f;
+float s_baseGrayscale = 0.0f;
+float s_baseContrast = 0.0f;
+float s_baseVignette = 0.0f;
+float s_baseScanline = 0.0f;
+float s_baseFlicker = 0.0f;
 float s_burstRgbShift = 0.0f;
 float s_burstDuration = 0.0f;
 float s_burstRemaining = 0.0f;
+float s_time = 0.0f;
 
 struct PostProcessCB {
-	float PP_Mode;
 	float PP_RGBShift;
 	float PP_MosaicBlocks;
-	float PP_Padding;
+	float PP_Posterize;
+	float PP_Noise;
+	float PP_Grayscale;
+	float PP_Contrast;
+	float PP_Vignette;
+	float PP_Scanline;
+	float PP_Time;
+	float PP_Flicker;
 	float PP_UVOffsetX;
 	float PP_UVOffsetY;
 	float PP_UVScaleX;
 	float PP_UVScaleY;
+	float PP_Pad0;
+	float PP_Pad1;
 };
-static_assert(sizeof(PostProcessCB) == 32, "PostProcessCB must be 32 bytes");
+static_assert(sizeof(PostProcessCB) == 64, "PostProcessCB must be 64 bytes");
 
 bool LoadShaderFile(const char* path, std::vector<char>& outData) {
 	std::ifstream file(path, std::ios::binary);
@@ -108,9 +124,17 @@ void PostProcess_Shutdown() {
 	SAFE_RELEASE(s_vs);
 	s_baseRgbShift = 0.0f;
 	s_baseMosaicBlocks = 0.0f;
+	s_basePosterize = 0.0f;
+	s_baseNoise = 0.0f;
+	s_baseGrayscale = 0.0f;
+	s_baseContrast = 0.0f;
+	s_baseVignette = 0.0f;
+	s_baseScanline = 0.0f;
+	s_baseFlicker = 0.0f;
 	s_burstRgbShift = 0.0f;
 	s_burstDuration = 0.0f;
 	s_burstRemaining = 0.0f;
+	s_time = 0.0f;
 }
 
 void PostProcess_SetEffects(float rgbShift, float mosaicBlocks) {
@@ -118,9 +142,33 @@ void PostProcess_SetEffects(float rgbShift, float mosaicBlocks) {
 	s_baseMosaicBlocks = (std::max)(0.0f, mosaicBlocks);
 }
 
+void PostProcess_SetEffects(const PostFXParams& params) {
+	s_baseRgbShift = (std::max)(0.0f, params.rgbShift);
+	s_baseMosaicBlocks = (std::max)(0.0f, params.mosaicBlocks);
+	s_basePosterize = (std::max)(0.0f, params.posterize);
+	s_baseNoise = (std::max)(0.0f, params.noise);
+	s_baseGrayscale = (std::max)(0.0f, params.grayscale);
+	s_baseContrast = (std::max)(0.0f, params.contrast);
+	s_baseVignette = (std::max)(0.0f, params.vignette);
+	s_baseScanline = (std::max)(0.0f, params.scanline);
+	s_baseFlicker = (std::max)(0.0f, params.flicker);
+}
+
 void PostProcess_GetEffects(float& outRgbShift, float& outMosaicBlocks) {
 	outRgbShift = s_baseRgbShift;
 	outMosaicBlocks = s_baseMosaicBlocks;
+}
+
+void PostProcess_GetEffects(PostFXParams& out) {
+	out.rgbShift = s_baseRgbShift;
+	out.mosaicBlocks = s_baseMosaicBlocks;
+	out.posterize = s_basePosterize;
+	out.noise = s_baseNoise;
+	out.grayscale = s_baseGrayscale;
+	out.contrast = s_baseContrast;
+	out.vignette = s_baseVignette;
+	out.scanline = s_baseScanline;
+	out.flicker = s_baseFlicker;
 }
 
 void PostProcess_TriggerBurst(float rgbShift, float durationSeconds) {
@@ -130,6 +178,7 @@ void PostProcess_TriggerBurst(float rgbShift, float durationSeconds) {
 }
 
 void PostProcess_Update(float dt) {
+	s_time += dt;
 	if (s_burstRemaining <= 0.0f) {
 		s_burstRemaining = 0.0f;
 		return;
@@ -152,14 +201,6 @@ void PostProcess_Draw() {
 	const float rgb = (std::max)(s_baseRgbShift, burst);
 	const float mosaic = s_baseMosaicBlocks;
 
-	float mode = 0.0f;
-	if (rgb > 0.0f && mosaic > 0.0f)
-		mode = 3.0f;
-	else if (rgb > 0.0f)
-		mode = 1.0f;
-	else if (mosaic > 0.0f)
-		mode = 2.0f;
-
 	Renderer_BindBackBuffer();
 
 	float vx, vy, vw, vh;
@@ -174,14 +215,22 @@ void PostProcess_Draw() {
 	D3D11_MAPPED_SUBRESOURCE mapped = {};
 	if (SUCCEEDED(ctx->Map(s_cb, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped))) {
 		auto* cb = static_cast<PostProcessCB*>(mapped.pData);
-		cb->PP_Mode = mode;
 		cb->PP_RGBShift = rgb;
 		cb->PP_MosaicBlocks = mosaic;
-		cb->PP_Padding = 0.0f;
+		cb->PP_Posterize = s_basePosterize;
+		cb->PP_Noise = s_baseNoise;
+		cb->PP_Grayscale = s_baseGrayscale;
+		cb->PP_Contrast = s_baseContrast;
+		cb->PP_Vignette = s_baseVignette;
+		cb->PP_Scanline = s_baseScanline;
+		cb->PP_Time = s_time;
+		cb->PP_Flicker = s_baseFlicker;
 		cb->PP_UVOffsetX = uvOffX;
 		cb->PP_UVOffsetY = uvOffY;
 		cb->PP_UVScaleX = uvScaleX;
 		cb->PP_UVScaleY = uvScaleY;
+		cb->PP_Pad0 = 0.0f;
+		cb->PP_Pad1 = 0.0f;
 		ctx->Unmap(s_cb, 0);
 	}
 

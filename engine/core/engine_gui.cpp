@@ -676,46 +676,82 @@ static void DrawPostFxShowcaseWindow(bool* open) {
         return;
     }
 
-    static float s_rgb = 0.0f;
-    static float s_mosaic = 0.0f;
+    static PostFXParams s_fx;
     static bool s_synced = false;
     if (!s_synced) {
-        PostProcess_GetEffects(s_rgb, s_mosaic);
+        PostProcess_GetEffects(s_fx);
         s_synced = true;
     }
 
+    auto applyFx = [&]() { PostProcess_SetEffects(s_fx); };
+
     ImGui::TextWrapped(
-        "Live post-process over the game viewport. "
-        "Use this to verify RGB shift / mosaic without a match GOAL.");
+        "Live stackable post-process over the game viewport. "
+        "Strength 0 = off for each effect.");
     ImGui::Separator();
 
-    if (ImGui::SliderFloat("RGB Shift", &s_rgb, 0.0f, 0.04f, "%.4f"))
-        PostProcess_SetEffects(s_rgb, s_mosaic);
-    if (ImGui::SliderFloat("Mosaic Blocks", &s_mosaic, 0.0f, 80.0f, "%.0f"))
-        PostProcess_SetEffects(s_rgb, s_mosaic);
+    if (ImGui::SliderFloat("RGB Shift", &s_fx.rgbShift, 0.0f, 0.04f, "%.4f"))
+        applyFx();
+    if (ImGui::SliderFloat("Mosaic Blocks", &s_fx.mosaicBlocks, 0.0f, 80.0f, "%.0f"))
+        applyFx();
+    if (ImGui::SliderFloat("Posterize", &s_fx.posterize, 0.0f, 32.0f, "%.0f"))
+        applyFx();
+    if (ImGui::SliderFloat("Noise", &s_fx.noise, 0.0f, 1.0f, "%.3f"))
+        applyFx();
+    if (ImGui::SliderFloat("Grayscale", &s_fx.grayscale, 0.0f, 1.0f, "%.3f"))
+        applyFx();
+    if (ImGui::SliderFloat("Contrast (1.0 = neutral)", &s_fx.contrast, 0.0f, 2.0f, "%.2f"))
+        applyFx();
+    if (ImGui::SliderFloat("Vignette", &s_fx.vignette, 0.0f, 1.0f, "%.3f"))
+        applyFx();
+    if (ImGui::SliderFloat("Scanline", &s_fx.scanline, 0.0f, 1.0f, "%.3f"))
+        applyFx();
+    if (ImGui::SliderFloat("Flicker", &s_fx.flicker, 0.0f, 1.0f, "%.3f"))
+        applyFx();
 
     ImGui::Spacing();
-    if (ImGui::Button("Apply Passthrough (clear)")) {
-        s_rgb = 0.0f;
-        s_mosaic = 0.0f;
-        PostProcess_SetEffects(0.0f, 0.0f);
+    if (ImGui::Button("Off")) {
+        s_fx = PostFXParams{};
+        applyFx();
     }
     ImGui::SameLine();
+    if (ImGui::Button("Backrooms VHS")) {
+        s_fx = PostFXParams{};
+        s_fx.noise = 0.12f;
+        s_fx.vignette = 0.55f;
+        s_fx.scanline = 0.25f;
+        s_fx.contrast = 1.15f;
+        s_fx.rgbShift = 0.0015f;
+        s_fx.flicker = 0.08f;
+        applyFx();
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Emo")) {
+        s_fx = PostFXParams{};
+        s_fx.grayscale = 1.0f;
+        s_fx.contrast = 1.4f;
+        s_fx.noise = 0.15f;
+        s_fx.posterize = 8.0f;
+        applyFx();
+    }
+
+    ImGui::Spacing();
     if (ImGui::Button("Preset: Mild RGB")) {
-        s_rgb = 0.008f;
-        s_mosaic = 0.0f;
-        PostProcess_SetEffects(s_rgb, s_mosaic);
-    }
-    if (ImGui::Button("Preset: Mosaic")) {
-        s_rgb = 0.0f;
-        s_mosaic = 40.0f;
-        PostProcess_SetEffects(s_rgb, s_mosaic);
+        s_fx = PostFXParams{};
+        s_fx.rgbShift = 0.008f;
+        applyFx();
     }
     ImGui::SameLine();
+    if (ImGui::Button("Preset: Mosaic")) {
+        s_fx = PostFXParams{};
+        s_fx.mosaicBlocks = 40.0f;
+        applyFx();
+    }
     if (ImGui::Button("Preset: Combined")) {
-        s_rgb = 0.01f;
-        s_mosaic = 32.0f;
-        PostProcess_SetEffects(s_rgb, s_mosaic);
+        s_fx = PostFXParams{};
+        s_fx.rgbShift = 0.01f;
+        s_fx.mosaicBlocks = 32.0f;
+        applyFx();
     }
 
     ImGui::Separator();
