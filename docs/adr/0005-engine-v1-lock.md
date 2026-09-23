@@ -17,3 +17,4 @@ Tag `engine-v1.0-lock` on ivy-engine. The engine is frozen at that tag for swing
 - Content projects should pin against `engine-v1.0-lock`.
 - Non-additive engine edits are out of scope until unfreeze.
 - ScriptRuntimeApi is at version 41 (append-only from 40).
+- Superseded in part by ADR 0006 (first-person camera path + ScriptRuntimeApi v42).

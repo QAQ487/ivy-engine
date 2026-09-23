@@ -62,6 +62,16 @@ _Avoid_: skin animation, GPU skin / CPU skin as the component name
 The rest pose of a Skin: the bone and mesh matrices that make `bindOffset`. If Bind is wrong, posed vertices scatter and do not form the mesh.
 _Avoid_: T-pose (one authored Bind), deform (playback)
 
+### Camera
+
+**FirstPerson**:
+Play camera mode that places the eye on a walkable camera rig (position + eye height, mouse/stick look). Parallel to ThirdPerson; the CameraDirector samples its pose when `CameraMode::FirstPerson` is active.
+_Avoid_: hacking ThirdPerson distance to zero, treating SceneCamera as FPS
+
+**ThirdPerson**:
+Play camera mode that follows a `TAG_PLAYER` target at a distance (magnet Push/Pull/Orbit). Scripts attach via `ThirdPersonCamera_SetTarget`.
+_Avoid_: follow cam, TPS as the only play camera
+
 ## Engine freeze
 
-2026-09: engine frozen at `engine-v1.0-lock` for swing-demo development; additive changes require explicit unfreeze.
+2026-09: engine frozen at `engine-v1.0-lock` for swing-demo development; additive changes require explicit unfreeze. ADR 0006 unfreezes only the first-person camera path (and its ScriptRuntimeApi appends).

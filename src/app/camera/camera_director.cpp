@@ -2,6 +2,7 @@
 #include "camera.h"
 #include "debug_camera.h"
 #include "third_person_camera.h"
+#include "first_person_camera.h"
 #include "engine/core/engine_gui.h"
 #include "engine/core/easing.h"
 #include "engine/ecs/camera_component.h"
@@ -47,6 +48,7 @@ CameraDirectorSource SourceFromCameraMode(CameraMode mode) {
 	switch (mode) {
 	case CameraMode::SceneCamera: return CameraDirectorSource::SceneNode;
 	case CameraMode::Intro:       return CameraDirectorSource::Intro;
+	case CameraMode::FirstPerson: return CameraDirectorSource::FirstPerson;
 	case CameraMode::ThirdPerson:
 	default:                      return CameraDirectorSource::Follow;
 	}
@@ -77,6 +79,8 @@ bool TrySampleActiveSource(const std::vector<std::unique_ptr<GameObject>>& roots
 		if (!ThirdPersonCamera_TryGetFollowPose(outPose))
 			return false;
 		return true;
+	case CameraDirectorSource::FirstPerson:
+		return FirstPersonCamera_TryGetPose(outPose);
 	case CameraDirectorSource::SceneNode:
 		return TrySampleSceneNode(roots, outPose);
 	case CameraDirectorSource::Intro:

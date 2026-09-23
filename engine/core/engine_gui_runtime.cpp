@@ -6,6 +6,7 @@
 #include "engine/physics/core/physics_system.h"
 #include "src/app/camera/debug_camera.h"
 #include "src/app/camera/third_person_camera.h"
+#include "src/app/camera/first_person_camera.h"
 #include "engine/rendering/d3d11/renderer.h"
 #include "engine/input/mouse.h"
 
@@ -42,7 +43,9 @@ static void EnterRuntimePlay() {
     PhysicsSystem_SavePositions();
     g_runtimePlaying = true;
     DebugCamera_SetEnabled(false);
-    const bool hideCursor = (g_cameraMode == CameraMode::ThirdPerson) && HasThirdPersonPlayer();
+    const bool hideCursor =
+        ((g_cameraMode == CameraMode::ThirdPerson) || (g_cameraMode == CameraMode::FirstPerson))
+        && HasThirdPersonPlayer();
     ThirdPersonCamera_ShowCursor(!hideCursor);
 }
 

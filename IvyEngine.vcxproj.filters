@@ -401,6 +401,9 @@
     <ClInclude Include="src\app\camera\third_person_camera.h">
       <Filter>src\app\camera</Filter>
     </ClInclude>
+    <ClInclude Include="src\app\camera\first_person_camera.h">
+      <Filter>src\app\camera</Filter>
+    </ClInclude>
     <ClInclude Include="src\app\main.h">
       <Filter>src\app</Filter>
     </ClInclude>
@@ -737,6 +740,9 @@
       <Filter>src\app\camera</Filter>
     </ClCompile>
     <ClCompile Include="src\app\camera\third_person_camera.cpp">
+      <Filter>src\app\camera</Filter>
+    </ClCompile>
+    <ClCompile Include="src\app\camera\first_person_camera.cpp">
       <Filter>src\app\camera</Filter>
     </ClCompile>
     <ClCompile Include="src\app\main.cpp">

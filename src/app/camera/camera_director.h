@@ -15,6 +15,7 @@ enum class CameraDirectorSource {
 	Follow = 0,
 	SceneNode = 1,
 	Intro = 2,
+	FirstPerson = 3,
 };
 
 void CameraDirector_Initialize();

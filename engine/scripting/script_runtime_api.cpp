@@ -7,6 +7,7 @@
 #include "engine/rendering/sprite/sprite.h"
 #include "engine/ui/ui_text.h"
 #include "third_person_camera.h"
+#include "first_person_camera.h"
 #include "engine/rendering/billboard/billboard.h"
 #include "engine/rendering/particle/particle_system.h"
 #include "engine/input/key_logger.h"
@@ -31,7 +32,7 @@
 #include <string>
 
 namespace {
-constexpr std::uint32_t kScriptRuntimeApiVersion = 41;
+constexpr std::uint32_t kScriptRuntimeApiVersion = 42;
 
 template <typename T>
 T* FindComponentByTypeName(GameObject& object, const char* typeName) {
@@ -667,6 +668,14 @@ const ScriptRuntimeApi g_scriptRuntimeApi = {
     &Host_CameraSetSpeedFactor,
     &Host_DebugPulseTimeScale,
     &Host_LineSpriteDraw,
+    &FirstPersonCamera_Initialize,
+    &FirstPersonCamera_SetTarget,
+    &FirstPersonCamera_SetEyeHeight,
+    &FirstPersonCamera_SetMouseSensitivity,
+    &FirstPersonCamera_SetControllerSensitivity,
+    &FirstPersonCamera_SetPitchLimits,
+    &FirstPersonCamera_ShowCursor,
+    &FirstPersonCamera_IsCursorVisible,
 };
 #else
 using GetApiFn = const ScriptRuntimeApi* (*)();
@@ -825,6 +834,53 @@ void ThirdPersonCamera_SetLookAtHeight(float height) {
     const ScriptRuntimeApi* api = ScriptRuntimeApi_GetHost();
     if (api && api->thirdPersonCameraSetLookAtHeight)
         api->thirdPersonCameraSetLookAtHeight(height);
+}
+
+void FirstPersonCamera_Initialize() {
+    const ScriptRuntimeApi* api = ScriptRuntimeApi_GetHost();
+    if (api && api->firstPersonCameraInitialize)
+        api->firstPersonCameraInitialize();
+}
+
+void FirstPersonCamera_SetTarget(DirectX::XMFLOAT3* positionPtr, float* yawPtr) {
+    const ScriptRuntimeApi* api = ScriptRuntimeApi_GetHost();
+    if (api && api->firstPersonCameraSetTarget)
+        api->firstPersonCameraSetTarget(positionPtr, yawPtr);
+}
+
+void FirstPersonCamera_SetEyeHeight(float eyeHeight) {
+    const ScriptRuntimeApi* api = ScriptRuntimeApi_GetHost();
+    if (api && api->firstPersonCameraSetEyeHeight)
+        api->firstPersonCameraSetEyeHeight(eyeHeight);
+}
+
+void FirstPersonCamera_SetMouseSensitivity(float sensitivity) {
+    const ScriptRuntimeApi* api = ScriptRuntimeApi_GetHost();
+    if (api && api->firstPersonCameraSetMouseSensitivity)
+        api->firstPersonCameraSetMouseSensitivity(sensitivity);
+}
+
+void FirstPersonCamera_SetControllerSensitivity(float sensitivity) {
+    const ScriptRuntimeApi* api = ScriptRuntimeApi_GetHost();
+    if (api && api->firstPersonCameraSetControllerSensitivity)
+        api->firstPersonCameraSetControllerSensitivity(sensitivity);
+}
+
+void FirstPersonCamera_SetPitchLimits(float minPitch, float maxPitch) {
+    const ScriptRuntimeApi* api = ScriptRuntimeApi_GetHost();
+    if (api && api->firstPersonCameraSetPitchLimits)
+        api->firstPersonCameraSetPitchLimits(minPitch, maxPitch);
+}
+
+void FirstPersonCamera_ShowCursor(bool show) {
+    const ScriptRuntimeApi* api = ScriptRuntimeApi_GetHost();
+    if (api && api->firstPersonCameraShowCursor)
+        api->firstPersonCameraShowCursor(show);
+}
+
+bool FirstPersonCamera_IsCursorVisible() {
+    const ScriptRuntimeApi* api = ScriptRuntimeApi_GetHost();
+    return api && api->firstPersonCameraIsCursorVisible ? api->firstPersonCameraIsCursorVisible() : true;
 }
 
 bool EngineGUI_IsPlaying() {

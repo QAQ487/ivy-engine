@@ -44,6 +44,7 @@
 #include "engine/core/job_system.h"
 #include "engine/core/frame_transform_snapshot.h"
 #include "third_person_camera.h"
+#include "first_person_camera.h"
 #include "engine/rendering/d3d11/renderer.h"
 #include "engine/rendering/d3d11/post_process.h"
 #include "engine/rendering/billboard/billboard.h"
@@ -386,7 +387,7 @@ void GameScene::Update(double elapsed_time) {
 	Billboard::ClearDrawList();
 
 	// Non-player scene roots. TAG_PLAYER roots are updated in the player batch
-	// below (EngineGUI skips them so snapshot Å® jobs Å® flushes can own them).
+	// below (EngineGUI skips them so snapshot ¬Å¬® jobs ¬Å¬® flushes can own them).
 	EngineGUI_Update(elapsed_time);
 
 	if (EngineGUI_IsPlaying()) {
@@ -449,8 +450,10 @@ void GameScene::Update(double elapsed_time) {
 
 		// Always update follow producer while playing so blends back from
 		// DeathCam/Intro have a live pose. Director picks active source.
-		if (!DebugCamera_IsEnabled())
+		if (!DebugCamera_IsEnabled()) {
 			ThirdPersonCamera_Update(elapsed_time);
+			FirstPersonCamera_Update(elapsed_time);
+		}
 	}
 	else {
 		PrefabRuntime_FlushDestroyed();

@@ -204,6 +204,16 @@ struct ScriptRuntimeApi {
     void (*debugPulseTimeScale)(float scale, unsigned durationMs);
     void (*lineSpriteDraw)(const DirectX::XMFLOAT3* a, const DirectX::XMFLOAT3* b,
         float thicknessWorld, const DirectX::XMFLOAT4* color);
+
+    // v42 — first-person camera (append-only)
+    void (*firstPersonCameraInitialize)();
+    void (*firstPersonCameraSetTarget)(DirectX::XMFLOAT3* positionPtr, float* yawPtr);
+    void (*firstPersonCameraSetEyeHeight)(float eyeHeight);
+    void (*firstPersonCameraSetMouseSensitivity)(float sensitivity);
+    void (*firstPersonCameraSetControllerSensitivity)(float sensitivity);
+    void (*firstPersonCameraSetPitchLimits)(float minPitch, float maxPitch);
+    void (*firstPersonCameraShowCursor)(bool show);
+    bool (*firstPersonCameraIsCursorVisible)();
 };
 
 const ScriptRuntimeApi* ScriptRuntimeApi_GetHost();

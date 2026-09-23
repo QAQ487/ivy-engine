@@ -52,7 +52,7 @@ void EngineGUI_QueueUnsavedExit();
 void DrawEditorSceneProxies();
 void DrawSceneModels();
 
-enum class CameraMode { ThirdPerson = 0, SceneCamera = 1, Intro = 2 };
+enum class CameraMode { ThirdPerson = 0, SceneCamera = 1, Intro = 2, FirstPerson = 3 };
 enum class EditorEditMode { Scene3D = 0, UI = 1 };
 
 CameraMode         EngineGUI_GetCameraMode();
