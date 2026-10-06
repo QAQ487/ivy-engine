@@ -281,6 +281,9 @@
     <ClInclude Include="engine\rendering\sprite\sprite.h">
       <Filter>engine\rendering\sprite</Filter>
     </ClInclude>
+    <ClInclude Include="engine\rendering\sprite\line_sprite.h">
+      <Filter>engine\rendering\sprite</Filter>
+    </ClInclude>
     <ClInclude Include="engine\rendering\sprite\texture.h">
       <Filter>engine\rendering\sprite</Filter>
     </ClInclude>
@@ -638,6 +641,9 @@
       <Filter>engine\rendering\model</Filter>
     </ClCompile>
     <ClCompile Include="engine\rendering\sprite\sprite.cpp">
+      <Filter>engine\rendering\sprite</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\rendering\sprite\line_sprite.cpp">
       <Filter>engine\rendering\sprite</Filter>
     </ClCompile>
     <ClCompile Include="engine\rendering\sprite\texture.cpp">

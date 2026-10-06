@@ -29,6 +29,7 @@ ID3D11Device* g_pDevice = nullptr;
 ID3D11DeviceContext* g_pContext = nullptr;
 ID3D11Buffer* g_pVertexBuffer = nullptr;
 ID3D11Buffer* g_pIndexBuffer = nullptr;
+ID3D11RasterizerState* g_pRasterNoCull = nullptr;
 
 } // namespace
 
@@ -55,6 +56,15 @@ void LineSprite_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 		initData.pSysMem = kLineIndices;
 		g_pDevice->CreateBuffer(&ibd, &initData, &g_pIndexBuffer);
 	}
+
+	// The quad is wound counter-clockwise on screen, so the default CULL_BACK state would discard it.
+	if (!g_pRasterNoCull) {
+		D3D11_RASTERIZER_DESC rd = {};
+		rd.FillMode = D3D11_FILL_SOLID;
+		rd.CullMode = D3D11_CULL_NONE;
+		rd.DepthClipEnable = TRUE;
+		g_pDevice->CreateRasterizerState(&rd, &g_pRasterNoCull);
+	}
 }
 
 void LineSprite_Finalize() {
@@ -65,6 +75,10 @@ void LineSprite_Finalize() {
 	if (g_pIndexBuffer) {
 		g_pIndexBuffer->Release();
 		g_pIndexBuffer = nullptr;
+	}
+	if (g_pRasterNoCull) {
+		g_pRasterNoCull->Release();
+		g_pRasterNoCull = nullptr;
 	}
 	g_pDevice = nullptr;
 	g_pContext = nullptr;
@@ -133,8 +147,12 @@ void LineSprite_Draw(
 	ID3D11DepthStencilState* prevDepth = nullptr;
 	UINT prevStencilRef = 0;
 	g_pContext->OMGetDepthStencilState(&prevDepth, &prevStencilRef);
+	ID3D11RasterizerState* prevRaster = nullptr;
+	g_pContext->RSGetState(&prevRaster);
 
 	Shader2D_Begin();
+	if (g_pRasterNoCull)
+		g_pContext->RSSetState(g_pRasterNoCull);
 	SetDepthEnable(true);
 	Shader_SetColor(color);
 
@@ -155,6 +173,9 @@ void LineSprite_Draw(
 	g_pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	g_pContext->DrawIndexed(6, 0, 0);
 
+	g_pContext->RSSetState(prevRaster);
+	if (prevRaster)
+		prevRaster->Release();
 	g_pContext->OMSetDepthStencilState(prevDepth, prevStencilRef);
 	if (prevDepth)
 		prevDepth->Release();
