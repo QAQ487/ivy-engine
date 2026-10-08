@@ -1,0 +1,23 @@
+{
+  "nodes": [
+    {
+      "id": "file:docs/diagrams/ivy-engine-architecture.zh-HK.html",
+      "type": "file",
+      "name": "ivy-engine-architecture.zh-HK.html",
+      "filePath": "docs/diagrams/ivy-engine-architecture.zh-HK.html",
+      "summary": "Hong Kong Traditional Chinese (zh-HK) translation of the standalone SVG architecture diagram, showing IvyEngine.exe and the runtime host sharing the GameScene loop, which loads the content project's scene graph, ticks engine systems, and runs scripts from GameScripts.dll.",
+      "tags": ["documentation", "architecture", "diagram", "localization", "overview"],
+      "complexity": "moderate",
+      "languageNotes": "Self-contained HTML with inline CSS and an inline SVG (viewBox 1280x720); adds Noto Sans/Serif TC font fallbacks and lang=\"zh-HK\" for CJK rendering."
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:docs/diagrams/ivy-engine-architecture.zh-HK.html",
+      "target": "file:docs/diagrams/ivy-engine-architecture.html",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    }
+  ]
+}

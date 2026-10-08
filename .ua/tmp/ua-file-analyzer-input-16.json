@@ -1,0 +1,7 @@
+{
+  "projectRoot": "C:\\Users\\terry\\source\\repos\\ivy-engine",
+  "batchFiles": [
+    {"path": "docs/diagrams/ivy-engine-architecture.zh-HK.html", "language": "html", "sizeLines": 218, "fileCategory": "markup"}
+  ],
+  "batchImportData": {"docs/diagrams/ivy-engine-architecture.zh-HK.html": []}
+}
