@@ -1,0 +1,29 @@
+{
+  "version": "1.0.0",
+  "baseCommit": "6493089f670c420f3b16838e09e352c700046c31",
+  "headCommit": "7dcc03df3772d2a552eea8e188a7243b025494d5",
+  "generatedAt": "2026-10-08T05:11:26.723Z",
+  "files": {
+    "docs/diagrams/ivy-engine-architecture.html": {
+      "filePath": "docs/diagrams/ivy-engine-architecture.html",
+      "contentHash": "4b89f644a3cc093e03aeb192faa2121d78ed7e0f9e382b5b8c11c1254dd28112",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 220,
+      "hasStructuralAnalysis": false
+    },
+    "docs/diagrams/ivy-engine-architecture.zh-HK.html": {
+      "filePath": "docs/diagrams/ivy-engine-architecture.zh-HK.html",
+      "contentHash": "7ea96a7aef2fba0430a15ec4b96192bc0d026ab5cd79446caf72dc46c213e36a",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 219,
+      "hasStructuralAnalysis": false
+    }
+  },
+  "deletedFiles": []
+}

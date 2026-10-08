@@ -1,0 +1,412 @@
+{
+  "engine/audio/audio_listener_sync.h": [
+    {
+      "path": "engine/audio/audio_listener_sync.cpp",
+      "batchIndex": 7,
+      "symbols": [
+        "ApplyPoseFromCamera",
+        "ApplyPoseFromNode",
+        "AudioListenerSync_EnsureOnCamera",
+        "AudioListenerSync_Tick"
+      ]
+    }
+  ],
+  "engine/core/frame_transform_snapshot.cpp": [
+    {
+      "path": "engine/ecs/game_object.h",
+      "batchIndex": 7,
+      "symbols": []
+    }
+  ],
+  "engine/ecs/audio_system.cpp": [
+    {
+      "path": "engine/ecs/audio_component.h",
+      "batchIndex": 2,
+      "symbols": [
+        "OnAttach",
+        "OnDetach",
+        "Update",
+        "OnReset",
+        "Serialize",
+        "Deserialize",
+        "Play",
+        "Stop",
+        "IsPlaying",
+        "SetClipPath",
+        "ApplyLiveSettings",
+        "FlushCommands",
+        "AudioComponent"
+      ]
+    }
+  ],
+  "engine/ecs/audio_system.h": [
+    {
+      "path": "engine/ecs/audio_component.cpp",
+      "batchIndex": 7,
+      "symbols": [
+        "BusFromString",
+        "OnAttach",
+        "OnDetach",
+        "Update",
+        "OnReset",
+        "Serialize",
+        "Deserialize",
+        "Play",
+        "Stop",
+        "IsPlaying",
+        "SetClipPath",
+        "ApplyLiveSettings",
+        "ApplyStopImmediate",
+        "FlushCommands",
+        "OwnerPosition"
+      ]
+    }
+  ],
+  "engine/ecs/effect_system_flush.cpp": [
+    {
+      "path": "engine/ecs/effect_component.h",
+      "batchIndex": 2,
+      "symbols": [
+        "OnAttach",
+        "OnDetach",
+        "Update",
+        "OnReset",
+        "Serialize",
+        "Deserialize",
+        "Play",
+        "Stop",
+        "IsPlaying",
+        "SetEffectPath",
+        "FlushCommands",
+        "EffectComponent"
+      ]
+    }
+  ],
+  "engine/ecs/effect_system_flush.h": [
+    {
+      "path": "engine/ecs/effect_component.cpp",
+      "batchIndex": 7,
+      "symbols": [
+        "Utf8ToWide",
+        "OnAttach",
+        "OnDetach",
+        "Update",
+        "OnReset",
+        "Serialize",
+        "Deserialize",
+        "Play",
+        "Stop",
+        "IsPlaying",
+        "SetEffectPath",
+        "ApplyStopImmediate",
+        "FlushCommands",
+        "LoadEffect",
+        "SyncTransformImmediate"
+      ]
+    }
+  ],
+  "engine/ecs/visual_system.h": [
+    {
+      "path": "engine/ecs/visual_system.cpp",
+      "batchIndex": 7,
+      "symbols": [
+        "UploadObjectTree",
+        "VisualSystem_UploadSkinning"
+      ]
+    }
+  ],
+  "engine/rendering/environment/skybox.h": [
+    {
+      "path": "engine/rendering/environment/skybox.cpp",
+      "batchIndex": 6,
+      "symbols": [
+        "CB_Skybox",
+        "CB_SkyboxParams",
+        "SkyboxVertex",
+        "Skybox_Initialize",
+        "Skybox_Finalize",
+        "Skybox_ReloadFromSettings",
+        "Skybox_Draw"
+      ]
+    },
+    {
+      "path": "engine/scene/render_settings.cpp",
+      "batchIndex": 1,
+      "symbols": [
+        "RenderSettings_ResetToDefaults",
+        "RenderSettings_GetShadowPreset",
+        "RenderSettings_GetShadowPreset",
+        "RenderSettings_ShadowQualityFromId",
+        "RenderSettings_ApplyShadowQuality",
+        "RenderSettings_ApplyFromJson",
+        "RenderSettings_ToJson",
+        "RenderSettings_ReloadSkybox",
+        "RenderSettings_GetDefaultShader"
+      ]
+    }
+  ],
+  "engine/rendering/lighting/lighting.cpp": [
+    {
+      "path": "engine/scene/render_settings.h",
+      "batchIndex": 1,
+      "symbols": [
+        "ShadowQualityPreset",
+        "RenderSettingsData"
+      ]
+    }
+  ],
+  "engine/rendering/lighting/lighting.h": [
+    {
+      "path": "engine/rendering/d3d11/shader.cpp",
+      "batchIndex": 4,
+      "symbols": [
+        "Shader3DVariantInfo",
+        "SKIN_CB",
+        "SURFACE_FX_CB",
+        "SHADOW_CB",
+        "Shader_Initialize",
+        "Shader_Finalize",
+        "XMMatrixExactEqual",
+        "Shader_SetProjectionMatrix",
+        "Shader_SetViewMatrix",
+        "Shader_SetWorldMatrix",
+        "Shader_SetColor",
+        "Shader_SetSkinPalette",
+        "Shader_SetMaterial",
+        "Shader_SetSurfaceFXParams",
+        "Shader_SetSurfaceFXMeshRadius",
+        "Shader_CommitSurfaceFX",
+        "Shader_SetShadowMatrix",
+        "Shader_SetShadowMatrices",
+        "Shader_SetShadowCascadeParams",
+        "Shader_GetProjectionMatrix",
+        "Shader_GetViewMatrix",
+        "Shader_GetWorldMatrix",
+        "Shader_BindShadowMap",
+        "Shader_BindShadowMaps",
+        "Shader_SetUseExternalVP",
+        "Shader_IsExternalVP",
+        "Shader2D_Begin",
+        "Shader3DVariantFromId",
+        "Shader3DVariantCount",
+        "Shader3DVariantByIndex",
+        "Shader3DVariantIsUserVisible",
+        "Shader3D_Begin",
+        "Shader3D_UseGpuSkin",
+        "Shader3D_BeginOutline"
+      ]
+    },
+    {
+      "path": "engine/scene/scene_lighting.cpp",
+      "batchIndex": 2,
+      "symbols": [
+        "SceneLightEntry",
+        "VisitLights",
+        "ApplyFallbackLighting",
+        "SceneLightingSyncFromNodes"
+      ]
+    }
+  ],
+  "engine/scene/scene_lighting.h": [
+    {
+      "path": "engine/scene/scene_lighting.cpp",
+      "batchIndex": 2,
+      "symbols": [
+        "SceneLightEntry",
+        "VisitLights",
+        "ApplyFallbackLighting",
+        "SceneLightingSyncFromNodes"
+      ]
+    }
+  ],
+  "src/app/scene/game_scene.cpp": [
+    {
+      "path": "engine/audio/audio_manager.h",
+      "batchIndex": 9,
+      "symbols": []
+    },
+    {
+      "path": "engine/core/engine_gui.h",
+      "batchIndex": 7,
+      "symbols": []
+    },
+    {
+      "path": "engine/core/job_system.h",
+      "batchIndex": 4,
+      "symbols": [
+        "JobNode"
+      ]
+    },
+    {
+      "path": "engine/debug_draw/debug_drawer.h",
+      "batchIndex": 9,
+      "symbols": []
+    },
+    {
+      "path": "engine/ecs/billboard_component.h",
+      "batchIndex": 2,
+      "symbols": [
+        "ID3D11ShaderResourceView",
+        "GameObject",
+        "Serialize",
+        "Deserialize",
+        "InvalidateTextureCache",
+        "SubmitSceneBillboards",
+        "BillboardComponent"
+      ]
+    },
+    {
+      "path": "engine/ecs/directional_light_component.h",
+      "batchIndex": 2,
+      "symbols": [
+        "GameObject",
+        "Transform",
+        "Serialize",
+        "Deserialize",
+        "ComputeDirectionWS",
+        "DirectionalLightComponent"
+      ]
+    },
+    {
+      "path": "engine/ecs/model_asset_cache.h",
+      "batchIndex": 1,
+      "symbols": []
+    },
+    {
+      "path": "engine/ecs/prefab_runtime.h",
+      "batchIndex": 7,
+      "symbols": [
+        "SceneBase"
+      ]
+    },
+    {
+      "path": "engine/input/key_logger.h",
+      "batchIndex": 4,
+      "symbols": []
+    },
+    {
+      "path": "engine/physics/core/physics_system.h",
+      "batchIndex": 9,
+      "symbols": []
+    },
+    {
+      "path": "engine/physics/core/rigidbody.h",
+      "batchIndex": 9,
+      "symbols": []
+    },
+    {
+      "path": "engine/rendering/billboard/billboard.h",
+      "batchIndex": 4,
+      "symbols": []
+    },
+    {
+      "path": "engine/rendering/d3d11/post_process.h",
+      "batchIndex": 4,
+      "symbols": []
+    },
+    {
+      "path": "engine/rendering/d3d11/renderer.h",
+      "batchIndex": 4,
+      "symbols": []
+    },
+    {
+      "path": "engine/rendering/d3d11/shader.h",
+      "batchIndex": 1,
+      "symbols": []
+    },
+    {
+      "path": "engine/rendering/effect/effect_system.h",
+      "batchIndex": 4,
+      "symbols": []
+    },
+    {
+      "path": "engine/rendering/lighting/shadow.h",
+      "batchIndex": 1,
+      "symbols": []
+    },
+    {
+      "path": "engine/rendering/model/model.h",
+      "batchIndex": 1,
+      "symbols": []
+    },
+    {
+      "path": "engine/rendering/particle/particle_system.h",
+      "batchIndex": 3,
+      "symbols": [
+        "ID3D11ShaderResourceView",
+        "ParticleEmitterConfig",
+        "Reset",
+        "Spawn",
+        "Tick",
+        "Compact",
+        "GetAliveCount",
+        "GetMaxParticles",
+        "ParticlePool",
+        "GetId",
+        "Tick",
+        "Render",
+        "SetPosition",
+        "SetEmitting",
+        "Stop",
+        "ShouldDestroy",
+        "IsAlive",
+        "SetConfig",
+        "ParticleEmitter",
+        "Initialize",
+        "Finalize",
+        "Reset",
+        "Tick",
+        "Render",
+        "CreateEmitter",
+        "SetEmitterPosition",
+        "SetEmitterEmitting",
+        "StopEmitter",
+        "DestroyEmitter",
+        "SetEmitterConfig",
+        "SpawnParticle",
+        "ParticleSystem"
+      ]
+    },
+    {
+      "path": "engine/rendering/sprite/texture.h",
+      "batchIndex": 6,
+      "symbols": []
+    },
+    {
+      "path": "engine/scene/render_settings.h",
+      "batchIndex": 1,
+      "symbols": [
+        "ShadowQualityPreset",
+        "RenderSettingsData"
+      ]
+    },
+    {
+      "path": "engine/scene/scene_loader.h",
+      "batchIndex": 8,
+      "symbols": []
+    },
+    {
+      "path": "engine/scene/scene_runtime.h",
+      "batchIndex": 2,
+      "symbols": [
+        "SceneBase",
+        "Clear",
+        "SyncFromEditorRoots",
+        "ApplyCollidersFromEditorRoots",
+        "RegisterSubtree",
+        "UnregisterSubtree",
+        "SceneRuntime"
+      ]
+    },
+    {
+      "path": "engine/ui/scene_canvas.h",
+      "batchIndex": 5,
+      "symbols": []
+    },
+    {
+      "path": "src/app/scene/game_scene_script_hooks.h",
+      "batchIndex": 11,
+      "symbols": []
+    }
+  ]
+}

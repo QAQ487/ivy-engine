@@ -1,0 +1,333 @@
+{
+  "projectRoot": "C:/Users/terry/source/repos/ivy-engine",
+  "batchFiles": [
+    {
+      "path": "engine/ecs/audio_component.h",
+      "language": "c",
+      "sizeLines": 50,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ecs/audio_listener_component.cpp",
+      "language": "cpp",
+      "sizeLines": 12,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ecs/audio_listener_component.h",
+      "language": "c",
+      "sizeLines": 13,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ecs/billboard_component.h",
+      "language": "c",
+      "sizeLines": 62,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ecs/collider_component.h",
+      "language": "c",
+      "sizeLines": 25,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ecs/component.h",
+      "language": "c",
+      "sizeLines": 48,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ecs/component_factory.cpp",
+      "language": "cpp",
+      "sizeLines": 28,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ecs/component_factory.h",
+      "language": "c",
+      "sizeLines": 54,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ecs/directional_light_component.cpp",
+      "language": "cpp",
+      "sizeLines": 42,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ecs/directional_light_component.h",
+      "language": "c",
+      "sizeLines": 25,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ecs/effect_component.h",
+      "language": "c",
+      "sizeLines": 49,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ecs/material_component.cpp",
+      "language": "cpp",
+      "sizeLines": 149,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ecs/material_component.h",
+      "language": "c",
+      "sizeLines": 66,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ecs/point_light_component.cpp",
+      "language": "cpp",
+      "sizeLines": 43,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ecs/point_light_component.h",
+      "language": "c",
+      "sizeLines": 20,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ecs/prefab_serializer.cpp",
+      "language": "cpp",
+      "sizeLines": 164,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ecs/rigidbody_component.cpp",
+      "language": "cpp",
+      "sizeLines": 48,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ecs/rigidbody_component.h",
+      "language": "c",
+      "sizeLines": 39,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ecs/spot_light_component.cpp",
+      "language": "cpp",
+      "sizeLines": 50,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ecs/spot_light_component.h",
+      "language": "c",
+      "sizeLines": 23,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ecs/tag_registry.cpp",
+      "language": "cpp",
+      "sizeLines": 158,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ecs/tag_registry.h",
+      "language": "c",
+      "sizeLines": 40,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/editor/editor_undo.cpp",
+      "language": "cpp",
+      "sizeLines": 1063,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/editor/light_gizmo.cpp",
+      "language": "cpp",
+      "sizeLines": 226,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/editor/light_gizmo.h",
+      "language": "c",
+      "sizeLines": 26,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/scene/scene_lighting.cpp",
+      "language": "cpp",
+      "sizeLines": 135,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/scene/scene_loader.cpp",
+      "language": "cpp",
+      "sizeLines": 749,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/scene/scene_runtime.cpp",
+      "language": "cpp",
+      "sizeLines": 95,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/scene/scene_runtime.h",
+      "language": "c",
+      "sizeLines": 29,
+      "fileCategory": "code"
+    }
+  ],
+  "batchImportData": {
+    "engine/ecs/audio_component.h": [
+      "engine/audio/audio_manager.h",
+      "engine/ecs/component.h"
+    ],
+    "engine/ecs/audio_listener_component.cpp": [
+      "engine/ecs/audio_listener_component.h"
+    ],
+    "engine/ecs/audio_listener_component.h": [
+      "engine/ecs/component.h"
+    ],
+    "engine/ecs/billboard_component.h": [
+      "engine/ecs/component.h"
+    ],
+    "engine/ecs/collider_component.h": [
+      "engine/ecs/component.h",
+      "engine/physics/collider/collider.h"
+    ],
+    "engine/ecs/component.h": [],
+    "engine/ecs/component_factory.cpp": [
+      "engine/ecs/component_factory.h"
+    ],
+    "engine/ecs/component_factory.h": [
+      "engine/ecs/component.h"
+    ],
+    "engine/ecs/directional_light_component.cpp": [
+      "engine/ecs/directional_light_component.h",
+      "engine/editor/light_gizmo.h"
+    ],
+    "engine/ecs/directional_light_component.h": [
+      "engine/ecs/component.h"
+    ],
+    "engine/ecs/effect_component.h": [
+      "engine/ecs/component.h"
+    ],
+    "engine/ecs/material_component.cpp": [
+      "engine/ecs/material_component.h",
+      "engine/rendering/model/model_util.h"
+    ],
+    "engine/ecs/material_component.h": [
+      "engine/ecs/component.h"
+    ],
+    "engine/ecs/point_light_component.cpp": [
+      "engine/ecs/point_light_component.h"
+    ],
+    "engine/ecs/point_light_component.h": [
+      "engine/ecs/component.h"
+    ],
+    "engine/ecs/prefab_serializer.cpp": [
+      "engine/ecs/component_factory.h",
+      "engine/ecs/prefab_serializer.h",
+      "engine/ecs/tag_registry.h"
+    ],
+    "engine/ecs/rigidbody_component.cpp": [
+      "engine/ecs/rigidbody_component.h"
+    ],
+    "engine/ecs/rigidbody_component.h": [
+      "engine/ecs/component.h",
+      "engine/physics/core/rigidbody.h"
+    ],
+    "engine/ecs/spot_light_component.cpp": [
+      "engine/ecs/spot_light_component.h"
+    ],
+    "engine/ecs/spot_light_component.h": [
+      "engine/ecs/component.h"
+    ],
+    "engine/ecs/tag_registry.cpp": [
+      "engine/ecs/game_object.h",
+      "engine/ecs/tag_registry.h"
+    ],
+    "engine/ecs/tag_registry.h": [],
+    "engine/editor/editor_undo.cpp": [
+      "engine/core/engine_gui.h",
+      "engine/core/engine_gui_internal.h",
+      "engine/ecs/audio_component.h",
+      "engine/ecs/audio_listener_component.h",
+      "engine/ecs/billboard_component.h",
+      "engine/ecs/camera_component.h",
+      "engine/ecs/collider_component.h",
+      "engine/ecs/component.h",
+      "engine/ecs/component_factory.h",
+      "engine/ecs/directional_light_component.h",
+      "engine/ecs/effect_component.h",
+      "engine/ecs/game_object.h",
+      "engine/ecs/material_component.h",
+      "engine/ecs/point_light_component.h",
+      "engine/ecs/prefab_serializer.h",
+      "engine/ecs/rigidbody_component.h",
+      "engine/ecs/spot_light_component.h",
+      "engine/ecs/transform.h",
+      "engine/ecs/visual_component.h",
+      "engine/editor/editor_undo.h",
+      "engine/scene/scene_loader.h",
+      "engine/scripting/script_component.h",
+      "engine/ui/scene_canvas.h",
+      "engine/ui/ui_element.h"
+    ],
+    "engine/editor/light_gizmo.cpp": [
+      "engine/debug_draw/debug_drawer.h",
+      "engine/ecs/directional_light_component.h",
+      "engine/ecs/game_object.h",
+      "engine/ecs/point_light_component.h",
+      "engine/ecs/spot_light_component.h",
+      "engine/ecs/transform.h",
+      "engine/editor/light_gizmo.h"
+    ],
+    "engine/editor/light_gizmo.h": [],
+    "engine/scene/scene_lighting.cpp": [
+      "engine/ecs/directional_light_component.h",
+      "engine/ecs/game_object.h",
+      "engine/ecs/point_light_component.h",
+      "engine/ecs/spot_light_component.h",
+      "engine/ecs/transform.h",
+      "engine/editor/light_gizmo.h",
+      "engine/rendering/lighting/lighting.h",
+      "engine/rendering/lighting/shadow.h",
+      "engine/scene/scene_lighting.h"
+    ],
+    "engine/scene/scene_loader.cpp": [
+      "engine/audio/audio_manager.h",
+      "engine/ecs/audio_component.h",
+      "engine/ecs/audio_listener_component.h",
+      "engine/ecs/billboard_component.h",
+      "engine/ecs/camera_component.h",
+      "engine/ecs/collider_component.h",
+      "engine/ecs/component_factory.h",
+      "engine/ecs/directional_light_component.h",
+      "engine/ecs/effect_component.h",
+      "engine/ecs/material_component.h",
+      "engine/ecs/point_light_component.h",
+      "engine/ecs/prefab_runtime.h",
+      "engine/ecs/prefab_serializer.h",
+      "engine/ecs/rigidbody_component.h",
+      "engine/ecs/spot_light_component.h",
+      "engine/ecs/tag_registry.h",
+      "engine/ecs/transform.h",
+      "engine/ecs/visual_component.h",
+      "engine/physics/core/physics_system.h",
+      "engine/scene/render_settings.h",
+      "engine/scene/scene_loader.h",
+      "engine/scene/scene_runtime.h",
+      "engine/scripting/script_component.h",
+      "engine/scripting/script_factory.h",
+      "engine/scripting/script_watcher.h",
+      "engine/ui/scene_canvas.h"
+    ],
+    "engine/scene/scene_runtime.cpp": [
+      "engine/ecs/collider_component.h",
+      "engine/scene/scene_runtime.h"
+    ],
+    "engine/scene/scene_runtime.h": [
+      "engine/ecs/game_object.h"
+    ]
+  }
+}

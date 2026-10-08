@@ -1,0 +1,1201 @@
+[
+ {
+  "id": "function:src/app/camera/first_person_camera.cpp:FirstPersonCamera_SetControllerSensitivity",
+  "name": "FirstPersonCamera_SetControllerSensitivity",
+  "summary": "Sets gamepad right-stick look sensitivity."
+ },
+ {
+  "id": "function:src/app/camera/first_person_camera.cpp:FirstPersonCamera_SetPitchLimits",
+  "name": "FirstPersonCamera_SetPitchLimits",
+  "summary": "Clamps first-person pitch range in degrees."
+ },
+ {
+  "id": "function:src/app/camera/first_person_camera.cpp:FirstPersonCamera_SetFov",
+  "name": "FirstPersonCamera_SetFov",
+  "summary": "Sets first-person vertical FOV in degrees."
+ },
+ {
+  "id": "function:src/app/camera/first_person_camera.cpp:FirstPersonCamera_ShowCursor",
+  "name": "FirstPersonCamera_ShowCursor",
+  "summary": "Forwards cursor visibility to the shared third-person cursor helper."
+ },
+ {
+  "id": "function:src/app/camera/first_person_camera.cpp:FirstPersonCamera_IsCursorVisible",
+  "name": "FirstPersonCamera_IsCursorVisible",
+  "summary": "Reports cursor visibility via the shared third-person cursor state."
+ },
+ {
+  "id": "function:src/app/camera/first_person_camera.cpp:FirstPersonCamera_TryGetPose",
+  "name": "FirstPersonCamera_TryGetPose",
+  "summary": "Copies the last computed first-person CameraPose for the director if one exists."
+ },
+ {
+  "id": "function:src/app/camera/third_person_camera.cpp:DesiredFaceAnglesToTarget",
+  "name": "DesiredFaceAnglesToTarget",
+  "summary": "Computes yaw/pitch that face the magnet target from the player, clamped to pitch limits."
+ },
+ {
+  "id": "function:src/app/camera/third_person_camera.cpp:FollowSharpnessForMode",
+  "name": "FollowSharpnessForMode",
+  "summary": "Returns exponential follow sharpness for Normal/Push/Pull/Orbit, easing with speed factor."
+ },
+ {
+  "id": "function:src/app/camera/third_person_camera.cpp:OnMagnetModeChanged",
+  "name": "OnMagnetModeChanged",
+  "summary": "Handles magnet mode transitions by snapping or easing distance, FOV, and facing."
+ },
+ {
+  "id": "function:src/app/camera/third_person_camera.cpp:ThirdPersonCamera_Initialize",
+  "name": "ThirdPersonCamera_Initialize",
+  "summary": "Resets follow attach pointers, default distance/height/FOV, magnet mode, trauma, and cached pose."
+ },
+ {
+  "id": "function:src/app/camera/third_person_camera.cpp:ThirdPersonCamera_Update",
+  "name": "ThirdPersonCamera_Update",
+  "summary": "Updates follow orbit from mouse/stick, magnet facing, smoothed boom, trauma shake, and writes the follow-cam node."
+ },
+ {
+  "id": "function:src/app/camera/third_person_camera.cpp:ThirdPersonCamera_SetTarget",
+  "name": "ThirdPersonCamera_SetTarget",
+  "summary": "Attaches live pointers to player position and yaw, or detaches the follow camera."
+ },
+ {
+  "id": "function:src/app/camera/third_person_camera.cpp:ThirdPersonCamera_SetDistance",
+  "name": "ThirdPersonCamera_SetDistance",
+  "summary": "Sets default follow boom distance."
+ },
+ {
+  "id": "function:src/app/camera/third_person_camera.cpp:ThirdPersonCamera_SetHeight",
+  "name": "ThirdPersonCamera_SetHeight",
+  "summary": "Sets camera height offset above the look-at point."
+ },
+ {
+  "id": "function:src/app/camera/third_person_camera.cpp:ThirdPersonCamera_SetLookAtHeight",
+  "name": "ThirdPersonCamera_SetLookAtHeight",
+  "summary": "Sets the look-at height offset on the target."
+ },
+ {
+  "id": "function:src/app/camera/third_person_camera.cpp:ThirdPersonCamera_SetMouseSensitivity",
+  "name": "ThirdPersonCamera_SetMouseSensitivity",
+  "summary": "Sets mouse orbit sensitivity."
+ },
+ {
+  "id": "function:src/app/camera/third_person_camera.cpp:ThirdPersonCamera_SetControllerSensitivity",
+  "name": "ThirdPersonCamera_SetControllerSensitivity",
+  "summary": "Sets gamepad orbit sensitivity."
+ },
+ {
+  "id": "function:src/app/camera/third_person_camera.cpp:ThirdPersonCamera_SetPitchLimits",
+  "name": "ThirdPersonCamera_SetPitchLimits",
+  "summary": "Sets follow-camera pitch clamp range."
+ },
+ {
+  "id": "function:src/app/camera/third_person_camera.cpp:ThirdPersonCamera_GetPitch",
+  "name": "ThirdPersonCamera_GetPitch",
+  "summary": "Returns the current follow-camera pitch in degrees."
+ },
+ {
+  "id": "function:src/app/camera/third_person_camera.cpp:ThirdPersonCamera_IsCursorVisible",
+  "name": "ThirdPersonCamera_IsCursorVisible",
+  "summary": "Returns whether the hardware cursor is shown."
+ },
+ {
+  "id": "function:src/app/camera/third_person_camera.cpp:ThirdPersonCamera_ShowCursor",
+  "name": "ThirdPersonCamera_ShowCursor",
+  "summary": "Shows or hides the hardware cursor with a ref-counted ShowCursor call."
+ },
+ {
+  "id": "function:src/app/camera/third_person_camera.cpp:ThirdPersonCamera_SetMagnetMode",
+  "name": "ThirdPersonCamera_SetMagnetMode",
+  "summary": "Sets Normal, Push, Pull, or Orbit magnet behavior."
+ },
+ {
+  "id": "function:src/app/camera/third_person_camera.cpp:ThirdPersonCamera_SetMagnetTarget",
+  "name": "ThirdPersonCamera_SetMagnetTarget",
+  "summary": "Sets the world position the magnet modes face or orbit."
+ },
+ {
+  "id": "function:src/app/camera/third_person_camera.cpp:ThirdPersonCamera_TryGetFollowPose",
+  "name": "ThirdPersonCamera_TryGetFollowPose",
+  "summary": "Copies the last follow CameraPose for the director if one exists."
+ },
+ {
+  "id": "function:src/app/camera/third_person_camera.cpp:ThirdPersonCamera_GetFollowCamNode",
+  "name": "ThirdPersonCamera_GetFollowCamNode",
+  "summary": "Returns the hidden follow-camera GameObject used for listener and scene sync."
+ },
+ {
+  "id": "function:src/app/camera/third_person_camera.cpp:ThirdPersonCamera_AddTrauma",
+  "name": "ThirdPersonCamera_AddTrauma",
+  "summary": "Adds clamped hit trauma that decays into camera shake."
+ },
+ {
+  "id": "function:src/app/camera/third_person_camera.cpp:ThirdPersonCamera_GetTrauma",
+  "name": "ThirdPersonCamera_GetTrauma",
+  "summary": "Returns the current trauma amount in [0,1]."
+ },
+ {
+  "id": "function:src/app/camera/third_person_camera.cpp:ThirdPersonCamera_SetSpeedFactor",
+  "name": "ThirdPersonCamera_SetSpeedFactor",
+  "summary": "Sets a [0,1] speed factor that the follow camera eases into FOV boost."
+ },
+ {
+  "id": "file:engine/audio/audio_manager.cpp",
+  "name": "audio_manager.cpp",
+  "summary": "Implements the XAudio2/X3DAudio singleton: WAV load, 2D/3D playback, bus volumes, GameObject-tracked emitters, and instance voices used by audio components.",
+  "languageNotes": "XAudio2 mastering voice plus X3DAudio listener/emitter DSP; named clips live beside numeric AudioPlaybackId instances."
+ },
+ {
+  "id": "file:engine/audio/audio_manager.h",
+  "name": "audio_manager.h",
+  "summary": "Declares AudioManager, AudioType, and the public load/play/stop/volume API for 2D, 3D, instance, and UI-click playback.",
+  "languageNotes": "C++ singleton with deleted copy operations; private helpers operate on an internal Playback voice struct."
+ },
+ {
+  "id": "file:engine/core/debug_system.cpp",
+  "name": "debug_system.cpp",
+  "summary": "Implements main-thread debug controls: collision visualization, time-scale cycling, freeze frame-step, hitstop pulses, and the on-screen overlay."
+ },
+ {
+  "id": "function:engine/audio/audio_manager.cpp:Initialize",
+  "name": "Initialize",
+  "summary": "Creates the XAudio2 engine, mastering voice, and X3DAudio handle."
+ },
+ {
+  "id": "function:engine/audio/audio_manager.cpp:Clamp01",
+  "name": "Clamp01",
+  "summary": "Clamps a scalar volume or mix value into the 0–1 range."
+ },
+ {
+  "id": "function:engine/audio/audio_manager.cpp:DestroyPlaybackVoice",
+  "name": "DestroyPlaybackVoice",
+  "summary": "Stops and destroys an XAudio2 source voice on a Playback."
+ },
+ {
+  "id": "function:engine/audio/audio_manager.cpp:VoiceHasFinished",
+  "name": "VoiceHasFinished",
+  "summary": "Returns whether a non-looping source voice has drained."
+ },
+ {
+  "id": "function:engine/audio/audio_manager.cpp:Finalize",
+  "name": "Finalize",
+  "summary": "Stops every voice and tears down XAudio2 resources."
+ },
+ {
+  "id": "function:engine/audio/audio_manager.cpp:Update",
+  "name": "Update",
+  "summary": "Ticks 3D emitters, listener tracking, finished-instance sweep, and debug draw."
+ },
+ {
+  "id": "function:engine/audio/audio_manager.cpp:LoadWav",
+  "name": "LoadWav",
+  "summary": "Reads a WAV file into Playback audio bytes and WAVEFORMATEX."
+ },
+ {
+  "id": "function:engine/audio/audio_manager.cpp:PlaySFX3D",
+  "name": "PlaySFX3D",
+  "summary": "Starts or restarts a named 3D SFX at a world position."
+ },
+ {
+  "id": "function:engine/audio/audio_manager.cpp:PlaySFX",
+  "name": "PlaySFX",
+  "summary": "Starts or restarts a named 2D sound-effect clip."
+ },
+ {
+  "id": "function:engine/audio/audio_manager.cpp:PlayBGM",
+  "name": "PlayBGM",
+  "summary": "Starts or restarts looping background music by id or path."
+ },
+ {
+  "id": "function:engine/audio/audio_manager.cpp:PlayVoice",
+  "name": "PlayVoice",
+  "summary": "Starts or restarts a named voice-over clip."
+ },
+ {
+  "id": "function:engine/audio/audio_manager.cpp:LoadBGM",
+  "name": "LoadBGM",
+  "summary": "Preloads a BGM WAV without starting playback."
+ },
+ {
+  "id": "function:engine/audio/audio_manager.cpp:LoadSFX",
+  "name": "LoadSFX",
+  "summary": "Preloads a 2D SFX WAV without starting playback."
+ },
+ {
+  "id": "function:engine/audio/audio_manager.cpp:LoadVoice",
+  "name": "LoadVoice",
+  "summary": "Preloads a voice WAV without starting playback."
+ },
+ {
+  "id": "function:engine/audio/audio_manager.cpp:Load3DSFX",
+  "name": "Load3DSFX",
+  "summary": "Preloads a 3D SFX and prepares its emitter."
+ },
+ {
+  "id": "function:engine/audio/audio_manager.cpp:Apply3DAudio",
+  "name": "Apply3DAudio",
+  "summary": "Runs X3DAudio and applies the output matrix to a 3D voice."
+ },
+ {
+  "id": "function:engine/audio/audio_manager.cpp:Stop",
+  "name": "Stop",
+  "summary": "Stops and releases the named playback id."
+ },
+ {
+  "id": "function:engine/audio/audio_manager.cpp:StopAll",
+  "name": "StopAll",
+  "summary": "Stops every named source currently playing."
+ },
+ {
+  "id": "function:engine/audio/audio_manager.cpp:StopAllByType",
+  "name": "StopAllByType",
+  "summary": "Stops all voices of BGM, SFX, or VOICE type."
+ },
+ {
+  "id": "function:engine/audio/audio_manager.cpp:IsPlaying",
+  "name": "IsPlaying",
+  "summary": "Reports whether the named source still has an active voice."
+ },
+ {
+  "id": "function:engine/audio/audio_manager.cpp:SetEmitterPosition",
+  "name": "SetEmitterPosition",
+  "summary": "Moves a 3D source emitter to a world position."
+ },
+ {
+  "id": "function:engine/audio/audio_manager.cpp:SetEmitterDistanceScale",
+  "name": "SetEmitterDistanceScale",
+  "summary": "Sets how quickly a 3D source attenuates with distance."
+ },
+ {
+  "id": "function:engine/audio/audio_manager.cpp:SetEmitter",
+  "name": "SetEmitter",
+  "summary": "Binds a 3D source emitter to a GameObject transform."
+ },
+ {
+  "id": "function:engine/audio/audio_manager.cpp:SetListenerStereoBalance",
+  "name": "SetListenerStereoBalance",
+  "summary": "Toggles listener stereo-balance processing."
+ },
+ {
+  "id": "function:engine/audio/audio_manager.cpp:SetListener",
+  "name": "SetListener",
+  "summary": "Sets the 3D listener from an explicit pose or a tracked GameObject."
+ },
+ {
+  "id": "function:engine/audio/audio_manager.cpp:OnGameObjectDestroyed",
+  "name": "OnGameObjectDestroyed",
+  "summary": "Clears listener/emitter pointers that referenced a freed GameObject."
+ },
+ {
+  "id": "function:engine/audio/audio_manager.cpp:SetVolume",
+  "name": "SetVolume",
+  "summary": "Sets per-source base volume and reapplies bus mix."
+ },
+ {
+  "id": "function:engine/audio/audio_manager.cpp:UpdateVolume",
+  "name": "UpdateVolume",
+  "summary": "Writes the combined bus volume onto a source voice."
+ },
+ {
+  "id": "function:engine/audio/audio_manager.cpp:ReapplyAllVolumes",
+  "name": "ReapplyAllVolumes",
+  "summary": "Recomputes output volume for every live source."
+ },
+ {
+  "id": "function:engine/audio/audio_manager.cpp:SetMasterVolume",
+  "name": "SetMasterVolume",
+  "summary": "Sets master bus volume and reapplies all voices."
+ },
+ {
+  "id": "function:engine/audio/audio_manager.cpp:SetBGMVolume",
+  "name": "SetBGMVolume",
+  "summary": "Sets the BGM bus volume."
+ },
+ {
+  "id": "function:engine/audio/audio_manager.cpp:SetSFXVolume",
+  "name": "SetSFXVolume",
+  "summary": "Sets the SFX bus volume."
+ },
+ {
+  "id": "function:engine/audio/audio_manager.cpp:SetVoiceVolume",
+  "name": "SetVoiceVolume",
+  "summary": "Sets the voice-over bus volume."
+ },
+ {
+  "id": "function:engine/audio/audio_manager.cpp:DrawDebug",
+  "name": "DrawDebug",
+  "summary": "Draws 3D emitter spheres through DebugDrawer when debug draw is on."
+ },
+ {
+  "id": "function:engine/audio/audio_manager.cpp:GetDebugInfo",
+  "name": "GetDebugInfo",
+  "summary": "Returns distance and L/R matrix volumes for a 3D source."
+ },
+ {
+  "id": "function:engine/audio/audio_manager.cpp:Setup3DEmitter",
+  "name": "Setup3DEmitter",
+  "summary": "Initializes X3DAudio emitter fields and distance curve."
+ },
+ {
+  "id": "function:engine/audio/audio_manager.cpp:SubmitAndStart",
+  "name": "SubmitAndStart",
+  "summary": "Submits the WAV buffer and starts the source voice."
+ },
+ {
+  "id": "function:engine/audio/audio_manager.cpp:SweepFinishedInstances",
+  "name": "SweepFinishedInstances",
+  "summary": "Destroys instance voices that have finished playing."
+ },
+ {
+  "id": "function:engine/audio/audio_manager.cpp:StartInstance",
+  "name": "StartInstance",
+  "summary": "Allocates a unique AudioPlaybackId and starts a component-owned voice."
+ },
+ {
+  "id": "function:engine/audio/audio_manager.cpp:StartInstanceFromLoaded",
+  "name": "StartInstanceFromLoaded",
+  "summary": "Starts an instance from a previously loaded named clip."
+ },
+ {
+  "id": "function:engine/audio/audio_manager.cpp:SetUiClickSound",
+  "name": "SetUiClickSound",
+  "summary": "Preloads the 2D SFX used by UI button clicks."
+ },
+ {
+  "id": "function:engine/audio/audio_manager.cpp:PlayUiClick",
+  "name": "PlayUiClick",
+  "summary": "Plays the preloaded UI click SFX."
+ },
+ {
+  "id": "function:engine/audio/audio_manager.cpp:StopInstance",
+  "name": "StopInstance",
+  "summary": "Stops one component-owned playback id."
+ },
+ {
+  "id": "function:engine/audio/audio_manager.cpp:IsInstancePlaying",
+  "name": "IsInstancePlaying",
+  "summary": "Returns whether an instance id still has an active voice."
+ },
+ {
+  "id": "function:engine/audio/audio_manager.cpp:SetInstancePosition",
+  "name": "SetInstancePosition",
+  "summary": "Updates a 3D instance emitter position."
+ },
+ {
+  "id": "function:engine/audio/audio_manager.cpp:SetInstanceDistanceScale",
+  "name": "SetInstanceDistanceScale",
+  "summary": "Updates attenuation scale for an instance voice."
+ },
+ {
+  "id": "function:engine/audio/audio_manager.cpp:SetInstanceVolume",
+  "name": "SetInstanceVolume",
+  "summary": "Updates volume on an instance voice."
+ },
+ {
+  "id": "function:engine/audio/audio_manager.cpp:StopAllInstances",
+  "name": "StopAllInstances",
+  "summary": "Stops every component-owned instance voice."
+ },
+ {
+  "id": "function:engine/audio/audio_manager.cpp:StopSceneInstances",
+  "name": "StopSceneInstances",
+  "summary": "Stops scene instances while leaving persistAcrossScene voices running."
+ },
+ {
+  "id": "function:engine/audio/audio_manager.cpp:LoadBusVolumesFromProjectFile",
+  "name": "LoadBusVolumesFromProjectFile",
+  "summary": "Reads master/BGM/SFX/voice bus levels from project.json."
+ },
+ {
+  "id": "function:engine/audio/audio_manager.cpp:TryLoadBusVolumesFromNearbyProject",
+  "name": "TryLoadBusVolumesFromNearbyProject",
+  "summary": "Looks for a nearby project.json and loads bus volumes."
+ },
+ {
+  "id": "class:engine/audio/audio_manager.cpp:Playback",
+  "name": "Playback",
+  "summary": "Internal voice record holding WAV bytes, an XAudio2 source voice, and optional X3DAudio emitter state."
+ },
+ {
+  "id": "function:engine/core/debug_system.cpp:ClearPulse",
+  "name": "ClearPulse",
+  "summary": "Cancels any in-flight time-scale pulse."
+ },
+ {
+  "id": "function:engine/core/debug_system.cpp:ApplyFreezeCursor",
+  "name": "ApplyFreezeCursor",
+  "summary": "Shows or restores the third-person camera cursor when entering or leaving freeze."
+ },
+ {
+  "id": "function:engine/core/debug_system.cpp:Init",
+  "name": "Init",
+  "summary": "Resets debug overlay, time scale, and collision-viz state."
+ },
+ {
+  "id": "function:engine/core/debug_system.cpp:Shutdown",
+  "name": "Shutdown",
+  "summary": "Clears overlay text and restores cursor ownership."
+ },
+ {
+  "id": "function:engine/core/debug_system.cpp:ToggleCollisionViz",
+  "name": "ToggleCollisionViz",
+  "summary": "Toggles F11 collider wireframe visualization."
+ },
+ {
+  "id": "function:engine/core/debug_system.cpp:CollisionVizEnabled",
+  "name": "CollisionVizEnabled",
+  "summary": "Returns whether collider debug draw is enabled."
+ },
+ {
+  "id": "function:engine/core/debug_system.cpp:GetTimeScale",
+  "name": "GetTimeScale",
+  "summary": "Returns the effective time scale including an active pulse."
+ },
+ {
+  "id": "function:engine/core/debug_system.cpp:PulseTimeScale",
+  "name": "PulseTimeScale",
+  "summary": "Starts a short real-time hitstop pulse unless debug time-scale is already overridden."
+ },
+ {
+  "id": "function:engine/core/debug_system.cpp:UpdateTimeScalePulse",
+  "name": "UpdateTimeScalePulse",
+  "summary": "Advances pulse remaining time using unscaled wall-clock delta."
+ },
+ {
+  "id": "function:engine/core/debug_system.cpp:CycleTimeScale",
+  "name": "CycleTimeScale",
+  "summary": "Cycles debug time scale 1 → 0.5 → 0.25 → freeze → 1."
+ },
+ {
+  "id": "function:engine/core/debug_system.cpp:IsFrozen",
+  "name": "IsFrozen",
+  "summary": "True when the effective time scale is zero."
+ },
+ {
+  "id": "function:engine/core/debug_system.cpp:StepOneFrame",
+  "name": "StepOneFrame",
+  "summary": "Requests a single Update tick while the world is frozen."
+ },
+ {
+  "id": "function:engine/core/debug_system.cpp:FrameStepRequested",
+  "name": "FrameStepRequested",
+  "summary": "Returns whether a freeze frame-step is pending."
+ },
+ {
+  "id": "function:engine/core/debug_system.cpp:StepAdvance",
+  "name": "StepAdvance",
+  "summary": "Returns a 1/60 dt if a step is pending and clears the request."
+ },
+ {
+  "id": "function:engine/core/debug_system.cpp:ConsumeFrameStep",
+  "name": "ConsumeFrameStep",
+  "summary": "Consumes a pending frame-step request and returns whether one was waiting."
+ },
+ {
+  "id": "function:engine/core/debug_system.cpp:SetOverlayText",
+  "name": "SetOverlayText",
+  "summary": "Replaces the debug overlay string."
+ },
+ {
+  "id": "function:engine/core/debug_system.cpp:GetOverlayColor",
+  "name": "GetOverlayColor",
+  "summary": "Returns overlay tint (red while frozen)."
+ },
+ {
+  "id": "function:engine/core/debug_system.cpp:RefreshOverlay",
+  "name": "RefreshOverlay",
+  "summary": "Rebuilds overlay lines from time scale, freeze, and physics debug stats."
+ },
+ {
+  "id": "function:engine/core/debug_system.cpp:ResetTimeScale",
+  "name": "ResetTimeScale",
+  "summary": "Clears freeze, pulses, and debug time-scale when play ends."
+ },
+ {
+  "id": "class:engine/core/debug_system.cpp:TimeScalePulseState",
+  "name": "TimeScalePulseState",
+  "summary": "Tracks an active hitstop-style time-scale pulse and remaining real-time duration."
+ },
+ {
+  "id": "file:engine/core/debug_system.h",
+  "name": "debug_system.h",
+  "summary": "Public DebugSystem API for collision viz, time scale, frame stepping, overlay text, and play-session time-scale reset.",
+  "languageNotes": "GAME_RUNTIME-safe free functions in a namespace — no ImGui dependency."
+ },
+ {
+  "id": "file:engine/debug_draw/debug_drawer.cpp",
+  "name": "debug_drawer.cpp",
+  "summary": "Builds D3D11 wireframe primitives and draws boxes, spheres, capsules, cylinders, and batched lines, including deferred queues flushed in the Draw phase.",
+  "languageNotes": "Static GPU buffers shared across instances; DrawLinesCached remaps a persistent dynamic VB instead of recreating it each frame."
+ },
+ {
+  "id": "file:engine/debug_draw/debug_drawer.h",
+  "name": "debug_drawer.h",
+  "summary": "Declares DebugDrawer wireframe drawing, deferred sphere/line queues, and cached multi-line submission used by colliders and gizmos."
+ },
+ {
+  "id": "function:engine/debug_draw/debug_drawer.cpp:~DebugDrawer",
+  "name": "~DebugDrawer",
+  "summary": "Releases GPU debug buffers if this instance still owns them."
+ },
+ {
+  "id": "function:engine/debug_draw/debug_drawer.cpp:Initialize",
+  "name": "Initialize",
+  "summary": "Creates the XAudio2 engine, mastering voice, and X3DAudio handle."
+ },
+ {
+  "id": "function:engine/debug_draw/debug_drawer.cpp:Release",
+  "name": "Release",
+  "summary": "Destroys DebugDrawer vertex/index buffers, texture, and depth state."
+ },
+ {
+  "id": "function:engine/debug_draw/debug_drawer.cpp:DrawBox",
+  "name": "DrawBox",
+  "summary": "Draws a wireframe OBB using the shared box mesh."
+ },
+ {
+  "id": "function:engine/debug_draw/debug_drawer.cpp:DrawSphere",
+  "name": "DrawSphere",
+  "summary": "Draws a wireframe sphere, optionally with depth testing disabled."
+ },
+ {
+  "id": "function:engine/debug_draw/debug_drawer.cpp:DrawCapsule",
+  "name": "DrawCapsule",
+  "summary": "Draws a wireframe capsule from radius, height, and rotation."
+ },
+ {
+  "id": "function:engine/debug_draw/debug_drawer.cpp:DrawCylinder",
+  "name": "DrawCylinder",
+  "summary": "Draws a wireframe Y-aligned cylinder after rotation."
+ },
+ {
+  "id": "function:engine/debug_draw/debug_drawer.cpp:DrawLine",
+  "name": "DrawLine",
+  "summary": "Draws a single world-space line segment."
+ },
+ {
+  "id": "function:engine/debug_draw/debug_drawer.cpp:DrawLines",
+  "name": "DrawLines",
+  "summary": "Batches many line segments into one GPU draw."
+ },
+ {
+  "id": "function:engine/debug_draw/debug_drawer.cpp:DrawLinesCached",
+  "name": "DrawLinesCached",
+  "summary": "Uploads line verts into a persistent dynamic VB and draws them."
+ },
+ {
+  "id": "function:engine/debug_draw/debug_drawer.cpp:QueueSphere",
+  "name": "QueueSphere",
+  "summary": "Enqueues a sphere wire for the Draw-phase flush."
+ },
+ {
+  "id": "function:engine/debug_draw/debug_drawer.cpp:FlushSphereQueue",
+  "name": "FlushSphereQueue",
+  "summary": "Draws queued spheres without depth test and clears the queue."
+ },
+ {
+  "id": "function:engine/debug_draw/debug_drawer.cpp:QueueLine",
+  "name": "QueueLine",
+  "summary": "Enqueues a line segment for the Draw-phase flush."
+ },
+ {
+  "id": "function:engine/debug_draw/debug_drawer.cpp:FlushLineQueue",
+  "name": "FlushLineQueue",
+  "summary": "Draws queued lines and clears the deferred line queue."
+ },
+ {
+  "id": "file:engine/ecs/game_object.cpp",
+  "name": "game_object.cpp",
+  "summary": "Implements GameObject update, destructor cleanup, trigger callbacks, collision-ignore lists, transform sync, reparenting, and visual/collider draw."
+ },
+ {
+  "id": "file:engine/editor/project_manager.cpp",
+  "name": "project_manager.cpp",
+  "summary": "Implements project create/open/save, recent-list tracking, engine-asset copy, gravity/audio bus activation, and the Windows folder picker.",
+  "languageNotes": "Uses Win32 IFileDialog plus nlohmann::json project files; scaffolds a content .sln and build scripts for new projects."
+ },
+ {
+  "id": "file:engine/physics/collider/collider.cpp",
+  "name": "collider.cpp",
+  "summary": "Implements box, sphere, capsule, cylinder, and mesh colliders: world poses, contact generation, resolution, ray tests, and debug wireframes.",
+  "languageNotes": "Per-shape CheckCollision/ResolveCollision overrides plus shared ResolveContact that writes velocity, friction, and contact flashes."
+ },
+ {
+  "id": "function:engine/ecs/game_object.cpp:IsInsideUpdate",
+  "name": "IsInsideUpdate",
+  "summary": "True while any GameObject::Update is on the call stack."
+ },
+ {
+  "id": "function:engine/ecs/game_object.cpp:Update",
+  "name": "Update",
+  "summary": "Ticks 3D emitters, listener tracking, finished-instance sweep, and debug draw."
+ },
+ {
+  "id": "function:engine/ecs/game_object.cpp:Update_IsParallelSafe",
+  "name": "Update_IsParallelSafe",
+  "summary": "Reports whether all attached scripts allow parallel Update."
+ },
+ {
+  "id": "function:engine/ecs/game_object.cpp:~GameObject",
+  "name": "~GameObject",
+  "summary": "Notifies audio and physics, detaches components, and deletes host-owned colliders."
+ },
+ {
+  "id": "function:engine/ecs/game_object.cpp:OnTriggerEnter",
+  "name": "OnTriggerEnter",
+  "summary": "Forwards trigger-enter to the object's Script component."
+ },
+ {
+  "id": "function:engine/ecs/game_object.cpp:OnTriggerExit",
+  "name": "OnTriggerExit",
+  "summary": "Forwards trigger-exit to the object's Script component."
+ },
+ {
+  "id": "function:engine/ecs/game_object.cpp:AddIgnoreCollisionTag",
+  "name": "AddIgnoreCollisionTag",
+  "summary": "Adds a tag this object should not collide with."
+ },
+ {
+  "id": "function:engine/ecs/game_object.cpp:RemoveIgnoreCollisionTag",
+  "name": "RemoveIgnoreCollisionTag",
+  "summary": "Removes a collision-ignore tag."
+ },
+ {
+  "id": "function:engine/ecs/game_object.cpp:AddIgnoreCollisionObject",
+  "name": "AddIgnoreCollisionObject",
+  "summary": "Ignores collisions against a specific other GameObject."
+ },
+ {
+  "id": "function:engine/ecs/game_object.cpp:RemoveIgnoreCollisionObject",
+  "name": "RemoveIgnoreCollisionObject",
+  "summary": "Stops ignoring a specific GameObject pair."
+ },
+ {
+  "id": "function:engine/ecs/game_object.cpp:ClearIgnoreCollisionObjects",
+  "name": "ClearIgnoreCollisionObjects",
+  "summary": "Clears all per-object collision ignores."
+ },
+ {
+  "id": "function:engine/ecs/game_object.cpp:IgnoresCollisionWith",
+  "name": "IgnoresCollisionWith",
+  "summary": "True if tags or object-ignore lists skip this pair."
+ },
+ {
+  "id": "function:engine/ecs/game_object.cpp:SyncLegacyTransformFromComponents",
+  "name": "SyncLegacyTransformFromComponents",
+  "summary": "Copies Transform component pose into legacy GameObject fields."
+ },
+ {
+  "id": "function:engine/ecs/game_object.cpp:SyncComponentsFromLegacyTransform",
+  "name": "SyncComponentsFromLegacyTransform",
+  "summary": "Writes legacy pose back onto the Transform component."
+ },
+ {
+  "id": "function:engine/ecs/game_object.cpp:ReparentChild",
+  "name": "ReparentChild",
+  "summary": "Moves a child under a new parent and keeps world pose stable."
+ },
+ {
+  "id": "function:engine/ecs/game_object.cpp:GetWorldPose",
+  "name": "GetWorldPose",
+  "summary": "Reads world position, rotation, and scale from Transform."
+ },
+ {
+  "id": "function:engine/ecs/game_object.cpp:DrawVisual",
+  "name": "DrawVisual",
+  "summary": "Draws the visual/model and optional debug collider for this object."
+ },
+ {
+  "id": "function:engine/editor/project_manager.cpp:CopyDirectoryRecursive",
+  "name": "CopyDirectoryRecursive",
+  "summary": "Recursively copies a directory tree, reporting filesystem errors."
+ },
+ {
+  "id": "function:engine/editor/project_manager.cpp:ReadDefaultSceneFileName",
+  "name": "ReadDefaultSceneFileName",
+  "summary": "Reads the default scene filename from a project root."
+ },
+ {
+  "id": "function:engine/editor/project_manager.cpp:WriteDefaultSceneFile",
+  "name": "WriteDefaultSceneFile",
+  "summary": "Writes the default-scene marker file under a project root."
+ },
+ {
+  "id": "function:engine/editor/project_manager.cpp:SanitizeProjectFolderName",
+  "name": "SanitizeProjectFolderName",
+  "summary": "Strips invalid path characters from a project folder name."
+ },
+ {
+  "id": "function:engine/editor/project_manager.cpp:WriteContentProjectSolution",
+  "name": "WriteContentProjectSolution",
+  "summary": "Writes the content-project Visual Studio solution scaffold."
+ },
+ {
+  "id": "function:engine/editor/project_manager.cpp:WriteContentBuildScriptsBat",
+  "name": "WriteContentBuildScriptsBat",
+  "summary": "Writes Windows build helper scripts into a new project."
+ },
+ {
+  "id": "function:engine/editor/project_manager.cpp:Utf8FromWide",
+  "name": "Utf8FromWide",
+  "summary": "Converts a wide Windows string to UTF-8."
+ },
+ {
+  "id": "function:engine/editor/project_manager.cpp:WideFromUtf8",
+  "name": "WideFromUtf8",
+  "summary": "Converts UTF-8 to a wide Windows string."
+ },
+ {
+  "id": "function:engine/editor/project_manager.cpp:GetExecutableDirectory",
+  "name": "GetExecutableDirectory",
+  "summary": "Returns the directory of the running editor executable."
+ },
+ {
+  "id": "function:engine/editor/project_manager.cpp:FindEngineRepoRoot",
+  "name": "FindEngineRepoRoot",
+  "summary": "Walks upward from the exe to locate the engine repository root."
+ },
+ {
+  "id": "function:engine/editor/project_manager.cpp:RecentListPath",
+  "name": "RecentListPath",
+  "summary": "Returns the path of the recent-projects JSON list."
+ },
+ {
+  "id": "function:engine/editor/project_manager.cpp:LoadRecentList",
+  "name": "LoadRecentList",
+  "summary": "Loads the recent-projects list from disk."
+ },
+ {
+  "id": "function:engine/editor/project_manager.cpp:SaveRecentList",
+  "name": "SaveRecentList",
+  "summary": "Writes the recent-projects list to disk."
+ },
+ {
+  "id": "function:engine/editor/project_manager.cpp:TouchRecent",
+  "name": "TouchRecent",
+  "summary": "Moves a project root to the front of the recent list."
+ },
+ {
+  "id": "function:engine/editor/project_manager.cpp:MakeDefaultData",
+  "name": "MakeDefaultData",
+  "summary": "Builds default ProjectData for a newly created root."
+ },
+ {
+  "id": "function:engine/editor/project_manager.cpp:LoadProjectFile",
+  "name": "LoadProjectFile",
+  "summary": "Parses project.json into ProjectData."
+ },
+ {
+  "id": "function:engine/editor/project_manager.cpp:WriteProjectFile",
+  "name": "WriteProjectFile",
+  "summary": "Serializes ProjectData to project.json."
+ },
+ {
+  "id": "function:engine/editor/project_manager.cpp:EnsureEngineAssets",
+  "name": "EnsureEngineAssets",
+  "summary": "Copies required engine assets into the project if missing."
+ },
+ {
+  "id": "function:engine/editor/project_manager.cpp:ActivateRoot",
+  "name": "ActivateRoot",
+  "summary": "Applies gravity, audio buses, UI click SFX, and recent-list state for an opened root."
+ },
+ {
+  "id": "function:engine/editor/project_manager.cpp:OpenProject",
+  "name": "OpenProject",
+  "summary": "Opens an existing project root and activates it."
+ },
+ {
+  "id": "function:engine/editor/project_manager.cpp:ScaffoldNewProjectTree",
+  "name": "ScaffoldNewProjectTree",
+  "summary": "Creates folders, default scene, and content project files."
+ },
+ {
+  "id": "function:engine/editor/project_manager.cpp:CreateProject",
+  "name": "CreateProject",
+  "summary": "Creates a new project under a parent directory."
+ },
+ {
+  "id": "function:engine/editor/project_manager.cpp:SaveProjectFile",
+  "name": "SaveProjectFile",
+  "summary": "Writes the in-memory project file back to disk."
+ },
+ {
+  "id": "function:engine/editor/project_manager.cpp:SetLastOpenedScene",
+  "name": "SetLastOpenedScene",
+  "summary": "Records the last opened scene filename."
+ },
+ {
+  "id": "function:engine/editor/project_manager.cpp:SetDefaultScene",
+  "name": "SetDefaultScene",
+  "summary": "Records the default scene filename."
+ },
+ {
+  "id": "function:engine/editor/project_manager.cpp:SetEditorUiZoomPercent",
+  "name": "SetEditorUiZoomPercent",
+  "summary": "Stores editor UI zoom in project data."
+ },
+ {
+  "id": "function:engine/editor/project_manager.cpp:SetPhysicsGravity",
+  "name": "SetPhysicsGravity",
+  "summary": "Writes gravity into project data and the live physics singleton."
+ },
+ {
+  "id": "function:engine/editor/project_manager.cpp:SetAudioBuses",
+  "name": "SetAudioBuses",
+  "summary": "Writes bus volumes into project data."
+ },
+ {
+  "id": "function:engine/editor/project_manager.cpp:SetUiClickSound",
+  "name": "SetUiClickSound",
+  "summary": "Preloads the 2D SFX used by UI button clicks."
+ },
+ {
+  "id": "function:engine/editor/project_manager.cpp:ResolveSceneToLoad",
+  "name": "ResolveSceneToLoad",
+  "summary": "Chooses last-opened vs default scene for startup."
+ },
+ {
+  "id": "function:engine/editor/project_manager.cpp:BootstrapAtStartup",
+  "name": "BootstrapAtStartup",
+  "summary": "Opens the last project or prompts so the editor can start."
+ },
+ {
+  "id": "function:engine/editor/project_manager.cpp:CloseProject",
+  "name": "CloseProject",
+  "summary": "Clears the active project root."
+ },
+ {
+  "id": "function:engine/editor/project_manager.cpp:UpdateWindowTitle",
+  "name": "UpdateWindowTitle",
+  "summary": "Sets the editor window title from the open project name."
+ },
+ {
+  "id": "function:engine/editor/project_manager.cpp:PickFolder",
+  "name": "PickFolder",
+  "summary": "Shows the Win32 folder picker and returns the chosen path."
+ },
+ {
+  "id": "function:engine/physics/collider/collider.cpp:GetOwnerPose",
+  "name": "GetOwnerPose",
+  "summary": "Reads an owner's world position, rotation, and scale for collider math."
+ },
+ {
+  "id": "function:engine/physics/collider/collider.cpp:CollisionPairIgnored",
+  "name": "CollisionPairIgnored",
+  "summary": "True when either GameObject ignores the other via tags or object lists."
+ },
+ {
+  "id": "function:engine/physics/collider/collider.cpp:MeshLocalTestRadius",
+  "name": "MeshLocalTestRadius",
+  "summary": "Converts a world test radius into mesh-local space."
+ },
+ {
+  "id": "function:engine/physics/collider/collider.cpp:LocalPenetrationToWorld",
+  "name": "LocalPenetrationToWorld",
+  "summary": "Transforms a local mesh penetration vector into world space."
+ },
+ {
+  "id": "function:engine/physics/collider/collider.cpp:MeshSizePaddingScale",
+  "name": "MeshSizePaddingScale",
+  "summary": "Computes extra mesh collision padding from local bounds and owner scale."
+ },
+ {
+  "id": "function:engine/physics/collider/collider.cpp:StabilizeFloorContactNormal",
+  "name": "StabilizeFloorContactNormal",
+  "summary": "Snaps near-up contact normals to world up to reduce jitter."
+ },
+ {
+  "id": "function:engine/physics/collider/collider.cpp:BuildCylinderWorldFrame",
+  "name": "BuildCylinderWorldFrame",
+  "summary": "Builds the orthonormal frame used for cylinder contact tests."
+ },
+ {
+  "id": "function:engine/physics/collider/collider.cpp:WorldPointToCylinderLocal",
+  "name": "WorldPointToCylinderLocal",
+  "summary": "Converts a world point into cylinder-local coordinates."
+ },
+ {
+  "id": "function:engine/physics/collider/collider.cpp:ClosestPointOnCylinderLocal",
+  "name": "ClosestPointOnCylinderLocal",
+  "summary": "Finds the closest point on a local cylinder surface."
+ },
+ {
+  "id": "function:engine/physics/collider/collider.cpp:SphereCylinder_Contact",
+  "name": "SphereCylinder_Contact",
+  "summary": "Computes sphere-vs-cylinder contact normal and penetration."
+ },
+ {
+  "id": "function:engine/physics/collider/collider.cpp:ClosestPointOnOBB_World",
+  "name": "ClosestPointOnOBB_World",
+  "summary": "Returns the closest point on a rotated box to a world point."
+ },
+ {
+  "id": "function:engine/physics/collider/collider.cpp:SphereOBB_Contact",
+  "name": "SphereOBB_Contact",
+  "summary": "Computes sphere-vs-OBB contact normal and penetration."
+ },
+ {
+  "id": "function:engine/physics/collider/collider.cpp:GetWorldCenter",
+  "name": "GetWorldCenter",
+  "summary": "Returns the collider center in world space including owner pose."
+ },
+ {
+  "id": "function:engine/physics/collider/collider.cpp:GetSize",
+  "name": "GetSize",
+  "summary": "Returns the box collider's full world-space size."
+ },
+ {
+  "id": "function:engine/physics/collider/collider.cpp:RayIntersect",
+  "name": "RayIntersect",
+  "summary": "Ray-tests the collider shape and returns the nearest hit."
+ },
+ {
+  "id": "function:engine/physics/collider/collider.cpp:RayIntersectSphereWorld",
+  "name": "RayIntersectSphereWorld",
+  "summary": "Analytic ray-vs-sphere test used by sphere and capsule rays."
+ },
+ {
+  "id": "function:engine/physics/collider/collider.cpp:ResolveContact",
+  "name": "ResolveContact",
+  "summary": "Applies positional correction, bounce, and friction for a solid contact."
+ },
+ {
+  "id": "function:engine/physics/collider/collider.cpp:CheckCollision",
+  "name": "CheckCollision",
+  "summary": "Dispatches shape-vs-shape overlap tests for the collider pair."
+ },
+ {
+  "id": "function:engine/physics/collider/collider.cpp:ResolveCollision",
+  "name": "ResolveCollision",
+  "summary": "Resolves overlap for the collider pair, including triggers."
+ },
+ {
+  "id": "function:engine/physics/collider/collider.cpp:DebugDraw",
+  "name": "DebugDraw",
+  "summary": "Draws the collider wireframe through DebugDrawer."
+ },
+ {
+  "id": "function:engine/physics/collider/collider.cpp:SetMeshData",
+  "name": "SetMeshData",
+  "summary": "Replaces mesh-collider vertices and indices and rebuilds the bounds."
+ },
+ {
+  "id": "function:engine/physics/collider/collider.cpp:BuildFromModel",
+  "name": "BuildFromModel",
+  "summary": "Fills a mesh collider from a Model3D's triangles."
+ },
+ {
+  "id": "function:engine/physics/collider/collider.cpp:GetWorldAABB",
+  "name": "GetWorldAABB",
+  "summary": "Computes the mesh collider's world-space AABB."
+ },
+ {
+  "id": "function:engine/physics/collider/collider.cpp:CalculateBoundingSphere",
+  "name": "CalculateBoundingSphere",
+  "summary": "Rebuilds the local bounding sphere from mesh vertices."
+ },
+ {
+  "id": "function:engine/physics/collider/collider.cpp:GetWorldBoundingSphereRadius",
+  "name": "GetWorldBoundingSphereRadius",
+  "summary": "Returns the mesh bounding radius scaled by the owner."
+ },
+ {
+  "id": "function:engine/physics/collider/collider.cpp:Raycast",
+  "name": "Raycast",
+  "summary": "Raycasts the triangle mesh and returns hit point and normal."
+ },
+ {
+  "id": "function:engine/physics/collider/collider.cpp:RayIntersectsTriangle",
+  "name": "RayIntersectsTriangle",
+  "summary": "Möller–Trumbore ray-triangle intersection helper."
+ },
+ {
+  "id": "function:engine/physics/collider/collider.cpp:TriangleIntersectsSphere",
+  "name": "TriangleIntersectsSphere",
+  "summary": "Tests a triangle against a sphere and returns contact data."
+ },
+ {
+  "id": "class:engine/physics/collider/collider.cpp:CylinderWorldFrame",
+  "name": "CylinderWorldFrame",
+  "summary": "Orthonormal cylinder frame (center, axes, radius, half-height) for contact tests."
+ },
+ {
+  "id": "file:engine/physics/collider/collider.h",
+  "name": "collider.h",
+  "summary": "Declares the Collider hierarchy (box, sphere, capsule, cylinder, mesh) with trigger flags, ray tests, and debug-draw hooks.",
+  "languageNotes": "Classic virtual collider interface; mesh stores local vertices/indices and a padded bounding sphere."
+ },
+ {
+  "id": "file:engine/physics/core/physics_system.cpp",
+  "name": "physics_system.cpp",
+  "summary": "Runs the play-mode physics tick: position snapshots, gravity integrate, swept broad phase, trigger enter/exit, raycasts, and contact-flash debug draw.",
+  "languageNotes": "Swept-AABB broad phase plus sub-stepped narrow phase to reduce tunneling on fast movers."
+ },
+ {
+  "id": "file:engine/physics/core/physics_system.h",
+  "name": "physics_system.h",
+  "summary": "Public physics tick, trigger-pair, raycast, and debug-stat API used by play mode, scripts, and scene changes."
+ },
+ {
+  "id": "function:engine/physics/core/physics_system.cpp:InsertTriggerPair",
+  "name": "InsertTriggerPair",
+  "summary": "Records an overlapping trigger pair for this resolution pass."
+ },
+ {
+  "id": "function:engine/physics/core/physics_system.cpp:DiffAndDispatchTriggerEvents",
+  "name": "DiffAndDispatchTriggerEvents",
+  "summary": "Diffs previous/current trigger sets and fires enter/exit."
+ },
+ {
+  "id": "function:engine/physics/core/physics_system.cpp:CommitContactPairs",
+  "name": "CommitContactPairs",
+  "summary": "Promotes this pass's solid contacts into the previous-pass set."
+ },
+ {
+  "id": "function:engine/physics/core/physics_system.cpp:IsDynamic",
+  "name": "IsDynamic",
+  "summary": "True when the object has a non-kinematic rigidbody."
+ },
+ {
+  "id": "function:engine/physics/core/physics_system.cpp:GetApproxRadius",
+  "name": "GetApproxRadius",
+  "summary": "Approximates a broad-phase radius from collider type and size."
+ },
+ {
+  "id": "function:engine/physics/core/physics_system.cpp:BroadPhasePass",
+  "name": "BroadPhasePass",
+  "summary": "Sphere-overlap broad phase using current centers."
+ },
+ {
+  "id": "function:engine/physics/core/physics_system.cpp:BroadPhasePassSwept",
+  "name": "BroadPhasePassSwept",
+  "summary": "Swept-sphere broad phase along previous-to-current motion."
+ },
+ {
+  "id": "function:engine/physics/core/physics_system.cpp:DoTriggerOverlapCheck",
+  "name": "DoTriggerOverlapCheck",
+  "summary": "Runs CheckCollision for a trigger pair and records it."
+ },
+ {
+  "id": "function:engine/physics/core/physics_system.cpp:DoSweptNarrowPhase",
+  "name": "DoSweptNarrowPhase",
+  "summary": "Sub-steps a fast mover and resolves collisions along the sweep."
+ },
+ {
+  "id": "function:engine/physics/core/physics_system.cpp:PhysicsSystem_ClearTriggerPairs",
+  "name": "PhysicsSystem_ClearTriggerPairs",
+  "summary": "Clears trigger tracking on scene change."
+ },
+ {
+  "id": "function:engine/physics/core/physics_system.cpp:PhysicsSystem_NotifyObjectDestroyed",
+  "name": "PhysicsSystem_NotifyObjectDestroyed",
+  "summary": "Fires leftover trigger-exit and drops pairs that referenced the object."
+ },
+ {
+  "id": "function:engine/physics/core/physics_system.cpp:PhysicsSystem_SavePositions",
+  "name": "PhysicsSystem_SavePositions",
+  "summary": "Snapshots dynamic object positions before script motion."
+ },
+ {
+  "id": "function:engine/physics/core/physics_system.cpp:PhysicsSystem_ResolveCollisions",
+  "name": "PhysicsSystem_ResolveCollisions",
+  "summary": "Full detect/resolve pass with swept broad phase and triggers."
+ },
+ {
+  "id": "function:engine/physics/core/physics_system.cpp:PhysicsSystem_Raycast",
+  "name": "PhysicsSystem_Raycast",
+  "summary": "Nearest-hit raycast against active scene colliders."
+ },
+ {
+  "id": "function:engine/physics/core/physics_system.cpp:PhysicsSystem_Update",
+  "name": "PhysicsSystem_Update",
+  "summary": "Integrates rigidbodies then resolves collisions for a play-mode tick."
+ },
+ {
+  "id": "function:engine/physics/core/physics_system.cpp:PhysicsSystem_GetDebugStats",
+  "name": "PhysicsSystem_GetDebugStats",
+  "summary": "Returns collider/pair/contact/trigger counters for the overlay."
+ },
+ {
+  "id": "function:engine/physics/core/physics_system.cpp:PhysicsSystem_NotifyContactResolved",
+  "name": "PhysicsSystem_NotifyContactResolved",
+  "summary": "Increments the resolved-contact debug counter."
+ },
+ {
+  "id": "function:engine/physics/core/physics_system.cpp:PhysicsSystem_WasContactPairKnown",
+  "name": "PhysicsSystem_WasContactPairKnown",
+  "summary": "True if this solid pair already contacted last pass."
+ },
+ {
+  "id": "function:engine/physics/core/physics_system.cpp:PhysicsSystem_QueueContactFlash",
+  "name": "PhysicsSystem_QueueContactFlash",
+  "summary": "Queues a short-lived contact-flash debug primitive."
+ },
+ {
+  "id": "function:engine/physics/core/physics_system.cpp:PhysicsSystem_PrepareContactFlashes",
+  "name": "PhysicsSystem_PrepareContactFlashes",
+  "summary": "Re-queues active flashes so Draw can flush them."
+ },
+ {
+  "id": "function:engine/physics/core/physics_system.cpp:PhysicsSystem_ClearDebugDrawQueue",
+  "name": "PhysicsSystem_ClearDebugDrawQueue",
+  "summary": "Clears pending physics debug primitives."
+ },
+ {
+  "id": "function:engine/physics/core/physics_system.cpp:PhysicsSystem_FlushDebugDraw",
+  "name": "PhysicsSystem_FlushDebugDraw",
+  "summary": "Draws collider wires and contact flashes when viz is enabled."
+ },
+ {
+  "id": "class:engine/physics/core/physics_system.cpp:ContactFlash",
+  "name": "ContactFlash",
+  "summary": "Short-lived debug flash at a new contact point and normal tip."
+ },
+ {
+  "id": "class:engine/physics/core/physics_system.cpp:BroadPhaseEntry",
+  "name": "BroadPhaseEntry",
+  "summary": "Sortable broad-phase record with collider, dynamics flag, and sweep center."
+ },
+ {
+  "id": "file:engine/physics/core/rigidbody.cpp",
+  "name": "rigidbody.cpp",
+  "summary": "Implements project gravity load plus Rigidbody force accumulation, velocity clear, and semi-implicit Euler integration with drag."
+ },
+ {
+  "id": "file:engine/physics/core/rigidbody.h",
+  "name": "rigidbody.h",
+  "summary": "Declares Rigidbody mass/drag/restitution/friction, ForceMode, and the engine gravity getters used during integration."
+ },
+ {
+  "id": "file:engine/scripting/script_runtime_api.cpp",
+  "name": "script_runtime_api.cpp",
+  "summary": "Host-side ScriptRuntimeApi table and ScriptApi_* thunks that let content DLLs drive audio, physics, camera, UI, particles, and prefabs.",
+  "languageNotes": "C-style function-pointer table (version 42) plus thin ScriptApi_* wrappers that call through ScriptRuntimeApi_GetHost()."
+ },
+ {
+  "id": "function:engine/physics/core/rigidbody.cpp:LoadGravityFromProjectFile",
+  "name": "LoadGravityFromProjectFile",
+  "summary": "Reads physics.gravity from a project.json path."
+ },
+ {
+  "id": "function:engine/physics/core/rigidbody.cpp:Physics_GetGravity",
+  "name": "Physics_GetGravity",
+  "summary": "Returns the current engine gravity magnitude."
+ },
+ {
+  "id": "function:engine/physics/core/rigidbody.cpp:Physics_SetGravity",
+  "name": "Physics_SetGravity",
+  "summary": "Overrides the live gravity used during integration."
+ },
+ {
+  "id": "function:engine/physics/core/rigidbody.cpp:Physics_TryLoadGravityFromNearbyProject",
+  "name": "Physics_TryLoadGravityFromNearbyProject",
+  "summary": "Loads gravity from cwd or exe-adjacent project.json."
+ },
+ {
+  "id": "function:engine/physics/core/rigidbody.cpp:AddForce",
+  "name": "AddForce",
+  "summary": "Accumulates Force/Acceleration/Impulse/VelocityChange into the rigidbody."
+ }
+]

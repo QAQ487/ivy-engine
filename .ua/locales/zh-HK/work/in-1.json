@@ -1,0 +1,1198 @@
+[
+ {
+  "id": "file:engine/core/engine_gui.cpp",
+  "name": "engine_gui.cpp",
+  "summary": "ImGui editor shell that owns scene hierarchy, inspector, play-mode sessions, project workflows, and viewport picking for Ivy Engine.",
+  "languageNotes": "Single large C++ translation unit: public EngineGUI_* API plus internal ImGui windows, ray picking, and play-session teardown."
+ },
+ {
+  "id": "file:engine/core/game_object.h",
+  "name": "game_object.h",
+  "summary": "Compatibility header that forwards to the ECS GameObject definition so app-layer code can include a core path."
+ },
+ {
+  "id": "file:engine/ecs/collider_component.cpp",
+  "name": "collider_component.cpp",
+  "summary": "Applies serialized collider shapes onto a GameObject, creating physics colliders from boxes, spheres, capsules, cylinders, or cached mesh data."
+ },
+ {
+  "id": "file:engine/ecs/model_asset_cache.cpp",
+  "name": "model_asset_cache.cpp",
+  "summary": "Singleton cache that indexes rom/model assets and lazily loads shared Model3D GPU resources for visuals and colliders."
+ },
+ {
+  "id": "file:engine/ecs/model_asset_cache.h",
+  "name": "model_asset_cache.h",
+  "summary": "Declares ModelAssetCache, the shared FBX/model directory index and GPU model lookup used by VisualComponent and the editor."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:SyncImGuiInputAcceptance",
+  "name": "SyncImGuiInputAcceptance",
+  "summary": "Enables or blocks ImGui input queues when the editor should not consume mouse and keyboard events."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:SaveUiPrefs",
+  "name": "SaveUiPrefs",
+  "summary": "Writes editor UI zoom and related prefs to the on-disk ui_prefs JSON file."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:LoadUiPrefs",
+  "name": "LoadUiPrefs",
+  "summary": "Reads saved UI zoom prefs and applies a valid zoom percent at editor startup."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:ApplyUiZoom",
+  "name": "ApplyUiZoom",
+  "summary": "Scales ImGui style sizes from a zoom percent so the editor UI stays readable."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:EngineGUI_IsSceneDirty",
+  "name": "EngineGUI_IsSceneDirty",
+  "summary": "Returns whether the open scene has unsaved editor changes."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:EngineGUI_MarkSceneDirty",
+  "name": "EngineGUI_MarkSceneDirty",
+  "summary": "Marks the open scene dirty so save prompts and title-bar state update."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:EngineGUI_ClearSceneDirty",
+  "name": "EngineGUI_ClearSceneDirty",
+  "summary": "Clears the unsaved-scene flag after a successful save or discard."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:EngineGUI_QueueUnsavedLoad",
+  "name": "EngineGUI_QueueUnsavedLoad",
+  "summary": "Queues a scene load that must first confirm discarding unsaved edits."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:EngineGUI_QueueUnsavedExit",
+  "name": "EngineGUI_QueueUnsavedExit",
+  "summary": "Queues editor exit so an unsaved-changes dialog can run first."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:RemapNodeTagsAfterDelete",
+  "name": "RemapNodeTagsAfterDelete",
+  "summary": "Rewrites tag IDs on a subtree after a node is deleted so remaining tags stay consistent."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:NormalizeSceneFileName",
+  "name": "NormalizeSceneFileName",
+  "summary": "Normalizes a scene name into a safe filename used under rom/scene."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:EngineGUI_IsSceneGraphObject",
+  "name": "EngineGUI_IsSceneGraphObject",
+  "summary": "Returns true when a GameObject is a real scene-graph node rather than an editor helper."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:CreateModelGameObject",
+  "name": "CreateModelGameObject",
+  "summary": "Spawns a GameObject with a VisualComponent bound to the named cached model."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:ComputeEditorLayout",
+  "name": "ComputeEditorLayout",
+  "summary": "Computes pane rectangles for hierarchy, viewport, and inspector from the current window size."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:SpawnRootGameObject",
+  "name": "SpawnRootGameObject",
+  "summary": "Inserts a new root node into the editor scene graph and marks the scene dirty."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:SpawnChildGameObject",
+  "name": "SpawnChildGameObject",
+  "summary": "Parents a newly created GameObject under the selected node."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:SpawnDuplicate",
+  "name": "SpawnDuplicate",
+  "summary": "Deep-duplicates a GameObject (and children) into the scene with unique names."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:DeleteGameObject",
+  "name": "DeleteGameObject",
+  "summary": "Removes a node from the scene, remaps tags, and updates selection and undo state."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:ClearScene",
+  "name": "ClearScene",
+  "summary": "Destroys all editor scene roots and resets selection for a new or loaded scene."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:ScrollValue",
+  "name": "ScrollValue",
+  "summary": "Applies mouse-wheel scrolling to a numeric inspector field."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:AcceptAssetPathDrop",
+  "name": "AcceptAssetPathDrop",
+  "summary": "Accepts a dragged asset path if its extension is in the allowed list."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:DrawScriptPropertyField",
+  "name": "DrawScriptPropertyField",
+  "summary": "Draws an ImGui field for one reflected GameScripts property on the selected node."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:DrawPostFxShowcaseWindow",
+  "name": "DrawPostFxShowcaseWindow",
+  "summary": "ImGui window for toggling and previewing post-process showcase effects."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:DrawShortcutHintsWindow",
+  "name": "DrawShortcutHintsWindow",
+  "summary": "ImGui cheatsheet of editor keyboard shortcuts."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:DrawRenderingSettingsWindow",
+  "name": "DrawRenderingSettingsWindow",
+  "summary": "ImGui window that edits skybox, fog, default shader, and shadow-quality render settings."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:ApplyProjectSessionState",
+  "name": "ApplyProjectSessionState",
+  "summary": "Applies opened-project paths, zoom, and audio/physics settings to the running editor session."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:SwitchToOpenedProject",
+  "name": "SwitchToOpenedProject",
+  "summary": "Switches the editor onto a newly opened ProjectManager root and refreshes asset indexes."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:RequestOpenProject",
+  "name": "RequestOpenProject",
+  "summary": "Begins the open-project flow for a chosen folder path."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:CloseOpenedProject",
+  "name": "CloseOpenedProject",
+  "summary": "Closes the current content project and returns editor state to the start screen."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:RequestCloseProject",
+  "name": "RequestCloseProject",
+  "summary": "Requests project close, prompting if the scene is dirty."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:OpenBuildPreflight",
+  "name": "OpenBuildPreflight",
+  "summary": "Opens the playable-package build dialog with destination and configuration prefs."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:RequestBuildCurrentProject",
+  "name": "RequestBuildCurrentProject",
+  "summary": "Starts an async PlayablePackage build of the open content project."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:BeginNewProjectFlow",
+  "name": "BeginNewProjectFlow",
+  "summary": "Starts the new-project folder picker and name dialog."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:SaveProject",
+  "name": "SaveProject",
+  "summary": "Writes project.json and the current scene so the content project stays in sync."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:ConsumePendingFolderPick",
+  "name": "ConsumePendingFolderPick",
+  "summary": "Applies a completed Win32 folder-picker result to open/create-project flows."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:DrawEngineStartScreen",
+  "name": "DrawEngineStartScreen",
+  "summary": "Renders the no-project start screen with recent projects and new/open actions."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:DrawEditorMenuBar",
+  "name": "DrawEditorMenuBar",
+  "summary": "Draws the File/Edit/Play menu bar that queues editor actions for the next frame."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:ExecutePendingEditorAction",
+  "name": "ExecutePendingEditorAction",
+  "summary": "Dispatches the queued menu action (save, play, build, project switch) after the ImGui frame."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:DrawEditorPopups",
+  "name": "DrawEditorPopups",
+  "summary": "Draws modal dialogs for unsaved changes, new/open project, build preflight, and scene name prompts."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:SaveSceneToFile",
+  "name": "SaveSceneToFile",
+  "summary": "Serializes the editor scene graph to a rom/scene JSON file."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:NewScene",
+  "name": "NewScene",
+  "summary": "Clears the current scene and starts an empty untitled scene."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:TeardownPlaySession",
+  "name": "TeardownPlaySession",
+  "summary": "Stops play mode, restores editor runtime state, and optionally resets selection."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:SoftStopPlayForSceneLoad",
+  "name": "SoftStopPlayForSceneLoad",
+  "summary": "Stops play without a full editor reset so a pending scene load can proceed."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:ReturnToStart",
+  "name": "ReturnToStart",
+  "summary": "Leaves the editor session and returns to the project start screen."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:HasThirdPersonPlayerNode",
+  "name": "HasThirdPersonPlayerNode",
+  "summary": "Walks a subtree looking for a third-person player script/node."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:HasCameraComponentNode",
+  "name": "HasCameraComponentNode",
+  "summary": "Walks a subtree looking for a CameraComponent."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:EngineGUI_IsDebugCameraPlayInputActive",
+  "name": "EngineGUI_IsDebugCameraPlayInputActive",
+  "summary": "True when play mode is using the debug fly camera instead of a scene camera."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:StartPlay",
+  "name": "StartPlay",
+  "summary": "Enters play mode: syncs SceneRuntime, starts scripts, and chooses debug vs scene camera."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:EngineGUI_QueueSceneLoad",
+  "name": "EngineGUI_QueueSceneLoad",
+  "summary": "Queues a scene filename to load after the current frame and any preload."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:EngineGUI_BeginSceneAssetPreload",
+  "name": "EngineGUI_BeginSceneAssetPreload",
+  "summary": "Starts time-sliced model/animation warmup for the pending scene load."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:EngineGUI_FlushSceneLoadPending",
+  "name": "EngineGUI_FlushSceneLoadPending",
+  "summary": "Finishes preload and actually loads the queued scene into the editor graph."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:EngineGUI_TickSceneAssetPreload",
+  "name": "EngineGUI_TickSceneAssetPreload",
+  "summary": "Advances one preload step and returns whether warmup is still running."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:EngineGUI_IsSceneAssetPreloadActive",
+  "name": "EngineGUI_IsSceneAssetPreloadActive",
+  "summary": "Returns whether a scene asset preload is currently in progress."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:EngineGUI_Initialize",
+  "name": "EngineGUI_Initialize",
+  "summary": "Creates ImGui, gizmos, asset indexes, and editor session state after D3D11 is ready."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:EngineGUI_Finalize",
+  "name": "EngineGUI_Finalize",
+  "summary": "Shuts down ImGui, watchers, and editor subsystems on engine exit."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:EngineGUI_IsPlaying",
+  "name": "EngineGUI_IsPlaying",
+  "summary": "Returns whether the editor is currently in play mode."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:EngineGUI_PreferPlayVisuals",
+  "name": "EngineGUI_PreferPlayVisuals",
+  "summary": "True when draw paths should use play-mode (real) models instead of editor proxies."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:EngineGUI_IsOnStart",
+  "name": "EngineGUI_IsOnStart",
+  "summary": "True while the start screen is showing and no project session is active."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:EngineGUI_StartPlay",
+  "name": "EngineGUI_StartPlay",
+  "summary": "Public wrapper that starts a play session from menus or shortcuts."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:EngineGUI_StopPlay",
+  "name": "EngineGUI_StopPlay",
+  "summary": "Public wrapper that stops play and restores the editor session."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:EngineGUI_GetCameraMode",
+  "name": "EngineGUI_GetCameraMode",
+  "summary": "Returns the current editor/play camera mode enum."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:EngineGUI_SetCameraMode",
+  "name": "EngineGUI_SetCameraMode",
+  "summary": "Sets the editor/play camera mode (scene camera vs debug camera)."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:EngineGUI_SetActiveCameraNodeName",
+  "name": "EngineGUI_SetActiveCameraNodeName",
+  "summary": "Pins play-mode rendering to a named CameraComponent node."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:EngineGUI_SetEnabled",
+  "name": "EngineGUI_SetEnabled",
+  "summary": "Enables or disables the entire ImGui editor overlay."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:EngineGUI_ResolveStartupScenePath",
+  "name": "EngineGUI_ResolveStartupScenePath",
+  "summary": "Resolves the project default/last-opened scene path for editor boot."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:EngineGUI_IsUiOverlayVisible",
+  "name": "EngineGUI_IsUiOverlayVisible",
+  "summary": "Returns whether in-game UI overlay editing is visible."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:EngineGUI_SetUiOverlayVisible",
+  "name": "EngineGUI_SetUiOverlayVisible",
+  "summary": "Shows or hides the UI overlay editor layer."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:EngineGUI_GetEditMode",
+  "name": "EngineGUI_GetEditMode",
+  "summary": "Returns the current editor edit mode (scene vs UI)."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:EngineGUI_SetEditMode",
+  "name": "EngineGUI_SetEditMode",
+  "summary": "Switches between scene-object editing and UI-canvas editing."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:EngineGUI_IsUiEditMode",
+  "name": "EngineGUI_IsUiEditMode",
+  "summary": "True when the editor is editing UI canvas elements instead of 3D nodes."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:EngineGUI_GetGameViewportRect",
+  "name": "EngineGUI_GetGameViewportRect",
+  "summary": "Returns the game viewport rectangle inside the editor layout for picking and rendering."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:EngineGUI_MouseToViewportLocal",
+  "name": "EngineGUI_MouseToViewportLocal",
+  "summary": "Converts a screen mouse position into viewport-local coordinates."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:RaySphere",
+  "name": "RaySphere",
+  "summary": "Ray-sphere intersection used for light/camera gizmo picking."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:RayIntersectsTriangle",
+  "name": "RayIntersectsTriangle",
+  "summary": "Möller–Trumbore ray-triangle test for mesh picking."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:RayPickModelMesh",
+  "name": "RayPickModelMesh",
+  "summary": "Transforms a model's CPU vertices and finds the closest ray hit on its triangles."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:BuildPickRay",
+  "name": "BuildPickRay",
+  "summary": "Builds a world-space pick ray from viewport mouse coordinates and the active camera."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:DrawMeshWireframeHighlight",
+  "name": "DrawMeshWireframeHighlight",
+  "summary": "Draws a wireframe overlay of a picked mesh via DebugDrawer."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:DrawSelectionColliderHighlight",
+  "name": "DrawSelectionColliderHighlight",
+  "summary": "Draws the selected node's collider volume in the viewport."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:DrawSelectionHighlight",
+  "name": "DrawSelectionHighlight",
+  "summary": "Draws mesh/collider/light highlights for the current editor selection."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:EngineGUI_DrawSelectionIndicator",
+  "name": "EngineGUI_DrawSelectionIndicator",
+  "summary": "Public hook that draws the current selection highlight during the editor frame."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:FocusSelectedObjectWithCamera",
+  "name": "FocusSelectedObjectWithCamera",
+  "summary": "Frames the editor camera on the selected object's world bounds."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:EngineGUI_Update",
+  "name": "EngineGUI_Update",
+  "summary": "Per-frame editor update: shortcuts, gizmos, play/stop, preload, and pending actions."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:DrawEditorSceneProxies",
+  "name": "DrawEditorSceneProxies",
+  "summary": "Draws editor-only proxies (lights, cameras, colliders) when not in play visuals."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:MoveNodeInList",
+  "name": "MoveNodeInList",
+  "summary": "Reorders a node among its siblings by a signed offset."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:GetNodeSiblingIndexLocal",
+  "name": "GetNodeSiblingIndexLocal",
+  "summary": "Returns a node's index in its parent's child list."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:UndoableReorderNode",
+  "name": "UndoableReorderNode",
+  "summary": "Records an undoable hierarchy reorder for the selected node."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:DrawSceneNodeHierarchy",
+  "name": "DrawSceneNodeHierarchy",
+  "summary": "Recursively draws the scene-tree ImGui rows with drag-reorder and context actions."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:EngineGUI_OnBackbufferResized",
+  "name": "EngineGUI_OnBackbufferResized",
+  "summary": "Notifies the editor layout that the D3D backbuffer size changed."
+ },
+ {
+  "id": "function:engine/core/engine_gui.cpp:EngineGUI_Draw",
+  "name": "EngineGUI_Draw",
+  "summary": "Draws the entire editor UI for one frame: layout, hierarchy, inspector, viewport tools, and popups."
+ },
+ {
+  "id": "class:engine/core/engine_gui.cpp:EditorLayoutMetrics",
+  "name": "EditorLayoutMetrics",
+  "summary": "Cached pixel metrics for the editor chrome: menu bar, toolbar, and pane rectangles used to lay out ImGui windows."
+ },
+ {
+  "id": "function:engine/ecs/collider_component.cpp:ClearFromOwner",
+  "name": "ClearFromOwner",
+  "summary": "Removes any physics collider currently attached to the owning GameObject."
+ },
+ {
+  "id": "function:engine/ecs/collider_component.cpp:ApplyToOwner",
+  "name": "ApplyToOwner",
+  "summary": "Builds a box/sphere/capsule/cylinder/mesh collider on the owner from serialized shape data and the cached model."
+ },
+ {
+  "id": "function:engine/ecs/collider_component.cpp:Serialize",
+  "name": "Serialize",
+  "summary": "Writes collider type, size, trigger, and offset fields to JSON."
+ },
+ {
+  "id": "function:engine/ecs/collider_component.cpp:Deserialize",
+  "name": "Deserialize",
+  "summary": "Parses collider JSON and stores shape parameters for a later ApplyToOwner."
+ },
+ {
+  "id": "function:engine/ecs/model_asset_cache.cpp:ToLowerString",
+  "name": "ToLowerString",
+  "summary": "Lowercases a UTF-8 string with the classic locale for asset-key comparisons."
+ },
+ {
+  "id": "function:engine/ecs/model_asset_cache.cpp:NormalizeAssetKey",
+  "name": "NormalizeAssetKey",
+  "summary": "Normalizes slashes and case so model paths share one cache key."
+ },
+ {
+  "id": "function:engine/ecs/model_asset_cache.cpp:StemKey",
+  "name": "StemKey",
+  "summary": "Returns the lowercase filename stem used when looking up models by short name."
+ },
+ {
+  "id": "function:engine/ecs/model_asset_cache.cpp:ResolveModelWidePath",
+  "name": "ResolveModelWidePath",
+  "summary": "Resolves a model name or relative path to a wide filesystem path for LoadFBX."
+ },
+ {
+  "id": "function:engine/ecs/model_asset_cache.cpp:SortFolderTree",
+  "name": "SortFolderTree",
+  "summary": "Recursively sorts model-folder nodes alphabetically for the editor browser."
+ },
+ {
+  "id": "function:engine/ecs/model_asset_cache.cpp:Initialize",
+  "name": "Initialize",
+  "summary": "Initializes the singleton cache and scans rom/model."
+ },
+ {
+  "id": "function:engine/ecs/model_asset_cache.cpp:Finalize",
+  "name": "Finalize",
+  "summary": "Releases cached Model3D instances and marks the cache finalized."
+ },
+ {
+  "id": "function:engine/ecs/model_asset_cache.cpp:RefreshAssetDirectory",
+  "name": "RefreshAssetDirectory",
+  "summary": "Rescans rom/model and rebuilds ObjectDef entries for every FBX/OBJ."
+ },
+ {
+  "id": "function:engine/ecs/model_asset_cache.cpp:RebuildFolderTree",
+  "name": "RebuildFolderTree",
+  "summary": "Rebuilds the hierarchical folder tree from indexed object definitions."
+ },
+ {
+  "id": "function:engine/ecs/model_asset_cache.cpp:FolderPathForDef",
+  "name": "FolderPathForDef",
+  "summary": "Returns the folder-relative path for one ObjectDef."
+ },
+ {
+  "id": "function:engine/ecs/model_asset_cache.cpp:GetObjectDefinitionsInFolder",
+  "name": "GetObjectDefinitionsInFolder",
+  "summary": "Lists model definitions that live directly in a rom/model subfolder."
+ },
+ {
+  "id": "file:engine/ecs/visual_component.cpp",
+  "name": "visual_component.cpp",
+  "summary": "Implements VisualComponent animation, proxy/real model lookup, SurfaceFX textures, and JSON serialize/deserialize for mesh instances."
+ },
+ {
+  "id": "file:engine/ecs/visual_component.h",
+  "name": "visual_component.h",
+  "summary": "ECS visual component that binds a GameObject to a cached Model3D, optional proxy mesh, animation clips, and per-instance shader overrides.",
+  "languageNotes": "Inherits Component; GetModel() is an inline cache lookup so editor and play paths share ModelAssetCache."
+ },
+ {
+  "id": "file:engine/editor/camera_gizmo.h",
+  "name": "camera_gizmo.h",
+  "summary": "Declares CameraGizmo debug-draw helpers that render camera frustums for selected and scene camera nodes."
+ },
+ {
+  "id": "file:engine/editor/editor_project_browser.h",
+  "name": "editor_project_browser.h",
+  "summary": "Declares the MapEditor project-browser panel entry used by the ImGui editor to pick and spawn project assets."
+ },
+ {
+  "id": "file:engine/editor/playable_package_builder.cpp",
+  "name": "playable_package_builder.cpp",
+  "summary": "Editor build pipeline that finds MSBuild, compiles the content project, and copies a playable game package to a user destination.",
+  "languageNotes": "Win32 process spawn plus recursive file copy; build runs asynchronously with a polling log."
+ },
+ {
+  "id": "function:engine/ecs/visual_component.cpp:ReadFloat4",
+  "name": "ReadFloat4",
+  "summary": "Reads an XMFLOAT4 from JSON with a fallback when the array is missing."
+ },
+ {
+  "id": "function:engine/ecs/visual_component.cpp:ReadFloat2",
+  "name": "ReadFloat2",
+  "summary": "Reads an XMFLOAT2 from JSON with a fallback when the array is missing."
+ },
+ {
+  "id": "function:engine/ecs/visual_component.cpp:ToJson",
+  "name": "ToJson",
+  "summary": "Serializes a DirectX float vector to a JSON array."
+ },
+ {
+  "id": "function:engine/ecs/visual_component.cpp:EnsureAnimInstance",
+  "name": "EnsureAnimInstance",
+  "summary": "Creates a per-instance Model3D clone when the object needs exclusive animation state."
+ },
+ {
+  "id": "function:engine/ecs/visual_component.cpp:ReleaseSurfaceFxTexture",
+  "name": "ReleaseSurfaceFxTexture",
+  "summary": "Releases the loaded SurfaceFX shader-resource view."
+ },
+ {
+  "id": "function:engine/ecs/visual_component.cpp:OnDetach",
+  "name": "OnDetach",
+  "summary": "Cleans animation instance and SurfaceFX resources when the component is removed."
+ },
+ {
+  "id": "function:engine/ecs/visual_component.cpp:OnReset",
+  "name": "OnReset",
+  "summary": "Restores play-mode visual state after play stops or the object resets."
+ },
+ {
+  "id": "function:engine/ecs/visual_component.cpp:EnsureAnimationsLoaded",
+  "name": "EnsureAnimationsLoaded",
+  "summary": "Loads named animation FBX clips onto the instance via ModelAssetCache / Model3D."
+ },
+ {
+  "id": "function:engine/ecs/visual_component.cpp:PlayClip",
+  "name": "PlayClip",
+  "summary": "Starts a named animation clip, optionally looping, on the instance model."
+ },
+ {
+  "id": "function:engine/ecs/visual_component.cpp:GetActiveClipDuration",
+  "name": "GetActiveClipDuration",
+  "summary": "Returns the duration in seconds of the currently playing clip."
+ },
+ {
+  "id": "function:engine/ecs/visual_component.cpp:SetAnimationSpeed",
+  "name": "SetAnimationSpeed",
+  "summary": "Sets playback speed on the active animation instance."
+ },
+ {
+  "id": "function:engine/ecs/visual_component.cpp:Update",
+  "name": "Update",
+  "summary": "Advances animation time each frame when playAnimation is enabled."
+ },
+ {
+  "id": "function:engine/ecs/visual_component.cpp:Serialize",
+  "name": "Serialize",
+  "summary": "Writes model paths, clips, emission, shader override, and SurfaceFX to JSON."
+ },
+ {
+  "id": "function:engine/ecs/visual_component.cpp:Deserialize",
+  "name": "Deserialize",
+  "summary": "Restores VisualComponent fields from scene/prefab JSON."
+ },
+ {
+  "id": "class:engine/ecs/visual_component.h:VisualComponent",
+  "name": "VisualComponent",
+  "summary": "Component that instances a cached model with proxy mesh, clips, emission glow, and optional SurfaceFX."
+ },
+ {
+  "id": "function:engine/editor/playable_package_builder.cpp:WideFromUtf8",
+  "name": "WideFromUtf8",
+  "summary": "Converts a UTF-8 path to a UTF-16 wstring for Win32 APIs."
+ },
+ {
+  "id": "function:engine/editor/playable_package_builder.cpp:Utf8FromWide",
+  "name": "Utf8FromWide",
+  "summary": "Converts a UTF-16 wstring back to UTF-8."
+ },
+ {
+  "id": "function:engine/editor/playable_package_builder.cpp:TrimCopy",
+  "name": "TrimCopy",
+  "summary": "Returns a copy of a string with leading and trailing whitespace removed."
+ },
+ {
+  "id": "function:engine/editor/playable_package_builder.cpp:SanitizeGameExeStem",
+  "name": "SanitizeGameExeStem",
+  "summary": "Strips invalid filename characters from the exported game .exe stem."
+ },
+ {
+  "id": "function:engine/editor/playable_package_builder.cpp:NormalizeForCompare",
+  "name": "NormalizeForCompare",
+  "summary": "Canonicalizes a path for equality checks across slash and case differences."
+ },
+ {
+  "id": "function:engine/editor/playable_package_builder.cpp:PathsEqual",
+  "name": "PathsEqual",
+  "summary": "True when two filesystem paths refer to the same location."
+ },
+ {
+  "id": "function:engine/editor/playable_package_builder.cpp:IsUnderOrEqual",
+  "name": "IsUnderOrEqual",
+  "summary": "True when a candidate path is the root or a descendant of it."
+ },
+ {
+  "id": "function:engine/editor/playable_package_builder.cpp:PrefsKey",
+  "name": "PrefsKey",
+  "summary": "Builds the prefs map key for a content-project root."
+ },
+ {
+  "id": "function:engine/editor/playable_package_builder.cpp:PrefsFilePath",
+  "name": "PrefsFilePath",
+  "summary": "Returns the on-disk path of playable-package builder prefs JSON."
+ },
+ {
+  "id": "function:engine/editor/playable_package_builder.cpp:AppendLog",
+  "name": "AppendLog",
+  "summary": "Appends text to the in-memory build log shown in the editor dialog."
+ },
+ {
+  "id": "function:engine/editor/playable_package_builder.cpp:AppendLogLine",
+  "name": "AppendLogLine",
+  "summary": "Appends a single line to the build log."
+ },
+ {
+  "id": "function:engine/editor/playable_package_builder.cpp:FindMsBuild",
+  "name": "FindMsBuild",
+  "summary": "Locates MSBuild.exe via vswhere and well-known Visual Studio install paths."
+ },
+ {
+  "id": "function:engine/editor/playable_package_builder.cpp:RunProcess",
+  "name": "RunProcess",
+  "summary": "Runs a command line in a working directory and captures output into the build log."
+ },
+ {
+  "id": "function:engine/editor/playable_package_builder.cpp:CopyOneFile",
+  "name": "CopyOneFile",
+  "summary": "Copies one file into the package directory, reporting errors."
+ },
+ {
+  "id": "function:engine/editor/playable_package_builder.cpp:CopyDirectoryRecursive",
+  "name": "CopyDirectoryRecursive",
+  "summary": "Recursively copies a directory tree into the playable package."
+ },
+ {
+  "id": "function:engine/editor/playable_package_builder.cpp:AssemblePackage",
+  "name": "AssemblePackage",
+  "summary": "Copies the built exe, rom assets, and runtime files into the destination package folder."
+ },
+ {
+  "id": "function:engine/editor/playable_package_builder.cpp:MsBuildProject",
+  "name": "MsBuildProject",
+  "summary": "Invokes MSBuild on the content project's vcxproj with the chosen configuration."
+ },
+ {
+  "id": "function:engine/editor/playable_package_builder.cpp:RunBuild",
+  "name": "RunBuild",
+  "summary": "Full build job: locate MSBuild, compile, assemble the package, and record success/failure."
+ },
+ {
+  "id": "function:engine/editor/playable_package_builder.cpp:TryParseConfiguration",
+  "name": "TryParseConfiguration",
+  "summary": "Parses a Debug/Release configuration name into the Configuration enum."
+ },
+ {
+  "id": "function:engine/editor/playable_package_builder.cpp:DefaultDestination",
+  "name": "DefaultDestination",
+  "summary": "Suggests a default export folder next to the content project."
+ },
+ {
+  "id": "function:engine/editor/playable_package_builder.cpp:LoadPrefs",
+  "name": "LoadPrefs",
+  "summary": "Loads last-used destination and configuration for a content root."
+ },
+ {
+  "id": "function:engine/editor/playable_package_builder.cpp:SavePrefs",
+  "name": "SavePrefs",
+  "summary": "Persists destination and configuration prefs for the next build dialog."
+ },
+ {
+  "id": "function:engine/editor/playable_package_builder.cpp:DestinationRefusalReason",
+  "name": "DestinationRefusalReason",
+  "summary": "Rejects destinations that would overwrite the project or engine repo."
+ },
+ {
+  "id": "function:engine/editor/playable_package_builder.cpp:IsBuildRunning",
+  "name": "IsBuildRunning",
+  "summary": "True while an async package build thread is still working."
+ },
+ {
+  "id": "function:engine/editor/playable_package_builder.cpp:StartBuild",
+  "name": "StartBuild",
+  "summary": "Starts RunBuild on a worker thread if no build is already running."
+ },
+ {
+  "id": "function:engine/editor/playable_package_builder.cpp:CopyLog",
+  "name": "CopyLog",
+  "summary": "Copies the current build log into a caller string for the ImGui dialog."
+ },
+ {
+  "id": "function:engine/editor/playable_package_builder.cpp:IsBuildFinished",
+  "name": "IsBuildFinished",
+  "summary": "True when the async build thread has completed."
+ },
+ {
+  "id": "function:engine/editor/playable_package_builder.cpp:LastBuildSucceeded",
+  "name": "LastBuildSucceeded",
+  "summary": "True when the last finished build assembled a package without error."
+ },
+ {
+  "id": "function:engine/editor/playable_package_builder.cpp:LastBuildResultMessage",
+  "name": "LastBuildResultMessage",
+  "summary": "Human-readable success or error string from the last build."
+ },
+ {
+  "id": "class:engine/editor/playable_package_builder.cpp:Job",
+  "name": "Job",
+  "summary": "Job type defined in engine/editor/playable_package_builder.cpp."
+ },
+ {
+  "id": "file:engine/editor/playable_package_builder.h",
+  "name": "playable_package_builder.h",
+  "summary": "Public PlayablePackage API for configuration prefs, destination checks, and async playable-package builds from the editor."
+ },
+ {
+  "id": "file:engine/editor/project_asset_index.cpp",
+  "name": "project_asset_index.cpp",
+  "summary": "Walks the open project's rom/ tree, classifies files by kind, and rebuilds the folder index used by the project browser."
+ },
+ {
+  "id": "file:engine/editor/project_asset_index.h",
+  "name": "project_asset_index.h",
+  "summary": "Singleton project asset index that classifies rom/ files (models, scenes, prefabs, scripts) and exposes folder contents to the editor."
+ },
+ {
+  "id": "file:engine/editor/project_asset_ops.cpp",
+  "name": "project_asset_ops.cpp",
+  "summary": "Filesystem operations for editor assets: rename, recycle-bin delete, folder/scene creation, Explorer reveal, and scene-reference search.",
+  "languageNotes": "Uses Windows recycle-bin deletion and path normalization so scene files are not deleted while open."
+ },
+ {
+  "id": "file:engine/editor/project_asset_ops.h",
+  "name": "project_asset_ops.h",
+  "summary": "Static ProjectAssetOps surface for safe rename/delete/create of project files from the editor browser."
+ },
+ {
+  "id": "class:engine/editor/playable_package_builder.h:Prefs",
+  "name": "Prefs",
+  "summary": "Saved destination folder and Debug/Release configuration for playable-package builds."
+ },
+ {
+  "id": "class:engine/editor/playable_package_builder.h:Request",
+  "name": "Request",
+  "summary": "Input payload for StartBuild: content root, destination, game name, and configuration."
+ },
+ {
+  "id": "function:engine/editor/project_asset_index.cpp:ToLowerString",
+  "name": "ToLowerString",
+  "summary": "Lowercases a string for path-prefix and classification comparisons."
+ },
+ {
+  "id": "function:engine/editor/project_asset_index.cpp:StartsWithPath",
+  "name": "StartsWithPath",
+  "summary": "True when a relative path is under a folder prefix."
+ },
+ {
+  "id": "function:engine/editor/project_asset_index.cpp:ShouldSkipIndexedPath",
+  "name": "ShouldSkipIndexedPath",
+  "summary": "Skips generated or hidden paths that should not appear in the project browser."
+ },
+ {
+  "id": "function:engine/editor/project_asset_index.cpp:AddFolderPath",
+  "name": "AddFolderPath",
+  "summary": "Ensures a folder node exists in the tree for a relative rom/ path."
+ },
+ {
+  "id": "function:engine/editor/project_asset_index.cpp:SortFolderTree",
+  "name": "SortFolderTree",
+  "summary": "Alphabetically sorts project folder nodes for the browser."
+ },
+ {
+  "id": "function:engine/editor/project_asset_index.cpp:ClassifyFile",
+  "name": "ClassifyFile",
+  "summary": "Maps a relative path to Kind (model, scene, prefab, script, texture, and others)."
+ },
+ {
+  "id": "function:engine/editor/project_asset_index.cpp:RebuildFolderTree",
+  "name": "RebuildFolderTree",
+  "summary": "Rebuilds the full folder tree and per-folder file lists from a scan."
+ },
+ {
+  "id": "function:engine/editor/project_asset_index.cpp:Refresh",
+  "name": "Refresh",
+  "summary": "Walks rom/ and refreshes the singleton ProjectAssetIndex."
+ },
+ {
+  "id": "function:engine/editor/project_asset_index.cpp:GetFolderContents",
+  "name": "GetFolderContents",
+  "summary": "Returns classified entries in one folder for the project browser list."
+ },
+ {
+  "id": "function:engine/editor/project_asset_index.cpp:GetFilesOfKind",
+  "name": "GetFilesOfKind",
+  "summary": "Collects every indexed file of a given Kind across the project."
+ },
+ {
+  "id": "function:engine/editor/project_asset_index.h:ProjectAssetIndex",
+  "name": "ProjectAssetIndex",
+  "summary": "Private default constructor; use Instance() for the process-wide index."
+ },
+ {
+  "id": "class:engine/editor/project_asset_index.h:ProjectAssetIndex",
+  "name": "ProjectAssetIndex",
+  "summary": "Singleton index of the open project's rom/ tree with folder contents and kind filters."
+ },
+ {
+  "id": "function:engine/editor/project_asset_ops.cpp:ToLowerCopy",
+  "name": "ToLowerCopy",
+  "summary": "Returns a lowercase copy of a path fragment."
+ },
+ {
+  "id": "function:engine/editor/project_asset_ops.cpp:NormalizeSlashes",
+  "name": "NormalizeSlashes",
+  "summary": "Rewrites path separators to forward slashes."
+ },
+ {
+  "id": "function:engine/editor/project_asset_ops.cpp:ParentRel",
+  "name": "ParentRel",
+  "summary": "Returns the parent relative path of a rom/ entry."
+ },
+ {
+  "id": "function:engine/editor/project_asset_ops.cpp:LeafName",
+  "name": "LeafName",
+  "summary": "Returns the final path component of a relative asset path."
+ },
+ {
+  "id": "function:engine/editor/project_asset_ops.cpp:Utf8FromWide",
+  "name": "Utf8FromWide",
+  "summary": "Converts a wide filesystem path to UTF-8."
+ },
+ {
+  "id": "function:engine/editor/project_asset_ops.cpp:PathFromUtf8",
+  "name": "PathFromUtf8",
+  "summary": "Builds a filesystem path from a UTF-8 string."
+ },
+ {
+  "id": "function:engine/editor/project_asset_ops.cpp:Utf8FromPath",
+  "name": "Utf8FromPath",
+  "summary": "Converts a filesystem path to UTF-8."
+ },
+ {
+  "id": "function:engine/editor/project_asset_ops.cpp:ProjectRootPath",
+  "name": "ProjectRootPath",
+  "summary": "Returns the absolute root of the open ProjectManager project."
+ },
+ {
+  "id": "function:engine/editor/project_asset_ops.cpp:GenericLower",
+  "name": "GenericLower",
+  "summary": "Lowercases a path for comparisons."
+ },
+ {
+  "id": "function:engine/editor/project_asset_ops.cpp:MakeAbsoluteNormalized",
+  "name": "MakeAbsoluteNormalized",
+  "summary": "Resolves and normalizes an absolute path."
+ },
+ {
+  "id": "function:engine/editor/project_asset_ops.cpp:CurrentSceneAbsoluteNormalized",
+  "name": "CurrentSceneAbsoluteNormalized",
+  "summary": "Absolute normalized path of the scene currently open in the editor."
+ },
+ {
+  "id": "function:engine/editor/project_asset_ops.cpp:RecyclePath",
+  "name": "RecyclePath",
+  "summary": "Sends a file or folder to the Windows Recycle Bin instead of permanently deleting it."
+ },
+ {
+  "id": "function:engine/editor/project_asset_ops.cpp:IsScriptsPath",
+  "name": "IsScriptsPath",
+  "summary": "True when a relative path is under game/scripts and must be treated carefully."
+ },
+ {
+  "id": "function:engine/editor/project_asset_ops.cpp:IsValidLeafName",
+  "name": "IsValidLeafName",
+  "summary": "Validates a new file or folder name and reports a reason when it is illegal."
+ },
+ {
+  "id": "function:engine/editor/project_asset_ops.cpp:AssetPathFromRelative",
+  "name": "AssetPathFromRelative",
+  "summary": "Converts a browser-relative path into the rom/-style asset path used by components."
+ },
+ {
+  "id": "function:engine/editor/project_asset_ops.cpp:AbsolutePathFromRelative",
+  "name": "AbsolutePathFromRelative",
+  "summary": "Resolves a project-relative path against the open project root."
+ },
+ {
+  "id": "function:engine/editor/project_asset_ops.cpp:IsCurrentSceneOpen",
+  "name": "IsCurrentSceneOpen",
+  "summary": "True when the given relative path is the scene currently loaded in the editor."
+ },
+ {
+  "id": "function:engine/editor/project_asset_ops.cpp:FolderContainsCurrentScene",
+  "name": "FolderContainsCurrentScene",
+  "summary": "True when deleting a folder would also delete the open scene."
+ },
+ {
+  "id": "function:engine/editor/project_asset_ops.cpp:FindSceneReferences",
+  "name": "FindSceneReferences",
+  "summary": "Scans scene JSON files for references to an asset path before delete/rename."
+ },
+ {
+  "id": "function:engine/editor/project_asset_ops.cpp:RenameAsset",
+  "name": "RenameAsset",
+  "summary": "Renames a project file or folder and updates the asset index."
+ },
+ {
+  "id": "function:engine/editor/project_asset_ops.cpp:DeleteAssetToRecycleBin",
+  "name": "DeleteAssetToRecycleBin",
+  "summary": "Deletes an asset via the Recycle Bin after blocking deletes of the open scene."
+ },
+ {
+  "id": "function:engine/editor/project_asset_ops.cpp:CreateFolder",
+  "name": "CreateFolder",
+  "summary": "Creates a new folder under a parent rom/ path."
+ },
+ {
+  "id": "function:engine/editor/project_asset_ops.cpp:CreateMinimalScene",
+  "name": "CreateMinimalScene",
+  "summary": "Writes a new empty scene JSON under the chosen folder."
+ },
+ {
+  "id": "function:engine/editor/project_asset_ops.cpp:ShowInExplorer",
+  "name": "ShowInExplorer",
+  "summary": "Opens Explorer with the asset selected or its folder opened."
+ },
+ {
+  "id": "class:engine/editor/project_asset_ops.h:ProjectAssetOps",
+  "name": "ProjectAssetOps",
+  "summary": "Static helpers for rename, recycle-bin delete, folder/scene create, and Explorer reveal."
+ },
+ {
+  "id": "file:engine/editor/project_manager.h",
+  "name": "project_manager.h",
+  "summary": "Singleton that opens Unity-style content projects (project.json, rom/, game/scripts), tracks recents, and stores editor/physics/audio settings."
+ },
+ {
+  "id": "file:engine/editor/transform_gizmo.h",
+  "name": "transform_gizmo.h",
+  "summary": "Declares the TransformGizmo used to move, rotate, and scale the selected GameObject in the editor viewport."
+ },
+ {
+  "id": "file:engine/rendering/d3d11/shader.h",
+  "name": "shader.h",
+  "summary": "D3D11 shader API: 3D variants (standard, toon, PBR, lights), skinning palette, SurfaceFX params, and cascaded shadow matrix binds.",
+  "languageNotes": "SURFACE_FX_PARAMS is a CPU mirror of constant buffer b4 and must stay 16-byte aligned."
+ },
+ {
+  "id": "file:engine/rendering/lighting/shadow.cpp",
+  "name": "shadow.cpp",
+  "summary": "Cascaded directional shadow-map implementation: camera-fitted ortho volumes, texel snap, and per-cascade depth-pass begin/end.",
+  "languageNotes": "Fits each cascade to frustum corners in light space, then snaps the ortho projection to shadow-map texels."
+ },
+ {
+  "id": "file:engine/rendering/lighting/shadow.h",
+  "name": "shadow.h",
+  "summary": "Public Shadow namespace for cascaded shadow maps: init/reconfigure, light direction, cascade matrices, and depth-pass control."
+ },
+ {
+  "id": "function:engine/editor/project_manager.h:IsOpen",
+  "name": "IsOpen",
+  "summary": "True when a content project root is currently open."
+ },
+ {
+  "id": "function:engine/editor/project_manager.h:GetEditorUiZoomPercent",
+  "name": "GetEditorUiZoomPercent",
+  "summary": "Returns the project's saved ImGui zoom percent."
+ },
+ {
+  "id": "function:engine/editor/project_manager.h:GetPhysicsGravity",
+  "name": "GetPhysicsGravity",
+  "summary": "Returns the project's saved physics gravity."
+ },
+ {
+  "id": "function:engine/editor/project_manager.h:ProjectManager",
+  "name": "ProjectManager",
+  "summary": "Private default constructor; use Instance() for the process-wide manager."
+ },
+ {
+  "id": "class:engine/editor/project_manager.h:ProjectManager",
+  "name": "ProjectManager",
+  "summary": "Singleton that opens content projects, persists project.json settings, and tracks recent roots."
+ },
+ {
+  "id": "function:engine/rendering/lighting/shadow.cpp:SafeNormalize3",
+  "name": "SafeNormalize3",
+  "summary": "Normalizes a 3-vector, falling back when the length is near zero."
+ },
+ {
+  "id": "function:engine/rendering/lighting/shadow.cpp:BuildFrustumCorners",
+  "name": "BuildFrustumCorners",
+  "summary": "Computes world-space frustum corners between a near and far plane for cascade fitting."
+ },
+ {
+  "id": "function:engine/rendering/lighting/shadow.cpp:BuildLightView",
+  "name": "BuildLightView",
+  "summary": "Builds a look-at view matrix from a focus point along the directional light."
+ },
+ {
+  "id": "function:engine/rendering/lighting/shadow.cpp:FitOrthoCascade",
+  "name": "FitOrthoCascade",
+  "summary": "Fits an ortho projection to frustum corners in light space and snaps it to texels."
+ },
+ {
+  "id": "function:engine/rendering/lighting/shadow.cpp:Initialize",
+  "name": "Initialize",
+  "summary": "Creates cascade depth textures, DSVs, and SRVs for the requested map size."
+ },
+ {
+  "id": "function:engine/rendering/lighting/shadow.cpp:Reconfigure",
+  "name": "Reconfigure",
+  "summary": "Rebuilds shadow maps when quality (size or cascade count) changes."
+ },
+ {
+  "id": "function:engine/rendering/lighting/shadow.cpp:Finalize",
+  "name": "Finalize",
+  "summary": "Releases all cascade textures and views."
+ },
+ {
+  "id": "function:engine/rendering/lighting/shadow.cpp:SetLightDirection",
+  "name": "SetLightDirection",
+  "summary": "Sets the directional light vector used to build cascade views."
+ },
+ {
+  "id": "function:engine/rendering/lighting/shadow.cpp:GetLightDirection",
+  "name": "GetLightDirection",
+  "summary": "Returns the current directional light vector."
+ },
+ {
+  "id": "function:engine/rendering/lighting/shadow.cpp:GetCascadeCount",
+  "name": "GetCascadeCount",
+  "summary": "Returns how many cascades are active."
+ },
+ {
+  "id": "function:engine/rendering/lighting/shadow.cpp:GetLightCount",
+  "name": "GetLightCount",
+  "summary": "Legacy alias for cascade count used by depth-pass loops."
+ },
+ {
+  "id": "function:engine/rendering/lighting/shadow.cpp:GetMaxCasters",
+  "name": "GetMaxCasters",
+  "summary": "Returns the maximum supported directional shadow casters (currently one)."
+ },
+ {
+  "id": "function:engine/rendering/lighting/shadow.cpp:GetCascadeSplits",
+  "name": "GetCascadeSplits",
+  "summary": "Returns view-space far-Z splits packed as an XMFLOAT4."
+ },
+ {
+  "id": "function:engine/rendering/lighting/shadow.cpp:GetCascadeBlend",
+  "name": "GetCascadeBlend",
+  "summary": "Returns the cascade blend width used by the shadow shader."
+ },
+ {
+  "id": "function:engine/rendering/lighting/shadow.cpp:UpdateForCamera",
+  "name": "UpdateForCamera",
+  "summary": "Rebuilds all cascade view/proj matrices from the active camera and max shadow distance."
+ },
+ {
+  "id": "function:engine/rendering/lighting/shadow.cpp:GetLightView",
+  "name": "GetLightView",
+  "summary": "Returns the light-space view matrix for one cascade."
+ },
+ {
+  "id": "function:engine/rendering/lighting/shadow.cpp:GetLightProj",
+  "name": "GetLightProj",
+  "summary": "Returns the light-space projection matrix for one cascade."
+ },
+ {
+  "id": "function:engine/rendering/lighting/shadow.cpp:GetLightViewProj",
+  "name": "GetLightViewProj",
+  "summary": "Returns the combined light view-projection for one cascade."
+ },
+ {
+  "id": "function:engine/rendering/lighting/shadow.cpp:Begin",
+  "name": "Begin",
+  "summary": "Binds a cascade depth target and begins the shadow depth pass."
+ },
+ {
+  "id": "function:engine/rendering/lighting/shadow.cpp:End",
+  "name": "End",
+  "summary": "Ends the shadow depth pass and restores the previous render target."
+ },
+ {
+  "id": "function:engine/rendering/lighting/shadow.cpp:GetShadowMapSize",
+  "name": "GetShadowMapSize",
+  "summary": "Returns the current shadow-map resolution."
+ },
+ {
+  "id": "function:engine/rendering/lighting/shadow.cpp:GetReceiverBias",
+  "name": "GetReceiverBias",
+  "summary": "Returns the receiver-side depth bias passed to shaders."
+ },
+ {
+  "id": "function:engine/rendering/lighting/shadow.cpp:GetTexelSize",
+  "name": "GetTexelSize",
+  "summary": "Returns 1/mapSize for shader shadow sampling."
+ },
+ {
+  "id": "function:engine/rendering/lighting/shadow.cpp:GetRenderingLightIndex",
+  "name": "GetRenderingLightIndex",
+  "summary": "Cascade index currently being rendered, or -1 outside a shadow pass."
+ }
+]

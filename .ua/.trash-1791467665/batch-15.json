@@ -1,0 +1,151 @@
+{
+  "nodes": [
+    {
+      "id": "config:samples/scenes/scene_job_timeline_test.json",
+      "type": "config",
+      "name": "scene_job_timeline_test.json",
+      "filePath": "samples/scenes/scene_job_timeline_test.json",
+      "summary": "Sample scene that stresses parallel job-timeline updates with eight TAG_PLAYER WorkerSpin cubes running SampleSpinScript and a busyMillis load, plus a hint to enable Parallel after F8.",
+      "tags": ["configuration", "scene", "sample", "job-system", "parallel"],
+      "complexity": "complex",
+      "languageNotes": "Version-4 Ivy scene JSON with canvas, nodes, settings, and version keys."
+    },
+    {
+      "id": "config:samples/scenes/scene_pbr_showcase.json",
+      "type": "config",
+      "name": "scene_pbr_showcase.json",
+      "filePath": "samples/scenes/scene_pbr_showcase.json",
+      "summary": "PBR lighting showcase scene with directional and fill lights, an orbit debug camera, skybox, and spinning dielectric/metal spheres at smooth versus rough roughness plus a toon comparison cube.",
+      "tags": ["configuration", "scene", "sample", "pbr", "lighting"],
+      "complexity": "complex",
+      "languageNotes": "Version-4 Ivy scene JSON that sets defaultShader to pbr and uses Material metallic/roughness on visual nodes."
+    },
+    {
+      "id": "config:samples/scenes/scene_physics_events_test.json",
+      "type": "config",
+      "name": "scene_physics_events_test.json",
+      "filePath": "samples/scenes/scene_physics_events_test.json",
+      "summary": "Physics event smoke-test scene with a static ground, a green trigger box, and a gravity-driven FallingSphere that runs SampleTriggerLogScript for OnTriggerEnter/Exit plus a downward raycast API check.",
+      "tags": ["configuration", "scene", "sample", "physics", "triggers"],
+      "complexity": "complex",
+      "languageNotes": "Version-4 Ivy scene JSON combining Collider, Rigidbody, and Script components on the falling body."
+    },
+    {
+      "id": "config:samples/scenes/scene_sample_playground.json",
+      "type": "config",
+      "name": "scene_sample_playground.json",
+      "filePath": "samples/scenes/scene_sample_playground.json",
+      "summary": "Basic playground scene with a WASD/stick Player using SamplePlayerScript and a toon-shaded box, plus a SpinningBox driven by SampleSpinScript at 60 degrees per second.",
+      "tags": ["configuration", "scene", "sample", "gameplay", "input"],
+      "complexity": "complex",
+      "languageNotes": "Version-4 Ivy scene JSON with canvas hint text, collider ground, and script-bound player and prop nodes."
+    }
+  ],
+  "edges": [
+    {
+      "source": "config:samples/scenes/scene_job_timeline_test.json",
+      "target": "config:samples/scenes/scene_pbr_showcase.json",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:samples/scenes/scene_job_timeline_test.json",
+      "target": "config:samples/scenes/scene_physics_events_test.json",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:samples/scenes/scene_job_timeline_test.json",
+      "target": "config:samples/scenes/scene_sample_playground.json",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:samples/scenes/scene_pbr_showcase.json",
+      "target": "config:samples/scenes/scene_physics_events_test.json",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:samples/scenes/scene_pbr_showcase.json",
+      "target": "config:samples/scenes/scene_sample_playground.json",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:samples/scenes/scene_physics_events_test.json",
+      "target": "config:samples/scenes/scene_sample_playground.json",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:samples/scenes/scene_job_timeline_test.json",
+      "target": "file:engine/scene/scene_loader.cpp",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:samples/scenes/scene_pbr_showcase.json",
+      "target": "file:engine/scene/scene_loader.cpp",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:samples/scenes/scene_physics_events_test.json",
+      "target": "file:engine/scene/scene_loader.cpp",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:samples/scenes/scene_sample_playground.json",
+      "target": "file:engine/scene/scene_loader.cpp",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:samples/scenes/scene_job_timeline_test.json",
+      "target": "file:samples/scripts/SampleSpinScript.cpp",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:samples/scenes/scene_pbr_showcase.json",
+      "target": "file:samples/scripts/SampleSpinScript.cpp",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:samples/scenes/scene_physics_events_test.json",
+      "target": "file:samples/scripts/SampleTriggerLogScript.cpp",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:samples/scenes/scene_sample_playground.json",
+      "target": "file:samples/scripts/SamplePlayerScript.cpp",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:samples/scenes/scene_sample_playground.json",
+      "target": "file:samples/scripts/SampleSpinScript.cpp",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    }
+  ]
+}

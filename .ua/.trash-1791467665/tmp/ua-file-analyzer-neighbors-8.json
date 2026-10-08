@@ -1,0 +1,1138 @@
+{
+  "engine/editor/editor_prefab_panel.h": [
+    {
+      "path": "engine/editor/editor_prefab_panel.cpp",
+      "batchIndex": 7,
+      "symbols": []
+    }
+  ],
+  "engine/editor/editor_project_browser.cpp": [
+    {
+      "path": "engine/core/engine_gui.h",
+      "batchIndex": 7,
+      "symbols": []
+    },
+    {
+      "path": "engine/ecs/collider_component.h",
+      "batchIndex": 2,
+      "symbols": [
+        "ApplyToOwner",
+        "ClearFromOwner",
+        "Serialize",
+        "Deserialize",
+        "ColliderComponent"
+      ]
+    },
+    {
+      "path": "engine/ecs/game_object.h",
+      "batchIndex": 7,
+      "symbols": []
+    },
+    {
+      "path": "engine/ecs/prefab_serializer.h",
+      "batchIndex": 7,
+      "symbols": [
+        "Serialize",
+        "SaveToFile",
+        "Deserialize",
+        "LoadFromFile",
+        "PrefabSerializer"
+      ]
+    },
+    {
+      "path": "engine/ecs/transform.h",
+      "batchIndex": 7,
+      "symbols": [
+        "GameObject",
+        "OnAttach",
+        "OnReset",
+        "SnapshotStartState",
+        "GetLocalMatrix",
+        "GetWorldMatrix",
+        "SetFromLocalMatrix",
+        "GetWorldPosition",
+        "GetWorldPositionRotationScale",
+        "Serialize",
+        "Deserialize",
+        "Transform"
+      ]
+    },
+    {
+      "path": "engine/ecs/visual_component.h",
+      "batchIndex": 1,
+      "symbols": [
+        "OnDetach",
+        "OnReset",
+        "Update",
+        "PlayClip",
+        "PlayClip",
+        "GetActiveClipDuration",
+        "SetAnimationSpeed",
+        "Serialize",
+        "Deserialize",
+        "VisualComponent"
+      ]
+    },
+    {
+      "path": "engine/editor/editor_project_browser.h",
+      "batchIndex": 1,
+      "symbols": [
+        "GameObject"
+      ]
+    },
+    {
+      "path": "engine/editor/project_asset_index.h",
+      "batchIndex": 1,
+      "symbols": [
+        "Refresh",
+        "GetFolderContents",
+        "GetFilesOfKind",
+        "ProjectAssetIndex"
+      ]
+    },
+    {
+      "path": "engine/editor/project_asset_ops.h",
+      "batchIndex": 1,
+      "symbols": [
+        "RenameAsset",
+        "DeleteAssetToRecycleBin",
+        "CreateFolder",
+        "CreateMinimalScene",
+        "IsCurrentSceneOpen",
+        "FolderContainsCurrentScene",
+        "FindSceneReferences",
+        "ShowInExplorer",
+        "AssetPathFromRelative",
+        "AbsolutePathFromRelative",
+        "IsScriptsPath",
+        "IsValidLeafName",
+        "ProjectAssetOps"
+      ]
+    }
+  ],
+  "engine/editor/transform_gizmo.cpp": [
+    {
+      "path": "engine/core/engine_gui.h",
+      "batchIndex": 7,
+      "symbols": []
+    },
+    {
+      "path": "engine/ecs/game_object.h",
+      "batchIndex": 7,
+      "symbols": []
+    },
+    {
+      "path": "engine/ecs/transform.h",
+      "batchIndex": 7,
+      "symbols": [
+        "GameObject",
+        "OnAttach",
+        "OnReset",
+        "SnapshotStartState",
+        "GetLocalMatrix",
+        "GetWorldMatrix",
+        "SetFromLocalMatrix",
+        "GetWorldPosition",
+        "GetWorldPositionRotationScale",
+        "Serialize",
+        "Deserialize",
+        "Transform"
+      ]
+    },
+    {
+      "path": "engine/editor/editor_undo.h",
+      "batchIndex": 5,
+      "symbols": [
+        "GameObject",
+        "UIElement",
+        "NodeRef",
+        "UiElementRef",
+        "~EditorCommand",
+        "Undo",
+        "Redo",
+        "Describe",
+        "EditorCommand",
+        "Push",
+        "Undo",
+        "Redo",
+        "CanUndo",
+        "CanRedo",
+        "Depth",
+        "TopUndoDescribe",
+        "TopRedoDescribe",
+        "Clear",
+        "IsRecording",
+        "EditorUndoStack"
+      ]
+    },
+    {
+      "path": "engine/editor/transform_gizmo.h",
+      "batchIndex": 1,
+      "symbols": [
+        "GameObject"
+      ]
+    }
+  ],
+  "engine/input/mouse.h": [
+    {
+      "path": "engine/core/engine_gui.cpp",
+      "batchIndex": 1,
+      "symbols": [
+        "EditorLayoutMetrics",
+        "EngineGUI_IsSceneDirty",
+        "EngineGUI_MarkSceneDirty",
+        "EngineGUI_ClearSceneDirty",
+        "EngineGUI_QueueUnsavedLoad",
+        "EngineGUI_QueueUnsavedExit",
+        "EngineGUI_IsSceneGraphObject",
+        "TeardownPlaySession",
+        "SoftStopPlayForSceneLoad",
+        "ReturnToStart",
+        "EngineGUI_IsDebugCameraPlayInputActive",
+        "EngineGUI_QueueSceneLoad",
+        "EngineGUI_BeginSceneAssetPreload",
+        "EngineGUI_FlushSceneLoadPending",
+        "EngineGUI_TickSceneAssetPreload",
+        "EngineGUI_IsSceneAssetPreloadActive",
+        "EngineGUI_Initialize",
+        "EngineGUI_Finalize",
+        "EngineGUI_IsPlaying",
+        "EngineGUI_PreferPlayVisuals",
+        "EngineGUI_IsOnStart",
+        "EngineGUI_StartPlay",
+        "EngineGUI_StopPlay",
+        "EngineGUI_GetCameraMode",
+        "EngineGUI_SetCameraMode",
+        "EngineGUI_SetActiveCameraNodeName",
+        "EngineGUI_SetEnabled",
+        "EngineGUI_ResolveStartupScenePath",
+        "EngineGUI_IsUiOverlayVisible",
+        "EngineGUI_SetUiOverlayVisible",
+        "EngineGUI_GetEditMode",
+        "EngineGUI_SetEditMode",
+        "EngineGUI_IsUiEditMode",
+        "EngineGUI_GetGameViewportRect",
+        "EngineGUI_MouseToViewportLocal",
+        "EngineGUI_DrawSelectionIndicator",
+        "EngineGUI_Update",
+        "DrawEditorSceneProxies",
+        "EngineGUI_OnBackbufferResized",
+        "EngineGUI_Draw"
+      ]
+    },
+    {
+      "path": "engine/core/engine_gui_runtime.cpp",
+      "batchIndex": 7,
+      "symbols": [
+        "EngineGUI_Initialize",
+        "EngineGUI_Finalize",
+        "EngineGUI_Update",
+        "EngineGUI_Draw",
+        "EngineGUI_OnBackbufferResized",
+        "EngineGUI_DrawSelectionIndicator",
+        "EngineGUI_IsPlaying",
+        "EngineGUI_PreferPlayVisuals",
+        "EngineGUI_IsSceneAssetPreloadActive",
+        "EngineGUI_IsDebugCameraPlayInputActive",
+        "EngineGUI_IsOnStart",
+        "EngineGUI_StartPlay",
+        "EngineGUI_StopPlay",
+        "EngineGUI_SetEnabled",
+        "EngineGUI_GetGameViewportRect",
+        "EngineGUI_SaveToFile",
+        "EngineGUI_LoadFromFile",
+        "EngineGUI_ResolveStartupScenePath",
+        "EngineGUI_GetCameraMode",
+        "EngineGUI_SetCameraMode",
+        "EngineGUI_SetActiveCameraNodeName",
+        "EngineGUI_IsUiOverlayVisible",
+        "EngineGUI_SetUiOverlayVisible",
+        "EngineGUI_GetEditMode",
+        "EngineGUI_SetEditMode",
+        "EngineGUI_IsUiEditMode",
+        "EngineGUI_MouseToViewportLocal",
+        "EngineGUI_IsSceneGraphObject",
+        "DrawEditorSceneProxies"
+      ]
+    },
+    {
+      "path": "engine/editor/ui_gizmo.cpp",
+      "batchIndex": 5,
+      "symbols": [
+        "ViewportLocalToWindow",
+        "IsResizable",
+        "GetElementSize",
+        "SetElementSize",
+        "GetRectCenter",
+        "DistancePointToSegment",
+        "HitTestTriangle",
+        "HitTestMoveArrow",
+        "HitTestHandle",
+        "DrawMoveArrow",
+        "DrawHandle",
+        "ApplyResize",
+        "ApplyMove",
+        "IsInteracting",
+        "WouldCaptureMouse",
+        "HandleInput",
+        "Draw"
+      ]
+    },
+    {
+      "path": "engine/input/mouse.cpp",
+      "batchIndex": 4,
+      "symbols": [
+        "UpdateClientPositionFromLParam",
+        "RefreshClientPositionFromCursor",
+        "ClientToBackbufferInt",
+        "Mouse_Initialize",
+        "Mouse_ResetFrame",
+        "Mouse_ProcessMessage",
+        "Mouse_GetDelta",
+        "Mouse_IsLeftDown",
+        "Mouse_IsRightDown",
+        "Mouse_IsMiddleDown",
+        "Mouse_GetWheelDelta",
+        "Mouse_ClearWheel",
+        "Mouse_GetX",
+        "Mouse_GetY",
+        "Mouse_GetPosition",
+        "Mouse_GetClientPosition"
+      ]
+    },
+    {
+      "path": "engine/scripting/script_runtime_api.cpp",
+      "batchIndex": 9,
+      "symbols": [
+        "ScriptApi_Visual_PlayClip",
+        "ScriptApi_Visual_TryGetBoneWorld",
+        "ScriptApi_Visual_PlayClipLoop",
+        "ScriptApi_Visual_GetClipDuration",
+        "ScriptApi_Visual_SetAnimSpeed",
+        "ScriptApi_Effect_Play",
+        "ScriptApi_Audio_Play",
+        "ScriptApi_Audio_Stop",
+        "ScriptApi_AudioSetMasterVolume",
+        "ScriptApi_AudioGetMasterVolume",
+        "ScriptApi_MouseGetPosition",
+        "ScriptApi_PostFX_Burst",
+        "ScriptApi_Physics_Raycast",
+        "ScriptApi_Camera_AddTrauma",
+        "ScriptApi_Camera_SetSpeedFactor",
+        "ScriptApi_Debug_PulseTimeScale",
+        "ScriptApi_LineSprite_Draw",
+        "ScriptApi_ApplyColliderComponent",
+        "ScriptApi_DestroyCollider",
+        "ScriptApi_GameObjectAddIgnoreCollisionTag",
+        "ScriptApi_GameObjectRemoveIgnoreCollisionTag",
+        "ScriptApi_GameObjectAddIgnoreCollisionObject",
+        "ScriptApi_GameObjectRemoveIgnoreCollisionObject",
+        "ScriptApi_GameObjectClearIgnoreCollisionObjects",
+        "ScriptApi_GetColliderWorldCenter",
+        "ScriptApi_GetBoxColliderSize",
+        "ScriptApi_SetBoxColliderSize",
+        "ScriptApi_TryGetColliderFootprint",
+        "ScriptApi_EngineGUIStopPlay",
+        "ScriptApi_CameraSetPosition",
+        "ScriptApi_CameraSetTarget",
+        "ScriptApi_CameraSetUp",
+        "ScriptApi_SetActiveCameraNodeName",
+        "ScriptApi_ActivateSceneCamera",
+        "ScriptApi_GetBackBufferWidth",
+        "ScriptApi_GetBackBufferHeight",
+        "ScriptApi_SpriteDraw",
+        "ScriptApi_TextureGetWhiteTexture",
+        "ScriptApi_TextureGetWidth",
+        "ScriptApi_TextureGetHeight",
+        "ScriptApi_TextureRelease",
+        "ScriptApi_EngineGUILoadFromFile",
+        "ScriptApi_EngineGUIStartPlay",
+        "ScriptApi_GetSphereColliderRadius",
+        "ScriptApi_GetCameraForward",
+        "ScriptApi_UICanvasRemoveElement",
+        "ScriptApi_UISpriteSetTexture",
+        "ScriptApi_UISpriteSetRadial360Fill",
+        "ScriptApi_UISpriteSetFillNone",
+        "ScriptApi_UISpriteSetSourceRect",
+        "ScriptApi_TextureLoad",
+        "ScriptApi_BillboardAdd",
+        "ScriptApi_BillboardAddUv",
+        "ScriptApi_ParticleCreateEmitter",
+        "ScriptApi_ParticleSetEmitterPosition",
+        "ScriptApi_ParticleSetEmitterEmitting",
+        "ScriptApi_ParticleStopEmitter",
+        "ScriptApi_ParticleDestroyEmitter",
+        "ScriptApi_ParticleSpawnAt",
+        "ScriptApi_GetRenderViewportWidth",
+        "ScriptApi_GetRenderViewportHeight",
+        "ScriptApi_GetCameraViewMatrix",
+        "ScriptApi_GetCameraProjMatrix",
+        "ScriptApi_DebugDrawSphereWire",
+        "ScriptApi_SceneCanvasSetTimerSeconds",
+        "ScriptApi_SceneCanvasRequestSceneFile",
+        "ScriptApi_UITextSetText",
+        "ScriptApi_UIElementSetVisible",
+        "ScriptApi_PickupDebugSetMessage",
+        "ScriptApi_PrefabDestroy",
+        "ScriptApi_PrefabSetBeforeDestroyCallback"
+      ]
+    },
+    {
+      "path": "engine/ui/ui_button.cpp",
+      "batchIndex": 6,
+      "symbols": [
+        "UIButton",
+        "Initialize",
+        "Update",
+        "SetVisible",
+        "Draw",
+        "Finalize",
+        "SetTexture",
+        "SetTexturePath",
+        "SetHoverTexture",
+        "SetHoverTexturePath",
+        "SetPressedTexture",
+        "SetPressedTexturePath",
+        "SetAction",
+        "Activate",
+        "GetScreenRect",
+        "ContainsPoint",
+        "SetFont",
+        "SetFontPath",
+        "ShutdownSharedFont"
+      ]
+    },
+    {
+      "path": "src/app/main.cpp",
+      "batchIndex": 6,
+      "symbols": [
+        "WinMain",
+        "Initialize",
+        "Finalize",
+        "Update",
+        "Draw",
+        "WndProc"
+      ]
+    }
+  ],
+  "engine/scene/scene_camera.cpp": [
+    {
+      "path": "engine/core/engine_gui.h",
+      "batchIndex": 7,
+      "symbols": []
+    },
+    {
+      "path": "engine/ecs/camera_component.h",
+      "batchIndex": 7,
+      "symbols": [
+        "Transform",
+        "Serialize",
+        "Deserialize",
+        "ComputeEyeWS",
+        "ComputeForwardWS",
+        "ComputeUpWS",
+        "ComputeRightWS",
+        "ComputeViewUpWS",
+        "ApplyToGlobalCamera",
+        "CameraComponent"
+      ]
+    },
+    {
+      "path": "engine/ecs/game_object.h",
+      "batchIndex": 7,
+      "symbols": []
+    },
+    {
+      "path": "engine/ecs/transform.h",
+      "batchIndex": 7,
+      "symbols": [
+        "GameObject",
+        "OnAttach",
+        "OnReset",
+        "SnapshotStartState",
+        "GetLocalMatrix",
+        "GetWorldMatrix",
+        "SetFromLocalMatrix",
+        "GetWorldPosition",
+        "GetWorldPositionRotationScale",
+        "Serialize",
+        "Deserialize",
+        "Transform"
+      ]
+    }
+  ],
+  "engine/scene/scene_loader.h": [
+    {
+      "path": "engine/ecs/game_object.h",
+      "batchIndex": 7,
+      "symbols": []
+    },
+    {
+      "path": "engine/core/engine_gui.cpp",
+      "batchIndex": 1,
+      "symbols": [
+        "EditorLayoutMetrics",
+        "EngineGUI_IsSceneDirty",
+        "EngineGUI_MarkSceneDirty",
+        "EngineGUI_ClearSceneDirty",
+        "EngineGUI_QueueUnsavedLoad",
+        "EngineGUI_QueueUnsavedExit",
+        "EngineGUI_IsSceneGraphObject",
+        "TeardownPlaySession",
+        "SoftStopPlayForSceneLoad",
+        "ReturnToStart",
+        "EngineGUI_IsDebugCameraPlayInputActive",
+        "EngineGUI_QueueSceneLoad",
+        "EngineGUI_BeginSceneAssetPreload",
+        "EngineGUI_FlushSceneLoadPending",
+        "EngineGUI_TickSceneAssetPreload",
+        "EngineGUI_IsSceneAssetPreloadActive",
+        "EngineGUI_Initialize",
+        "EngineGUI_Finalize",
+        "EngineGUI_IsPlaying",
+        "EngineGUI_PreferPlayVisuals",
+        "EngineGUI_IsOnStart",
+        "EngineGUI_StartPlay",
+        "EngineGUI_StopPlay",
+        "EngineGUI_GetCameraMode",
+        "EngineGUI_SetCameraMode",
+        "EngineGUI_SetActiveCameraNodeName",
+        "EngineGUI_SetEnabled",
+        "EngineGUI_ResolveStartupScenePath",
+        "EngineGUI_IsUiOverlayVisible",
+        "EngineGUI_SetUiOverlayVisible",
+        "EngineGUI_GetEditMode",
+        "EngineGUI_SetEditMode",
+        "EngineGUI_IsUiEditMode",
+        "EngineGUI_GetGameViewportRect",
+        "EngineGUI_MouseToViewportLocal",
+        "EngineGUI_DrawSelectionIndicator",
+        "EngineGUI_Update",
+        "DrawEditorSceneProxies",
+        "EngineGUI_OnBackbufferResized",
+        "EngineGUI_Draw"
+      ]
+    },
+    {
+      "path": "engine/core/engine_gui_internal.h",
+      "batchIndex": 7,
+      "symbols": [
+        "GameObject",
+        "UIElement"
+      ]
+    },
+    {
+      "path": "engine/core/engine_gui_persistence.cpp",
+      "batchIndex": 7,
+      "symbols": [
+        "EngineGUI_SaveToFile",
+        "EngineGUI_LoadFromFileCore",
+        "EngineGUI_LoadFromFile"
+      ]
+    },
+    {
+      "path": "engine/core/engine_gui_runtime.cpp",
+      "batchIndex": 7,
+      "symbols": [
+        "EngineGUI_Initialize",
+        "EngineGUI_Finalize",
+        "EngineGUI_Update",
+        "EngineGUI_Draw",
+        "EngineGUI_OnBackbufferResized",
+        "EngineGUI_DrawSelectionIndicator",
+        "EngineGUI_IsPlaying",
+        "EngineGUI_PreferPlayVisuals",
+        "EngineGUI_IsSceneAssetPreloadActive",
+        "EngineGUI_IsDebugCameraPlayInputActive",
+        "EngineGUI_IsOnStart",
+        "EngineGUI_StartPlay",
+        "EngineGUI_StopPlay",
+        "EngineGUI_SetEnabled",
+        "EngineGUI_GetGameViewportRect",
+        "EngineGUI_SaveToFile",
+        "EngineGUI_LoadFromFile",
+        "EngineGUI_ResolveStartupScenePath",
+        "EngineGUI_GetCameraMode",
+        "EngineGUI_SetCameraMode",
+        "EngineGUI_SetActiveCameraNodeName",
+        "EngineGUI_IsUiOverlayVisible",
+        "EngineGUI_SetUiOverlayVisible",
+        "EngineGUI_GetEditMode",
+        "EngineGUI_SetEditMode",
+        "EngineGUI_IsUiEditMode",
+        "EngineGUI_MouseToViewportLocal",
+        "EngineGUI_IsSceneGraphObject",
+        "DrawEditorSceneProxies"
+      ]
+    },
+    {
+      "path": "engine/ecs/prefab_runtime.cpp",
+      "batchIndex": 7,
+      "symbols": [
+        "PendingSpawn",
+        "CollectSubtree",
+        "ExtractFromSceneGraph",
+        "DestroySubtreeOwned",
+        "IsInSceneGraph",
+        "PrefabRuntime_SetBeforeDestroyCallback",
+        "PrefabRuntime_IsSpawnRoot",
+        "PrefabRuntime_IsRuntimeSpawned",
+        "PrefabRuntime_FlushSpawned",
+        "PrefabRuntime_Destroy",
+        "PrefabRuntime_DestroyAllSpawnedChildren",
+        "PrefabRuntime_ResetSessionState",
+        "PrefabRuntime_FlushDestroyed"
+      ]
+    },
+    {
+      "path": "engine/ecs/visual_system.cpp",
+      "batchIndex": 7,
+      "symbols": [
+        "UploadObjectTree",
+        "VisualSystem_UploadSkinning"
+      ]
+    },
+    {
+      "path": "engine/editor/editor_undo.cpp",
+      "batchIndex": 2,
+      "symbols": [
+        "NodeInSubtree",
+        "NodeInScene",
+        "GetSiblingIndex",
+        "InsertNodeAt",
+        "DetachNode",
+        "ApplyComponentPostDeserialize",
+        "ParseNodeNameFromJson",
+        "ComponentEditSession",
+        "DiscardSession",
+        "SerializeComponent",
+        "TransformCommand",
+        "Undo",
+        "Redo",
+        "Describe",
+        "TransformCommand",
+        "ComponentEditCommand",
+        "Undo",
+        "Redo",
+        "Describe",
+        "ComponentEditCommand",
+        "CreateObjectCommand",
+        "Undo",
+        "Redo",
+        "Describe",
+        "CreateObjectCommand",
+        "DeleteObjectCommand",
+        "Undo",
+        "Redo",
+        "Describe",
+        "DeleteObjectCommand",
+        "RenameCommand",
+        "Undo",
+        "Redo",
+        "Describe",
+        "RenameCommand",
+        "TagCommand",
+        "Undo",
+        "Redo",
+        "Describe",
+        "TagCommand",
+        "ReparentCommand",
+        "Undo",
+        "Redo",
+        "Describe",
+        "ReparentCommand",
+        "RemoveComponentByTypeName",
+        "AddComponentFromJson",
+        "AddComponentCommand",
+        "Undo",
+        "Redo",
+        "Describe",
+        "AddComponentCommand",
+        "RemoveComponentCommand",
+        "Undo",
+        "Redo",
+        "Describe",
+        "RemoveComponentCommand",
+        "CreateUiCommand",
+        "Undo",
+        "Redo",
+        "Describe",
+        "CreateUiCommand",
+        "DeleteUiCommand",
+        "Undo",
+        "Redo",
+        "Describe",
+        "DeleteUiCommand",
+        "UiEditCommand",
+        "Undo",
+        "Redo",
+        "Describe",
+        "UiEditCommand",
+        "UiReorderCommand",
+        "Undo",
+        "Redo",
+        "Describe",
+        "UiReorderCommand",
+        "UiEditSession",
+        "DiscardUiSession",
+        "MakeNodeRef",
+        "MakeUiElementRef",
+        "EditorUndo_DeleteNodeInternal",
+        "RebuildLabels",
+        "Push",
+        "Undo",
+        "Redo",
+        "CanUndo",
+        "CanRedo",
+        "Depth",
+        "TopUndoDescribe",
+        "TopRedoDescribe",
+        "Clear",
+        "EditorUndo_Push",
+        "EditorUndo_Undo",
+        "EditorUndo_Redo",
+        "EditorUndo_Clear",
+        "EditorUndo_PushTransform",
+        "EditorUndo_PushComponentEdit",
+        "EditorUndo_PushCreate",
+        "EditorUndo_PushDelete",
+        "EditorUndo_BeginComponentEdit",
+        "EditorUndo_EndComponentEdit",
+        "EditorUndo_DiscardComponentEdit",
+        "EditorUndo_PushRename",
+        "EditorUndo_PushTag",
+        "EditorUndo_PushReparent",
+        "EditorUndo_PushAddComponent",
+        "EditorUndo_PushRemoveComponent",
+        "EditorUndo_PushUiCreate",
+        "EditorUndo_PushUiDelete",
+        "EditorUndo_PushUiEdit",
+        "EditorUndo_PushUiReorder",
+        "EditorUndo_BeginUiEdit",
+        "EditorUndo_EndUiEdit",
+        "EditorUndo_DiscardUiEdit"
+      ]
+    },
+    {
+      "path": "engine/editor/project_asset_ops.cpp",
+      "batchIndex": 1,
+      "symbols": [
+        "ToLowerCopy",
+        "NormalizeSlashes",
+        "ParentRel",
+        "LeafName",
+        "Utf8FromWide",
+        "PathFromUtf8",
+        "Utf8FromPath",
+        "ProjectRootPath",
+        "GenericLower",
+        "MakeAbsoluteNormalized",
+        "CurrentSceneAbsoluteNormalized",
+        "RecyclePath",
+        "IsScriptsPath",
+        "IsValidLeafName",
+        "AssetPathFromRelative",
+        "AbsolutePathFromRelative",
+        "IsCurrentSceneOpen",
+        "FolderContainsCurrentScene",
+        "FindSceneReferences",
+        "RenameAsset",
+        "DeleteAssetToRecycleBin",
+        "CreateFolder",
+        "CreateMinimalScene",
+        "ShowInExplorer"
+      ]
+    },
+    {
+      "path": "engine/scene/scene_loader.cpp",
+      "batchIndex": 2,
+      "symbols": [
+        "SceneAssetEntry",
+        "SceneLoader_DebugCameraEnabledOnPlay",
+        "SceneLoader_DebugCameraFlyOnPlay",
+        "SceneLoader_RegisterComponentTypes",
+        "SyncSceneRuntime",
+        "ClearSceneRuntime",
+        "ApplyEditorColliders",
+        "RestoreEditorDebugColliderFlags",
+        "SceneLoader_SetDefaultSceneFileName",
+        "SceneLoader_CopySceneFileName",
+        "SceneLoader_RefreshSceneAssets",
+        "SceneLoader_LoadDefaultSceneSetting",
+        "SceneLoader_LoadScriptDlls",
+        "SceneLoader_UnloadScriptDlls",
+        "SceneLoader_ScanScriptDllsForChanges",
+        "SceneLoader_DrainScriptReloadQueue",
+        "SceneLoader_Initialize",
+        "SceneLoader_StopScriptWatcher",
+        "SceneLoader_Finalize",
+        "GameObjectFromLegacyBlock",
+        "SceneLoader_LoadFromFile",
+        "SceneLoader_SaveToFile",
+        "SceneLoader_ClearSceneNodes",
+        "TeardownAllScripts",
+        "TeardownScenePlaySession",
+        "SceneLoader_IsSceneGraphObject",
+        "DrawSceneModels",
+        "SnapshotSceneStartTransforms",
+        "SceneLoader_TryGetSceneAsset",
+        "SceneLoader_GetSceneAssetCount",
+        "SceneLoader_ApplySceneAssetByIndex",
+        "SceneLoader_GetDefaultSceneDisplayName",
+        "SceneLoader_IsSceneAssetsScanned"
+      ]
+    },
+    {
+      "path": "src/app/scene/game_scene.cpp",
+      "batchIndex": 10,
+      "symbols": [
+        "Initialize",
+        "Finalize",
+        "Update",
+        "Draw",
+        "SetRenderObject",
+        "Object_Draw"
+      ]
+    }
+  ],
+  "src/app/camera/camera_director.cpp": [
+    {
+      "path": "engine/core/easing.h",
+      "batchIndex": 7,
+      "symbols": []
+    },
+    {
+      "path": "engine/core/engine_gui.h",
+      "batchIndex": 7,
+      "symbols": []
+    },
+    {
+      "path": "engine/ecs/camera_component.h",
+      "batchIndex": 7,
+      "symbols": [
+        "Transform",
+        "Serialize",
+        "Deserialize",
+        "ComputeEyeWS",
+        "ComputeForwardWS",
+        "ComputeUpWS",
+        "ComputeRightWS",
+        "ComputeViewUpWS",
+        "ApplyToGlobalCamera",
+        "CameraComponent"
+      ]
+    },
+    {
+      "path": "engine/ecs/game_object.h",
+      "batchIndex": 7,
+      "symbols": []
+    },
+    {
+      "path": "engine/ecs/transform.h",
+      "batchIndex": 7,
+      "symbols": [
+        "GameObject",
+        "OnAttach",
+        "OnReset",
+        "SnapshotStartState",
+        "GetLocalMatrix",
+        "GetWorldMatrix",
+        "SetFromLocalMatrix",
+        "GetWorldPosition",
+        "GetWorldPositionRotationScale",
+        "Serialize",
+        "Deserialize",
+        "Transform"
+      ]
+    }
+  ],
+  "src/app/camera/camera_pose.cpp": [
+    {
+      "path": "engine/ecs/camera_component.h",
+      "batchIndex": 7,
+      "symbols": [
+        "Transform",
+        "Serialize",
+        "Deserialize",
+        "ComputeEyeWS",
+        "ComputeForwardWS",
+        "ComputeUpWS",
+        "ComputeRightWS",
+        "ComputeViewUpWS",
+        "ApplyToGlobalCamera",
+        "CameraComponent"
+      ]
+    },
+    {
+      "path": "engine/ecs/transform.h",
+      "batchIndex": 7,
+      "symbols": [
+        "GameObject",
+        "OnAttach",
+        "OnReset",
+        "SnapshotStartState",
+        "GetLocalMatrix",
+        "GetWorldMatrix",
+        "SetFromLocalMatrix",
+        "GetWorldPosition",
+        "GetWorldPositionRotationScale",
+        "Serialize",
+        "Deserialize",
+        "Transform"
+      ]
+    }
+  ],
+  "src/app/camera/debug_camera.cpp": [
+    {
+      "path": "engine/core/engine_gui.h",
+      "batchIndex": 7,
+      "symbols": []
+    },
+    {
+      "path": "engine/input/key_logger.h",
+      "batchIndex": 4,
+      "symbols": []
+    },
+    {
+      "path": "engine/input/keyboard.h",
+      "batchIndex": 3,
+      "symbols": []
+    }
+  ],
+  "src/app/camera/debug_camera.h": [
+    {
+      "path": "engine/core/engine_gui_runtime.cpp",
+      "batchIndex": 7,
+      "symbols": [
+        "EngineGUI_Initialize",
+        "EngineGUI_Finalize",
+        "EngineGUI_Update",
+        "EngineGUI_Draw",
+        "EngineGUI_OnBackbufferResized",
+        "EngineGUI_DrawSelectionIndicator",
+        "EngineGUI_IsPlaying",
+        "EngineGUI_PreferPlayVisuals",
+        "EngineGUI_IsSceneAssetPreloadActive",
+        "EngineGUI_IsDebugCameraPlayInputActive",
+        "EngineGUI_IsOnStart",
+        "EngineGUI_StartPlay",
+        "EngineGUI_StopPlay",
+        "EngineGUI_SetEnabled",
+        "EngineGUI_GetGameViewportRect",
+        "EngineGUI_SaveToFile",
+        "EngineGUI_LoadFromFile",
+        "EngineGUI_ResolveStartupScenePath",
+        "EngineGUI_GetCameraMode",
+        "EngineGUI_SetCameraMode",
+        "EngineGUI_SetActiveCameraNodeName",
+        "EngineGUI_IsUiOverlayVisible",
+        "EngineGUI_SetUiOverlayVisible",
+        "EngineGUI_GetEditMode",
+        "EngineGUI_SetEditMode",
+        "EngineGUI_IsUiEditMode",
+        "EngineGUI_MouseToViewportLocal",
+        "EngineGUI_IsSceneGraphObject",
+        "DrawEditorSceneProxies"
+      ]
+    }
+  ],
+  "src/app/camera/first_person_camera.cpp": [
+    {
+      "path": "engine/ecs/audio_listener_component.h",
+      "batchIndex": 2,
+      "symbols": [
+        "Serialize",
+        "Deserialize",
+        "AudioListenerComponent"
+      ]
+    },
+    {
+      "path": "engine/ecs/camera_component.h",
+      "batchIndex": 7,
+      "symbols": [
+        "Transform",
+        "Serialize",
+        "Deserialize",
+        "ComputeEyeWS",
+        "ComputeForwardWS",
+        "ComputeUpWS",
+        "ComputeRightWS",
+        "ComputeViewUpWS",
+        "ApplyToGlobalCamera",
+        "CameraComponent"
+      ]
+    },
+    {
+      "path": "engine/ecs/game_object.h",
+      "batchIndex": 7,
+      "symbols": []
+    },
+    {
+      "path": "engine/ecs/transform.h",
+      "batchIndex": 7,
+      "symbols": [
+        "GameObject",
+        "OnAttach",
+        "OnReset",
+        "SnapshotStartState",
+        "GetLocalMatrix",
+        "GetWorldMatrix",
+        "SetFromLocalMatrix",
+        "GetWorldPosition",
+        "GetWorldPositionRotationScale",
+        "Serialize",
+        "Deserialize",
+        "Transform"
+      ]
+    },
+    {
+      "path": "engine/input/controller.h",
+      "batchIndex": 3,
+      "symbols": []
+    },
+    {
+      "path": "engine/rendering/d3d11/renderer.h",
+      "batchIndex": 4,
+      "symbols": []
+    }
+  ],
+  "src/app/camera/first_person_camera.h": [
+    {
+      "path": "engine/core/engine_gui_runtime.cpp",
+      "batchIndex": 7,
+      "symbols": [
+        "EngineGUI_Initialize",
+        "EngineGUI_Finalize",
+        "EngineGUI_Update",
+        "EngineGUI_Draw",
+        "EngineGUI_OnBackbufferResized",
+        "EngineGUI_DrawSelectionIndicator",
+        "EngineGUI_IsPlaying",
+        "EngineGUI_PreferPlayVisuals",
+        "EngineGUI_IsSceneAssetPreloadActive",
+        "EngineGUI_IsDebugCameraPlayInputActive",
+        "EngineGUI_IsOnStart",
+        "EngineGUI_StartPlay",
+        "EngineGUI_StopPlay",
+        "EngineGUI_SetEnabled",
+        "EngineGUI_GetGameViewportRect",
+        "EngineGUI_SaveToFile",
+        "EngineGUI_LoadFromFile",
+        "EngineGUI_ResolveStartupScenePath",
+        "EngineGUI_GetCameraMode",
+        "EngineGUI_SetCameraMode",
+        "EngineGUI_SetActiveCameraNodeName",
+        "EngineGUI_IsUiOverlayVisible",
+        "EngineGUI_SetUiOverlayVisible",
+        "EngineGUI_GetEditMode",
+        "EngineGUI_SetEditMode",
+        "EngineGUI_IsUiEditMode",
+        "EngineGUI_MouseToViewportLocal",
+        "EngineGUI_IsSceneGraphObject",
+        "DrawEditorSceneProxies"
+      ]
+    }
+  ],
+  "src/app/camera/third_person_camera.cpp": [
+    {
+      "path": "engine/core/easing.h",
+      "batchIndex": 7,
+      "symbols": []
+    },
+    {
+      "path": "engine/ecs/audio_listener_component.h",
+      "batchIndex": 2,
+      "symbols": [
+        "Serialize",
+        "Deserialize",
+        "AudioListenerComponent"
+      ]
+    },
+    {
+      "path": "engine/ecs/camera_component.h",
+      "batchIndex": 7,
+      "symbols": [
+        "Transform",
+        "Serialize",
+        "Deserialize",
+        "ComputeEyeWS",
+        "ComputeForwardWS",
+        "ComputeUpWS",
+        "ComputeRightWS",
+        "ComputeViewUpWS",
+        "ApplyToGlobalCamera",
+        "CameraComponent"
+      ]
+    },
+    {
+      "path": "engine/ecs/game_object.h",
+      "batchIndex": 7,
+      "symbols": []
+    },
+    {
+      "path": "engine/ecs/transform.h",
+      "batchIndex": 7,
+      "symbols": [
+        "GameObject",
+        "OnAttach",
+        "OnReset",
+        "SnapshotStartState",
+        "GetLocalMatrix",
+        "GetWorldMatrix",
+        "SetFromLocalMatrix",
+        "GetWorldPosition",
+        "GetWorldPositionRotationScale",
+        "Serialize",
+        "Deserialize",
+        "Transform"
+      ]
+    },
+    {
+      "path": "engine/input/controller.h",
+      "batchIndex": 3,
+      "symbols": []
+    },
+    {
+      "path": "engine/rendering/d3d11/renderer.h",
+      "batchIndex": 4,
+      "symbols": []
+    }
+  ],
+  "src/app/camera/third_person_camera.h": [
+    {
+      "path": "engine/core/engine_gui_runtime.cpp",
+      "batchIndex": 7,
+      "symbols": [
+        "EngineGUI_Initialize",
+        "EngineGUI_Finalize",
+        "EngineGUI_Update",
+        "EngineGUI_Draw",
+        "EngineGUI_OnBackbufferResized",
+        "EngineGUI_DrawSelectionIndicator",
+        "EngineGUI_IsPlaying",
+        "EngineGUI_PreferPlayVisuals",
+        "EngineGUI_IsSceneAssetPreloadActive",
+        "EngineGUI_IsDebugCameraPlayInputActive",
+        "EngineGUI_IsOnStart",
+        "EngineGUI_StartPlay",
+        "EngineGUI_StopPlay",
+        "EngineGUI_SetEnabled",
+        "EngineGUI_GetGameViewportRect",
+        "EngineGUI_SaveToFile",
+        "EngineGUI_LoadFromFile",
+        "EngineGUI_ResolveStartupScenePath",
+        "EngineGUI_GetCameraMode",
+        "EngineGUI_SetCameraMode",
+        "EngineGUI_SetActiveCameraNodeName",
+        "EngineGUI_IsUiOverlayVisible",
+        "EngineGUI_SetUiOverlayVisible",
+        "EngineGUI_GetEditMode",
+        "EngineGUI_SetEditMode",
+        "EngineGUI_IsUiEditMode",
+        "EngineGUI_MouseToViewportLocal",
+        "EngineGUI_IsSceneGraphObject",
+        "DrawEditorSceneProxies"
+      ]
+    }
+  ]
+}

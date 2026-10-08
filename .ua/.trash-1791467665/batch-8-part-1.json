@@ -1,0 +1,1122 @@
+{
+  "nodes": [
+    {
+      "id": "file:engine/editor/editor_prefab_panel.h",
+      "type": "file",
+      "name": "editor_prefab_panel.h",
+      "summary": "Declares MapEditor::PrefabPanel, the editor UI entry that lists prefab files and returns a spawned GameObject when the user instantiates one.",
+      "tags": [
+        "editor",
+        "prefab",
+        "ui-panel",
+        "type-definition"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/editor/editor_prefab_panel.h"
+    },
+    {
+      "id": "file:engine/editor/editor_project_browser.cpp",
+      "type": "file",
+      "name": "editor_project_browser.cpp",
+      "summary": "Implements the ImGui project browser: folder tree, asset grid, drag-and-drop, and modal flows for rename, delete, new folder, and new scene.",
+      "tags": [
+        "editor",
+        "asset-browser",
+        "ui-panel",
+        "event-handler"
+      ],
+      "complexity": "complex",
+      "filePath": "engine/editor/editor_project_browser.cpp"
+    },
+    {
+      "id": "file:engine/editor/transform_gizmo.cpp",
+      "type": "file",
+      "name": "transform_gizmo.cpp",
+      "summary": "ImGuizmo-based translate/rotate/scale gizmo that projects the editor camera, applies world or local TRS to selected GameObjects, and records undo snapshots.",
+      "tags": [
+        "editor",
+        "gizmo",
+        "transform",
+        "event-handler"
+      ],
+      "complexity": "complex",
+      "filePath": "engine/editor/transform_gizmo.cpp",
+      "languageNotes": "Builds ImGuizmo view/projection from the global Camera and converts between column-major ImGuizmo matrices and DirectXMath XMMATRIX."
+    },
+    {
+      "id": "file:engine/input/mouse.h",
+      "type": "file",
+      "name": "mouse.h",
+      "summary": "C API for per-frame mouse delta, button state, wheel, and both back-buffer and HWND client coordinates used by gizmos and cameras.",
+      "tags": [
+        "input",
+        "type-definition",
+        "api-handler"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/input/mouse.h"
+    },
+    {
+      "id": "file:engine/scene/scene_camera.cpp",
+      "type": "file",
+      "name": "scene_camera.cpp",
+      "summary": "Copies the active named CameraComponent node into the global Camera when editor CameraMode is SceneCamera.",
+      "tags": [
+        "camera",
+        "scene",
+        "synchronization",
+        "service"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/scene/scene_camera.cpp"
+    },
+    {
+      "id": "file:engine/scene/scene_camera.h",
+      "type": "file",
+      "name": "scene_camera.h",
+      "summary": "Declares SceneCameraSyncFromActiveNode, the scene-camera producer that writes a CameraComponent pose into the global Camera.",
+      "tags": [
+        "camera",
+        "scene",
+        "type-definition"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/scene/scene_camera.h"
+    },
+    {
+      "id": "file:engine/scene/scene_loader.h",
+      "type": "file",
+      "name": "scene_loader.h",
+      "summary": "Public scene-load API: initialize/finalize, JSON load/save, script-DLL hot reload, play-session teardown, and editor scene-asset browser helpers.",
+      "tags": [
+        "scene",
+        "serialization",
+        "type-definition",
+        "entry-point"
+      ],
+      "complexity": "moderate",
+      "filePath": "engine/scene/scene_loader.h"
+    },
+    {
+      "id": "function:engine/editor/editor_project_browser.cpp:CreateModelGameObject",
+      "type": "function",
+      "name": "CreateModelGameObject",
+      "summary": "Builds a GameObject with Transform, VisualComponent, and ColliderComponent for a model asset dropped or opened from the browser.",
+      "tags": [
+        "factory",
+        "prefab",
+        "ecs"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/editor/editor_project_browser.cpp",
+      "lineRange": [
+        51,
+        63
+      ]
+    },
+    {
+      "id": "function:engine/editor/editor_project_browser.cpp:AdjustSelectionAfterRename",
+      "type": "function",
+      "name": "AdjustSelectionAfterRename",
+      "summary": "Rewrites the selected folder path when a renamed folder is an ancestor of the current selection.",
+      "tags": [
+        "utility",
+        "asset-browser",
+        "path"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/editor/editor_project_browser.cpp",
+      "lineRange": [
+        123,
+        137
+      ]
+    },
+    {
+      "id": "function:engine/editor/editor_project_browser.cpp:AdjustSelectionAfterDelete",
+      "type": "function",
+      "name": "AdjustSelectionAfterDelete",
+      "summary": "Moves folder selection to the parent when the deleted path contains the current folder.",
+      "tags": [
+        "utility",
+        "asset-browser",
+        "path"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/editor/editor_project_browser.cpp",
+      "lineRange": [
+        139,
+        149
+      ]
+    },
+    {
+      "id": "function:engine/editor/editor_project_browser.cpp:FolderTreeLabel",
+      "type": "function",
+      "name": "FolderTreeLabel",
+      "summary": "Builds an ImGui tree-node label that preserves expansion state via a stable storage id.",
+      "tags": [
+        "ui-panel",
+        "utility",
+        "imgui"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/editor/editor_project_browser.cpp",
+      "lineRange": [
+        151,
+        163
+      ]
+    },
+    {
+      "id": "function:engine/editor/editor_project_browser.cpp:TryOpenOrUseAsset",
+      "type": "function",
+      "name": "TryOpenOrUseAsset",
+      "summary": "Opens a scene, or instantiates a model or prefab GameObject into the scene graph from a browser entry.",
+      "tags": [
+        "factory",
+        "asset-browser",
+        "serialization"
+      ],
+      "complexity": "moderate",
+      "filePath": "engine/editor/editor_project_browser.cpp",
+      "lineRange": [
+        178,
+        201
+      ]
+    },
+    {
+      "id": "function:engine/editor/editor_project_browser.cpp:OpenRenameModal",
+      "type": "function",
+      "name": "OpenRenameModal",
+      "summary": "Resets modal state and pre-fills the rename buffer with a folder name or file stem.",
+      "tags": [
+        "ui-panel",
+        "event-handler",
+        "asset-browser"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/editor/editor_project_browser.cpp",
+      "lineRange": [
+        203,
+        217
+      ]
+    },
+    {
+      "id": "function:engine/editor/editor_project_browser.cpp:OpenDeleteModal",
+      "type": "function",
+      "name": "OpenDeleteModal",
+      "summary": "Opens the delete confirmation modal and scans scene references when the asset kind requires it.",
+      "tags": [
+        "ui-panel",
+        "validation",
+        "asset-browser"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/editor/editor_project_browser.cpp",
+      "lineRange": [
+        219,
+        232
+      ]
+    },
+    {
+      "id": "function:engine/editor/editor_project_browser.cpp:DrawFolderContextMenu",
+      "type": "function",
+      "name": "DrawFolderContextMenu",
+      "summary": "Folder right-click menu for new scene/folder, reveal in Explorer, rename, and delete (scripts path guarded).",
+      "tags": [
+        "ui-panel",
+        "event-handler",
+        "asset-browser"
+      ],
+      "complexity": "moderate",
+      "filePath": "engine/editor/editor_project_browser.cpp",
+      "lineRange": [
+        248,
+        271
+      ]
+    },
+    {
+      "id": "function:engine/editor/editor_project_browser.cpp:DrawAssetContextMenu",
+      "type": "function",
+      "name": "DrawAssetContextMenu",
+      "summary": "Asset right-click menu for open/use, Explorer, rename, delete, and clipboard path copy.",
+      "tags": [
+        "ui-panel",
+        "event-handler",
+        "asset-browser"
+      ],
+      "complexity": "moderate",
+      "filePath": "engine/editor/editor_project_browser.cpp",
+      "lineRange": [
+        273,
+        306
+      ]
+    },
+    {
+      "id": "function:engine/editor/editor_project_browser.cpp:DrawFolderTreeNode",
+      "type": "function",
+      "name": "DrawFolderTreeNode",
+      "summary": "Recursively draws the project folder tree, updates selection on click, and attaches folder context menus.",
+      "tags": [
+        "ui-panel",
+        "component",
+        "asset-browser"
+      ],
+      "complexity": "moderate",
+      "filePath": "engine/editor/editor_project_browser.cpp",
+      "lineRange": [
+        308,
+        357
+      ]
+    },
+    {
+      "id": "function:engine/editor/editor_project_browser.cpp:DrawBreadcrumb",
+      "type": "function",
+      "name": "DrawBreadcrumb",
+      "summary": "Renders clickable path breadcrumbs that jump the browser back to an ancestor folder.",
+      "tags": [
+        "ui-panel",
+        "navigation",
+        "asset-browser"
+      ],
+      "complexity": "moderate",
+      "filePath": "engine/editor/editor_project_browser.cpp",
+      "lineRange": [
+        359,
+        384
+      ]
+    },
+    {
+      "id": "function:engine/editor/editor_project_browser.cpp:DrawBrowserModals",
+      "type": "function",
+      "name": "DrawBrowserModals",
+      "summary": "Draws rename, delete, new-scene, and new-folder popups and commits changes through ProjectAssetOps.",
+      "tags": [
+        "ui-panel",
+        "event-handler",
+        "validation"
+      ],
+      "complexity": "complex",
+      "filePath": "engine/editor/editor_project_browser.cpp",
+      "lineRange": [
+        399,
+        588
+      ]
+    },
+    {
+      "id": "function:engine/editor/editor_project_browser.cpp:ProjectBrowserPanel",
+      "type": "function",
+      "name": "ProjectBrowserPanel",
+      "summary": "Main project-browser panel: refresh, search, folder tree, asset grid, prefab drag-drop, and modal ownership.",
+      "tags": [
+        "entry-point",
+        "ui-panel",
+        "asset-browser"
+      ],
+      "complexity": "complex",
+      "filePath": "engine/editor/editor_project_browser.cpp",
+      "lineRange": [
+        592,
+        699
+      ]
+    },
+    {
+      "id": "function:engine/editor/transform_gizmo.cpp:BuildImGuizmoLookAt",
+      "type": "function",
+      "name": "BuildImGuizmoLookAt",
+      "summary": "Constructs a left-handed look-at view matrix in ImGuizmo column-major layout from eye, at, and up.",
+      "tags": [
+        "utility",
+        "math",
+        "gizmo"
+      ],
+      "complexity": "moderate",
+      "filePath": "engine/editor/transform_gizmo.cpp",
+      "lineRange": [
+        45,
+        73
+      ]
+    },
+    {
+      "id": "function:engine/editor/transform_gizmo.cpp:BuildImGuizmoPerspective",
+      "type": "function",
+      "name": "BuildImGuizmoPerspective",
+      "summary": "Fills an ImGuizmo-compatible perspective projection from FOV, aspect, and clip planes.",
+      "tags": [
+        "utility",
+        "math",
+        "gizmo"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/editor/transform_gizmo.cpp",
+      "lineRange": [
+        75,
+        88
+      ]
+    },
+    {
+      "id": "function:engine/editor/transform_gizmo.cpp:BuildCameraMatrices",
+      "type": "function",
+      "name": "BuildCameraMatrices",
+      "summary": "Derives ImGuizmo view and projection matrices from the current global Camera and viewport size.",
+      "tags": [
+        "camera",
+        "gizmo",
+        "utility"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/editor/transform_gizmo.cpp",
+      "lineRange": [
+        96,
+        106
+      ]
+    },
+    {
+      "id": "function:engine/editor/transform_gizmo.cpp:EulerZyxDegreesFromRotationMatrix",
+      "type": "function",
+      "name": "EulerZyxDegreesFromRotationMatrix",
+      "summary": "Extracts ZYX Euler degrees from a rotation matrix, handling the pitch singularity case.",
+      "tags": [
+        "math",
+        "transform",
+        "utility"
+      ],
+      "complexity": "moderate",
+      "filePath": "engine/editor/transform_gizmo.cpp",
+      "lineRange": [
+        108,
+        134
+      ]
+    },
+    {
+      "id": "function:engine/editor/transform_gizmo.cpp:ExtractWorldTRS",
+      "type": "function",
+      "name": "ExtractWorldTRS",
+      "summary": "Decomposes a Transform world matrix into ImGuizmo translation, Euler rotation, and scale.",
+      "tags": [
+        "transform",
+        "gizmo",
+        "serialization"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/editor/transform_gizmo.cpp",
+      "lineRange": [
+        136,
+        145
+      ]
+    },
+    {
+      "id": "function:engine/editor/transform_gizmo.cpp:ApplyMatrixToTransform",
+      "type": "function",
+      "name": "ApplyMatrixToTransform",
+      "summary": "Writes an ImGuizmo matrix back to a Transform in local or world mode, converting parent space when needed.",
+      "tags": [
+        "transform",
+        "gizmo",
+        "serialization"
+      ],
+      "complexity": "moderate",
+      "filePath": "engine/editor/transform_gizmo.cpp",
+      "lineRange": [
+        188,
+        220
+      ]
+    },
+    {
+      "id": "function:engine/editor/transform_gizmo.cpp:BeginFrame",
+      "type": "function",
+      "name": "BeginFrame",
+      "summary": "Starts an ImGuizmo frame so later Draw calls can submit manipulators.",
+      "tags": [
+        "gizmo",
+        "entry-point",
+        "editor"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/editor/transform_gizmo.cpp",
+      "lineRange": [
+        236,
+        238
+      ]
+    },
+    {
+      "id": "function:engine/editor/transform_gizmo.cpp:IsInteracting",
+      "type": "function",
+      "name": "IsInteracting",
+      "summary": "Reports whether the mouse is over or currently dragging the transform gizmo.",
+      "tags": [
+        "gizmo",
+        "event-handler",
+        "editor"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/editor/transform_gizmo.cpp",
+      "lineRange": [
+        240,
+        242
+      ]
+    },
+    {
+      "id": "function:engine/editor/transform_gizmo.cpp:DrawToolbarControls",
+      "type": "function",
+      "name": "DrawToolbarControls",
+      "summary": "ImGui radio buttons for translate/rotate/scale and local vs world space with tooltips.",
+      "tags": [
+        "ui-panel",
+        "gizmo",
+        "editor"
+      ],
+      "complexity": "moderate",
+      "filePath": "engine/editor/transform_gizmo.cpp",
+      "lineRange": [
+        244,
+        278
+      ]
+    },
+    {
+      "id": "function:engine/editor/transform_gizmo.cpp:HandleHotkeys",
+      "type": "function",
+      "name": "HandleHotkeys",
+      "summary": "W/E/R and Q/G hotkeys that switch gizmo operation and space when the mouse is in the game viewport.",
+      "tags": [
+        "event-handler",
+        "gizmo",
+        "editor"
+      ],
+      "complexity": "moderate",
+      "filePath": "engine/editor/transform_gizmo.cpp",
+      "lineRange": [
+        280,
+        299
+      ]
+    },
+    {
+      "id": "function:engine/editor/transform_gizmo.cpp:SetVisible",
+      "type": "function",
+      "name": "SetVisible",
+      "summary": "Shows or hides the viewport transform gizmo.",
+      "tags": [
+        "gizmo",
+        "utility",
+        "editor"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/editor/transform_gizmo.cpp",
+      "lineRange": [
+        301,
+        303
+      ]
+    },
+    {
+      "id": "function:engine/editor/transform_gizmo.cpp:IsVisible",
+      "type": "function",
+      "name": "IsVisible",
+      "summary": "Returns whether the transform gizmo is currently drawn.",
+      "tags": [
+        "gizmo",
+        "utility",
+        "editor"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/editor/transform_gizmo.cpp",
+      "lineRange": [
+        305,
+        307
+      ]
+    },
+    {
+      "id": "function:engine/editor/transform_gizmo.cpp:Draw",
+      "type": "function",
+      "name": "Draw",
+      "summary": "Draws ImGuizmo on the selected object, applies manipulated TRS, marks the scene dirty, and pushes a transform undo command.",
+      "tags": [
+        "gizmo",
+        "event-handler",
+        "transform"
+      ],
+      "complexity": "complex",
+      "filePath": "engine/editor/transform_gizmo.cpp",
+      "lineRange": [
+        309,
+        368
+      ]
+    },
+    {
+      "id": "function:engine/scene/scene_camera.cpp:SceneCameraSyncFromActiveNode",
+      "type": "function",
+      "name": "SceneCameraSyncFromActiveNode",
+      "summary": "Finds the named active CameraComponent in the scene graph and applies its world pose to the global Camera.",
+      "tags": [
+        "camera",
+        "synchronization",
+        "scene"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/scene/scene_camera.cpp",
+      "lineRange": [
+        32,
+        49
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:engine/editor/editor_project_browser.cpp",
+      "target": "file:engine/core/engine_gui.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/editor/editor_project_browser.cpp",
+      "target": "file:engine/ecs/collider_component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/editor/editor_project_browser.cpp",
+      "target": "file:engine/ecs/game_object.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/editor/editor_project_browser.cpp",
+      "target": "file:engine/ecs/prefab_serializer.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/editor/editor_project_browser.cpp",
+      "target": "file:engine/ecs/transform.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/editor/editor_project_browser.cpp",
+      "target": "file:engine/ecs/visual_component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/editor/editor_project_browser.cpp",
+      "target": "file:engine/editor/editor_project_browser.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/editor/editor_project_browser.cpp",
+      "target": "file:engine/editor/project_asset_index.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/editor/editor_project_browser.cpp",
+      "target": "file:engine/editor/project_asset_ops.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/editor/editor_project_browser.cpp",
+      "target": "file:engine/scene/scene_loader.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/editor/transform_gizmo.cpp",
+      "target": "file:engine/core/engine_gui.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/editor/transform_gizmo.cpp",
+      "target": "file:engine/ecs/game_object.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/editor/transform_gizmo.cpp",
+      "target": "file:engine/ecs/transform.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/editor/transform_gizmo.cpp",
+      "target": "file:engine/editor/editor_undo.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/editor/transform_gizmo.cpp",
+      "target": "file:engine/editor/transform_gizmo.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/editor/transform_gizmo.cpp",
+      "target": "file:engine/input/mouse.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/scene/scene_camera.cpp",
+      "target": "file:engine/core/engine_gui.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/scene/scene_camera.cpp",
+      "target": "file:engine/ecs/camera_component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/scene/scene_camera.cpp",
+      "target": "file:engine/ecs/game_object.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/scene/scene_camera.cpp",
+      "target": "file:engine/ecs/transform.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/scene/scene_camera.cpp",
+      "target": "file:engine/scene/scene_camera.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/scene/scene_loader.h",
+      "target": "file:engine/ecs/game_object.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/editor/editor_project_browser.cpp",
+      "target": "function:engine/editor/editor_project_browser.cpp:CreateModelGameObject",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/editor_project_browser.cpp",
+      "target": "function:engine/editor/editor_project_browser.cpp:AdjustSelectionAfterRename",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/editor_project_browser.cpp",
+      "target": "function:engine/editor/editor_project_browser.cpp:AdjustSelectionAfterDelete",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/editor_project_browser.cpp",
+      "target": "function:engine/editor/editor_project_browser.cpp:FolderTreeLabel",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/editor_project_browser.cpp",
+      "target": "function:engine/editor/editor_project_browser.cpp:TryOpenOrUseAsset",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/editor_project_browser.cpp",
+      "target": "function:engine/editor/editor_project_browser.cpp:OpenRenameModal",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/editor_project_browser.cpp",
+      "target": "function:engine/editor/editor_project_browser.cpp:OpenDeleteModal",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/editor_project_browser.cpp",
+      "target": "function:engine/editor/editor_project_browser.cpp:DrawFolderContextMenu",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/editor_project_browser.cpp",
+      "target": "function:engine/editor/editor_project_browser.cpp:DrawAssetContextMenu",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/editor_project_browser.cpp",
+      "target": "function:engine/editor/editor_project_browser.cpp:DrawFolderTreeNode",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/editor_project_browser.cpp",
+      "target": "function:engine/editor/editor_project_browser.cpp:DrawBreadcrumb",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/editor_project_browser.cpp",
+      "target": "function:engine/editor/editor_project_browser.cpp:DrawBrowserModals",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/editor_project_browser.cpp",
+      "target": "function:engine/editor/editor_project_browser.cpp:ProjectBrowserPanel",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/editor_project_browser.cpp",
+      "target": "function:engine/editor/editor_project_browser.cpp:ProjectBrowserPanel",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/editor/transform_gizmo.cpp",
+      "target": "function:engine/editor/transform_gizmo.cpp:BuildImGuizmoLookAt",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/transform_gizmo.cpp",
+      "target": "function:engine/editor/transform_gizmo.cpp:BuildImGuizmoPerspective",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/transform_gizmo.cpp",
+      "target": "function:engine/editor/transform_gizmo.cpp:BuildCameraMatrices",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/transform_gizmo.cpp",
+      "target": "function:engine/editor/transform_gizmo.cpp:EulerZyxDegreesFromRotationMatrix",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/transform_gizmo.cpp",
+      "target": "function:engine/editor/transform_gizmo.cpp:ExtractWorldTRS",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/transform_gizmo.cpp",
+      "target": "function:engine/editor/transform_gizmo.cpp:ApplyMatrixToTransform",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/transform_gizmo.cpp",
+      "target": "function:engine/editor/transform_gizmo.cpp:BeginFrame",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/transform_gizmo.cpp",
+      "target": "function:engine/editor/transform_gizmo.cpp:BeginFrame",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/editor/transform_gizmo.cpp",
+      "target": "function:engine/editor/transform_gizmo.cpp:IsInteracting",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/transform_gizmo.cpp",
+      "target": "function:engine/editor/transform_gizmo.cpp:IsInteracting",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/editor/transform_gizmo.cpp",
+      "target": "function:engine/editor/transform_gizmo.cpp:DrawToolbarControls",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/transform_gizmo.cpp",
+      "target": "function:engine/editor/transform_gizmo.cpp:DrawToolbarControls",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/editor/transform_gizmo.cpp",
+      "target": "function:engine/editor/transform_gizmo.cpp:HandleHotkeys",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/transform_gizmo.cpp",
+      "target": "function:engine/editor/transform_gizmo.cpp:HandleHotkeys",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/editor/transform_gizmo.cpp",
+      "target": "function:engine/editor/transform_gizmo.cpp:SetVisible",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/transform_gizmo.cpp",
+      "target": "function:engine/editor/transform_gizmo.cpp:SetVisible",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/editor/transform_gizmo.cpp",
+      "target": "function:engine/editor/transform_gizmo.cpp:IsVisible",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/transform_gizmo.cpp",
+      "target": "function:engine/editor/transform_gizmo.cpp:IsVisible",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/editor/transform_gizmo.cpp",
+      "target": "function:engine/editor/transform_gizmo.cpp:Draw",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/transform_gizmo.cpp",
+      "target": "function:engine/editor/transform_gizmo.cpp:Draw",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/scene/scene_camera.cpp",
+      "target": "function:engine/scene/scene_camera.cpp:SceneCameraSyncFromActiveNode",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/scene/scene_camera.cpp",
+      "target": "function:engine/scene/scene_camera.cpp:SceneCameraSyncFromActiveNode",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/editor/editor_project_browser.cpp:TryOpenOrUseAsset",
+      "target": "function:engine/ecs/prefab_serializer.h:LoadFromFile",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/editor/editor_project_browser.cpp:OpenDeleteModal",
+      "target": "function:engine/editor/project_asset_ops.h:FindSceneReferences",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/editor/editor_project_browser.cpp:DrawFolderContextMenu",
+      "target": "function:engine/editor/project_asset_ops.h:IsScriptsPath",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/editor/editor_project_browser.cpp:DrawFolderContextMenu",
+      "target": "function:engine/editor/project_asset_ops.h:ShowInExplorer",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/editor/editor_project_browser.cpp:DrawAssetContextMenu",
+      "target": "function:engine/editor/project_asset_ops.h:ShowInExplorer",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/editor/editor_project_browser.cpp:DrawBrowserModals",
+      "target": "function:engine/editor/project_asset_ops.h:RenameAsset",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/editor/editor_project_browser.cpp:DrawBrowserModals",
+      "target": "function:engine/editor/project_asset_ops.h:DeleteAssetToRecycleBin",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/editor/editor_project_browser.cpp:DrawBrowserModals",
+      "target": "function:engine/editor/project_asset_ops.h:CreateFolder",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/editor/editor_project_browser.cpp:DrawBrowserModals",
+      "target": "function:engine/editor/project_asset_ops.h:CreateMinimalScene",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/editor/editor_project_browser.cpp:DrawBrowserModals",
+      "target": "function:engine/editor/project_asset_ops.h:IsCurrentSceneOpen",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/editor/editor_project_browser.cpp:DrawBrowserModals",
+      "target": "function:engine/editor/project_asset_ops.h:FolderContainsCurrentScene",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/editor/editor_project_browser.cpp:DrawBrowserModals",
+      "target": "function:engine/editor/project_asset_index.h:Refresh",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/editor/editor_project_browser.cpp:ProjectBrowserPanel",
+      "target": "function:engine/editor/project_asset_index.h:Refresh",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/editor/editor_project_browser.cpp:ProjectBrowserPanel",
+      "target": "function:engine/editor/project_asset_index.h:GetFolderContents",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/editor/editor_project_browser.cpp:ProjectBrowserPanel",
+      "target": "function:engine/scene/scene_loader.cpp:SceneLoader_CopySceneFileName",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/editor/transform_gizmo.cpp:ExtractWorldTRS",
+      "target": "function:engine/ecs/transform.h:GetWorldMatrix",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/editor/transform_gizmo.cpp:ApplyMatrixToTransform",
+      "target": "function:engine/ecs/transform.h:SetFromLocalMatrix",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/editor/transform_gizmo.cpp:Draw",
+      "target": "function:engine/ecs/transform.h:GetWorldMatrix",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/editor/transform_gizmo.cpp:Draw",
+      "target": "function:engine/ecs/transform.h:SnapshotStartState",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/editor/transform_gizmo.cpp:Draw",
+      "target": "function:engine/ecs/transform.h:Serialize",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/editor/transform_gizmo.cpp:HandleHotkeys",
+      "target": "function:engine/input/mouse.cpp:Mouse_IsRightDown",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/scene/scene_camera.cpp:SceneCameraSyncFromActiveNode",
+      "target": "function:engine/ecs/camera_component.h:ApplyToGlobalCamera",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

@@ -1,0 +1,1619 @@
+{
+  "nodes": [
+    {
+      "id": "file:engine/ecs/rigidbody_component.cpp",
+      "type": "file",
+      "name": "rigidbody_component.cpp",
+      "summary": "Applies Rigidbody settings to the owner and serializes mass, drag, gravity, and kinematic flags.",
+      "tags": [
+        "component",
+        "physics",
+        "serialization"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/ecs/rigidbody_component.cpp"
+    },
+    {
+      "id": "file:engine/ecs/rigidbody_component.h",
+      "type": "file",
+      "name": "rigidbody_component.h",
+      "summary": "Declares RigidbodyComponent wrapping a physics Rigidbody with apply/reset and JSON persistence.",
+      "tags": [
+        "component",
+        "physics",
+        "data-model"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/ecs/rigidbody_component.h"
+    },
+    {
+      "id": "file:engine/ecs/spot_light_component.cpp",
+      "type": "file",
+      "name": "spot_light_component.cpp",
+      "summary": "Serializes and deserializes SpotLightComponent cone angles, range, color, and optional shadow casting.",
+      "tags": [
+        "component",
+        "lighting",
+        "serialization"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/ecs/spot_light_component.cpp"
+    },
+    {
+      "id": "file:engine/ecs/spot_light_component.h",
+      "type": "file",
+      "name": "spot_light_component.h",
+      "summary": "Declares SpotLightComponent with cone inner/outer angles, range, attenuation, and shadow flag.",
+      "tags": [
+        "component",
+        "lighting",
+        "data-model"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/ecs/spot_light_component.h"
+    },
+    {
+      "id": "file:engine/ecs/tag_registry.cpp",
+      "type": "file",
+      "name": "tag_registry.cpp",
+      "summary": "Implements the TagRegistry singleton: built-in tag slots, custom tag add/remove, and rom/tags.json persistence.",
+      "tags": [
+        "singleton",
+        "data-model",
+        "serialization"
+      ],
+      "complexity": "moderate",
+      "filePath": "engine/ecs/tag_registry.cpp"
+    },
+    {
+      "id": "file:engine/ecs/tag_registry.h",
+      "type": "file",
+      "name": "tag_registry.h",
+      "summary": "Declares the project-wide GameObject tag catalog with stable built-in indices and custom tags persisted to JSON.",
+      "tags": [
+        "type-definition",
+        "singleton",
+        "data-model"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/ecs/tag_registry.h"
+    },
+    {
+      "id": "file:engine/editor/editor_undo.cpp",
+      "type": "file",
+      "name": "editor_undo.cpp",
+      "summary": "Implements the editor undo stack: transform, component, hierarchy, and UI commands plus ImGui-aware edit sessions.",
+      "tags": [
+        "event-handler",
+        "editor",
+        "serialization",
+        "service"
+      ],
+      "complexity": "complex",
+      "filePath": "engine/editor/editor_undo.cpp",
+      "languageNotes": "Command pattern: anonymous-namespace EditorCommand subclasses plus a public EditorUndo_* C API."
+    },
+    {
+      "id": "file:engine/editor/light_gizmo.cpp",
+      "type": "file",
+      "name": "light_gizmo.cpp",
+      "summary": "Draws debug gizmos for directional, point, and spot lights and computes world-space light pose from Transform.",
+      "tags": [
+        "utility",
+        "lighting",
+        "editor",
+        "debug"
+      ],
+      "complexity": "moderate",
+      "filePath": "engine/editor/light_gizmo.cpp"
+    },
+    {
+      "id": "class:engine/ecs/rigidbody_component.h:RigidbodyComponent",
+      "type": "class",
+      "name": "RigidbodyComponent",
+      "summary": "Serializable wrapper around a physics Rigidbody that can apply settings onto its owner.",
+      "tags": [
+        "component",
+        "physics",
+        "serialization"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/ecs/rigidbody_component.h",
+      "lineRange": [
+        24,
+        39
+      ]
+    },
+    {
+      "id": "class:engine/ecs/spot_light_component.h:SpotLightComponent",
+      "type": "class",
+      "name": "SpotLightComponent",
+      "summary": "Cone light with inner/outer angles, range, attenuation, and optional shadows.",
+      "tags": [
+        "component",
+        "lighting",
+        "serialization"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/ecs/spot_light_component.h",
+      "lineRange": [
+        6,
+        23
+      ]
+    },
+    {
+      "id": "class:engine/ecs/tag_registry.h:TagRegistry",
+      "type": "class",
+      "name": "TagRegistry",
+      "summary": "Singleton catalog of built-in and custom GameObject tags with JSON load/save.",
+      "tags": [
+        "singleton",
+        "data-model",
+        "registry"
+      ],
+      "complexity": "moderate",
+      "filePath": "engine/ecs/tag_registry.h",
+      "lineRange": [
+        9,
+        38
+      ]
+    },
+    {
+      "id": "class:engine/editor/editor_undo.cpp:TransformCommand",
+      "type": "class",
+      "name": "TransformCommand",
+      "summary": "Undo command that reapplies before/after SceneTransform JSON onto a NodeRef.",
+      "tags": [
+        "command",
+        "editor",
+        "undo"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/editor/editor_undo.cpp",
+      "lineRange": [
+        207,
+        237
+      ]
+    },
+    {
+      "id": "class:engine/editor/editor_undo.cpp:ComponentEditCommand",
+      "type": "class",
+      "name": "ComponentEditCommand",
+      "summary": "Undo command that deserializes a component snapshot and runs post-deserialize apply hooks.",
+      "tags": [
+        "command",
+        "editor",
+        "undo"
+      ],
+      "complexity": "moderate",
+      "filePath": "engine/editor/editor_undo.cpp",
+      "lineRange": [
+        239,
+        270
+      ]
+    },
+    {
+      "id": "class:engine/editor/editor_undo.cpp:CreateObjectCommand",
+      "type": "class",
+      "name": "CreateObjectCommand",
+      "summary": "Undo command that inserts or removes a prefab-serialized GameObject subtree.",
+      "tags": [
+        "command",
+        "editor",
+        "undo"
+      ],
+      "complexity": "moderate",
+      "filePath": "engine/editor/editor_undo.cpp",
+      "lineRange": [
+        272,
+        326
+      ]
+    },
+    {
+      "id": "class:engine/editor/editor_undo.cpp:DeleteObjectCommand",
+      "type": "class",
+      "name": "DeleteObjectCommand",
+      "summary": "Undo command that restores a deleted subtree from JSON or deletes it again.",
+      "tags": [
+        "command",
+        "editor",
+        "undo"
+      ],
+      "complexity": "moderate",
+      "filePath": "engine/editor/editor_undo.cpp",
+      "lineRange": [
+        328,
+        382
+      ]
+    },
+    {
+      "id": "class:engine/editor/editor_undo.cpp:RenameCommand",
+      "type": "class",
+      "name": "RenameCommand",
+      "summary": "Undo command that swaps a GameObject display name.",
+      "tags": [
+        "command",
+        "editor",
+        "undo"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/editor/editor_undo.cpp",
+      "lineRange": [
+        384,
+        401
+      ]
+    },
+    {
+      "id": "class:engine/editor/editor_undo.cpp:TagCommand",
+      "type": "class",
+      "name": "TagCommand",
+      "summary": "Undo command that restores a GameObject tag id.",
+      "tags": [
+        "command",
+        "editor",
+        "undo"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/editor/editor_undo.cpp",
+      "lineRange": [
+        403,
+        422
+      ]
+    },
+    {
+      "id": "class:engine/editor/editor_undo.cpp:ReparentCommand",
+      "type": "class",
+      "name": "ReparentCommand",
+      "summary": "Undo command that moves a node between parents and sibling indices.",
+      "tags": [
+        "command",
+        "editor",
+        "undo"
+      ],
+      "complexity": "moderate",
+      "filePath": "engine/editor/editor_undo.cpp",
+      "lineRange": [
+        424,
+        452
+      ]
+    },
+    {
+      "id": "class:engine/editor/editor_undo.cpp:AddComponentCommand",
+      "type": "class",
+      "name": "AddComponentCommand",
+      "summary": "Undo command that creates a component from JSON or removes it by type name.",
+      "tags": [
+        "command",
+        "editor",
+        "undo"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/editor/editor_undo.cpp",
+      "lineRange": [
+        482,
+        503
+      ]
+    },
+    {
+      "id": "class:engine/editor/editor_undo.cpp:RemoveComponentCommand",
+      "type": "class",
+      "name": "RemoveComponentCommand",
+      "summary": "Undo command that removes a component and can restore it from serialized JSON.",
+      "tags": [
+        "command",
+        "editor",
+        "undo"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/editor/editor_undo.cpp",
+      "lineRange": [
+        505,
+        526
+      ]
+    },
+    {
+      "id": "class:engine/editor/editor_undo.cpp:CreateUiCommand",
+      "type": "class",
+      "name": "CreateUiCommand",
+      "summary": "Undo command that creates or deletes a canvas UI element from a snapshot.",
+      "tags": [
+        "command",
+        "editor",
+        "ui"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/editor/editor_undo.cpp",
+      "lineRange": [
+        531,
+        558
+      ]
+    },
+    {
+      "id": "class:engine/editor/editor_undo.cpp:DeleteUiCommand",
+      "type": "class",
+      "name": "DeleteUiCommand",
+      "summary": "Undo command that restores or removes a deleted UI element.",
+      "tags": [
+        "command",
+        "editor",
+        "ui"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/editor/editor_undo.cpp",
+      "lineRange": [
+        560,
+        587
+      ]
+    },
+    {
+      "id": "class:engine/editor/editor_undo.cpp:UiEditCommand",
+      "type": "class",
+      "name": "UiEditCommand",
+      "summary": "Undo command that reapplies before/after JSON onto a UI element.",
+      "tags": [
+        "command",
+        "editor",
+        "ui"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/editor/editor_undo.cpp",
+      "lineRange": [
+        589,
+        615
+      ]
+    },
+    {
+      "id": "class:engine/editor/editor_undo.cpp:UiReorderCommand",
+      "type": "class",
+      "name": "UiReorderCommand",
+      "summary": "Undo command that restores a UI element sibling order.",
+      "tags": [
+        "command",
+        "editor",
+        "ui"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/editor/editor_undo.cpp",
+      "lineRange": [
+        617,
+        637
+      ]
+    },
+    {
+      "id": "function:engine/ecs/rigidbody_component.cpp:Serialize",
+      "type": "function",
+      "name": "Serialize",
+      "summary": "Persists gravity, kinematic, mass, drag, restitution, and friction settings.",
+      "tags": [
+        "serialization",
+        "physics"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/ecs/rigidbody_component.cpp",
+      "lineRange": [
+        23,
+        32
+      ]
+    },
+    {
+      "id": "function:engine/ecs/rigidbody_component.cpp:Deserialize",
+      "type": "function",
+      "name": "Deserialize",
+      "summary": "Restores Rigidbody fields from JSON and leaves ApplyToOwner to the caller.",
+      "tags": [
+        "serialization",
+        "physics"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/ecs/rigidbody_component.cpp",
+      "lineRange": [
+        34,
+        48
+      ]
+    },
+    {
+      "id": "function:engine/ecs/spot_light_component.cpp:Serialize",
+      "type": "function",
+      "name": "Serialize",
+      "summary": "Writes spot-light color, cone angles, range, attenuation, and shadow flag.",
+      "tags": [
+        "serialization",
+        "lighting"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/ecs/spot_light_component.cpp",
+      "lineRange": [
+        6,
+        19
+      ]
+    },
+    {
+      "id": "function:engine/ecs/spot_light_component.cpp:Deserialize",
+      "type": "function",
+      "name": "Deserialize",
+      "summary": "Parses SpotLight JSON including inner/outer cone degrees and attenuation.",
+      "tags": [
+        "serialization",
+        "lighting"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/ecs/spot_light_component.cpp",
+      "lineRange": [
+        21,
+        50
+      ]
+    },
+    {
+      "id": "function:engine/ecs/tag_registry.cpp:FindByName",
+      "type": "function",
+      "name": "FindByName",
+      "summary": "Looks up a tag id by case-insensitive trimmed name.",
+      "tags": [
+        "utility",
+        "registry"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/ecs/tag_registry.cpp",
+      "lineRange": [
+        76,
+        85
+      ]
+    },
+    {
+      "id": "function:engine/ecs/tag_registry.cpp:AddTag",
+      "type": "function",
+      "name": "AddTag",
+      "summary": "Appends a unique custom tag and returns its new id, or -1 on failure.",
+      "tags": [
+        "registry",
+        "mutation"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/ecs/tag_registry.cpp",
+      "lineRange": [
+        87,
+        96
+      ]
+    },
+    {
+      "id": "function:engine/ecs/tag_registry.cpp:LoadFromFile",
+      "type": "function",
+      "name": "LoadFromFile",
+      "summary": "Reloads built-in names and appends custom tags from rom/tags.json.",
+      "tags": [
+        "serialization",
+        "registry"
+      ],
+      "complexity": "moderate",
+      "filePath": "engine/ecs/tag_registry.cpp",
+      "lineRange": [
+        113,
+        147
+      ]
+    },
+    {
+      "id": "function:engine/ecs/tag_registry.cpp:SaveToFile",
+      "type": "function",
+      "name": "SaveToFile",
+      "summary": "Writes the current tag name list as a JSON tags array.",
+      "tags": [
+        "serialization",
+        "registry"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/ecs/tag_registry.cpp",
+      "lineRange": [
+        149,
+        158
+      ]
+    },
+    {
+      "id": "function:engine/editor/editor_undo.cpp:GetSiblingIndex",
+      "type": "function",
+      "name": "GetSiblingIndex",
+      "summary": "Returns a node's index among its parent children or among scene roots.",
+      "tags": [
+        "utility",
+        "editor",
+        "hierarchy"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/editor/editor_undo.cpp",
+      "lineRange": [
+        88,
+        104
+      ]
+    },
+    {
+      "id": "function:engine/editor/editor_undo.cpp:InsertNodeAt",
+      "type": "function",
+      "name": "InsertNodeAt",
+      "summary": "Inserts a GameObject at a sibling index under a parent or as a scene root.",
+      "tags": [
+        "editor",
+        "hierarchy"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/editor/editor_undo.cpp",
+      "lineRange": [
+        106,
+        118
+      ]
+    },
+    {
+      "id": "function:engine/editor/editor_undo.cpp:DetachNode",
+      "type": "function",
+      "name": "DetachNode",
+      "summary": "Removes a node from its parent or the scene-root list without destroying it.",
+      "tags": [
+        "editor",
+        "hierarchy"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/editor/editor_undo.cpp",
+      "lineRange": [
+        120,
+        140
+      ]
+    },
+    {
+      "id": "function:engine/editor/editor_undo.cpp:ApplyComponentPostDeserialize",
+      "type": "function",
+      "name": "ApplyComponentPostDeserialize",
+      "summary": "Reapplies collider, audio, effect, and billboard side effects after an undo deserialize.",
+      "tags": [
+        "editor",
+        "component",
+        "undo"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/editor/editor_undo.cpp",
+      "lineRange": [
+        142,
+        164
+      ]
+    },
+    {
+      "id": "function:engine/editor/editor_undo.cpp:ParseNodeNameFromJson",
+      "type": "function",
+      "name": "ParseNodeNameFromJson",
+      "summary": "Extracts a GameObject name from a prefab or scene-node JSON blob.",
+      "tags": [
+        "serialization",
+        "editor"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/editor/editor_undo.cpp",
+      "lineRange": [
+        166,
+        179
+      ]
+    },
+    {
+      "id": "function:engine/editor/editor_undo.cpp:RemoveComponentByTypeName",
+      "type": "function",
+      "name": "RemoveComponentByTypeName",
+      "summary": "Removes a typed component from a node using the editor type-name switch.",
+      "tags": [
+        "editor",
+        "component"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/editor/editor_undo.cpp",
+      "lineRange": [
+        454,
+        470
+      ]
+    },
+    {
+      "id": "function:engine/editor/editor_undo.cpp:EditorUndo_PushCreate",
+      "type": "function",
+      "name": "EditorUndo_PushCreate",
+      "summary": "Records a create-object undo command from a live node, parent, and insert index.",
+      "tags": [
+        "editor",
+        "undo",
+        "api"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/editor/editor_undo.cpp",
+      "lineRange": [
+        818,
+        827
+      ]
+    },
+    {
+      "id": "function:engine/editor/editor_undo.cpp:EditorUndo_EndComponentEdit",
+      "type": "function",
+      "name": "EditorUndo_EndComponentEdit",
+      "summary": "Commits or opens an ImGui component-edit session when widgets deactivate after edits.",
+      "tags": [
+        "editor",
+        "undo",
+        "api"
+      ],
+      "complexity": "complex",
+      "filePath": "engine/editor/editor_undo.cpp",
+      "lineRange": [
+        849,
+        915
+      ]
+    },
+    {
+      "id": "function:engine/editor/editor_undo.cpp:EditorUndo_PushAddComponent",
+      "type": "function",
+      "name": "EditorUndo_PushAddComponent",
+      "summary": "Pushes an add-component command after capturing the new component JSON.",
+      "tags": [
+        "editor",
+        "undo",
+        "api"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/editor/editor_undo.cpp",
+      "lineRange": [
+        945,
+        957
+      ]
+    },
+    {
+      "id": "function:engine/editor/editor_undo.cpp:EditorUndo_PushRemoveComponent",
+      "type": "function",
+      "name": "EditorUndo_PushRemoveComponent",
+      "summary": "Pushes a remove-component command after snapshotting the component JSON.",
+      "tags": [
+        "editor",
+        "undo",
+        "api"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/editor/editor_undo.cpp",
+      "lineRange": [
+        959,
+        972
+      ]
+    },
+    {
+      "id": "function:engine/editor/editor_undo.cpp:EditorUndo_EndUiEdit",
+      "type": "function",
+      "name": "EditorUndo_EndUiEdit",
+      "summary": "Commits an ImGui UI-element edit session into a UiEditCommand when values change.",
+      "tags": [
+        "editor",
+        "undo",
+        "ui"
+      ],
+      "complexity": "moderate",
+      "filePath": "engine/editor/editor_undo.cpp",
+      "lineRange": [
+        1013,
+        1056
+      ]
+    },
+    {
+      "id": "function:engine/editor/light_gizmo.cpp:VisitDraw",
+      "type": "function",
+      "name": "VisitDraw",
+      "summary": "Recursively draws gizmos for enabled directional, point, and spot lights on a node.",
+      "tags": [
+        "lighting",
+        "debug",
+        "editor"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/editor/light_gizmo.cpp",
+      "lineRange": [
+        28,
+        53
+      ]
+    },
+    {
+      "id": "function:engine/editor/light_gizmo.cpp:GetWorldPosition",
+      "type": "function",
+      "name": "GetWorldPosition",
+      "summary": "Returns a Transform world position used as point/spot light origin.",
+      "tags": [
+        "lighting",
+        "utility"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/editor/light_gizmo.cpp",
+      "lineRange": [
+        59,
+        65
+      ]
+    },
+    {
+      "id": "function:engine/editor/light_gizmo.cpp:GetShineDirectionWS",
+      "type": "function",
+      "name": "GetShineDirectionWS",
+      "summary": "Computes the world-space outgoing shine direction from a light Transform.",
+      "tags": [
+        "lighting",
+        "utility"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/editor/light_gizmo.cpp",
+      "lineRange": [
+        67,
+        79
+      ]
+    },
+    {
+      "id": "function:engine/editor/light_gizmo.cpp:DrawDirectional",
+      "type": "function",
+      "name": "DrawDirectional",
+      "summary": "Draws a directional-light arrow gizmo using a DebugDrawer.",
+      "tags": [
+        "lighting",
+        "debug"
+      ],
+      "complexity": "moderate",
+      "filePath": "engine/editor/light_gizmo.cpp",
+      "lineRange": [
+        86,
+        135
+      ]
+    },
+    {
+      "id": "function:engine/editor/light_gizmo.cpp:DrawPoint",
+      "type": "function",
+      "name": "DrawPoint",
+      "summary": "Draws a point-light range sphere gizmo.",
+      "tags": [
+        "lighting",
+        "debug"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/editor/light_gizmo.cpp",
+      "lineRange": [
+        137,
+        165
+      ]
+    },
+    {
+      "id": "function:engine/editor/light_gizmo.cpp:DrawSpot",
+      "type": "function",
+      "name": "DrawSpot",
+      "summary": "Draws a spot-light cone gizmo from inner/outer angles and range.",
+      "tags": [
+        "lighting",
+        "debug"
+      ],
+      "complexity": "moderate",
+      "filePath": "engine/editor/light_gizmo.cpp",
+      "lineRange": [
+        167,
+        219
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:engine/ecs/rigidbody_component.h",
+      "target": "class:engine/ecs/rigidbody_component.h:RigidbodyComponent",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/rigidbody_component.h",
+      "target": "class:engine/ecs/rigidbody_component.h:RigidbodyComponent",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/spot_light_component.h",
+      "target": "class:engine/ecs/spot_light_component.h:SpotLightComponent",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/spot_light_component.h",
+      "target": "class:engine/ecs/spot_light_component.h:SpotLightComponent",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/tag_registry.h",
+      "target": "class:engine/ecs/tag_registry.h:TagRegistry",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/tag_registry.h",
+      "target": "class:engine/ecs/tag_registry.h:TagRegistry",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/editor/editor_undo.cpp",
+      "target": "class:engine/editor/editor_undo.cpp:TransformCommand",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/editor_undo.cpp",
+      "target": "class:engine/editor/editor_undo.cpp:ComponentEditCommand",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/editor_undo.cpp",
+      "target": "class:engine/editor/editor_undo.cpp:CreateObjectCommand",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/editor_undo.cpp",
+      "target": "class:engine/editor/editor_undo.cpp:DeleteObjectCommand",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/editor_undo.cpp",
+      "target": "class:engine/editor/editor_undo.cpp:RenameCommand",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/editor_undo.cpp",
+      "target": "class:engine/editor/editor_undo.cpp:TagCommand",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/editor_undo.cpp",
+      "target": "class:engine/editor/editor_undo.cpp:ReparentCommand",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/editor_undo.cpp",
+      "target": "class:engine/editor/editor_undo.cpp:AddComponentCommand",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/editor_undo.cpp",
+      "target": "class:engine/editor/editor_undo.cpp:RemoveComponentCommand",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/editor_undo.cpp",
+      "target": "class:engine/editor/editor_undo.cpp:CreateUiCommand",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/editor_undo.cpp",
+      "target": "class:engine/editor/editor_undo.cpp:DeleteUiCommand",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/editor_undo.cpp",
+      "target": "class:engine/editor/editor_undo.cpp:UiEditCommand",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/editor_undo.cpp",
+      "target": "class:engine/editor/editor_undo.cpp:UiReorderCommand",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/rigidbody_component.cpp",
+      "target": "function:engine/ecs/rigidbody_component.cpp:Serialize",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/rigidbody_component.cpp",
+      "target": "function:engine/ecs/rigidbody_component.cpp:Deserialize",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/spot_light_component.cpp",
+      "target": "function:engine/ecs/spot_light_component.cpp:Serialize",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/spot_light_component.cpp",
+      "target": "function:engine/ecs/spot_light_component.cpp:Deserialize",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/tag_registry.cpp",
+      "target": "function:engine/ecs/tag_registry.cpp:FindByName",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/tag_registry.cpp",
+      "target": "function:engine/ecs/tag_registry.cpp:AddTag",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/tag_registry.cpp",
+      "target": "function:engine/ecs/tag_registry.cpp:LoadFromFile",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/tag_registry.cpp",
+      "target": "function:engine/ecs/tag_registry.cpp:SaveToFile",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/editor_undo.cpp",
+      "target": "function:engine/editor/editor_undo.cpp:GetSiblingIndex",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/editor_undo.cpp",
+      "target": "function:engine/editor/editor_undo.cpp:InsertNodeAt",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/editor_undo.cpp",
+      "target": "function:engine/editor/editor_undo.cpp:DetachNode",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/editor_undo.cpp",
+      "target": "function:engine/editor/editor_undo.cpp:ApplyComponentPostDeserialize",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/editor_undo.cpp",
+      "target": "function:engine/editor/editor_undo.cpp:ParseNodeNameFromJson",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/editor_undo.cpp",
+      "target": "function:engine/editor/editor_undo.cpp:RemoveComponentByTypeName",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/editor_undo.cpp",
+      "target": "function:engine/editor/editor_undo.cpp:EditorUndo_PushCreate",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/editor_undo.cpp",
+      "target": "function:engine/editor/editor_undo.cpp:EditorUndo_PushCreate",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/editor/editor_undo.cpp",
+      "target": "function:engine/editor/editor_undo.cpp:EditorUndo_EndComponentEdit",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/editor_undo.cpp",
+      "target": "function:engine/editor/editor_undo.cpp:EditorUndo_EndComponentEdit",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/editor/editor_undo.cpp",
+      "target": "function:engine/editor/editor_undo.cpp:EditorUndo_PushAddComponent",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/editor_undo.cpp",
+      "target": "function:engine/editor/editor_undo.cpp:EditorUndo_PushAddComponent",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/editor/editor_undo.cpp",
+      "target": "function:engine/editor/editor_undo.cpp:EditorUndo_PushRemoveComponent",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/editor_undo.cpp",
+      "target": "function:engine/editor/editor_undo.cpp:EditorUndo_PushRemoveComponent",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/editor/editor_undo.cpp",
+      "target": "function:engine/editor/editor_undo.cpp:EditorUndo_EndUiEdit",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/editor_undo.cpp",
+      "target": "function:engine/editor/editor_undo.cpp:EditorUndo_EndUiEdit",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/editor/light_gizmo.cpp",
+      "target": "function:engine/editor/light_gizmo.cpp:VisitDraw",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/light_gizmo.cpp",
+      "target": "function:engine/editor/light_gizmo.cpp:GetWorldPosition",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/light_gizmo.cpp",
+      "target": "function:engine/editor/light_gizmo.cpp:GetWorldPosition",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/editor/light_gizmo.cpp",
+      "target": "function:engine/editor/light_gizmo.cpp:GetShineDirectionWS",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/light_gizmo.cpp",
+      "target": "function:engine/editor/light_gizmo.cpp:GetShineDirectionWS",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/editor/light_gizmo.cpp",
+      "target": "function:engine/editor/light_gizmo.cpp:DrawDirectional",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/light_gizmo.cpp",
+      "target": "function:engine/editor/light_gizmo.cpp:DrawDirectional",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/editor/light_gizmo.cpp",
+      "target": "function:engine/editor/light_gizmo.cpp:DrawPoint",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/light_gizmo.cpp",
+      "target": "function:engine/editor/light_gizmo.cpp:DrawPoint",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/editor/light_gizmo.cpp",
+      "target": "function:engine/editor/light_gizmo.cpp:DrawSpot",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/light_gizmo.cpp",
+      "target": "function:engine/editor/light_gizmo.cpp:DrawSpot",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/rigidbody_component.cpp",
+      "target": "file:engine/ecs/rigidbody_component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/ecs/rigidbody_component.h",
+      "target": "file:engine/ecs/component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/ecs/rigidbody_component.h",
+      "target": "file:engine/physics/core/rigidbody.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/ecs/spot_light_component.cpp",
+      "target": "file:engine/ecs/spot_light_component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/ecs/spot_light_component.h",
+      "target": "file:engine/ecs/component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/ecs/tag_registry.cpp",
+      "target": "file:engine/ecs/game_object.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/ecs/tag_registry.cpp",
+      "target": "file:engine/ecs/tag_registry.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/editor/editor_undo.cpp",
+      "target": "file:engine/core/engine_gui.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/editor/editor_undo.cpp",
+      "target": "file:engine/core/engine_gui_internal.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/editor/editor_undo.cpp",
+      "target": "file:engine/ecs/audio_component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/editor/editor_undo.cpp",
+      "target": "file:engine/ecs/audio_listener_component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/editor/editor_undo.cpp",
+      "target": "file:engine/ecs/billboard_component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/editor/editor_undo.cpp",
+      "target": "file:engine/ecs/camera_component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/editor/editor_undo.cpp",
+      "target": "file:engine/ecs/collider_component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/editor/editor_undo.cpp",
+      "target": "file:engine/ecs/component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/editor/editor_undo.cpp",
+      "target": "file:engine/ecs/component_factory.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/editor/editor_undo.cpp",
+      "target": "file:engine/ecs/directional_light_component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/editor/editor_undo.cpp",
+      "target": "file:engine/ecs/effect_component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/editor/editor_undo.cpp",
+      "target": "file:engine/ecs/game_object.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/editor/editor_undo.cpp",
+      "target": "file:engine/ecs/material_component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/editor/editor_undo.cpp",
+      "target": "file:engine/ecs/point_light_component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/editor/editor_undo.cpp",
+      "target": "file:engine/ecs/prefab_serializer.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/editor/editor_undo.cpp",
+      "target": "file:engine/ecs/rigidbody_component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/editor/editor_undo.cpp",
+      "target": "file:engine/ecs/spot_light_component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/editor/editor_undo.cpp",
+      "target": "file:engine/ecs/transform.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/editor/editor_undo.cpp",
+      "target": "file:engine/ecs/visual_component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/editor/editor_undo.cpp",
+      "target": "file:engine/editor/editor_undo.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/editor/editor_undo.cpp",
+      "target": "file:engine/scene/scene_loader.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/editor/editor_undo.cpp",
+      "target": "file:engine/scripting/script_component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/editor/editor_undo.cpp",
+      "target": "file:engine/ui/scene_canvas.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/editor/editor_undo.cpp",
+      "target": "file:engine/ui/ui_element.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/editor/light_gizmo.cpp",
+      "target": "file:engine/debug_draw/debug_drawer.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/editor/light_gizmo.cpp",
+      "target": "file:engine/ecs/directional_light_component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/editor/light_gizmo.cpp",
+      "target": "file:engine/ecs/game_object.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/editor/light_gizmo.cpp",
+      "target": "file:engine/ecs/point_light_component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/editor/light_gizmo.cpp",
+      "target": "file:engine/ecs/spot_light_component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/editor/light_gizmo.cpp",
+      "target": "file:engine/ecs/transform.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/editor/light_gizmo.cpp",
+      "target": "file:engine/editor/light_gizmo.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "class:engine/ecs/rigidbody_component.h:RigidbodyComponent",
+      "target": "file:engine/ecs/component.h",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:engine/ecs/spot_light_component.h:SpotLightComponent",
+      "target": "file:engine/ecs/component.h",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:engine/editor/editor_undo.cpp:TransformCommand",
+      "target": "class:engine/editor/editor_undo.h:EditorCommand",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:engine/editor/editor_undo.cpp:ComponentEditCommand",
+      "target": "class:engine/editor/editor_undo.h:EditorCommand",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:engine/editor/editor_undo.cpp:CreateObjectCommand",
+      "target": "class:engine/editor/editor_undo.h:EditorCommand",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:engine/editor/editor_undo.cpp:DeleteObjectCommand",
+      "target": "class:engine/editor/editor_undo.h:EditorCommand",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:engine/editor/editor_undo.cpp:RenameCommand",
+      "target": "class:engine/editor/editor_undo.h:EditorCommand",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:engine/editor/editor_undo.cpp:TagCommand",
+      "target": "class:engine/editor/editor_undo.h:EditorCommand",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:engine/editor/editor_undo.cpp:ReparentCommand",
+      "target": "class:engine/editor/editor_undo.h:EditorCommand",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:engine/editor/editor_undo.cpp:AddComponentCommand",
+      "target": "class:engine/editor/editor_undo.h:EditorCommand",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:engine/editor/editor_undo.cpp:RemoveComponentCommand",
+      "target": "class:engine/editor/editor_undo.h:EditorCommand",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:engine/editor/editor_undo.cpp:CreateUiCommand",
+      "target": "class:engine/editor/editor_undo.h:EditorCommand",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:engine/editor/editor_undo.cpp:DeleteUiCommand",
+      "target": "class:engine/editor/editor_undo.h:EditorCommand",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:engine/editor/editor_undo.cpp:UiEditCommand",
+      "target": "class:engine/editor/editor_undo.h:EditorCommand",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:engine/editor/editor_undo.cpp:UiReorderCommand",
+      "target": "class:engine/editor/editor_undo.h:EditorCommand",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "function:engine/editor/light_gizmo.cpp:VisitDraw",
+      "target": "file:engine/ecs/directional_light_component.h",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/editor/light_gizmo.cpp:VisitDraw",
+      "target": "file:engine/ecs/point_light_component.h",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/editor/light_gizmo.cpp:VisitDraw",
+      "target": "file:engine/ecs/spot_light_component.h",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/editor/editor_undo.cpp:ApplyComponentPostDeserialize",
+      "target": "file:engine/ecs/collider_component.h",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/editor/editor_undo.cpp:ApplyComponentPostDeserialize",
+      "target": "file:engine/ecs/audio_component.h",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/editor/editor_undo.cpp:ApplyComponentPostDeserialize",
+      "target": "file:engine/ecs/effect_component.h",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/editor/editor_undo.cpp:ApplyComponentPostDeserialize",
+      "target": "file:engine/ecs/billboard_component.h",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:engine/editor/editor_undo.cpp:CreateObjectCommand",
+      "target": "function:engine/ecs/prefab_serializer.h:Deserialize",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:engine/editor/editor_undo.cpp:DeleteObjectCommand",
+      "target": "function:engine/ecs/prefab_serializer.h:Deserialize",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:engine/editor/editor_undo.cpp:AddComponentCommand",
+      "target": "file:engine/ecs/component_factory.h",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/editor/editor_undo.cpp:RemoveComponentByTypeName",
+      "target": "class:engine/ecs/transform.h:Transform",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

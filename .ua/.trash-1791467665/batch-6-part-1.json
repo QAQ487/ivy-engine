@@ -1,0 +1,1797 @@
+{
+  "nodes": [
+    {
+      "id": "file:engine/rendering/environment/skybox.cpp",
+      "type": "file",
+      "name": "skybox.cpp",
+      "filePath": "engine/rendering/environment/skybox.cpp",
+      "summary": "Implements cubemap skybox rendering: loads compiled shaders, builds a unit cube, and draws a camera-locked environment with tint and exposure from render settings.",
+      "tags": [
+        "rendering",
+        "skybox",
+        "environment",
+        "d3d11"
+      ],
+      "complexity": "complex",
+      "languageNotes": "Strips view translation so the cube stays camera-centered; uses a front-face cull and read-only depth so the skybox sits behind the scene."
+    },
+    {
+      "id": "file:engine/rendering/model/model_util.cpp",
+      "type": "file",
+      "name": "model_util.cpp",
+      "filePath": "engine/rendering/model/model_util.cpp",
+      "summary": "Shared model import helpers: WIC texture loading with an SRV cache, MTL/FBX diffuse texture resolution, and FBX skinned-mesh evaluation via a process-wide FbxManager.",
+      "tags": [
+        "rendering",
+        "model",
+        "texture-cache",
+        "fbx",
+        "utility"
+      ],
+      "complexity": "complex",
+      "languageNotes": "Caches WIC-decoded SRVs by wide path; FbxShared owns the SDK manager/IO settings for the process lifetime."
+    },
+    {
+      "id": "file:engine/rendering/particle/particle_system.cpp",
+      "type": "file",
+      "name": "particle_system.cpp",
+      "filePath": "engine/rendering/particle/particle_system.cpp",
+      "summary": "Implements the CPU particle pool, emitter simulation (shapes, lifetime color/size, gravity), and GPU billboard instancing with additive or alpha blending.",
+      "tags": [
+        "rendering",
+        "particles",
+        "gpu-instancing",
+        "service"
+      ],
+      "complexity": "complex",
+      "languageNotes": "ParticleSystem is a singleton; ParticleRenderer_* builds instanced billboard meshes and binds blend states per emitter."
+    },
+    {
+      "id": "file:engine/rendering/sprite/line_sprite.cpp",
+      "type": "file",
+      "name": "line_sprite.cpp",
+      "filePath": "engine/rendering/sprite/line_sprite.cpp",
+      "summary": "Draws a camera-facing world-space quad stretched between two points, used for ropes and trails with depth testing enabled.",
+      "tags": [
+        "rendering",
+        "sprite",
+        "billboard",
+        "debug-draw"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:engine/rendering/sprite/line_sprite.h",
+      "type": "file",
+      "name": "line_sprite.h",
+      "filePath": "engine/rendering/sprite/line_sprite.h",
+      "summary": "Declares LineSprite initialize/finalize/draw for a depth-tested, camera-facing quad between two world points.",
+      "tags": [
+        "rendering",
+        "sprite",
+        "type-definition",
+        "api-handler"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/rendering/environment/skybox.cpp:LoadCompiledShader",
+      "type": "function",
+      "name": "LoadCompiledShader",
+      "filePath": "engine/rendering/environment/skybox.cpp",
+      "lineRange": [
+        43,
+        63
+      ],
+      "summary": "Reads a compiled shader blob from disk and creates the skybox vertex and pixel shaders.",
+      "tags": [
+        "shader-loader",
+        "d3d11",
+        "utility"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:engine/rendering/environment/skybox.cpp:Skybox_Initialize",
+      "type": "function",
+      "name": "Skybox_Initialize",
+      "filePath": "engine/rendering/environment/skybox.cpp",
+      "lineRange": [
+        70,
+        159
+      ],
+      "summary": "Creates skybox shaders, cube geometry, constant buffers, sampler, and raster/depth states from the D3D11 device.",
+      "tags": [
+        "initialization",
+        "skybox",
+        "d3d11"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:engine/rendering/environment/skybox.cpp:Skybox_Finalize",
+      "type": "function",
+      "name": "Skybox_Finalize",
+      "filePath": "engine/rendering/environment/skybox.cpp",
+      "lineRange": [
+        161,
+        177
+      ],
+      "summary": "Releases skybox GPU objects and clears the cached cubemap path.",
+      "tags": [
+        "shutdown",
+        "skybox",
+        "resource-lifetime"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/rendering/environment/skybox.cpp:Skybox_ReloadFromSettings",
+      "type": "function",
+      "name": "Skybox_ReloadFromSettings",
+      "filePath": "engine/rendering/environment/skybox.cpp",
+      "lineRange": [
+        179,
+        197
+      ],
+      "summary": "Loads or clears the skybox cubemap from RenderSettings, converting the path with ToWString.",
+      "tags": [
+        "skybox",
+        "settings",
+        "cubemap"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/rendering/environment/skybox.cpp:Skybox_Draw",
+      "type": "function",
+      "name": "Skybox_Draw",
+      "filePath": "engine/rendering/environment/skybox.cpp",
+      "lineRange": [
+        199,
+        291
+      ],
+      "summary": "Draws the camera-locked cube with current view/projection, tint, and exposure, restoring prior D3D state afterward.",
+      "tags": [
+        "skybox",
+        "draw",
+        "d3d11"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:engine/rendering/model/model_util.cpp:ModelUtil_ReleaseTextureCache",
+      "type": "function",
+      "name": "ModelUtil_ReleaseTextureCache",
+      "filePath": "engine/rendering/model/model_util.cpp",
+      "lineRange": [
+        37,
+        42
+      ],
+      "summary": "Releases every cached model texture SRV; must run before the D3D11 device is destroyed.",
+      "tags": [
+        "texture-cache",
+        "shutdown",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/rendering/model/model_util.cpp:Trim",
+      "type": "function",
+      "name": "Trim",
+      "filePath": "engine/rendering/model/model_util.cpp",
+      "lineRange": [
+        45,
+        49
+      ],
+      "summary": "Trims leading and trailing whitespace from a std::string in place.",
+      "tags": [
+        "utility",
+        "string"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/rendering/model/model_util.cpp:Split",
+      "type": "function",
+      "name": "Split",
+      "filePath": "engine/rendering/model/model_util.cpp",
+      "lineRange": [
+        50,
+        56
+      ],
+      "summary": "Splits a string on a separator character into a vector of tokens.",
+      "tags": [
+        "utility",
+        "string"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/rendering/model/model_util.cpp:WideToUTF8",
+      "type": "function",
+      "name": "WideToUTF8",
+      "filePath": "engine/rendering/model/model_util.cpp",
+      "lineRange": [
+        57,
+        63
+      ],
+      "summary": "Converts a wide Windows path to a UTF-8 std::string.",
+      "tags": [
+        "utility",
+        "encoding"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/rendering/model/model_util.cpp:Utf8ToWide",
+      "type": "function",
+      "name": "Utf8ToWide",
+      "filePath": "engine/rendering/model/model_util.cpp",
+      "lineRange": [
+        64,
+        71
+      ],
+      "summary": "Converts a UTF-8 C string to a std::wstring.",
+      "tags": [
+        "utility",
+        "encoding"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/rendering/model/model_util.cpp:DirnameW",
+      "type": "function",
+      "name": "DirnameW",
+      "filePath": "engine/rendering/model/model_util.cpp",
+      "lineRange": [
+        72,
+        76
+      ],
+      "summary": "Returns the parent directory of a wide path.",
+      "tags": [
+        "utility",
+        "path"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/rendering/model/model_util.cpp:JoinPathW",
+      "type": "function",
+      "name": "JoinPathW",
+      "filePath": "engine/rendering/model/model_util.cpp",
+      "lineRange": [
+        77,
+        83
+      ],
+      "summary": "Joins a wide directory and file name, inserting a separator when needed.",
+      "tags": [
+        "utility",
+        "path"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/rendering/model/model_util.cpp:IsAbsolutePathW",
+      "type": "function",
+      "name": "IsAbsolutePathW",
+      "filePath": "engine/rendering/model/model_util.cpp",
+      "lineRange": [
+        84,
+        88
+      ],
+      "summary": "Reports whether a wide path is absolute (drive or UNC).",
+      "tags": [
+        "utility",
+        "path"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/rendering/model/model_util.cpp:LoadTextureWIC_Internal",
+      "type": "function",
+      "name": "LoadTextureWIC_Internal",
+      "filePath": "engine/rendering/model/model_util.cpp",
+      "lineRange": [
+        109,
+        240
+      ],
+      "summary": "Decodes an image with WIC, creates a mipmapped D3D11 SRV, and inserts it into the path cache.",
+      "tags": [
+        "texture-loader",
+        "wic",
+        "d3d11"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:engine/rendering/model/model_util.cpp:LoadTextureWIC_SRV",
+      "type": "function",
+      "name": "LoadTextureWIC_SRV",
+      "filePath": "engine/rendering/model/model_util.cpp",
+      "lineRange": [
+        242,
+        245
+      ],
+      "summary": "Public wrapper that loads or returns a cached WIC texture SRV.",
+      "tags": [
+        "texture-loader",
+        "cache",
+        "api-handler"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/rendering/model/model_util.cpp:TryLoadMTLTexture_SRV",
+      "type": "function",
+      "name": "TryLoadMTLTexture_SRV",
+      "filePath": "engine/rendering/model/model_util.cpp",
+      "lineRange": [
+        317,
+        378
+      ],
+      "summary": "Parses an MTL file for map_Kd and loads the diffuse texture plus UV scale/offset/clamp flags.",
+      "tags": [
+        "mtl",
+        "texture-loader",
+        "model"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:engine/rendering/model/model_util.cpp:FindFirstDiffuseFileTexture",
+      "type": "function",
+      "name": "FindFirstDiffuseFileTexture",
+      "filePath": "engine/rendering/model/model_util.cpp",
+      "lineRange": [
+        381,
+        492
+      ],
+      "summary": "Walks an FBX node material graph to find the first diffuse file texture and its UV set.",
+      "tags": [
+        "fbx",
+        "texture-loader",
+        "model"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:engine/rendering/model/model_util.cpp:TransformNormal_IT",
+      "type": "function",
+      "name": "TransformNormal_IT",
+      "filePath": "engine/rendering/model/model_util.cpp",
+      "lineRange": [
+        495,
+        502
+      ],
+      "summary": "Transforms a normal by an inverse-transpose FBX matrix.",
+      "tags": [
+        "math",
+        "fbx",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/rendering/model/model_util.cpp:HasNegativeDeterminant",
+      "type": "function",
+      "name": "HasNegativeDeterminant",
+      "filePath": "engine/rendering/model/model_util.cpp",
+      "lineRange": [
+        503,
+        503
+      ],
+      "summary": "Returns whether an FBX matrix has a negative determinant (winding flip).",
+      "tags": [
+        "math",
+        "fbx",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/rendering/model/model_util.cpp:FbxShared",
+      "type": "function",
+      "name": "FbxShared",
+      "filePath": "engine/rendering/model/model_util.cpp",
+      "lineRange": [
+        506,
+        510
+      ],
+      "summary": "Constructs the process-wide FBX manager and IO settings.",
+      "tags": [
+        "fbx",
+        "singleton",
+        "initialization"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/rendering/model/model_util.cpp:~FbxShared",
+      "type": "function",
+      "name": "~FbxShared",
+      "filePath": "engine/rendering/model/model_util.cpp",
+      "lineRange": [
+        511,
+        514
+      ],
+      "summary": "Destroys the shared FBX manager on process teardown.",
+      "tags": [
+        "fbx",
+        "shutdown"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/rendering/model/model_util.cpp:EnumerateSkinnedMeshes",
+      "type": "function",
+      "name": "EnumerateSkinnedMeshes",
+      "filePath": "engine/rendering/model/model_util.cpp",
+      "lineRange": [
+        518,
+        527
+      ],
+      "summary": "Recursively collects FBX meshes that have skin deformers.",
+      "tags": [
+        "fbx",
+        "skinning",
+        "traversal"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/rendering/model/model_util.cpp:ComputeSkinnedCP_ForMesh",
+      "type": "function",
+      "name": "ComputeSkinnedCP_ForMesh",
+      "filePath": "engine/rendering/model/model_util.cpp",
+      "lineRange": [
+        530,
+        649
+      ],
+      "summary": "Evaluates an FBX skin at a time and writes deformed control-point positions and normals.",
+      "tags": [
+        "fbx",
+        "skinning",
+        "animation"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:engine/rendering/particle/particle_system.cpp:LoadCompiledShader",
+      "type": "function",
+      "name": "LoadCompiledShader",
+      "filePath": "engine/rendering/particle/particle_system.cpp",
+      "lineRange": [
+        51,
+        60
+      ],
+      "summary": "Loads a compiled particle shader blob from disk for the billboard renderer.",
+      "tags": [
+        "shader-loader",
+        "particles",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/rendering/particle/particle_system.cpp:CreateBlendState",
+      "type": "function",
+      "name": "CreateBlendState",
+      "filePath": "engine/rendering/particle/particle_system.cpp",
+      "lineRange": [
+        96,
+        107
+      ],
+      "summary": "Creates additive or alpha D3D11 blend states used by particle billboards.",
+      "tags": [
+        "d3d11",
+        "blend",
+        "particles"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/rendering/particle/particle_system.cpp:Reset",
+      "type": "function",
+      "name": "Reset",
+      "filePath": "engine/rendering/particle/particle_system.cpp",
+      "lineRange": [
+        110,
+        114
+      ],
+      "summary": "Clears a ParticlePool or the ParticleSystem emitter list so simulation can restart.",
+      "tags": [
+        "particles",
+        "lifecycle"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/rendering/particle/particle_system.cpp:Spawn",
+      "type": "function",
+      "name": "Spawn",
+      "filePath": "engine/rendering/particle/particle_system.cpp",
+      "lineRange": [
+        116,
+        142
+      ],
+      "summary": "Allocates a live particle in the pool with position, velocity, size, color, and lifetime.",
+      "tags": [
+        "particles",
+        "spawn"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:engine/rendering/particle/particle_system.cpp:Tick",
+      "type": "function",
+      "name": "Tick",
+      "filePath": "engine/rendering/particle/particle_system.cpp",
+      "lineRange": [
+        144,
+        169
+      ],
+      "summary": "Advances particle or emitter simulation: aging, gravity, emission, and compacting dead particles.",
+      "tags": [
+        "particles",
+        "simulation",
+        "update"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:engine/rendering/particle/particle_system.cpp:Compact",
+      "type": "function",
+      "name": "Compact",
+      "filePath": "engine/rendering/particle/particle_system.cpp",
+      "lineRange": [
+        171,
+        184
+      ],
+      "summary": "Packs live particles to the front of the pool after deaths.",
+      "tags": [
+        "particles",
+        "memory"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/rendering/particle/particle_system.cpp:CopyParticle",
+      "type": "function",
+      "name": "CopyParticle",
+      "filePath": "engine/rendering/particle/particle_system.cpp",
+      "lineRange": [
+        186,
+        200
+      ],
+      "summary": "Copies all per-particle attributes from one pool slot to another.",
+      "tags": [
+        "particles",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/rendering/particle/particle_system.cpp:ParticleEmitter",
+      "type": "function",
+      "name": "ParticleEmitter",
+      "filePath": "engine/rendering/particle/particle_system.cpp",
+      "lineRange": [
+        202,
+        205
+      ],
+      "summary": "Constructs an emitter, assigns its id, and applies the initial ParticleEmitterConfig.",
+      "tags": [
+        "particles",
+        "factory",
+        "lifecycle"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/rendering/particle/particle_system.cpp:SetConfig",
+      "type": "function",
+      "name": "SetConfig",
+      "filePath": "engine/rendering/particle/particle_system.cpp",
+      "lineRange": [
+        207,
+        218
+      ],
+      "summary": "Applies emitter configuration and resizes/resets the underlying particle pool.",
+      "tags": [
+        "particles",
+        "configuration"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/rendering/particle/particle_system.cpp:Render",
+      "type": "function",
+      "name": "Render",
+      "filePath": "engine/rendering/particle/particle_system.cpp",
+      "lineRange": [
+        244,
+        246
+      ],
+      "summary": "Forwards alive emitters to the GPU billboard renderer.",
+      "tags": [
+        "particles",
+        "draw"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/rendering/particle/particle_system.cpp:Stop",
+      "type": "function",
+      "name": "Stop",
+      "filePath": "engine/rendering/particle/particle_system.cpp",
+      "lineRange": [
+        248,
+        251
+      ],
+      "summary": "Stops emission and optionally marks the emitter to destroy when empty.",
+      "tags": [
+        "particles",
+        "lifecycle"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/rendering/particle/particle_system.cpp:Emit",
+      "type": "function",
+      "name": "Emit",
+      "filePath": "engine/rendering/particle/particle_system.cpp",
+      "lineRange": [
+        253,
+        286
+      ],
+      "summary": "Spawns particles from the emitter shape using random position, direction, and lifetime ranges.",
+      "tags": [
+        "particles",
+        "spawn",
+        "emission"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:engine/rendering/particle/particle_system.cpp:RandomShapePosition",
+      "type": "function",
+      "name": "RandomShapePosition",
+      "filePath": "engine/rendering/particle/particle_system.cpp",
+      "lineRange": [
+        288,
+        307
+      ],
+      "summary": "Samples a spawn position inside the configured sphere, cone, box, or edge shape.",
+      "tags": [
+        "particles",
+        "math",
+        "random"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:engine/rendering/particle/particle_system.cpp:RandomDirection",
+      "type": "function",
+      "name": "RandomDirection",
+      "filePath": "engine/rendering/particle/particle_system.cpp",
+      "lineRange": [
+        309,
+        322
+      ],
+      "summary": "Samples an emission direction for the current shape, falling back to up if degenerate.",
+      "tags": [
+        "particles",
+        "math",
+        "random"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/rendering/particle/particle_system.cpp:Initialize",
+      "type": "function",
+      "name": "Initialize",
+      "filePath": "engine/rendering/particle/particle_system.cpp",
+      "lineRange": [
+        358,
+        360
+      ],
+      "summary": "Initializes the ParticleSystem singleton by creating the GPU billboard renderer.",
+      "tags": [
+        "particles",
+        "initialization",
+        "singleton"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/rendering/particle/particle_system.cpp:Finalize",
+      "type": "function",
+      "name": "Finalize",
+      "filePath": "engine/rendering/particle/particle_system.cpp",
+      "lineRange": [
+        362,
+        365
+      ],
+      "summary": "Resets emitters and releases particle renderer GPU resources.",
+      "tags": [
+        "particles",
+        "shutdown"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/rendering/particle/particle_system.cpp:CreateEmitter",
+      "type": "function",
+      "name": "CreateEmitter",
+      "filePath": "engine/rendering/particle/particle_system.cpp",
+      "lineRange": [
+        393,
+        397
+      ],
+      "summary": "Allocates a new ParticleEmitter and returns its id.",
+      "tags": [
+        "particles",
+        "factory",
+        "api-handler"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/rendering/particle/particle_system.cpp:SetEmitterPosition",
+      "type": "function",
+      "name": "SetEmitterPosition",
+      "filePath": "engine/rendering/particle/particle_system.cpp",
+      "lineRange": [
+        399,
+        402
+      ],
+      "summary": "Moves a live emitter to a world position.",
+      "tags": [
+        "particles",
+        "api-handler"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/rendering/particle/particle_system.cpp:SetEmitterEmitting",
+      "type": "function",
+      "name": "SetEmitterEmitting",
+      "filePath": "engine/rendering/particle/particle_system.cpp",
+      "lineRange": [
+        404,
+        407
+      ],
+      "summary": "Toggles whether a named emitter is currently emitting.",
+      "tags": [
+        "particles",
+        "api-handler"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/rendering/particle/particle_system.cpp:StopEmitter",
+      "type": "function",
+      "name": "StopEmitter",
+      "filePath": "engine/rendering/particle/particle_system.cpp",
+      "lineRange": [
+        409,
+        412
+      ],
+      "summary": "Stops a named emitter, optionally destroying it when empty.",
+      "tags": [
+        "particles",
+        "api-handler"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/rendering/particle/particle_system.cpp:DestroyEmitter",
+      "type": "function",
+      "name": "DestroyEmitter",
+      "filePath": "engine/rendering/particle/particle_system.cpp",
+      "lineRange": [
+        414,
+        421
+      ],
+      "summary": "Removes an emitter from the system immediately.",
+      "tags": [
+        "particles",
+        "api-handler"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/rendering/particle/particle_system.cpp:SetEmitterConfig",
+      "type": "function",
+      "name": "SetEmitterConfig",
+      "filePath": "engine/rendering/particle/particle_system.cpp",
+      "lineRange": [
+        423,
+        426
+      ],
+      "summary": "Replaces the configuration of an existing emitter.",
+      "tags": [
+        "particles",
+        "configuration",
+        "api-handler"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/rendering/particle/particle_system.cpp:SpawnParticle",
+      "type": "function",
+      "name": "SpawnParticle",
+      "filePath": "engine/rendering/particle/particle_system.cpp",
+      "lineRange": [
+        428,
+        452
+      ],
+      "summary": "Manually injects one particle into a named emitter pool.",
+      "tags": [
+        "particles",
+        "spawn",
+        "api-handler"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:engine/rendering/particle/particle_system.cpp:ParticleRenderer_Initialize",
+      "type": "function",
+      "name": "ParticleRenderer_Initialize",
+      "filePath": "engine/rendering/particle/particle_system.cpp",
+      "lineRange": [
+        462,
+        555
+      ],
+      "summary": "Creates particle billboard shaders, input layout, instance buffers, and blend states.",
+      "tags": [
+        "particles",
+        "initialization",
+        "d3d11"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:engine/rendering/particle/particle_system.cpp:ParticleRenderer_Finalize",
+      "type": "function",
+      "name": "ParticleRenderer_Finalize",
+      "filePath": "engine/rendering/particle/particle_system.cpp",
+      "lineRange": [
+        557,
+        572
+      ],
+      "summary": "Releases particle renderer shaders, buffers, and blend states.",
+      "tags": [
+        "particles",
+        "shutdown",
+        "d3d11"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/rendering/particle/particle_system.cpp:ParticleRenderer_RenderEmitter",
+      "type": "function",
+      "name": "ParticleRenderer_RenderEmitter",
+      "filePath": "engine/rendering/particle/particle_system.cpp",
+      "lineRange": [
+        574,
+        708
+      ],
+      "summary": "Uploads instance data for an emitter and draws camera-facing billboards with the emitter texture.",
+      "tags": [
+        "particles",
+        "draw",
+        "gpu-instancing"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:engine/rendering/sprite/line_sprite.cpp:LineSprite_Initialize",
+      "type": "function",
+      "name": "LineSprite_Initialize",
+      "filePath": "engine/rendering/sprite/line_sprite.cpp",
+      "lineRange": [
+        36,
+        68
+      ],
+      "summary": "Creates the line-sprite vertex/index buffers and a no-cull rasterizer state.",
+      "tags": [
+        "initialization",
+        "sprite",
+        "d3d11"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:engine/rendering/sprite/line_sprite.cpp:LineSprite_Finalize",
+      "type": "function",
+      "name": "LineSprite_Finalize",
+      "filePath": "engine/rendering/sprite/line_sprite.cpp",
+      "lineRange": [
+        70,
+        85
+      ],
+      "summary": "Releases line-sprite GPU buffers and rasterizer state.",
+      "tags": [
+        "shutdown",
+        "sprite"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/rendering/sprite/line_sprite.cpp:LineSprite_Draw",
+      "type": "function",
+      "name": "LineSprite_Draw",
+      "filePath": "engine/rendering/sprite/line_sprite.cpp",
+      "lineRange": [
+        87,
+        182
+      ],
+      "summary": "Builds a camera-facing quad between two world points and draws it with the white texture and tint.",
+      "tags": [
+        "sprite",
+        "billboard",
+        "draw"
+      ],
+      "complexity": "complex"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:engine/rendering/environment/skybox.cpp",
+      "target": "function:engine/rendering/environment/skybox.cpp:LoadCompiledShader",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/rendering/environment/skybox.cpp",
+      "target": "function:engine/rendering/environment/skybox.cpp:Skybox_Initialize",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/rendering/environment/skybox.cpp",
+      "target": "function:engine/rendering/environment/skybox.cpp:Skybox_Initialize",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/rendering/environment/skybox.cpp",
+      "target": "function:engine/rendering/environment/skybox.cpp:Skybox_Finalize",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/rendering/environment/skybox.cpp",
+      "target": "function:engine/rendering/environment/skybox.cpp:Skybox_Finalize",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/rendering/environment/skybox.cpp",
+      "target": "function:engine/rendering/environment/skybox.cpp:Skybox_ReloadFromSettings",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/rendering/environment/skybox.cpp",
+      "target": "function:engine/rendering/environment/skybox.cpp:Skybox_ReloadFromSettings",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/rendering/environment/skybox.cpp",
+      "target": "function:engine/rendering/environment/skybox.cpp:Skybox_Draw",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/rendering/environment/skybox.cpp",
+      "target": "function:engine/rendering/environment/skybox.cpp:Skybox_Draw",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/rendering/model/model_util.cpp",
+      "target": "function:engine/rendering/model/model_util.cpp:ModelUtil_ReleaseTextureCache",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/rendering/model/model_util.cpp",
+      "target": "function:engine/rendering/model/model_util.cpp:ModelUtil_ReleaseTextureCache",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/rendering/model/model_util.cpp",
+      "target": "function:engine/rendering/model/model_util.cpp:Trim",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/rendering/model/model_util.cpp",
+      "target": "function:engine/rendering/model/model_util.cpp:Trim",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/rendering/model/model_util.cpp",
+      "target": "function:engine/rendering/model/model_util.cpp:Split",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/rendering/model/model_util.cpp",
+      "target": "function:engine/rendering/model/model_util.cpp:Split",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/rendering/model/model_util.cpp",
+      "target": "function:engine/rendering/model/model_util.cpp:WideToUTF8",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/rendering/model/model_util.cpp",
+      "target": "function:engine/rendering/model/model_util.cpp:WideToUTF8",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/rendering/model/model_util.cpp",
+      "target": "function:engine/rendering/model/model_util.cpp:Utf8ToWide",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/rendering/model/model_util.cpp",
+      "target": "function:engine/rendering/model/model_util.cpp:Utf8ToWide",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/rendering/model/model_util.cpp",
+      "target": "function:engine/rendering/model/model_util.cpp:DirnameW",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/rendering/model/model_util.cpp",
+      "target": "function:engine/rendering/model/model_util.cpp:DirnameW",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/rendering/model/model_util.cpp",
+      "target": "function:engine/rendering/model/model_util.cpp:JoinPathW",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/rendering/model/model_util.cpp",
+      "target": "function:engine/rendering/model/model_util.cpp:JoinPathW",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/rendering/model/model_util.cpp",
+      "target": "function:engine/rendering/model/model_util.cpp:IsAbsolutePathW",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/rendering/model/model_util.cpp",
+      "target": "function:engine/rendering/model/model_util.cpp:IsAbsolutePathW",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/rendering/model/model_util.cpp",
+      "target": "function:engine/rendering/model/model_util.cpp:LoadTextureWIC_Internal",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/rendering/model/model_util.cpp",
+      "target": "function:engine/rendering/model/model_util.cpp:LoadTextureWIC_SRV",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/rendering/model/model_util.cpp",
+      "target": "function:engine/rendering/model/model_util.cpp:LoadTextureWIC_SRV",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/rendering/model/model_util.cpp",
+      "target": "function:engine/rendering/model/model_util.cpp:TryLoadMTLTexture_SRV",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/rendering/model/model_util.cpp",
+      "target": "function:engine/rendering/model/model_util.cpp:TryLoadMTLTexture_SRV",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/rendering/model/model_util.cpp",
+      "target": "function:engine/rendering/model/model_util.cpp:FindFirstDiffuseFileTexture",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/rendering/model/model_util.cpp",
+      "target": "function:engine/rendering/model/model_util.cpp:FindFirstDiffuseFileTexture",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/rendering/model/model_util.cpp",
+      "target": "function:engine/rendering/model/model_util.cpp:TransformNormal_IT",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/rendering/model/model_util.cpp",
+      "target": "function:engine/rendering/model/model_util.cpp:TransformNormal_IT",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/rendering/model/model_util.cpp",
+      "target": "function:engine/rendering/model/model_util.cpp:HasNegativeDeterminant",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/rendering/model/model_util.cpp",
+      "target": "function:engine/rendering/model/model_util.cpp:HasNegativeDeterminant",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/rendering/model/model_util.cpp",
+      "target": "function:engine/rendering/model/model_util.cpp:FbxShared",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/rendering/model/model_util.cpp",
+      "target": "function:engine/rendering/model/model_util.cpp:FbxShared",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/rendering/model/model_util.cpp",
+      "target": "function:engine/rendering/model/model_util.cpp:~FbxShared",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/rendering/model/model_util.cpp",
+      "target": "function:engine/rendering/model/model_util.cpp:~FbxShared",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/rendering/model/model_util.cpp",
+      "target": "function:engine/rendering/model/model_util.cpp:EnumerateSkinnedMeshes",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/rendering/model/model_util.cpp",
+      "target": "function:engine/rendering/model/model_util.cpp:EnumerateSkinnedMeshes",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/rendering/model/model_util.cpp",
+      "target": "function:engine/rendering/model/model_util.cpp:ComputeSkinnedCP_ForMesh",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/rendering/model/model_util.cpp",
+      "target": "function:engine/rendering/model/model_util.cpp:ComputeSkinnedCP_ForMesh",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/rendering/particle/particle_system.cpp",
+      "target": "function:engine/rendering/particle/particle_system.cpp:LoadCompiledShader",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/rendering/particle/particle_system.cpp",
+      "target": "function:engine/rendering/particle/particle_system.cpp:LoadCompiledShader",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/rendering/particle/particle_system.cpp",
+      "target": "function:engine/rendering/particle/particle_system.cpp:CreateBlendState",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/rendering/particle/particle_system.cpp",
+      "target": "function:engine/rendering/particle/particle_system.cpp:CreateBlendState",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/rendering/particle/particle_system.cpp",
+      "target": "function:engine/rendering/particle/particle_system.cpp:Reset",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/rendering/particle/particle_system.cpp",
+      "target": "function:engine/rendering/particle/particle_system.cpp:Reset",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/rendering/particle/particle_system.cpp",
+      "target": "function:engine/rendering/particle/particle_system.cpp:Spawn",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/rendering/particle/particle_system.cpp",
+      "target": "function:engine/rendering/particle/particle_system.cpp:Spawn",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/rendering/particle/particle_system.cpp",
+      "target": "function:engine/rendering/particle/particle_system.cpp:Tick",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/rendering/particle/particle_system.cpp",
+      "target": "function:engine/rendering/particle/particle_system.cpp:Tick",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/rendering/particle/particle_system.cpp",
+      "target": "function:engine/rendering/particle/particle_system.cpp:Compact",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/rendering/particle/particle_system.cpp",
+      "target": "function:engine/rendering/particle/particle_system.cpp:Compact",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/rendering/particle/particle_system.cpp",
+      "target": "function:engine/rendering/particle/particle_system.cpp:CopyParticle",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/rendering/particle/particle_system.cpp",
+      "target": "function:engine/rendering/particle/particle_system.cpp:CopyParticle",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/rendering/particle/particle_system.cpp",
+      "target": "function:engine/rendering/particle/particle_system.cpp:ParticleEmitter",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/rendering/particle/particle_system.cpp",
+      "target": "function:engine/rendering/particle/particle_system.cpp:ParticleEmitter",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/rendering/particle/particle_system.cpp",
+      "target": "function:engine/rendering/particle/particle_system.cpp:SetConfig",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/rendering/particle/particle_system.cpp",
+      "target": "function:engine/rendering/particle/particle_system.cpp:SetConfig",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/rendering/particle/particle_system.cpp",
+      "target": "function:engine/rendering/particle/particle_system.cpp:Render",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/rendering/particle/particle_system.cpp",
+      "target": "function:engine/rendering/particle/particle_system.cpp:Render",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/rendering/particle/particle_system.cpp",
+      "target": "function:engine/rendering/particle/particle_system.cpp:Stop",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/rendering/particle/particle_system.cpp",
+      "target": "function:engine/rendering/particle/particle_system.cpp:Stop",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/rendering/particle/particle_system.cpp",
+      "target": "function:engine/rendering/particle/particle_system.cpp:Emit",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/rendering/particle/particle_system.cpp",
+      "target": "function:engine/rendering/particle/particle_system.cpp:Emit",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/rendering/particle/particle_system.cpp",
+      "target": "function:engine/rendering/particle/particle_system.cpp:RandomShapePosition",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/rendering/particle/particle_system.cpp",
+      "target": "function:engine/rendering/particle/particle_system.cpp:RandomShapePosition",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/rendering/particle/particle_system.cpp",
+      "target": "function:engine/rendering/particle/particle_system.cpp:RandomDirection",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/rendering/particle/particle_system.cpp",
+      "target": "function:engine/rendering/particle/particle_system.cpp:RandomDirection",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/rendering/particle/particle_system.cpp",
+      "target": "function:engine/rendering/particle/particle_system.cpp:Initialize",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/rendering/particle/particle_system.cpp",
+      "target": "function:engine/rendering/particle/particle_system.cpp:Initialize",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/rendering/particle/particle_system.cpp",
+      "target": "function:engine/rendering/particle/particle_system.cpp:Finalize",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/rendering/particle/particle_system.cpp",
+      "target": "function:engine/rendering/particle/particle_system.cpp:Finalize",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/rendering/particle/particle_system.cpp",
+      "target": "function:engine/rendering/particle/particle_system.cpp:CreateEmitter",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/rendering/particle/particle_system.cpp",
+      "target": "function:engine/rendering/particle/particle_system.cpp:CreateEmitter",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/rendering/particle/particle_system.cpp",
+      "target": "function:engine/rendering/particle/particle_system.cpp:SetEmitterPosition",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/rendering/particle/particle_system.cpp",
+      "target": "function:engine/rendering/particle/particle_system.cpp:SetEmitterPosition",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/rendering/particle/particle_system.cpp",
+      "target": "function:engine/rendering/particle/particle_system.cpp:SetEmitterEmitting",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/rendering/particle/particle_system.cpp",
+      "target": "function:engine/rendering/particle/particle_system.cpp:SetEmitterEmitting",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/rendering/particle/particle_system.cpp",
+      "target": "function:engine/rendering/particle/particle_system.cpp:StopEmitter",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/rendering/particle/particle_system.cpp",
+      "target": "function:engine/rendering/particle/particle_system.cpp:StopEmitter",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/rendering/particle/particle_system.cpp",
+      "target": "function:engine/rendering/particle/particle_system.cpp:DestroyEmitter",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/rendering/particle/particle_system.cpp",
+      "target": "function:engine/rendering/particle/particle_system.cpp:DestroyEmitter",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/rendering/particle/particle_system.cpp",
+      "target": "function:engine/rendering/particle/particle_system.cpp:SetEmitterConfig",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/rendering/particle/particle_system.cpp",
+      "target": "function:engine/rendering/particle/particle_system.cpp:SetEmitterConfig",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/rendering/particle/particle_system.cpp",
+      "target": "function:engine/rendering/particle/particle_system.cpp:SpawnParticle",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/rendering/particle/particle_system.cpp",
+      "target": "function:engine/rendering/particle/particle_system.cpp:SpawnParticle",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/rendering/particle/particle_system.cpp",
+      "target": "function:engine/rendering/particle/particle_system.cpp:ParticleRenderer_Initialize",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/rendering/particle/particle_system.cpp",
+      "target": "function:engine/rendering/particle/particle_system.cpp:ParticleRenderer_Initialize",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/rendering/particle/particle_system.cpp",
+      "target": "function:engine/rendering/particle/particle_system.cpp:ParticleRenderer_Finalize",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/rendering/particle/particle_system.cpp",
+      "target": "function:engine/rendering/particle/particle_system.cpp:ParticleRenderer_Finalize",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/rendering/particle/particle_system.cpp",
+      "target": "function:engine/rendering/particle/particle_system.cpp:ParticleRenderer_RenderEmitter",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/rendering/particle/particle_system.cpp",
+      "target": "function:engine/rendering/particle/particle_system.cpp:ParticleRenderer_RenderEmitter",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/rendering/sprite/line_sprite.cpp",
+      "target": "function:engine/rendering/sprite/line_sprite.cpp:LineSprite_Initialize",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/rendering/sprite/line_sprite.cpp",
+      "target": "function:engine/rendering/sprite/line_sprite.cpp:LineSprite_Initialize",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/rendering/sprite/line_sprite.cpp",
+      "target": "function:engine/rendering/sprite/line_sprite.cpp:LineSprite_Finalize",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/rendering/sprite/line_sprite.cpp",
+      "target": "function:engine/rendering/sprite/line_sprite.cpp:LineSprite_Finalize",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/rendering/sprite/line_sprite.cpp",
+      "target": "function:engine/rendering/sprite/line_sprite.cpp:LineSprite_Draw",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/rendering/sprite/line_sprite.cpp",
+      "target": "function:engine/rendering/sprite/line_sprite.cpp:LineSprite_Draw",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/rendering/environment/skybox.cpp",
+      "target": "file:engine/ecs/string_utils.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/rendering/environment/skybox.cpp",
+      "target": "file:engine/rendering/d3d11/renderer.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/rendering/environment/skybox.cpp",
+      "target": "file:engine/rendering/environment/skybox.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/rendering/environment/skybox.cpp",
+      "target": "file:engine/rendering/sprite/texture.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/rendering/environment/skybox.cpp",
+      "target": "file:engine/scene/render_settings.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/rendering/model/model_util.cpp",
+      "target": "file:engine/rendering/d3d11/renderer.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/rendering/model/model_util.cpp",
+      "target": "file:engine/rendering/model/model_util.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/rendering/particle/particle_system.cpp",
+      "target": "file:engine/ecs/string_utils.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/rendering/particle/particle_system.cpp",
+      "target": "file:engine/rendering/d3d11/renderer.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/rendering/particle/particle_system.cpp",
+      "target": "file:engine/rendering/particle/particle_system.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/rendering/particle/particle_system.cpp",
+      "target": "file:engine/rendering/sprite/texture.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/rendering/sprite/line_sprite.cpp",
+      "target": "file:engine/rendering/d3d11/renderer.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/rendering/sprite/line_sprite.cpp",
+      "target": "file:engine/rendering/d3d11/shader.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/rendering/sprite/line_sprite.cpp",
+      "target": "file:engine/rendering/sprite/line_sprite.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/rendering/sprite/line_sprite.cpp",
+      "target": "file:engine/rendering/sprite/texture.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:engine/rendering/environment/skybox.cpp:Skybox_ReloadFromSettings",
+      "target": "function:engine/ecs/string_utils.h:ToWString",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/rendering/environment/skybox.cpp:Skybox_ReloadFromSettings",
+      "target": "function:engine/rendering/sprite/texture.cpp:CubemapLoad",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/rendering/particle/particle_system.cpp:ParticleRenderer_RenderEmitter",
+      "target": "function:engine/rendering/sprite/texture.cpp:TextureGetWhiteTexture",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/rendering/sprite/line_sprite.cpp:LineSprite_Draw",
+      "target": "function:engine/rendering/sprite/texture.cpp:TextureGetWhiteTexture",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/rendering/sprite/line_sprite.cpp:LineSprite_Draw",
+      "target": "function:engine/rendering/sprite/texture.cpp:TextureSetTexture",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

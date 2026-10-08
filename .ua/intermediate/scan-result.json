@@ -1,0 +1,3468 @@
+{
+  "name": "ivy-engine",
+  "description": "Ivy Engine is a from-scratch C++ / Direct3D 11 game engine with a full ImGui editor, ECS gameplay runtime, physics, hot-reloadable C++ DLL scripts, and a Visual Studio 2022 Windows build. Note: this project has over 100 source files; consider scoping analysis to a subdirectory for faster results.",
+  "languages": [
+    "batch",
+    "c",
+    "cpp",
+    "dds",
+    "efkefc",
+    "efkmat",
+    "efkmodel",
+    "exe",
+    "fbx",
+    "filters",
+    "hlsl",
+    "hlsli",
+    "html",
+    "json",
+    "markdown",
+    "props",
+    "python",
+    "sln",
+    "targets",
+    "txt",
+    "unknown",
+    "vcxproj"
+  ],
+  "frameworks": [],
+  "files": [
+    {
+      "path": ".gitattributes",
+      "language": "unknown",
+      "sizeLines": 63,
+      "fileCategory": "code"
+    },
+    {
+      "path": "CONTEXT.md",
+      "language": "markdown",
+      "sizeLines": 77,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "IvyEngine.Shaders.targets",
+      "language": "targets",
+      "sizeLines": 92,
+      "fileCategory": "code"
+    },
+    {
+      "path": "IvyEngine.sln",
+      "language": "sln",
+      "sizeLines": 41,
+      "fileCategory": "config"
+    },
+    {
+      "path": "IvyEngine.vcxproj",
+      "language": "vcxproj",
+      "sizeLines": 506,
+      "fileCategory": "code"
+    },
+    {
+      "path": "IvyEngine.vcxproj.filters",
+      "language": "filters",
+      "sizeLines": 871,
+      "fileCategory": "code"
+    },
+    {
+      "path": "IvyEngineRuntime.vcxproj",
+      "language": "vcxproj",
+      "sizeLines": 523,
+      "fileCategory": "code"
+    },
+    {
+      "path": "IvyEngineRuntime.vcxproj.filters",
+      "language": "filters",
+      "sizeLines": 600,
+      "fileCategory": "code"
+    },
+    {
+      "path": "README.md",
+      "language": "markdown",
+      "sizeLines": 87,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "docs/CONTENT_PROJECT.md",
+      "language": "markdown",
+      "sizeLines": 53,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "docs/ENGINE_API_REFERENCE.md",
+      "language": "markdown",
+      "sizeLines": 1885,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "docs/ENGINE_MANUAL.md",
+      "language": "markdown",
+      "sizeLines": 1084,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "docs/ENGINE_USER_GUIDE.md",
+      "language": "markdown",
+      "sizeLines": 1002,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "docs/_api_extract.md",
+      "language": "markdown",
+      "sizeLines": 1627,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "docs/adr/0001-runtime-audio-buses-from-project-json.md",
+      "language": "markdown",
+      "sizeLines": 5,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "docs/adr/0002-gui-build-playable-package.md",
+      "language": "markdown",
+      "sizeLines": 5,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "docs/adr/0003-gpu-vertex-shader-skin.md",
+      "language": "markdown",
+      "sizeLines": 11,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "docs/adr/0004-runtime-gravity-from-project-json.md",
+      "language": "markdown",
+      "sizeLines": 5,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "docs/adr/0005-engine-v1-lock.md",
+      "language": "markdown",
+      "sizeLines": 20,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "docs/adr/0006-first-person-camera-unfreeze.md",
+      "language": "markdown",
+      "sizeLines": 5,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "docs/diagrams/ivy-engine-architecture.html",
+      "language": "html",
+      "sizeLines": 219,
+      "fileCategory": "markup"
+    },
+    {
+      "path": "docs/diagrams/ivy-engine-architecture.zh-HK.html",
+      "language": "html",
+      "sizeLines": 218,
+      "fileCategory": "markup"
+    },
+    {
+      "path": "engine/audio/audio_listener_sync.cpp",
+      "language": "cpp",
+      "sizeLines": 117,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/audio/audio_listener_sync.h",
+      "language": "c",
+      "sizeLines": 9,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/audio/audio_manager.cpp",
+      "language": "cpp",
+      "sizeLines": 1122,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/audio/audio_manager.h",
+      "language": "c",
+      "sizeLines": 175,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/core/debug_system.cpp",
+      "language": "cpp",
+      "sizeLines": 221,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/core/debug_system.h",
+      "language": "c",
+      "sizeLines": 45,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/core/easing.cpp",
+      "language": "cpp",
+      "sizeLines": 193,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/core/easing.h",
+      "language": "c",
+      "sizeLines": 43,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/core/engine_gui.cpp",
+      "language": "cpp",
+      "sizeLines": 4420,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/core/engine_gui.h",
+      "language": "c",
+      "sizeLines": 72,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/core/engine_gui_internal.h",
+      "language": "c",
+      "sizeLines": 36,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/core/engine_gui_persistence.cpp",
+      "language": "cpp",
+      "sizeLines": 33,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/core/engine_gui_runtime.cpp",
+      "language": "cpp",
+      "sizeLines": 198,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/core/frame_transform_snapshot.cpp",
+      "language": "cpp",
+      "sizeLines": 41,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/core/frame_transform_snapshot.h",
+      "language": "c",
+      "sizeLines": 24,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/core/game_object.h",
+      "language": "c",
+      "sizeLines": 2,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/core/job_system.cpp",
+      "language": "cpp",
+      "sizeLines": 413,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/core/job_system.h",
+      "language": "c",
+      "sizeLines": 45,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/core/system_timer.cpp",
+      "language": "cpp",
+      "sizeLines": 175,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/core/system_timer.h",
+      "language": "c",
+      "sizeLines": 46,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/debug_draw/debug_drawer.cpp",
+      "language": "cpp",
+      "sizeLines": 777,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/debug_draw/debug_drawer.h",
+      "language": "c",
+      "sizeLines": 133,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/debug_draw/debug_ofstream.cpp",
+      "language": "cpp",
+      "sizeLines": 11,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/debug_draw/debug_ofstream.h",
+      "language": "c",
+      "sizeLines": 39,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/debug_draw/debug_text.cpp",
+      "language": "cpp",
+      "sizeLines": 478,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/debug_draw/debug_text.h",
+      "language": "c",
+      "sizeLines": 104,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ecs/audio_component.cpp",
+      "language": "cpp",
+      "sizeLines": 184,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ecs/audio_component.h",
+      "language": "c",
+      "sizeLines": 50,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ecs/audio_listener_component.cpp",
+      "language": "cpp",
+      "sizeLines": 12,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ecs/audio_listener_component.h",
+      "language": "c",
+      "sizeLines": 13,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ecs/audio_system.cpp",
+      "language": "cpp",
+      "sizeLines": 33,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ecs/audio_system.h",
+      "language": "c",
+      "sizeLines": 9,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ecs/billboard_component.cpp",
+      "language": "cpp",
+      "sizeLines": 94,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ecs/billboard_component.h",
+      "language": "c",
+      "sizeLines": 62,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ecs/camera_component.cpp",
+      "language": "cpp",
+      "sizeLines": 93,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ecs/camera_component.h",
+      "language": "c",
+      "sizeLines": 28,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ecs/collider_component.cpp",
+      "language": "cpp",
+      "sizeLines": 105,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ecs/collider_component.h",
+      "language": "c",
+      "sizeLines": 25,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ecs/component.h",
+      "language": "c",
+      "sizeLines": 48,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ecs/component_factory.cpp",
+      "language": "cpp",
+      "sizeLines": 28,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ecs/component_factory.h",
+      "language": "c",
+      "sizeLines": 54,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ecs/directional_light_component.cpp",
+      "language": "cpp",
+      "sizeLines": 42,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ecs/directional_light_component.h",
+      "language": "c",
+      "sizeLines": 25,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ecs/effect_component.cpp",
+      "language": "cpp",
+      "sizeLines": 217,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ecs/effect_component.h",
+      "language": "c",
+      "sizeLines": 49,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ecs/effect_system_flush.cpp",
+      "language": "cpp",
+      "sizeLines": 33,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ecs/effect_system_flush.h",
+      "language": "c",
+      "sizeLines": 10,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ecs/game_object.cpp",
+      "language": "cpp",
+      "sizeLines": 267,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ecs/game_object.h",
+      "language": "c",
+      "sizeLines": 448,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ecs/material_component.cpp",
+      "language": "cpp",
+      "sizeLines": 149,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ecs/material_component.h",
+      "language": "c",
+      "sizeLines": 66,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ecs/model_asset_cache.cpp",
+      "language": "cpp",
+      "sizeLines": 254,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ecs/model_asset_cache.h",
+      "language": "c",
+      "sizeLines": 56,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ecs/point_light_component.cpp",
+      "language": "cpp",
+      "sizeLines": 43,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ecs/point_light_component.h",
+      "language": "c",
+      "sizeLines": 20,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ecs/prefab_runtime.cpp",
+      "language": "cpp",
+      "sizeLines": 297,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ecs/prefab_runtime.h",
+      "language": "c",
+      "sizeLines": 30,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ecs/prefab_serializer.cpp",
+      "language": "cpp",
+      "sizeLines": 164,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ecs/prefab_serializer.h",
+      "language": "c",
+      "sizeLines": 42,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ecs/rigidbody_component.cpp",
+      "language": "cpp",
+      "sizeLines": 48,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ecs/rigidbody_component.h",
+      "language": "c",
+      "sizeLines": 39,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ecs/spot_light_component.cpp",
+      "language": "cpp",
+      "sizeLines": 50,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ecs/spot_light_component.h",
+      "language": "c",
+      "sizeLines": 23,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ecs/string_utils.h",
+      "language": "c",
+      "sizeLines": 22,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ecs/tag_registry.cpp",
+      "language": "cpp",
+      "sizeLines": 158,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ecs/tag_registry.h",
+      "language": "c",
+      "sizeLines": 40,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ecs/transform.cpp",
+      "language": "cpp",
+      "sizeLines": 164,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ecs/transform.h",
+      "language": "c",
+      "sizeLines": 68,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ecs/visual_component.cpp",
+      "language": "cpp",
+      "sizeLines": 336,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ecs/visual_component.h",
+      "language": "c",
+      "sizeLines": 101,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ecs/visual_system.cpp",
+      "language": "cpp",
+      "sizeLines": 32,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ecs/visual_system.h",
+      "language": "c",
+      "sizeLines": 9,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/editor/camera_gizmo.cpp",
+      "language": "cpp",
+      "sizeLines": 100,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/editor/camera_gizmo.h",
+      "language": "c",
+      "sizeLines": 18,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/editor/editor_prefab_panel.cpp",
+      "language": "cpp",
+      "sizeLines": 87,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/editor/editor_prefab_panel.h",
+      "language": "c",
+      "sizeLines": 24,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/editor/editor_project_browser.cpp",
+      "language": "cpp",
+      "sizeLines": 701,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/editor/editor_project_browser.h",
+      "language": "c",
+      "sizeLines": 12,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/editor/editor_ui_panel.cpp",
+      "language": "cpp",
+      "sizeLines": 535,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/editor/editor_ui_panel.h",
+      "language": "c",
+      "sizeLines": 19,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/editor/editor_undo.cpp",
+      "language": "cpp",
+      "sizeLines": 1063,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/editor/editor_undo.h",
+      "language": "c",
+      "sizeLines": 96,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/editor/light_gizmo.cpp",
+      "language": "cpp",
+      "sizeLines": 226,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/editor/light_gizmo.h",
+      "language": "c",
+      "sizeLines": 26,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/editor/playable_package_builder.cpp",
+      "language": "cpp",
+      "sizeLines": 628,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/editor/playable_package_builder.h",
+      "language": "c",
+      "sizeLines": 44,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/editor/project_asset_index.cpp",
+      "language": "cpp",
+      "sizeLines": 300,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/editor/project_asset_index.h",
+      "language": "c",
+      "sizeLines": 52,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/editor/project_asset_ops.cpp",
+      "language": "cpp",
+      "sizeLines": 449,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/editor/project_asset_ops.h",
+      "language": "c",
+      "sizeLines": 21,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/editor/project_manager.cpp",
+      "language": "cpp",
+      "sizeLines": 851,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/editor/project_manager.h",
+      "language": "c",
+      "sizeLines": 104,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/editor/transform_gizmo.cpp",
+      "language": "cpp",
+      "sizeLines": 370,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/editor/transform_gizmo.h",
+      "language": "c",
+      "sizeLines": 17,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/editor/ui_gizmo.cpp",
+      "language": "cpp",
+      "sizeLines": 475,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/editor/ui_gizmo.h",
+      "language": "c",
+      "sizeLines": 12,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/input/controller.cpp",
+      "language": "cpp",
+      "sizeLines": 184,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/input/controller.h",
+      "language": "c",
+      "sizeLines": 73,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/input/key_logger.cpp",
+      "language": "cpp",
+      "sizeLines": 150,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/input/key_logger.h",
+      "language": "c",
+      "sizeLines": 24,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/input/keyboard.cpp",
+      "language": "cpp",
+      "sizeLines": 145,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/input/keyboard.h",
+      "language": "c",
+      "sizeLines": 433,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/input/mouse.cpp",
+      "language": "cpp",
+      "sizeLines": 170,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/input/mouse.h",
+      "language": "c",
+      "sizeLines": 36,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/physics/collider/collider.cpp",
+      "language": "cpp",
+      "sizeLines": 2217,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/physics/collider/collider.h",
+      "language": "c",
+      "sizeLines": 237,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/physics/core/physics_system.cpp",
+      "language": "cpp",
+      "sizeLines": 681,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/physics/core/physics_system.h",
+      "language": "c",
+      "sizeLines": 79,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/physics/core/rigidbody.cpp",
+      "language": "cpp",
+      "sizeLines": 141,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/physics/core/rigidbody.h",
+      "language": "c",
+      "sizeLines": 81,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/rendering/billboard/billboard.cpp",
+      "language": "cpp",
+      "sizeLines": 312,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/rendering/billboard/billboard.h",
+      "language": "c",
+      "sizeLines": 103,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/rendering/d3d11/post_process.cpp",
+      "language": "cpp",
+      "sizeLines": 254,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/rendering/d3d11/post_process.h",
+      "language": "c",
+      "sizeLines": 35,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/rendering/d3d11/renderer.cpp",
+      "language": "cpp",
+      "sizeLines": 637,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/rendering/d3d11/renderer.h",
+      "language": "c",
+      "sizeLines": 97,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/rendering/d3d11/shader.cpp",
+      "language": "cpp",
+      "sizeLines": 780,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/rendering/d3d11/shader.h",
+      "language": "c",
+      "sizeLines": 92,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/rendering/effect/effect_object.cpp",
+      "language": "cpp",
+      "sizeLines": 150,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/rendering/effect/effect_object.h",
+      "language": "c",
+      "sizeLines": 86,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/rendering/effect/effect_system.cpp",
+      "language": "cpp",
+      "sizeLines": 240,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/rendering/effect/effect_system.h",
+      "language": "c",
+      "sizeLines": 49,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/rendering/environment/skybox.cpp",
+      "language": "cpp",
+      "sizeLines": 291,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/rendering/environment/skybox.h",
+      "language": "c",
+      "sizeLines": 9,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/rendering/lighting/lighting.cpp",
+      "language": "cpp",
+      "sizeLines": 184,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/rendering/lighting/lighting.h",
+      "language": "c",
+      "sizeLines": 72,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/rendering/lighting/shadow.cpp",
+      "language": "cpp",
+      "sizeLines": 458,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/rendering/lighting/shadow.h",
+      "language": "c",
+      "sizeLines": 72,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/rendering/model/model.cpp",
+      "language": "cpp",
+      "sizeLines": 2201,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/rendering/model/model.h",
+      "language": "c",
+      "sizeLines": 283,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/rendering/model/model_util.cpp",
+      "language": "cpp",
+      "sizeLines": 648,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/rendering/model/model_util.h",
+      "language": "c",
+      "sizeLines": 99,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/rendering/particle/particle_system.cpp",
+      "language": "cpp",
+      "sizeLines": 710,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/rendering/particle/particle_system.h",
+      "language": "c",
+      "sizeLines": 180,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/rendering/sprite/line_sprite.cpp",
+      "language": "cpp",
+      "sizeLines": 182,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/rendering/sprite/line_sprite.h",
+      "language": "c",
+      "sizeLines": 20,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/rendering/sprite/sprite.cpp",
+      "language": "cpp",
+      "sizeLines": 382,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/rendering/sprite/sprite.h",
+      "language": "c",
+      "sizeLines": 37,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/rendering/sprite/texture.cpp",
+      "language": "cpp",
+      "sizeLines": 273,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/rendering/sprite/texture.h",
+      "language": "c",
+      "sizeLines": 36,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/scene/render_settings.cpp",
+      "language": "cpp",
+      "sizeLines": 190,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/scene/render_settings.h",
+      "language": "c",
+      "sizeLines": 56,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/scene/scene_asset_preload.cpp",
+      "language": "cpp",
+      "sizeLines": 421,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/scene/scene_asset_preload.h",
+      "language": "c",
+      "sizeLines": 63,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/scene/scene_camera.cpp",
+      "language": "cpp",
+      "sizeLines": 49,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/scene/scene_camera.h",
+      "language": "c",
+      "sizeLines": 9,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/scene/scene_lighting.cpp",
+      "language": "cpp",
+      "sizeLines": 135,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/scene/scene_lighting.h",
+      "language": "c",
+      "sizeLines": 7,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/scene/scene_loader.cpp",
+      "language": "cpp",
+      "sizeLines": 749,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/scene/scene_loader.h",
+      "language": "c",
+      "sizeLines": 66,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/scene/scene_node.cpp",
+      "language": "cpp",
+      "sizeLines": 13,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/scene/scene_node.h",
+      "language": "c",
+      "sizeLines": 19,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/scene/scene_runtime.cpp",
+      "language": "cpp",
+      "sizeLines": 95,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/scene/scene_runtime.h",
+      "language": "c",
+      "sizeLines": 29,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/scripting/Script.h",
+      "language": "c",
+      "sizeLines": 87,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/scripting/script_component.cpp",
+      "language": "cpp",
+      "sizeLines": 140,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/scripting/script_component.h",
+      "language": "c",
+      "sizeLines": 61,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/scripting/script_dll_exports.cpp",
+      "language": "cpp",
+      "sizeLines": 70,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/scripting/script_dll_register.h",
+      "language": "c",
+      "sizeLines": 44,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/scripting/script_factory.cpp",
+      "language": "cpp",
+      "sizeLines": 339,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/scripting/script_factory.h",
+      "language": "c",
+      "sizeLines": 107,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/scripting/script_fields.h",
+      "language": "c",
+      "sizeLines": 43,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/scripting/script_register.h",
+      "language": "c",
+      "sizeLines": 41,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/scripting/script_runtime_api.cpp",
+      "language": "cpp",
+      "sizeLines": 1497,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/scripting/script_runtime_api.h",
+      "language": "c",
+      "sizeLines": 367,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/scripting/script_watcher.cpp",
+      "language": "cpp",
+      "sizeLines": 70,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/scripting/script_watcher.h",
+      "language": "c",
+      "sizeLines": 24,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/scripting/ui_canvas_script.h",
+      "language": "c",
+      "sizeLines": 19,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/scripting/ui_canvas_script_dll_exports.cpp",
+      "language": "cpp",
+      "sizeLines": 35,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/scripting/ui_canvas_script_factory.cpp",
+      "language": "cpp",
+      "sizeLines": 87,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/scripting/ui_canvas_script_factory.h",
+      "language": "c",
+      "sizeLines": 37,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/scripting/ui_canvas_script_register.h",
+      "language": "c",
+      "sizeLines": 41,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ui/scene_canvas.cpp",
+      "language": "cpp",
+      "sizeLines": 614,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ui/scene_canvas.h",
+      "language": "c",
+      "sizeLines": 51,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ui/ui_bar.cpp",
+      "language": "cpp",
+      "sizeLines": 175,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ui/ui_bar.h",
+      "language": "c",
+      "sizeLines": 98,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ui/ui_button.cpp",
+      "language": "cpp",
+      "sizeLines": 262,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ui/ui_button.h",
+      "language": "c",
+      "sizeLines": 156,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ui/ui_button_pointer.h",
+      "language": "c",
+      "sizeLines": 19,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ui/ui_canvas.cpp",
+      "language": "cpp",
+      "sizeLines": 445,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ui/ui_canvas.h",
+      "language": "c",
+      "sizeLines": 121,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ui/ui_element.cpp",
+      "language": "cpp",
+      "sizeLines": 187,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ui/ui_element.h",
+      "language": "c",
+      "sizeLines": 109,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ui/ui_element_script_host.cpp",
+      "language": "cpp",
+      "sizeLines": 112,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ui/ui_element_script_host.h",
+      "language": "c",
+      "sizeLines": 37,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ui/ui_font.cpp",
+      "language": "cpp",
+      "sizeLines": 163,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ui/ui_font.h",
+      "language": "c",
+      "sizeLines": 29,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ui/ui_sprite.cpp",
+      "language": "cpp",
+      "sizeLines": 157,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ui/ui_sprite.h",
+      "language": "c",
+      "sizeLines": 110,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ui/ui_text.cpp",
+      "language": "cpp",
+      "sizeLines": 147,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ui/ui_text.h",
+      "language": "c",
+      "sizeLines": 104,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ui/ui_text_renderer.cpp",
+      "language": "cpp",
+      "sizeLines": 189,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ui/ui_text_renderer.h",
+      "language": "c",
+      "sizeLines": 43,
+      "fileCategory": "code"
+    },
+    {
+      "path": "external_content_template/ContentProject.sln",
+      "language": "sln",
+      "sizeLines": 27,
+      "fileCategory": "config"
+    },
+    {
+      "path": "external_content_template/Directory.Build.props",
+      "language": "props",
+      "sizeLines": 3,
+      "fileCategory": "code"
+    },
+    {
+      "path": "external_content_template/IvyEngine.props",
+      "language": "props",
+      "sizeLines": 6,
+      "fileCategory": "code"
+    },
+    {
+      "path": "external_content_template/build_scripts.bat",
+      "language": "batch",
+      "sizeLines": 17,
+      "fileCategory": "script"
+    },
+    {
+      "path": "external_content_template/deploy/deploy.bat",
+      "language": "batch",
+      "sizeLines": 27,
+      "fileCategory": "script"
+    },
+    {
+      "path": "external_content_template/game/scripts/GameScripts/GameScripts.vcxproj",
+      "language": "vcxproj",
+      "sizeLines": 250,
+      "fileCategory": "code"
+    },
+    {
+      "path": "external_content_template/game/scripts/GameScripts/GameScripts.vcxproj.filters",
+      "language": "filters",
+      "sizeLines": 36,
+      "fileCategory": "code"
+    },
+    {
+      "path": "external_content_template/game/scripts/GameScripts/framework.h",
+      "language": "c",
+      "sizeLines": 5,
+      "fileCategory": "code"
+    },
+    {
+      "path": "external_content_template/game/scripts/GameScripts/pch.cpp",
+      "language": "cpp",
+      "sizeLines": 5,
+      "fileCategory": "code"
+    },
+    {
+      "path": "external_content_template/game/scripts/GameScripts/pch.h",
+      "language": "c",
+      "sizeLines": 13,
+      "fileCategory": "code"
+    },
+    {
+      "path": "external_content_template/rom/scene/default_scene.txt",
+      "language": "txt",
+      "sizeLines": 1,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "external_template/GameScripts.External.vcxproj",
+      "language": "vcxproj",
+      "sizeLines": 342,
+      "fileCategory": "code"
+    },
+    {
+      "path": "pch.cpp",
+      "language": "cpp",
+      "sizeLines": 1,
+      "fileCategory": "code"
+    },
+    {
+      "path": "pch.h",
+      "language": "c",
+      "sizeLines": 69,
+      "fileCategory": "code"
+    },
+    {
+      "path": "project.json",
+      "language": "json",
+      "sizeLines": 9,
+      "fileCategory": "config"
+    },
+    {
+      "path": "rom/editor/ui_prefs.json",
+      "language": "json",
+      "sizeLines": 2,
+      "fileCategory": "config"
+    },
+    {
+      "path": "rom/effects/Effect_speed_up.efkefc",
+      "language": "efkefc",
+      "sizeLines": 16,
+      "fileCategory": "code"
+    },
+    {
+      "path": "rom/effects/Materials/mt_dissolve01.efkmat",
+      "language": "efkmat",
+      "sizeLines": 36,
+      "fileCategory": "code"
+    },
+    {
+      "path": "rom/effects/Materials/mt_dissolve02.efkmat",
+      "language": "efkmat",
+      "sizeLines": 41,
+      "fileCategory": "code"
+    },
+    {
+      "path": "rom/effects/Materials/mt_ice01.efkmat",
+      "language": "efkmat",
+      "sizeLines": 64,
+      "fileCategory": "code"
+    },
+    {
+      "path": "rom/effects/Materials/mt_lightning01.efkmat",
+      "language": "efkmat",
+      "sizeLines": 66,
+      "fileCategory": "code"
+    },
+    {
+      "path": "rom/effects/Materials/mt_lightning02.efkmat",
+      "language": "efkmat",
+      "sizeLines": 23,
+      "fileCategory": "code"
+    },
+    {
+      "path": "rom/effects/Materials/mt_lightning03.efkmat",
+      "language": "efkmat",
+      "sizeLines": 70,
+      "fileCategory": "code"
+    },
+    {
+      "path": "rom/effects/Materials/mt_slash01.efkmat",
+      "language": "efkmat",
+      "sizeLines": 23,
+      "fileCategory": "code"
+    },
+    {
+      "path": "rom/effects/Materials/mt_toon_shockwave01.efkmat",
+      "language": "efkmat",
+      "sizeLines": 75,
+      "fileCategory": "code"
+    },
+    {
+      "path": "rom/effects/Materials/mt_wind02.efkmat",
+      "language": "efkmat",
+      "sizeLines": 35,
+      "fileCategory": "code"
+    },
+    {
+      "path": "rom/effects/Materials/mt_wind03_groundAura.efkmat",
+      "language": "efkmat",
+      "sizeLines": 48,
+      "fileCategory": "code"
+    },
+    {
+      "path": "rom/effects/Materials/mt_wind03_groundCrack.efkmat",
+      "language": "efkmat",
+      "sizeLines": 28,
+      "fileCategory": "code"
+    },
+    {
+      "path": "rom/effects/Materials/mt_wind03_slash01.efkmat",
+      "language": "efkmat",
+      "sizeLines": 36,
+      "fileCategory": "code"
+    },
+    {
+      "path": "rom/effects/Materials/mt_wind03_tornado01.efkmat",
+      "language": "efkmat",
+      "sizeLines": 95,
+      "fileCategory": "code"
+    },
+    {
+      "path": "rom/effects/Materials/mt_wind03_tornado01_test.efkmat",
+      "language": "efkmat",
+      "sizeLines": 89,
+      "fileCategory": "code"
+    },
+    {
+      "path": "rom/effects/Meshes/ms_groundAura01.efkmodel",
+      "language": "efkmodel",
+      "sizeLines": 61,
+      "fileCategory": "code"
+    },
+    {
+      "path": "rom/effects/Meshes/ms_groundAura01.fbx",
+      "language": "fbx",
+      "sizeLines": 32,
+      "fileCategory": "code"
+    },
+    {
+      "path": "rom/effects/Meshes/ms_groundAura02.efkmodel",
+      "language": "efkmodel",
+      "sizeLines": 56,
+      "fileCategory": "code"
+    },
+    {
+      "path": "rom/effects/Meshes/ms_groundAura02.fbx",
+      "language": "fbx",
+      "sizeLines": 38,
+      "fileCategory": "code"
+    },
+    {
+      "path": "rom/effects/Meshes/ms_ice01.efkmodel",
+      "language": "efkmodel",
+      "sizeLines": 2348,
+      "fileCategory": "code"
+    },
+    {
+      "path": "rom/effects/Meshes/ms_ice01.fbx",
+      "language": "fbx",
+      "sizeLines": 418,
+      "fileCategory": "code"
+    },
+    {
+      "path": "rom/effects/Meshes/ms_ice02.efkmodel",
+      "language": "efkmodel",
+      "sizeLines": 246,
+      "fileCategory": "code"
+    },
+    {
+      "path": "rom/effects/Meshes/ms_ice02.fbx",
+      "language": "fbx",
+      "sizeLines": 36,
+      "fileCategory": "code"
+    },
+    {
+      "path": "rom/effects/Meshes/ms_ice03.efkmodel",
+      "language": "efkmodel",
+      "sizeLines": 27,
+      "fileCategory": "code"
+    },
+    {
+      "path": "rom/effects/Meshes/ms_ice03.fbx",
+      "language": "fbx",
+      "sizeLines": 31,
+      "fileCategory": "code"
+    },
+    {
+      "path": "rom/effects/Meshes/ms_lightning01.efkmodel",
+      "language": "efkmodel",
+      "sizeLines": 129,
+      "fileCategory": "code"
+    },
+    {
+      "path": "rom/effects/Meshes/ms_lightning01.fbx",
+      "language": "fbx",
+      "sizeLines": 73,
+      "fileCategory": "code"
+    },
+    {
+      "path": "rom/effects/Meshes/ms_lightning02.efkmodel",
+      "language": "efkmodel",
+      "sizeLines": 10,
+      "fileCategory": "code"
+    },
+    {
+      "path": "rom/effects/Meshes/ms_lightning02.fbx",
+      "language": "fbx",
+      "sizeLines": 29,
+      "fileCategory": "code"
+    },
+    {
+      "path": "rom/effects/Meshes/ms_lightning03_01.efkmodel",
+      "language": "efkmodel",
+      "sizeLines": 7,
+      "fileCategory": "code"
+    },
+    {
+      "path": "rom/effects/Meshes/ms_lightning03_01.fbx",
+      "language": "fbx",
+      "sizeLines": 37,
+      "fileCategory": "code"
+    },
+    {
+      "path": "rom/effects/Meshes/ms_lightning03_02.efkmodel",
+      "language": "efkmodel",
+      "sizeLines": 6,
+      "fileCategory": "code"
+    },
+    {
+      "path": "rom/effects/Meshes/ms_lightning03_02.fbx",
+      "language": "fbx",
+      "sizeLines": 37,
+      "fileCategory": "code"
+    },
+    {
+      "path": "rom/effects/Meshes/ms_lightning03_03.efkmodel",
+      "language": "efkmodel",
+      "sizeLines": 2,
+      "fileCategory": "code"
+    },
+    {
+      "path": "rom/effects/Meshes/ms_lightning03_03.fbx",
+      "language": "fbx",
+      "sizeLines": 35,
+      "fileCategory": "code"
+    },
+    {
+      "path": "rom/effects/Meshes/ms_plane01.efkmodel",
+      "language": "efkmodel",
+      "sizeLines": 0,
+      "fileCategory": "code"
+    },
+    {
+      "path": "rom/effects/Meshes/ms_plane01.fbx",
+      "language": "fbx",
+      "sizeLines": 33,
+      "fileCategory": "code"
+    },
+    {
+      "path": "rom/effects/Meshes/ms_rock01.efkmodel",
+      "language": "efkmodel",
+      "sizeLines": 22,
+      "fileCategory": "code"
+    },
+    {
+      "path": "rom/effects/Meshes/ms_rock01.fbx",
+      "language": "fbx",
+      "sizeLines": 33,
+      "fileCategory": "code"
+    },
+    {
+      "path": "rom/effects/Meshes/ms_slash01.efkmodel",
+      "language": "efkmodel",
+      "sizeLines": 14,
+      "fileCategory": "code"
+    },
+    {
+      "path": "rom/effects/Meshes/ms_slash01.fbx",
+      "language": "fbx",
+      "sizeLines": 34,
+      "fileCategory": "code"
+    },
+    {
+      "path": "rom/effects/Meshes/ms_slash02.efkmodel",
+      "language": "efkmodel",
+      "sizeLines": 8,
+      "fileCategory": "code"
+    },
+    {
+      "path": "rom/effects/Meshes/ms_slash02.fbx",
+      "language": "fbx",
+      "sizeLines": 25,
+      "fileCategory": "code"
+    },
+    {
+      "path": "rom/effects/Meshes/ms_tornado01.efkmodel",
+      "language": "efkmodel",
+      "sizeLines": 134,
+      "fileCategory": "code"
+    },
+    {
+      "path": "rom/effects/Meshes/ms_tornado01.fbx",
+      "language": "fbx",
+      "sizeLines": 56,
+      "fileCategory": "code"
+    },
+    {
+      "path": "rom/effects/Meshes/ms_tornado02.efkmodel",
+      "language": "efkmodel",
+      "sizeLines": 142,
+      "fileCategory": "code"
+    },
+    {
+      "path": "rom/effects/Meshes/ms_tornado02.fbx",
+      "language": "fbx",
+      "sizeLines": 64,
+      "fileCategory": "code"
+    },
+    {
+      "path": "rom/effects/Meshes/ms_tornado03.efkmodel",
+      "language": "efkmodel",
+      "sizeLines": 97,
+      "fileCategory": "code"
+    },
+    {
+      "path": "rom/effects/Meshes/ms_tornado03.fbx",
+      "language": "fbx",
+      "sizeLines": 57,
+      "fileCategory": "code"
+    },
+    {
+      "path": "rom/effects/Meshes/ms_tornado04.efkmodel",
+      "language": "efkmodel",
+      "sizeLines": 50,
+      "fileCategory": "code"
+    },
+    {
+      "path": "rom/effects/Meshes/ms_tornado04.fbx",
+      "language": "fbx",
+      "sizeLines": 41,
+      "fileCategory": "code"
+    },
+    {
+      "path": "rom/effects/Meshes/ms_wind01.efkmodel",
+      "language": "efkmodel",
+      "sizeLines": 58,
+      "fileCategory": "code"
+    },
+    {
+      "path": "rom/effects/Meshes/ms_wind01.fbx",
+      "language": "fbx",
+      "sizeLines": 75,
+      "fileCategory": "code"
+    },
+    {
+      "path": "rom/effects/Meshes/ms_wind02.efkmodel",
+      "language": "efkmodel",
+      "sizeLines": 7,
+      "fileCategory": "code"
+    },
+    {
+      "path": "rom/effects/Meshes/ms_wind02.fbx",
+      "language": "fbx",
+      "sizeLines": 47,
+      "fileCategory": "code"
+    },
+    {
+      "path": "rom/effects/ef_fire01.efkefc",
+      "language": "efkefc",
+      "sizeLines": 52,
+      "fileCategory": "code"
+    },
+    {
+      "path": "rom/effects/ef_fire02.efkefc",
+      "language": "efkefc",
+      "sizeLines": 145,
+      "fileCategory": "code"
+    },
+    {
+      "path": "rom/effects/ef_fire03.efkefc",
+      "language": "efkefc",
+      "sizeLines": 136,
+      "fileCategory": "code"
+    },
+    {
+      "path": "rom/effects/ef_holy01.efkefc",
+      "language": "efkefc",
+      "sizeLines": 35,
+      "fileCategory": "code"
+    },
+    {
+      "path": "rom/effects/ef_ice01.efkefc",
+      "language": "efkefc",
+      "sizeLines": 44,
+      "fileCategory": "code"
+    },
+    {
+      "path": "rom/effects/ef_ice02.efkefc",
+      "language": "efkefc",
+      "sizeLines": 347,
+      "fileCategory": "code"
+    },
+    {
+      "path": "rom/effects/ef_ice03.efkefc",
+      "language": "efkefc",
+      "sizeLines": 162,
+      "fileCategory": "code"
+    },
+    {
+      "path": "rom/effects/ef_lightning01.efkefc",
+      "language": "efkefc",
+      "sizeLines": 65,
+      "fileCategory": "code"
+    },
+    {
+      "path": "rom/effects/ef_lightning02.efkefc",
+      "language": "efkefc",
+      "sizeLines": 102,
+      "fileCategory": "code"
+    },
+    {
+      "path": "rom/effects/ef_lightning03.efkefc",
+      "language": "efkefc",
+      "sizeLines": 253,
+      "fileCategory": "code"
+    },
+    {
+      "path": "rom/effects/ef_parts_hit01.efkefc",
+      "language": "efkefc",
+      "sizeLines": 16,
+      "fileCategory": "code"
+    },
+    {
+      "path": "rom/effects/ef_parts_hit02.efkefc",
+      "language": "efkefc",
+      "sizeLines": 12,
+      "fileCategory": "code"
+    },
+    {
+      "path": "rom/effects/ef_wind01.efkefc",
+      "language": "efkefc",
+      "sizeLines": 60,
+      "fileCategory": "code"
+    },
+    {
+      "path": "rom/effects/ef_wind02.efkefc",
+      "language": "efkefc",
+      "sizeLines": 40,
+      "fileCategory": "code"
+    },
+    {
+      "path": "rom/effects/ef_wind03.efkefc",
+      "language": "efkefc",
+      "sizeLines": 79,
+      "fileCategory": "code"
+    },
+    {
+      "path": "rom/scene/default_scene.txt",
+      "language": "txt",
+      "sizeLines": 1,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "rom/scene/scene_sample_menu.json",
+      "language": "json",
+      "sizeLines": 136,
+      "fileCategory": "config"
+    },
+    {
+      "path": "rom/skybox/001/MySkybox.dds",
+      "language": "dds",
+      "sizeLines": 0,
+      "fileCategory": "code"
+    },
+    {
+      "path": "rom/skybox/MySkybox.dds",
+      "language": "dds",
+      "sizeLines": 889,
+      "fileCategory": "code"
+    },
+    {
+      "path": "rom/skybox/run.bat",
+      "language": "batch",
+      "sizeLines": 2,
+      "fileCategory": "script"
+    },
+    {
+      "path": "rom/skybox/texassemble.exe",
+      "language": "exe",
+      "sizeLines": 1591,
+      "fileCategory": "code"
+    },
+    {
+      "path": "rom/tags.json",
+      "language": "json",
+      "sizeLines": 12,
+      "fileCategory": "config"
+    },
+    {
+      "path": "samples/scenes/scene_job_timeline_test.json",
+      "language": "json",
+      "sizeLines": 271,
+      "fileCategory": "config"
+    },
+    {
+      "path": "samples/scenes/scene_pbr_showcase.json",
+      "language": "json",
+      "sizeLines": 278,
+      "fileCategory": "config"
+    },
+    {
+      "path": "samples/scenes/scene_physics_events_test.json",
+      "language": "json",
+      "sizeLines": 201,
+      "fileCategory": "config"
+    },
+    {
+      "path": "samples/scenes/scene_sample_playground.json",
+      "language": "json",
+      "sizeLines": 211,
+      "fileCategory": "config"
+    },
+    {
+      "path": "samples/scripts/SampleFirstPersonScript.cpp",
+      "language": "cpp",
+      "sizeLines": 108,
+      "fileCategory": "code"
+    },
+    {
+      "path": "samples/scripts/SampleFirstPersonScript.h",
+      "language": "c",
+      "sizeLines": 21,
+      "fileCategory": "code"
+    },
+    {
+      "path": "samples/scripts/SamplePlayerScript.cpp",
+      "language": "cpp",
+      "sizeLines": 107,
+      "fileCategory": "code"
+    },
+    {
+      "path": "samples/scripts/SamplePlayerScript.h",
+      "language": "c",
+      "sizeLines": 20,
+      "fileCategory": "code"
+    },
+    {
+      "path": "samples/scripts/SampleSpinScript.cpp",
+      "language": "cpp",
+      "sizeLines": 38,
+      "fileCategory": "code"
+    },
+    {
+      "path": "samples/scripts/SampleSpinScript.h",
+      "language": "c",
+      "sizeLines": 17,
+      "fileCategory": "code"
+    },
+    {
+      "path": "samples/scripts/SampleTriggerLogScript.cpp",
+      "language": "cpp",
+      "sizeLines": 52,
+      "fileCategory": "code"
+    },
+    {
+      "path": "samples/scripts/SampleTriggerLogScript.h",
+      "language": "c",
+      "sizeLines": 24,
+      "fileCategory": "code"
+    },
+    {
+      "path": "shaders/FullscreenVS.hlsl",
+      "language": "hlsl",
+      "sizeLines": 15,
+      "fileCategory": "code"
+    },
+    {
+      "path": "shaders/LightingCommon.hlsli",
+      "language": "hlsli",
+      "sizeLines": 587,
+      "fileCategory": "code"
+    },
+    {
+      "path": "shaders/ParticlePS.hlsl",
+      "language": "hlsl",
+      "sizeLines": 14,
+      "fileCategory": "code"
+    },
+    {
+      "path": "shaders/ParticleVS.hlsl",
+      "language": "hlsl",
+      "sizeLines": 43,
+      "fileCategory": "code"
+    },
+    {
+      "path": "shaders/PixelShader2D.hlsl",
+      "language": "hlsl",
+      "sizeLines": 18,
+      "fileCategory": "code"
+    },
+    {
+      "path": "shaders/PixelShader3D.hlsl",
+      "language": "hlsl",
+      "sizeLines": 55,
+      "fileCategory": "code"
+    },
+    {
+      "path": "shaders/PixelShader3D_DirectionalPixel.hlsl",
+      "language": "hlsl",
+      "sizeLines": 41,
+      "fileCategory": "code"
+    },
+    {
+      "path": "shaders/PixelShader3D_Hemisphere.hlsl",
+      "language": "hlsl",
+      "sizeLines": 16,
+      "fileCategory": "code"
+    },
+    {
+      "path": "shaders/PixelShader3D_Outline.hlsl",
+      "language": "hlsl",
+      "sizeLines": 6,
+      "fileCategory": "code"
+    },
+    {
+      "path": "shaders/PixelShader3D_PBR.hlsl",
+      "language": "hlsl",
+      "sizeLines": 58,
+      "fileCategory": "code"
+    },
+    {
+      "path": "shaders/PixelShader3D_PointPixel.hlsl",
+      "language": "hlsl",
+      "sizeLines": 33,
+      "fileCategory": "code"
+    },
+    {
+      "path": "shaders/PixelShader3D_Rim.hlsl",
+      "language": "hlsl",
+      "sizeLines": 24,
+      "fileCategory": "code"
+    },
+    {
+      "path": "shaders/PixelShader3D_SpotPixel.hlsl",
+      "language": "hlsl",
+      "sizeLines": 41,
+      "fileCategory": "code"
+    },
+    {
+      "path": "shaders/PixelShader3D_SurfaceFX.hlsl",
+      "language": "hlsl",
+      "sizeLines": 64,
+      "fileCategory": "code"
+    },
+    {
+      "path": "shaders/PixelShader3D_Toon.hlsl",
+      "language": "hlsl",
+      "sizeLines": 68,
+      "fileCategory": "code"
+    },
+    {
+      "path": "shaders/PixelShaderUnlit.hlsl",
+      "language": "hlsl",
+      "sizeLines": 26,
+      "fileCategory": "code"
+    },
+    {
+      "path": "shaders/PostProcessPS.hlsl",
+      "language": "hlsl",
+      "sizeLines": 144,
+      "fileCategory": "code"
+    },
+    {
+      "path": "shaders/ShaderCommon.hlsli",
+      "language": "hlsli",
+      "sizeLines": 69,
+      "fileCategory": "code"
+    },
+    {
+      "path": "shaders/SkyboxPS.hlsl",
+      "language": "hlsl",
+      "sizeLines": 19,
+      "fileCategory": "code"
+    },
+    {
+      "path": "shaders/SkyboxVS.hlsl",
+      "language": "hlsl",
+      "sizeLines": 24,
+      "fileCategory": "code"
+    },
+    {
+      "path": "shaders/VertexShader2D.hlsl",
+      "language": "hlsl",
+      "sizeLines": 31,
+      "fileCategory": "code"
+    },
+    {
+      "path": "shaders/VertexShader3D.hlsl",
+      "language": "hlsl",
+      "sizeLines": 22,
+      "fileCategory": "code"
+    },
+    {
+      "path": "shaders/VertexShader3DSkinned.hlsl",
+      "language": "hlsl",
+      "sizeLines": 22,
+      "fileCategory": "code"
+    },
+    {
+      "path": "shaders/VertexShader3D_Outline.hlsl",
+      "language": "hlsl",
+      "sizeLines": 23,
+      "fileCategory": "code"
+    },
+    {
+      "path": "shaders/VertexShaderUnlit.hlsl",
+      "language": "hlsl",
+      "sizeLines": 75,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/camera/camera.cpp",
+      "language": "cpp",
+      "sizeLines": 66,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/camera/camera.h",
+      "language": "c",
+      "sizeLines": 41,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/camera/camera_director.cpp",
+      "language": "cpp",
+      "sizeLines": 182,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/camera/camera_director.h",
+      "language": "c",
+      "sizeLines": 35,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/camera/camera_pose.cpp",
+      "language": "cpp",
+      "sizeLines": 195,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/camera/camera_pose.h",
+      "language": "c",
+      "sizeLines": 29,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/camera/debug_camera.cpp",
+      "language": "cpp",
+      "sizeLines": 426,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/camera/debug_camera.h",
+      "language": "c",
+      "sizeLines": 50,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/camera/first_person_camera.cpp",
+      "language": "cpp",
+      "sizeLines": 185,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/camera/first_person_camera.h",
+      "language": "c",
+      "sizeLines": 30,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/camera/third_person_camera.cpp",
+      "language": "cpp",
+      "sizeLines": 472,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/camera/third_person_camera.h",
+      "language": "c",
+      "sizeLines": 50,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/main.cpp",
+      "language": "cpp",
+      "sizeLines": 575,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/main.h",
+      "language": "c",
+      "sizeLines": 49,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/rendering/WICTextureLoader11.cpp",
+      "language": "cpp",
+      "sizeLines": 1076,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/rendering/WICTextureLoader11.h",
+      "language": "c",
+      "sizeLines": 149,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/rendering/fade.cpp",
+      "language": "cpp",
+      "sizeLines": 105,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/rendering/fade.h",
+      "language": "c",
+      "sizeLines": 51,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/rendering/grid.cpp",
+      "language": "cpp",
+      "sizeLines": 246,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/rendering/grid.h",
+      "language": "c",
+      "sizeLines": 30,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/rendering/scene_transition.cpp",
+      "language": "cpp",
+      "sizeLines": 79,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/rendering/scene_transition.h",
+      "language": "c",
+      "sizeLines": 27,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/scene/game_scene.cpp",
+      "language": "cpp",
+      "sizeLines": 637,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/scene/game_scene.h",
+      "language": "c",
+      "sizeLines": 33,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/scene/game_scene_script_hooks.cpp",
+      "language": "cpp",
+      "sizeLines": 21,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/scene/game_scene_script_hooks.h",
+      "language": "c",
+      "sizeLines": 5,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/scene/scene_manager.cpp",
+      "language": "cpp",
+      "sizeLines": 77,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/scene/scene_manager.h",
+      "language": "c",
+      "sizeLines": 59,
+      "fileCategory": "code"
+    },
+    {
+      "path": "tools/assemble_api_reference.py",
+      "language": "python",
+      "sizeLines": 275,
+      "fileCategory": "code"
+    },
+    {
+      "path": "tools/build_fbx_stats.bat",
+      "language": "batch",
+      "sizeLines": 8,
+      "fileCategory": "script"
+    },
+    {
+      "path": "tools/extract_api_headers.py",
+      "language": "python",
+      "sizeLines": 60,
+      "fileCategory": "code"
+    },
+    {
+      "path": "tools/fbx_stats.cpp",
+      "language": "cpp",
+      "sizeLines": 117,
+      "fileCategory": "code"
+    },
+    {
+      "path": "tools/generate_default_sky_cubemap.py",
+      "language": "python",
+      "sizeLines": 71,
+      "fileCategory": "code"
+    }
+  ],
+  "totalFiles": 378,
+  "filteredByIgnore": 322,
+  "estimatedComplexity": "large",
+  "importMap": {
+    ".gitattributes": [],
+    "CONTEXT.md": [],
+    "IvyEngine.Shaders.targets": [],
+    "IvyEngine.sln": [],
+    "IvyEngine.vcxproj": [],
+    "IvyEngine.vcxproj.filters": [],
+    "IvyEngineRuntime.vcxproj": [],
+    "IvyEngineRuntime.vcxproj.filters": [],
+    "README.md": [],
+    "docs/CONTENT_PROJECT.md": [],
+    "docs/ENGINE_API_REFERENCE.md": [],
+    "docs/ENGINE_MANUAL.md": [],
+    "docs/ENGINE_USER_GUIDE.md": [],
+    "docs/_api_extract.md": [],
+    "docs/adr/0001-runtime-audio-buses-from-project-json.md": [],
+    "docs/adr/0002-gui-build-playable-package.md": [],
+    "docs/adr/0003-gpu-vertex-shader-skin.md": [],
+    "docs/adr/0004-runtime-gravity-from-project-json.md": [],
+    "docs/adr/0005-engine-v1-lock.md": [],
+    "docs/adr/0006-first-person-camera-unfreeze.md": [],
+    "docs/diagrams/ivy-engine-architecture.html": [],
+    "docs/diagrams/ivy-engine-architecture.zh-HK.html": [],
+    "engine/audio/audio_listener_sync.cpp": [
+      "engine/audio/audio_listener_sync.h",
+      "engine/audio/audio_manager.h",
+      "engine/core/engine_gui.h",
+      "engine/ecs/audio_listener_component.h",
+      "engine/ecs/camera_component.h",
+      "engine/ecs/game_object.h",
+      "engine/ecs/transform.h"
+    ],
+    "engine/audio/audio_listener_sync.h": [],
+    "engine/audio/audio_manager.cpp": [
+      "engine/audio/audio_manager.h",
+      "engine/debug_draw/debug_drawer.h",
+      "engine/ecs/game_object.h"
+    ],
+    "engine/audio/audio_manager.h": [],
+    "engine/core/debug_system.cpp": [
+      "engine/core/debug_system.h",
+      "engine/physics/core/physics_system.h"
+    ],
+    "engine/core/debug_system.h": [],
+    "engine/core/easing.cpp": [
+      "engine/core/easing.h"
+    ],
+    "engine/core/easing.h": [],
+    "engine/core/engine_gui.cpp": [
+      "engine/audio/audio_manager.h",
+      "engine/core/debug_system.h",
+      "engine/core/engine_gui.h",
+      "engine/core/engine_gui_internal.h",
+      "engine/core/job_system.h",
+      "engine/debug_draw/debug_drawer.h",
+      "engine/ecs/audio_component.h",
+      "engine/ecs/audio_listener_component.h",
+      "engine/ecs/billboard_component.h",
+      "engine/ecs/camera_component.h",
+      "engine/ecs/collider_component.h",
+      "engine/ecs/component_factory.h",
+      "engine/ecs/directional_light_component.h",
+      "engine/ecs/effect_component.h",
+      "engine/ecs/game_object.h",
+      "engine/ecs/material_component.h",
+      "engine/ecs/model_asset_cache.h",
+      "engine/ecs/point_light_component.h",
+      "engine/ecs/prefab_runtime.h",
+      "engine/ecs/prefab_serializer.h",
+      "engine/ecs/rigidbody_component.h",
+      "engine/ecs/spot_light_component.h",
+      "engine/ecs/tag_registry.h",
+      "engine/ecs/transform.h",
+      "engine/ecs/visual_component.h",
+      "engine/editor/camera_gizmo.h",
+      "engine/editor/editor_project_browser.h",
+      "engine/editor/editor_ui_panel.h",
+      "engine/editor/editor_undo.h",
+      "engine/editor/light_gizmo.h",
+      "engine/editor/playable_package_builder.h",
+      "engine/editor/project_asset_index.h",
+      "engine/editor/project_manager.h",
+      "engine/editor/transform_gizmo.h",
+      "engine/editor/ui_gizmo.h",
+      "engine/input/key_logger.h",
+      "engine/input/keyboard.h",
+      "engine/input/mouse.h",
+      "engine/physics/collider/collider.h",
+      "engine/physics/core/physics_system.h",
+      "engine/rendering/d3d11/post_process.h",
+      "engine/rendering/d3d11/renderer.h",
+      "engine/rendering/d3d11/shader.h",
+      "engine/rendering/model/model.h",
+      "engine/scene/render_settings.h",
+      "engine/scene/scene_asset_preload.h",
+      "engine/scene/scene_loader.h",
+      "engine/scene/scene_runtime.h",
+      "engine/scripting/Script.h",
+      "engine/scripting/script_component.h",
+      "engine/scripting/script_factory.h",
+      "engine/scripting/script_watcher.h",
+      "engine/ui/scene_canvas.h",
+      "engine/ui/ui_canvas.h",
+      "engine/ui/ui_element.h"
+    ],
+    "engine/core/engine_gui.h": [],
+    "engine/core/engine_gui_internal.h": [
+      "engine/core/engine_gui.h",
+      "engine/scene/scene_loader.h"
+    ],
+    "engine/core/engine_gui_persistence.cpp": [
+      "engine/core/engine_gui.h",
+      "engine/core/engine_gui_internal.h",
+      "engine/scene/scene_loader.h"
+    ],
+    "engine/core/engine_gui_runtime.cpp": [
+      "engine/core/engine_gui.h",
+      "engine/ecs/game_object.h",
+      "engine/ecs/model_asset_cache.h",
+      "engine/input/mouse.h",
+      "engine/physics/core/physics_system.h",
+      "engine/rendering/d3d11/renderer.h",
+      "engine/scene/scene_loader.h",
+      "engine/scripting/script_component.h",
+      "src/app/camera/debug_camera.h",
+      "src/app/camera/first_person_camera.h",
+      "src/app/camera/third_person_camera.h"
+    ],
+    "engine/core/frame_transform_snapshot.cpp": [
+      "engine/core/frame_transform_snapshot.h",
+      "engine/ecs/game_object.h"
+    ],
+    "engine/core/frame_transform_snapshot.h": [],
+    "engine/core/game_object.h": [
+      "engine/ecs/game_object.h"
+    ],
+    "engine/core/job_system.cpp": [
+      "engine/core/job_system.h"
+    ],
+    "engine/core/job_system.h": [],
+    "engine/core/system_timer.cpp": [],
+    "engine/core/system_timer.h": [],
+    "engine/debug_draw/debug_drawer.cpp": [
+      "engine/debug_draw/debug_drawer.h"
+    ],
+    "engine/debug_draw/debug_drawer.h": [],
+    "engine/debug_draw/debug_ofstream.cpp": [
+      "engine/debug_draw/debug_ofstream.h"
+    ],
+    "engine/debug_draw/debug_ofstream.h": [],
+    "engine/debug_draw/debug_text.cpp": [
+      "engine/debug_draw/debug_text.h"
+    ],
+    "engine/debug_draw/debug_text.h": [],
+    "engine/ecs/audio_component.cpp": [
+      "engine/ecs/audio_component.h",
+      "engine/ecs/audio_system.h",
+      "engine/ecs/game_object.h",
+      "engine/ecs/transform.h"
+    ],
+    "engine/ecs/audio_component.h": [
+      "engine/audio/audio_manager.h",
+      "engine/ecs/component.h"
+    ],
+    "engine/ecs/audio_listener_component.cpp": [
+      "engine/ecs/audio_listener_component.h"
+    ],
+    "engine/ecs/audio_listener_component.h": [
+      "engine/ecs/component.h"
+    ],
+    "engine/ecs/audio_system.cpp": [
+      "engine/ecs/audio_component.h",
+      "engine/ecs/audio_system.h"
+    ],
+    "engine/ecs/audio_system.h": [],
+    "engine/ecs/billboard_component.cpp": [
+      "engine/ecs/billboard_component.h",
+      "engine/ecs/game_object.h",
+      "engine/ecs/string_utils.h",
+      "engine/ecs/transform.h",
+      "engine/rendering/billboard/billboard.h",
+      "engine/rendering/sprite/texture.h"
+    ],
+    "engine/ecs/billboard_component.h": [
+      "engine/ecs/component.h"
+    ],
+    "engine/ecs/camera_component.cpp": [
+      "engine/ecs/camera_component.h",
+      "engine/ecs/transform.h"
+    ],
+    "engine/ecs/camera_component.h": [
+      "engine/ecs/component.h"
+    ],
+    "engine/ecs/collider_component.cpp": [
+      "engine/ecs/collider_component.h",
+      "engine/ecs/game_object.h",
+      "engine/ecs/model_asset_cache.h",
+      "engine/ecs/rigidbody_component.h",
+      "engine/ecs/visual_component.h"
+    ],
+    "engine/ecs/collider_component.h": [
+      "engine/ecs/component.h",
+      "engine/physics/collider/collider.h"
+    ],
+    "engine/ecs/component.h": [],
+    "engine/ecs/component_factory.cpp": [
+      "engine/ecs/component_factory.h"
+    ],
+    "engine/ecs/component_factory.h": [
+      "engine/ecs/component.h"
+    ],
+    "engine/ecs/directional_light_component.cpp": [
+      "engine/ecs/directional_light_component.h",
+      "engine/editor/light_gizmo.h"
+    ],
+    "engine/ecs/directional_light_component.h": [
+      "engine/ecs/component.h"
+    ],
+    "engine/ecs/effect_component.cpp": [
+      "engine/ecs/effect_component.h",
+      "engine/ecs/effect_system_flush.h",
+      "engine/ecs/game_object.h",
+      "engine/ecs/transform.h",
+      "engine/rendering/effect/effect_system.h"
+    ],
+    "engine/ecs/effect_component.h": [
+      "engine/ecs/component.h"
+    ],
+    "engine/ecs/effect_system_flush.cpp": [
+      "engine/ecs/effect_component.h",
+      "engine/ecs/effect_system_flush.h"
+    ],
+    "engine/ecs/effect_system_flush.h": [],
+    "engine/ecs/game_object.cpp": [
+      "engine/audio/audio_manager.h",
+      "engine/core/debug_system.h",
+      "engine/ecs/collider_component.h",
+      "engine/ecs/game_object.h",
+      "engine/ecs/material_component.h",
+      "engine/ecs/transform.h",
+      "engine/ecs/visual_component.h",
+      "engine/physics/core/physics_system.h",
+      "engine/rendering/d3d11/shader.h",
+      "engine/scene/render_settings.h",
+      "engine/scripting/script_component.h"
+    ],
+    "engine/ecs/game_object.h": [],
+    "engine/ecs/material_component.cpp": [
+      "engine/ecs/material_component.h",
+      "engine/rendering/model/model_util.h"
+    ],
+    "engine/ecs/material_component.h": [
+      "engine/ecs/component.h"
+    ],
+    "engine/ecs/model_asset_cache.cpp": [
+      "engine/ecs/model_asset_cache.h",
+      "engine/ecs/string_utils.h"
+    ],
+    "engine/ecs/model_asset_cache.h": [],
+    "engine/ecs/point_light_component.cpp": [
+      "engine/ecs/point_light_component.h"
+    ],
+    "engine/ecs/point_light_component.h": [
+      "engine/ecs/component.h"
+    ],
+    "engine/ecs/prefab_runtime.cpp": [
+      "engine/ecs/prefab_runtime.h",
+      "engine/ecs/prefab_serializer.h",
+      "engine/ecs/transform.h",
+      "engine/physics/core/physics_system.h",
+      "engine/scene/scene_loader.h",
+      "engine/scene/scene_runtime.h",
+      "engine/scripting/script_component.h"
+    ],
+    "engine/ecs/prefab_runtime.h": [
+      "engine/ecs/game_object.h"
+    ],
+    "engine/ecs/prefab_serializer.cpp": [
+      "engine/ecs/component_factory.h",
+      "engine/ecs/prefab_serializer.h",
+      "engine/ecs/tag_registry.h"
+    ],
+    "engine/ecs/prefab_serializer.h": [
+      "engine/ecs/game_object.h"
+    ],
+    "engine/ecs/rigidbody_component.cpp": [
+      "engine/ecs/rigidbody_component.h"
+    ],
+    "engine/ecs/rigidbody_component.h": [
+      "engine/ecs/component.h",
+      "engine/physics/core/rigidbody.h"
+    ],
+    "engine/ecs/spot_light_component.cpp": [
+      "engine/ecs/spot_light_component.h"
+    ],
+    "engine/ecs/spot_light_component.h": [
+      "engine/ecs/component.h"
+    ],
+    "engine/ecs/string_utils.h": [],
+    "engine/ecs/tag_registry.cpp": [
+      "engine/ecs/game_object.h",
+      "engine/ecs/tag_registry.h"
+    ],
+    "engine/ecs/tag_registry.h": [],
+    "engine/ecs/transform.cpp": [
+      "engine/ecs/game_object.h",
+      "engine/ecs/transform.h"
+    ],
+    "engine/ecs/transform.h": [
+      "engine/ecs/component.h"
+    ],
+    "engine/ecs/visual_component.cpp": [
+      "engine/ecs/model_asset_cache.h",
+      "engine/ecs/visual_component.h",
+      "engine/rendering/model/model_util.h"
+    ],
+    "engine/ecs/visual_component.h": [
+      "engine/ecs/component.h",
+      "engine/rendering/d3d11/shader.h",
+      "engine/rendering/model/model.h"
+    ],
+    "engine/ecs/visual_system.cpp": [
+      "engine/ecs/game_object.h",
+      "engine/ecs/visual_component.h",
+      "engine/ecs/visual_system.h",
+      "engine/scene/scene_loader.h"
+    ],
+    "engine/ecs/visual_system.h": [],
+    "engine/editor/camera_gizmo.cpp": [
+      "engine/debug_draw/debug_drawer.h",
+      "engine/ecs/camera_component.h",
+      "engine/ecs/game_object.h",
+      "engine/ecs/transform.h",
+      "engine/editor/camera_gizmo.h"
+    ],
+    "engine/editor/camera_gizmo.h": [],
+    "engine/editor/editor_prefab_panel.cpp": [
+      "engine/ecs/game_object.h",
+      "engine/ecs/prefab_serializer.h",
+      "engine/editor/editor_prefab_panel.h"
+    ],
+    "engine/editor/editor_prefab_panel.h": [],
+    "engine/editor/editor_project_browser.cpp": [
+      "engine/core/engine_gui.h",
+      "engine/ecs/collider_component.h",
+      "engine/ecs/game_object.h",
+      "engine/ecs/prefab_serializer.h",
+      "engine/ecs/transform.h",
+      "engine/ecs/visual_component.h",
+      "engine/editor/editor_project_browser.h",
+      "engine/editor/project_asset_index.h",
+      "engine/editor/project_asset_ops.h",
+      "engine/scene/scene_loader.h"
+    ],
+    "engine/editor/editor_project_browser.h": [],
+    "engine/editor/editor_ui_panel.cpp": [
+      "engine/core/engine_gui.h",
+      "engine/ecs/game_object.h",
+      "engine/editor/editor_ui_panel.h",
+      "engine/editor/editor_undo.h",
+      "engine/scripting/ui_canvas_script_factory.h",
+      "engine/ui/scene_canvas.h",
+      "engine/ui/ui_bar.h",
+      "engine/ui/ui_button.h",
+      "engine/ui/ui_canvas.h",
+      "engine/ui/ui_sprite.h",
+      "engine/ui/ui_text.h"
+    ],
+    "engine/editor/editor_ui_panel.h": [],
+    "engine/editor/editor_undo.cpp": [
+      "engine/core/engine_gui.h",
+      "engine/core/engine_gui_internal.h",
+      "engine/ecs/audio_component.h",
+      "engine/ecs/audio_listener_component.h",
+      "engine/ecs/billboard_component.h",
+      "engine/ecs/camera_component.h",
+      "engine/ecs/collider_component.h",
+      "engine/ecs/component.h",
+      "engine/ecs/component_factory.h",
+      "engine/ecs/directional_light_component.h",
+      "engine/ecs/effect_component.h",
+      "engine/ecs/game_object.h",
+      "engine/ecs/material_component.h",
+      "engine/ecs/point_light_component.h",
+      "engine/ecs/prefab_serializer.h",
+      "engine/ecs/rigidbody_component.h",
+      "engine/ecs/spot_light_component.h",
+      "engine/ecs/transform.h",
+      "engine/ecs/visual_component.h",
+      "engine/editor/editor_undo.h",
+      "engine/scene/scene_loader.h",
+      "engine/scripting/script_component.h",
+      "engine/ui/scene_canvas.h",
+      "engine/ui/ui_element.h"
+    ],
+    "engine/editor/editor_undo.h": [],
+    "engine/editor/light_gizmo.cpp": [
+      "engine/debug_draw/debug_drawer.h",
+      "engine/ecs/directional_light_component.h",
+      "engine/ecs/game_object.h",
+      "engine/ecs/point_light_component.h",
+      "engine/ecs/spot_light_component.h",
+      "engine/ecs/transform.h",
+      "engine/editor/light_gizmo.h"
+    ],
+    "engine/editor/light_gizmo.h": [],
+    "engine/editor/playable_package_builder.cpp": [
+      "engine/editor/playable_package_builder.h",
+      "engine/editor/project_manager.h"
+    ],
+    "engine/editor/playable_package_builder.h": [],
+    "engine/editor/project_asset_index.cpp": [
+      "engine/ecs/model_asset_cache.h",
+      "engine/editor/project_asset_index.h"
+    ],
+    "engine/editor/project_asset_index.h": [],
+    "engine/editor/project_asset_ops.cpp": [
+      "engine/ecs/string_utils.h",
+      "engine/editor/project_asset_index.h",
+      "engine/editor/project_asset_ops.h",
+      "engine/editor/project_manager.h",
+      "engine/scene/scene_loader.h"
+    ],
+    "engine/editor/project_asset_ops.h": [],
+    "engine/editor/project_manager.cpp": [
+      "engine/audio/audio_manager.h",
+      "engine/editor/project_manager.h",
+      "engine/physics/core/rigidbody.h"
+    ],
+    "engine/editor/project_manager.h": [],
+    "engine/editor/transform_gizmo.cpp": [
+      "engine/core/engine_gui.h",
+      "engine/ecs/game_object.h",
+      "engine/ecs/transform.h",
+      "engine/editor/editor_undo.h",
+      "engine/editor/transform_gizmo.h",
+      "engine/input/mouse.h"
+    ],
+    "engine/editor/transform_gizmo.h": [],
+    "engine/editor/ui_gizmo.cpp": [
+      "engine/core/engine_gui.h",
+      "engine/editor/editor_undo.h",
+      "engine/editor/ui_gizmo.h",
+      "engine/input/mouse.h",
+      "engine/ui/scene_canvas.h",
+      "engine/ui/ui_bar.h",
+      "engine/ui/ui_button.h",
+      "engine/ui/ui_element.h",
+      "engine/ui/ui_sprite.h"
+    ],
+    "engine/editor/ui_gizmo.h": [],
+    "engine/input/controller.cpp": [
+      "engine/input/controller.h"
+    ],
+    "engine/input/controller.h": [],
+    "engine/input/key_logger.cpp": [
+      "engine/core/system_timer.h",
+      "engine/input/key_logger.h"
+    ],
+    "engine/input/key_logger.h": [],
+    "engine/input/keyboard.cpp": [
+      "engine/input/keyboard.h"
+    ],
+    "engine/input/keyboard.h": [],
+    "engine/input/mouse.cpp": [
+      "engine/input/mouse.h",
+      "engine/rendering/d3d11/renderer.h"
+    ],
+    "engine/input/mouse.h": [],
+    "engine/physics/collider/collider.cpp": [
+      "engine/core/debug_system.h",
+      "engine/debug_draw/debug_drawer.h",
+      "engine/ecs/game_object.h",
+      "engine/ecs/transform.h",
+      "engine/physics/collider/collider.h",
+      "engine/physics/core/physics_system.h",
+      "engine/physics/core/rigidbody.h",
+      "engine/rendering/d3d11/renderer.h"
+    ],
+    "engine/physics/collider/collider.h": [],
+    "engine/physics/core/physics_system.cpp": [
+      "engine/core/debug_system.h",
+      "engine/debug_draw/debug_drawer.h",
+      "engine/ecs/game_object.h",
+      "engine/ecs/transform.h",
+      "engine/physics/collider/collider.h",
+      "engine/physics/core/physics_system.h"
+    ],
+    "engine/physics/core/physics_system.h": [],
+    "engine/physics/core/rigidbody.cpp": [
+      "engine/physics/core/rigidbody.h"
+    ],
+    "engine/physics/core/rigidbody.h": [],
+    "engine/rendering/billboard/billboard.cpp": [
+      "engine/rendering/billboard/billboard.h",
+      "engine/rendering/d3d11/renderer.h",
+      "engine/rendering/sprite/texture.h"
+    ],
+    "engine/rendering/billboard/billboard.h": [],
+    "engine/rendering/d3d11/post_process.cpp": [
+      "engine/core/engine_gui.h",
+      "engine/rendering/d3d11/post_process.h",
+      "engine/rendering/d3d11/renderer.h"
+    ],
+    "engine/rendering/d3d11/post_process.h": [],
+    "engine/rendering/d3d11/renderer.cpp": [
+      "engine/rendering/d3d11/renderer.h",
+      "engine/scene/render_settings.h"
+    ],
+    "engine/rendering/d3d11/renderer.h": [],
+    "engine/rendering/d3d11/shader.cpp": [
+      "engine/core/system_timer.h",
+      "engine/debug_draw/debug_ofstream.h",
+      "engine/rendering/d3d11/renderer.h",
+      "engine/rendering/d3d11/shader.h",
+      "engine/rendering/lighting/lighting.h",
+      "engine/rendering/lighting/shadow.h"
+    ],
+    "engine/rendering/d3d11/shader.h": [],
+    "engine/rendering/effect/effect_object.cpp": [
+      "engine/rendering/effect/effect_object.h"
+    ],
+    "engine/rendering/effect/effect_object.h": [],
+    "engine/rendering/effect/effect_system.cpp": [
+      "engine/rendering/d3d11/renderer.h",
+      "engine/rendering/effect/effect_system.h"
+    ],
+    "engine/rendering/effect/effect_system.h": [],
+    "engine/rendering/environment/skybox.cpp": [
+      "engine/ecs/string_utils.h",
+      "engine/rendering/d3d11/renderer.h",
+      "engine/rendering/environment/skybox.h",
+      "engine/rendering/sprite/texture.h",
+      "engine/scene/render_settings.h"
+    ],
+    "engine/rendering/environment/skybox.h": [],
+    "engine/rendering/lighting/lighting.cpp": [
+      "engine/rendering/lighting/lighting.h",
+      "engine/scene/render_settings.h"
+    ],
+    "engine/rendering/lighting/lighting.h": [],
+    "engine/rendering/lighting/shadow.cpp": [
+      "engine/rendering/lighting/shadow.h"
+    ],
+    "engine/rendering/lighting/shadow.h": [],
+    "engine/rendering/model/model.cpp": [
+      "engine/rendering/d3d11/renderer.h",
+      "engine/rendering/d3d11/shader.h",
+      "engine/rendering/lighting/shadow.h",
+      "engine/rendering/model/model.h",
+      "engine/rendering/model/model_util.h"
+    ],
+    "engine/rendering/model/model.h": [],
+    "engine/rendering/model/model_util.cpp": [
+      "engine/rendering/d3d11/renderer.h",
+      "engine/rendering/model/model_util.h"
+    ],
+    "engine/rendering/model/model_util.h": [],
+    "engine/rendering/particle/particle_system.cpp": [
+      "engine/ecs/string_utils.h",
+      "engine/rendering/d3d11/renderer.h",
+      "engine/rendering/particle/particle_system.h",
+      "engine/rendering/sprite/texture.h"
+    ],
+    "engine/rendering/particle/particle_system.h": [],
+    "engine/rendering/sprite/line_sprite.cpp": [
+      "engine/rendering/d3d11/renderer.h",
+      "engine/rendering/d3d11/shader.h",
+      "engine/rendering/sprite/line_sprite.h",
+      "engine/rendering/sprite/texture.h"
+    ],
+    "engine/rendering/sprite/line_sprite.h": [],
+    "engine/rendering/sprite/sprite.cpp": [
+      "engine/debug_draw/debug_ofstream.h",
+      "engine/rendering/d3d11/renderer.h",
+      "engine/rendering/d3d11/shader.h",
+      "engine/rendering/sprite/sprite.h",
+      "engine/rendering/sprite/texture.h"
+    ],
+    "engine/rendering/sprite/sprite.h": [],
+    "engine/rendering/sprite/texture.cpp": [
+      "engine/debug_draw/debug_ofstream.h",
+      "engine/rendering/d3d11/renderer.h",
+      "engine/rendering/sprite/texture.h",
+      "engine/ui/ui_font.h"
+    ],
+    "engine/rendering/sprite/texture.h": [],
+    "engine/scene/render_settings.cpp": [
+      "engine/rendering/d3d11/renderer.h",
+      "engine/rendering/d3d11/shader.h",
+      "engine/rendering/environment/skybox.h",
+      "engine/rendering/lighting/shadow.h",
+      "engine/scene/render_settings.h"
+    ],
+    "engine/scene/render_settings.h": [
+      "engine/rendering/d3d11/shader.h"
+    ],
+    "engine/scene/scene_asset_preload.cpp": [
+      "engine/ecs/game_object.h",
+      "engine/ecs/model_asset_cache.h",
+      "engine/ecs/visual_component.h",
+      "engine/rendering/model/model.h",
+      "engine/scene/scene_asset_preload.h"
+    ],
+    "engine/scene/scene_asset_preload.h": [],
+    "engine/scene/scene_camera.cpp": [
+      "engine/core/engine_gui.h",
+      "engine/ecs/camera_component.h",
+      "engine/ecs/game_object.h",
+      "engine/ecs/transform.h",
+      "engine/scene/scene_camera.h"
+    ],
+    "engine/scene/scene_camera.h": [],
+    "engine/scene/scene_lighting.cpp": [
+      "engine/ecs/directional_light_component.h",
+      "engine/ecs/game_object.h",
+      "engine/ecs/point_light_component.h",
+      "engine/ecs/spot_light_component.h",
+      "engine/ecs/transform.h",
+      "engine/editor/light_gizmo.h",
+      "engine/rendering/lighting/lighting.h",
+      "engine/rendering/lighting/shadow.h",
+      "engine/scene/scene_lighting.h"
+    ],
+    "engine/scene/scene_lighting.h": [],
+    "engine/scene/scene_loader.cpp": [
+      "engine/audio/audio_manager.h",
+      "engine/ecs/audio_component.h",
+      "engine/ecs/audio_listener_component.h",
+      "engine/ecs/billboard_component.h",
+      "engine/ecs/camera_component.h",
+      "engine/ecs/collider_component.h",
+      "engine/ecs/component_factory.h",
+      "engine/ecs/directional_light_component.h",
+      "engine/ecs/effect_component.h",
+      "engine/ecs/material_component.h",
+      "engine/ecs/point_light_component.h",
+      "engine/ecs/prefab_runtime.h",
+      "engine/ecs/prefab_serializer.h",
+      "engine/ecs/rigidbody_component.h",
+      "engine/ecs/spot_light_component.h",
+      "engine/ecs/tag_registry.h",
+      "engine/ecs/transform.h",
+      "engine/ecs/visual_component.h",
+      "engine/physics/core/physics_system.h",
+      "engine/scene/render_settings.h",
+      "engine/scene/scene_loader.h",
+      "engine/scene/scene_runtime.h",
+      "engine/scripting/script_component.h",
+      "engine/scripting/script_factory.h",
+      "engine/scripting/script_watcher.h",
+      "engine/ui/scene_canvas.h"
+    ],
+    "engine/scene/scene_loader.h": [
+      "engine/ecs/game_object.h"
+    ],
+    "engine/scene/scene_node.cpp": [
+      "engine/scene/scene_node.h"
+    ],
+    "engine/scene/scene_node.h": [
+      "engine/ecs/game_object.h"
+    ],
+    "engine/scene/scene_runtime.cpp": [
+      "engine/ecs/collider_component.h",
+      "engine/scene/scene_runtime.h"
+    ],
+    "engine/scene/scene_runtime.h": [
+      "engine/ecs/game_object.h"
+    ],
+    "engine/scripting/Script.h": [
+      "engine/scene/scene_node.h"
+    ],
+    "engine/scripting/script_component.cpp": [
+      "engine/core/engine_gui.h",
+      "engine/scripting/script_component.h",
+      "engine/scripting/script_factory.h"
+    ],
+    "engine/scripting/script_component.h": [
+      "engine/ecs/component.h",
+      "engine/scripting/Script.h",
+      "engine/scripting/script_factory.h"
+    ],
+    "engine/scripting/script_dll_exports.cpp": [
+      "engine/scripting/Script.h"
+    ],
+    "engine/scripting/script_dll_register.h": [
+      "engine/scripting/Script.h"
+    ],
+    "engine/scripting/script_factory.cpp": [
+      "engine/scripting/script_factory.h",
+      "engine/scripting/ui_canvas_script_factory.h"
+    ],
+    "engine/scripting/script_factory.h": [
+      "engine/scripting/Script.h"
+    ],
+    "engine/scripting/script_fields.h": [],
+    "engine/scripting/script_register.h": [
+      "engine/scripting/script_factory.h"
+    ],
+    "engine/scripting/script_runtime_api.cpp": [
+      "engine/audio/audio_manager.h",
+      "engine/core/debug_system.h",
+      "engine/core/engine_gui.h",
+      "engine/debug_draw/debug_drawer.h",
+      "engine/ecs/audio_component.h",
+      "engine/ecs/effect_component.h",
+      "engine/ecs/material_component.h",
+      "engine/ecs/prefab_runtime.h",
+      "engine/ecs/visual_component.h",
+      "engine/input/key_logger.h",
+      "engine/input/mouse.h",
+      "engine/physics/collider/collider.h",
+      "engine/physics/core/physics_system.h",
+      "engine/rendering/billboard/billboard.h",
+      "engine/rendering/d3d11/post_process.h",
+      "engine/rendering/d3d11/renderer.h",
+      "engine/rendering/particle/particle_system.h",
+      "engine/rendering/sprite/line_sprite.h",
+      "engine/rendering/sprite/sprite.h",
+      "engine/rendering/sprite/texture.h",
+      "engine/scripting/script_runtime_api.h",
+      "engine/ui/scene_canvas.h",
+      "engine/ui/ui_text.h"
+    ],
+    "engine/scripting/script_runtime_api.h": [
+      "engine/core/engine_gui.h",
+      "engine/ecs/audio_component.h",
+      "engine/ecs/collider_component.h",
+      "engine/ecs/effect_component.h",
+      "engine/ecs/game_object.h",
+      "engine/ecs/material_component.h",
+      "engine/ecs/transform.h",
+      "engine/ecs/visual_component.h",
+      "engine/input/controller.h",
+      "engine/input/keyboard.h",
+      "engine/physics/collider/collider.h",
+      "engine/rendering/billboard/billboard.h",
+      "engine/rendering/particle/particle_system.h",
+      "engine/scene/scene_node.h",
+      "engine/ui/ui_canvas.h",
+      "engine/ui/ui_element.h",
+      "engine/ui/ui_sprite.h",
+      "engine/ui/ui_text.h"
+    ],
+    "engine/scripting/script_watcher.cpp": [
+      "engine/scripting/script_watcher.h"
+    ],
+    "engine/scripting/script_watcher.h": [],
+    "engine/scripting/ui_canvas_script.h": [],
+    "engine/scripting/ui_canvas_script_dll_exports.cpp": [
+      "engine/scripting/ui_canvas_script.h"
+    ],
+    "engine/scripting/ui_canvas_script_factory.cpp": [
+      "engine/scripting/ui_canvas_script_factory.h"
+    ],
+    "engine/scripting/ui_canvas_script_factory.h": [
+      "engine/scripting/ui_canvas_script.h"
+    ],
+    "engine/scripting/ui_canvas_script_register.h": [
+      "engine/scripting/ui_canvas_script.h"
+    ],
+    "engine/ui/scene_canvas.cpp": [
+      "engine/core/engine_gui.h",
+      "engine/ecs/string_utils.h",
+      "engine/input/key_logger.h",
+      "engine/rendering/d3d11/renderer.h",
+      "engine/rendering/sprite/sprite.h",
+      "engine/rendering/sprite/texture.h",
+      "engine/ui/scene_canvas.h"
+    ],
+    "engine/ui/scene_canvas.h": [],
+    "engine/ui/ui_bar.cpp": [
+      "engine/ecs/string_utils.h",
+      "engine/rendering/sprite/sprite.h",
+      "engine/rendering/sprite/texture.h",
+      "engine/ui/ui_bar.h"
+    ],
+    "engine/ui/ui_bar.h": [],
+    "engine/ui/ui_button.cpp": [
+      "engine/audio/audio_manager.h",
+      "engine/core/engine_gui.h",
+      "engine/ecs/string_utils.h",
+      "engine/input/mouse.h",
+      "engine/rendering/sprite/sprite.h",
+      "engine/rendering/sprite/texture.h",
+      "engine/ui/ui_button.h"
+    ],
+    "engine/ui/ui_button.h": [],
+    "engine/ui/ui_button_pointer.h": [],
+    "engine/ui/ui_canvas.cpp": [
+      "engine/input/controller.h",
+      "engine/input/key_logger.h",
+      "engine/ui/ui_canvas.h"
+    ],
+    "engine/ui/ui_canvas.h": [],
+    "engine/ui/ui_element.cpp": [
+      "engine/core/engine_gui.h",
+      "engine/rendering/d3d11/renderer.h",
+      "engine/ui/ui_element.h",
+      "engine/ui/ui_element_script_host.h"
+    ],
+    "engine/ui/ui_element.h": [],
+    "engine/ui/ui_element_script_host.cpp": [
+      "engine/core/engine_gui.h",
+      "engine/ui/ui_element.h",
+      "engine/ui/ui_element_script_host.h"
+    ],
+    "engine/ui/ui_element_script_host.h": [
+      "engine/scripting/ui_canvas_script_factory.h"
+    ],
+    "engine/ui/ui_font.cpp": [
+      "engine/rendering/sprite/texture.h",
+      "engine/ui/ui_font.h"
+    ],
+    "engine/ui/ui_font.h": [],
+    "engine/ui/ui_sprite.cpp": [
+      "engine/ecs/string_utils.h",
+      "engine/rendering/sprite/sprite.h",
+      "engine/rendering/sprite/texture.h",
+      "engine/ui/ui_sprite.h"
+    ],
+    "engine/ui/ui_sprite.h": [],
+    "engine/ui/ui_text.cpp": [
+      "engine/ecs/string_utils.h",
+      "engine/ui/ui_text.h"
+    ],
+    "engine/ui/ui_text.h": [],
+    "engine/ui/ui_text_renderer.cpp": [
+      "engine/rendering/sprite/sprite.h",
+      "engine/rendering/sprite/texture.h",
+      "engine/ui/ui_font.h",
+      "engine/ui/ui_text_renderer.h"
+    ],
+    "engine/ui/ui_text_renderer.h": [],
+    "external_content_template/ContentProject.sln": [],
+    "external_content_template/Directory.Build.props": [],
+    "external_content_template/IvyEngine.props": [],
+    "external_content_template/build_scripts.bat": [],
+    "external_content_template/deploy/deploy.bat": [],
+    "external_content_template/game/scripts/GameScripts/GameScripts.vcxproj": [],
+    "external_content_template/game/scripts/GameScripts/GameScripts.vcxproj.filters": [],
+    "external_content_template/game/scripts/GameScripts/framework.h": [],
+    "external_content_template/game/scripts/GameScripts/pch.cpp": [
+      "external_content_template/game/scripts/GameScripts/pch.h"
+    ],
+    "external_content_template/game/scripts/GameScripts/pch.h": [],
+    "external_content_template/rom/scene/default_scene.txt": [],
+    "external_template/GameScripts.External.vcxproj": [],
+    "pch.cpp": [
+      "pch.h"
+    ],
+    "pch.h": [],
+    "project.json": [],
+    "rom/editor/ui_prefs.json": [],
+    "rom/effects/Effect_speed_up.efkefc": [],
+    "rom/effects/Materials/mt_dissolve01.efkmat": [],
+    "rom/effects/Materials/mt_dissolve02.efkmat": [],
+    "rom/effects/Materials/mt_ice01.efkmat": [],
+    "rom/effects/Materials/mt_lightning01.efkmat": [],
+    "rom/effects/Materials/mt_lightning02.efkmat": [],
+    "rom/effects/Materials/mt_lightning03.efkmat": [],
+    "rom/effects/Materials/mt_slash01.efkmat": [],
+    "rom/effects/Materials/mt_toon_shockwave01.efkmat": [],
+    "rom/effects/Materials/mt_wind02.efkmat": [],
+    "rom/effects/Materials/mt_wind03_groundAura.efkmat": [],
+    "rom/effects/Materials/mt_wind03_groundCrack.efkmat": [],
+    "rom/effects/Materials/mt_wind03_slash01.efkmat": [],
+    "rom/effects/Materials/mt_wind03_tornado01.efkmat": [],
+    "rom/effects/Materials/mt_wind03_tornado01_test.efkmat": [],
+    "rom/effects/Meshes/ms_groundAura01.efkmodel": [],
+    "rom/effects/Meshes/ms_groundAura01.fbx": [],
+    "rom/effects/Meshes/ms_groundAura02.efkmodel": [],
+    "rom/effects/Meshes/ms_groundAura02.fbx": [],
+    "rom/effects/Meshes/ms_ice01.efkmodel": [],
+    "rom/effects/Meshes/ms_ice01.fbx": [],
+    "rom/effects/Meshes/ms_ice02.efkmodel": [],
+    "rom/effects/Meshes/ms_ice02.fbx": [],
+    "rom/effects/Meshes/ms_ice03.efkmodel": [],
+    "rom/effects/Meshes/ms_ice03.fbx": [],
+    "rom/effects/Meshes/ms_lightning01.efkmodel": [],
+    "rom/effects/Meshes/ms_lightning01.fbx": [],
+    "rom/effects/Meshes/ms_lightning02.efkmodel": [],
+    "rom/effects/Meshes/ms_lightning02.fbx": [],
+    "rom/effects/Meshes/ms_lightning03_01.efkmodel": [],
+    "rom/effects/Meshes/ms_lightning03_01.fbx": [],
+    "rom/effects/Meshes/ms_lightning03_02.efkmodel": [],
+    "rom/effects/Meshes/ms_lightning03_02.fbx": [],
+    "rom/effects/Meshes/ms_lightning03_03.efkmodel": [],
+    "rom/effects/Meshes/ms_lightning03_03.fbx": [],
+    "rom/effects/Meshes/ms_plane01.efkmodel": [],
+    "rom/effects/Meshes/ms_plane01.fbx": [],
+    "rom/effects/Meshes/ms_rock01.efkmodel": [],
+    "rom/effects/Meshes/ms_rock01.fbx": [],
+    "rom/effects/Meshes/ms_slash01.efkmodel": [],
+    "rom/effects/Meshes/ms_slash01.fbx": [],
+    "rom/effects/Meshes/ms_slash02.efkmodel": [],
+    "rom/effects/Meshes/ms_slash02.fbx": [],
+    "rom/effects/Meshes/ms_tornado01.efkmodel": [],
+    "rom/effects/Meshes/ms_tornado01.fbx": [],
+    "rom/effects/Meshes/ms_tornado02.efkmodel": [],
+    "rom/effects/Meshes/ms_tornado02.fbx": [],
+    "rom/effects/Meshes/ms_tornado03.efkmodel": [],
+    "rom/effects/Meshes/ms_tornado03.fbx": [],
+    "rom/effects/Meshes/ms_tornado04.efkmodel": [],
+    "rom/effects/Meshes/ms_tornado04.fbx": [],
+    "rom/effects/Meshes/ms_wind01.efkmodel": [],
+    "rom/effects/Meshes/ms_wind01.fbx": [],
+    "rom/effects/Meshes/ms_wind02.efkmodel": [],
+    "rom/effects/Meshes/ms_wind02.fbx": [],
+    "rom/effects/ef_fire01.efkefc": [],
+    "rom/effects/ef_fire02.efkefc": [],
+    "rom/effects/ef_fire03.efkefc": [],
+    "rom/effects/ef_holy01.efkefc": [],
+    "rom/effects/ef_ice01.efkefc": [],
+    "rom/effects/ef_ice02.efkefc": [],
+    "rom/effects/ef_ice03.efkefc": [],
+    "rom/effects/ef_lightning01.efkefc": [],
+    "rom/effects/ef_lightning02.efkefc": [],
+    "rom/effects/ef_lightning03.efkefc": [],
+    "rom/effects/ef_parts_hit01.efkefc": [],
+    "rom/effects/ef_parts_hit02.efkefc": [],
+    "rom/effects/ef_wind01.efkefc": [],
+    "rom/effects/ef_wind02.efkefc": [],
+    "rom/effects/ef_wind03.efkefc": [],
+    "rom/scene/default_scene.txt": [],
+    "rom/scene/scene_sample_menu.json": [],
+    "rom/skybox/001/MySkybox.dds": [],
+    "rom/skybox/MySkybox.dds": [],
+    "rom/skybox/run.bat": [],
+    "rom/skybox/texassemble.exe": [],
+    "rom/tags.json": [],
+    "samples/scenes/scene_job_timeline_test.json": [],
+    "samples/scenes/scene_pbr_showcase.json": [],
+    "samples/scenes/scene_physics_events_test.json": [],
+    "samples/scenes/scene_sample_playground.json": [],
+    "samples/scripts/SampleFirstPersonScript.cpp": [
+      "engine/ecs/transform.h",
+      "engine/input/controller.h",
+      "engine/input/keyboard.h",
+      "engine/scripting/script_dll_register.h",
+      "engine/scripting/script_runtime_api.h",
+      "samples/scripts/SampleFirstPersonScript.h"
+    ],
+    "samples/scripts/SampleFirstPersonScript.h": [
+      "engine/scripting/Script.h",
+      "engine/scripting/script_fields.h"
+    ],
+    "samples/scripts/SamplePlayerScript.cpp": [
+      "engine/ecs/transform.h",
+      "engine/input/controller.h",
+      "engine/input/keyboard.h",
+      "engine/scripting/script_dll_register.h",
+      "engine/scripting/script_runtime_api.h",
+      "samples/scripts/SamplePlayerScript.h"
+    ],
+    "samples/scripts/SamplePlayerScript.h": [
+      "engine/scripting/Script.h",
+      "engine/scripting/script_fields.h"
+    ],
+    "samples/scripts/SampleSpinScript.cpp": [
+      "engine/ecs/transform.h",
+      "engine/scripting/script_dll_register.h",
+      "engine/scripting/script_runtime_api.h",
+      "samples/scripts/SampleSpinScript.h"
+    ],
+    "samples/scripts/SampleSpinScript.h": [
+      "engine/scripting/Script.h",
+      "engine/scripting/script_fields.h"
+    ],
+    "samples/scripts/SampleTriggerLogScript.cpp": [
+      "engine/ecs/material_component.h",
+      "engine/scripting/script_dll_register.h",
+      "engine/scripting/script_runtime_api.h",
+      "samples/scripts/SampleTriggerLogScript.h"
+    ],
+    "samples/scripts/SampleTriggerLogScript.h": [
+      "engine/scripting/Script.h",
+      "engine/scripting/script_fields.h"
+    ],
+    "shaders/FullscreenVS.hlsl": [],
+    "shaders/LightingCommon.hlsli": [],
+    "shaders/ParticlePS.hlsl": [],
+    "shaders/ParticleVS.hlsl": [],
+    "shaders/PixelShader2D.hlsl": [],
+    "shaders/PixelShader3D.hlsl": [],
+    "shaders/PixelShader3D_DirectionalPixel.hlsl": [],
+    "shaders/PixelShader3D_Hemisphere.hlsl": [],
+    "shaders/PixelShader3D_Outline.hlsl": [],
+    "shaders/PixelShader3D_PBR.hlsl": [],
+    "shaders/PixelShader3D_PointPixel.hlsl": [],
+    "shaders/PixelShader3D_Rim.hlsl": [],
+    "shaders/PixelShader3D_SpotPixel.hlsl": [],
+    "shaders/PixelShader3D_SurfaceFX.hlsl": [],
+    "shaders/PixelShader3D_Toon.hlsl": [],
+    "shaders/PixelShaderUnlit.hlsl": [],
+    "shaders/PostProcessPS.hlsl": [],
+    "shaders/ShaderCommon.hlsli": [],
+    "shaders/SkyboxPS.hlsl": [],
+    "shaders/SkyboxVS.hlsl": [],
+    "shaders/VertexShader2D.hlsl": [],
+    "shaders/VertexShader3D.hlsl": [],
+    "shaders/VertexShader3DSkinned.hlsl": [],
+    "shaders/VertexShader3D_Outline.hlsl": [],
+    "shaders/VertexShaderUnlit.hlsl": [],
+    "src/app/camera/camera.cpp": [
+      "src/app/camera/camera.h"
+    ],
+    "src/app/camera/camera.h": [],
+    "src/app/camera/camera_director.cpp": [
+      "engine/core/easing.h",
+      "engine/core/engine_gui.h",
+      "engine/ecs/camera_component.h",
+      "engine/ecs/game_object.h",
+      "engine/ecs/transform.h",
+      "src/app/camera/camera.h",
+      "src/app/camera/camera_director.h",
+      "src/app/camera/debug_camera.h",
+      "src/app/camera/first_person_camera.h",
+      "src/app/camera/third_person_camera.h"
+    ],
+    "src/app/camera/camera_director.h": [],
+    "src/app/camera/camera_pose.cpp": [
+      "engine/ecs/camera_component.h",
+      "engine/ecs/transform.h",
+      "src/app/camera/camera.h",
+      "src/app/camera/camera_pose.h"
+    ],
+    "src/app/camera/camera_pose.h": [],
+    "src/app/camera/debug_camera.cpp": [
+      "engine/core/engine_gui.h",
+      "engine/input/key_logger.h",
+      "engine/input/keyboard.h",
+      "engine/input/mouse.h",
+      "src/app/camera/camera.h",
+      "src/app/camera/debug_camera.h"
+    ],
+    "src/app/camera/debug_camera.h": [],
+    "src/app/camera/first_person_camera.cpp": [
+      "engine/ecs/audio_listener_component.h",
+      "engine/ecs/camera_component.h",
+      "engine/ecs/game_object.h",
+      "engine/ecs/transform.h",
+      "engine/input/controller.h",
+      "engine/input/mouse.h",
+      "engine/rendering/d3d11/renderer.h",
+      "src/app/camera/camera_pose.h",
+      "src/app/camera/first_person_camera.h",
+      "src/app/camera/third_person_camera.h"
+    ],
+    "src/app/camera/first_person_camera.h": [],
+    "src/app/camera/third_person_camera.cpp": [
+      "engine/core/easing.h",
+      "engine/ecs/audio_listener_component.h",
+      "engine/ecs/camera_component.h",
+      "engine/ecs/game_object.h",
+      "engine/ecs/transform.h",
+      "engine/input/controller.h",
+      "engine/input/mouse.h",
+      "engine/rendering/d3d11/renderer.h",
+      "src/app/camera/camera_pose.h",
+      "src/app/camera/third_person_camera.h"
+    ],
+    "src/app/camera/third_person_camera.h": [],
+    "src/app/main.cpp": [
+      "engine/audio/audio_manager.h",
+      "engine/core/debug_system.h",
+      "engine/core/engine_gui.h",
+      "engine/core/job_system.h",
+      "engine/core/system_timer.h",
+      "engine/debug_draw/debug_ofstream.h",
+      "engine/debug_draw/debug_text.h",
+      "engine/input/controller.h",
+      "engine/input/key_logger.h",
+      "engine/input/keyboard.h",
+      "engine/input/mouse.h",
+      "engine/rendering/d3d11/post_process.h",
+      "engine/rendering/d3d11/renderer.h",
+      "engine/rendering/d3d11/shader.h",
+      "engine/rendering/effect/effect_system.h",
+      "engine/rendering/model/model_util.h",
+      "engine/rendering/sprite/line_sprite.h",
+      "engine/rendering/sprite/sprite.h",
+      "engine/rendering/sprite/texture.h",
+      "src/app/main.h"
+    ],
+    "src/app/main.h": [],
+    "src/app/rendering/WICTextureLoader11.cpp": [
+      "src/app/rendering/WICTextureLoader11.h"
+    ],
+    "src/app/rendering/WICTextureLoader11.h": [],
+    "src/app/rendering/fade.cpp": [
+      "engine/rendering/sprite/sprite.h",
+      "engine/rendering/sprite/texture.h",
+      "src/app/rendering/fade.h"
+    ],
+    "src/app/rendering/fade.h": [],
+    "src/app/rendering/grid.cpp": [
+      "engine/physics/collider/collider.h",
+      "engine/rendering/d3d11/renderer.h",
+      "engine/rendering/d3d11/shader.h",
+      "engine/rendering/model/model_util.h",
+      "engine/scene/render_settings.h",
+      "src/app/rendering/grid.h"
+    ],
+    "src/app/rendering/grid.h": [
+      "engine/core/game_object.h"
+    ],
+    "src/app/rendering/scene_transition.cpp": [
+      "engine/scripting/script_factory.h",
+      "src/app/rendering/scene_transition.h"
+    ],
+    "src/app/rendering/scene_transition.h": [],
+    "src/app/scene/game_scene.cpp": [
+      "engine/audio/audio_listener_sync.h",
+      "engine/audio/audio_manager.h",
+      "engine/core/engine_gui.h",
+      "engine/core/frame_transform_snapshot.h",
+      "engine/core/job_system.h",
+      "engine/debug_draw/debug_drawer.h",
+      "engine/ecs/audio_system.h",
+      "engine/ecs/billboard_component.h",
+      "engine/ecs/directional_light_component.h",
+      "engine/ecs/effect_system_flush.h",
+      "engine/ecs/model_asset_cache.h",
+      "engine/ecs/prefab_runtime.h",
+      "engine/ecs/visual_system.h",
+      "engine/input/key_logger.h",
+      "engine/physics/core/physics_system.h",
+      "engine/physics/core/rigidbody.h",
+      "engine/rendering/billboard/billboard.h",
+      "engine/rendering/d3d11/post_process.h",
+      "engine/rendering/d3d11/renderer.h",
+      "engine/rendering/d3d11/shader.h",
+      "engine/rendering/effect/effect_system.h",
+      "engine/rendering/environment/skybox.h",
+      "engine/rendering/lighting/lighting.h",
+      "engine/rendering/lighting/shadow.h",
+      "engine/rendering/model/model.h",
+      "engine/rendering/particle/particle_system.h",
+      "engine/rendering/sprite/texture.h",
+      "engine/scene/render_settings.h",
+      "engine/scene/scene_lighting.h",
+      "engine/scene/scene_loader.h",
+      "engine/scene/scene_runtime.h",
+      "engine/ui/scene_canvas.h",
+      "src/app/scene/game_scene.h",
+      "src/app/scene/game_scene_script_hooks.h"
+    ],
+    "src/app/scene/game_scene.h": [],
+    "src/app/scene/game_scene_script_hooks.cpp": [
+      "engine/scripting/script_factory.h",
+      "src/app/scene/game_scene_script_hooks.h"
+    ],
+    "src/app/scene/game_scene_script_hooks.h": [],
+    "src/app/scene/scene_manager.cpp": [
+      "engine/physics/core/physics_system.h",
+      "src/app/scene/scene_manager.h"
+    ],
+    "src/app/scene/scene_manager.h": [],
+    "tools/assemble_api_reference.py": [],
+    "tools/build_fbx_stats.bat": [],
+    "tools/extract_api_headers.py": [],
+    "tools/fbx_stats.cpp": [],
+    "tools/generate_default_sky_cubemap.py": []
+  },
+  "contentDigest": "636d4d9ce72d98c106253b0275ed8d542519eb88865340a523a214a3f0201cb2"
+}

@@ -1,0 +1,1201 @@
+[
+ {
+  "id": "function:engine/ui/ui_element_script_host.cpp:SaveToJson",
+  "name": "SaveToJson",
+  "summary": "Writes the script class name and serialized properties back to JSON."
+ },
+ {
+  "id": "function:engine/ui/ui_element_script_host.cpp:CreateScript",
+  "name": "CreateScript",
+  "summary": "Creates a UICanvasScript from the factory and deserializes stored properties onto it."
+ },
+ {
+  "id": "function:engine/ui/ui_element_script_host.cpp:Update",
+  "name": "Update",
+  "summary": "During play, lazily calls OnCreate then OnUpdate on the attached canvas script."
+ },
+ {
+  "id": "function:engine/ui/ui_element_script_host.cpp:InvokeOnClick",
+  "name": "InvokeOnClick",
+  "summary": "During play, ensures OnCreate ran then forwards a click to the attached script."
+ },
+ {
+  "id": "function:engine/ui/ui_element_script_host.cpp:HotReload",
+  "name": "HotReload",
+  "summary": "Tears down the current script instance and recreates it from the (possibly reloaded) factory."
+ },
+ {
+  "id": "function:engine/ui/ui_text.cpp:UIText",
+  "name": "UIText",
+  "summary": "Constructs a UIText with default white color, scale, spacing, and left alignment."
+ },
+ {
+  "id": "function:engine/ui/ui_text.cpp:Draw",
+  "name": "Draw",
+  "summary": "Draws the bitmap string at the scaled screen position using the configured alignment and color."
+ },
+ {
+  "id": "function:engine/ui/ui_text.cpp:SetFont",
+  "name": "SetFont",
+  "summary": "Loads a font texture into the text renderer and applies character spacing."
+ },
+ {
+  "id": "function:engine/ui/ui_text.cpp:GetScreenRect",
+  "name": "GetScreenRect",
+  "summary": "Computes the aligned text bounding box in viewport space for hit testing and gizmos."
+ },
+ {
+  "id": "file:engine/rendering/environment/skybox.cpp",
+  "name": "skybox.cpp",
+  "summary": "Implements cubemap skybox rendering: loads compiled shaders, builds a unit cube, and draws a camera-locked environment with tint and exposure from render settings.",
+  "languageNotes": "Strips view translation so the cube stays camera-centered; uses a front-face cull and read-only depth so the skybox sits behind the scene."
+ },
+ {
+  "id": "file:engine/rendering/model/model_util.cpp",
+  "name": "model_util.cpp",
+  "summary": "Shared model import helpers: WIC texture loading with an SRV cache, MTL/FBX diffuse texture resolution, and FBX skinned-mesh evaluation via a process-wide FbxManager.",
+  "languageNotes": "Caches WIC-decoded SRVs by wide path; FbxShared owns the SDK manager/IO settings for the process lifetime."
+ },
+ {
+  "id": "file:engine/rendering/particle/particle_system.cpp",
+  "name": "particle_system.cpp",
+  "summary": "Implements the CPU particle pool, emitter simulation (shapes, lifetime color/size, gravity), and GPU billboard instancing with additive or alpha blending.",
+  "languageNotes": "ParticleSystem is a singleton; ParticleRenderer_* builds instanced billboard meshes and binds blend states per emitter."
+ },
+ {
+  "id": "file:engine/rendering/sprite/line_sprite.cpp",
+  "name": "line_sprite.cpp",
+  "summary": "Draws a camera-facing world-space quad stretched between two points, used for ropes and trails with depth testing enabled."
+ },
+ {
+  "id": "file:engine/rendering/sprite/line_sprite.h",
+  "name": "line_sprite.h",
+  "summary": "Declares LineSprite initialize/finalize/draw for a depth-tested, camera-facing quad between two world points."
+ },
+ {
+  "id": "function:engine/rendering/environment/skybox.cpp:LoadCompiledShader",
+  "name": "LoadCompiledShader",
+  "summary": "Reads a compiled shader blob from disk and creates the skybox vertex and pixel shaders."
+ },
+ {
+  "id": "function:engine/rendering/environment/skybox.cpp:Skybox_Initialize",
+  "name": "Skybox_Initialize",
+  "summary": "Creates skybox shaders, cube geometry, constant buffers, sampler, and raster/depth states from the D3D11 device."
+ },
+ {
+  "id": "function:engine/rendering/environment/skybox.cpp:Skybox_Finalize",
+  "name": "Skybox_Finalize",
+  "summary": "Releases skybox GPU objects and clears the cached cubemap path."
+ },
+ {
+  "id": "function:engine/rendering/environment/skybox.cpp:Skybox_ReloadFromSettings",
+  "name": "Skybox_ReloadFromSettings",
+  "summary": "Loads or clears the skybox cubemap from RenderSettings, converting the path with ToWString."
+ },
+ {
+  "id": "function:engine/rendering/environment/skybox.cpp:Skybox_Draw",
+  "name": "Skybox_Draw",
+  "summary": "Draws the camera-locked cube with current view/projection, tint, and exposure, restoring prior D3D state afterward."
+ },
+ {
+  "id": "function:engine/rendering/model/model_util.cpp:ModelUtil_ReleaseTextureCache",
+  "name": "ModelUtil_ReleaseTextureCache",
+  "summary": "Releases every cached model texture SRV; must run before the D3D11 device is destroyed."
+ },
+ {
+  "id": "function:engine/rendering/model/model_util.cpp:Trim",
+  "name": "Trim",
+  "summary": "Trims leading and trailing whitespace from a std::string in place."
+ },
+ {
+  "id": "function:engine/rendering/model/model_util.cpp:Split",
+  "name": "Split",
+  "summary": "Splits a string on a separator character into a vector of tokens."
+ },
+ {
+  "id": "function:engine/rendering/model/model_util.cpp:WideToUTF8",
+  "name": "WideToUTF8",
+  "summary": "Converts a wide Windows path to a UTF-8 std::string."
+ },
+ {
+  "id": "function:engine/rendering/model/model_util.cpp:Utf8ToWide",
+  "name": "Utf8ToWide",
+  "summary": "Converts a UTF-8 C string to a std::wstring."
+ },
+ {
+  "id": "function:engine/rendering/model/model_util.cpp:DirnameW",
+  "name": "DirnameW",
+  "summary": "Returns the parent directory of a wide path."
+ },
+ {
+  "id": "function:engine/rendering/model/model_util.cpp:JoinPathW",
+  "name": "JoinPathW",
+  "summary": "Joins a wide directory and file name, inserting a separator when needed."
+ },
+ {
+  "id": "function:engine/rendering/model/model_util.cpp:IsAbsolutePathW",
+  "name": "IsAbsolutePathW",
+  "summary": "Reports whether a wide path is absolute (drive or UNC)."
+ },
+ {
+  "id": "function:engine/rendering/model/model_util.cpp:LoadTextureWIC_Internal",
+  "name": "LoadTextureWIC_Internal",
+  "summary": "Decodes an image with WIC, creates a mipmapped D3D11 SRV, and inserts it into the path cache."
+ },
+ {
+  "id": "function:engine/rendering/model/model_util.cpp:LoadTextureWIC_SRV",
+  "name": "LoadTextureWIC_SRV",
+  "summary": "Public wrapper that loads or returns a cached WIC texture SRV."
+ },
+ {
+  "id": "function:engine/rendering/model/model_util.cpp:TryLoadMTLTexture_SRV",
+  "name": "TryLoadMTLTexture_SRV",
+  "summary": "Parses an MTL file for map_Kd and loads the diffuse texture plus UV scale/offset/clamp flags."
+ },
+ {
+  "id": "function:engine/rendering/model/model_util.cpp:FindFirstDiffuseFileTexture",
+  "name": "FindFirstDiffuseFileTexture",
+  "summary": "Walks an FBX node material graph to find the first diffuse file texture and its UV set."
+ },
+ {
+  "id": "function:engine/rendering/model/model_util.cpp:TransformNormal_IT",
+  "name": "TransformNormal_IT",
+  "summary": "Transforms a normal by an inverse-transpose FBX matrix."
+ },
+ {
+  "id": "function:engine/rendering/model/model_util.cpp:HasNegativeDeterminant",
+  "name": "HasNegativeDeterminant",
+  "summary": "Returns whether an FBX matrix has a negative determinant (winding flip)."
+ },
+ {
+  "id": "function:engine/rendering/model/model_util.cpp:FbxShared",
+  "name": "FbxShared",
+  "summary": "Constructs the process-wide FBX manager and IO settings."
+ },
+ {
+  "id": "function:engine/rendering/model/model_util.cpp:~FbxShared",
+  "name": "~FbxShared",
+  "summary": "Destroys the shared FBX manager on process teardown."
+ },
+ {
+  "id": "function:engine/rendering/model/model_util.cpp:EnumerateSkinnedMeshes",
+  "name": "EnumerateSkinnedMeshes",
+  "summary": "Recursively collects FBX meshes that have skin deformers."
+ },
+ {
+  "id": "function:engine/rendering/model/model_util.cpp:ComputeSkinnedCP_ForMesh",
+  "name": "ComputeSkinnedCP_ForMesh",
+  "summary": "Evaluates an FBX skin at a time and writes deformed control-point positions and normals."
+ },
+ {
+  "id": "function:engine/rendering/particle/particle_system.cpp:LoadCompiledShader",
+  "name": "LoadCompiledShader",
+  "summary": "Loads a compiled particle shader blob from disk for the billboard renderer."
+ },
+ {
+  "id": "function:engine/rendering/particle/particle_system.cpp:CreateBlendState",
+  "name": "CreateBlendState",
+  "summary": "Creates additive or alpha D3D11 blend states used by particle billboards."
+ },
+ {
+  "id": "function:engine/rendering/particle/particle_system.cpp:Reset",
+  "name": "Reset",
+  "summary": "Clears a ParticlePool or the ParticleSystem emitter list so simulation can restart."
+ },
+ {
+  "id": "function:engine/rendering/particle/particle_system.cpp:Spawn",
+  "name": "Spawn",
+  "summary": "Allocates a live particle in the pool with position, velocity, size, color, and lifetime."
+ },
+ {
+  "id": "function:engine/rendering/particle/particle_system.cpp:Tick",
+  "name": "Tick",
+  "summary": "Advances particle or emitter simulation: aging, gravity, emission, and compacting dead particles."
+ },
+ {
+  "id": "function:engine/rendering/particle/particle_system.cpp:Compact",
+  "name": "Compact",
+  "summary": "Packs live particles to the front of the pool after deaths."
+ },
+ {
+  "id": "function:engine/rendering/particle/particle_system.cpp:CopyParticle",
+  "name": "CopyParticle",
+  "summary": "Copies all per-particle attributes from one pool slot to another."
+ },
+ {
+  "id": "function:engine/rendering/particle/particle_system.cpp:ParticleEmitter",
+  "name": "ParticleEmitter",
+  "summary": "Constructs an emitter, assigns its id, and applies the initial ParticleEmitterConfig."
+ },
+ {
+  "id": "function:engine/rendering/particle/particle_system.cpp:SetConfig",
+  "name": "SetConfig",
+  "summary": "Applies emitter configuration and resizes/resets the underlying particle pool."
+ },
+ {
+  "id": "function:engine/rendering/particle/particle_system.cpp:Render",
+  "name": "Render",
+  "summary": "Forwards alive emitters to the GPU billboard renderer."
+ },
+ {
+  "id": "function:engine/rendering/particle/particle_system.cpp:Stop",
+  "name": "Stop",
+  "summary": "Stops emission and optionally marks the emitter to destroy when empty."
+ },
+ {
+  "id": "function:engine/rendering/particle/particle_system.cpp:Emit",
+  "name": "Emit",
+  "summary": "Spawns particles from the emitter shape using random position, direction, and lifetime ranges."
+ },
+ {
+  "id": "function:engine/rendering/particle/particle_system.cpp:RandomShapePosition",
+  "name": "RandomShapePosition",
+  "summary": "Samples a spawn position inside the configured sphere, cone, box, or edge shape."
+ },
+ {
+  "id": "function:engine/rendering/particle/particle_system.cpp:RandomDirection",
+  "name": "RandomDirection",
+  "summary": "Samples an emission direction for the current shape, falling back to up if degenerate."
+ },
+ {
+  "id": "function:engine/rendering/particle/particle_system.cpp:Initialize",
+  "name": "Initialize",
+  "summary": "Initializes the ParticleSystem singleton by creating the GPU billboard renderer."
+ },
+ {
+  "id": "function:engine/rendering/particle/particle_system.cpp:Finalize",
+  "name": "Finalize",
+  "summary": "Resets emitters and releases particle renderer GPU resources."
+ },
+ {
+  "id": "function:engine/rendering/particle/particle_system.cpp:CreateEmitter",
+  "name": "CreateEmitter",
+  "summary": "Allocates a new ParticleEmitter and returns its id."
+ },
+ {
+  "id": "function:engine/rendering/particle/particle_system.cpp:SetEmitterPosition",
+  "name": "SetEmitterPosition",
+  "summary": "Moves a live emitter to a world position."
+ },
+ {
+  "id": "function:engine/rendering/particle/particle_system.cpp:SetEmitterEmitting",
+  "name": "SetEmitterEmitting",
+  "summary": "Toggles whether a named emitter is currently emitting."
+ },
+ {
+  "id": "function:engine/rendering/particle/particle_system.cpp:StopEmitter",
+  "name": "StopEmitter",
+  "summary": "Stops a named emitter, optionally destroying it when empty."
+ },
+ {
+  "id": "function:engine/rendering/particle/particle_system.cpp:DestroyEmitter",
+  "name": "DestroyEmitter",
+  "summary": "Removes an emitter from the system immediately."
+ },
+ {
+  "id": "function:engine/rendering/particle/particle_system.cpp:SetEmitterConfig",
+  "name": "SetEmitterConfig",
+  "summary": "Replaces the configuration of an existing emitter."
+ },
+ {
+  "id": "function:engine/rendering/particle/particle_system.cpp:SpawnParticle",
+  "name": "SpawnParticle",
+  "summary": "Manually injects one particle into a named emitter pool."
+ },
+ {
+  "id": "function:engine/rendering/particle/particle_system.cpp:ParticleRenderer_Initialize",
+  "name": "ParticleRenderer_Initialize",
+  "summary": "Creates particle billboard shaders, input layout, instance buffers, and blend states."
+ },
+ {
+  "id": "function:engine/rendering/particle/particle_system.cpp:ParticleRenderer_Finalize",
+  "name": "ParticleRenderer_Finalize",
+  "summary": "Releases particle renderer shaders, buffers, and blend states."
+ },
+ {
+  "id": "function:engine/rendering/particle/particle_system.cpp:ParticleRenderer_RenderEmitter",
+  "name": "ParticleRenderer_RenderEmitter",
+  "summary": "Uploads instance data for an emitter and draws camera-facing billboards with the emitter texture."
+ },
+ {
+  "id": "function:engine/rendering/sprite/line_sprite.cpp:LineSprite_Initialize",
+  "name": "LineSprite_Initialize",
+  "summary": "Creates the line-sprite vertex/index buffers and a no-cull rasterizer state."
+ },
+ {
+  "id": "function:engine/rendering/sprite/line_sprite.cpp:LineSprite_Finalize",
+  "name": "LineSprite_Finalize",
+  "summary": "Releases line-sprite GPU buffers and rasterizer state."
+ },
+ {
+  "id": "function:engine/rendering/sprite/line_sprite.cpp:LineSprite_Draw",
+  "name": "LineSprite_Draw",
+  "summary": "Builds a camera-facing quad between two world points and draws it with the white texture and tint."
+ },
+ {
+  "id": "file:engine/rendering/sprite/sprite.cpp",
+  "name": "sprite.cpp",
+  "summary": "2D sprite rasterizer that uploads quads (and a radial-fill fan) through the shared 2D shaders, with rotation, atlas UVs, and color tint.",
+  "languageNotes": "Sprite_Draw overloads funnel into one textured-quad path; Sprite_DrawRadialFill builds a triangle fan for circular progress."
+ },
+ {
+  "id": "file:engine/rendering/sprite/sprite.h",
+  "name": "sprite.h",
+  "summary": "Public 2D sprite API: initialize/finalize plus draw overloads and radial-fill drawing for circular progress indicators."
+ },
+ {
+  "id": "file:engine/rendering/sprite/texture.cpp",
+  "name": "texture.cpp",
+  "summary": "Texture slot manager that loads WIC/DirectXTex images, creates RGBA atlases, caches a 1x1 white texture, and loads DDS cubemaps.",
+  "languageNotes": "Fixed arrays of 1024 2D textures and 64 cubemaps; TextureAllRelease also clears the UI font cache."
+ },
+ {
+  "id": "file:engine/rendering/sprite/texture.h",
+  "name": "texture.h",
+  "summary": "Declares texture and cubemap load/bind/release APIs used by sprites, UI, particles, and the skybox."
+ },
+ {
+  "id": "file:engine/ui/scene_canvas.cpp",
+  "name": "scene_canvas.cpp",
+  "summary": "Owns the shared in-game UI canvas: JSON load/save of sprites, text, buttons, and bars, plus HUD bindings, button actions, and respawn overlay/timer helpers.",
+  "languageNotes": "Anonymous-namespace JSON helpers plus a button-action registry that defaults LoadScene to SceneCanvas_RequestSceneFile."
+ },
+ {
+  "id": "function:engine/rendering/sprite/sprite.cpp:Sprite_Initialize",
+  "name": "Sprite_Initialize",
+  "summary": "Creates the 2D sprite vertex buffer and a larger radial-fill vertex/index pair."
+ },
+ {
+  "id": "function:engine/rendering/sprite/sprite.cpp:Sprite_Finalize",
+  "name": "Sprite_Finalize",
+  "summary": "Releases sprite and radial-fill GPU buffers."
+ },
+ {
+  "id": "function:engine/rendering/sprite/sprite.cpp:Sprite_Draw",
+  "name": "Sprite_Draw",
+  "summary": "Draws a textured 2D quad with optional atlas UVs, rotation, and color; overloads forward here."
+ },
+ {
+  "id": "function:engine/rendering/sprite/sprite.cpp:Sprite_DrawRadialFill",
+  "name": "Sprite_DrawRadialFill",
+  "summary": "Draws a circular-progress sprite by uploading a triangle fan clipped to fill amount and origin."
+ },
+ {
+  "id": "function:engine/rendering/sprite/texture.cpp:Texture_Initialize",
+  "name": "Texture_Initialize",
+  "summary": "Stores the D3D11 device and context used by later texture loads."
+ },
+ {
+  "id": "function:engine/rendering/sprite/texture.cpp:Texture_Finalize",
+  "name": "Texture_Finalize",
+  "summary": "Releases all 2D textures and cubemaps held by the manager."
+ },
+ {
+  "id": "function:engine/rendering/sprite/texture.cpp:TextureLoad",
+  "name": "TextureLoad",
+  "summary": "Loads or reuses a texture by wide path via DirectXTex and returns a slot id."
+ },
+ {
+  "id": "function:engine/rendering/sprite/texture.cpp:TextureCreateFromRGBA",
+  "name": "TextureCreateFromRGBA",
+  "summary": "Creates a texture slot from raw RGBA bytes, used for baked font atlases."
+ },
+ {
+  "id": "function:engine/rendering/sprite/texture.cpp:TextureGetWhiteTexture",
+  "name": "TextureGetWhiteTexture",
+  "summary": "Lazily creates and returns the cached 1x1 white texture id."
+ },
+ {
+  "id": "function:engine/rendering/sprite/texture.cpp:TextureAllRelease",
+  "name": "TextureAllRelease",
+  "summary": "Releases every 2D texture slot and clears the UI font cache."
+ },
+ {
+  "id": "function:engine/rendering/sprite/texture.cpp:TextureSetTexture",
+  "name": "TextureSetTexture",
+  "summary": "Binds a texture slot SRV to pixel-shader slot 0, or unbinds if invalid."
+ },
+ {
+  "id": "function:engine/rendering/sprite/texture.cpp:TextureGetSize",
+  "name": "TextureGetSize",
+  "summary": "Returns the width and height of a texture slot."
+ },
+ {
+  "id": "function:engine/rendering/sprite/texture.cpp:CubemapLoad",
+  "name": "CubemapLoad",
+  "summary": "Loads or returns a cached DDS cubemap SRV for skybox rendering."
+ },
+ {
+  "id": "function:engine/rendering/sprite/texture.cpp:CubemapReleaseAll",
+  "name": "CubemapReleaseAll",
+  "summary": "Releases every cached cubemap SRV."
+ },
+ {
+  "id": "function:engine/ui/scene_canvas.cpp:EnsureDefaultButtonActions",
+  "name": "EnsureDefaultButtonActions",
+  "summary": "Registers the built-in LoadScene button action that requests a scene file from the canvas."
+ },
+ {
+  "id": "function:engine/ui/scene_canvas.cpp:AnchorFromString",
+  "name": "AnchorFromString",
+  "summary": "Parses a JSON anchor name into a UIAnchor enum."
+ },
+ {
+  "id": "function:engine/ui/scene_canvas.cpp:AnchorToString",
+  "name": "AnchorToString",
+  "summary": "Serializes a UIAnchor enum back to its JSON name."
+ },
+ {
+  "id": "function:engine/ui/scene_canvas.cpp:TextAlignFromString",
+  "name": "TextAlignFromString",
+  "summary": "Parses a text-align string used by UIText elements."
+ },
+ {
+  "id": "function:engine/ui/scene_canvas.cpp:TextAlignToString",
+  "name": "TextAlignToString",
+  "summary": "Serializes a text-align value for canvas JSON."
+ },
+ {
+  "id": "function:engine/ui/scene_canvas.cpp:ReadFloat2",
+  "name": "ReadFloat2",
+  "summary": "Reads an XMFLOAT2 from a JSON array."
+ },
+ {
+  "id": "function:engine/ui/scene_canvas.cpp:WriteFloat2",
+  "name": "WriteFloat2",
+  "summary": "Writes an XMFLOAT2 as a JSON array."
+ },
+ {
+  "id": "function:engine/ui/scene_canvas.cpp:ReadColor",
+  "name": "ReadColor",
+  "summary": "Reads an RGBA color from JSON with defaults."
+ },
+ {
+  "id": "function:engine/ui/scene_canvas.cpp:WriteColor",
+  "name": "WriteColor",
+  "summary": "Writes an RGBA color as a JSON array."
+ },
+ {
+  "id": "function:engine/ui/scene_canvas.cpp:NormalizeSceneFile",
+  "name": "NormalizeSceneFile",
+  "summary": "Normalizes a requested scene path so canvas buttons can load it consistently."
+ },
+ {
+  "id": "function:engine/ui/scene_canvas.cpp:ApplyCommon",
+  "name": "ApplyCommon",
+  "summary": "Applies shared JSON fields such as visibility to a freshly loaded UI element."
+ },
+ {
+  "id": "function:engine/ui/scene_canvas.cpp:LoadElementScript",
+  "name": "LoadElementScript",
+  "summary": "Attaches a canvas script to an element from JSON."
+ },
+ {
+  "id": "function:engine/ui/scene_canvas.cpp:AppendElementScript",
+  "name": "AppendElementScript",
+  "summary": "Writes an element script block back into serialized JSON."
+ },
+ {
+  "id": "function:engine/ui/scene_canvas.cpp:ReadOnClickScript",
+  "name": "ReadOnClickScript",
+  "summary": "Reads a button onClick script payload from JSON."
+ },
+ {
+  "id": "function:engine/ui/scene_canvas.cpp:BindSceneHudElements",
+  "name": "BindSceneHudElements",
+  "summary": "Rebinds well-known HUD pointers (score, timer, red overlay) after canvas reload."
+ },
+ {
+  "id": "function:engine/ui/scene_canvas.cpp:LoadSpriteElement",
+  "name": "LoadSpriteElement",
+  "summary": "Deserializes a UISprite from canvas JSON including texture path and color."
+ },
+ {
+  "id": "function:engine/ui/scene_canvas.cpp:LoadTextElement",
+  "name": "LoadTextElement",
+  "summary": "Deserializes a UIText element including font, align, and color."
+ },
+ {
+  "id": "function:engine/ui/scene_canvas.cpp:LoadButtonElement",
+  "name": "LoadButtonElement",
+  "summary": "Deserializes a UIButton with state textures, action, and onClick script."
+ },
+ {
+  "id": "function:engine/ui/scene_canvas.cpp:LoadBarElement",
+  "name": "LoadBarElement",
+  "summary": "Deserializes a UIBar including fill/background textures and value range."
+ },
+ {
+  "id": "function:engine/ui/scene_canvas.cpp:SerializeCommon",
+  "name": "SerializeCommon",
+  "summary": "Writes shared element fields (name, anchor, position) into JSON."
+ },
+ {
+  "id": "function:engine/ui/scene_canvas.cpp:SerializeElementJson",
+  "name": "SerializeElementJson",
+  "summary": "Serializes a live UIElement (sprite/text/button/bar) to a JSON object for save/undo."
+ },
+ {
+  "id": "function:engine/ui/scene_canvas.cpp:SceneCanvas_Initialize",
+  "name": "SceneCanvas_Initialize",
+  "summary": "Creates the shared UICanvas, registers default button actions, and binds HUD elements."
+ },
+ {
+  "id": "function:engine/ui/scene_canvas.cpp:SceneCanvas_Finalize",
+  "name": "SceneCanvas_Finalize",
+  "summary": "Destroys the shared canvas and clears HUD element pointers."
+ },
+ {
+  "id": "function:engine/ui/scene_canvas.cpp:SceneCanvas_Update",
+  "name": "SceneCanvas_Update",
+  "summary": "Ticks the shared scene canvas."
+ },
+ {
+  "id": "function:engine/ui/scene_canvas.cpp:SceneCanvas_Draw",
+  "name": "SceneCanvas_Draw",
+  "summary": "Draws the shared scene canvas."
+ },
+ {
+  "id": "function:engine/ui/scene_canvas.cpp:SceneCanvas_ClearSceneCanvas",
+  "name": "SceneCanvas_ClearSceneCanvas",
+  "summary": "Removes all canvas elements and rebinds HUD pointers."
+ },
+ {
+  "id": "function:engine/ui/scene_canvas.cpp:SceneCanvas_LoadSceneCanvas",
+  "name": "SceneCanvas_LoadSceneCanvas",
+  "summary": "Rebuilds the canvas from a JSON document by dispatching per-type loaders."
+ },
+ {
+  "id": "function:engine/ui/scene_canvas.cpp:SceneCanvas_SaveSceneCanvas",
+  "name": "SceneCanvas_SaveSceneCanvas",
+  "summary": "Serializes the current canvas element list to JSON."
+ },
+ {
+  "id": "function:engine/ui/scene_canvas.cpp:SceneCanvas_SerializeElement",
+  "name": "SceneCanvas_SerializeElement",
+  "summary": "Serializes one element to a JSON string for editor undo."
+ },
+ {
+  "id": "function:engine/ui/scene_canvas.cpp:SceneCanvas_GetElementIndex",
+  "name": "SceneCanvas_GetElementIndex",
+  "summary": "Returns the index of an element pointer in the canvas list, or -1."
+ },
+ {
+  "id": "function:engine/ui/scene_canvas.cpp:SceneCanvas_RemoveElementInternal",
+  "name": "SceneCanvas_RemoveElementInternal",
+  "summary": "Removes an element and refreshes HUD bindings."
+ },
+ {
+  "id": "function:engine/ui/scene_canvas.cpp:SceneCanvas_BindButtonAction",
+  "name": "SceneCanvas_BindButtonAction",
+  "summary": "Applies a registered action binder to a button by its action name."
+ },
+ {
+  "id": "function:engine/ui/scene_canvas.cpp:SceneCanvas_RegisterButtonAction",
+  "name": "SceneCanvas_RegisterButtonAction",
+  "summary": "Registers or replaces a named button-action binder."
+ },
+ {
+  "id": "function:engine/ui/scene_canvas.cpp:SceneCanvas_RequestSceneFile",
+  "name": "SceneCanvas_RequestSceneFile",
+  "summary": "Queues a scene file (and optional play-on-load) for the next consume."
+ },
+ {
+  "id": "function:engine/ui/scene_canvas.cpp:SceneCanvas_ConsumeRequestedSceneFile",
+  "name": "SceneCanvas_ConsumeRequestedSceneFile",
+  "summary": "Returns and clears the pending scene-file request."
+ },
+ {
+  "id": "function:engine/ui/scene_canvas.cpp:SceneCanvas_ShowRedOverlay",
+  "name": "SceneCanvas_ShowRedOverlay",
+  "summary": "Shows the full-screen red respawn overlay sprite."
+ },
+ {
+  "id": "function:engine/ui/scene_canvas.cpp:SceneCanvas_HideRedOverlay",
+  "name": "SceneCanvas_HideRedOverlay",
+  "summary": "Hides the red respawn overlay."
+ },
+ {
+  "id": "function:engine/ui/scene_canvas.cpp:SceneCanvas_SetRedOverlayAlpha",
+  "name": "SceneCanvas_SetRedOverlayAlpha",
+  "summary": "Sets the red overlay sprite alpha."
+ },
+ {
+  "id": "function:engine/ui/scene_canvas.cpp:SceneCanvas_SetTimerSeconds",
+  "name": "SceneCanvas_SetTimerSeconds",
+  "summary": "Updates the top-middle scene timer text from a seconds value."
+ },
+ {
+  "id": "file:engine/ui/ui_bar.cpp",
+  "name": "ui_bar.cpp",
+  "summary": "Implements UIBar, a progress-bar element that draws background/fill sprites, optional label/value text, and loads bar textures from paths."
+ },
+ {
+  "id": "file:engine/ui/ui_button.cpp",
+  "name": "ui_button.cpp",
+  "summary": "Implements UIButton hover/press hit-testing, state textures, shared bitmap/TTF label rendering, click actions, and UI click audio."
+ },
+ {
+  "id": "file:engine/ui/ui_font.cpp",
+  "name": "ui_font.cpp",
+  "summary": "Bakes TrueType/OpenType fonts into a 1024 atlas via stb_truetype, uploads the atlas as an RGBA texture, and caches UIFont metrics by path.",
+  "languageNotes": "STB_TRUETYPE_IMPLEMENTATION is compiled here; glyphs 32-126 are baked at 64px into a 1024 atlas."
+ },
+ {
+  "id": "file:engine/ui/ui_font.h",
+  "name": "ui_font.h",
+  "summary": "Defines UIGlyph/UIFont atlas metrics and the TTF path/cache API used by UI text rendering."
+ },
+ {
+  "id": "file:engine/ui/ui_sprite.cpp",
+  "name": "ui_sprite.cpp",
+  "summary": "Implements UISprite drawing with optional atlas source rects and Unity-style Radial360 fill for circular progress."
+ },
+ {
+  "id": "function:engine/ui/ui_bar.cpp:UIBar",
+  "name": "UIBar",
+  "summary": "Constructs a UIBar with default colors, size, and optional label."
+ },
+ {
+  "id": "function:engine/ui/ui_bar.cpp:Initialize",
+  "name": "Initialize",
+  "summary": "Creates the bar text renderer and loads any configured textures."
+ },
+ {
+  "id": "function:engine/ui/ui_bar.cpp:Update",
+  "name": "Update",
+  "summary": "Invokes the optional onUpdate callback each tick."
+ },
+ {
+  "id": "function:engine/ui/ui_bar.cpp:Draw",
+  "name": "Draw",
+  "summary": "Draws background/fill sprites and optional label/value text at the anchored screen rect."
+ },
+ {
+  "id": "function:engine/ui/ui_bar.cpp:GetScreenRect",
+  "name": "GetScreenRect",
+  "summary": "Computes the bar hit/layout rectangle from anchor and design size."
+ },
+ {
+  "id": "function:engine/ui/ui_bar.cpp:Finalize",
+  "name": "Finalize",
+  "summary": "Releases the bar text renderer."
+ },
+ {
+  "id": "function:engine/ui/ui_bar.cpp:SetBackgroundTexturePath",
+  "name": "SetBackgroundTexturePath",
+  "summary": "Loads a background texture from a UTF-8 path via TextureLoad."
+ },
+ {
+  "id": "function:engine/ui/ui_bar.cpp:SetFillTexturePath",
+  "name": "SetFillTexturePath",
+  "summary": "Loads a fill texture from a UTF-8 path via TextureLoad."
+ },
+ {
+  "id": "function:engine/ui/ui_button.cpp:UIButton",
+  "name": "UIButton",
+  "summary": "Constructs a UIButton with default colors, navigation links, and unset textures."
+ },
+ {
+  "id": "function:engine/ui/ui_button.cpp:Initialize",
+  "name": "Initialize",
+  "summary": "No-op initialize hook required by UIElement."
+ },
+ {
+  "id": "function:engine/ui/ui_button.cpp:Update",
+  "name": "Update",
+  "summary": "Updates hover/press from the mouse and activates the button on click."
+ },
+ {
+  "id": "function:engine/ui/ui_button.cpp:SetVisible",
+  "name": "SetVisible",
+  "summary": "Shows or hides the button and clears hover/press when hidden."
+ },
+ {
+  "id": "function:engine/ui/ui_button.cpp:Draw",
+  "name": "Draw",
+  "summary": "Draws the state texture (or white fallback) and centered label text."
+ },
+ {
+  "id": "function:engine/ui/ui_button.cpp:Finalize",
+  "name": "Finalize",
+  "summary": "Releases button-owned resources."
+ },
+ {
+  "id": "function:engine/ui/ui_button.cpp:SetTexture",
+  "name": "SetTexture",
+  "summary": "Assigns the normal-state texture id or loads it from a path."
+ },
+ {
+  "id": "function:engine/ui/ui_button.cpp:SetTexturePath",
+  "name": "SetTexturePath",
+  "summary": "Stores and loads the normal-state texture from a UTF-8 path."
+ },
+ {
+  "id": "function:engine/ui/ui_button.cpp:SetHoverTexture",
+  "name": "SetHoverTexture",
+  "summary": "Assigns the hover-state texture id."
+ },
+ {
+  "id": "function:engine/ui/ui_button.cpp:SetHoverTexturePath",
+  "name": "SetHoverTexturePath",
+  "summary": "Loads the hover-state texture from a UTF-8 path."
+ },
+ {
+  "id": "function:engine/ui/ui_button.cpp:SetPressedTexture",
+  "name": "SetPressedTexture",
+  "summary": "Assigns the pressed-state texture id."
+ },
+ {
+  "id": "function:engine/ui/ui_button.cpp:SetPressedTexturePath",
+  "name": "SetPressedTexturePath",
+  "summary": "Loads the pressed-state texture from a UTF-8 path."
+ },
+ {
+  "id": "function:engine/ui/ui_button.cpp:SetAction",
+  "name": "SetAction",
+  "summary": "Stores the button action name, target scene, and play-on-load flag."
+ },
+ {
+  "id": "function:engine/ui/ui_button.cpp:Activate",
+  "name": "Activate",
+  "summary": "Fires the click callback, plays the UI click sound, and runs the bound action."
+ },
+ {
+  "id": "function:engine/ui/ui_button.cpp:GetScreenRect",
+  "name": "GetScreenRect",
+  "summary": "Computes the button rectangle from anchor and size."
+ },
+ {
+  "id": "function:engine/ui/ui_button.cpp:ContainsPoint",
+  "name": "ContainsPoint",
+  "summary": "Hit-tests a point against the button screen rect."
+ },
+ {
+  "id": "function:engine/ui/ui_button.cpp:SetFont",
+  "name": "SetFont",
+  "summary": "Configures the shared button UITextRenderer from a font texture or TTF path."
+ },
+ {
+  "id": "function:engine/ui/ui_button.cpp:SetFontPath",
+  "name": "SetFontPath",
+  "summary": "UTF-8 wrapper that forwards to SetFont."
+ },
+ {
+  "id": "function:engine/ui/ui_button.cpp:ShutdownSharedFont",
+  "name": "ShutdownSharedFont",
+  "summary": "Finalizes the process-wide button text renderer."
+ },
+ {
+  "id": "function:engine/ui/ui_font.cpp:EndsWithIgnoreCase",
+  "name": "EndsWithIgnoreCase",
+  "summary": "Case-insensitive suffix test used to detect .ttf/.otf paths (wide and UTF-8 overloads)."
+ },
+ {
+  "id": "function:engine/ui/ui_font.cpp:LoadFile",
+  "name": "LoadFile",
+  "summary": "Reads an entire font file into a byte buffer for stb_truetype."
+ },
+ {
+  "id": "function:engine/ui/ui_font.cpp:BakeFont",
+  "name": "BakeFont",
+  "summary": "Bakes ASCII glyphs into a 1024 atlas and uploads it with TextureCreateFromRGBA."
+ },
+ {
+  "id": "function:engine/ui/ui_font.cpp:UIFont_IsTrueTypePath",
+  "name": "UIFont_IsTrueTypePath",
+  "summary": "Returns true when a path ends with .ttf or .otf."
+ },
+ {
+  "id": "function:engine/ui/ui_font.cpp:UIFont_Get",
+  "name": "UIFont_Get",
+  "summary": "Returns a cached UIFont, baking the TTF on first use or showing an error dialog on failure."
+ },
+ {
+  "id": "function:engine/ui/ui_font.cpp:UIFont_ClearCache",
+  "name": "UIFont_ClearCache",
+  "summary": "Clears all baked UIFont entries."
+ },
+ {
+  "id": "function:engine/ui/ui_sprite.cpp:UISprite",
+  "name": "UISprite",
+  "summary": "Constructs a UISprite with default tint, rotation, and no source-rect/fill."
+ },
+ {
+  "id": "function:engine/ui/ui_sprite.cpp:Initialize",
+  "name": "Initialize",
+  "summary": "No-op initialize; texture is assigned later via SetTexture."
+ },
+ {
+  "id": "function:engine/ui/ui_sprite.cpp:Update",
+  "name": "Update",
+  "summary": "No-op per-frame update for static sprites."
+ },
+ {
+  "id": "function:engine/ui/ui_sprite.cpp:Draw",
+  "name": "Draw",
+  "summary": "Draws the sprite with optional atlas rect or Radial360 fill using Sprite_Draw*."
+ },
+ {
+  "id": "function:engine/ui/ui_sprite.cpp:Finalize",
+  "name": "Finalize",
+  "summary": "No-op finalize hook."
+ },
+ {
+  "id": "function:engine/ui/ui_sprite.cpp:GetScreenRect",
+  "name": "GetScreenRect",
+  "summary": "Computes the sprite rectangle from anchor and size."
+ },
+ {
+  "id": "function:engine/ui/ui_sprite.cpp:SetTexture",
+  "name": "SetTexture",
+  "summary": "Assigns a texture id or loads one from a path."
+ },
+ {
+  "id": "function:engine/ui/ui_sprite.cpp:SetTexturePath",
+  "name": "SetTexturePath",
+  "summary": "Stores and loads the sprite texture from a UTF-8 path."
+ },
+ {
+  "id": "function:engine/ui/ui_sprite.cpp:SetSourceRect",
+  "name": "SetSourceRect",
+  "summary": "Enables an atlas source rectangle in texture pixels."
+ },
+ {
+  "id": "function:engine/ui/ui_sprite.cpp:ClearSourceRect",
+  "name": "ClearSourceRect",
+  "summary": "Clears the atlas rect so the full texture is drawn."
+ },
+ {
+  "id": "class:engine/ui/ui_font.h:UIGlyph",
+  "name": "UIGlyph",
+  "summary": "Per-glyph atlas rectangle and advance metrics for baked UI fonts."
+ },
+ {
+  "id": "class:engine/ui/ui_font.h:UIFont",
+  "name": "UIFont",
+  "summary": "Baked font atlas handle: texture id, metrics, and a 95-glyph ASCII table."
+ },
+ {
+  "id": "file:engine/ui/ui_text_renderer.cpp",
+  "name": "ui_text_renderer.cpp",
+  "summary": "Draws UI strings either from a baked TTF atlas or a legacy monospaced font texture, measuring width and line height for layout."
+ },
+ {
+  "id": "file:engine/ui/ui_text_renderer.h",
+  "name": "ui_text_renderer.h",
+  "summary": "Declares UITextRenderer, which can render either a TTF-backed UIFont atlas or a grid font texture."
+ },
+ {
+  "id": "file:src/app/main.cpp",
+  "name": "main.cpp",
+  "summary": "Windows application entry: creates the DPI-aware window, initializes renderer/input/audio/jobs, and runs the 60 Hz update/draw loop with fade and scene management.",
+  "languageNotes": "WinMain hosts a PeekMessage loop capped at ~60 FPS; editor-only F7/F9/F10/F11/F12 hotkeys are compiled out of GAME_RUNTIME."
+ },
+ {
+  "id": "file:src/app/main.h",
+  "name": "main.h",
+  "summary": "Application header that pulls in D3D11/DirectInput headers and defines the 1920x1080 design-resolution screen macros."
+ },
+ {
+  "id": "file:src/app/rendering/fade.cpp",
+  "name": "fade.cpp",
+  "summary": "Full-screen color fade that interpolates alpha, optionally swaps SceneManager scenes at fade-out, then fades back in."
+ },
+ {
+  "id": "function:engine/ui/ui_text_renderer.cpp:UITextRenderer",
+  "name": "UITextRenderer",
+  "summary": "Constructs a UITextRenderer with legacy grid-font defaults and no TTF bound."
+ },
+ {
+  "id": "function:engine/ui/ui_text_renderer.cpp:DrawScale",
+  "name": "DrawScale",
+  "summary": "Scales TTF draw size so baked 64px glyphs match the legacy 32px cell."
+ },
+ {
+  "id": "function:engine/ui/ui_text_renderer.cpp:Initialize",
+  "name": "Initialize",
+  "summary": "Loads either a TTF via UIFont_Get or a grid font texture via TextureLoad."
+ },
+ {
+  "id": "function:engine/ui/ui_text_renderer.cpp:Draw",
+  "name": "Draw",
+  "summary": "Draws a string with TTF glyph quads or a monospaced grid font via Sprite_Draw."
+ },
+ {
+  "id": "function:engine/ui/ui_text_renderer.cpp:GetTextWidth",
+  "name": "GetTextWidth",
+  "summary": "Measures string width for TTF advances or grid-cell spacing."
+ },
+ {
+  "id": "function:engine/ui/ui_text_renderer.cpp:GetLineHeight",
+  "name": "GetLineHeight",
+  "summary": "Returns scaled line height from the TTF or grid cell height."
+ },
+ {
+  "id": "function:engine/ui/ui_text_renderer.cpp:Finalize",
+  "name": "Finalize",
+  "summary": "Clears the renderer font/texture binding."
+ },
+ {
+  "id": "function:src/app/main.cpp:WinMain",
+  "name": "WinMain",
+  "summary": "Windows entry point: DPI-aware window creation, subsystem init, and the 60 Hz message/game loop."
+ },
+ {
+  "id": "function:src/app/main.cpp:Initialize",
+  "name": "Initialize",
+  "summary": "Boots renderer, shaders, sprites, input, jobs, audio, fade, post-process, effects, and the first GameScene."
+ },
+ {
+  "id": "function:src/app/main.cpp:Finalize",
+  "name": "Finalize",
+  "summary": "Tears down the scene and all subsystems in reverse dependency order before the D3D device dies."
+ },
+ {
+  "id": "function:src/app/main.cpp:Update",
+  "name": "Update",
+  "summary": "Ticks input, debug time-scale, effects, fade, post-process, scene, and audio at a scaled fixed timestep."
+ },
+ {
+  "id": "function:src/app/main.cpp:Draw",
+  "name": "Draw",
+  "summary": "Clears, draws the scene, fade overlay, debug text, and presents the back buffer."
+ },
+ {
+  "id": "function:src/app/main.cpp:WndProc",
+  "name": "WndProc",
+  "summary": "Window procedure handling resize/move, DPI, ImGui input, and quit."
+ },
+ {
+  "id": "function:src/app/rendering/fade.cpp:Fade_Initialize",
+  "name": "Fade_Initialize",
+  "summary": "Resets fade state and loads the full-screen fade texture."
+ },
+ {
+  "id": "function:src/app/rendering/fade.cpp:Fade_Finalize",
+  "name": "Fade_Finalize",
+  "summary": "Unbinds the fade texture slot."
+ },
+ {
+  "id": "function:src/app/rendering/fade.cpp:Fade_Update",
+  "name": "Fade_Update",
+  "summary": "Advances fade-out/in alpha and changes scene when fade-out completes."
+ },
+ {
+  "id": "function:src/app/rendering/fade.cpp:Fade_Draw",
+  "name": "Fade_Draw",
+  "summary": "Draws the full-screen fade sprite at the current alpha."
+ },
+ {
+  "id": "function:src/app/rendering/fade.cpp:Fade_SetOut",
+  "name": "Fade_SetOut",
+  "summary": "Starts a fade-out with color, speed, and optional scene change."
+ },
+ {
+  "id": "function:src/app/rendering/fade.cpp:Fade_SetIn",
+  "name": "Fade_SetIn",
+  "summary": "Starts a fade-in from full alpha."
+ },
+ {
+  "id": "function:src/app/rendering/fade.cpp:Fade_SetNextScene",
+  "name": "Fade_SetNextScene",
+  "summary": "Stores the SceneBase to switch to at the end of fade-out."
+ },
+ {
+  "id": "function:src/app/rendering/fade.cpp:Fade_IsFadeEnd",
+  "name": "Fade_IsFadeEnd",
+  "summary": "True when no fade is active."
+ },
+ {
+  "id": "function:src/app/rendering/fade.cpp:Fade_IsOutEnd",
+  "name": "Fade_IsOutEnd",
+  "summary": "True when fade-out has reached full alpha and fade-in is about to start."
+ },
+ {
+  "id": "function:src/app/rendering/fade.cpp:Fade_IsInEnd",
+  "name": "Fade_IsInEnd",
+  "summary": "True when fade-in has finished."
+ },
+ {
+  "id": "function:src/app/rendering/fade.cpp:Fade_IsFading",
+  "name": "Fade_IsFading",
+  "summary": "True while a fade is in progress."
+ },
+ {
+  "id": "class:engine/ui/ui_text_renderer.h:UITextRenderer",
+  "name": "UITextRenderer",
+  "summary": "Text renderer that can draw baked TTF atlases or a legacy monospaced font texture."
+ },
+ {
+  "id": "file:src/app/rendering/fade.h",
+  "name": "fade.h",
+  "summary": "Declares fade modes, the FADE state struct, and the public Fade_* API for scene transitions."
+ },
+ {
+  "id": "file:engine/audio/audio_listener_sync.cpp",
+  "name": "audio_listener_sync.cpp",
+  "summary": "Keeps the 3D audio listener pose aligned with the active camera, debug camera, or first AudioListenerComponent in the scene graph."
+ },
+ {
+  "id": "file:engine/core/easing.cpp",
+  "name": "easing.cpp",
+  "summary": "Implements Robert Penner-style ease-in/out curves (sine through bounce) used by camera blends and other timed interpolations.",
+  "languageNotes": "Function bodies sit inside an unusual #ifndef PI guard, which hid them from tree-sitter extraction."
+ },
+ {
+  "id": "file:engine/core/easing.h",
+  "name": "easing.h",
+  "summary": "Declares the public easing API: 30 scalar ease-in, ease-out, and ease-in-out curves over normalized time t."
+ },
+ {
+  "id": "file:engine/core/engine_gui.h",
+  "name": "engine_gui.h",
+  "summary": "Public editor/runtime GUI API for play mode, scene load/save, camera mode, viewport mapping, and UI edit mode."
+ },
+ {
+  "id": "file:engine/core/engine_gui_internal.h",
+  "name": "engine_gui_internal.h",
+  "summary": "Shared editor GUI internals: play-session teardown, queued scene loads, and time-sliced asset preload hooks."
+ },
+ {
+  "id": "file:engine/core/engine_gui_persistence.cpp",
+  "name": "engine_gui_persistence.cpp",
+  "summary": "Editor-side scene save/load wrappers that queue loads and gate them behind the unsaved-changes popup."
+ },
+ {
+  "id": "function:engine/audio/audio_listener_sync.cpp:FindNodeByNameInRoots",
+  "name": "FindNodeByNameInRoots",
+  "summary": "Searches scene roots by name and returns the first matching GameObject."
+ },
+ {
+  "id": "function:engine/audio/audio_listener_sync.cpp:FindFirstListener",
+  "name": "FindFirstListener",
+  "summary": "Depth-first search for the first node that already has an AudioListenerComponent."
+ },
+ {
+  "id": "function:engine/audio/audio_listener_sync.cpp:ApplyPoseFromNode",
+  "name": "ApplyPoseFromNode",
+  "summary": "Pushes a node eye/forward/up pose into AudioManager, falling back to the global camera if the node is null."
+ },
+ {
+  "id": "function:engine/audio/audio_listener_sync.cpp:AudioListenerSync_EnsureOnCamera",
+  "name": "AudioListenerSync_EnsureOnCamera",
+  "summary": "Attaches an AudioListenerComponent to a camera node when play mode is using that camera."
+ },
+ {
+  "id": "function:engine/audio/audio_listener_sync.cpp:AudioListenerSync_Tick",
+  "name": "AudioListenerSync_Tick",
+  "summary": "Each frame, chooses the active camera or fallback listener and writes its world pose to AudioManager."
+ },
+ {
+  "id": "function:engine/core/easing.cpp:easeInSine",
+  "name": "easeInSine",
+  "summary": "Sine ease-in: sin(pi/2 * t)."
+ },
+ {
+  "id": "function:engine/core/easing.cpp:easeOutSine",
+  "name": "easeOutSine",
+  "summary": "Sine ease-out ending at 1."
+ },
+ {
+  "id": "function:engine/core/easing.cpp:easeInOutSine",
+  "name": "easeInOutSine",
+  "summary": "Symmetric sine ease-in-out around t=0.5."
+ },
+ {
+  "id": "function:engine/core/easing.cpp:easeInQuad",
+  "name": "easeInQuad",
+  "summary": "Quadratic ease-in (t squared)."
+ },
+ {
+  "id": "function:engine/core/easing.cpp:easeOutQuad",
+  "name": "easeOutQuad",
+  "summary": "Quadratic ease-out."
+ },
+ {
+  "id": "function:engine/core/easing.cpp:easeInOutQuad",
+  "name": "easeInOutQuad",
+  "summary": "Piecewise quadratic ease-in-out."
+ },
+ {
+  "id": "function:engine/core/easing.cpp:easeInCubic",
+  "name": "easeInCubic",
+  "summary": "Cubic ease-in (t cubed)."
+ },
+ {
+  "id": "function:engine/core/easing.cpp:easeOutCubic",
+  "name": "easeOutCubic",
+  "summary": "Cubic ease-out."
+ },
+ {
+  "id": "function:engine/core/easing.cpp:easeInOutCubic",
+  "name": "easeInOutCubic",
+  "summary": "Cubic ease-in-out with a corrected ease-out half."
+ },
+ {
+  "id": "function:engine/core/easing.cpp:easeInQuart",
+  "name": "easeInQuart",
+  "summary": "Quartic ease-in."
+ },
+ {
+  "id": "function:engine/core/easing.cpp:easeOutQuart",
+  "name": "easeOutQuart",
+  "summary": "Quartic ease-out."
+ },
+ {
+  "id": "function:engine/core/easing.cpp:easeInOutQuart",
+  "name": "easeInOutQuart",
+  "summary": "Piecewise quartic ease-in-out."
+ },
+ {
+  "id": "function:engine/core/easing.cpp:easeInQuint",
+  "name": "easeInQuint",
+  "summary": "Quintic ease-in."
+ },
+ {
+  "id": "function:engine/core/easing.cpp:easeOutQuint",
+  "name": "easeOutQuint",
+  "summary": "Quintic ease-out."
+ },
+ {
+  "id": "function:engine/core/easing.cpp:easeInOutQuint",
+  "name": "easeInOutQuint",
+  "summary": "Piecewise quintic ease-in-out."
+ },
+ {
+  "id": "function:engine/core/easing.cpp:easeInExpo",
+  "name": "easeInExpo",
+  "summary": "Exponential ease-in via pow(2, 8t)."
+ },
+ {
+  "id": "function:engine/core/easing.cpp:easeOutExpo",
+  "name": "easeOutExpo",
+  "summary": "Exponential ease-out."
+ },
+ {
+  "id": "function:engine/core/easing.cpp:easeInOutExpo",
+  "name": "easeInOutExpo",
+  "summary": "Piecewise exponential ease-in-out."
+ },
+ {
+  "id": "function:engine/core/easing.cpp:easeInCirc",
+  "name": "easeInCirc",
+  "summary": "Circular ease-in using sqrt."
+ },
+ {
+  "id": "function:engine/core/easing.cpp:easeOutCirc",
+  "name": "easeOutCirc",
+  "summary": "Circular ease-out (sqrt(t))."
+ },
+ {
+  "id": "function:engine/core/easing.cpp:easeInOutCirc",
+  "name": "easeInOutCirc",
+  "summary": "Piecewise circular ease-in-out."
+ },
+ {
+  "id": "function:engine/core/easing.cpp:easeInBack",
+  "name": "easeInBack",
+  "summary": "Back ease-in that overshoots below zero."
+ }
+]

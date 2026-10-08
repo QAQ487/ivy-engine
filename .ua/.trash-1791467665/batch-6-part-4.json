@@ -1,0 +1,1158 @@
+{
+  "nodes": [
+    {
+      "id": "file:engine/ui/ui_text_renderer.cpp",
+      "type": "file",
+      "name": "ui_text_renderer.cpp",
+      "filePath": "engine/ui/ui_text_renderer.cpp",
+      "summary": "Draws UI strings either from a baked TTF atlas or a legacy monospaced font texture, measuring width and line height for layout.",
+      "tags": [
+        "ui",
+        "text",
+        "font",
+        "rendering"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:engine/ui/ui_text_renderer.h",
+      "type": "file",
+      "name": "ui_text_renderer.h",
+      "filePath": "engine/ui/ui_text_renderer.h",
+      "summary": "Declares UITextRenderer, which can render either a TTF-backed UIFont atlas or a grid font texture.",
+      "tags": [
+        "ui",
+        "text",
+        "type-definition",
+        "component"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/app/main.cpp",
+      "type": "file",
+      "name": "main.cpp",
+      "filePath": "src/app/main.cpp",
+      "summary": "Windows application entry: creates the DPI-aware window, initializes renderer/input/audio/jobs, and runs the 60 Hz update/draw loop with fade and scene management.",
+      "tags": [
+        "entry-point",
+        "application",
+        "game-loop",
+        "windows"
+      ],
+      "complexity": "complex",
+      "languageNotes": "WinMain hosts a PeekMessage loop capped at ~60 FPS; editor-only F7/F9/F10/F11/F12 hotkeys are compiled out of GAME_RUNTIME."
+    },
+    {
+      "id": "file:src/app/main.h",
+      "type": "file",
+      "name": "main.h",
+      "filePath": "src/app/main.h",
+      "summary": "Application header that pulls in D3D11/DirectInput headers and defines the 1920x1080 design-resolution screen macros.",
+      "tags": [
+        "entry-point",
+        "type-definition",
+        "configuration"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/app/rendering/fade.cpp",
+      "type": "file",
+      "name": "fade.cpp",
+      "filePath": "src/app/rendering/fade.cpp",
+      "summary": "Full-screen color fade that interpolates alpha, optionally swaps SceneManager scenes at fade-out, then fades back in.",
+      "tags": [
+        "rendering",
+        "fade",
+        "scene-transition",
+        "sprite"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:engine/ui/ui_text_renderer.cpp:UITextRenderer",
+      "type": "function",
+      "name": "UITextRenderer",
+      "filePath": "engine/ui/ui_text_renderer.cpp",
+      "lineRange": [
+        11,
+        20
+      ],
+      "summary": "Constructs a UITextRenderer with legacy grid-font defaults and no TTF bound.",
+      "tags": [
+        "ui",
+        "constructor",
+        "text"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ui/ui_text_renderer.cpp:DrawScale",
+      "type": "function",
+      "name": "DrawScale",
+      "filePath": "engine/ui/ui_text_renderer.cpp",
+      "lineRange": [
+        22,
+        26
+      ],
+      "summary": "Scales TTF draw size so baked 64px glyphs match the legacy 32px cell.",
+      "tags": [
+        "ui",
+        "font",
+        "layout"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ui/ui_text_renderer.cpp:Initialize",
+      "type": "function",
+      "name": "Initialize",
+      "filePath": "engine/ui/ui_text_renderer.cpp",
+      "lineRange": [
+        34,
+        58
+      ],
+      "summary": "Loads either a TTF via UIFont_Get or a grid font texture via TextureLoad.",
+      "tags": [
+        "ui",
+        "initialization",
+        "font"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:engine/ui/ui_text_renderer.cpp:Draw",
+      "type": "function",
+      "name": "Draw",
+      "filePath": "engine/ui/ui_text_renderer.cpp",
+      "lineRange": [
+        60,
+        135
+      ],
+      "summary": "Draws a string with TTF glyph quads or a monospaced grid font via Sprite_Draw.",
+      "tags": [
+        "ui",
+        "text",
+        "draw"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:engine/ui/ui_text_renderer.cpp:GetTextWidth",
+      "type": "function",
+      "name": "GetTextWidth",
+      "filePath": "engine/ui/ui_text_renderer.cpp",
+      "lineRange": [
+        137,
+        177
+      ],
+      "summary": "Measures string width for TTF advances or grid-cell spacing.",
+      "tags": [
+        "ui",
+        "layout",
+        "text"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:engine/ui/ui_text_renderer.cpp:GetLineHeight",
+      "type": "function",
+      "name": "GetLineHeight",
+      "filePath": "engine/ui/ui_text_renderer.cpp",
+      "lineRange": [
+        179,
+        183
+      ],
+      "summary": "Returns scaled line height from the TTF or grid cell height.",
+      "tags": [
+        "ui",
+        "layout",
+        "text"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ui/ui_text_renderer.cpp:Finalize",
+      "type": "function",
+      "name": "Finalize",
+      "filePath": "engine/ui/ui_text_renderer.cpp",
+      "lineRange": [
+        185,
+        189
+      ],
+      "summary": "Clears the renderer font/texture binding.",
+      "tags": [
+        "ui",
+        "shutdown"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/app/main.cpp:WinMain",
+      "type": "function",
+      "name": "WinMain",
+      "filePath": "src/app/main.cpp",
+      "lineRange": [
+        99,
+        247
+      ],
+      "summary": "Windows entry point: DPI-aware window creation, subsystem init, and the 60 Hz message/game loop.",
+      "tags": [
+        "entry-point",
+        "windows",
+        "game-loop"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/app/main.cpp:Initialize",
+      "type": "function",
+      "name": "Initialize",
+      "filePath": "src/app/main.cpp",
+      "lineRange": [
+        252,
+        292
+      ],
+      "summary": "Boots renderer, shaders, sprites, input, jobs, audio, fade, post-process, effects, and the first GameScene.",
+      "tags": [
+        "initialization",
+        "bootstrap"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/app/main.cpp:Finalize",
+      "type": "function",
+      "name": "Finalize",
+      "filePath": "src/app/main.cpp",
+      "lineRange": [
+        297,
+        318
+      ],
+      "summary": "Tears down the scene and all subsystems in reverse dependency order before the D3D device dies.",
+      "tags": [
+        "shutdown",
+        "lifecycle"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/app/main.cpp:Update",
+      "type": "function",
+      "name": "Update",
+      "filePath": "src/app/main.cpp",
+      "lineRange": [
+        323,
+        388
+      ],
+      "summary": "Ticks input, debug time-scale, effects, fade, post-process, scene, and audio at a scaled fixed timestep.",
+      "tags": [
+        "update",
+        "game-loop"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/app/main.cpp:Draw",
+      "type": "function",
+      "name": "Draw",
+      "filePath": "src/app/main.cpp",
+      "lineRange": [
+        393,
+        463
+      ],
+      "summary": "Clears, draws the scene, fade overlay, debug text, and presents the back buffer.",
+      "tags": [
+        "draw",
+        "game-loop"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/app/main.cpp:WndProc",
+      "type": "function",
+      "name": "WndProc",
+      "filePath": "src/app/main.cpp",
+      "lineRange": [
+        468,
+        576
+      ],
+      "summary": "Window procedure handling resize/move, DPI, ImGui input, and quit.",
+      "tags": [
+        "windows",
+        "event-handler"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/app/rendering/fade.cpp:Fade_Initialize",
+      "type": "function",
+      "name": "Fade_Initialize",
+      "filePath": "src/app/rendering/fade.cpp",
+      "lineRange": [
+        21,
+        31
+      ],
+      "summary": "Resets fade state and loads the full-screen fade texture.",
+      "tags": [
+        "fade",
+        "initialization"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/app/rendering/fade.cpp:Fade_Finalize",
+      "type": "function",
+      "name": "Fade_Finalize",
+      "filePath": "src/app/rendering/fade.cpp",
+      "lineRange": [
+        33,
+        35
+      ],
+      "summary": "Unbinds the fade texture slot.",
+      "tags": [
+        "fade",
+        "shutdown"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/app/rendering/fade.cpp:Fade_Update",
+      "type": "function",
+      "name": "Fade_Update",
+      "filePath": "src/app/rendering/fade.cpp",
+      "lineRange": [
+        37,
+        64
+      ],
+      "summary": "Advances fade-out/in alpha and changes scene when fade-out completes.",
+      "tags": [
+        "fade",
+        "update",
+        "scene-transition"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/app/rendering/fade.cpp:Fade_Draw",
+      "type": "function",
+      "name": "Fade_Draw",
+      "filePath": "src/app/rendering/fade.cpp",
+      "lineRange": [
+        66,
+        72
+      ],
+      "summary": "Draws the full-screen fade sprite at the current alpha.",
+      "tags": [
+        "fade",
+        "draw"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/app/rendering/fade.cpp:Fade_SetOut",
+      "type": "function",
+      "name": "Fade_SetOut",
+      "filePath": "src/app/rendering/fade.cpp",
+      "lineRange": [
+        75,
+        85
+      ],
+      "summary": "Starts a fade-out with color, speed, and optional scene change.",
+      "tags": [
+        "fade",
+        "api-handler"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/app/rendering/fade.cpp:Fade_SetIn",
+      "type": "function",
+      "name": "Fade_SetIn",
+      "filePath": "src/app/rendering/fade.cpp",
+      "lineRange": [
+        88,
+        95
+      ],
+      "summary": "Starts a fade-in from full alpha.",
+      "tags": [
+        "fade",
+        "api-handler"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/app/rendering/fade.cpp:Fade_SetNextScene",
+      "type": "function",
+      "name": "Fade_SetNextScene",
+      "filePath": "src/app/rendering/fade.cpp",
+      "lineRange": [
+        98,
+        100
+      ],
+      "summary": "Stores the SceneBase to switch to at the end of fade-out.",
+      "tags": [
+        "fade",
+        "scene-transition"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/app/rendering/fade.cpp:Fade_IsFadeEnd",
+      "type": "function",
+      "name": "Fade_IsFadeEnd",
+      "filePath": "src/app/rendering/fade.cpp",
+      "lineRange": [
+        103,
+        103
+      ],
+      "summary": "True when no fade is active.",
+      "tags": [
+        "fade",
+        "query"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/app/rendering/fade.cpp:Fade_IsOutEnd",
+      "type": "function",
+      "name": "Fade_IsOutEnd",
+      "filePath": "src/app/rendering/fade.cpp",
+      "lineRange": [
+        104,
+        104
+      ],
+      "summary": "True when fade-out has reached full alpha and fade-in is about to start.",
+      "tags": [
+        "fade",
+        "query"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/app/rendering/fade.cpp:Fade_IsInEnd",
+      "type": "function",
+      "name": "Fade_IsInEnd",
+      "filePath": "src/app/rendering/fade.cpp",
+      "lineRange": [
+        105,
+        105
+      ],
+      "summary": "True when fade-in has finished.",
+      "tags": [
+        "fade",
+        "query"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/app/rendering/fade.cpp:Fade_IsFading",
+      "type": "function",
+      "name": "Fade_IsFading",
+      "filePath": "src/app/rendering/fade.cpp",
+      "lineRange": [
+        106,
+        106
+      ],
+      "summary": "True while a fade is in progress.",
+      "tags": [
+        "fade",
+        "query"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:engine/ui/ui_text_renderer.h:UITextRenderer",
+      "type": "class",
+      "name": "UITextRenderer",
+      "filePath": "engine/ui/ui_text_renderer.h",
+      "lineRange": [
+        7,
+        41
+      ],
+      "summary": "Text renderer that can draw baked TTF atlases or a legacy monospaced font texture.",
+      "tags": [
+        "ui",
+        "text",
+        "component",
+        "type-definition"
+      ],
+      "complexity": "moderate"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:engine/ui/ui_text_renderer.cpp",
+      "target": "function:engine/ui/ui_text_renderer.cpp:UITextRenderer",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ui/ui_text_renderer.cpp",
+      "target": "function:engine/ui/ui_text_renderer.cpp:UITextRenderer",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ui/ui_text_renderer.cpp",
+      "target": "function:engine/ui/ui_text_renderer.cpp:DrawScale",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ui/ui_text_renderer.cpp",
+      "target": "function:engine/ui/ui_text_renderer.cpp:DrawScale",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ui/ui_text_renderer.cpp",
+      "target": "function:engine/ui/ui_text_renderer.cpp:Initialize",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ui/ui_text_renderer.cpp",
+      "target": "function:engine/ui/ui_text_renderer.cpp:Initialize",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ui/ui_text_renderer.cpp",
+      "target": "function:engine/ui/ui_text_renderer.cpp:Draw",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ui/ui_text_renderer.cpp",
+      "target": "function:engine/ui/ui_text_renderer.cpp:Draw",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ui/ui_text_renderer.cpp",
+      "target": "function:engine/ui/ui_text_renderer.cpp:GetTextWidth",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ui/ui_text_renderer.cpp",
+      "target": "function:engine/ui/ui_text_renderer.cpp:GetTextWidth",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ui/ui_text_renderer.cpp",
+      "target": "function:engine/ui/ui_text_renderer.cpp:GetLineHeight",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ui/ui_text_renderer.cpp",
+      "target": "function:engine/ui/ui_text_renderer.cpp:GetLineHeight",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ui/ui_text_renderer.cpp",
+      "target": "function:engine/ui/ui_text_renderer.cpp:Finalize",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ui/ui_text_renderer.cpp",
+      "target": "function:engine/ui/ui_text_renderer.cpp:Finalize",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/main.cpp",
+      "target": "function:src/app/main.cpp:WinMain",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/main.cpp",
+      "target": "function:src/app/main.cpp:WinMain",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/main.cpp",
+      "target": "function:src/app/main.cpp:Initialize",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/main.cpp",
+      "target": "function:src/app/main.cpp:Initialize",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/main.cpp",
+      "target": "function:src/app/main.cpp:Finalize",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/main.cpp",
+      "target": "function:src/app/main.cpp:Finalize",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/main.cpp",
+      "target": "function:src/app/main.cpp:Update",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/main.cpp",
+      "target": "function:src/app/main.cpp:Update",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/main.cpp",
+      "target": "function:src/app/main.cpp:Draw",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/main.cpp",
+      "target": "function:src/app/main.cpp:Draw",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/main.cpp",
+      "target": "function:src/app/main.cpp:WndProc",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/main.cpp",
+      "target": "function:src/app/main.cpp:WndProc",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/rendering/fade.cpp",
+      "target": "function:src/app/rendering/fade.cpp:Fade_Initialize",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/rendering/fade.cpp",
+      "target": "function:src/app/rendering/fade.cpp:Fade_Initialize",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/rendering/fade.cpp",
+      "target": "function:src/app/rendering/fade.cpp:Fade_Finalize",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/rendering/fade.cpp",
+      "target": "function:src/app/rendering/fade.cpp:Fade_Finalize",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/rendering/fade.cpp",
+      "target": "function:src/app/rendering/fade.cpp:Fade_Update",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/rendering/fade.cpp",
+      "target": "function:src/app/rendering/fade.cpp:Fade_Update",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/rendering/fade.cpp",
+      "target": "function:src/app/rendering/fade.cpp:Fade_Draw",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/rendering/fade.cpp",
+      "target": "function:src/app/rendering/fade.cpp:Fade_Draw",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/rendering/fade.cpp",
+      "target": "function:src/app/rendering/fade.cpp:Fade_SetOut",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/rendering/fade.cpp",
+      "target": "function:src/app/rendering/fade.cpp:Fade_SetOut",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/rendering/fade.cpp",
+      "target": "function:src/app/rendering/fade.cpp:Fade_SetIn",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/rendering/fade.cpp",
+      "target": "function:src/app/rendering/fade.cpp:Fade_SetIn",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/rendering/fade.cpp",
+      "target": "function:src/app/rendering/fade.cpp:Fade_SetNextScene",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/rendering/fade.cpp",
+      "target": "function:src/app/rendering/fade.cpp:Fade_SetNextScene",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/rendering/fade.cpp",
+      "target": "function:src/app/rendering/fade.cpp:Fade_IsFadeEnd",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/rendering/fade.cpp",
+      "target": "function:src/app/rendering/fade.cpp:Fade_IsFadeEnd",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/rendering/fade.cpp",
+      "target": "function:src/app/rendering/fade.cpp:Fade_IsOutEnd",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/rendering/fade.cpp",
+      "target": "function:src/app/rendering/fade.cpp:Fade_IsOutEnd",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/rendering/fade.cpp",
+      "target": "function:src/app/rendering/fade.cpp:Fade_IsInEnd",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/rendering/fade.cpp",
+      "target": "function:src/app/rendering/fade.cpp:Fade_IsInEnd",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/rendering/fade.cpp",
+      "target": "function:src/app/rendering/fade.cpp:Fade_IsFading",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/rendering/fade.cpp",
+      "target": "function:src/app/rendering/fade.cpp:Fade_IsFading",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ui/ui_text_renderer.h",
+      "target": "class:engine/ui/ui_text_renderer.h:UITextRenderer",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ui/ui_text_renderer.h",
+      "target": "class:engine/ui/ui_text_renderer.h:UITextRenderer",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ui/ui_text_renderer.cpp",
+      "target": "file:engine/rendering/sprite/sprite.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/ui/ui_text_renderer.cpp",
+      "target": "file:engine/rendering/sprite/texture.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/ui/ui_text_renderer.cpp",
+      "target": "file:engine/ui/ui_font.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/ui/ui_text_renderer.cpp",
+      "target": "file:engine/ui/ui_text_renderer.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/main.cpp",
+      "target": "file:engine/audio/audio_manager.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/main.cpp",
+      "target": "file:engine/core/debug_system.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/main.cpp",
+      "target": "file:engine/core/engine_gui.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/main.cpp",
+      "target": "file:engine/core/job_system.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/main.cpp",
+      "target": "file:engine/core/system_timer.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/main.cpp",
+      "target": "file:engine/debug_draw/debug_ofstream.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/main.cpp",
+      "target": "file:engine/debug_draw/debug_text.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/main.cpp",
+      "target": "file:engine/input/controller.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/main.cpp",
+      "target": "file:engine/input/key_logger.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/main.cpp",
+      "target": "file:engine/input/keyboard.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/main.cpp",
+      "target": "file:engine/input/mouse.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/main.cpp",
+      "target": "file:engine/rendering/d3d11/post_process.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/main.cpp",
+      "target": "file:engine/rendering/d3d11/renderer.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/main.cpp",
+      "target": "file:engine/rendering/d3d11/shader.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/main.cpp",
+      "target": "file:engine/rendering/effect/effect_system.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/main.cpp",
+      "target": "file:engine/rendering/model/model_util.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/main.cpp",
+      "target": "file:engine/rendering/sprite/line_sprite.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/main.cpp",
+      "target": "file:engine/rendering/sprite/sprite.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/main.cpp",
+      "target": "file:engine/rendering/sprite/texture.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/main.cpp",
+      "target": "file:src/app/main.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/rendering/fade.cpp",
+      "target": "file:engine/rendering/sprite/sprite.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/rendering/fade.cpp",
+      "target": "file:engine/rendering/sprite/texture.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/rendering/fade.cpp",
+      "target": "file:src/app/rendering/fade.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:engine/ui/ui_text_renderer.cpp:Initialize",
+      "target": "function:engine/ui/ui_font.cpp:UIFont_IsTrueTypePath",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/ui/ui_text_renderer.cpp:Initialize",
+      "target": "function:engine/ui/ui_font.cpp:UIFont_Get",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/ui/ui_text_renderer.cpp:Initialize",
+      "target": "function:engine/rendering/sprite/texture.cpp:TextureLoad",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/ui/ui_text_renderer.cpp:Draw",
+      "target": "function:engine/rendering/sprite/sprite.cpp:Sprite_Draw",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/app/main.cpp:Initialize",
+      "target": "function:engine/rendering/sprite/texture.cpp:Texture_Initialize",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/app/main.cpp:Initialize",
+      "target": "function:engine/rendering/sprite/sprite.cpp:Sprite_Initialize",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/app/main.cpp:Initialize",
+      "target": "function:engine/rendering/sprite/line_sprite.cpp:LineSprite_Initialize",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/app/main.cpp:Initialize",
+      "target": "function:src/app/rendering/fade.cpp:Fade_Initialize",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/app/main.cpp:Finalize",
+      "target": "function:src/app/rendering/fade.cpp:Fade_Finalize",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/app/main.cpp:Finalize",
+      "target": "function:engine/rendering/sprite/line_sprite.cpp:LineSprite_Finalize",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/app/main.cpp:Finalize",
+      "target": "function:engine/rendering/sprite/sprite.cpp:Sprite_Finalize",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/app/main.cpp:Finalize",
+      "target": "function:engine/rendering/sprite/texture.cpp:Texture_Finalize",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/app/main.cpp:Finalize",
+      "target": "function:engine/rendering/model/model_util.cpp:ModelUtil_ReleaseTextureCache",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/app/main.cpp:Update",
+      "target": "function:src/app/rendering/fade.cpp:Fade_Update",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/app/main.cpp:Update",
+      "target": "function:src/app/rendering/fade.cpp:Fade_IsFadeEnd",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/app/main.cpp:Draw",
+      "target": "function:src/app/rendering/fade.cpp:Fade_Draw",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/app/rendering/fade.cpp:Fade_Initialize",
+      "target": "function:engine/rendering/sprite/texture.cpp:TextureLoad",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/app/rendering/fade.cpp:Fade_Finalize",
+      "target": "function:engine/rendering/sprite/texture.cpp:TextureSetTexture",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/app/rendering/fade.cpp:Fade_Draw",
+      "target": "function:engine/rendering/sprite/sprite.cpp:Sprite_Draw",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

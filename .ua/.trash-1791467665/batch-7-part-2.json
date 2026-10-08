@@ -1,0 +1,1149 @@
+{
+  "nodes": [
+    {
+      "id": "file:engine/core/engine_gui_runtime.cpp",
+      "type": "file",
+      "name": "engine_gui_runtime.cpp",
+      "filePath": "engine/core/engine_gui_runtime.cpp",
+      "summary": "Runtime (non-editor) EngineGUI implementation: starts play, ticks non-player scene nodes, and stubs editor-only UI hooks.",
+      "tags": [
+        "runtime",
+        "api-handler",
+        "play-mode",
+        "entry-point"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "Same EngineGUI_* symbols as the editor build, compiled only into the game runtime host."
+    },
+    {
+      "id": "function:engine/core/engine_gui_runtime.cpp:HasThirdPersonPlayerNode",
+      "type": "function",
+      "name": "HasThirdPersonPlayerNode",
+      "filePath": "engine/core/engine_gui_runtime.cpp",
+      "lineRange": [
+        19,
+        28
+      ],
+      "summary": "Recursively finds a TAG_PLAYER node used to decide whether play should hide the cursor.",
+      "tags": [
+        "scene-graph",
+        "lookup",
+        "camera"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui_runtime.cpp:EnterRuntimePlay",
+      "type": "function",
+      "name": "EnterRuntimePlay",
+      "filePath": "engine/core/engine_gui_runtime.cpp",
+      "lineRange": [
+        38,
+        50
+      ],
+      "summary": "Snapshots start transforms, syncs runtime, seeds physics poses, and hides the cursor for follow cameras.",
+      "tags": [
+        "play-mode",
+        "runtime",
+        "camera"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_Initialize",
+      "type": "function",
+      "name": "EngineGUI_Initialize",
+      "filePath": "engine/core/engine_gui_runtime.cpp",
+      "lineRange": [
+        52,
+        57
+      ],
+      "summary": "Refreshes the model asset cache and initializes the scene loader for the runtime host.",
+      "tags": [
+        "entry-point",
+        "initialization",
+        "runtime"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_Finalize",
+      "type": "function",
+      "name": "EngineGUI_Finalize",
+      "filePath": "engine/core/engine_gui_runtime.cpp",
+      "lineRange": [
+        59,
+        63
+      ],
+      "summary": "Shuts down the scene loader and clears runtime play/camera state.",
+      "tags": [
+        "shutdown",
+        "runtime",
+        "api-handler"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_Update",
+      "type": "function",
+      "name": "EngineGUI_Update",
+      "filePath": "engine/core/engine_gui_runtime.cpp",
+      "lineRange": [
+        65,
+        77
+      ],
+      "summary": "Ticks non-player scene roots while runtime play is active; player roots are left for GameScene.",
+      "tags": [
+        "play-mode",
+        "runtime",
+        "event-handler"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_Draw",
+      "type": "function",
+      "name": "EngineGUI_Draw",
+      "filePath": "engine/core/engine_gui_runtime.cpp",
+      "lineRange": [
+        79,
+        80
+      ],
+      "summary": "No-op draw hook so the runtime host matches the editor EngineGUI surface.",
+      "tags": [
+        "runtime",
+        "api-handler",
+        "rendering"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_OnBackbufferResized",
+      "type": "function",
+      "name": "EngineGUI_OnBackbufferResized",
+      "filePath": "engine/core/engine_gui_runtime.cpp",
+      "lineRange": [
+        82,
+        83
+      ],
+      "summary": "No-op resize hook for the runtime EngineGUI build.",
+      "tags": [
+        "runtime",
+        "api-handler",
+        "viewport"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_DrawSelectionIndicator",
+      "type": "function",
+      "name": "EngineGUI_DrawSelectionIndicator",
+      "filePath": "engine/core/engine_gui_runtime.cpp",
+      "lineRange": [
+        85,
+        86
+      ],
+      "summary": "No-op selection overlay in the runtime build.",
+      "tags": [
+        "runtime",
+        "api-handler",
+        "editor"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_IsPlaying",
+      "type": "function",
+      "name": "EngineGUI_IsPlaying",
+      "filePath": "engine/core/engine_gui_runtime.cpp",
+      "lineRange": [
+        88,
+        90
+      ],
+      "summary": "Returns whether the runtime host is currently in play mode.",
+      "tags": [
+        "play-mode",
+        "runtime",
+        "query"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_PreferPlayVisuals",
+      "type": "function",
+      "name": "EngineGUI_PreferPlayVisuals",
+      "filePath": "engine/core/engine_gui_runtime.cpp",
+      "lineRange": [
+        92,
+        94
+      ],
+      "summary": "Reports play visuals as active whenever runtime play is on.",
+      "tags": [
+        "play-mode",
+        "runtime",
+        "query"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_IsSceneAssetPreloadActive",
+      "type": "function",
+      "name": "EngineGUI_IsSceneAssetPreloadActive",
+      "filePath": "engine/core/engine_gui_runtime.cpp",
+      "lineRange": [
+        96,
+        98
+      ],
+      "summary": "Always false in the runtime build (no editor preload pipeline).",
+      "tags": [
+        "runtime",
+        "api-handler",
+        "preload"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_IsDebugCameraPlayInputActive",
+      "type": "function",
+      "name": "EngineGUI_IsDebugCameraPlayInputActive",
+      "filePath": "engine/core/engine_gui_runtime.cpp",
+      "lineRange": [
+        100,
+        102
+      ],
+      "summary": "Always false in the runtime build.",
+      "tags": [
+        "runtime",
+        "api-handler",
+        "camera"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_IsOnStart",
+      "type": "function",
+      "name": "EngineGUI_IsOnStart",
+      "filePath": "engine/core/engine_gui_runtime.cpp",
+      "lineRange": [
+        104,
+        106
+      ],
+      "summary": "True when the runtime host is not playing.",
+      "tags": [
+        "play-mode",
+        "runtime",
+        "query"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_StartPlay",
+      "type": "function",
+      "name": "EngineGUI_StartPlay",
+      "filePath": "engine/core/engine_gui_runtime.cpp",
+      "lineRange": [
+        108,
+        110
+      ],
+      "summary": "Enters runtime play via EnterRuntimePlay.",
+      "tags": [
+        "play-mode",
+        "runtime",
+        "api-handler"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_StopPlay",
+      "type": "function",
+      "name": "EngineGUI_StopPlay",
+      "filePath": "engine/core/engine_gui_runtime.cpp",
+      "lineRange": [
+        112,
+        117
+      ],
+      "summary": "Tears down the play session, disables the debug camera, and resyncs runtime.",
+      "tags": [
+        "play-mode",
+        "runtime",
+        "api-handler"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_SetEnabled",
+      "type": "function",
+      "name": "EngineGUI_SetEnabled",
+      "filePath": "engine/core/engine_gui_runtime.cpp",
+      "lineRange": [
+        119,
+        120
+      ],
+      "summary": "No-op editor-enable toggle in the runtime build.",
+      "tags": [
+        "runtime",
+        "api-handler",
+        "editor"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_GetGameViewportRect",
+      "type": "function",
+      "name": "EngineGUI_GetGameViewportRect",
+      "filePath": "engine/core/engine_gui_runtime.cpp",
+      "lineRange": [
+        122,
+        127
+      ],
+      "summary": "Reports the full backbuffer as the game viewport.",
+      "tags": [
+        "viewport",
+        "runtime",
+        "api-handler"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_SaveToFile",
+      "type": "function",
+      "name": "EngineGUI_SaveToFile",
+      "filePath": "engine/core/engine_gui_runtime.cpp",
+      "lineRange": [
+        129,
+        131
+      ],
+      "summary": "Saves the loaded scene through SceneLoader_SaveToFile.",
+      "tags": [
+        "persistence",
+        "runtime",
+        "api-handler"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_LoadFromFile",
+      "type": "function",
+      "name": "EngineGUI_LoadFromFile",
+      "filePath": "engine/core/engine_gui_runtime.cpp",
+      "lineRange": [
+        133,
+        138
+      ],
+      "summary": "Loads a scene and immediately enters runtime play on success.",
+      "tags": [
+        "persistence",
+        "play-mode",
+        "runtime"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_GetDefaultScenePath",
+      "type": "function",
+      "name": "EngineGUI_GetDefaultScenePath",
+      "filePath": "engine/core/engine_gui_runtime.cpp",
+      "lineRange": [
+        140,
+        142
+      ],
+      "summary": "Forwards the default scene path from SceneLoader.",
+      "tags": [
+        "runtime",
+        "persistence",
+        "api-handler"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_ResolveStartupScenePath",
+      "type": "function",
+      "name": "EngineGUI_ResolveStartupScenePath",
+      "filePath": "engine/core/engine_gui_runtime.cpp",
+      "lineRange": [
+        144,
+        146
+      ],
+      "summary": "Returns an empty path so the runtime uses the default scene.",
+      "tags": [
+        "runtime",
+        "api-handler",
+        "persistence"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_GetCameraMode",
+      "type": "function",
+      "name": "EngineGUI_GetCameraMode",
+      "filePath": "engine/core/engine_gui_runtime.cpp",
+      "lineRange": [
+        148,
+        150
+      ],
+      "summary": "Returns the runtime camera mode (defaults to ThirdPerson).",
+      "tags": [
+        "camera",
+        "runtime",
+        "query"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_SetCameraMode",
+      "type": "function",
+      "name": "EngineGUI_SetCameraMode",
+      "filePath": "engine/core/engine_gui_runtime.cpp",
+      "lineRange": [
+        152,
+        154
+      ],
+      "summary": "Stores the requested runtime camera mode.",
+      "tags": [
+        "camera",
+        "runtime",
+        "api-handler"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_GetActiveCameraNodeName",
+      "type": "function",
+      "name": "EngineGUI_GetActiveCameraNodeName",
+      "filePath": "engine/core/engine_gui_runtime.cpp",
+      "lineRange": [
+        156,
+        158
+      ],
+      "summary": "Returns the stored active scene-camera node name.",
+      "tags": [
+        "camera",
+        "runtime",
+        "query"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_SetActiveCameraNodeName",
+      "type": "function",
+      "name": "EngineGUI_SetActiveCameraNodeName",
+      "filePath": "engine/core/engine_gui_runtime.cpp",
+      "lineRange": [
+        160,
+        162
+      ],
+      "summary": "Records which scene camera node name is currently active.",
+      "tags": [
+        "camera",
+        "runtime",
+        "api-handler"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_IsUiOverlayVisible",
+      "type": "function",
+      "name": "EngineGUI_IsUiOverlayVisible",
+      "filePath": "engine/core/engine_gui_runtime.cpp",
+      "lineRange": [
+        164,
+        166
+      ],
+      "summary": "Always reports the UI overlay as visible in the runtime build.",
+      "tags": [
+        "runtime",
+        "ui",
+        "query"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_SetUiOverlayVisible",
+      "type": "function",
+      "name": "EngineGUI_SetUiOverlayVisible",
+      "filePath": "engine/core/engine_gui_runtime.cpp",
+      "lineRange": [
+        168,
+        169
+      ],
+      "summary": "No-op UI overlay toggle in the runtime build.",
+      "tags": [
+        "runtime",
+        "ui",
+        "api-handler"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_GetEditMode",
+      "type": "function",
+      "name": "EngineGUI_GetEditMode",
+      "filePath": "engine/core/engine_gui_runtime.cpp",
+      "lineRange": [
+        171,
+        173
+      ],
+      "summary": "Always returns Scene3D edit mode in the runtime build.",
+      "tags": [
+        "runtime",
+        "editor",
+        "query"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_SetEditMode",
+      "type": "function",
+      "name": "EngineGUI_SetEditMode",
+      "filePath": "engine/core/engine_gui_runtime.cpp",
+      "lineRange": [
+        175,
+        176
+      ],
+      "summary": "No-op edit-mode setter in the runtime build.",
+      "tags": [
+        "runtime",
+        "editor",
+        "api-handler"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_IsUiEditMode",
+      "type": "function",
+      "name": "EngineGUI_IsUiEditMode",
+      "filePath": "engine/core/engine_gui_runtime.cpp",
+      "lineRange": [
+        178,
+        180
+      ],
+      "summary": "Always false in the runtime build.",
+      "tags": [
+        "runtime",
+        "ui",
+        "query"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_MouseToViewportLocal",
+      "type": "function",
+      "name": "EngineGUI_MouseToViewportLocal",
+      "filePath": "engine/core/engine_gui_runtime.cpp",
+      "lineRange": [
+        182,
+        191
+      ],
+      "summary": "Maps the hardware mouse into backbuffer space and reports whether it is inside the viewport.",
+      "tags": [
+        "input",
+        "viewport",
+        "runtime"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_IsSceneGraphObject",
+      "type": "function",
+      "name": "EngineGUI_IsSceneGraphObject",
+      "filePath": "engine/core/engine_gui_runtime.cpp",
+      "lineRange": [
+        193,
+        195
+      ],
+      "summary": "Forwards scene-graph membership checks to SceneLoader_IsSceneGraphObject.",
+      "tags": [
+        "scene-graph",
+        "runtime",
+        "query"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui_runtime.cpp:DrawEditorSceneProxies",
+      "type": "function",
+      "name": "DrawEditorSceneProxies",
+      "filePath": "engine/core/engine_gui_runtime.cpp",
+      "lineRange": [
+        197,
+        198
+      ],
+      "summary": "No-op editor proxy draw in the runtime build.",
+      "tags": [
+        "runtime",
+        "api-handler",
+        "rendering"
+      ],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:engine/core/engine_gui_runtime.cpp",
+      "target": "function:engine/core/engine_gui_runtime.cpp:HasThirdPersonPlayerNode",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui_runtime.cpp",
+      "target": "function:engine/core/engine_gui_runtime.cpp:EnterRuntimePlay",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui_runtime.cpp",
+      "target": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_Initialize",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui_runtime.cpp",
+      "target": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_Initialize",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/engine_gui_runtime.cpp",
+      "target": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_Finalize",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui_runtime.cpp",
+      "target": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_Finalize",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/engine_gui_runtime.cpp",
+      "target": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_Update",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui_runtime.cpp",
+      "target": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_Update",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/engine_gui_runtime.cpp",
+      "target": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_Draw",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui_runtime.cpp",
+      "target": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_Draw",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/engine_gui_runtime.cpp",
+      "target": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_OnBackbufferResized",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui_runtime.cpp",
+      "target": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_OnBackbufferResized",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/engine_gui_runtime.cpp",
+      "target": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_DrawSelectionIndicator",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui_runtime.cpp",
+      "target": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_DrawSelectionIndicator",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/engine_gui_runtime.cpp",
+      "target": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_IsPlaying",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui_runtime.cpp",
+      "target": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_IsPlaying",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/engine_gui_runtime.cpp",
+      "target": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_PreferPlayVisuals",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui_runtime.cpp",
+      "target": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_PreferPlayVisuals",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/engine_gui_runtime.cpp",
+      "target": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_IsSceneAssetPreloadActive",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui_runtime.cpp",
+      "target": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_IsSceneAssetPreloadActive",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/engine_gui_runtime.cpp",
+      "target": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_IsDebugCameraPlayInputActive",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui_runtime.cpp",
+      "target": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_IsDebugCameraPlayInputActive",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/engine_gui_runtime.cpp",
+      "target": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_IsOnStart",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui_runtime.cpp",
+      "target": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_IsOnStart",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/engine_gui_runtime.cpp",
+      "target": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_StartPlay",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui_runtime.cpp",
+      "target": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_StartPlay",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/engine_gui_runtime.cpp",
+      "target": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_StopPlay",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui_runtime.cpp",
+      "target": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_StopPlay",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/engine_gui_runtime.cpp",
+      "target": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_SetEnabled",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui_runtime.cpp",
+      "target": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_SetEnabled",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/engine_gui_runtime.cpp",
+      "target": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_GetGameViewportRect",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui_runtime.cpp",
+      "target": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_GetGameViewportRect",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/engine_gui_runtime.cpp",
+      "target": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_SaveToFile",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui_runtime.cpp",
+      "target": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_SaveToFile",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/engine_gui_runtime.cpp",
+      "target": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_LoadFromFile",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui_runtime.cpp",
+      "target": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_LoadFromFile",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/engine_gui_runtime.cpp",
+      "target": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_GetDefaultScenePath",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui_runtime.cpp",
+      "target": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_GetDefaultScenePath",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/engine_gui_runtime.cpp",
+      "target": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_ResolveStartupScenePath",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui_runtime.cpp",
+      "target": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_ResolveStartupScenePath",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/engine_gui_runtime.cpp",
+      "target": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_GetCameraMode",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui_runtime.cpp",
+      "target": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_GetCameraMode",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/engine_gui_runtime.cpp",
+      "target": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_SetCameraMode",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui_runtime.cpp",
+      "target": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_SetCameraMode",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/engine_gui_runtime.cpp",
+      "target": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_GetActiveCameraNodeName",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui_runtime.cpp",
+      "target": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_GetActiveCameraNodeName",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/engine_gui_runtime.cpp",
+      "target": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_SetActiveCameraNodeName",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui_runtime.cpp",
+      "target": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_SetActiveCameraNodeName",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/engine_gui_runtime.cpp",
+      "target": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_IsUiOverlayVisible",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui_runtime.cpp",
+      "target": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_IsUiOverlayVisible",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/engine_gui_runtime.cpp",
+      "target": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_SetUiOverlayVisible",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui_runtime.cpp",
+      "target": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_SetUiOverlayVisible",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/engine_gui_runtime.cpp",
+      "target": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_GetEditMode",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui_runtime.cpp",
+      "target": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_GetEditMode",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/engine_gui_runtime.cpp",
+      "target": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_SetEditMode",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui_runtime.cpp",
+      "target": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_SetEditMode",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/engine_gui_runtime.cpp",
+      "target": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_IsUiEditMode",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui_runtime.cpp",
+      "target": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_IsUiEditMode",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/engine_gui_runtime.cpp",
+      "target": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_MouseToViewportLocal",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui_runtime.cpp",
+      "target": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_MouseToViewportLocal",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/engine_gui_runtime.cpp",
+      "target": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_IsSceneGraphObject",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui_runtime.cpp",
+      "target": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_IsSceneGraphObject",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/engine_gui_runtime.cpp",
+      "target": "function:engine/core/engine_gui_runtime.cpp:DrawEditorSceneProxies",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui_runtime.cpp",
+      "target": "function:engine/core/engine_gui_runtime.cpp:DrawEditorSceneProxies",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/engine_gui_runtime.cpp",
+      "target": "file:engine/core/engine_gui.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/core/engine_gui_runtime.cpp",
+      "target": "file:engine/ecs/game_object.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/core/engine_gui_runtime.cpp",
+      "target": "file:engine/ecs/model_asset_cache.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/core/engine_gui_runtime.cpp",
+      "target": "file:engine/input/mouse.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/core/engine_gui_runtime.cpp",
+      "target": "file:engine/physics/core/physics_system.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/core/engine_gui_runtime.cpp",
+      "target": "file:engine/rendering/d3d11/renderer.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/core/engine_gui_runtime.cpp",
+      "target": "file:engine/scene/scene_loader.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/core/engine_gui_runtime.cpp",
+      "target": "file:engine/scripting/script_component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/core/engine_gui_runtime.cpp",
+      "target": "file:src/app/camera/debug_camera.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/core/engine_gui_runtime.cpp",
+      "target": "file:src/app/camera/first_person_camera.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/core/engine_gui_runtime.cpp",
+      "target": "file:src/app/camera/third_person_camera.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_StartPlay",
+      "target": "function:engine/core/engine_gui_runtime.cpp:EnterRuntimePlay",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_LoadFromFile",
+      "target": "function:engine/core/engine_gui_runtime.cpp:EnterRuntimePlay",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/core/engine_gui_runtime.cpp:EnterRuntimePlay",
+      "target": "function:engine/core/engine_gui_runtime.cpp:HasThirdPersonPlayerNode",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/core/engine_gui_runtime.cpp:EnterRuntimePlay",
+      "target": "function:src/app/camera/debug_camera.cpp:DebugCamera_SetEnabled",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/core/engine_gui_runtime.cpp:EnterRuntimePlay",
+      "target": "function:src/app/camera/third_person_camera.cpp:ThirdPersonCamera_ShowCursor",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/core/engine_gui_runtime.cpp:EngineGUI_StopPlay",
+      "target": "function:src/app/camera/debug_camera.cpp:DebugCamera_SetEnabled",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

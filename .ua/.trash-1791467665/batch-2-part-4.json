@@ -1,0 +1,1097 @@
+{
+  "nodes": [
+    {
+      "id": "file:engine/editor/light_gizmo.h",
+      "type": "file",
+      "name": "light_gizmo.h",
+      "summary": "Public LightGizmo API for light world pose helpers and debug-draw of scene light volumes.",
+      "tags": [
+        "type-definition",
+        "lighting",
+        "editor"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/editor/light_gizmo.h"
+    },
+    {
+      "id": "file:engine/scene/scene_lighting.cpp",
+      "type": "file",
+      "name": "scene_lighting.cpp",
+      "summary": "Walks scene nodes to push enabled light components into the Lighting/Shadow systems, with a default fallback rig.",
+      "tags": [
+        "service",
+        "lighting",
+        "scene"
+      ],
+      "complexity": "moderate",
+      "filePath": "engine/scene/scene_lighting.cpp"
+    },
+    {
+      "id": "file:engine/scene/scene_loader.cpp",
+      "type": "file",
+      "name": "scene_loader.cpp",
+      "summary": "Loads and saves scene JSON, registers ECS component types, manages script DLLs, and coordinates play-session teardown.",
+      "tags": [
+        "entry-point",
+        "serialization",
+        "scene",
+        "service"
+      ],
+      "complexity": "complex",
+      "filePath": "engine/scene/scene_loader.cpp"
+    },
+    {
+      "id": "file:engine/scene/scene_runtime.cpp",
+      "type": "file",
+      "name": "scene_runtime.cpp",
+      "summary": "Registers editor GameObject trees with the active SceneBase for physics and applies or clears collider components.",
+      "tags": [
+        "service",
+        "scene",
+        "physics"
+      ],
+      "complexity": "moderate",
+      "filePath": "engine/scene/scene_runtime.cpp"
+    },
+    {
+      "id": "file:engine/scene/scene_runtime.h",
+      "type": "file",
+      "name": "scene_runtime.h",
+      "summary": "Declares the SceneRuntime singleton that syncs editor roots into the play/physics scene.",
+      "tags": [
+        "singleton",
+        "scene",
+        "type-definition"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/scene/scene_runtime.h"
+    },
+    {
+      "id": "class:engine/scene/scene_runtime.h:SceneRuntime",
+      "type": "class",
+      "name": "SceneRuntime",
+      "summary": "Singleton that registers editor scene trees with SceneBase and rebuilds debug colliders.",
+      "tags": [
+        "singleton",
+        "scene",
+        "physics"
+      ],
+      "complexity": "moderate",
+      "filePath": "engine/scene/scene_runtime.h",
+      "lineRange": [
+        9,
+        29
+      ]
+    },
+    {
+      "id": "function:engine/scene/scene_lighting.cpp:VisitLights",
+      "type": "function",
+      "name": "VisitLights",
+      "summary": "Collects enabled directional, point, and spot light components from a node tree.",
+      "tags": [
+        "lighting",
+        "scene"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/scene/scene_lighting.cpp",
+      "lineRange": [
+        24,
+        39
+      ]
+    },
+    {
+      "id": "function:engine/scene/scene_lighting.cpp:ApplyFallbackLighting",
+      "type": "function",
+      "name": "ApplyFallbackLighting",
+      "summary": "Installs a default directional light and ambient color when the scene has no lights.",
+      "tags": [
+        "lighting",
+        "scene"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/scene/scene_lighting.cpp",
+      "lineRange": [
+        41,
+        52
+      ]
+    },
+    {
+      "id": "function:engine/scene/scene_lighting.cpp:SceneLightingSyncFromNodes",
+      "type": "function",
+      "name": "SceneLightingSyncFromNodes",
+      "summary": "Pushes collected scene lights into Lighting/Shadow, mapping poses through LightGizmo.",
+      "tags": [
+        "lighting",
+        "scene",
+        "service"
+      ],
+      "complexity": "complex",
+      "filePath": "engine/scene/scene_lighting.cpp",
+      "lineRange": [
+        64,
+        135
+      ]
+    },
+    {
+      "id": "function:engine/scene/scene_loader.cpp:ApplySceneSettings",
+      "type": "function",
+      "name": "ApplySceneSettings",
+      "summary": "Applies render settings and debug-camera pose/mode from a scene JSON settings object.",
+      "tags": [
+        "scene",
+        "configuration"
+      ],
+      "complexity": "moderate",
+      "filePath": "engine/scene/scene_loader.cpp",
+      "lineRange": [
+        99,
+        143
+      ]
+    },
+    {
+      "id": "function:engine/scene/scene_loader.cpp:SceneLoader_RegisterComponentTypes",
+      "type": "function",
+      "name": "SceneLoader_RegisterComponentTypes",
+      "summary": "Registers all built-in ECS component creators with ComponentFactory exactly once.",
+      "tags": [
+        "factory",
+        "component",
+        "entry-point"
+      ],
+      "complexity": "moderate",
+      "filePath": "engine/scene/scene_loader.cpp",
+      "lineRange": [
+        159,
+        220
+      ]
+    },
+    {
+      "id": "function:engine/scene/scene_loader.cpp:RestoreEditorDebugColliderFlags",
+      "type": "function",
+      "name": "RestoreEditorDebugColliderFlags",
+      "summary": "Restores showDebugCollider flags after a play session tears down physics shapes.",
+      "tags": [
+        "scene",
+        "physics",
+        "editor"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/scene/scene_loader.cpp",
+      "lineRange": [
+        236,
+        246
+      ]
+    },
+    {
+      "id": "function:engine/scene/scene_loader.cpp:SceneLoader_RefreshSceneAssets",
+      "type": "function",
+      "name": "SceneLoader_RefreshSceneAssets",
+      "summary": "Scans the scene directory and rebuilds the in-memory scene-asset catalog.",
+      "tags": [
+        "scene",
+        "assets"
+      ],
+      "complexity": "moderate",
+      "filePath": "engine/scene/scene_loader.cpp",
+      "lineRange": [
+        275,
+        315
+      ]
+    },
+    {
+      "id": "function:engine/scene/scene_loader.cpp:SceneLoader_LoadDefaultSceneSetting",
+      "type": "function",
+      "name": "SceneLoader_LoadDefaultSceneSetting",
+      "summary": "Reads default_scene.txt to remember which scene file should load at startup.",
+      "tags": [
+        "scene",
+        "configuration"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/scene/scene_loader.cpp",
+      "lineRange": [
+        317,
+        336
+      ]
+    },
+    {
+      "id": "function:engine/scene/scene_loader.cpp:SceneLoader_LoadScriptDlls",
+      "type": "function",
+      "name": "SceneLoader_LoadScriptDlls",
+      "summary": "Loads gameplay script DLLs from the runtime bin directory via ScriptFactory.",
+      "tags": [
+        "scripting",
+        "scene"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/scene/scene_loader.cpp",
+      "lineRange": [
+        348,
+        367
+      ]
+    },
+    {
+      "id": "function:engine/scene/scene_loader.cpp:SceneLoader_ScanScriptDllsForChanges",
+      "type": "function",
+      "name": "SceneLoader_ScanScriptDllsForChanges",
+      "summary": "Detects script DLL changes and queues hot reloads through ScriptFactory.",
+      "tags": [
+        "scripting",
+        "hot-reload"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/scene/scene_loader.cpp",
+      "lineRange": [
+        374,
+        400
+      ]
+    },
+    {
+      "id": "function:engine/scene/scene_loader.cpp:SceneLoader_Initialize",
+      "type": "function",
+      "name": "SceneLoader_Initialize",
+      "summary": "Registers components, loads tags, starts the script watcher, and prepares scene assets.",
+      "tags": [
+        "entry-point",
+        "scene"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/scene/scene_loader.cpp",
+      "lineRange": [
+        408,
+        424
+      ]
+    },
+    {
+      "id": "function:engine/scene/scene_loader.cpp:CreateModelGameObject",
+      "type": "function",
+      "name": "CreateModelGameObject",
+      "summary": "Builds a GameObject with Transform and VisualComponent for a legacy model block.",
+      "tags": [
+        "factory",
+        "scene"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/scene/scene_loader.cpp",
+      "lineRange": [
+        437,
+        446
+      ]
+    },
+    {
+      "id": "function:engine/scene/scene_loader.cpp:GameObjectFromLegacyBlock",
+      "type": "function",
+      "name": "GameObjectFromLegacyBlock",
+      "summary": "Converts a version-3 scene block into a GameObject with transform, visual, and collider.",
+      "tags": [
+        "serialization",
+        "scene",
+        "migration"
+      ],
+      "complexity": "moderate",
+      "filePath": "engine/scene/scene_loader.cpp",
+      "lineRange": [
+        448,
+        491
+      ]
+    },
+    {
+      "id": "function:engine/scene/scene_loader.cpp:SceneLoader_PrepareForSceneReload",
+      "type": "function",
+      "name": "SceneLoader_PrepareForSceneReload",
+      "summary": "Flushes prefabs, tears down scripts, and clears SceneRuntime before loading a new scene.",
+      "tags": [
+        "scene",
+        "lifecycle"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/scene/scene_loader.cpp",
+      "lineRange": [
+        497,
+        509
+      ]
+    },
+    {
+      "id": "function:engine/scene/scene_loader.cpp:SceneLoader_LoadFromFile",
+      "type": "function",
+      "name": "SceneLoader_LoadFromFile",
+      "summary": "Loads a scene JSON file: prefab instances, inline nodes, canvas, settings, then syncs runtime.",
+      "tags": [
+        "serialization",
+        "scene",
+        "entry-point"
+      ],
+      "complexity": "complex",
+      "filePath": "engine/scene/scene_loader.cpp",
+      "lineRange": [
+        511,
+        594
+      ]
+    },
+    {
+      "id": "function:engine/scene/scene_loader.cpp:SceneLoader_SaveToFile",
+      "type": "function",
+      "name": "SceneLoader_SaveToFile",
+      "summary": "Writes version-4 scene JSON with settings, non-spawn nodes, and canvas state.",
+      "tags": [
+        "serialization",
+        "scene"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/scene/scene_loader.cpp",
+      "lineRange": [
+        600,
+        619
+      ]
+    },
+    {
+      "id": "function:engine/scene/scene_loader.cpp:TeardownAllScripts",
+      "type": "function",
+      "name": "TeardownAllScripts",
+      "summary": "Walks scene nodes and calls ScriptComponent::Teardown on each script.",
+      "tags": [
+        "scripting",
+        "lifecycle"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/scene/scene_loader.cpp",
+      "lineRange": [
+        628,
+        639
+      ]
+    },
+    {
+      "id": "function:engine/scene/scene_loader.cpp:TeardownScenePlaySession",
+      "type": "function",
+      "name": "TeardownScenePlaySession",
+      "summary": "Stops play-only objects, scripts, and runtime registration when leaving play mode.",
+      "tags": [
+        "scene",
+        "lifecycle"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/scene/scene_loader.cpp",
+      "lineRange": [
+        641,
+        659
+      ]
+    },
+    {
+      "id": "function:engine/scene/scene_runtime.cpp:Clear",
+      "type": "function",
+      "name": "Clear",
+      "summary": "Unregisters all tracked objects from SceneBase and optionally destroys colliders.",
+      "tags": [
+        "scene",
+        "physics"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/scene/scene_runtime.cpp",
+      "lineRange": [
+        12,
+        23
+      ]
+    },
+    {
+      "id": "function:engine/scene/scene_runtime.cpp:ApplyCollidersTree",
+      "type": "function",
+      "name": "ApplyCollidersTree",
+      "summary": "Recursively syncs transforms and applies ColliderComponent shapes for debug draw.",
+      "tags": [
+        "scene",
+        "physics"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/scene/scene_runtime.cpp",
+      "lineRange": [
+        25,
+        35
+      ]
+    },
+    {
+      "id": "function:engine/scene/scene_runtime.cpp:RegisterTree",
+      "type": "function",
+      "name": "RegisterTree",
+      "summary": "Applies colliders and adds objects that have physics shapes to the active scene.",
+      "tags": [
+        "scene",
+        "physics"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/scene/scene_runtime.cpp",
+      "lineRange": [
+        44,
+        59
+      ]
+    },
+    {
+      "id": "function:engine/scene/scene_runtime.cpp:UnregisterTree",
+      "type": "function",
+      "name": "UnregisterTree",
+      "summary": "Removes a subtree from SceneBase and optionally clears collider shapes.",
+      "tags": [
+        "scene",
+        "physics"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/scene/scene_runtime.cpp",
+      "lineRange": [
+        70,
+        85
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:engine/scene/scene_runtime.h",
+      "target": "class:engine/scene/scene_runtime.h:SceneRuntime",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/scene/scene_runtime.h",
+      "target": "class:engine/scene/scene_runtime.h:SceneRuntime",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/scene/scene_lighting.cpp",
+      "target": "function:engine/scene/scene_lighting.cpp:VisitLights",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/scene/scene_lighting.cpp",
+      "target": "function:engine/scene/scene_lighting.cpp:ApplyFallbackLighting",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/scene/scene_lighting.cpp",
+      "target": "function:engine/scene/scene_lighting.cpp:SceneLightingSyncFromNodes",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/scene/scene_lighting.cpp",
+      "target": "function:engine/scene/scene_lighting.cpp:SceneLightingSyncFromNodes",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/scene/scene_loader.cpp",
+      "target": "function:engine/scene/scene_loader.cpp:ApplySceneSettings",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/scene/scene_loader.cpp",
+      "target": "function:engine/scene/scene_loader.cpp:SceneLoader_RegisterComponentTypes",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/scene/scene_loader.cpp",
+      "target": "function:engine/scene/scene_loader.cpp:SceneLoader_RegisterComponentTypes",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/scene/scene_loader.cpp",
+      "target": "function:engine/scene/scene_loader.cpp:RestoreEditorDebugColliderFlags",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/scene/scene_loader.cpp",
+      "target": "function:engine/scene/scene_loader.cpp:SceneLoader_RefreshSceneAssets",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/scene/scene_loader.cpp",
+      "target": "function:engine/scene/scene_loader.cpp:SceneLoader_RefreshSceneAssets",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/scene/scene_loader.cpp",
+      "target": "function:engine/scene/scene_loader.cpp:SceneLoader_LoadDefaultSceneSetting",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/scene/scene_loader.cpp",
+      "target": "function:engine/scene/scene_loader.cpp:SceneLoader_LoadDefaultSceneSetting",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/scene/scene_loader.cpp",
+      "target": "function:engine/scene/scene_loader.cpp:SceneLoader_LoadScriptDlls",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/scene/scene_loader.cpp",
+      "target": "function:engine/scene/scene_loader.cpp:SceneLoader_LoadScriptDlls",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/scene/scene_loader.cpp",
+      "target": "function:engine/scene/scene_loader.cpp:SceneLoader_ScanScriptDllsForChanges",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/scene/scene_loader.cpp",
+      "target": "function:engine/scene/scene_loader.cpp:SceneLoader_ScanScriptDllsForChanges",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/scene/scene_loader.cpp",
+      "target": "function:engine/scene/scene_loader.cpp:SceneLoader_Initialize",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/scene/scene_loader.cpp",
+      "target": "function:engine/scene/scene_loader.cpp:SceneLoader_Initialize",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/scene/scene_loader.cpp",
+      "target": "function:engine/scene/scene_loader.cpp:CreateModelGameObject",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/scene/scene_loader.cpp",
+      "target": "function:engine/scene/scene_loader.cpp:GameObjectFromLegacyBlock",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/scene/scene_loader.cpp",
+      "target": "function:engine/scene/scene_loader.cpp:GameObjectFromLegacyBlock",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/scene/scene_loader.cpp",
+      "target": "function:engine/scene/scene_loader.cpp:SceneLoader_PrepareForSceneReload",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/scene/scene_loader.cpp",
+      "target": "function:engine/scene/scene_loader.cpp:SceneLoader_LoadFromFile",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/scene/scene_loader.cpp",
+      "target": "function:engine/scene/scene_loader.cpp:SceneLoader_LoadFromFile",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/scene/scene_loader.cpp",
+      "target": "function:engine/scene/scene_loader.cpp:SceneLoader_SaveToFile",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/scene/scene_loader.cpp",
+      "target": "function:engine/scene/scene_loader.cpp:SceneLoader_SaveToFile",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/scene/scene_loader.cpp",
+      "target": "function:engine/scene/scene_loader.cpp:TeardownAllScripts",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/scene/scene_loader.cpp",
+      "target": "function:engine/scene/scene_loader.cpp:TeardownAllScripts",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/scene/scene_loader.cpp",
+      "target": "function:engine/scene/scene_loader.cpp:TeardownScenePlaySession",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/scene/scene_loader.cpp",
+      "target": "function:engine/scene/scene_loader.cpp:TeardownScenePlaySession",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/scene/scene_runtime.cpp",
+      "target": "function:engine/scene/scene_runtime.cpp:Clear",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/scene/scene_runtime.cpp",
+      "target": "function:engine/scene/scene_runtime.cpp:ApplyCollidersTree",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/scene/scene_runtime.cpp",
+      "target": "function:engine/scene/scene_runtime.cpp:RegisterTree",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/scene/scene_runtime.cpp",
+      "target": "function:engine/scene/scene_runtime.cpp:UnregisterTree",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/scene/scene_lighting.cpp",
+      "target": "file:engine/ecs/directional_light_component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/scene/scene_lighting.cpp",
+      "target": "file:engine/ecs/game_object.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/scene/scene_lighting.cpp",
+      "target": "file:engine/ecs/point_light_component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/scene/scene_lighting.cpp",
+      "target": "file:engine/ecs/spot_light_component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/scene/scene_lighting.cpp",
+      "target": "file:engine/ecs/transform.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/scene/scene_lighting.cpp",
+      "target": "file:engine/editor/light_gizmo.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/scene/scene_lighting.cpp",
+      "target": "file:engine/rendering/lighting/lighting.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/scene/scene_lighting.cpp",
+      "target": "file:engine/rendering/lighting/shadow.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/scene/scene_lighting.cpp",
+      "target": "file:engine/scene/scene_lighting.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/scene/scene_loader.cpp",
+      "target": "file:engine/audio/audio_manager.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/scene/scene_loader.cpp",
+      "target": "file:engine/ecs/audio_component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/scene/scene_loader.cpp",
+      "target": "file:engine/ecs/audio_listener_component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/scene/scene_loader.cpp",
+      "target": "file:engine/ecs/billboard_component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/scene/scene_loader.cpp",
+      "target": "file:engine/ecs/camera_component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/scene/scene_loader.cpp",
+      "target": "file:engine/ecs/collider_component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/scene/scene_loader.cpp",
+      "target": "file:engine/ecs/component_factory.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/scene/scene_loader.cpp",
+      "target": "file:engine/ecs/directional_light_component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/scene/scene_loader.cpp",
+      "target": "file:engine/ecs/effect_component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/scene/scene_loader.cpp",
+      "target": "file:engine/ecs/material_component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/scene/scene_loader.cpp",
+      "target": "file:engine/ecs/point_light_component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/scene/scene_loader.cpp",
+      "target": "file:engine/ecs/prefab_runtime.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/scene/scene_loader.cpp",
+      "target": "file:engine/ecs/prefab_serializer.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/scene/scene_loader.cpp",
+      "target": "file:engine/ecs/rigidbody_component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/scene/scene_loader.cpp",
+      "target": "file:engine/ecs/spot_light_component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/scene/scene_loader.cpp",
+      "target": "file:engine/ecs/tag_registry.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/scene/scene_loader.cpp",
+      "target": "file:engine/ecs/transform.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/scene/scene_loader.cpp",
+      "target": "file:engine/ecs/visual_component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/scene/scene_loader.cpp",
+      "target": "file:engine/physics/core/physics_system.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/scene/scene_loader.cpp",
+      "target": "file:engine/scene/render_settings.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/scene/scene_loader.cpp",
+      "target": "file:engine/scene/scene_loader.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/scene/scene_loader.cpp",
+      "target": "file:engine/scene/scene_runtime.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/scene/scene_loader.cpp",
+      "target": "file:engine/scripting/script_component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/scene/scene_loader.cpp",
+      "target": "file:engine/scripting/script_factory.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/scene/scene_loader.cpp",
+      "target": "file:engine/scripting/script_watcher.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/scene/scene_loader.cpp",
+      "target": "file:engine/ui/scene_canvas.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/scene/scene_runtime.cpp",
+      "target": "file:engine/ecs/collider_component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/scene/scene_runtime.cpp",
+      "target": "file:engine/scene/scene_runtime.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/scene/scene_runtime.h",
+      "target": "file:engine/ecs/game_object.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:engine/scene/scene_loader.cpp:SceneLoader_RegisterComponentTypes",
+      "target": "file:engine/ecs/component_factory.h",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/scene/scene_loader.cpp:SceneLoader_LoadFromFile",
+      "target": "function:engine/ecs/prefab_serializer.h:LoadFromFile",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/scene/scene_loader.cpp:SceneLoader_LoadFromFile",
+      "target": "function:engine/ecs/prefab_serializer.h:Deserialize",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/scene/scene_loader.cpp:SceneLoader_LoadFromFile",
+      "target": "file:engine/ecs/tag_registry.h",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/scene/scene_loader.cpp:SceneLoader_LoadFromFile",
+      "target": "file:engine/scene/scene_runtime.h",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/scene/scene_loader.cpp:SceneLoader_SaveToFile",
+      "target": "function:engine/ecs/prefab_serializer.h:Serialize",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/scene/scene_loader.cpp:SceneLoader_PrepareForSceneReload",
+      "target": "function:engine/scene/scene_runtime.cpp:Clear",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/scene/scene_loader.cpp:SceneLoader_LoadScriptDlls",
+      "target": "function:engine/scripting/script_factory.h:LoadScriptDll",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/scene/scene_loader.cpp:SceneLoader_ScanScriptDllsForChanges",
+      "target": "class:engine/scripting/script_factory.h:ScriptFactory",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/scene/scene_loader.cpp:TeardownAllScripts",
+      "target": "function:engine/scripting/script_component.h:Teardown",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/scene/scene_loader.cpp:SceneLoader_Initialize",
+      "target": "file:engine/ecs/tag_registry.h",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/scene/scene_runtime.cpp:Clear",
+      "target": "file:engine/ecs/collider_component.h",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/scene/scene_runtime.cpp:ApplyCollidersTree",
+      "target": "file:engine/ecs/collider_component.h",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/scene/scene_runtime.cpp:RegisterTree",
+      "target": "file:engine/ecs/collider_component.h",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/scene/scene_runtime.cpp:UnregisterTree",
+      "target": "file:engine/ecs/collider_component.h",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/scene/scene_lighting.cpp:VisitLights",
+      "target": "file:engine/ecs/directional_light_component.h",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/scene/scene_lighting.cpp:VisitLights",
+      "target": "file:engine/ecs/point_light_component.h",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/scene/scene_lighting.cpp:VisitLights",
+      "target": "file:engine/ecs/spot_light_component.h",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/scene/scene_lighting.cpp:SceneLightingSyncFromNodes",
+      "target": "file:engine/editor/light_gizmo.h",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

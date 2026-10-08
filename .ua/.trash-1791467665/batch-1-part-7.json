@@ -1,0 +1,121 @@
+{
+  "nodes": [
+    {
+      "id": "file:src/app/rendering/grid.h",
+      "type": "file",
+      "name": "grid.h",
+      "filePath": "src/app/rendering/grid.h",
+      "summary": "Grid GameObject used as the editor ground plane, with C helpers to initialize, finalize, and draw the singleton instance.",
+      "tags": [
+        "rendering",
+        "editor",
+        "type-definition",
+        "component"
+      ],
+      "complexity": "simple",
+      "languageNotes": "Inherits GameObject so the grid participates in the scene object's initialize/draw lifecycle."
+    },
+    {
+      "id": "function:src/app/rendering/grid.h:SetVertexBuffer",
+      "type": "function",
+      "name": "SetVertexBuffer",
+      "filePath": "src/app/rendering/grid.h",
+      "lineRange": [
+        25,
+        25
+      ],
+      "summary": "Overrides the grid's vertex buffer pointer.",
+      "tags": [
+        "function",
+        "engine",
+        "cpp"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/app/rendering/grid.h:SetTexture",
+      "type": "function",
+      "name": "SetTexture",
+      "filePath": "src/app/rendering/grid.h",
+      "lineRange": [
+        26,
+        26
+      ],
+      "summary": "Overrides the grid's texture SRV (usually the solid-white helper).",
+      "tags": [
+        "function",
+        "engine",
+        "cpp"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:src/app/rendering/grid.h:Grid",
+      "type": "class",
+      "name": "Grid",
+      "filePath": "src/app/rendering/grid.h",
+      "lineRange": [
+        14,
+        27
+      ],
+      "summary": "GameObject subclass that owns the editor ground-grid mesh and draw path.",
+      "tags": [
+        "data-model",
+        "engine",
+        "cpp"
+      ],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:src/app/rendering/grid.h",
+      "target": "function:src/app/rendering/grid.h:SetVertexBuffer",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/rendering/grid.h",
+      "target": "function:src/app/rendering/grid.h:SetVertexBuffer",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/rendering/grid.h",
+      "target": "function:src/app/rendering/grid.h:SetTexture",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/rendering/grid.h",
+      "target": "function:src/app/rendering/grid.h:SetTexture",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/rendering/grid.h",
+      "target": "class:src/app/rendering/grid.h:Grid",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/rendering/grid.h",
+      "target": "class:src/app/rendering/grid.h:Grid",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/rendering/grid.h",
+      "target": "file:engine/core/game_object.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    }
+  ]
+}

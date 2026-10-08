@@ -1,0 +1,15 @@
+{
+  "fixedSectionOk": true,
+  "nodesRecovered": 70,
+  "edgesRestored": 96,
+  "crossBatchEdgesAdded": 0,
+  "typesRemapped": 0,
+  "complexityRemapped": 0,
+  "notes": [
+    "Merge report had no mechanical ID/complexity remaps; all 1833 batch nodes kept valid types (file/function/class/document/config/resource) and complexity values.",
+    "Recovered 70 missing function nodes targeted by 96 dangling calls edges (C++ header methods and a few .cpp helpers omitted by batch extractors).",
+    "Restored 96 dropped calls edges and added 140 file contains/exports edges so recovered functions stay attached to their parent files.",
+    "Import map already fully represented: all 637 file-to-file imports edges from 378 importMap keys exist (230 keys have no imports). Merge script recovering 0 was correct, not a matching failure.",
+    "Header-method nodes are declarations; many have .cpp implementation twins already in the graph. Edges were restored to the original header IDs rather than retargeted."
+  ]
+}

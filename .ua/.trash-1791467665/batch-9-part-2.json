@@ -1,0 +1,491 @@
+{
+  "nodes": [
+    {
+      "id": "file:engine/core/debug_system.h",
+      "type": "file",
+      "name": "debug_system.h",
+      "filePath": "engine/core/debug_system.h",
+      "summary": "Public DebugSystem API for collision viz, time scale, frame stepping, overlay text, and play-session time-scale reset.",
+      "tags": [
+        "type-definition",
+        "debug",
+        "time-scale",
+        "api-handler"
+      ],
+      "complexity": "simple",
+      "languageNotes": "GAME_RUNTIME-safe free functions in a namespace — no ImGui dependency."
+    },
+    {
+      "id": "file:engine/debug_draw/debug_drawer.cpp",
+      "type": "file",
+      "name": "debug_drawer.cpp",
+      "filePath": "engine/debug_draw/debug_drawer.cpp",
+      "summary": "Builds D3D11 wireframe primitives and draws boxes, spheres, capsules, cylinders, and batched lines, including deferred queues flushed in the Draw phase.",
+      "tags": [
+        "debug",
+        "rendering",
+        "service",
+        "gizmo"
+      ],
+      "complexity": "complex",
+      "languageNotes": "Static GPU buffers shared across instances; DrawLinesCached remaps a persistent dynamic VB instead of recreating it each frame."
+    },
+    {
+      "id": "file:engine/debug_draw/debug_drawer.h",
+      "type": "file",
+      "name": "debug_drawer.h",
+      "filePath": "engine/debug_draw/debug_drawer.h",
+      "summary": "Declares DebugDrawer wireframe drawing, deferred sphere/line queues, and cached multi-line submission used by colliders and gizmos.",
+      "tags": [
+        "type-definition",
+        "debug",
+        "rendering",
+        "gizmo"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:engine/debug_draw/debug_drawer.cpp:~DebugDrawer",
+      "type": "function",
+      "name": "~DebugDrawer",
+      "filePath": "engine/debug_draw/debug_drawer.cpp",
+      "lineRange": [
+        53,
+        55
+      ],
+      "summary": "Releases GPU debug buffers if this instance still owns them.",
+      "tags": [
+        "debug",
+        "rendering",
+        "gizmo"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/debug_draw/debug_drawer.cpp:Initialize",
+      "type": "function",
+      "name": "Initialize",
+      "filePath": "engine/debug_draw/debug_drawer.cpp",
+      "lineRange": [
+        57,
+        260
+      ],
+      "summary": "Creates the XAudio2 engine, mastering voice, and X3DAudio handle.",
+      "tags": [
+        "debug",
+        "rendering",
+        "gizmo"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:engine/debug_draw/debug_drawer.cpp:Release",
+      "type": "function",
+      "name": "Release",
+      "filePath": "engine/debug_draw/debug_drawer.cpp",
+      "lineRange": [
+        262,
+        273
+      ],
+      "summary": "Destroys DebugDrawer vertex/index buffers, texture, and depth state.",
+      "tags": [
+        "debug",
+        "rendering",
+        "gizmo"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/debug_draw/debug_drawer.cpp:DrawBox",
+      "type": "function",
+      "name": "DrawBox",
+      "filePath": "engine/debug_draw/debug_drawer.cpp",
+      "lineRange": [
+        275,
+        354
+      ],
+      "summary": "Draws a wireframe OBB using the shared box mesh.",
+      "tags": [
+        "debug",
+        "rendering",
+        "gizmo"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:engine/debug_draw/debug_drawer.cpp:DrawSphere",
+      "type": "function",
+      "name": "DrawSphere",
+      "filePath": "engine/debug_draw/debug_drawer.cpp",
+      "lineRange": [
+        356,
+        442
+      ],
+      "summary": "Draws a wireframe sphere, optionally with depth testing disabled.",
+      "tags": [
+        "debug",
+        "rendering",
+        "gizmo"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:engine/debug_draw/debug_drawer.cpp:DrawCapsule",
+      "type": "function",
+      "name": "DrawCapsule",
+      "filePath": "engine/debug_draw/debug_drawer.cpp",
+      "lineRange": [
+        444,
+        532
+      ],
+      "summary": "Draws a wireframe capsule from radius, height, and rotation.",
+      "tags": [
+        "debug",
+        "rendering",
+        "gizmo"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:engine/debug_draw/debug_drawer.cpp:DrawCylinder",
+      "type": "function",
+      "name": "DrawCylinder",
+      "filePath": "engine/debug_draw/debug_drawer.cpp",
+      "lineRange": [
+        534,
+        591
+      ],
+      "summary": "Draws a wireframe Y-aligned cylinder after rotation.",
+      "tags": [
+        "debug",
+        "rendering",
+        "gizmo"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:engine/debug_draw/debug_drawer.cpp:DrawLine",
+      "type": "function",
+      "name": "DrawLine",
+      "filePath": "engine/debug_draw/debug_drawer.cpp",
+      "lineRange": [
+        593,
+        647
+      ],
+      "summary": "Draws a single world-space line segment.",
+      "tags": [
+        "debug",
+        "rendering",
+        "gizmo"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:engine/debug_draw/debug_drawer.cpp:DrawLines",
+      "type": "function",
+      "name": "DrawLines",
+      "filePath": "engine/debug_draw/debug_drawer.cpp",
+      "lineRange": [
+        649,
+        685
+      ],
+      "summary": "Batches many line segments into one GPU draw.",
+      "tags": [
+        "debug",
+        "rendering",
+        "gizmo"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/debug_draw/debug_drawer.cpp:DrawLinesCached",
+      "type": "function",
+      "name": "DrawLinesCached",
+      "filePath": "engine/debug_draw/debug_drawer.cpp",
+      "lineRange": [
+        687,
+        730
+      ],
+      "summary": "Uploads line verts into a persistent dynamic VB and draws them.",
+      "tags": [
+        "debug",
+        "rendering",
+        "gizmo"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/debug_draw/debug_drawer.cpp:QueueSphere",
+      "type": "function",
+      "name": "QueueSphere",
+      "filePath": "engine/debug_draw/debug_drawer.cpp",
+      "lineRange": [
+        732,
+        738
+      ],
+      "summary": "Enqueues a sphere wire for the Draw-phase flush.",
+      "tags": [
+        "debug",
+        "rendering",
+        "gizmo"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/debug_draw/debug_drawer.cpp:FlushSphereQueue",
+      "type": "function",
+      "name": "FlushSphereQueue",
+      "filePath": "engine/debug_draw/debug_drawer.cpp",
+      "lineRange": [
+        740,
+        756
+      ],
+      "summary": "Draws queued spheres without depth test and clears the queue.",
+      "tags": [
+        "debug",
+        "rendering",
+        "gizmo"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/debug_draw/debug_drawer.cpp:QueueLine",
+      "type": "function",
+      "name": "QueueLine",
+      "filePath": "engine/debug_draw/debug_drawer.cpp",
+      "lineRange": [
+        758,
+        762
+      ],
+      "summary": "Enqueues a line segment for the Draw-phase flush.",
+      "tags": [
+        "debug",
+        "rendering",
+        "gizmo"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/debug_draw/debug_drawer.cpp:FlushLineQueue",
+      "type": "function",
+      "name": "FlushLineQueue",
+      "filePath": "engine/debug_draw/debug_drawer.cpp",
+      "lineRange": [
+        764,
+        777
+      ],
+      "summary": "Draws queued lines and clears the deferred line queue.",
+      "tags": [
+        "debug",
+        "rendering",
+        "gizmo"
+      ],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:engine/debug_draw/debug_drawer.cpp",
+      "target": "function:engine/debug_draw/debug_drawer.cpp:~DebugDrawer",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/debug_draw/debug_drawer.cpp",
+      "target": "function:engine/debug_draw/debug_drawer.cpp:~DebugDrawer",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/debug_draw/debug_drawer.cpp",
+      "target": "function:engine/debug_draw/debug_drawer.cpp:Initialize",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/debug_draw/debug_drawer.cpp",
+      "target": "function:engine/debug_draw/debug_drawer.cpp:Initialize",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/debug_draw/debug_drawer.cpp",
+      "target": "function:engine/debug_draw/debug_drawer.cpp:Release",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/debug_draw/debug_drawer.cpp",
+      "target": "function:engine/debug_draw/debug_drawer.cpp:Release",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/debug_draw/debug_drawer.cpp",
+      "target": "function:engine/debug_draw/debug_drawer.cpp:DrawBox",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/debug_draw/debug_drawer.cpp",
+      "target": "function:engine/debug_draw/debug_drawer.cpp:DrawBox",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/debug_draw/debug_drawer.cpp",
+      "target": "function:engine/debug_draw/debug_drawer.cpp:DrawSphere",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/debug_draw/debug_drawer.cpp",
+      "target": "function:engine/debug_draw/debug_drawer.cpp:DrawSphere",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/debug_draw/debug_drawer.cpp",
+      "target": "function:engine/debug_draw/debug_drawer.cpp:DrawCapsule",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/debug_draw/debug_drawer.cpp",
+      "target": "function:engine/debug_draw/debug_drawer.cpp:DrawCapsule",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/debug_draw/debug_drawer.cpp",
+      "target": "function:engine/debug_draw/debug_drawer.cpp:DrawCylinder",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/debug_draw/debug_drawer.cpp",
+      "target": "function:engine/debug_draw/debug_drawer.cpp:DrawCylinder",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/debug_draw/debug_drawer.cpp",
+      "target": "function:engine/debug_draw/debug_drawer.cpp:DrawLine",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/debug_draw/debug_drawer.cpp",
+      "target": "function:engine/debug_draw/debug_drawer.cpp:DrawLine",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/debug_draw/debug_drawer.cpp",
+      "target": "function:engine/debug_draw/debug_drawer.cpp:DrawLines",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/debug_draw/debug_drawer.cpp",
+      "target": "function:engine/debug_draw/debug_drawer.cpp:DrawLines",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/debug_draw/debug_drawer.cpp",
+      "target": "function:engine/debug_draw/debug_drawer.cpp:DrawLinesCached",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/debug_draw/debug_drawer.cpp",
+      "target": "function:engine/debug_draw/debug_drawer.cpp:DrawLinesCached",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/debug_draw/debug_drawer.cpp",
+      "target": "function:engine/debug_draw/debug_drawer.cpp:QueueSphere",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/debug_draw/debug_drawer.cpp",
+      "target": "function:engine/debug_draw/debug_drawer.cpp:QueueSphere",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/debug_draw/debug_drawer.cpp",
+      "target": "function:engine/debug_draw/debug_drawer.cpp:FlushSphereQueue",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/debug_draw/debug_drawer.cpp",
+      "target": "function:engine/debug_draw/debug_drawer.cpp:FlushSphereQueue",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/debug_draw/debug_drawer.cpp",
+      "target": "function:engine/debug_draw/debug_drawer.cpp:QueueLine",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/debug_draw/debug_drawer.cpp",
+      "target": "function:engine/debug_draw/debug_drawer.cpp:QueueLine",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/debug_draw/debug_drawer.cpp",
+      "target": "function:engine/debug_draw/debug_drawer.cpp:FlushLineQueue",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/debug_draw/debug_drawer.cpp",
+      "target": "function:engine/debug_draw/debug_drawer.cpp:FlushLineQueue",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/debug_draw/debug_drawer.cpp",
+      "target": "file:engine/debug_draw/debug_drawer.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    }
+  ]
+}

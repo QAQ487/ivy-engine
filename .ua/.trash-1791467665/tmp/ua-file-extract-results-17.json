@@ -1,0 +1,77 @@
+{
+  "scriptCompleted": true,
+  "filesAnalyzed": 2,
+  "filesSkipped": [
+    "rom/effects/Effect_speed_up.efkefc",
+    "rom/effects/Materials/mt_dissolve01.efkmat",
+    "rom/effects/Materials/mt_dissolve02.efkmat",
+    "rom/effects/Materials/mt_ice01.efkmat",
+    "rom/effects/Materials/mt_lightning01.efkmat",
+    "rom/effects/Materials/mt_lightning02.efkmat",
+    "rom/effects/Materials/mt_lightning03.efkmat",
+    "rom/effects/Materials/mt_slash01.efkmat",
+    "rom/effects/Materials/mt_toon_shockwave01.efkmat",
+    "rom/effects/Materials/mt_wind02.efkmat",
+    "rom/effects/Materials/mt_wind03_groundAura.efkmat",
+    "rom/effects/Materials/mt_wind03_groundCrack.efkmat",
+    "rom/effects/Materials/mt_wind03_slash01.efkmat",
+    "rom/effects/Materials/mt_wind03_tornado01.efkmat",
+    "rom/effects/Materials/mt_wind03_tornado01_test.efkmat",
+    "rom/effects/Meshes/ms_groundAura01.efkmodel",
+    "rom/effects/Meshes/ms_groundAura01.fbx",
+    "rom/effects/Meshes/ms_groundAura02.efkmodel",
+    "rom/effects/Meshes/ms_groundAura02.fbx",
+    "rom/effects/Meshes/ms_ice01.efkmodel",
+    "rom/effects/Meshes/ms_ice01.fbx",
+    "rom/effects/Meshes/ms_ice02.efkmodel",
+    "rom/effects/Meshes/ms_ice02.fbx"
+  ],
+  "filesUnreadable": [],
+  "analysisOutcomes": {
+    "structure": {
+      "succeeded": 2,
+      "failed": 0
+    },
+    "callGraph": {
+      "succeeded": 1,
+      "failed": 0,
+      "skipped": 1
+    }
+  },
+  "results": [
+    {
+      "path": "pch.h",
+      "language": "c",
+      "fileCategory": "code",
+      "totalLines": 69,
+      "nonEmptyLines": 57,
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "rom/editor/ui_prefs.json",
+      "language": "json",
+      "fileCategory": "config",
+      "totalLines": 3,
+      "nonEmptyLines": 3,
+      "sections": [
+        {
+          "heading": "uiZoomPercent",
+          "level": 1,
+          "line": 2
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "sectionCount": 1
+      }
+    }
+  ]
+}

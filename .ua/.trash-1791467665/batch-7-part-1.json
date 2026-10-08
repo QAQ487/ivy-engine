@@ -1,0 +1,1409 @@
+{
+  "nodes": [
+    {
+      "id": "file:engine/audio/audio_listener_sync.cpp",
+      "type": "file",
+      "name": "audio_listener_sync.cpp",
+      "filePath": "engine/audio/audio_listener_sync.cpp",
+      "summary": "Keeps the 3D audio listener pose aligned with the active camera, debug camera, or first AudioListenerComponent in the scene graph.",
+      "tags": [
+        "audio",
+        "listener-sync",
+        "service",
+        "camera"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:engine/core/easing.cpp",
+      "type": "file",
+      "name": "easing.cpp",
+      "filePath": "engine/core/easing.cpp",
+      "summary": "Implements Robert Penner-style ease-in/out curves (sine through bounce) used by camera blends and other timed interpolations.",
+      "tags": [
+        "utility",
+        "easing",
+        "animation",
+        "interpolation"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "Function bodies sit inside an unusual #ifndef PI guard, which hid them from tree-sitter extraction."
+    },
+    {
+      "id": "file:engine/core/easing.h",
+      "type": "file",
+      "name": "easing.h",
+      "filePath": "engine/core/easing.h",
+      "summary": "Declares the public easing API: 30 scalar ease-in, ease-out, and ease-in-out curves over normalized time t.",
+      "tags": [
+        "utility",
+        "easing",
+        "type-definition",
+        "api-handler"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:engine/core/engine_gui.h",
+      "type": "file",
+      "name": "engine_gui.h",
+      "filePath": "engine/core/engine_gui.h",
+      "summary": "Public editor/runtime GUI API for play mode, scene load/save, camera mode, viewport mapping, and UI edit mode.",
+      "tags": [
+        "editor",
+        "api-handler",
+        "type-definition",
+        "entry-point"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:engine/core/engine_gui_internal.h",
+      "type": "file",
+      "name": "engine_gui_internal.h",
+      "filePath": "engine/core/engine_gui_internal.h",
+      "summary": "Shared editor GUI internals: play-session teardown, queued scene loads, and time-sliced asset preload hooks.",
+      "tags": [
+        "editor",
+        "internal-api",
+        "type-definition",
+        "scene-load"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:engine/core/engine_gui_persistence.cpp",
+      "type": "file",
+      "name": "engine_gui_persistence.cpp",
+      "filePath": "engine/core/engine_gui_persistence.cpp",
+      "summary": "Editor-side scene save/load wrappers that queue loads and gate them behind the unsaved-changes popup.",
+      "tags": [
+        "editor",
+        "persistence",
+        "scene-load",
+        "api-handler"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/audio/audio_listener_sync.cpp:FindNodeByNameInRoots",
+      "type": "function",
+      "name": "FindNodeByNameInRoots",
+      "filePath": "engine/audio/audio_listener_sync.cpp",
+      "lineRange": [
+        27,
+        36
+      ],
+      "summary": "Searches scene roots by name and returns the first matching GameObject.",
+      "tags": [
+        "utility",
+        "scene-graph",
+        "lookup"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/audio/audio_listener_sync.cpp:FindFirstListener",
+      "type": "function",
+      "name": "FindFirstListener",
+      "filePath": "engine/audio/audio_listener_sync.cpp",
+      "lineRange": [
+        38,
+        47
+      ],
+      "summary": "Depth-first search for the first node that already has an AudioListenerComponent.",
+      "tags": [
+        "audio",
+        "scene-graph",
+        "lookup"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/audio/audio_listener_sync.cpp:ApplyPoseFromNode",
+      "type": "function",
+      "name": "ApplyPoseFromNode",
+      "filePath": "engine/audio/audio_listener_sync.cpp",
+      "lineRange": [
+        63,
+        77
+      ],
+      "summary": "Pushes a node eye/forward/up pose into AudioManager, falling back to the global camera if the node is null.",
+      "tags": [
+        "audio",
+        "listener-sync",
+        "camera"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/audio/audio_listener_sync.cpp:AudioListenerSync_EnsureOnCamera",
+      "type": "function",
+      "name": "AudioListenerSync_EnsureOnCamera",
+      "filePath": "engine/audio/audio_listener_sync.cpp",
+      "lineRange": [
+        81,
+        86
+      ],
+      "summary": "Attaches an AudioListenerComponent to a camera node when play mode is using that camera.",
+      "tags": [
+        "audio",
+        "ecs-component",
+        "factory"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/audio/audio_listener_sync.cpp:AudioListenerSync_Tick",
+      "type": "function",
+      "name": "AudioListenerSync_Tick",
+      "filePath": "engine/audio/audio_listener_sync.cpp",
+      "lineRange": [
+        88,
+        117
+      ],
+      "summary": "Each frame, chooses the active camera or fallback listener and writes its world pose to AudioManager.",
+      "tags": [
+        "audio",
+        "listener-sync",
+        "event-handler"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:engine/core/easing.cpp:easeInSine",
+      "type": "function",
+      "name": "easeInSine",
+      "filePath": "engine/core/easing.cpp",
+      "lineRange": [
+        18,
+        20
+      ],
+      "summary": "Sine ease-in: sin(pi/2 * t).",
+      "tags": [
+        "easing",
+        "utility",
+        "interpolation"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/easing.cpp:easeOutSine",
+      "type": "function",
+      "name": "easeOutSine",
+      "filePath": "engine/core/easing.cpp",
+      "lineRange": [
+        22,
+        24
+      ],
+      "summary": "Sine ease-out ending at 1.",
+      "tags": [
+        "easing",
+        "utility",
+        "interpolation"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/easing.cpp:easeInOutSine",
+      "type": "function",
+      "name": "easeInOutSine",
+      "filePath": "engine/core/easing.cpp",
+      "lineRange": [
+        26,
+        28
+      ],
+      "summary": "Symmetric sine ease-in-out around t=0.5.",
+      "tags": [
+        "easing",
+        "utility",
+        "interpolation"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/easing.cpp:easeInQuad",
+      "type": "function",
+      "name": "easeInQuad",
+      "filePath": "engine/core/easing.cpp",
+      "lineRange": [
+        30,
+        32
+      ],
+      "summary": "Quadratic ease-in (t squared).",
+      "tags": [
+        "easing",
+        "utility",
+        "interpolation"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/easing.cpp:easeOutQuad",
+      "type": "function",
+      "name": "easeOutQuad",
+      "filePath": "engine/core/easing.cpp",
+      "lineRange": [
+        34,
+        36
+      ],
+      "summary": "Quadratic ease-out.",
+      "tags": [
+        "easing",
+        "utility",
+        "interpolation"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/easing.cpp:easeInOutQuad",
+      "type": "function",
+      "name": "easeInOutQuad",
+      "filePath": "engine/core/easing.cpp",
+      "lineRange": [
+        38,
+        40
+      ],
+      "summary": "Piecewise quadratic ease-in-out.",
+      "tags": [
+        "easing",
+        "utility",
+        "interpolation"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/easing.cpp:easeInCubic",
+      "type": "function",
+      "name": "easeInCubic",
+      "filePath": "engine/core/easing.cpp",
+      "lineRange": [
+        42,
+        44
+      ],
+      "summary": "Cubic ease-in (t cubed).",
+      "tags": [
+        "easing",
+        "utility",
+        "interpolation"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/easing.cpp:easeOutCubic",
+      "type": "function",
+      "name": "easeOutCubic",
+      "filePath": "engine/core/easing.cpp",
+      "lineRange": [
+        46,
+        48
+      ],
+      "summary": "Cubic ease-out.",
+      "tags": [
+        "easing",
+        "utility",
+        "interpolation"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/easing.cpp:easeInOutCubic",
+      "type": "function",
+      "name": "easeInOutCubic",
+      "filePath": "engine/core/easing.cpp",
+      "lineRange": [
+        50,
+        56
+      ],
+      "summary": "Cubic ease-in-out with a corrected ease-out half.",
+      "tags": [
+        "easing",
+        "utility",
+        "interpolation"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/easing.cpp:easeInQuart",
+      "type": "function",
+      "name": "easeInQuart",
+      "filePath": "engine/core/easing.cpp",
+      "lineRange": [
+        58,
+        61
+      ],
+      "summary": "Quartic ease-in.",
+      "tags": [
+        "easing",
+        "utility",
+        "interpolation"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/easing.cpp:easeOutQuart",
+      "type": "function",
+      "name": "easeOutQuart",
+      "filePath": "engine/core/easing.cpp",
+      "lineRange": [
+        63,
+        66
+      ],
+      "summary": "Quartic ease-out.",
+      "tags": [
+        "easing",
+        "utility",
+        "interpolation"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/easing.cpp:easeInOutQuart",
+      "type": "function",
+      "name": "easeInOutQuart",
+      "filePath": "engine/core/easing.cpp",
+      "lineRange": [
+        68,
+        77
+      ],
+      "summary": "Piecewise quartic ease-in-out.",
+      "tags": [
+        "easing",
+        "utility",
+        "interpolation"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/easing.cpp:easeInQuint",
+      "type": "function",
+      "name": "easeInQuint",
+      "filePath": "engine/core/easing.cpp",
+      "lineRange": [
+        79,
+        82
+      ],
+      "summary": "Quintic ease-in.",
+      "tags": [
+        "easing",
+        "utility",
+        "interpolation"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/easing.cpp:easeOutQuint",
+      "type": "function",
+      "name": "easeOutQuint",
+      "filePath": "engine/core/easing.cpp",
+      "lineRange": [
+        84,
+        87
+      ],
+      "summary": "Quintic ease-out.",
+      "tags": [
+        "easing",
+        "utility",
+        "interpolation"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/easing.cpp:easeInOutQuint",
+      "type": "function",
+      "name": "easeInOutQuint",
+      "filePath": "engine/core/easing.cpp",
+      "lineRange": [
+        89,
+        99
+      ],
+      "summary": "Piecewise quintic ease-in-out.",
+      "tags": [
+        "easing",
+        "utility",
+        "interpolation"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/easing.cpp:easeInExpo",
+      "type": "function",
+      "name": "easeInExpo",
+      "filePath": "engine/core/easing.cpp",
+      "lineRange": [
+        101,
+        103
+      ],
+      "summary": "Exponential ease-in via pow(2, 8t).",
+      "tags": [
+        "easing",
+        "utility",
+        "interpolation"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/easing.cpp:easeOutExpo",
+      "type": "function",
+      "name": "easeOutExpo",
+      "filePath": "engine/core/easing.cpp",
+      "lineRange": [
+        105,
+        107
+      ],
+      "summary": "Exponential ease-out.",
+      "tags": [
+        "easing",
+        "utility",
+        "interpolation"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/easing.cpp:easeInOutExpo",
+      "type": "function",
+      "name": "easeInOutExpo",
+      "filePath": "engine/core/easing.cpp",
+      "lineRange": [
+        109,
+        116
+      ],
+      "summary": "Piecewise exponential ease-in-out.",
+      "tags": [
+        "easing",
+        "utility",
+        "interpolation"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/easing.cpp:easeInCirc",
+      "type": "function",
+      "name": "easeInCirc",
+      "filePath": "engine/core/easing.cpp",
+      "lineRange": [
+        118,
+        120
+      ],
+      "summary": "Circular ease-in using sqrt.",
+      "tags": [
+        "easing",
+        "utility",
+        "interpolation"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/easing.cpp:easeOutCirc",
+      "type": "function",
+      "name": "easeOutCirc",
+      "filePath": "engine/core/easing.cpp",
+      "lineRange": [
+        122,
+        124
+      ],
+      "summary": "Circular ease-out (sqrt(t)).",
+      "tags": [
+        "easing",
+        "utility",
+        "interpolation"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/easing.cpp:easeInOutCirc",
+      "type": "function",
+      "name": "easeInOutCirc",
+      "filePath": "engine/core/easing.cpp",
+      "lineRange": [
+        126,
+        133
+      ],
+      "summary": "Piecewise circular ease-in-out.",
+      "tags": [
+        "easing",
+        "utility",
+        "interpolation"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/easing.cpp:easeInBack",
+      "type": "function",
+      "name": "easeInBack",
+      "filePath": "engine/core/easing.cpp",
+      "lineRange": [
+        135,
+        137
+      ],
+      "summary": "Back ease-in that overshoots below zero.",
+      "tags": [
+        "easing",
+        "utility",
+        "interpolation"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/easing.cpp:easeOutBack",
+      "type": "function",
+      "name": "easeOutBack",
+      "filePath": "engine/core/easing.cpp",
+      "lineRange": [
+        139,
+        141
+      ],
+      "summary": "Back ease-out that overshoots past one.",
+      "tags": [
+        "easing",
+        "utility",
+        "interpolation"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/easing.cpp:easeInOutBack",
+      "type": "function",
+      "name": "easeInOutBack",
+      "filePath": "engine/core/easing.cpp",
+      "lineRange": [
+        143,
+        149
+      ],
+      "summary": "Piecewise back ease-in-out with overshoot.",
+      "tags": [
+        "easing",
+        "utility",
+        "interpolation"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/easing.cpp:easeInElastic",
+      "type": "function",
+      "name": "easeInElastic",
+      "filePath": "engine/core/easing.cpp",
+      "lineRange": [
+        151,
+        155
+      ],
+      "summary": "Elastic ease-in using a decaying sine.",
+      "tags": [
+        "easing",
+        "utility",
+        "interpolation"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/easing.cpp:easeOutElastic",
+      "type": "function",
+      "name": "easeOutElastic",
+      "filePath": "engine/core/easing.cpp",
+      "lineRange": [
+        157,
+        160
+      ],
+      "summary": "Elastic ease-out using a decaying cosine.",
+      "tags": [
+        "easing",
+        "utility",
+        "interpolation"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/easing.cpp:easeInOutElastic",
+      "type": "function",
+      "name": "easeInOutElastic",
+      "filePath": "engine/core/easing.cpp",
+      "lineRange": [
+        162,
+        175
+      ],
+      "summary": "Three-phase elastic ease-in-out with a mid sine plateau.",
+      "tags": [
+        "easing",
+        "utility",
+        "interpolation"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/easing.cpp:easeInBounce",
+      "type": "function",
+      "name": "easeInBounce",
+      "filePath": "engine/core/easing.cpp",
+      "lineRange": [
+        177,
+        179
+      ],
+      "summary": "Bounce ease-in from exponentially decaying sines.",
+      "tags": [
+        "easing",
+        "utility",
+        "interpolation"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/easing.cpp:easeOutBounce",
+      "type": "function",
+      "name": "easeOutBounce",
+      "filePath": "engine/core/easing.cpp",
+      "lineRange": [
+        181,
+        183
+      ],
+      "summary": "Bounce ease-out from decaying cosines.",
+      "tags": [
+        "easing",
+        "utility",
+        "interpolation"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/easing.cpp:easeInOutBounce",
+      "type": "function",
+      "name": "easeInOutBounce",
+      "filePath": "engine/core/easing.cpp",
+      "lineRange": [
+        185,
+        192
+      ],
+      "summary": "Piecewise bounce ease-in-out.",
+      "tags": [
+        "easing",
+        "utility",
+        "interpolation"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui_persistence.cpp:EngineGUI_SaveToFile",
+      "type": "function",
+      "name": "EngineGUI_SaveToFile",
+      "filePath": "engine/core/engine_gui_persistence.cpp",
+      "lineRange": [
+        5,
+        7
+      ],
+      "summary": "Saves the current editor scene through SceneLoader_SaveToFile.",
+      "tags": [
+        "persistence",
+        "scene-load",
+        "api-handler"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui_persistence.cpp:EngineGUI_LoadFromFileCore",
+      "type": "function",
+      "name": "EngineGUI_LoadFromFileCore",
+      "filePath": "engine/core/engine_gui_persistence.cpp",
+      "lineRange": [
+        9,
+        21
+      ],
+      "summary": "Queues a scene load and soft-stops play without the unsaved-changes gate.",
+      "tags": [
+        "persistence",
+        "scene-load",
+        "play-mode"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui_persistence.cpp:EngineGUI_LoadFromFile",
+      "type": "function",
+      "name": "EngineGUI_LoadFromFile",
+      "filePath": "engine/core/engine_gui_persistence.cpp",
+      "lineRange": [
+        23,
+        33
+      ],
+      "summary": "Loads a scene, or opens the unsaved-changes popup when the editor scene is dirty.",
+      "tags": [
+        "persistence",
+        "scene-load",
+        "api-handler"
+      ],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:engine/audio/audio_listener_sync.cpp",
+      "target": "function:engine/audio/audio_listener_sync.cpp:FindNodeByNameInRoots",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/audio/audio_listener_sync.cpp",
+      "target": "function:engine/audio/audio_listener_sync.cpp:FindFirstListener",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/audio/audio_listener_sync.cpp",
+      "target": "function:engine/audio/audio_listener_sync.cpp:ApplyPoseFromNode",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/audio/audio_listener_sync.cpp",
+      "target": "function:engine/audio/audio_listener_sync.cpp:AudioListenerSync_EnsureOnCamera",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/audio/audio_listener_sync.cpp",
+      "target": "function:engine/audio/audio_listener_sync.cpp:AudioListenerSync_EnsureOnCamera",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/audio/audio_listener_sync.cpp",
+      "target": "function:engine/audio/audio_listener_sync.cpp:AudioListenerSync_Tick",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/audio/audio_listener_sync.cpp",
+      "target": "function:engine/audio/audio_listener_sync.cpp:AudioListenerSync_Tick",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/easing.cpp",
+      "target": "function:engine/core/easing.cpp:easeInSine",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/easing.cpp",
+      "target": "function:engine/core/easing.cpp:easeInSine",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/easing.cpp",
+      "target": "function:engine/core/easing.cpp:easeOutSine",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/easing.cpp",
+      "target": "function:engine/core/easing.cpp:easeOutSine",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/easing.cpp",
+      "target": "function:engine/core/easing.cpp:easeInOutSine",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/easing.cpp",
+      "target": "function:engine/core/easing.cpp:easeInOutSine",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/easing.cpp",
+      "target": "function:engine/core/easing.cpp:easeInQuad",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/easing.cpp",
+      "target": "function:engine/core/easing.cpp:easeInQuad",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/easing.cpp",
+      "target": "function:engine/core/easing.cpp:easeOutQuad",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/easing.cpp",
+      "target": "function:engine/core/easing.cpp:easeOutQuad",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/easing.cpp",
+      "target": "function:engine/core/easing.cpp:easeInOutQuad",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/easing.cpp",
+      "target": "function:engine/core/easing.cpp:easeInOutQuad",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/easing.cpp",
+      "target": "function:engine/core/easing.cpp:easeInCubic",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/easing.cpp",
+      "target": "function:engine/core/easing.cpp:easeInCubic",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/easing.cpp",
+      "target": "function:engine/core/easing.cpp:easeOutCubic",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/easing.cpp",
+      "target": "function:engine/core/easing.cpp:easeOutCubic",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/easing.cpp",
+      "target": "function:engine/core/easing.cpp:easeInOutCubic",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/easing.cpp",
+      "target": "function:engine/core/easing.cpp:easeInOutCubic",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/easing.cpp",
+      "target": "function:engine/core/easing.cpp:easeInQuart",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/easing.cpp",
+      "target": "function:engine/core/easing.cpp:easeInQuart",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/easing.cpp",
+      "target": "function:engine/core/easing.cpp:easeOutQuart",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/easing.cpp",
+      "target": "function:engine/core/easing.cpp:easeOutQuart",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/easing.cpp",
+      "target": "function:engine/core/easing.cpp:easeInOutQuart",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/easing.cpp",
+      "target": "function:engine/core/easing.cpp:easeInOutQuart",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/easing.cpp",
+      "target": "function:engine/core/easing.cpp:easeInQuint",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/easing.cpp",
+      "target": "function:engine/core/easing.cpp:easeInQuint",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/easing.cpp",
+      "target": "function:engine/core/easing.cpp:easeOutQuint",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/easing.cpp",
+      "target": "function:engine/core/easing.cpp:easeOutQuint",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/easing.cpp",
+      "target": "function:engine/core/easing.cpp:easeInOutQuint",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/easing.cpp",
+      "target": "function:engine/core/easing.cpp:easeInOutQuint",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/easing.cpp",
+      "target": "function:engine/core/easing.cpp:easeInExpo",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/easing.cpp",
+      "target": "function:engine/core/easing.cpp:easeInExpo",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/easing.cpp",
+      "target": "function:engine/core/easing.cpp:easeOutExpo",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/easing.cpp",
+      "target": "function:engine/core/easing.cpp:easeOutExpo",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/easing.cpp",
+      "target": "function:engine/core/easing.cpp:easeInOutExpo",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/easing.cpp",
+      "target": "function:engine/core/easing.cpp:easeInOutExpo",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/easing.cpp",
+      "target": "function:engine/core/easing.cpp:easeInCirc",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/easing.cpp",
+      "target": "function:engine/core/easing.cpp:easeInCirc",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/easing.cpp",
+      "target": "function:engine/core/easing.cpp:easeOutCirc",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/easing.cpp",
+      "target": "function:engine/core/easing.cpp:easeOutCirc",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/easing.cpp",
+      "target": "function:engine/core/easing.cpp:easeInOutCirc",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/easing.cpp",
+      "target": "function:engine/core/easing.cpp:easeInOutCirc",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/easing.cpp",
+      "target": "function:engine/core/easing.cpp:easeInBack",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/easing.cpp",
+      "target": "function:engine/core/easing.cpp:easeInBack",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/easing.cpp",
+      "target": "function:engine/core/easing.cpp:easeOutBack",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/easing.cpp",
+      "target": "function:engine/core/easing.cpp:easeOutBack",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/easing.cpp",
+      "target": "function:engine/core/easing.cpp:easeInOutBack",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/easing.cpp",
+      "target": "function:engine/core/easing.cpp:easeInOutBack",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/easing.cpp",
+      "target": "function:engine/core/easing.cpp:easeInElastic",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/easing.cpp",
+      "target": "function:engine/core/easing.cpp:easeInElastic",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/easing.cpp",
+      "target": "function:engine/core/easing.cpp:easeOutElastic",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/easing.cpp",
+      "target": "function:engine/core/easing.cpp:easeOutElastic",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/easing.cpp",
+      "target": "function:engine/core/easing.cpp:easeInOutElastic",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/easing.cpp",
+      "target": "function:engine/core/easing.cpp:easeInOutElastic",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/easing.cpp",
+      "target": "function:engine/core/easing.cpp:easeInBounce",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/easing.cpp",
+      "target": "function:engine/core/easing.cpp:easeInBounce",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/easing.cpp",
+      "target": "function:engine/core/easing.cpp:easeOutBounce",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/easing.cpp",
+      "target": "function:engine/core/easing.cpp:easeOutBounce",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/easing.cpp",
+      "target": "function:engine/core/easing.cpp:easeInOutBounce",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/easing.cpp",
+      "target": "function:engine/core/easing.cpp:easeInOutBounce",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/engine_gui_persistence.cpp",
+      "target": "function:engine/core/engine_gui_persistence.cpp:EngineGUI_SaveToFile",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui_persistence.cpp",
+      "target": "function:engine/core/engine_gui_persistence.cpp:EngineGUI_SaveToFile",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/engine_gui_persistence.cpp",
+      "target": "function:engine/core/engine_gui_persistence.cpp:EngineGUI_LoadFromFileCore",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui_persistence.cpp",
+      "target": "function:engine/core/engine_gui_persistence.cpp:EngineGUI_LoadFromFileCore",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/engine_gui_persistence.cpp",
+      "target": "function:engine/core/engine_gui_persistence.cpp:EngineGUI_LoadFromFile",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui_persistence.cpp",
+      "target": "function:engine/core/engine_gui_persistence.cpp:EngineGUI_LoadFromFile",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/audio/audio_listener_sync.cpp",
+      "target": "file:engine/audio/audio_listener_sync.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/audio/audio_listener_sync.cpp",
+      "target": "file:engine/audio/audio_manager.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/audio/audio_listener_sync.cpp",
+      "target": "file:engine/core/engine_gui.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/audio/audio_listener_sync.cpp",
+      "target": "file:engine/ecs/audio_listener_component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/audio/audio_listener_sync.cpp",
+      "target": "file:engine/ecs/camera_component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/audio/audio_listener_sync.cpp",
+      "target": "file:engine/ecs/game_object.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/audio/audio_listener_sync.cpp",
+      "target": "file:engine/ecs/transform.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/core/easing.cpp",
+      "target": "file:engine/core/easing.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/core/engine_gui_internal.h",
+      "target": "file:engine/core/engine_gui.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/core/engine_gui_internal.h",
+      "target": "file:engine/scene/scene_loader.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/core/engine_gui_persistence.cpp",
+      "target": "file:engine/core/engine_gui.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/core/engine_gui_persistence.cpp",
+      "target": "file:engine/core/engine_gui_internal.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/core/engine_gui_persistence.cpp",
+      "target": "file:engine/scene/scene_loader.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:engine/audio/audio_listener_sync.cpp:AudioListenerSync_Tick",
+      "target": "function:engine/audio/audio_listener_sync.cpp:ApplyPoseFromNode",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/audio/audio_listener_sync.cpp:AudioListenerSync_Tick",
+      "target": "function:engine/audio/audio_listener_sync.cpp:AudioListenerSync_EnsureOnCamera",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/audio/audio_listener_sync.cpp:AudioListenerSync_Tick",
+      "target": "function:engine/audio/audio_listener_sync.cpp:FindNodeByNameInRoots",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/audio/audio_listener_sync.cpp:AudioListenerSync_Tick",
+      "target": "function:engine/audio/audio_listener_sync.cpp:FindFirstListener",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/audio/audio_listener_sync.cpp:AudioListenerSync_Tick",
+      "target": "function:src/app/camera/debug_camera.cpp:DebugCamera_IsEnabled",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/core/engine_gui_persistence.cpp:EngineGUI_LoadFromFileCore",
+      "target": "function:engine/core/engine_gui.cpp:SoftStopPlayForSceneLoad",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/core/engine_gui_persistence.cpp:EngineGUI_LoadFromFile",
+      "target": "function:engine/core/engine_gui_persistence.cpp:EngineGUI_LoadFromFileCore",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/core/engine_gui_persistence.cpp:EngineGUI_LoadFromFile",
+      "target": "function:engine/core/engine_gui.cpp:EngineGUI_IsSceneDirty",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/core/engine_gui_persistence.cpp:EngineGUI_LoadFromFile",
+      "target": "function:engine/core/engine_gui.cpp:EngineGUI_QueueUnsavedLoad",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/core/engine_gui_persistence.cpp:EngineGUI_LoadFromFile",
+      "target": "function:engine/core/engine_gui.cpp:SoftStopPlayForSceneLoad",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

@@ -1,0 +1,946 @@
+{
+  "nodes": [
+    {
+      "id": "file:engine/ecs/audio_component.cpp",
+      "type": "file",
+      "name": "audio_component.cpp",
+      "filePath": "engine/ecs/audio_component.cpp",
+      "summary": "Implements AudioComponent lifecycle, JSON clip settings, and deferred play/stop/position commands flushed to AudioManager.",
+      "tags": [
+        "audio",
+        "ecs-component",
+        "serialization",
+        "service"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:engine/ecs/camera_component.cpp",
+      "type": "file",
+      "name": "camera_component.cpp",
+      "filePath": "engine/ecs/camera_component.cpp",
+      "summary": "Implements CameraComponent world-space eye/basis math, global Camera application, and FOV/clip serialization.",
+      "tags": [
+        "camera",
+        "ecs-component",
+        "serialization",
+        "math"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:engine/ecs/camera_component.h",
+      "type": "file",
+      "name": "camera_component.h",
+      "filePath": "engine/ecs/camera_component.h",
+      "summary": "Declares CameraComponent: enabled flag, lens parameters, and static helpers that derive eye and axes from a Transform.",
+      "tags": [
+        "camera",
+        "ecs-component",
+        "type-definition",
+        "data-model"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ecs/audio_component.cpp:OnAttach",
+      "type": "function",
+      "name": "OnAttach",
+      "filePath": "engine/ecs/audio_component.cpp",
+      "lineRange": [
+        32,
+        34
+      ],
+      "summary": "Registers this AudioComponent with AudioSystem.",
+      "tags": [
+        "ecs-component",
+        "lifecycle",
+        "audio"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ecs/audio_component.cpp:OnDetach",
+      "type": "function",
+      "name": "OnDetach",
+      "filePath": "engine/ecs/audio_component.cpp",
+      "lineRange": [
+        36,
+        41
+      ],
+      "summary": "Unregisters the component, stops playback, and clears deferred commands.",
+      "tags": [
+        "ecs-component",
+        "lifecycle",
+        "audio"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ecs/audio_component.cpp:Update",
+      "type": "function",
+      "name": "Update",
+      "filePath": "engine/ecs/audio_component.cpp",
+      "lineRange": [
+        43,
+        55
+      ],
+      "summary": "Auto-plays once if requested and flags finished-check plus spatial position sync.",
+      "tags": [
+        "ecs-component",
+        "event-handler",
+        "audio"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ecs/audio_component.cpp:OnReset",
+      "type": "function",
+      "name": "OnReset",
+      "filePath": "engine/ecs/audio_component.cpp",
+      "lineRange": [
+        57,
+        60
+      ],
+      "summary": "Stops playback and clears the auto-play latch for Return-to-Start.",
+      "tags": [
+        "ecs-component",
+        "lifecycle",
+        "audio"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ecs/audio_component.cpp:Serialize",
+      "type": "function",
+      "name": "Serialize",
+      "filePath": "engine/ecs/audio_component.cpp",
+      "lineRange": [
+        62,
+        72
+      ],
+      "summary": "Writes clip path, bus, volume, loop, autoPlay, spatial, and distanceScale to JSON.",
+      "tags": [
+        "serialization",
+        "audio",
+        "ecs-component"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ecs/audio_component.cpp:Deserialize",
+      "type": "function",
+      "name": "Deserialize",
+      "filePath": "engine/ecs/audio_component.cpp",
+      "lineRange": [
+        74,
+        90
+      ],
+      "summary": "Restores clip settings from JSON and stops any current instance.",
+      "tags": [
+        "serialization",
+        "audio",
+        "ecs-component"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ecs/audio_component.cpp:Play",
+      "type": "function",
+      "name": "Play",
+      "filePath": "engine/ecs/audio_component.cpp",
+      "lineRange": [
+        92,
+        97
+      ],
+      "summary": "Queues stop-then-play and flushes immediately when not inside GameObject::Update.",
+      "tags": [
+        "audio",
+        "playback",
+        "api-handler"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ecs/audio_component.cpp:Stop",
+      "type": "function",
+      "name": "Stop",
+      "filePath": "engine/ecs/audio_component.cpp",
+      "lineRange": [
+        99,
+        104
+      ],
+      "summary": "Queues a stop and flushes immediately when it is safe to touch AudioManager.",
+      "tags": [
+        "audio",
+        "playback",
+        "api-handler"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ecs/audio_component.cpp:IsPlaying",
+      "type": "function",
+      "name": "IsPlaying",
+      "filePath": "engine/ecs/audio_component.cpp",
+      "lineRange": [
+        106,
+        112
+      ],
+      "summary": "True if a play is queued or AudioManager still reports the playback id.",
+      "tags": [
+        "audio",
+        "query",
+        "playback"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ecs/audio_component.cpp:SetClipPath",
+      "type": "function",
+      "name": "SetClipPath",
+      "filePath": "engine/ecs/audio_component.cpp",
+      "lineRange": [
+        114,
+        119
+      ],
+      "summary": "Stops current audio and replaces the clip path, resetting auto-play.",
+      "tags": [
+        "audio",
+        "api-handler",
+        "asset-load"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ecs/audio_component.cpp:ApplyLiveSettings",
+      "type": "function",
+      "name": "ApplyLiveSettings",
+      "filePath": "engine/ecs/audio_component.cpp",
+      "lineRange": [
+        121,
+        125
+      ],
+      "summary": "Queues a live volume/distance update and flushes when not inside Update.",
+      "tags": [
+        "audio",
+        "api-handler",
+        "playback"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ecs/audio_component.cpp:ApplyStopImmediate",
+      "type": "function",
+      "name": "ApplyStopImmediate",
+      "filePath": "engine/ecs/audio_component.cpp",
+      "lineRange": [
+        127,
+        131
+      ],
+      "summary": "Stops the current AudioManager instance and clears the playback id.",
+      "tags": [
+        "audio",
+        "playback",
+        "service"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ecs/audio_component.cpp:FlushCommands",
+      "type": "function",
+      "name": "FlushCommands",
+      "filePath": "engine/ecs/audio_component.cpp",
+      "lineRange": [
+        133,
+        177
+      ],
+      "summary": "Applies queued stop/play/finished/settings/position commands to AudioManager.",
+      "tags": [
+        "audio",
+        "playback",
+        "service"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:engine/ecs/audio_component.cpp:OwnerPosition",
+      "type": "function",
+      "name": "OwnerPosition",
+      "filePath": "engine/ecs/audio_component.cpp",
+      "lineRange": [
+        179,
+        184
+      ],
+      "summary": "Returns the owner world position from Transform, or legacy GameObject position.",
+      "tags": [
+        "audio",
+        "transform",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ecs/camera_component.cpp:TransformAxisWS",
+      "type": "function",
+      "name": "TransformAxisWS",
+      "filePath": "engine/ecs/camera_component.cpp",
+      "lineRange": [
+        11,
+        21
+      ],
+      "summary": "Transforms a local axis by the world matrix and returns a normalized fallback when degenerate.",
+      "tags": [
+        "math",
+        "transform",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ecs/camera_component.cpp:ComputeEyeWS",
+      "type": "function",
+      "name": "ComputeEyeWS",
+      "filePath": "engine/ecs/camera_component.cpp",
+      "lineRange": [
+        25,
+        31
+      ],
+      "summary": "Reads the world-space camera eye from the Transform translation.",
+      "tags": [
+        "camera",
+        "math",
+        "transform"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ecs/camera_component.cpp:ComputeForwardWS",
+      "type": "function",
+      "name": "ComputeForwardWS",
+      "filePath": "engine/ecs/camera_component.cpp",
+      "lineRange": [
+        33,
+        35
+      ],
+      "summary": "Returns the Transform local +Z axis in world space.",
+      "tags": [
+        "camera",
+        "math",
+        "transform"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ecs/camera_component.cpp:ComputeUpWS",
+      "type": "function",
+      "name": "ComputeUpWS",
+      "filePath": "engine/ecs/camera_component.cpp",
+      "lineRange": [
+        37,
+        39
+      ],
+      "summary": "Returns the Transform local +Y axis in world space.",
+      "tags": [
+        "camera",
+        "math",
+        "transform"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ecs/camera_component.cpp:ComputeRightWS",
+      "type": "function",
+      "name": "ComputeRightWS",
+      "filePath": "engine/ecs/camera_component.cpp",
+      "lineRange": [
+        41,
+        43
+      ],
+      "summary": "Returns the Transform local +X axis in world space.",
+      "tags": [
+        "camera",
+        "math",
+        "transform"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ecs/camera_component.cpp:ComputeViewUpWS",
+      "type": "function",
+      "name": "ComputeViewUpWS",
+      "filePath": "engine/ecs/camera_component.cpp",
+      "lineRange": [
+        45,
+        59
+      ],
+      "summary": "Builds a stable view-up from forward crossed with world Y, switching to +Z near vertical pitch.",
+      "tags": [
+        "camera",
+        "math",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ecs/camera_component.cpp:ApplyToGlobalCamera",
+      "type": "function",
+      "name": "ApplyToGlobalCamera",
+      "filePath": "engine/ecs/camera_component.cpp",
+      "lineRange": [
+        61,
+        72
+      ],
+      "summary": "Writes eye, look target, up, FOV, and clip planes into the global Camera singleton.",
+      "tags": [
+        "camera",
+        "service",
+        "ecs-component"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ecs/camera_component.cpp:Serialize",
+      "type": "function",
+      "name": "Serialize",
+      "filePath": "engine/ecs/camera_component.cpp",
+      "lineRange": [
+        74,
+        81
+      ],
+      "summary": "Serializes enabled, fov, and clip planes to JSON.",
+      "tags": [
+        "serialization",
+        "camera",
+        "ecs-component"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ecs/camera_component.cpp:Deserialize",
+      "type": "function",
+      "name": "Deserialize",
+      "filePath": "engine/ecs/camera_component.cpp",
+      "lineRange": [
+        83,
+        93
+      ],
+      "summary": "Restores lens parameters from JSON with defaults on parse failure.",
+      "tags": [
+        "serialization",
+        "camera",
+        "ecs-component"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:engine/ecs/camera_component.h:CameraComponent",
+      "type": "class",
+      "name": "CameraComponent",
+      "filePath": "engine/ecs/camera_component.h",
+      "lineRange": [
+        8,
+        28
+      ],
+      "summary": "Component storing lens settings and helpers that derive a world-space view from an engine::Transform.",
+      "tags": [
+        "camera",
+        "ecs-component",
+        "data-model"
+      ],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:engine/ecs/audio_component.cpp",
+      "target": "function:engine/ecs/audio_component.cpp:OnAttach",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/audio_component.cpp",
+      "target": "function:engine/ecs/audio_component.cpp:OnAttach",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/audio_component.cpp",
+      "target": "function:engine/ecs/audio_component.cpp:OnDetach",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/audio_component.cpp",
+      "target": "function:engine/ecs/audio_component.cpp:OnDetach",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/audio_component.cpp",
+      "target": "function:engine/ecs/audio_component.cpp:Update",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/audio_component.cpp",
+      "target": "function:engine/ecs/audio_component.cpp:Update",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/audio_component.cpp",
+      "target": "function:engine/ecs/audio_component.cpp:OnReset",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/audio_component.cpp",
+      "target": "function:engine/ecs/audio_component.cpp:OnReset",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/audio_component.cpp",
+      "target": "function:engine/ecs/audio_component.cpp:Serialize",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/audio_component.cpp",
+      "target": "function:engine/ecs/audio_component.cpp:Serialize",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/audio_component.cpp",
+      "target": "function:engine/ecs/audio_component.cpp:Deserialize",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/audio_component.cpp",
+      "target": "function:engine/ecs/audio_component.cpp:Deserialize",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/audio_component.cpp",
+      "target": "function:engine/ecs/audio_component.cpp:Play",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/audio_component.cpp",
+      "target": "function:engine/ecs/audio_component.cpp:Play",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/audio_component.cpp",
+      "target": "function:engine/ecs/audio_component.cpp:Stop",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/audio_component.cpp",
+      "target": "function:engine/ecs/audio_component.cpp:Stop",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/audio_component.cpp",
+      "target": "function:engine/ecs/audio_component.cpp:IsPlaying",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/audio_component.cpp",
+      "target": "function:engine/ecs/audio_component.cpp:IsPlaying",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/audio_component.cpp",
+      "target": "function:engine/ecs/audio_component.cpp:SetClipPath",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/audio_component.cpp",
+      "target": "function:engine/ecs/audio_component.cpp:SetClipPath",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/audio_component.cpp",
+      "target": "function:engine/ecs/audio_component.cpp:ApplyLiveSettings",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/audio_component.cpp",
+      "target": "function:engine/ecs/audio_component.cpp:ApplyLiveSettings",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/audio_component.cpp",
+      "target": "function:engine/ecs/audio_component.cpp:ApplyStopImmediate",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/audio_component.cpp",
+      "target": "function:engine/ecs/audio_component.cpp:ApplyStopImmediate",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/audio_component.cpp",
+      "target": "function:engine/ecs/audio_component.cpp:FlushCommands",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/audio_component.cpp",
+      "target": "function:engine/ecs/audio_component.cpp:FlushCommands",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/audio_component.cpp",
+      "target": "function:engine/ecs/audio_component.cpp:OwnerPosition",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/audio_component.cpp",
+      "target": "function:engine/ecs/audio_component.cpp:OwnerPosition",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/camera_component.cpp",
+      "target": "function:engine/ecs/camera_component.cpp:TransformAxisWS",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/camera_component.cpp",
+      "target": "function:engine/ecs/camera_component.cpp:ComputeEyeWS",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/camera_component.cpp",
+      "target": "function:engine/ecs/camera_component.cpp:ComputeEyeWS",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/camera_component.cpp",
+      "target": "function:engine/ecs/camera_component.cpp:ComputeForwardWS",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/camera_component.cpp",
+      "target": "function:engine/ecs/camera_component.cpp:ComputeForwardWS",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/camera_component.cpp",
+      "target": "function:engine/ecs/camera_component.cpp:ComputeUpWS",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/camera_component.cpp",
+      "target": "function:engine/ecs/camera_component.cpp:ComputeUpWS",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/camera_component.cpp",
+      "target": "function:engine/ecs/camera_component.cpp:ComputeRightWS",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/camera_component.cpp",
+      "target": "function:engine/ecs/camera_component.cpp:ComputeRightWS",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/camera_component.cpp",
+      "target": "function:engine/ecs/camera_component.cpp:ComputeViewUpWS",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/camera_component.cpp",
+      "target": "function:engine/ecs/camera_component.cpp:ComputeViewUpWS",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/camera_component.cpp",
+      "target": "function:engine/ecs/camera_component.cpp:ApplyToGlobalCamera",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/camera_component.cpp",
+      "target": "function:engine/ecs/camera_component.cpp:ApplyToGlobalCamera",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/camera_component.cpp",
+      "target": "function:engine/ecs/camera_component.cpp:Serialize",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/camera_component.cpp",
+      "target": "function:engine/ecs/camera_component.cpp:Serialize",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/camera_component.cpp",
+      "target": "function:engine/ecs/camera_component.cpp:Deserialize",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/camera_component.cpp",
+      "target": "function:engine/ecs/camera_component.cpp:Deserialize",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/camera_component.h",
+      "target": "class:engine/ecs/camera_component.h:CameraComponent",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/camera_component.h",
+      "target": "class:engine/ecs/camera_component.h:CameraComponent",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/audio_component.cpp",
+      "target": "file:engine/ecs/audio_component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/ecs/audio_component.cpp",
+      "target": "file:engine/ecs/audio_system.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/ecs/audio_component.cpp",
+      "target": "file:engine/ecs/game_object.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/ecs/audio_component.cpp",
+      "target": "file:engine/ecs/transform.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/ecs/camera_component.cpp",
+      "target": "file:engine/ecs/camera_component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/ecs/camera_component.cpp",
+      "target": "file:engine/ecs/transform.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/ecs/camera_component.h",
+      "target": "file:engine/ecs/component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:engine/ecs/audio_component.cpp:OnDetach",
+      "target": "function:engine/ecs/audio_component.cpp:ApplyStopImmediate",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/ecs/audio_component.cpp:Update",
+      "target": "function:engine/ecs/audio_component.cpp:Play",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/ecs/audio_component.cpp:OnReset",
+      "target": "function:engine/ecs/audio_component.cpp:Stop",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/ecs/audio_component.cpp:Deserialize",
+      "target": "function:engine/ecs/audio_component.cpp:Stop",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/ecs/audio_component.cpp:Play",
+      "target": "function:engine/ecs/audio_component.cpp:FlushCommands",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/ecs/audio_component.cpp:Stop",
+      "target": "function:engine/ecs/audio_component.cpp:FlushCommands",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/ecs/audio_component.cpp:SetClipPath",
+      "target": "function:engine/ecs/audio_component.cpp:Stop",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/ecs/audio_component.cpp:ApplyLiveSettings",
+      "target": "function:engine/ecs/audio_component.cpp:FlushCommands",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/ecs/audio_component.cpp:FlushCommands",
+      "target": "function:engine/ecs/audio_component.cpp:ApplyStopImmediate",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/ecs/audio_component.cpp:FlushCommands",
+      "target": "function:engine/ecs/audio_component.cpp:OwnerPosition",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/ecs/camera_component.cpp:ComputeForwardWS",
+      "target": "function:engine/ecs/camera_component.cpp:TransformAxisWS",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/ecs/camera_component.cpp:ComputeUpWS",
+      "target": "function:engine/ecs/camera_component.cpp:TransformAxisWS",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/ecs/camera_component.cpp:ComputeRightWS",
+      "target": "function:engine/ecs/camera_component.cpp:TransformAxisWS",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/ecs/camera_component.cpp:ApplyToGlobalCamera",
+      "target": "function:engine/ecs/camera_component.cpp:ComputeEyeWS",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/ecs/camera_component.cpp:ApplyToGlobalCamera",
+      "target": "function:engine/ecs/camera_component.cpp:ComputeForwardWS",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/ecs/camera_component.cpp:ApplyToGlobalCamera",
+      "target": "function:engine/ecs/camera_component.cpp:ComputeViewUpWS",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

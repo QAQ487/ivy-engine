@@ -1,0 +1,722 @@
+{
+ "file:engine/core/engine_gui.cpp": {
+  "summary": "Ivy Engine 的 ImGui 編輯器外殼，負責管理場景階層、屬性檢視器、遊玩模式工作階段、專案流程及視埠點選。",
+  "languageNotes": "單一大型 C++ 編譯單元：包含公開的 EngineGUI_* API，以及內部 ImGui 視窗、射線點選和遊玩工作階段的拆卸邏輯。"
+ },
+ "file:engine/core/game_object.h": {
+  "summary": "相容性標頭檔，轉發至 ECS 的 GameObject 定義，讓應用層程式碼可經 core 路徑引用。"
+ },
+ "file:engine/ecs/collider_component.cpp": {
+  "summary": "將序列化的碰撞體形狀套用到 GameObject，根據方塊、球體、膠囊體、圓柱體或快取網格資料建立物理碰撞體。"
+ },
+ "file:engine/ecs/model_asset_cache.cpp": {
+  "summary": "Singleton 快取，為 rom/model 資源建立索引，並延遲載入供視覺元件及碰撞體共用的 Model3D GPU 資源。"
+ },
+ "file:engine/ecs/model_asset_cache.h": {
+  "summary": "宣告 ModelAssetCache，即供 VisualComponent 及編輯器使用的共用 FBX／模型目錄索引與 GPU 模型查詢。"
+ },
+ "function:engine/core/engine_gui.cpp:SyncImGuiInputAcceptance": {
+  "summary": "在編輯器不應接收滑鼠及鍵盤事件時，啟用或封鎖 ImGui 的輸入佇列。"
+ },
+ "function:engine/core/engine_gui.cpp:SaveUiPrefs": {
+  "summary": "將編輯器 UI 縮放比例及相關偏好設定寫入磁碟上的 ui_prefs JSON 檔案。"
+ },
+ "function:engine/core/engine_gui.cpp:LoadUiPrefs": {
+  "summary": "讀取已儲存的 UI 縮放偏好設定，並在編輯器啟動時套用有效的縮放百分比。"
+ },
+ "function:engine/core/engine_gui.cpp:ApplyUiZoom": {
+  "summary": "按縮放百分比調整 ImGui 樣式尺寸，確保編輯器介面清晰易讀。"
+ },
+ "function:engine/core/engine_gui.cpp:EngineGUI_IsSceneDirty": {
+  "summary": "回傳目前開啟的場景是否有未儲存的編輯器變更。"
+ },
+ "function:engine/core/engine_gui.cpp:EngineGUI_MarkSceneDirty": {
+  "summary": "將目前開啟的場景標記為已修改，以更新儲存提示及標題列狀態。"
+ },
+ "function:engine/core/engine_gui.cpp:EngineGUI_ClearSceneDirty": {
+  "summary": "在成功儲存或捨棄變更後，清除場景的未儲存旗標。"
+ },
+ "function:engine/core/engine_gui.cpp:EngineGUI_QueueUnsavedLoad": {
+  "summary": "將場景載入加入佇列，載入前須先確認捨棄未儲存的編輯。"
+ },
+ "function:engine/core/engine_gui.cpp:EngineGUI_QueueUnsavedExit": {
+  "summary": "將編輯器結束動作加入佇列，以便先顯示未儲存變更對話框。"
+ },
+ "function:engine/core/engine_gui.cpp:RemapNodeTagsAfterDelete": {
+  "summary": "刪除節點後重寫子樹上的標籤 ID，使餘下標籤保持一致。"
+ },
+ "function:engine/core/engine_gui.cpp:NormalizeSceneFileName": {
+  "summary": "將場景名稱正規化為可安全用於 rom/scene 下的檔案名稱。"
+ },
+ "function:engine/core/engine_gui.cpp:EngineGUI_IsSceneGraphObject": {
+  "summary": "當 GameObject 是真正的場景圖節點而非編輯器輔助物件時回傳 true。"
+ },
+ "function:engine/core/engine_gui.cpp:CreateModelGameObject": {
+  "summary": "生成一個 GameObject，並附加綁定至指定快取模型的 VisualComponent。"
+ },
+ "function:engine/core/engine_gui.cpp:ComputeEditorLayout": {
+  "summary": "根據目前視窗大小，計算階層、視埠及屬性檢視器各面板的矩形範圍。"
+ },
+ "function:engine/core/engine_gui.cpp:SpawnRootGameObject": {
+  "summary": "在編輯器場景圖中插入新的根節點，並將場景標記為已修改。"
+ },
+ "function:engine/core/engine_gui.cpp:SpawnChildGameObject": {
+  "summary": "將新建立的 GameObject 設為所選節點的子節點。"
+ },
+ "function:engine/core/engine_gui.cpp:SpawnDuplicate": {
+  "summary": "深層複製 GameObject（連同其子節點）至場景中，並賦予唯一名稱。"
+ },
+ "function:engine/core/engine_gui.cpp:DeleteGameObject": {
+  "summary": "從場景移除節點、重新對應標籤，並更新選取及復原狀態。"
+ },
+ "function:engine/core/engine_gui.cpp:ClearScene": {
+  "summary": "銷毀所有編輯器場景根節點，並重設選取狀態，以準備新場景或已載入的場景。"
+ },
+ "function:engine/core/engine_gui.cpp:ScrollValue": {
+  "summary": "將滑鼠滾輪捲動套用到屬性檢視器中的數值欄位。"
+ },
+ "function:engine/core/engine_gui.cpp:AcceptAssetPathDrop": {
+  "summary": "當拖放的資源路徑副檔名在允許清單內時，接受該拖放。"
+ },
+ "function:engine/core/engine_gui.cpp:DrawScriptPropertyField": {
+  "summary": "為所選節點上一個經反射的 GameScripts 屬性繪製 ImGui 欄位。"
+ },
+ "function:engine/core/engine_gui.cpp:DrawPostFxShowcaseWindow": {
+  "summary": "提供 ImGui 視窗，用於切換及預覽後期處理展示效果。"
+ },
+ "function:engine/core/engine_gui.cpp:DrawShortcutHintsWindow": {
+  "summary": "顯示編輯器鍵盤快捷鍵速查表的 ImGui 視窗。"
+ },
+ "function:engine/core/engine_gui.cpp:DrawRenderingSettingsWindow": {
+  "summary": "提供 ImGui 視窗，用於編輯天空盒、霧效、預設 shader 及陰影品質等渲染設定。"
+ },
+ "function:engine/core/engine_gui.cpp:ApplyProjectSessionState": {
+  "summary": "將已開啟專案的路徑、縮放比例及音訊／物理設定套用到執行中的編輯器工作階段。"
+ },
+ "function:engine/core/engine_gui.cpp:SwitchToOpenedProject": {
+  "summary": "將編輯器切換至新開啟的 ProjectManager 根目錄，並重新整理資源索引。"
+ },
+ "function:engine/core/engine_gui.cpp:RequestOpenProject": {
+  "summary": "針對所選資料夾路徑啟動開啟專案流程。"
+ },
+ "function:engine/core/engine_gui.cpp:CloseOpenedProject": {
+  "summary": "關閉目前的內容專案，並將編輯器狀態返回開始畫面。"
+ },
+ "function:engine/core/engine_gui.cpp:RequestCloseProject": {
+  "summary": "要求關閉專案，若場景有未儲存變更則先提示使用者。"
+ },
+ "function:engine/core/engine_gui.cpp:OpenBuildPreflight": {
+  "summary": "開啟可遊玩套件的建置對話框，並帶入目的地及組態偏好設定。"
+ },
+ "function:engine/core/engine_gui.cpp:RequestBuildCurrentProject": {
+  "summary": "以非同步方式為目前開啟的內容專案啟動 PlayablePackage 建置。"
+ },
+ "function:engine/core/engine_gui.cpp:BeginNewProjectFlow": {
+  "summary": "啟動新專案的資料夾選擇器及命名對話框。"
+ },
+ "function:engine/core/engine_gui.cpp:SaveProject": {
+  "summary": "寫入 project.json 及目前場景，使內容專案保持同步。"
+ },
+ "function:engine/core/engine_gui.cpp:ConsumePendingFolderPick": {
+  "summary": "將已完成的 Win32 資料夾選擇結果套用到開啟／建立專案流程。"
+ },
+ "function:engine/core/engine_gui.cpp:DrawEngineStartScreen": {
+  "summary": "在未開啟專案時渲染開始畫面，顯示最近使用的專案及新建／開啟動作。"
+ },
+ "function:engine/core/engine_gui.cpp:DrawEditorMenuBar": {
+  "summary": "繪製 File／Edit／Play 選單列，並將編輯器動作排入佇列至下一幀執行。"
+ },
+ "function:engine/core/engine_gui.cpp:ExecutePendingEditorAction": {
+  "summary": "在 ImGui 幀結束後分派佇列中的選單動作（儲存、遊玩、建置、切換專案）。"
+ },
+ "function:engine/core/engine_gui.cpp:DrawEditorPopups": {
+  "summary": "繪製未儲存變更、新建／開啟專案、建置預檢及場景命名提示等強制回應對話框。"
+ },
+ "function:engine/core/engine_gui.cpp:SaveSceneToFile": {
+  "summary": "將編輯器場景圖序列化為 rom/scene 下的 JSON 檔案。"
+ },
+ "function:engine/core/engine_gui.cpp:NewScene": {
+  "summary": "清除目前場景，並開始一個未命名的空白場景。"
+ },
+ "function:engine/core/engine_gui.cpp:TeardownPlaySession": {
+  "summary": "停止遊玩模式、還原編輯器執行階段狀態，並可選擇重設選取狀態。"
+ },
+ "function:engine/core/engine_gui.cpp:SoftStopPlayForSceneLoad": {
+  "summary": "在不完全重設編輯器的情況下停止遊玩，讓待處理的場景載入得以進行。"
+ },
+ "function:engine/core/engine_gui.cpp:ReturnToStart": {
+  "summary": "離開編輯器工作階段並返回專案開始畫面。"
+ },
+ "function:engine/core/engine_gui.cpp:HasThirdPersonPlayerNode": {
+  "summary": "遍歷子樹，尋找第三人稱玩家腳本或節點。"
+ },
+ "function:engine/core/engine_gui.cpp:HasCameraComponentNode": {
+  "summary": "遍歷子樹，尋找 CameraComponent。"
+ },
+ "function:engine/core/engine_gui.cpp:EngineGUI_IsDebugCameraPlayInputActive": {
+  "summary": "當遊玩模式使用除錯飛行攝影機而非場景攝影機時回傳 true。"
+ },
+ "function:engine/core/engine_gui.cpp:StartPlay": {
+  "summary": "進入遊玩模式：同步 SceneRuntime、啟動腳本，並選擇使用除錯攝影機或場景攝影機。"
+ },
+ "function:engine/core/engine_gui.cpp:EngineGUI_QueueSceneLoad": {
+  "summary": "將場景檔案名稱加入佇列，在目前幀及任何預載完成後載入。"
+ },
+ "function:engine/core/engine_gui.cpp:EngineGUI_BeginSceneAssetPreload": {
+  "summary": "為待載入的場景啟動分時進行的模型／動畫預熱。"
+ },
+ "function:engine/core/engine_gui.cpp:EngineGUI_FlushSceneLoadPending": {
+  "summary": "完成預載，並將佇列中的場景實際載入編輯器場景圖。"
+ },
+ "function:engine/core/engine_gui.cpp:EngineGUI_TickSceneAssetPreload": {
+  "summary": "推進一個預載步驟，並回傳預熱是否仍在進行。"
+ },
+ "function:engine/core/engine_gui.cpp:EngineGUI_IsSceneAssetPreloadActive": {
+  "summary": "回傳場景資源預載目前是否正在進行。"
+ },
+ "function:engine/core/engine_gui.cpp:EngineGUI_Initialize": {
+  "summary": "在 D3D11 就緒後建立 ImGui、gizmo、資源索引及編輯器工作階段狀態。"
+ },
+ "function:engine/core/engine_gui.cpp:EngineGUI_Finalize": {
+  "summary": "在引擎結束時關閉 ImGui、檔案監視器及各編輯器子系統。"
+ },
+ "function:engine/core/engine_gui.cpp:EngineGUI_IsPlaying": {
+  "summary": "回傳編輯器目前是否處於遊玩模式。"
+ },
+ "function:engine/core/engine_gui.cpp:EngineGUI_PreferPlayVisuals": {
+  "summary": "當繪製流程應使用遊玩模式的真實模型而非編輯器代理模型時回傳 true。"
+ },
+ "function:engine/core/engine_gui.cpp:EngineGUI_IsOnStart": {
+  "summary": "當正在顯示開始畫面且沒有啟用中的專案工作階段時回傳 true。"
+ },
+ "function:engine/core/engine_gui.cpp:EngineGUI_StartPlay": {
+  "summary": "公開包裝函數，從選單或快捷鍵啟動遊玩工作階段。"
+ },
+ "function:engine/core/engine_gui.cpp:EngineGUI_StopPlay": {
+  "summary": "公開包裝函數，停止遊玩並還原編輯器工作階段。"
+ },
+ "function:engine/core/engine_gui.cpp:EngineGUI_GetCameraMode": {
+  "summary": "回傳目前編輯器／遊玩攝影機模式的列舉值。"
+ },
+ "function:engine/core/engine_gui.cpp:EngineGUI_SetCameraMode": {
+  "summary": "設定編輯器／遊玩攝影機模式（場景攝影機或除錯攝影機）。"
+ },
+ "function:engine/core/engine_gui.cpp:EngineGUI_SetActiveCameraNodeName": {
+  "summary": "將遊玩模式的渲染固定至指定名稱的 CameraComponent 節點。"
+ },
+ "function:engine/core/engine_gui.cpp:EngineGUI_SetEnabled": {
+  "summary": "啟用或停用整個 ImGui 編輯器疊加層。"
+ },
+ "function:engine/core/engine_gui.cpp:EngineGUI_ResolveStartupScenePath": {
+  "summary": "解析專案的預設或上次開啟的場景路徑，供編輯器啟動時使用。"
+ },
+ "function:engine/core/engine_gui.cpp:EngineGUI_IsUiOverlayVisible": {
+  "summary": "回傳遊戲內 UI 疊加層編輯是否可見。"
+ },
+ "function:engine/core/engine_gui.cpp:EngineGUI_SetUiOverlayVisible": {
+  "summary": "顯示或隱藏 UI 疊加層編輯器圖層。"
+ },
+ "function:engine/core/engine_gui.cpp:EngineGUI_GetEditMode": {
+  "summary": "回傳目前的編輯器編輯模式（場景或 UI）。"
+ },
+ "function:engine/core/engine_gui.cpp:EngineGUI_SetEditMode": {
+  "summary": "在場景物件編輯與 UI 畫布編輯之間切換。"
+ },
+ "function:engine/core/engine_gui.cpp:EngineGUI_IsUiEditMode": {
+  "summary": "當編輯器正在編輯 UI 畫布元素而非 3D 節點時回傳 true。"
+ },
+ "function:engine/core/engine_gui.cpp:EngineGUI_GetGameViewportRect": {
+  "summary": "回傳編輯器版面內遊戲視埠的矩形範圍，供點選及渲染使用。"
+ },
+ "function:engine/core/engine_gui.cpp:EngineGUI_MouseToViewportLocal": {
+  "summary": "將螢幕上的滑鼠位置轉換為視埠本地座標。"
+ },
+ "function:engine/core/engine_gui.cpp:RaySphere": {
+  "summary": "射線與球體相交測試，用於點選光源／攝影機 gizmo。"
+ },
+ "function:engine/core/engine_gui.cpp:RayIntersectsTriangle": {
+  "summary": "以 Möller–Trumbore 演算法進行射線與三角形相交測試，用於網格點選。"
+ },
+ "function:engine/core/engine_gui.cpp:RayPickModelMesh": {
+  "summary": "轉換模型的 CPU 頂點，並找出射線在其三角形上最近的命中點。"
+ },
+ "function:engine/core/engine_gui.cpp:BuildPickRay": {
+  "summary": "根據視埠滑鼠座標及啟用中的攝影機，建立世界空間的點選射線。"
+ },
+ "function:engine/core/engine_gui.cpp:DrawMeshWireframeHighlight": {
+  "summary": "透過 DebugDrawer 為被點選的網格繪製線框疊加。"
+ },
+ "function:engine/core/engine_gui.cpp:DrawSelectionColliderHighlight": {
+  "summary": "在視埠中繪製所選節點的碰撞體範圍。"
+ },
+ "function:engine/core/engine_gui.cpp:DrawSelectionHighlight": {
+  "summary": "為目前編輯器選取項目繪製網格、碰撞體或光源的高亮顯示。"
+ },
+ "function:engine/core/engine_gui.cpp:EngineGUI_DrawSelectionIndicator": {
+  "summary": "公開 hook，在編輯器幀期間繪製目前選取項目的高亮顯示。"
+ },
+ "function:engine/core/engine_gui.cpp:FocusSelectedObjectWithCamera": {
+  "summary": "調整編輯器攝影機，使其框住所選物件的世界邊界。"
+ },
+ "function:engine/core/engine_gui.cpp:EngineGUI_Update": {
+  "summary": "每幀更新編輯器：處理快捷鍵、gizmo、遊玩／停止、預載及待處理動作。"
+ },
+ "function:engine/core/engine_gui.cpp:DrawEditorSceneProxies": {
+  "summary": "在非遊玩視覺模式下，繪製僅供編輯器使用的代理物件（光源、攝影機、碰撞體）。"
+ },
+ "function:engine/core/engine_gui.cpp:MoveNodeInList": {
+  "summary": "按帶正負號的偏移量，在同層節點之間重新排列節點次序。"
+ },
+ "function:engine/core/engine_gui.cpp:GetNodeSiblingIndexLocal": {
+  "summary": "回傳節點在其父節點子清單中的索引。"
+ },
+ "function:engine/core/engine_gui.cpp:UndoableReorderNode": {
+  "summary": "為所選節點記錄一次可復原的階層重新排序。"
+ },
+ "function:engine/core/engine_gui.cpp:DrawSceneNodeHierarchy": {
+  "summary": "遞迴繪製場景樹的 ImGui 列，支援拖曳重新排序及右鍵選單動作。"
+ },
+ "function:engine/core/engine_gui.cpp:EngineGUI_OnBackbufferResized": {
+  "summary": "通知編輯器版面 D3D 後台緩衝區的大小已改變。"
+ },
+ "function:engine/core/engine_gui.cpp:EngineGUI_Draw": {
+  "summary": "繪製單一幀的完整編輯器介面：版面、階層、屬性檢視器、視埠工具及彈出視窗。"
+ },
+ "class:engine/core/engine_gui.cpp:EditorLayoutMetrics": {
+  "summary": "快取編輯器外框的像素尺寸：選單列、工具列及面板矩形，用於排列 ImGui 視窗。"
+ },
+ "function:engine/ecs/collider_component.cpp:ClearFromOwner": {
+  "summary": "移除目前附加在所屬 GameObject 上的任何物理碰撞體。"
+ },
+ "function:engine/ecs/collider_component.cpp:ApplyToOwner": {
+  "summary": "根據序列化的形狀資料及快取模型，在所屬物件上建立方塊／球體／膠囊體／圓柱體／網格碰撞體。"
+ },
+ "function:engine/ecs/collider_component.cpp:Serialize": {
+  "summary": "將碰撞體類型、尺寸、觸發器及偏移欄位寫入 JSON。"
+ },
+ "function:engine/ecs/collider_component.cpp:Deserialize": {
+  "summary": "解析碰撞體 JSON，並儲存形狀參數供稍後 ApplyToOwner 使用。"
+ },
+ "function:engine/ecs/model_asset_cache.cpp:ToLowerString": {
+  "summary": "使用 classic locale 將 UTF-8 字串轉為小寫，用於比較資源鍵值。"
+ },
+ "function:engine/ecs/model_asset_cache.cpp:NormalizeAssetKey": {
+  "summary": "統一斜線及大小寫，使模型路徑共用同一個快取鍵值。"
+ },
+ "function:engine/ecs/model_asset_cache.cpp:StemKey": {
+  "summary": "回傳小寫的檔案名稱主幹，用於以短名稱查詢模型。"
+ },
+ "function:engine/ecs/model_asset_cache.cpp:ResolveModelWidePath": {
+  "summary": "將模型名稱或相對路徑解析為寬字元檔案系統路徑，供 LoadFBX 使用。"
+ },
+ "function:engine/ecs/model_asset_cache.cpp:SortFolderTree": {
+  "summary": "遞迴地按字母排序模型資料夾節點，供編輯器瀏覽器使用。"
+ },
+ "function:engine/ecs/model_asset_cache.cpp:Initialize": {
+  "summary": "初始化 singleton 快取並掃描 rom/model。"
+ },
+ "function:engine/ecs/model_asset_cache.cpp:Finalize": {
+  "summary": "釋放已快取的 Model3D 實例，並將快取標記為已終結。"
+ },
+ "function:engine/ecs/model_asset_cache.cpp:RefreshAssetDirectory": {
+  "summary": "重新掃描 rom/model，並為每個 FBX／OBJ 重建 ObjectDef 項目。"
+ },
+ "function:engine/ecs/model_asset_cache.cpp:RebuildFolderTree": {
+  "summary": "根據已索引的物件定義重建階層式資料夾樹。"
+ },
+ "function:engine/ecs/model_asset_cache.cpp:FolderPathForDef": {
+  "summary": "回傳單一 ObjectDef 相對於資料夾的路徑。"
+ },
+ "function:engine/ecs/model_asset_cache.cpp:GetObjectDefinitionsInFolder": {
+  "summary": "列出直接位於某個 rom/model 子資料夾內的模型定義。"
+ },
+ "file:engine/ecs/visual_component.cpp": {
+  "summary": "實作 VisualComponent 的動畫、代理／真實模型查詢、SurfaceFX 紋理，以及網格實例的 JSON 序列化與反序列化。"
+ },
+ "file:engine/ecs/visual_component.h": {
+  "summary": "ECS 視覺元件，將 GameObject 綁定至快取的 Model3D、可選的代理網格、動畫片段及每個實例的 shader 覆寫設定。",
+  "languageNotes": "繼承自 Component；GetModel() 是內嵌的快取查詢，讓編輯器與遊玩流程共用 ModelAssetCache。"
+ },
+ "file:engine/editor/camera_gizmo.h": {
+  "summary": "宣告 CameraGizmo 除錯繪製輔助函數，為所選及場景中的攝影機節點渲染視錐體。"
+ },
+ "file:engine/editor/editor_project_browser.h": {
+  "summary": "宣告 MapEditor 專案瀏覽器面板入口，供 ImGui 編輯器選取及生成專案資源。"
+ },
+ "file:engine/editor/playable_package_builder.cpp": {
+  "summary": "編輯器建置流程，負責尋找 MSBuild、編譯內容專案，並將可遊玩的遊戲套件複製到使用者指定的目的地。",
+  "languageNotes": "使用 Win32 建立處理程序並遞迴複製檔案；建置以非同步方式執行，並透過輪詢日誌回報進度。"
+ },
+ "function:engine/ecs/visual_component.cpp:ReadFloat4": {
+  "summary": "從 JSON 讀取 XMFLOAT4，陣列缺失時使用後備值。"
+ },
+ "function:engine/ecs/visual_component.cpp:ReadFloat2": {
+  "summary": "從 JSON 讀取 XMFLOAT2，陣列缺失時使用後備值。"
+ },
+ "function:engine/ecs/visual_component.cpp:ToJson": {
+  "summary": "將 DirectX 浮點向量序列化為 JSON 陣列。"
+ },
+ "function:engine/ecs/visual_component.cpp:EnsureAnimInstance": {
+  "summary": "當物件需要獨立的動畫狀態時，建立每個實例專屬的 Model3D 複本。"
+ },
+ "function:engine/ecs/visual_component.cpp:ReleaseSurfaceFxTexture": {
+  "summary": "釋放已載入的 SurfaceFX 著色器資源檢視。"
+ },
+ "function:engine/ecs/visual_component.cpp:OnDetach": {
+  "summary": "在元件被移除時清理動畫實例及 SurfaceFX 資源。"
+ },
+ "function:engine/ecs/visual_component.cpp:OnReset": {
+  "summary": "在遊玩停止或物件重設後，還原遊玩模式的視覺狀態。"
+ },
+ "function:engine/ecs/visual_component.cpp:EnsureAnimationsLoaded": {
+  "summary": "透過 ModelAssetCache／Model3D，將指定名稱的動畫 FBX 片段載入至實例。"
+ },
+ "function:engine/ecs/visual_component.cpp:PlayClip": {
+  "summary": "在實例模型上開始播放指定名稱的動畫片段，並可選擇循環播放。"
+ },
+ "function:engine/ecs/visual_component.cpp:GetActiveClipDuration": {
+  "summary": "回傳目前播放中片段的長度（秒）。"
+ },
+ "function:engine/ecs/visual_component.cpp:SetAnimationSpeed": {
+  "summary": "設定啟用中動畫實例的播放速度。"
+ },
+ "function:engine/ecs/visual_component.cpp:Update": {
+  "summary": "在 playAnimation 啟用時，每幀推進動畫時間。"
+ },
+ "function:engine/ecs/visual_component.cpp:Serialize": {
+  "summary": "將模型路徑、動畫片段、自發光、shader 覆寫及 SurfaceFX 寫入 JSON。"
+ },
+ "function:engine/ecs/visual_component.cpp:Deserialize": {
+  "summary": "從場景／prefab JSON 還原 VisualComponent 的各欄位。"
+ },
+ "class:engine/ecs/visual_component.h:VisualComponent": {
+  "summary": "元件，以代理網格、動畫片段、自發光效果及可選的 SurfaceFX 實例化快取模型。"
+ },
+ "function:engine/editor/playable_package_builder.cpp:WideFromUtf8": {
+  "summary": "將 UTF-8 路徑轉換為 UTF-16 wstring，供 Win32 API 使用。"
+ },
+ "function:engine/editor/playable_package_builder.cpp:Utf8FromWide": {
+  "summary": "將 UTF-16 wstring 轉換回 UTF-8。"
+ },
+ "function:engine/editor/playable_package_builder.cpp:TrimCopy": {
+  "summary": "回傳已移除前後空白字元的字串複本。"
+ },
+ "function:engine/editor/playable_package_builder.cpp:SanitizeGameExeStem": {
+  "summary": "從匯出遊戲的 .exe 檔案名稱主幹中移除無效的檔案名稱字元。"
+ },
+ "function:engine/editor/playable_package_builder.cpp:NormalizeForCompare": {
+  "summary": "將路徑標準化，以便在斜線及大小寫不同時仍能進行相等比較。"
+ },
+ "function:engine/editor/playable_package_builder.cpp:PathsEqual": {
+  "summary": "當兩個檔案系統路徑指向同一位置時回傳 true。"
+ },
+ "function:engine/editor/playable_package_builder.cpp:IsUnderOrEqual": {
+  "summary": "當候選路徑等於根路徑或為其子孫路徑時回傳 true。"
+ },
+ "function:engine/editor/playable_package_builder.cpp:PrefsKey": {
+  "summary": "為內容專案根目錄建立偏好設定對應表的鍵值。"
+ },
+ "function:engine/editor/playable_package_builder.cpp:PrefsFilePath": {
+  "summary": "回傳可遊玩套件建置器偏好設定 JSON 在磁碟上的路徑。"
+ },
+ "function:engine/editor/playable_package_builder.cpp:AppendLog": {
+  "summary": "將文字附加到記憶體中的建置日誌，供編輯器對話框顯示。"
+ },
+ "function:engine/editor/playable_package_builder.cpp:AppendLogLine": {
+  "summary": "將單行文字附加到建置日誌。"
+ },
+ "function:engine/editor/playable_package_builder.cpp:FindMsBuild": {
+  "summary": "透過 vswhere 及常見的 Visual Studio 安裝路徑尋找 MSBuild.exe。"
+ },
+ "function:engine/editor/playable_package_builder.cpp:RunProcess": {
+  "summary": "在指定工作目錄中執行命令列，並將輸出擷取至建置日誌。"
+ },
+ "function:engine/editor/playable_package_builder.cpp:CopyOneFile": {
+  "summary": "將單一檔案複製到套件目錄，並回報錯誤。"
+ },
+ "function:engine/editor/playable_package_builder.cpp:CopyDirectoryRecursive": {
+  "summary": "遞迴地將目錄樹複製到可遊玩套件中。"
+ },
+ "function:engine/editor/playable_package_builder.cpp:AssemblePackage": {
+  "summary": "將建置完成的 exe、rom 資源及執行階段檔案複製到目的地套件資料夾。"
+ },
+ "function:engine/editor/playable_package_builder.cpp:MsBuildProject": {
+  "summary": "以所選組態對內容專案的 vcxproj 呼叫 MSBuild。"
+ },
+ "function:engine/editor/playable_package_builder.cpp:RunBuild": {
+  "summary": "執行完整建置工作：尋找 MSBuild、編譯、組裝套件，並記錄成功或失敗。"
+ },
+ "function:engine/editor/playable_package_builder.cpp:TryParseConfiguration": {
+  "summary": "將 Debug／Release 組態名稱解析為 Configuration 列舉值。"
+ },
+ "function:engine/editor/playable_package_builder.cpp:DefaultDestination": {
+  "summary": "建議位於內容專案旁的預設匯出資料夾。"
+ },
+ "function:engine/editor/playable_package_builder.cpp:LoadPrefs": {
+  "summary": "載入某內容根目錄上次使用的目的地及組態。"
+ },
+ "function:engine/editor/playable_package_builder.cpp:SavePrefs": {
+  "summary": "保存目的地及組態偏好設定，供下次建置對話框使用。"
+ },
+ "function:engine/editor/playable_package_builder.cpp:DestinationRefusalReason": {
+  "summary": "拒絕會覆寫專案或引擎儲存庫的目的地。"
+ },
+ "function:engine/editor/playable_package_builder.cpp:IsBuildRunning": {
+  "summary": "當非同步套件建置執行緒仍在運作時回傳 true。"
+ },
+ "function:engine/editor/playable_package_builder.cpp:StartBuild": {
+  "summary": "若目前沒有進行中的建置，則在工作執行緒上啟動 RunBuild。"
+ },
+ "function:engine/editor/playable_package_builder.cpp:CopyLog": {
+  "summary": "將目前的建置日誌複製到呼叫者提供的字串，供 ImGui 對話框使用。"
+ },
+ "function:engine/editor/playable_package_builder.cpp:IsBuildFinished": {
+  "summary": "當非同步建置執行緒已完成時回傳 true。"
+ },
+ "function:engine/editor/playable_package_builder.cpp:LastBuildSucceeded": {
+  "summary": "當上次完成的建置無錯誤地組裝出套件時回傳 true。"
+ },
+ "function:engine/editor/playable_package_builder.cpp:LastBuildResultMessage": {
+  "summary": "提供上次建置的成功或錯誤訊息，以人類可讀的字串表示。"
+ },
+ "class:engine/editor/playable_package_builder.cpp:Job": {
+  "summary": "定義於 engine/editor/playable_package_builder.cpp 的 Job 類型。"
+ },
+ "file:engine/editor/playable_package_builder.h": {
+  "summary": "公開的 PlayablePackage API，提供組態偏好設定、目的地檢查，以及從編輯器進行非同步可遊玩套件建置。"
+ },
+ "file:engine/editor/project_asset_index.cpp": {
+  "summary": "遍歷已開啟專案的 rom/ 樹，按類型分類檔案，並重建專案瀏覽器使用的資料夾索引。"
+ },
+ "file:engine/editor/project_asset_index.h": {
+  "summary": "Singleton 專案資源索引，負責分類 rom/ 檔案（模型、場景、prefab、腳本），並向編輯器提供資料夾內容。"
+ },
+ "file:engine/editor/project_asset_ops.cpp": {
+  "summary": "處理編輯器資源的檔案系統操作：重新命名、移至資源回收筒、建立資料夾／場景、在檔案總管中顯示，以及搜尋場景參照。",
+  "languageNotes": "使用 Windows 資源回收筒刪除及路徑正規化，避免刪除正在開啟的場景檔案。"
+ },
+ "file:engine/editor/project_asset_ops.h": {
+  "summary": "提供靜態 ProjectAssetOps 介面，讓編輯器瀏覽器安全地重新命名、刪除及建立專案檔案。"
+ },
+ "class:engine/editor/playable_package_builder.h:Prefs": {
+  "summary": "儲存可遊玩套件建置所用的目的地資料夾及 Debug／Release 組態。"
+ },
+ "class:engine/editor/playable_package_builder.h:Request": {
+  "summary": "StartBuild 的輸入資料：內容根目錄、目的地、遊戲名稱及組態。"
+ },
+ "function:engine/editor/project_asset_index.cpp:ToLowerString": {
+  "summary": "將字串轉為小寫，用於路徑前綴及分類比較。"
+ },
+ "function:engine/editor/project_asset_index.cpp:StartsWithPath": {
+  "summary": "當相對路徑位於某資料夾前綴之下時回傳 true。"
+ },
+ "function:engine/editor/project_asset_index.cpp:ShouldSkipIndexedPath": {
+  "summary": "略過不應在專案瀏覽器中顯示的自動產生或隱藏路徑。"
+ },
+ "function:engine/editor/project_asset_index.cpp:AddFolderPath": {
+  "summary": "確保資料夾樹中存在對應某個 rom/ 相對路徑的資料夾節點。"
+ },
+ "function:engine/editor/project_asset_index.cpp:SortFolderTree": {
+  "summary": "按字母排序專案資料夾節點，供瀏覽器使用。"
+ },
+ "function:engine/editor/project_asset_index.cpp:ClassifyFile": {
+  "summary": "將相對路徑對應至 Kind（模型、場景、prefab、腳本、紋理等）。"
+ },
+ "function:engine/editor/project_asset_index.cpp:RebuildFolderTree": {
+  "summary": "根據掃描結果重建完整資料夾樹及各資料夾的檔案清單。"
+ },
+ "function:engine/editor/project_asset_index.cpp:Refresh": {
+  "summary": "遍歷 rom/ 並重新整理 singleton ProjectAssetIndex。"
+ },
+ "function:engine/editor/project_asset_index.cpp:GetFolderContents": {
+  "summary": "回傳單一資料夾內已分類的項目，供專案瀏覽器清單使用。"
+ },
+ "function:engine/editor/project_asset_index.cpp:GetFilesOfKind": {
+  "summary": "收集整個專案中屬於指定 Kind 的所有已索引檔案。"
+ },
+ "function:engine/editor/project_asset_index.h:ProjectAssetIndex": {
+  "summary": "私有預設建構函數；請使用 Instance() 取得整個處理程序共用的索引。"
+ },
+ "class:engine/editor/project_asset_index.h:ProjectAssetIndex": {
+  "summary": "Singleton 索引，涵蓋已開啟專案的 rom/ 樹，提供資料夾內容及類型篩選。"
+ },
+ "function:engine/editor/project_asset_ops.cpp:ToLowerCopy": {
+  "summary": "回傳路徑片段的小寫複本。"
+ },
+ "function:engine/editor/project_asset_ops.cpp:NormalizeSlashes": {
+  "summary": "將路徑分隔符號改寫為正斜線。"
+ },
+ "function:engine/editor/project_asset_ops.cpp:ParentRel": {
+  "summary": "回傳 rom/ 項目的父層相對路徑。"
+ },
+ "function:engine/editor/project_asset_ops.cpp:LeafName": {
+  "summary": "回傳相對資源路徑的最後一個路徑元件。"
+ },
+ "function:engine/editor/project_asset_ops.cpp:Utf8FromWide": {
+  "summary": "將寬字元檔案系統路徑轉換為 UTF-8。"
+ },
+ "function:engine/editor/project_asset_ops.cpp:PathFromUtf8": {
+  "summary": "根據 UTF-8 字串建立檔案系統路徑。"
+ },
+ "function:engine/editor/project_asset_ops.cpp:Utf8FromPath": {
+  "summary": "將檔案系統路徑轉換為 UTF-8。"
+ },
+ "function:engine/editor/project_asset_ops.cpp:ProjectRootPath": {
+  "summary": "回傳已開啟 ProjectManager 專案的絕對根路徑。"
+ },
+ "function:engine/editor/project_asset_ops.cpp:GenericLower": {
+  "summary": "將路徑轉為小寫以供比較。"
+ },
+ "function:engine/editor/project_asset_ops.cpp:MakeAbsoluteNormalized": {
+  "summary": "解析並正規化絕對路徑。"
+ },
+ "function:engine/editor/project_asset_ops.cpp:CurrentSceneAbsoluteNormalized": {
+  "summary": "回傳編輯器目前開啟場景的已正規化絕對路徑。"
+ },
+ "function:engine/editor/project_asset_ops.cpp:RecyclePath": {
+  "summary": "將檔案或資料夾移至 Windows 資源回收筒，而非永久刪除。"
+ },
+ "function:engine/editor/project_asset_ops.cpp:IsScriptsPath": {
+  "summary": "當相對路徑位於 game/scripts 之下、須審慎處理時回傳 true。"
+ },
+ "function:engine/editor/project_asset_ops.cpp:IsValidLeafName": {
+  "summary": "驗證新的檔案或資料夾名稱，若名稱不合法則回報原因。"
+ },
+ "function:engine/editor/project_asset_ops.cpp:AssetPathFromRelative": {
+  "summary": "將瀏覽器相對路徑轉換為元件所用的 rom/ 格式資源路徑。"
+ },
+ "function:engine/editor/project_asset_ops.cpp:AbsolutePathFromRelative": {
+  "summary": "以已開啟的專案根目錄為基準解析專案相對路徑。"
+ },
+ "function:engine/editor/project_asset_ops.cpp:IsCurrentSceneOpen": {
+  "summary": "當指定的相對路徑是編輯器目前載入的場景時回傳 true。"
+ },
+ "function:engine/editor/project_asset_ops.cpp:FolderContainsCurrentScene": {
+  "summary": "當刪除某資料夾會一併刪除已開啟的場景時回傳 true。"
+ },
+ "function:engine/editor/project_asset_ops.cpp:FindSceneReferences": {
+  "summary": "在刪除或重新命名前，掃描場景 JSON 檔案中對某資源路徑的參照。"
+ },
+ "function:engine/editor/project_asset_ops.cpp:RenameAsset": {
+  "summary": "重新命名專案檔案或資料夾，並更新資源索引。"
+ },
+ "function:engine/editor/project_asset_ops.cpp:DeleteAssetToRecycleBin": {
+  "summary": "在阻止刪除已開啟場景後，透過資源回收筒刪除資源。"
+ },
+ "function:engine/editor/project_asset_ops.cpp:CreateFolder": {
+  "summary": "在父層 rom/ 路徑下建立新資料夾。"
+ },
+ "function:engine/editor/project_asset_ops.cpp:CreateMinimalScene": {
+  "summary": "在所選資料夾下寫入新的空白場景 JSON。"
+ },
+ "function:engine/editor/project_asset_ops.cpp:ShowInExplorer": {
+  "summary": "開啟檔案總管並選取該資源，或開啟其所在資料夾。"
+ },
+ "class:engine/editor/project_asset_ops.h:ProjectAssetOps": {
+  "summary": "提供重新命名、移至資源回收筒、建立資料夾／場景及在檔案總管中顯示的靜態輔助函數。"
+ },
+ "file:engine/editor/project_manager.h": {
+  "summary": "Singleton，負責開啟 Unity 風格的內容專案（project.json、rom/、game/scripts）、追蹤最近使用的專案，並儲存編輯器／物理／音訊設定。"
+ },
+ "file:engine/editor/transform_gizmo.h": {
+  "summary": "宣告 TransformGizmo，用於在編輯器視埠中移動、旋轉及縮放所選的 GameObject。"
+ },
+ "file:engine/rendering/d3d11/shader.h": {
+  "summary": "D3D11 shader API：提供 3D 變體（標準、卡通、PBR、光源）、蒙皮調色盤、SurfaceFX 參數及串聯陰影矩陣綁定。",
+  "languageNotes": "SURFACE_FX_PARAMS 是常數緩衝區 b4 在 CPU 端的鏡像，必須保持 16 位元組對齊。"
+ },
+ "file:engine/rendering/lighting/shadow.cpp": {
+  "summary": "串聯方向光陰影貼圖的實作：配合攝影機的正交範圍、texel 對齊，以及每個串聯層的深度渲染開始／結束。",
+  "languageNotes": "在光源空間中將每個串聯層配合視錐體角點，再把正交投影對齊至陰影貼圖的 texel。"
+ },
+ "file:engine/rendering/lighting/shadow.h": {
+  "summary": "公開的 Shadow 命名空間，提供串聯陰影貼圖的初始化／重新設定、光源方向、串聯矩陣及深度渲染控制。"
+ },
+ "function:engine/editor/project_manager.h:IsOpen": {
+  "summary": "當目前已開啟內容專案根目錄時回傳 true。"
+ },
+ "function:engine/editor/project_manager.h:GetEditorUiZoomPercent": {
+  "summary": "回傳專案已儲存的 ImGui 縮放百分比。"
+ },
+ "function:engine/editor/project_manager.h:GetPhysicsGravity": {
+  "summary": "回傳專案已儲存的物理重力設定。"
+ },
+ "function:engine/editor/project_manager.h:ProjectManager": {
+  "summary": "私有預設建構函數；請使用 Instance() 取得整個處理程序共用的管理器。"
+ },
+ "class:engine/editor/project_manager.h:ProjectManager": {
+  "summary": "Singleton，負責開啟內容專案、保存 project.json 設定，並追蹤最近使用的根目錄。"
+ },
+ "function:engine/rendering/lighting/shadow.cpp:SafeNormalize3": {
+  "summary": "正規化三維向量，長度接近零時使用後備值。"
+ },
+ "function:engine/rendering/lighting/shadow.cpp:BuildFrustumCorners": {
+  "summary": "計算近平面與遠平面之間的世界空間視錐體角點，用於配合串聯層。"
+ },
+ "function:engine/rendering/lighting/shadow.cpp:BuildLightView": {
+  "summary": "沿方向光從焦點建立 look-at 視圖矩陣。"
+ },
+ "function:engine/rendering/lighting/shadow.cpp:FitOrthoCascade": {
+  "summary": "在光源空間中將正交投影配合視錐體角點，並對齊至 texel。"
+ },
+ "function:engine/rendering/lighting/shadow.cpp:Initialize": {
+  "summary": "按要求的貼圖大小建立串聯深度紋理、DSV 及 SRV。"
+ },
+ "function:engine/rendering/lighting/shadow.cpp:Reconfigure": {
+  "summary": "當品質（大小或串聯層數）改變時重建陰影貼圖。"
+ },
+ "function:engine/rendering/lighting/shadow.cpp:Finalize": {
+  "summary": "釋放所有串聯紋理及檢視。"
+ },
+ "function:engine/rendering/lighting/shadow.cpp:SetLightDirection": {
+  "summary": "設定用於建立串聯視圖的方向光向量。"
+ },
+ "function:engine/rendering/lighting/shadow.cpp:GetLightDirection": {
+  "summary": "回傳目前的方向光向量。"
+ },
+ "function:engine/rendering/lighting/shadow.cpp:GetCascadeCount": {
+  "summary": "回傳啟用中的串聯層數量。"
+ },
+ "function:engine/rendering/lighting/shadow.cpp:GetLightCount": {
+  "summary": "串聯層數量的舊版別名，供深度渲染迴圈使用。"
+ },
+ "function:engine/rendering/lighting/shadow.cpp:GetMaxCasters": {
+  "summary": "回傳支援的方向光陰影投射者上限（目前為一個）。"
+ },
+ "function:engine/rendering/lighting/shadow.cpp:GetCascadeSplits": {
+  "summary": "回傳封裝為 XMFLOAT4 的視圖空間遠端 Z 分割值。"
+ },
+ "function:engine/rendering/lighting/shadow.cpp:GetCascadeBlend": {
+  "summary": "回傳陰影 shader 使用的串聯層混合寬度。"
+ },
+ "function:engine/rendering/lighting/shadow.cpp:UpdateForCamera": {
+  "summary": "根據啟用中的攝影機及最大陰影距離，重建所有串聯層的視圖／投影矩陣。"
+ },
+ "function:engine/rendering/lighting/shadow.cpp:GetLightView": {
+  "summary": "回傳單一串聯層的光源空間視圖矩陣。"
+ },
+ "function:engine/rendering/lighting/shadow.cpp:GetLightProj": {
+  "summary": "回傳單一串聯層的光源空間投影矩陣。"
+ },
+ "function:engine/rendering/lighting/shadow.cpp:GetLightViewProj": {
+  "summary": "回傳單一串聯層的合併光源視圖投影矩陣。"
+ },
+ "function:engine/rendering/lighting/shadow.cpp:Begin": {
+  "summary": "綁定串聯層深度目標，並開始陰影深度渲染。"
+ },
+ "function:engine/rendering/lighting/shadow.cpp:End": {
+  "summary": "結束陰影深度渲染，並還原先前的渲染目標。"
+ },
+ "function:engine/rendering/lighting/shadow.cpp:GetShadowMapSize": {
+  "summary": "回傳目前的陰影貼圖解析度。"
+ },
+ "function:engine/rendering/lighting/shadow.cpp:GetReceiverBias": {
+  "summary": "回傳傳遞給 shader 的接收端深度偏移值。"
+ },
+ "function:engine/rendering/lighting/shadow.cpp:GetTexelSize": {
+  "summary": "回傳 1/mapSize，供 shader 進行陰影取樣。"
+ },
+ "function:engine/rendering/lighting/shadow.cpp:GetRenderingLightIndex": {
+  "summary": "回傳目前正在渲染的串聯層索引；不在陰影渲染期間則回傳 -1。"
+ }
+}

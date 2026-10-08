@@ -1,0 +1,1413 @@
+{
+  "nodes": [
+    {
+      "id": "file:engine/ecs/prefab_runtime.cpp",
+      "type": "file",
+      "name": "prefab_runtime.cpp",
+      "filePath": "engine/ecs/prefab_runtime.cpp",
+      "summary": "Runtime prefab spawn/destroy service that defers Instantiates during Update and flushes pending graph mutations safely.",
+      "tags": [
+        "prefab",
+        "runtime",
+        "factory",
+        "scene-graph"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:engine/ecs/prefab_runtime.h",
+      "type": "file",
+      "name": "prefab_runtime.h",
+      "filePath": "engine/ecs/prefab_runtime.h",
+      "summary": "Declares PrefabRuntime spawn-root helpers, deferred instantiate/destroy, and the before-destroy callback hook.",
+      "tags": [
+        "prefab",
+        "runtime",
+        "type-definition",
+        "factory"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:engine/ecs/prefab_serializer.h",
+      "type": "file",
+      "name": "prefab_serializer.h",
+      "filePath": "engine/ecs/prefab_serializer.h",
+      "summary": "Declares PrefabSerializer static JSON save/load for a GameObject subtree, including the versioned scene-style wrapper.",
+      "tags": [
+        "prefab",
+        "serialization",
+        "type-definition",
+        "data-model"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:engine/ecs/transform.cpp",
+      "type": "file",
+      "name": "transform.cpp",
+      "filePath": "engine/ecs/transform.cpp",
+      "summary": "Implements engine::Transform local/world matrices, ZYX Euler decompose, start-state snapshots, and JSON pose fields.",
+      "tags": [
+        "transform",
+        "ecs-component",
+        "math",
+        "serialization"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:engine/ecs/transform.h",
+      "type": "file",
+      "name": "transform.h",
+      "filePath": "engine/ecs/transform.h",
+      "summary": "Declares the SceneTransform component: local pose, world-matrix helpers, and start-state snapshot used by Return-to-Start.",
+      "tags": [
+        "transform",
+        "ecs-component",
+        "type-definition",
+        "data-model"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:engine/ecs/visual_system.cpp",
+      "type": "file",
+      "name": "visual_system.cpp",
+      "filePath": "engine/ecs/visual_system.cpp",
+      "summary": "Walks scene-graph roots and uploads dirty skinned vertices for every VisualComponent model.",
+      "tags": [
+        "rendering",
+        "skinning",
+        "scene-graph",
+        "service"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:engine/editor/camera_gizmo.cpp",
+      "type": "file",
+      "name": "camera_gizmo.cpp",
+      "filePath": "engine/editor/camera_gizmo.cpp",
+      "summary": "Draws editor debug axes and a near-plane frustum wire for every enabled CameraComponent in the scene graph.",
+      "tags": [
+        "editor",
+        "gizmo",
+        "camera",
+        "debug-draw"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:engine/editor/editor_prefab_panel.cpp",
+      "type": "file",
+      "name": "editor_prefab_panel.cpp",
+      "filePath": "engine/editor/editor_prefab_panel.cpp",
+      "summary": "ImGui prefab browser that lists JSON prefabs, instantiates on click, and starts ASSET_PREFAB drag-drop payloads.",
+      "tags": [
+        "editor",
+        "prefab",
+        "ui-panel",
+        "factory"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:engine/ecs/prefab_runtime.cpp:ExtractFromSceneGraph",
+      "type": "function",
+      "name": "ExtractFromSceneGraph",
+      "filePath": "engine/ecs/prefab_runtime.cpp",
+      "lineRange": [
+        43,
+        68
+      ],
+      "summary": "Detaches a GameObject from scene roots or its parent and returns ownership of that subtree.",
+      "tags": [
+        "prefab",
+        "scene-graph",
+        "ownership"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:engine/ecs/prefab_runtime.cpp:IsInSceneGraph",
+      "type": "function",
+      "name": "IsInSceneGraph",
+      "filePath": "engine/ecs/prefab_runtime.cpp",
+      "lineRange": [
+        75,
+        94
+      ],
+      "summary": "Returns whether an object is still reachable from SceneLoader roots.",
+      "tags": [
+        "prefab",
+        "scene-graph",
+        "query"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ecs/prefab_runtime.cpp:PrefabRuntime_SetBeforeDestroyCallback",
+      "type": "function",
+      "name": "PrefabRuntime_SetBeforeDestroyCallback",
+      "filePath": "engine/ecs/prefab_runtime.cpp",
+      "lineRange": [
+        98,
+        100
+      ],
+      "summary": "Installs a host callback invoked just before a spawned object is destroyed.",
+      "tags": [
+        "prefab",
+        "lifecycle",
+        "callback"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ecs/prefab_runtime.cpp:PrefabRuntime_IsSpawnRoot",
+      "type": "function",
+      "name": "PrefabRuntime_IsSpawnRoot",
+      "filePath": "engine/ecs/prefab_runtime.cpp",
+      "lineRange": [
+        102,
+        104
+      ],
+      "summary": "True when the object is the reserved __RuntimeSpawned root.",
+      "tags": [
+        "prefab",
+        "query",
+        "scene-graph"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ecs/prefab_runtime.cpp:PrefabRuntime_IsRuntimeSpawned",
+      "type": "function",
+      "name": "PrefabRuntime_IsRuntimeSpawned",
+      "filePath": "engine/ecs/prefab_runtime.cpp",
+      "lineRange": [
+        106,
+        112
+      ],
+      "summary": "True when the object lives under the runtime spawn root.",
+      "tags": [
+        "prefab",
+        "query",
+        "scene-graph"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ecs/prefab_runtime.cpp:PrefabRuntime_EnsureSpawnRoot",
+      "type": "function",
+      "name": "PrefabRuntime_EnsureSpawnRoot",
+      "filePath": "engine/ecs/prefab_runtime.cpp",
+      "lineRange": [
+        114,
+        134
+      ],
+      "summary": "Finds or creates the __RuntimeSpawned root under the current scene nodes.",
+      "tags": [
+        "prefab",
+        "factory",
+        "scene-graph"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ecs/prefab_runtime.cpp:PrefabRuntime_InstantiateImmediate",
+      "type": "function",
+      "name": "PrefabRuntime_InstantiateImmediate",
+      "filePath": "engine/ecs/prefab_runtime.cpp",
+      "lineRange": [
+        136,
+        167
+      ],
+      "summary": "Loads a prefab, applies world pose, parents it, and registers the subtree with SceneRuntime.",
+      "tags": [
+        "prefab",
+        "factory",
+        "scene-graph"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:engine/ecs/prefab_runtime.cpp:PrefabRuntime_Instantiate",
+      "type": "function",
+      "name": "PrefabRuntime_Instantiate",
+      "filePath": "engine/ecs/prefab_runtime.cpp",
+      "lineRange": [
+        169,
+        194
+      ],
+      "summary": "Defers instantiate into a mutex-guarded queue when called from GameObject::Update; otherwise spawns immediately.",
+      "tags": [
+        "prefab",
+        "factory",
+        "concurrency"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:engine/ecs/prefab_runtime.cpp:PrefabRuntime_FlushSpawned",
+      "type": "function",
+      "name": "PrefabRuntime_FlushSpawned",
+      "filePath": "engine/ecs/prefab_runtime.cpp",
+      "lineRange": [
+        196,
+        210
+      ],
+      "summary": "Drains the pending-spawn queue and instantiates each request immediately.",
+      "tags": [
+        "prefab",
+        "factory",
+        "event-handler"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ecs/prefab_runtime.cpp:PrefabRuntime_Destroy",
+      "type": "function",
+      "name": "PrefabRuntime_Destroy",
+      "filePath": "engine/ecs/prefab_runtime.cpp",
+      "lineRange": [
+        212,
+        225
+      ],
+      "summary": "Deactivates an object, fires the destroy callback, and queues it for FlushDestroyed.",
+      "tags": [
+        "prefab",
+        "lifecycle",
+        "concurrency"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ecs/prefab_runtime.cpp:PrefabRuntime_DestroyAllSpawnedChildren",
+      "type": "function",
+      "name": "PrefabRuntime_DestroyAllSpawnedChildren",
+      "filePath": "engine/ecs/prefab_runtime.cpp",
+      "lineRange": [
+        227,
+        243
+      ],
+      "summary": "Destroys every child of the runtime spawn root and flushes the destroy queue.",
+      "tags": [
+        "prefab",
+        "lifecycle",
+        "scene-graph"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ecs/prefab_runtime.cpp:PrefabRuntime_ResetSessionState",
+      "type": "function",
+      "name": "PrefabRuntime_ResetSessionState",
+      "filePath": "engine/ecs/prefab_runtime.cpp",
+      "lineRange": [
+        245,
+        254
+      ],
+      "summary": "Clears spawn-root, callbacks, and pending spawn/destroy queues for a new play session.",
+      "tags": [
+        "prefab",
+        "lifecycle",
+        "session"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ecs/prefab_runtime.cpp:PrefabRuntime_FlushDestroyed",
+      "type": "function",
+      "name": "PrefabRuntime_FlushDestroyed",
+      "filePath": "engine/ecs/prefab_runtime.cpp",
+      "lineRange": [
+        256,
+        297
+      ],
+      "summary": "Unregisters, tears down scripts, notifies physics, and deletes queued spawned objects.",
+      "tags": [
+        "prefab",
+        "lifecycle",
+        "scene-graph"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:engine/ecs/prefab_serializer.h:PrefabSerializer",
+      "type": "class",
+      "name": "PrefabSerializer",
+      "filePath": "engine/ecs/prefab_serializer.h",
+      "lineRange": [
+        32,
+        42
+      ],
+      "summary": "Static JSON serializer for a GameObject subtree, supporting both bare-node and versioned scene wrappers.",
+      "tags": [
+        "prefab",
+        "serialization",
+        "factory"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ecs/transform.cpp:EulerZyxDegreesFromRotationMatrix",
+      "type": "function",
+      "name": "EulerZyxDegreesFromRotationMatrix",
+      "filePath": "engine/ecs/transform.cpp",
+      "lineRange": [
+        25,
+        51
+      ],
+      "summary": "Extracts ZYX Euler degrees from a rotation matrix, with a gimbal-lock fallback.",
+      "tags": [
+        "math",
+        "transform",
+        "utility"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:engine/ecs/transform.cpp:OnAttach",
+      "type": "function",
+      "name": "OnAttach",
+      "filePath": "engine/ecs/transform.cpp",
+      "lineRange": [
+        55,
+        57
+      ],
+      "summary": "Snapshots the deserialized local pose as the Return-to-Start state.",
+      "tags": [
+        "ecs-component",
+        "lifecycle",
+        "transform"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ecs/transform.cpp:OnReset",
+      "type": "function",
+      "name": "OnReset",
+      "filePath": "engine/ecs/transform.cpp",
+      "lineRange": [
+        59,
+        63
+      ],
+      "summary": "Restores local pose from the last snapshotted start state.",
+      "tags": [
+        "ecs-component",
+        "lifecycle",
+        "transform"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ecs/transform.cpp:SnapshotStartState",
+      "type": "function",
+      "name": "SnapshotStartState",
+      "filePath": "engine/ecs/transform.cpp",
+      "lineRange": [
+        65,
+        69
+      ],
+      "summary": "Copies current local pose into the start-state fields used by OnReset.",
+      "tags": [
+        "transform",
+        "lifecycle",
+        "ecs-component"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ecs/transform.cpp:GetLocalMatrix",
+      "type": "function",
+      "name": "GetLocalMatrix",
+      "filePath": "engine/ecs/transform.cpp",
+      "lineRange": [
+        71,
+        79
+      ],
+      "summary": "Builds S * Rzyx * T from local scale, Euler degrees, and position.",
+      "tags": [
+        "transform",
+        "math",
+        "ecs-component"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ecs/transform.cpp:GetWorldMatrix",
+      "type": "function",
+      "name": "GetWorldMatrix",
+      "filePath": "engine/ecs/transform.cpp",
+      "lineRange": [
+        81,
+        92
+      ],
+      "summary": "Composes local matrices up the parent Transform chain.",
+      "tags": [
+        "transform",
+        "math",
+        "scene-graph"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ecs/transform.cpp:GetWorldPosition",
+      "type": "function",
+      "name": "GetWorldPosition",
+      "filePath": "engine/ecs/transform.cpp",
+      "lineRange": [
+        94,
+        98
+      ],
+      "summary": "Reads world translation from the composed world matrix.",
+      "tags": [
+        "transform",
+        "math",
+        "ecs-component"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ecs/transform.cpp:GetWorldPositionRotationScale",
+      "type": "function",
+      "name": "GetWorldPositionRotationScale",
+      "filePath": "engine/ecs/transform.cpp",
+      "lineRange": [
+        100,
+        119
+      ],
+      "summary": "Returns world pose, skipping decompose when there is no parent Transform.",
+      "tags": [
+        "transform",
+        "math",
+        "ecs-component"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ecs/transform.cpp:SetFromLocalMatrix",
+      "type": "function",
+      "name": "SetFromLocalMatrix",
+      "filePath": "engine/ecs/transform.cpp",
+      "lineRange": [
+        121,
+        130
+      ],
+      "summary": "Decomposes a matrix back into local position, ZYX Euler, and scale.",
+      "tags": [
+        "transform",
+        "math",
+        "ecs-component"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ecs/transform.cpp:Serialize",
+      "type": "function",
+      "name": "Serialize",
+      "filePath": "engine/ecs/transform.cpp",
+      "lineRange": [
+        132,
+        144
+      ],
+      "summary": "Writes local position, rotation, and scale axes to JSON.",
+      "tags": [
+        "serialization",
+        "transform",
+        "ecs-component"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ecs/transform.cpp:Deserialize",
+      "type": "function",
+      "name": "Deserialize",
+      "filePath": "engine/ecs/transform.cpp",
+      "lineRange": [
+        146,
+        162
+      ],
+      "summary": "Restores local pose from JSON and snapshots that pose as start state.",
+      "tags": [
+        "serialization",
+        "transform",
+        "ecs-component"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:engine/ecs/transform.h:Transform",
+      "type": "class",
+      "name": "Transform",
+      "filePath": "engine/ecs/transform.h",
+      "lineRange": [
+        24,
+        66
+      ],
+      "summary": "SceneTransform component storing local pose and deriving world matrices from the parent GameObject chain.",
+      "tags": [
+        "transform",
+        "ecs-component",
+        "data-model"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:engine/ecs/visual_system.cpp:UploadObjectTree",
+      "type": "function",
+      "name": "UploadObjectTree",
+      "filePath": "engine/ecs/visual_system.cpp",
+      "lineRange": [
+        13,
+        23
+      ],
+      "summary": "Recursively uploads dirty skinned vertices for VisualComponents under a node.",
+      "tags": [
+        "rendering",
+        "skinning",
+        "scene-graph"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ecs/visual_system.cpp:VisualSystem_UploadSkinning",
+      "type": "function",
+      "name": "VisualSystem_UploadSkinning",
+      "filePath": "engine/ecs/visual_system.cpp",
+      "lineRange": [
+        27,
+        32
+      ],
+      "summary": "Uploads skinning for every scene-graph root, covering authored and runtime-spawned objects.",
+      "tags": [
+        "rendering",
+        "skinning",
+        "service"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/editor/camera_gizmo.cpp:VisitDraw",
+      "type": "function",
+      "name": "VisitDraw",
+      "filePath": "engine/editor/camera_gizmo.cpp",
+      "lineRange": [
+        22,
+        34
+      ],
+      "summary": "Walks a subtree and draws an enabled CameraComponent gizmo at each node.",
+      "tags": [
+        "editor",
+        "gizmo",
+        "scene-graph"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/editor/camera_gizmo.cpp:DrawCamera",
+      "type": "function",
+      "name": "DrawCamera",
+      "filePath": "engine/editor/camera_gizmo.cpp",
+      "lineRange": [
+        40,
+        93
+      ],
+      "summary": "Draws RGB axes and a FOV near-plane frustum for one camera Transform.",
+      "tags": [
+        "editor",
+        "gizmo",
+        "camera",
+        "debug-draw"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:engine/editor/camera_gizmo.cpp:DrawSceneCameras",
+      "type": "function",
+      "name": "DrawSceneCameras",
+      "filePath": "engine/editor/camera_gizmo.cpp",
+      "lineRange": [
+        95,
+        98
+      ],
+      "summary": "Draws camera gizmos for every enabled camera under the given scene roots.",
+      "tags": [
+        "editor",
+        "gizmo",
+        "camera"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/editor/editor_prefab_panel.cpp:PrefabPanel",
+      "type": "function",
+      "name": "PrefabPanel",
+      "filePath": "engine/editor/editor_prefab_panel.cpp",
+      "lineRange": [
+        23,
+        85
+      ],
+      "summary": "Renders a refreshable prefab grid, instantiates on click, and starts ASSET_PREFAB drag-drop.",
+      "tags": [
+        "editor",
+        "prefab",
+        "ui-panel",
+        "factory"
+      ],
+      "complexity": "moderate"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:engine/ecs/prefab_runtime.cpp",
+      "target": "function:engine/ecs/prefab_runtime.cpp:ExtractFromSceneGraph",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/prefab_runtime.cpp",
+      "target": "function:engine/ecs/prefab_runtime.cpp:IsInSceneGraph",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/prefab_runtime.cpp",
+      "target": "function:engine/ecs/prefab_runtime.cpp:PrefabRuntime_SetBeforeDestroyCallback",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/prefab_runtime.cpp",
+      "target": "function:engine/ecs/prefab_runtime.cpp:PrefabRuntime_SetBeforeDestroyCallback",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/prefab_runtime.cpp",
+      "target": "function:engine/ecs/prefab_runtime.cpp:PrefabRuntime_IsSpawnRoot",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/prefab_runtime.cpp",
+      "target": "function:engine/ecs/prefab_runtime.cpp:PrefabRuntime_IsSpawnRoot",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/prefab_runtime.cpp",
+      "target": "function:engine/ecs/prefab_runtime.cpp:PrefabRuntime_IsRuntimeSpawned",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/prefab_runtime.cpp",
+      "target": "function:engine/ecs/prefab_runtime.cpp:PrefabRuntime_IsRuntimeSpawned",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/prefab_runtime.cpp",
+      "target": "function:engine/ecs/prefab_runtime.cpp:PrefabRuntime_EnsureSpawnRoot",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/prefab_runtime.cpp",
+      "target": "function:engine/ecs/prefab_runtime.cpp:PrefabRuntime_EnsureSpawnRoot",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/prefab_runtime.cpp",
+      "target": "function:engine/ecs/prefab_runtime.cpp:PrefabRuntime_InstantiateImmediate",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/prefab_runtime.cpp",
+      "target": "function:engine/ecs/prefab_runtime.cpp:PrefabRuntime_Instantiate",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/prefab_runtime.cpp",
+      "target": "function:engine/ecs/prefab_runtime.cpp:PrefabRuntime_Instantiate",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/prefab_runtime.cpp",
+      "target": "function:engine/ecs/prefab_runtime.cpp:PrefabRuntime_FlushSpawned",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/prefab_runtime.cpp",
+      "target": "function:engine/ecs/prefab_runtime.cpp:PrefabRuntime_FlushSpawned",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/prefab_runtime.cpp",
+      "target": "function:engine/ecs/prefab_runtime.cpp:PrefabRuntime_Destroy",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/prefab_runtime.cpp",
+      "target": "function:engine/ecs/prefab_runtime.cpp:PrefabRuntime_Destroy",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/prefab_runtime.cpp",
+      "target": "function:engine/ecs/prefab_runtime.cpp:PrefabRuntime_DestroyAllSpawnedChildren",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/prefab_runtime.cpp",
+      "target": "function:engine/ecs/prefab_runtime.cpp:PrefabRuntime_DestroyAllSpawnedChildren",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/prefab_runtime.cpp",
+      "target": "function:engine/ecs/prefab_runtime.cpp:PrefabRuntime_ResetSessionState",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/prefab_runtime.cpp",
+      "target": "function:engine/ecs/prefab_runtime.cpp:PrefabRuntime_ResetSessionState",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/prefab_runtime.cpp",
+      "target": "function:engine/ecs/prefab_runtime.cpp:PrefabRuntime_FlushDestroyed",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/prefab_runtime.cpp",
+      "target": "function:engine/ecs/prefab_runtime.cpp:PrefabRuntime_FlushDestroyed",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/prefab_serializer.h",
+      "target": "class:engine/ecs/prefab_serializer.h:PrefabSerializer",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/prefab_serializer.h",
+      "target": "class:engine/ecs/prefab_serializer.h:PrefabSerializer",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/transform.cpp",
+      "target": "function:engine/ecs/transform.cpp:EulerZyxDegreesFromRotationMatrix",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/transform.cpp",
+      "target": "function:engine/ecs/transform.cpp:OnAttach",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/transform.cpp",
+      "target": "function:engine/ecs/transform.cpp:OnAttach",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/transform.cpp",
+      "target": "function:engine/ecs/transform.cpp:OnReset",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/transform.cpp",
+      "target": "function:engine/ecs/transform.cpp:OnReset",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/transform.cpp",
+      "target": "function:engine/ecs/transform.cpp:SnapshotStartState",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/transform.cpp",
+      "target": "function:engine/ecs/transform.cpp:SnapshotStartState",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/transform.cpp",
+      "target": "function:engine/ecs/transform.cpp:GetLocalMatrix",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/transform.cpp",
+      "target": "function:engine/ecs/transform.cpp:GetLocalMatrix",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/transform.cpp",
+      "target": "function:engine/ecs/transform.cpp:GetWorldMatrix",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/transform.cpp",
+      "target": "function:engine/ecs/transform.cpp:GetWorldMatrix",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/transform.cpp",
+      "target": "function:engine/ecs/transform.cpp:GetWorldPosition",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/transform.cpp",
+      "target": "function:engine/ecs/transform.cpp:GetWorldPosition",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/transform.cpp",
+      "target": "function:engine/ecs/transform.cpp:GetWorldPositionRotationScale",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/transform.cpp",
+      "target": "function:engine/ecs/transform.cpp:GetWorldPositionRotationScale",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/transform.cpp",
+      "target": "function:engine/ecs/transform.cpp:SetFromLocalMatrix",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/transform.cpp",
+      "target": "function:engine/ecs/transform.cpp:SetFromLocalMatrix",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/transform.cpp",
+      "target": "function:engine/ecs/transform.cpp:Serialize",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/transform.cpp",
+      "target": "function:engine/ecs/transform.cpp:Serialize",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/transform.cpp",
+      "target": "function:engine/ecs/transform.cpp:Deserialize",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/transform.cpp",
+      "target": "function:engine/ecs/transform.cpp:Deserialize",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/transform.h",
+      "target": "class:engine/ecs/transform.h:Transform",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/transform.h",
+      "target": "class:engine/ecs/transform.h:Transform",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/visual_system.cpp",
+      "target": "function:engine/ecs/visual_system.cpp:UploadObjectTree",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/visual_system.cpp",
+      "target": "function:engine/ecs/visual_system.cpp:VisualSystem_UploadSkinning",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/visual_system.cpp",
+      "target": "function:engine/ecs/visual_system.cpp:VisualSystem_UploadSkinning",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/editor/camera_gizmo.cpp",
+      "target": "function:engine/editor/camera_gizmo.cpp:VisitDraw",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/camera_gizmo.cpp",
+      "target": "function:engine/editor/camera_gizmo.cpp:DrawCamera",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/camera_gizmo.cpp",
+      "target": "function:engine/editor/camera_gizmo.cpp:DrawCamera",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/editor/camera_gizmo.cpp",
+      "target": "function:engine/editor/camera_gizmo.cpp:DrawSceneCameras",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/camera_gizmo.cpp",
+      "target": "function:engine/editor/camera_gizmo.cpp:DrawSceneCameras",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/editor/editor_prefab_panel.cpp",
+      "target": "function:engine/editor/editor_prefab_panel.cpp:PrefabPanel",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/editor_prefab_panel.cpp",
+      "target": "function:engine/editor/editor_prefab_panel.cpp:PrefabPanel",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/prefab_runtime.cpp",
+      "target": "file:engine/ecs/prefab_runtime.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/ecs/prefab_runtime.cpp",
+      "target": "file:engine/ecs/prefab_serializer.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/ecs/prefab_runtime.cpp",
+      "target": "file:engine/ecs/transform.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/ecs/prefab_runtime.cpp",
+      "target": "file:engine/physics/core/physics_system.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/ecs/prefab_runtime.cpp",
+      "target": "file:engine/scene/scene_loader.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/ecs/prefab_runtime.cpp",
+      "target": "file:engine/scene/scene_runtime.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/ecs/prefab_runtime.cpp",
+      "target": "file:engine/scripting/script_component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/ecs/prefab_runtime.h",
+      "target": "file:engine/ecs/game_object.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/ecs/prefab_serializer.h",
+      "target": "file:engine/ecs/game_object.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/ecs/transform.cpp",
+      "target": "file:engine/ecs/game_object.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/ecs/transform.cpp",
+      "target": "file:engine/ecs/transform.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/ecs/transform.h",
+      "target": "file:engine/ecs/component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/ecs/visual_system.cpp",
+      "target": "file:engine/ecs/game_object.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/ecs/visual_system.cpp",
+      "target": "file:engine/ecs/visual_component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/ecs/visual_system.cpp",
+      "target": "file:engine/ecs/visual_system.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/ecs/visual_system.cpp",
+      "target": "file:engine/scene/scene_loader.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/editor/camera_gizmo.cpp",
+      "target": "file:engine/debug_draw/debug_drawer.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/editor/camera_gizmo.cpp",
+      "target": "file:engine/ecs/camera_component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/editor/camera_gizmo.cpp",
+      "target": "file:engine/ecs/game_object.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/editor/camera_gizmo.cpp",
+      "target": "file:engine/ecs/transform.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/editor/camera_gizmo.cpp",
+      "target": "file:engine/editor/camera_gizmo.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/editor/editor_prefab_panel.cpp",
+      "target": "file:engine/ecs/game_object.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/editor/editor_prefab_panel.cpp",
+      "target": "file:engine/ecs/prefab_serializer.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/editor/editor_prefab_panel.cpp",
+      "target": "file:engine/editor/editor_prefab_panel.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:engine/ecs/prefab_runtime.cpp:PrefabRuntime_IsRuntimeSpawned",
+      "target": "function:engine/ecs/prefab_runtime.cpp:PrefabRuntime_IsSpawnRoot",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/ecs/prefab_runtime.cpp:PrefabRuntime_EnsureSpawnRoot",
+      "target": "function:engine/ecs/prefab_runtime.cpp:IsInSceneGraph",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/ecs/prefab_runtime.cpp:PrefabRuntime_EnsureSpawnRoot",
+      "target": "function:engine/ecs/prefab_runtime.cpp:PrefabRuntime_IsSpawnRoot",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/ecs/prefab_runtime.cpp:PrefabRuntime_InstantiateImmediate",
+      "target": "function:engine/ecs/prefab_runtime.cpp:PrefabRuntime_EnsureSpawnRoot",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/ecs/prefab_runtime.cpp:PrefabRuntime_InstantiateImmediate",
+      "target": "function:engine/ecs/prefab_serializer.cpp:LoadFromFile",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/ecs/prefab_runtime.cpp:PrefabRuntime_InstantiateImmediate",
+      "target": "function:engine/scene/scene_runtime.h:RegisterSubtree",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/ecs/prefab_runtime.cpp:PrefabRuntime_Instantiate",
+      "target": "function:engine/ecs/prefab_runtime.cpp:PrefabRuntime_InstantiateImmediate",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/ecs/prefab_runtime.cpp:PrefabRuntime_FlushSpawned",
+      "target": "function:engine/ecs/prefab_runtime.cpp:PrefabRuntime_InstantiateImmediate",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/ecs/prefab_runtime.cpp:PrefabRuntime_DestroyAllSpawnedChildren",
+      "target": "function:engine/ecs/prefab_runtime.cpp:PrefabRuntime_IsSpawnRoot",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/ecs/prefab_runtime.cpp:PrefabRuntime_DestroyAllSpawnedChildren",
+      "target": "function:engine/ecs/prefab_runtime.cpp:PrefabRuntime_Destroy",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/ecs/prefab_runtime.cpp:PrefabRuntime_DestroyAllSpawnedChildren",
+      "target": "function:engine/ecs/prefab_runtime.cpp:PrefabRuntime_FlushDestroyed",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/ecs/prefab_runtime.cpp:PrefabRuntime_FlushDestroyed",
+      "target": "function:engine/ecs/prefab_runtime.cpp:ExtractFromSceneGraph",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/ecs/prefab_runtime.cpp:PrefabRuntime_FlushDestroyed",
+      "target": "function:engine/scripting/script_component.h:Teardown",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/ecs/prefab_runtime.cpp:PrefabRuntime_FlushDestroyed",
+      "target": "function:engine/scene/scene_runtime.h:UnregisterSubtree",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/ecs/transform.cpp:OnAttach",
+      "target": "function:engine/ecs/transform.cpp:SnapshotStartState",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/ecs/transform.cpp:GetWorldMatrix",
+      "target": "function:engine/ecs/transform.cpp:GetLocalMatrix",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/ecs/transform.cpp:GetWorldPosition",
+      "target": "function:engine/ecs/transform.cpp:GetWorldMatrix",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/ecs/transform.cpp:GetWorldPositionRotationScale",
+      "target": "function:engine/ecs/transform.cpp:GetWorldMatrix",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/ecs/transform.cpp:GetWorldPositionRotationScale",
+      "target": "function:engine/ecs/transform.cpp:EulerZyxDegreesFromRotationMatrix",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/ecs/transform.cpp:SetFromLocalMatrix",
+      "target": "function:engine/ecs/transform.cpp:EulerZyxDegreesFromRotationMatrix",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/ecs/transform.cpp:Deserialize",
+      "target": "function:engine/ecs/transform.cpp:SnapshotStartState",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/ecs/visual_system.cpp:VisualSystem_UploadSkinning",
+      "target": "function:engine/ecs/visual_system.cpp:UploadObjectTree",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/editor/camera_gizmo.cpp:VisitDraw",
+      "target": "function:engine/editor/camera_gizmo.cpp:DrawCamera",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/editor/camera_gizmo.cpp:DrawSceneCameras",
+      "target": "function:engine/editor/camera_gizmo.cpp:VisitDraw",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/editor/editor_prefab_panel.cpp:PrefabPanel",
+      "target": "function:engine/ecs/prefab_serializer.cpp:LoadFromFile",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

@@ -1,0 +1,589 @@
+{
+  "nodes": [
+    {
+      "id": "file:shaders/VertexShader3D.hlsl",
+      "type": "file",
+      "name": "VertexShader3D.hlsl",
+      "filePath": "shaders/VertexShader3D.hlsl",
+      "summary": "Standard 3D vertex shader that projects object-space positions through WorldViewProjection and forwards lighting interpolants.",
+      "tags": ["shader", "vertex-shader", "3d", "entry-point"],
+      "complexity": "simple",
+      "languageNotes": "HLSL entry point includes ShaderCommon.hlsli for shared matrices and helpers."
+    },
+    {
+      "id": "file:shaders/VertexShader3DSkinned.hlsl",
+      "type": "file",
+      "name": "VertexShader3DSkinned.hlsl",
+      "filePath": "shaders/VertexShader3DSkinned.hlsl",
+      "summary": "Skinned 3D vertex shader that blends bone-weighted positions with SkinPositionOS before the WorldViewProjection transform.",
+      "tags": ["shader", "vertex-shader", "skinned", "3d"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:shaders/VertexShader3D_Outline.hlsl",
+      "type": "file",
+      "name": "VertexShader3D_Outline.hlsl",
+      "filePath": "shaders/VertexShader3D_Outline.hlsl",
+      "summary": "Outline-pass vertex shader that skins a mesh then extrudes clip-space XY along the projected normal for a screen-consistent toon silhouette.",
+      "tags": ["shader", "vertex-shader", "outline", "skinned"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:shaders/VertexShaderUnlit.hlsl",
+      "type": "file",
+      "name": "VertexShaderUnlit.hlsl",
+      "filePath": "shaders/VertexShaderUnlit.hlsl",
+      "summary": "Billboard and ground-decal vertex shader that builds camera-facing or XZ-aligned quads with rotation, atlas UVs, and per-instance color.",
+      "tags": ["shader", "vertex-shader", "billboard", "unlit"],
+      "complexity": "moderate",
+      "languageNotes": "Two constant buffers drive view-projection and per-billboard pose, size, rotation, and UV atlas scale."
+    },
+    {
+      "id": "file:src/app/rendering/WICTextureLoader11.cpp",
+      "type": "file",
+      "name": "WICTextureLoader11.cpp",
+      "filePath": "src/app/rendering/WICTextureLoader11.cpp",
+      "summary": "Microsoft WIC-to-D3D11 texture loader that converts pixel formats, optionally resizes to power-of-two, and creates textures with mip generation.",
+      "tags": ["texture-loader", "d3d11", "wic", "vendor"],
+      "complexity": "complex",
+      "languageNotes": "Vendor DirectXTK-style implementation with device-only and device-context overloads for auto mipmaps."
+    },
+    {
+      "id": "file:src/app/rendering/WICTextureLoader11.h",
+      "type": "file",
+      "name": "WICTextureLoader11.h",
+      "filePath": "src/app/rendering/WICTextureLoader11.h",
+      "summary": "Public DirectX WIC texture-loader API declaring memory and file overloads plus WIC_LOADER_FLAGS for sRGB, resize, and RGBA32 forcing.",
+      "tags": ["type-definition", "texture-loader", "d3d11", "api"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:tools/assemble_api_reference.py",
+      "type": "file",
+      "name": "assemble_api_reference.py",
+      "filePath": "tools/assemble_api_reference.py",
+      "summary": "Builds docs/ENGINE_API_REFERENCE.md by wrapping the extracted header catalog in a capability-overview intro template.",
+      "tags": ["documentation", "codegen", "utility", "entry-point"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:tools/build_fbx_stats.bat",
+      "type": "file",
+      "name": "build_fbx_stats.bat",
+      "filePath": "tools/build_fbx_stats.bat",
+      "summary": "Compiles tools/fbx_stats.cpp against the FBX SDK with MSVC and copies libfbxsdk.dll into tools/bin.",
+      "tags": ["build-system", "fbx", "script", "tooling"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:tools/extract_api_headers.py",
+      "type": "file",
+      "name": "extract_api_headers.py",
+      "filePath": "tools/extract_api_headers.py",
+      "summary": "Scans engine/ and src/app/ headers for declarations, enums, and macros, writes docs/_api_extract.md, then runs the API reference assembler.",
+      "tags": ["documentation", "codegen", "parsing", "entry-point"],
+      "complexity": "moderate",
+      "languageNotes": "Top-level script using regexes to scrape C++ declarations rather than a full parser."
+    },
+    {
+      "id": "file:tools/fbx_stats.cpp",
+      "type": "file",
+      "name": "fbx_stats.cpp",
+      "filePath": "tools/fbx_stats.cpp",
+      "summary": "Command-line FBX inspector that prints mesh, skin, and cluster counts and verifies Autodesk matrix-multiply conventions.",
+      "tags": ["entry-point", "fbx", "tooling", "diagnostics"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:tools/generate_default_sky_cubemap.py",
+      "type": "file",
+      "name": "generate_default_sky_cubemap.py",
+      "filePath": "tools/generate_default_sky_cubemap.py",
+      "summary": "Writes a 64-pixel RGBA DDS cubemap with simple sky gradients used as the engine default sky texture.",
+      "tags": ["codegen", "texture", "skybox", "entry-point"],
+      "complexity": "moderate",
+      "languageNotes": "Hand-packs a DDS header and six BGRA faces without an image library."
+    },
+    {
+      "id": "function:shaders/VertexShader3D.hlsl:main",
+      "type": "function",
+      "name": "main",
+      "filePath": "shaders/VertexShader3D.hlsl",
+      "lineRange": [6, 22],
+      "summary": "Projects object-space position by WorldViewProjection and forwards normal, UVs, vertex color, and object-space position.",
+      "tags": ["shader", "entry-point", "vertex-shader"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:shaders/VertexShader3DSkinned.hlsl:main",
+      "type": "function",
+      "name": "main",
+      "filePath": "shaders/VertexShader3DSkinned.hlsl",
+      "lineRange": [3, 22],
+      "summary": "Skins the vertex with blend indices and weights, then projects the result and forwards standard interpolants.",
+      "tags": ["shader", "entry-point", "skinned"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:shaders/VertexShader3D_Outline.hlsl:main",
+      "type": "function",
+      "name": "main",
+      "filePath": "shaders/VertexShader3D_Outline.hlsl",
+      "lineRange": [3, 23],
+      "summary": "Skins the vertex and offsets clip-space XY along the projected normal by OutlineWidth for a toon outline.",
+      "tags": ["shader", "entry-point", "outline"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:shaders/VertexShaderUnlit.hlsl:main",
+      "type": "function",
+      "name": "main",
+      "filePath": "shaders/VertexShaderUnlit.hlsl",
+      "lineRange": [38, 76],
+      "summary": "Builds camera-facing or ground-aligned billboard world positions, applies atlas UVs, and outputs clip position plus color.",
+      "tags": ["shader", "entry-point", "billboard"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/app/rendering/WICTextureLoader11.cpp:InitializeWICFactory",
+      "type": "function",
+      "name": "InitializeWICFactory",
+      "filePath": "src/app/rendering/WICTextureLoader11.cpp",
+      "lineRange": [192, 219],
+      "summary": "Creates a WIC Imaging Factory 2 instance, falling back to factory 1 when WIC2 is unavailable.",
+      "tags": ["wic", "factory", "initialization"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/app/rendering/WICTextureLoader11.cpp:WICToDXGI",
+      "type": "function",
+      "name": "WICToDXGI",
+      "filePath": "src/app/rendering/WICTextureLoader11.cpp",
+      "lineRange": [239, 254],
+      "summary": "Maps a WIC pixel-format GUID to the matching DXGI_FORMAT using the translation table.",
+      "tags": ["wic", "format-conversion", "utility"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/app/rendering/WICTextureLoader11.cpp:WICBitsPerPixel",
+      "type": "function",
+      "name": "WICBitsPerPixel",
+      "filePath": "src/app/rendering/WICTextureLoader11.cpp",
+      "lineRange": [257, 283],
+      "summary": "Queries WIC component info for the bits-per-pixel of a target pixel-format GUID.",
+      "tags": ["wic", "format-conversion", "utility"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/app/rendering/WICTextureLoader11.cpp:MakeSRGB",
+      "type": "function",
+      "name": "MakeSRGB",
+      "filePath": "src/app/rendering/WICTextureLoader11.cpp",
+      "lineRange": [287, 315],
+      "summary": "Converts a linear DXGI format to its sRGB equivalent when load flags request color-space tagging.",
+      "tags": ["srgb", "format-conversion", "utility"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/app/rendering/WICTextureLoader11.cpp:FitPowerOf2",
+      "type": "function",
+      "name": "FitPowerOf2",
+      "filePath": "src/app/rendering/WICTextureLoader11.cpp",
+      "lineRange": [319, 357],
+      "summary": "Shrinks texture dimensions to a power-of-two size that fits maxsize while preserving aspect ratio.",
+      "tags": ["resize", "utility", "texture-loader"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/app/rendering/WICTextureLoader11.cpp:CreateTextureFromWIC",
+      "type": "function",
+      "name": "CreateTextureFromWIC",
+      "filePath": "src/app/rendering/WICTextureLoader11.cpp",
+      "lineRange": [361, 763],
+      "summary": "Core loader that converts and scales a WIC frame, creates a D3D11 texture and SRV, and optionally generates mipmaps.",
+      "tags": ["texture-loader", "d3d11", "wic"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/app/rendering/WICTextureLoader11.cpp:SetDebugTextureInfo",
+      "type": "function",
+      "name": "SetDebugTextureInfo",
+      "filePath": "src/app/rendering/WICTextureLoader11.cpp",
+      "lineRange": [767, 809],
+      "summary": "Attaches the source filename as D3D debug object names on the created texture and shader-resource view.",
+      "tags": ["debug", "d3d11", "utility"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/app/rendering/WICTextureLoader11.cpp:CreateWICTextureFromMemory",
+      "type": "function",
+      "name": "CreateWICTextureFromMemory",
+      "filePath": "src/app/rendering/WICTextureLoader11.cpp",
+      "lineRange": [813, 828],
+      "summary": "Public wrapper that decodes an in-memory WIC image into a D3D11 texture by forwarding to the Ex overload.",
+      "tags": ["texture-loader", "api", "wic"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/app/rendering/WICTextureLoader11.cpp:CreateWICTextureFromMemoryEx",
+      "type": "function",
+      "name": "CreateWICTextureFromMemoryEx",
+      "filePath": "src/app/rendering/WICTextureLoader11.cpp",
+      "lineRange": [870, 955],
+      "summary": "Full memory-path WIC loader that streams bytes, decodes a frame, and creates a D3D11 texture with usage and load flags.",
+      "tags": ["texture-loader", "api", "wic"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/app/rendering/WICTextureLoader11.cpp:CreateWICTextureFromFile",
+      "type": "function",
+      "name": "CreateWICTextureFromFile",
+      "filePath": "src/app/rendering/WICTextureLoader11.cpp",
+      "lineRange": [958, 971],
+      "summary": "Public wrapper that loads a WIC image from disk into a D3D11 texture by forwarding to the Ex overload.",
+      "tags": ["texture-loader", "api", "wic"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/app/rendering/WICTextureLoader11.cpp:CreateWICTextureFromFileEx",
+      "type": "function",
+      "name": "CreateWICTextureFromFileEx",
+      "filePath": "src/app/rendering/WICTextureLoader11.cpp",
+      "lineRange": [1011, 1076],
+      "summary": "Full file-path WIC loader that decodes a filename via WIC and creates a D3D11 texture with usage and load flags.",
+      "tags": ["texture-loader", "api", "wic"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:tools/assemble_api_reference.py:header_count",
+      "type": "function",
+      "name": "header_count",
+      "filePath": "tools/assemble_api_reference.py",
+      "lineRange": [8, 9],
+      "summary": "Counts markdown header entries that start with ### ` in the extracted API catalog.",
+      "tags": ["utility", "documentation", "parsing"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:tools/fbx_stats.cpp:Walk",
+      "type": "function",
+      "name": "Walk",
+      "filePath": "tools/fbx_stats.cpp",
+      "lineRange": [8, 23],
+      "summary": "Recursively prints each FBX mesh node's polygon, control-point, skin, and cluster counts.",
+      "tags": ["fbx", "traversal", "diagnostics"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:tools/fbx_stats.cpp:Dump",
+      "type": "function",
+      "name": "Dump",
+      "filePath": "tools/fbx_stats.cpp",
+      "lineRange": [25, 64],
+      "summary": "Imports an FBX file, reports skinned-mesh totals, and walks the scene graph for per-mesh stats.",
+      "tags": ["fbx", "import", "diagnostics"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:tools/fbx_stats.cpp:TestMatrixConvention",
+      "type": "function",
+      "name": "TestMatrixConvention",
+      "filePath": "tools/fbx_stats.cpp",
+      "lineRange": [66, 105],
+      "summary": "Prints FBX MultT results against row-vector and column-vector interpretations to confirm matrix convention.",
+      "tags": ["fbx", "math", "diagnostics"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:tools/fbx_stats.cpp:main",
+      "type": "function",
+      "name": "main",
+      "filePath": "tools/fbx_stats.cpp",
+      "lineRange": [107, 117],
+      "summary": "Runs the matrix-convention test, then dumps statistics for each FBX path passed on the command line.",
+      "tags": ["entry-point", "cli", "fbx"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:tools/generate_default_sky_cubemap.py:face_pixels",
+      "type": "function",
+      "name": "face_pixels",
+      "filePath": "tools/generate_default_sky_cubemap.py",
+      "lineRange": [16, 38],
+      "summary": "Generates a 64x64 BGRA face with a simple sky gradient for one cubemap side.",
+      "tags": ["texture", "skybox", "codegen"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:tools/generate_default_sky_cubemap.py:write_dds",
+      "type": "function",
+      "name": "write_dds",
+      "filePath": "tools/generate_default_sky_cubemap.py",
+      "lineRange": [41, 65],
+      "summary": "Packs six cubemap faces into a DDS header and writes the binary file to disk.",
+      "tags": ["dds", "serialization", "skybox"],
+      "complexity": "moderate"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:src/app/rendering/WICTextureLoader11.cpp",
+      "target": "file:src/app/rendering/WICTextureLoader11.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:shaders/VertexShader3D.hlsl",
+      "target": "function:shaders/VertexShader3D.hlsl:main",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:shaders/VertexShader3DSkinned.hlsl",
+      "target": "function:shaders/VertexShader3DSkinned.hlsl:main",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:shaders/VertexShader3D_Outline.hlsl",
+      "target": "function:shaders/VertexShader3D_Outline.hlsl:main",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:shaders/VertexShaderUnlit.hlsl",
+      "target": "function:shaders/VertexShaderUnlit.hlsl:main",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/app/rendering/WICTextureLoader11.cpp",
+      "target": "function:src/app/rendering/WICTextureLoader11.cpp:InitializeWICFactory",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/app/rendering/WICTextureLoader11.cpp",
+      "target": "function:src/app/rendering/WICTextureLoader11.cpp:WICToDXGI",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/app/rendering/WICTextureLoader11.cpp",
+      "target": "function:src/app/rendering/WICTextureLoader11.cpp:WICBitsPerPixel",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/app/rendering/WICTextureLoader11.cpp",
+      "target": "function:src/app/rendering/WICTextureLoader11.cpp:MakeSRGB",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/app/rendering/WICTextureLoader11.cpp",
+      "target": "function:src/app/rendering/WICTextureLoader11.cpp:FitPowerOf2",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/app/rendering/WICTextureLoader11.cpp",
+      "target": "function:src/app/rendering/WICTextureLoader11.cpp:CreateTextureFromWIC",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/app/rendering/WICTextureLoader11.cpp",
+      "target": "function:src/app/rendering/WICTextureLoader11.cpp:SetDebugTextureInfo",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/app/rendering/WICTextureLoader11.cpp",
+      "target": "function:src/app/rendering/WICTextureLoader11.cpp:CreateWICTextureFromMemory",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/app/rendering/WICTextureLoader11.cpp",
+      "target": "function:src/app/rendering/WICTextureLoader11.cpp:CreateWICTextureFromMemoryEx",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/app/rendering/WICTextureLoader11.cpp",
+      "target": "function:src/app/rendering/WICTextureLoader11.cpp:CreateWICTextureFromFile",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/app/rendering/WICTextureLoader11.cpp",
+      "target": "function:src/app/rendering/WICTextureLoader11.cpp:CreateWICTextureFromFileEx",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:tools/assemble_api_reference.py",
+      "target": "function:tools/assemble_api_reference.py:header_count",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:tools/fbx_stats.cpp",
+      "target": "function:tools/fbx_stats.cpp:Walk",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:tools/fbx_stats.cpp",
+      "target": "function:tools/fbx_stats.cpp:Dump",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:tools/fbx_stats.cpp",
+      "target": "function:tools/fbx_stats.cpp:TestMatrixConvention",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:tools/fbx_stats.cpp",
+      "target": "function:tools/fbx_stats.cpp:main",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:tools/generate_default_sky_cubemap.py",
+      "target": "function:tools/generate_default_sky_cubemap.py:face_pixels",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:tools/generate_default_sky_cubemap.py",
+      "target": "function:tools/generate_default_sky_cubemap.py:write_dds",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:shaders/VertexShader3D.hlsl",
+      "target": "function:shaders/VertexShader3D.hlsl:main",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:shaders/VertexShader3DSkinned.hlsl",
+      "target": "function:shaders/VertexShader3DSkinned.hlsl:main",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:shaders/VertexShader3D_Outline.hlsl",
+      "target": "function:shaders/VertexShader3D_Outline.hlsl:main",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:shaders/VertexShaderUnlit.hlsl",
+      "target": "function:shaders/VertexShaderUnlit.hlsl:main",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/rendering/WICTextureLoader11.cpp",
+      "target": "function:src/app/rendering/WICTextureLoader11.cpp:CreateWICTextureFromMemory",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/rendering/WICTextureLoader11.cpp",
+      "target": "function:src/app/rendering/WICTextureLoader11.cpp:CreateWICTextureFromMemoryEx",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/rendering/WICTextureLoader11.cpp",
+      "target": "function:src/app/rendering/WICTextureLoader11.cpp:CreateWICTextureFromFile",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/rendering/WICTextureLoader11.cpp",
+      "target": "function:src/app/rendering/WICTextureLoader11.cpp:CreateWICTextureFromFileEx",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:tools/assemble_api_reference.py",
+      "target": "function:tools/assemble_api_reference.py:header_count",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:tools/fbx_stats.cpp",
+      "target": "function:tools/fbx_stats.cpp:main",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:tools/generate_default_sky_cubemap.py",
+      "target": "function:tools/generate_default_sky_cubemap.py:face_pixels",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:tools/generate_default_sky_cubemap.py",
+      "target": "function:tools/generate_default_sky_cubemap.py:write_dds",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:tools/extract_api_headers.py",
+      "target": "file:tools/assemble_api_reference.py",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:tools/build_fbx_stats.bat",
+      "target": "file:tools/fbx_stats.cpp",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    }
+  ]
+}

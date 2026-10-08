@@ -1,0 +1,3750 @@
+{
+  "nodes": [
+    {
+      "id": "file:engine/core/engine_gui.cpp",
+      "type": "file",
+      "name": "engine_gui.cpp",
+      "filePath": "engine/core/engine_gui.cpp",
+      "summary": "ImGui editor shell that owns scene hierarchy, inspector, play-mode sessions, project workflows, and viewport picking for Ivy Engine.",
+      "tags": [
+        "entry-point",
+        "editor",
+        "imgui",
+        "scene-graph"
+      ],
+      "complexity": "complex",
+      "languageNotes": "Single large C++ translation unit: public EngineGUI_* API plus internal ImGui windows, ray picking, and play-session teardown."
+    },
+    {
+      "id": "file:engine/core/game_object.h",
+      "type": "file",
+      "name": "game_object.h",
+      "filePath": "engine/core/game_object.h",
+      "summary": "Compatibility header that forwards to the ECS GameObject definition so app-layer code can include a core path.",
+      "tags": [
+        "barrel",
+        "data-model",
+        "compatibility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:engine/ecs/collider_component.cpp",
+      "type": "file",
+      "name": "collider_component.cpp",
+      "filePath": "engine/ecs/collider_component.cpp",
+      "summary": "Applies serialized collider shapes onto a GameObject, creating physics colliders from boxes, spheres, capsules, cylinders, or cached mesh data.",
+      "tags": [
+        "ecs",
+        "physics",
+        "serialization",
+        "component"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:engine/ecs/model_asset_cache.cpp",
+      "type": "file",
+      "name": "model_asset_cache.cpp",
+      "filePath": "engine/ecs/model_asset_cache.cpp",
+      "summary": "Singleton cache that indexes rom/model assets and lazily loads shared Model3D GPU resources for visuals and colliders.",
+      "tags": [
+        "cache",
+        "asset-pipeline",
+        "singleton",
+        "service"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:engine/ecs/model_asset_cache.h",
+      "type": "file",
+      "name": "model_asset_cache.h",
+      "filePath": "engine/ecs/model_asset_cache.h",
+      "summary": "Declares ModelAssetCache, the shared FBX/model directory index and GPU model lookup used by VisualComponent and the editor.",
+      "tags": [
+        "type-definition",
+        "cache",
+        "ecs",
+        "asset-pipeline"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:SyncImGuiInputAcceptance",
+      "type": "function",
+      "name": "SyncImGuiInputAcceptance",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        116,
+        134
+      ],
+      "summary": "Enables or blocks ImGui input queues when the editor should not consume mouse and keyboard events.",
+      "tags": [
+        "ui",
+        "editor",
+        "function"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:SaveUiPrefs",
+      "type": "function",
+      "name": "SaveUiPrefs",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        197,
+        209
+      ],
+      "summary": "Writes editor UI zoom and related prefs to the on-disk ui_prefs JSON file.",
+      "tags": [
+        "editor",
+        "function",
+        "engine"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:LoadUiPrefs",
+      "type": "function",
+      "name": "LoadUiPrefs",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        211,
+        227
+      ],
+      "summary": "Reads saved UI zoom prefs and applies a valid zoom percent at editor startup.",
+      "tags": [
+        "editor",
+        "assets",
+        "function"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:ApplyUiZoom",
+      "type": "function",
+      "name": "ApplyUiZoom",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        229,
+        245
+      ],
+      "summary": "Scales ImGui style sizes from a zoom percent so the editor UI stays readable.",
+      "tags": [
+        "editor",
+        "function",
+        "engine"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:EngineGUI_IsSceneDirty",
+      "type": "function",
+      "name": "EngineGUI_IsSceneDirty",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        272,
+        272
+      ],
+      "summary": "Returns whether the open scene has unsaved editor changes.",
+      "tags": [
+        "editor",
+        "function",
+        "engine"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:EngineGUI_MarkSceneDirty",
+      "type": "function",
+      "name": "EngineGUI_MarkSceneDirty",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        273,
+        273
+      ],
+      "summary": "Marks the open scene dirty so save prompts and title-bar state update.",
+      "tags": [
+        "editor",
+        "function",
+        "engine"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:EngineGUI_ClearSceneDirty",
+      "type": "function",
+      "name": "EngineGUI_ClearSceneDirty",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        274,
+        274
+      ],
+      "summary": "Clears the unsaved-scene flag after a successful save or discard.",
+      "tags": [
+        "editor",
+        "function",
+        "engine"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:EngineGUI_QueueUnsavedLoad",
+      "type": "function",
+      "name": "EngineGUI_QueueUnsavedLoad",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        294,
+        299
+      ],
+      "summary": "Queues a scene load that must first confirm discarding unsaved edits.",
+      "tags": [
+        "editor",
+        "assets",
+        "function"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:EngineGUI_QueueUnsavedExit",
+      "type": "function",
+      "name": "EngineGUI_QueueUnsavedExit",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        301,
+        305
+      ],
+      "summary": "Queues editor exit so an unsaved-changes dialog can run first.",
+      "tags": [
+        "editor",
+        "function",
+        "engine"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:RemapNodeTagsAfterDelete",
+      "type": "function",
+      "name": "RemapNodeTagsAfterDelete",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        328,
+        352
+      ],
+      "summary": "Rewrites tag IDs on a subtree after a node is deleted so remaining tags stay consistent.",
+      "tags": [
+        "editor",
+        "function",
+        "engine"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:NormalizeSceneFileName",
+      "type": "function",
+      "name": "NormalizeSceneFileName",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        375,
+        388
+      ],
+      "summary": "Normalizes a scene name into a safe filename used under rom/scene.",
+      "tags": [
+        "editor",
+        "filesystem",
+        "function"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:EngineGUI_IsSceneGraphObject",
+      "type": "function",
+      "name": "EngineGUI_IsSceneGraphObject",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        390,
+        392
+      ],
+      "summary": "Returns true when a GameObject is a real scene-graph node rather than an editor helper.",
+      "tags": [
+        "editor",
+        "assets",
+        "function"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:CreateModelGameObject",
+      "type": "function",
+      "name": "CreateModelGameObject",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        394,
+        403
+      ],
+      "summary": "Spawns a GameObject with a VisualComponent bound to the named cached model.",
+      "tags": [
+        "editor",
+        "assets",
+        "lifecycle",
+        "function"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:ComputeEditorLayout",
+      "type": "function",
+      "name": "ComputeEditorLayout",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        413,
+        443
+      ],
+      "summary": "Computes pane rectangles for hierarchy, viewport, and inspector from the current window size.",
+      "tags": [
+        "editor",
+        "function",
+        "engine"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:SpawnRootGameObject",
+      "type": "function",
+      "name": "SpawnRootGameObject",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        496,
+        505
+      ],
+      "summary": "Inserts a new root node into the editor scene graph and marks the scene dirty.",
+      "tags": [
+        "editor",
+        "assets",
+        "lifecycle",
+        "function"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:SpawnChildGameObject",
+      "type": "function",
+      "name": "SpawnChildGameObject",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        507,
+        518
+      ],
+      "summary": "Parents a newly created GameObject under the selected node.",
+      "tags": [
+        "editor",
+        "assets",
+        "lifecycle",
+        "function"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:SpawnDuplicate",
+      "type": "function",
+      "name": "SpawnDuplicate",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        524,
+        544
+      ],
+      "summary": "Deep-duplicates a GameObject (and children) into the scene with unique names.",
+      "tags": [
+        "editor",
+        "lifecycle",
+        "function"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:DeleteGameObject",
+      "type": "function",
+      "name": "DeleteGameObject",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        546,
+        569
+      ],
+      "summary": "Removes a node from the scene, remaps tags, and updates selection and undo state.",
+      "tags": [
+        "editor",
+        "assets",
+        "function"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:ClearScene",
+      "type": "function",
+      "name": "ClearScene",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        571,
+        580
+      ],
+      "summary": "Destroys all editor scene roots and resets selection for a new or loaded scene.",
+      "tags": [
+        "editor",
+        "function",
+        "engine"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:ScrollValue",
+      "type": "function",
+      "name": "ScrollValue",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        583,
+        592
+      ],
+      "summary": "Applies mouse-wheel scrolling to a numeric inspector field.",
+      "tags": [
+        "editor",
+        "function",
+        "engine"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:AcceptAssetPathDrop",
+      "type": "function",
+      "name": "AcceptAssetPathDrop",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        613,
+        626
+      ],
+      "summary": "Accepts a dragged asset path if its extension is in the allowed list.",
+      "tags": [
+        "editor",
+        "assets",
+        "filesystem",
+        "function"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:DrawScriptPropertyField",
+      "type": "function",
+      "name": "DrawScriptPropertyField",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        628,
+        669
+      ],
+      "summary": "Draws an ImGui field for one reflected GameScripts property on the selected node.",
+      "tags": [
+        "ui",
+        "editor",
+        "function"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:DrawPostFxShowcaseWindow",
+      "type": "function",
+      "name": "DrawPostFxShowcaseWindow",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        671,
+        770
+      ],
+      "summary": "ImGui window for toggling and previewing post-process showcase effects.",
+      "tags": [
+        "ui",
+        "editor",
+        "function"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:DrawShortcutHintsWindow",
+      "type": "function",
+      "name": "DrawShortcutHintsWindow",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        772,
+        826
+      ],
+      "summary": "ImGui cheatsheet of editor keyboard shortcuts.",
+      "tags": [
+        "ui",
+        "editor",
+        "function"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:DrawRenderingSettingsWindow",
+      "type": "function",
+      "name": "DrawRenderingSettingsWindow",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        828,
+        931
+      ],
+      "summary": "ImGui window that edits skybox, fog, default shader, and shadow-quality render settings.",
+      "tags": [
+        "ui",
+        "editor",
+        "function"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:ApplyProjectSessionState",
+      "type": "function",
+      "name": "ApplyProjectSessionState",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        943,
+        967
+      ],
+      "summary": "Applies opened-project paths, zoom, and audio/physics settings to the running editor session.",
+      "tags": [
+        "editor",
+        "function",
+        "engine"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:SwitchToOpenedProject",
+      "type": "function",
+      "name": "SwitchToOpenedProject",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        969,
+        988
+      ],
+      "summary": "Switches the editor onto a newly opened ProjectManager root and refreshes asset indexes.",
+      "tags": [
+        "editor",
+        "function",
+        "engine"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:RequestOpenProject",
+      "type": "function",
+      "name": "RequestOpenProject",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        990,
+        1009
+      ],
+      "summary": "Begins the open-project flow for a chosen folder path.",
+      "tags": [
+        "editor",
+        "function",
+        "engine"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:CloseOpenedProject",
+      "type": "function",
+      "name": "CloseOpenedProject",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        1011,
+        1031
+      ],
+      "summary": "Closes the current content project and returns editor state to the start screen.",
+      "tags": [
+        "editor",
+        "function",
+        "engine"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:RequestCloseProject",
+      "type": "function",
+      "name": "RequestCloseProject",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        1033,
+        1046
+      ],
+      "summary": "Requests project close, prompting if the scene is dirty.",
+      "tags": [
+        "editor",
+        "function",
+        "engine"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:OpenBuildPreflight",
+      "type": "function",
+      "name": "OpenBuildPreflight",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        1059,
+        1069
+      ],
+      "summary": "Opens the playable-package build dialog with destination and configuration prefs.",
+      "tags": [
+        "editor",
+        "lighting",
+        "packaging",
+        "function"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:RequestBuildCurrentProject",
+      "type": "function",
+      "name": "RequestBuildCurrentProject",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        1071,
+        1081
+      ],
+      "summary": "Starts an async PlayablePackage build of the open content project.",
+      "tags": [
+        "editor",
+        "packaging",
+        "function"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:BeginNewProjectFlow",
+      "type": "function",
+      "name": "BeginNewProjectFlow",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        1083,
+        1092
+      ],
+      "summary": "Starts the new-project folder picker and name dialog.",
+      "tags": [
+        "editor",
+        "function",
+        "engine"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:SaveProject",
+      "type": "function",
+      "name": "SaveProject",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        1094,
+        1122
+      ],
+      "summary": "Writes project.json and the current scene so the content project stays in sync.",
+      "tags": [
+        "editor",
+        "function",
+        "engine"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:ConsumePendingFolderPick",
+      "type": "function",
+      "name": "ConsumePendingFolderPick",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        1124,
+        1141
+      ],
+      "summary": "Applies a completed Win32 folder-picker result to open/create-project flows.",
+      "tags": [
+        "editor",
+        "picking",
+        "filesystem",
+        "function"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:DrawEngineStartScreen",
+      "type": "function",
+      "name": "DrawEngineStartScreen",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        1162,
+        1257
+      ],
+      "summary": "Renders the no-project start screen with recent projects and new/open actions.",
+      "tags": [
+        "ui",
+        "editor",
+        "function"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:DrawEditorMenuBar",
+      "type": "function",
+      "name": "DrawEditorMenuBar",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        1259,
+        1428
+      ],
+      "summary": "Draws the File/Edit/Play menu bar that queues editor actions for the next frame.",
+      "tags": [
+        "ui",
+        "editor",
+        "function"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:ExecutePendingEditorAction",
+      "type": "function",
+      "name": "ExecutePendingEditorAction",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        1430,
+        1501
+      ],
+      "summary": "Dispatches the queued menu action (save, play, build, project switch) after the ImGui frame.",
+      "tags": [
+        "editor",
+        "function",
+        "engine"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:DrawEditorPopups",
+      "type": "function",
+      "name": "DrawEditorPopups",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        1503,
+        1996
+      ],
+      "summary": "Draws modal dialogs for unsaved changes, new/open project, build preflight, and scene name prompts.",
+      "tags": [
+        "ui",
+        "editor",
+        "function"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:SaveSceneToFile",
+      "type": "function",
+      "name": "SaveSceneToFile",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        1998,
+        2014
+      ],
+      "summary": "Serializes the editor scene graph to a rom/scene JSON file.",
+      "tags": [
+        "editor",
+        "filesystem",
+        "function"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:NewScene",
+      "type": "function",
+      "name": "NewScene",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        2023,
+        2034
+      ],
+      "summary": "Clears the current scene and starts an empty untitled scene.",
+      "tags": [
+        "editor",
+        "function",
+        "engine"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:TeardownPlaySession",
+      "type": "function",
+      "name": "TeardownPlaySession",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        2036,
+        2044
+      ],
+      "summary": "Stops play mode, restores editor runtime state, and optionally resets selection.",
+      "tags": [
+        "editor",
+        "runtime",
+        "function"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:SoftStopPlayForSceneLoad",
+      "type": "function",
+      "name": "SoftStopPlayForSceneLoad",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        2049,
+        2058
+      ],
+      "summary": "Stops play without a full editor reset so a pending scene load can proceed.",
+      "tags": [
+        "editor",
+        "assets",
+        "runtime",
+        "function"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:ReturnToStart",
+      "type": "function",
+      "name": "ReturnToStart",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        2060,
+        2071
+      ],
+      "summary": "Leaves the editor session and returns to the project start screen.",
+      "tags": [
+        "editor",
+        "function",
+        "engine"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:HasThirdPersonPlayerNode",
+      "type": "function",
+      "name": "HasThirdPersonPlayerNode",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        2073,
+        2082
+      ],
+      "summary": "Walks a subtree looking for a third-person player script/node.",
+      "tags": [
+        "editor",
+        "runtime",
+        "function"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:HasCameraComponentNode",
+      "type": "function",
+      "name": "HasCameraComponentNode",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        2084,
+        2093
+      ],
+      "summary": "Walks a subtree looking for a CameraComponent.",
+      "tags": [
+        "editor",
+        "function",
+        "engine"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:EngineGUI_IsDebugCameraPlayInputActive",
+      "type": "function",
+      "name": "EngineGUI_IsDebugCameraPlayInputActive",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        2117,
+        2119
+      ],
+      "summary": "True when play mode is using the debug fly camera instead of a scene camera.",
+      "tags": [
+        "editor",
+        "runtime",
+        "function"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:StartPlay",
+      "type": "function",
+      "name": "StartPlay",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        2121,
+        2156
+      ],
+      "summary": "Enters play mode: syncs SceneRuntime, starts scripts, and chooses debug vs scene camera.",
+      "tags": [
+        "editor",
+        "runtime",
+        "function"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:EngineGUI_QueueSceneLoad",
+      "type": "function",
+      "name": "EngineGUI_QueueSceneLoad",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        2158,
+        2164
+      ],
+      "summary": "Queues a scene filename to load after the current frame and any preload.",
+      "tags": [
+        "editor",
+        "assets",
+        "function"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:EngineGUI_BeginSceneAssetPreload",
+      "type": "function",
+      "name": "EngineGUI_BeginSceneAssetPreload",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        2166,
+        2169
+      ],
+      "summary": "Starts time-sliced model/animation warmup for the pending scene load.",
+      "tags": [
+        "editor",
+        "assets",
+        "function"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:EngineGUI_FlushSceneLoadPending",
+      "type": "function",
+      "name": "EngineGUI_FlushSceneLoadPending",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        2171,
+        2213
+      ],
+      "summary": "Finishes preload and actually loads the queued scene into the editor graph.",
+      "tags": [
+        "editor",
+        "assets",
+        "function"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:EngineGUI_TickSceneAssetPreload",
+      "type": "function",
+      "name": "EngineGUI_TickSceneAssetPreload",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        2215,
+        2226
+      ],
+      "summary": "Advances one preload step and returns whether warmup is still running.",
+      "tags": [
+        "editor",
+        "assets",
+        "runtime",
+        "function"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:EngineGUI_IsSceneAssetPreloadActive",
+      "type": "function",
+      "name": "EngineGUI_IsSceneAssetPreloadActive",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        2228,
+        2230
+      ],
+      "summary": "Returns whether a scene asset preload is currently in progress.",
+      "tags": [
+        "editor",
+        "assets",
+        "function"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:EngineGUI_Initialize",
+      "type": "function",
+      "name": "EngineGUI_Initialize",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        2238,
+        2295
+      ],
+      "summary": "Creates ImGui, gizmos, asset indexes, and editor session state after D3D11 is ready.",
+      "tags": [
+        "editor",
+        "lifecycle",
+        "function"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:EngineGUI_Finalize",
+      "type": "function",
+      "name": "EngineGUI_Finalize",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        2297,
+        2316
+      ],
+      "summary": "Shuts down ImGui, watchers, and editor subsystems on engine exit.",
+      "tags": [
+        "editor",
+        "lifecycle",
+        "function"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:EngineGUI_IsPlaying",
+      "type": "function",
+      "name": "EngineGUI_IsPlaying",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        2318,
+        2318
+      ],
+      "summary": "Returns whether the editor is currently in play mode.",
+      "tags": [
+        "editor",
+        "runtime",
+        "function"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:EngineGUI_PreferPlayVisuals",
+      "type": "function",
+      "name": "EngineGUI_PreferPlayVisuals",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        2319,
+        2319
+      ],
+      "summary": "True when draw paths should use play-mode (real) models instead of editor proxies.",
+      "tags": [
+        "editor",
+        "runtime",
+        "function"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:EngineGUI_IsOnStart",
+      "type": "function",
+      "name": "EngineGUI_IsOnStart",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        2320,
+        2320
+      ],
+      "summary": "True while the start screen is showing and no project session is active.",
+      "tags": [
+        "editor",
+        "function",
+        "engine"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:EngineGUI_StartPlay",
+      "type": "function",
+      "name": "EngineGUI_StartPlay",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        2321,
+        2321
+      ],
+      "summary": "Public wrapper that starts a play session from menus or shortcuts.",
+      "tags": [
+        "editor",
+        "runtime",
+        "function"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:EngineGUI_StopPlay",
+      "type": "function",
+      "name": "EngineGUI_StopPlay",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        2322,
+        2322
+      ],
+      "summary": "Public wrapper that stops play and restores the editor session.",
+      "tags": [
+        "editor",
+        "runtime",
+        "function"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:EngineGUI_GetCameraMode",
+      "type": "function",
+      "name": "EngineGUI_GetCameraMode",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        2323,
+        2323
+      ],
+      "summary": "Returns the current editor/play camera mode enum.",
+      "tags": [
+        "editor",
+        "function",
+        "engine"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:EngineGUI_SetCameraMode",
+      "type": "function",
+      "name": "EngineGUI_SetCameraMode",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        2324,
+        2324
+      ],
+      "summary": "Sets the editor/play camera mode (scene camera vs debug camera).",
+      "tags": [
+        "editor",
+        "function",
+        "engine"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:EngineGUI_SetActiveCameraNodeName",
+      "type": "function",
+      "name": "EngineGUI_SetActiveCameraNodeName",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        2326,
+        2326
+      ],
+      "summary": "Pins play-mode rendering to a named CameraComponent node.",
+      "tags": [
+        "editor",
+        "function",
+        "engine"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:EngineGUI_SetEnabled",
+      "type": "function",
+      "name": "EngineGUI_SetEnabled",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        2327,
+        2327
+      ],
+      "summary": "Enables or disables the entire ImGui editor overlay.",
+      "tags": [
+        "editor",
+        "function",
+        "engine"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:EngineGUI_ResolveStartupScenePath",
+      "type": "function",
+      "name": "EngineGUI_ResolveStartupScenePath",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        2330,
+        2332
+      ],
+      "summary": "Resolves the project default/last-opened scene path for editor boot.",
+      "tags": [
+        "editor",
+        "filesystem",
+        "function"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:EngineGUI_IsUiOverlayVisible",
+      "type": "function",
+      "name": "EngineGUI_IsUiOverlayVisible",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        2334,
+        2334
+      ],
+      "summary": "Returns whether in-game UI overlay editing is visible.",
+      "tags": [
+        "editor",
+        "function",
+        "engine"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:EngineGUI_SetUiOverlayVisible",
+      "type": "function",
+      "name": "EngineGUI_SetUiOverlayVisible",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        2335,
+        2335
+      ],
+      "summary": "Shows or hides the UI overlay editor layer.",
+      "tags": [
+        "editor",
+        "function",
+        "engine"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:EngineGUI_GetEditMode",
+      "type": "function",
+      "name": "EngineGUI_GetEditMode",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        2337,
+        2337
+      ],
+      "summary": "Returns the current editor edit mode (scene vs UI).",
+      "tags": [
+        "editor",
+        "function",
+        "engine"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:EngineGUI_SetEditMode",
+      "type": "function",
+      "name": "EngineGUI_SetEditMode",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        2338,
+        2342
+      ],
+      "summary": "Switches between scene-object editing and UI-canvas editing.",
+      "tags": [
+        "editor",
+        "function",
+        "engine"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:EngineGUI_IsUiEditMode",
+      "type": "function",
+      "name": "EngineGUI_IsUiEditMode",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        2343,
+        2343
+      ],
+      "summary": "True when the editor is editing UI canvas elements instead of 3D nodes.",
+      "tags": [
+        "editor",
+        "function",
+        "engine"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:EngineGUI_GetGameViewportRect",
+      "type": "function",
+      "name": "EngineGUI_GetGameViewportRect",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        2345,
+        2362
+      ],
+      "summary": "Returns the game viewport rectangle inside the editor layout for picking and rendering.",
+      "tags": [
+        "editor",
+        "function",
+        "engine"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:EngineGUI_MouseToViewportLocal",
+      "type": "function",
+      "name": "EngineGUI_MouseToViewportLocal",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        2364,
+        2374
+      ],
+      "summary": "Converts a screen mouse position into viewport-local coordinates.",
+      "tags": [
+        "editor",
+        "function",
+        "engine"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:RaySphere",
+      "type": "function",
+      "name": "RaySphere",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        2378,
+        2393
+      ],
+      "summary": "Ray-sphere intersection used for light/camera gizmo picking.",
+      "tags": [
+        "editor",
+        "picking",
+        "function"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:RayIntersectsTriangle",
+      "type": "function",
+      "name": "RayIntersectsTriangle",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        2396,
+        2433
+      ],
+      "summary": "Möller–Trumbore ray-triangle test for mesh picking.",
+      "tags": [
+        "editor",
+        "picking",
+        "function"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:RayPickModelMesh",
+      "type": "function",
+      "name": "RayPickModelMesh",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        2435,
+        2473
+      ],
+      "summary": "Transforms a model's CPU vertices and finds the closest ray hit on its triangles.",
+      "tags": [
+        "editor",
+        "picking",
+        "function"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:BuildPickRay",
+      "type": "function",
+      "name": "BuildPickRay",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        2475,
+        2496
+      ],
+      "summary": "Builds a world-space pick ray from viewport mouse coordinates and the active camera.",
+      "tags": [
+        "editor",
+        "picking",
+        "packaging",
+        "function"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:DrawMeshWireframeHighlight",
+      "type": "function",
+      "name": "DrawMeshWireframeHighlight",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        2500,
+        2530
+      ],
+      "summary": "Draws a wireframe overlay of a picked mesh via DebugDrawer.",
+      "tags": [
+        "ui",
+        "editor",
+        "lighting",
+        "function"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:DrawSelectionColliderHighlight",
+      "type": "function",
+      "name": "DrawSelectionColliderHighlight",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        2545,
+        2597
+      ],
+      "summary": "Draws the selected node's collider volume in the viewport.",
+      "tags": [
+        "ui",
+        "editor",
+        "lighting",
+        "function"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:DrawSelectionHighlight",
+      "type": "function",
+      "name": "DrawSelectionHighlight",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        2609,
+        2643
+      ],
+      "summary": "Draws mesh/collider/light highlights for the current editor selection.",
+      "tags": [
+        "ui",
+        "editor",
+        "lighting",
+        "function"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:EngineGUI_DrawSelectionIndicator",
+      "type": "function",
+      "name": "EngineGUI_DrawSelectionIndicator",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        2645,
+        2647
+      ],
+      "summary": "Public hook that draws the current selection highlight during the editor frame.",
+      "tags": [
+        "ui",
+        "editor",
+        "function"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:FocusSelectedObjectWithCamera",
+      "type": "function",
+      "name": "FocusSelectedObjectWithCamera",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        2649,
+        2683
+      ],
+      "summary": "Frames the editor camera on the selected object's world bounds.",
+      "tags": [
+        "editor",
+        "assets",
+        "function"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:EngineGUI_Update",
+      "type": "function",
+      "name": "EngineGUI_Update",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        2687,
+        2881
+      ],
+      "summary": "Per-frame editor update: shortcuts, gizmos, play/stop, preload, and pending actions.",
+      "tags": [
+        "editor",
+        "runtime",
+        "function"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:DrawEditorSceneProxies",
+      "type": "function",
+      "name": "DrawEditorSceneProxies",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        2890,
+        2893
+      ],
+      "summary": "Draws editor-only proxies (lights, cameras, colliders) when not in play visuals.",
+      "tags": [
+        "ui",
+        "editor",
+        "function"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:MoveNodeInList",
+      "type": "function",
+      "name": "MoveNodeInList",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        2897,
+        2920
+      ],
+      "summary": "Reorders a node among its siblings by a signed offset.",
+      "tags": [
+        "editor",
+        "function",
+        "engine"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:GetNodeSiblingIndexLocal",
+      "type": "function",
+      "name": "GetNodeSiblingIndexLocal",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        2945,
+        2956
+      ],
+      "summary": "Returns a node's index in its parent's child list.",
+      "tags": [
+        "editor",
+        "function",
+        "engine"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:UndoableReorderNode",
+      "type": "function",
+      "name": "UndoableReorderNode",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        2958,
+        2968
+      ],
+      "summary": "Records an undoable hierarchy reorder for the selected node.",
+      "tags": [
+        "editor",
+        "function",
+        "engine"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:DrawSceneNodeHierarchy",
+      "type": "function",
+      "name": "DrawSceneNodeHierarchy",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        2970,
+        3064
+      ],
+      "summary": "Recursively draws the scene-tree ImGui rows with drag-reorder and context actions.",
+      "tags": [
+        "ui",
+        "editor",
+        "function"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:EngineGUI_OnBackbufferResized",
+      "type": "function",
+      "name": "EngineGUI_OnBackbufferResized",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        3068,
+        3072
+      ],
+      "summary": "Notifies the editor layout that the D3D backbuffer size changed.",
+      "tags": [
+        "editor",
+        "function",
+        "engine"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/core/engine_gui.cpp:EngineGUI_Draw",
+      "type": "function",
+      "name": "EngineGUI_Draw",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        3074,
+        4420
+      ],
+      "summary": "Draws the entire editor UI for one frame: layout, hierarchy, inspector, viewport tools, and popups.",
+      "tags": [
+        "ui",
+        "editor",
+        "function"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:engine/core/engine_gui.cpp:EditorLayoutMetrics",
+      "type": "class",
+      "name": "EditorLayoutMetrics",
+      "filePath": "engine/core/engine_gui.cpp",
+      "lineRange": [
+        254,
+        264
+      ],
+      "summary": "Cached pixel metrics for the editor chrome: menu bar, toolbar, and pane rectangles used to lay out ImGui windows.",
+      "tags": [
+        "data-model",
+        "editor",
+        "engine"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ecs/collider_component.cpp:ClearFromOwner",
+      "type": "function",
+      "name": "ClearFromOwner",
+      "filePath": "engine/ecs/collider_component.cpp",
+      "lineRange": [
+        12,
+        21
+      ],
+      "summary": "Removes any physics collider currently attached to the owning GameObject.",
+      "tags": [
+        "function",
+        "engine",
+        "cpp"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ecs/collider_component.cpp:ApplyToOwner",
+      "type": "function",
+      "name": "ApplyToOwner",
+      "filePath": "engine/ecs/collider_component.cpp",
+      "lineRange": [
+        23,
+        68
+      ],
+      "summary": "Builds a box/sphere/capsule/cylinder/mesh collider on the owner from serialized shape data and the cached model.",
+      "tags": [
+        "function",
+        "engine",
+        "cpp"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ecs/collider_component.cpp:Serialize",
+      "type": "function",
+      "name": "Serialize",
+      "filePath": "engine/ecs/collider_component.cpp",
+      "lineRange": [
+        70,
+        81
+      ],
+      "summary": "Writes collider type, size, trigger, and offset fields to JSON.",
+      "tags": [
+        "serialization",
+        "function",
+        "engine"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ecs/collider_component.cpp:Deserialize",
+      "type": "function",
+      "name": "Deserialize",
+      "filePath": "engine/ecs/collider_component.cpp",
+      "lineRange": [
+        83,
+        105
+      ],
+      "summary": "Parses collider JSON and stores shape parameters for a later ApplyToOwner.",
+      "tags": [
+        "serialization",
+        "function",
+        "engine"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ecs/model_asset_cache.cpp:ToLowerString",
+      "type": "function",
+      "name": "ToLowerString",
+      "filePath": "engine/ecs/model_asset_cache.cpp",
+      "lineRange": [
+        16,
+        22
+      ],
+      "summary": "Lowercases a UTF-8 string with the classic locale for asset-key comparisons.",
+      "tags": [
+        "function",
+        "engine",
+        "cpp"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ecs/model_asset_cache.cpp:NormalizeAssetKey",
+      "type": "function",
+      "name": "NormalizeAssetKey",
+      "filePath": "engine/ecs/model_asset_cache.cpp",
+      "lineRange": [
+        24,
+        28
+      ],
+      "summary": "Normalizes slashes and case so model paths share one cache key.",
+      "tags": [
+        "assets",
+        "function",
+        "engine"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ecs/model_asset_cache.cpp:StemKey",
+      "type": "function",
+      "name": "StemKey",
+      "filePath": "engine/ecs/model_asset_cache.cpp",
+      "lineRange": [
+        30,
+        32
+      ],
+      "summary": "Returns the lowercase filename stem used when looking up models by short name.",
+      "tags": [
+        "function",
+        "engine",
+        "cpp"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ecs/model_asset_cache.cpp:ResolveModelWidePath",
+      "type": "function",
+      "name": "ResolveModelWidePath",
+      "filePath": "engine/ecs/model_asset_cache.cpp",
+      "lineRange": [
+        63,
+        82
+      ],
+      "summary": "Resolves a model name or relative path to a wide filesystem path for LoadFBX.",
+      "tags": [
+        "filesystem",
+        "function",
+        "engine"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ecs/model_asset_cache.cpp:SortFolderTree",
+      "type": "function",
+      "name": "SortFolderTree",
+      "filePath": "engine/ecs/model_asset_cache.cpp",
+      "lineRange": [
+        97,
+        107
+      ],
+      "summary": "Recursively sorts model-folder nodes alphabetically for the editor browser.",
+      "tags": [
+        "filesystem",
+        "function",
+        "engine"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ecs/model_asset_cache.cpp:Initialize",
+      "type": "function",
+      "name": "Initialize",
+      "filePath": "engine/ecs/model_asset_cache.cpp",
+      "lineRange": [
+        119,
+        122
+      ],
+      "summary": "Initializes the singleton cache and scans rom/model.",
+      "tags": [
+        "lifecycle",
+        "function",
+        "engine"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ecs/model_asset_cache.cpp:Finalize",
+      "type": "function",
+      "name": "Finalize",
+      "filePath": "engine/ecs/model_asset_cache.cpp",
+      "lineRange": [
+        124,
+        133
+      ],
+      "summary": "Releases cached Model3D instances and marks the cache finalized.",
+      "tags": [
+        "lifecycle",
+        "function",
+        "engine"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ecs/model_asset_cache.cpp:RefreshAssetDirectory",
+      "type": "function",
+      "name": "RefreshAssetDirectory",
+      "filePath": "engine/ecs/model_asset_cache.cpp",
+      "lineRange": [
+        135,
+        172
+      ],
+      "summary": "Rescans rom/model and rebuilds ObjectDef entries for every FBX/OBJ.",
+      "tags": [
+        "assets",
+        "function",
+        "engine"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ecs/model_asset_cache.cpp:RebuildFolderTree",
+      "type": "function",
+      "name": "RebuildFolderTree",
+      "filePath": "engine/ecs/model_asset_cache.cpp",
+      "lineRange": [
+        174,
+        206
+      ],
+      "summary": "Rebuilds the hierarchical folder tree from indexed object definitions.",
+      "tags": [
+        "packaging",
+        "filesystem",
+        "function"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ecs/model_asset_cache.cpp:FolderPathForDef",
+      "type": "function",
+      "name": "FolderPathForDef",
+      "filePath": "engine/ecs/model_asset_cache.cpp",
+      "lineRange": [
+        208,
+        211
+      ],
+      "summary": "Returns the folder-relative path for one ObjectDef.",
+      "tags": [
+        "filesystem",
+        "function",
+        "engine"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ecs/model_asset_cache.cpp:GetObjectDefinitionsInFolder",
+      "type": "function",
+      "name": "GetObjectDefinitionsInFolder",
+      "filePath": "engine/ecs/model_asset_cache.cpp",
+      "lineRange": [
+        217,
+        226
+      ],
+      "summary": "Lists model definitions that live directly in a rom/model subfolder.",
+      "tags": [
+        "assets",
+        "lifecycle",
+        "filesystem",
+        "function"
+      ],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:SyncImGuiInputAcceptance",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:SaveUiPrefs",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:LoadUiPrefs",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:ApplyUiZoom",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:EngineGUI_IsSceneDirty",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:EngineGUI_IsSceneDirty",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:EngineGUI_MarkSceneDirty",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:EngineGUI_MarkSceneDirty",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:EngineGUI_ClearSceneDirty",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:EngineGUI_ClearSceneDirty",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:EngineGUI_QueueUnsavedLoad",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:EngineGUI_QueueUnsavedLoad",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:EngineGUI_QueueUnsavedExit",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:EngineGUI_QueueUnsavedExit",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:RemapNodeTagsAfterDelete",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:NormalizeSceneFileName",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:EngineGUI_IsSceneGraphObject",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:EngineGUI_IsSceneGraphObject",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:CreateModelGameObject",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:ComputeEditorLayout",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:SpawnRootGameObject",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:SpawnChildGameObject",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:SpawnDuplicate",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:DeleteGameObject",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:ClearScene",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:ScrollValue",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:AcceptAssetPathDrop",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:DrawScriptPropertyField",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:DrawPostFxShowcaseWindow",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:DrawShortcutHintsWindow",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:DrawRenderingSettingsWindow",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:ApplyProjectSessionState",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:SwitchToOpenedProject",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:RequestOpenProject",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:CloseOpenedProject",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:RequestCloseProject",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:OpenBuildPreflight",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:RequestBuildCurrentProject",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:BeginNewProjectFlow",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:SaveProject",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:ConsumePendingFolderPick",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:DrawEngineStartScreen",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:DrawEditorMenuBar",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:ExecutePendingEditorAction",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:DrawEditorPopups",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:SaveSceneToFile",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:NewScene",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:TeardownPlaySession",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:TeardownPlaySession",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:SoftStopPlayForSceneLoad",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:SoftStopPlayForSceneLoad",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:ReturnToStart",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:ReturnToStart",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:HasThirdPersonPlayerNode",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:HasCameraComponentNode",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:EngineGUI_IsDebugCameraPlayInputActive",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:EngineGUI_IsDebugCameraPlayInputActive",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:StartPlay",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:EngineGUI_QueueSceneLoad",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:EngineGUI_QueueSceneLoad",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:EngineGUI_BeginSceneAssetPreload",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:EngineGUI_BeginSceneAssetPreload",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:EngineGUI_FlushSceneLoadPending",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:EngineGUI_FlushSceneLoadPending",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:EngineGUI_TickSceneAssetPreload",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:EngineGUI_TickSceneAssetPreload",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:EngineGUI_IsSceneAssetPreloadActive",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:EngineGUI_IsSceneAssetPreloadActive",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:EngineGUI_Initialize",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:EngineGUI_Initialize",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:EngineGUI_Finalize",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:EngineGUI_Finalize",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:EngineGUI_IsPlaying",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:EngineGUI_IsPlaying",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:EngineGUI_PreferPlayVisuals",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:EngineGUI_PreferPlayVisuals",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:EngineGUI_IsOnStart",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:EngineGUI_IsOnStart",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:EngineGUI_StartPlay",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:EngineGUI_StartPlay",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:EngineGUI_StopPlay",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:EngineGUI_StopPlay",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:EngineGUI_GetCameraMode",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:EngineGUI_GetCameraMode",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:EngineGUI_SetCameraMode",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:EngineGUI_SetCameraMode",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:EngineGUI_SetActiveCameraNodeName",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:EngineGUI_SetActiveCameraNodeName",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:EngineGUI_SetEnabled",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:EngineGUI_SetEnabled",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:EngineGUI_ResolveStartupScenePath",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:EngineGUI_ResolveStartupScenePath",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:EngineGUI_IsUiOverlayVisible",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:EngineGUI_IsUiOverlayVisible",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:EngineGUI_SetUiOverlayVisible",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:EngineGUI_SetUiOverlayVisible",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:EngineGUI_GetEditMode",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:EngineGUI_GetEditMode",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:EngineGUI_SetEditMode",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:EngineGUI_SetEditMode",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:EngineGUI_IsUiEditMode",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:EngineGUI_IsUiEditMode",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:EngineGUI_GetGameViewportRect",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:EngineGUI_GetGameViewportRect",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:EngineGUI_MouseToViewportLocal",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:EngineGUI_MouseToViewportLocal",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:RaySphere",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:RayIntersectsTriangle",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:RayPickModelMesh",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:BuildPickRay",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:DrawMeshWireframeHighlight",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:DrawSelectionColliderHighlight",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:DrawSelectionHighlight",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:EngineGUI_DrawSelectionIndicator",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:EngineGUI_DrawSelectionIndicator",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:FocusSelectedObjectWithCamera",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:EngineGUI_Update",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:EngineGUI_Update",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:DrawEditorSceneProxies",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:DrawEditorSceneProxies",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:MoveNodeInList",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:GetNodeSiblingIndexLocal",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:UndoableReorderNode",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:DrawSceneNodeHierarchy",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:EngineGUI_OnBackbufferResized",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:EngineGUI_OnBackbufferResized",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:EngineGUI_Draw",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "function:engine/core/engine_gui.cpp:EngineGUI_Draw",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "class:engine/core/engine_gui.cpp:EditorLayoutMetrics",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "class:engine/core/engine_gui.cpp:EditorLayoutMetrics",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/collider_component.cpp",
+      "target": "function:engine/ecs/collider_component.cpp:ClearFromOwner",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/collider_component.cpp",
+      "target": "function:engine/ecs/collider_component.cpp:ClearFromOwner",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/collider_component.cpp",
+      "target": "function:engine/ecs/collider_component.cpp:ApplyToOwner",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/collider_component.cpp",
+      "target": "function:engine/ecs/collider_component.cpp:ApplyToOwner",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/collider_component.cpp",
+      "target": "function:engine/ecs/collider_component.cpp:Serialize",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/collider_component.cpp",
+      "target": "function:engine/ecs/collider_component.cpp:Serialize",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/collider_component.cpp",
+      "target": "function:engine/ecs/collider_component.cpp:Deserialize",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/collider_component.cpp",
+      "target": "function:engine/ecs/collider_component.cpp:Deserialize",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/model_asset_cache.cpp",
+      "target": "function:engine/ecs/model_asset_cache.cpp:ToLowerString",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/model_asset_cache.cpp",
+      "target": "function:engine/ecs/model_asset_cache.cpp:ToLowerString",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/model_asset_cache.cpp",
+      "target": "function:engine/ecs/model_asset_cache.cpp:NormalizeAssetKey",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/model_asset_cache.cpp",
+      "target": "function:engine/ecs/model_asset_cache.cpp:NormalizeAssetKey",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/model_asset_cache.cpp",
+      "target": "function:engine/ecs/model_asset_cache.cpp:StemKey",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/model_asset_cache.cpp",
+      "target": "function:engine/ecs/model_asset_cache.cpp:StemKey",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/model_asset_cache.cpp",
+      "target": "function:engine/ecs/model_asset_cache.cpp:ResolveModelWidePath",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/model_asset_cache.cpp",
+      "target": "function:engine/ecs/model_asset_cache.cpp:ResolveModelWidePath",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/model_asset_cache.cpp",
+      "target": "function:engine/ecs/model_asset_cache.cpp:SortFolderTree",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/model_asset_cache.cpp",
+      "target": "function:engine/ecs/model_asset_cache.cpp:SortFolderTree",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/model_asset_cache.cpp",
+      "target": "function:engine/ecs/model_asset_cache.cpp:Initialize",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/model_asset_cache.cpp",
+      "target": "function:engine/ecs/model_asset_cache.cpp:Initialize",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/model_asset_cache.cpp",
+      "target": "function:engine/ecs/model_asset_cache.cpp:Finalize",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/model_asset_cache.cpp",
+      "target": "function:engine/ecs/model_asset_cache.cpp:Finalize",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/model_asset_cache.cpp",
+      "target": "function:engine/ecs/model_asset_cache.cpp:RefreshAssetDirectory",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/model_asset_cache.cpp",
+      "target": "function:engine/ecs/model_asset_cache.cpp:RefreshAssetDirectory",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/model_asset_cache.cpp",
+      "target": "function:engine/ecs/model_asset_cache.cpp:RebuildFolderTree",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/model_asset_cache.cpp",
+      "target": "function:engine/ecs/model_asset_cache.cpp:RebuildFolderTree",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/model_asset_cache.cpp",
+      "target": "function:engine/ecs/model_asset_cache.cpp:FolderPathForDef",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/model_asset_cache.cpp",
+      "target": "function:engine/ecs/model_asset_cache.cpp:FolderPathForDef",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/model_asset_cache.cpp",
+      "target": "function:engine/ecs/model_asset_cache.cpp:GetObjectDefinitionsInFolder",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/model_asset_cache.cpp",
+      "target": "function:engine/ecs/model_asset_cache.cpp:GetObjectDefinitionsInFolder",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "file:engine/audio/audio_manager.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "file:engine/core/debug_system.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "file:engine/core/engine_gui.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "file:engine/core/engine_gui_internal.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "file:engine/core/job_system.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "file:engine/debug_draw/debug_drawer.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "file:engine/ecs/audio_component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "file:engine/ecs/audio_listener_component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "file:engine/ecs/billboard_component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "file:engine/ecs/camera_component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "file:engine/ecs/collider_component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "file:engine/ecs/component_factory.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "file:engine/ecs/directional_light_component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "file:engine/ecs/effect_component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "file:engine/ecs/game_object.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "file:engine/ecs/material_component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "file:engine/ecs/model_asset_cache.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "file:engine/ecs/point_light_component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "file:engine/ecs/prefab_runtime.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "file:engine/ecs/prefab_serializer.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "file:engine/ecs/rigidbody_component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "file:engine/ecs/spot_light_component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "file:engine/ecs/tag_registry.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "file:engine/ecs/transform.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "file:engine/ecs/visual_component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "file:engine/editor/camera_gizmo.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "file:engine/editor/editor_project_browser.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "file:engine/editor/editor_ui_panel.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "file:engine/editor/editor_undo.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "file:engine/editor/light_gizmo.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "file:engine/editor/playable_package_builder.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "file:engine/editor/project_asset_index.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "file:engine/editor/project_manager.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "file:engine/editor/transform_gizmo.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "file:engine/editor/ui_gizmo.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "file:engine/input/key_logger.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "file:engine/input/keyboard.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "file:engine/input/mouse.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "file:engine/physics/collider/collider.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "file:engine/physics/core/physics_system.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "file:engine/rendering/d3d11/post_process.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "file:engine/rendering/d3d11/renderer.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "file:engine/rendering/d3d11/shader.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "file:engine/rendering/model/model.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "file:engine/scene/render_settings.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "file:engine/scene/scene_asset_preload.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "file:engine/scene/scene_loader.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "file:engine/scene/scene_runtime.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "file:engine/scripting/Script.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "file:engine/scripting/script_component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "file:engine/scripting/script_factory.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "file:engine/scripting/script_watcher.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "file:engine/ui/scene_canvas.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "file:engine/ui/ui_canvas.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/core/engine_gui.cpp",
+      "target": "file:engine/ui/ui_element.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/core/game_object.h",
+      "target": "file:engine/ecs/game_object.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/ecs/collider_component.cpp",
+      "target": "file:engine/ecs/collider_component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/ecs/collider_component.cpp",
+      "target": "file:engine/ecs/game_object.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/ecs/collider_component.cpp",
+      "target": "file:engine/ecs/model_asset_cache.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/ecs/collider_component.cpp",
+      "target": "file:engine/ecs/rigidbody_component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/ecs/collider_component.cpp",
+      "target": "file:engine/ecs/visual_component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/ecs/model_asset_cache.cpp",
+      "target": "file:engine/ecs/model_asset_cache.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/ecs/model_asset_cache.cpp",
+      "target": "file:engine/ecs/string_utils.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:engine/core/engine_gui.cpp:ApplyProjectSessionState",
+      "target": "function:engine/editor/project_manager.h:IsOpen",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/core/engine_gui.cpp:ApplyProjectSessionState",
+      "target": "function:engine/editor/project_manager.h:GetEditorUiZoomPercent",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/core/engine_gui.cpp:ApplyProjectSessionState",
+      "target": "function:engine/ecs/prefab_serializer.h:LoadFromFile",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/core/engine_gui.cpp:SwitchToOpenedProject",
+      "target": "function:engine/editor/project_manager.h:IsOpen",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/core/engine_gui.cpp:CloseOpenedProject",
+      "target": "function:engine/editor/project_manager.h:IsOpen",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/core/engine_gui.cpp:RequestCloseProject",
+      "target": "function:engine/editor/project_manager.h:IsOpen",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/core/engine_gui.cpp:OpenBuildPreflight",
+      "target": "function:engine/editor/project_manager.h:IsOpen",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/core/engine_gui.cpp:RequestBuildCurrentProject",
+      "target": "function:engine/editor/project_manager.h:IsOpen",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/core/engine_gui.cpp:SaveProject",
+      "target": "function:engine/editor/project_manager.h:IsOpen",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/core/engine_gui.cpp:DrawEditorMenuBar",
+      "target": "function:engine/editor/project_manager.h:IsOpen",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/core/engine_gui.cpp:DrawEditorMenuBar",
+      "target": "function:engine/editor/editor_undo.h:TopUndoDescribe",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/core/engine_gui.cpp:DrawEditorMenuBar",
+      "target": "function:engine/editor/editor_undo.h:TopRedoDescribe",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/core/engine_gui.cpp:DrawEditorMenuBar",
+      "target": "function:engine/editor/editor_undo.h:CanUndo",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/core/engine_gui.cpp:DrawEditorMenuBar",
+      "target": "function:engine/editor/editor_undo.h:CanRedo",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/core/engine_gui.cpp:DrawEditorPopups",
+      "target": "function:engine/ecs/prefab_serializer.h:SaveToFile",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/core/engine_gui.cpp:DrawEditorPopups",
+      "target": "function:engine/editor/project_manager.h:IsOpen",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/core/engine_gui.cpp:DrawEditorPopups",
+      "target": "function:engine/editor/project_manager.h:GetPhysicsGravity",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/core/engine_gui.cpp:EngineGUI_FlushSceneLoadPending",
+      "target": "function:engine/editor/project_manager.h:IsOpen",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/core/engine_gui.cpp:EngineGUI_Initialize",
+      "target": "function:engine/editor/project_manager.h:IsOpen",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/core/engine_gui.cpp:EngineGUI_Initialize",
+      "target": "function:engine/editor/project_manager.h:GetEditorUiZoomPercent",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/core/engine_gui.cpp:EngineGUI_Update",
+      "target": "function:engine/scripting/script_component.h:GetScriptClass",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/core/engine_gui.cpp:EngineGUI_Update",
+      "target": "function:engine/scripting/script_component.h:HotReload",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/core/engine_gui.cpp:DrawSceneNodeHierarchy",
+      "target": "function:engine/ecs/prefab_serializer.h:LoadFromFile",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/core/engine_gui.cpp:EngineGUI_Draw",
+      "target": "function:engine/editor/project_manager.h:IsOpen",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/core/engine_gui.cpp:EngineGUI_Draw",
+      "target": "function:engine/editor/editor_undo.h:CanUndo",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/core/engine_gui.cpp:EngineGUI_Draw",
+      "target": "function:engine/editor/editor_undo.h:CanRedo",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/core/engine_gui.cpp:EngineGUI_Draw",
+      "target": "function:engine/ecs/prefab_serializer.h:LoadFromFile",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/core/engine_gui.cpp:EngineGUI_Draw",
+      "target": "function:engine/ecs/directional_light_component.h:ComputeDirectionWS",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/core/engine_gui.cpp:EngineGUI_Draw",
+      "target": "function:engine/ecs/camera_component.h:ComputeForwardWS",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/core/engine_gui.cpp:EngineGUI_Draw",
+      "target": "function:engine/ecs/camera_component.h:ComputeUpWS",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/core/engine_gui.cpp:EngineGUI_Draw",
+      "target": "function:engine/ecs/camera_component.h:ComputeRightWS",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/core/engine_gui.cpp:EngineGUI_Draw",
+      "target": "function:engine/ecs/effect_component.h:SetEffectPath",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/core/engine_gui.cpp:EngineGUI_Draw",
+      "target": "function:engine/ecs/audio_component.h:SetClipPath",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/core/engine_gui.cpp:EngineGUI_Draw",
+      "target": "function:engine/ecs/audio_component.h:ApplyLiveSettings",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/core/engine_gui.cpp:EngineGUI_Draw",
+      "target": "function:engine/scripting/script_component.h:GetScriptClass",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/core/engine_gui.cpp:EngineGUI_Draw",
+      "target": "function:engine/scripting/script_component.h:GetEditableProperties",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/core/engine_gui.cpp:EngineGUI_Draw",
+      "target": "function:engine/scripting/script_component.h:ApplyProperties",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/core/engine_gui.cpp:EngineGUI_Draw",
+      "target": "function:engine/ecs/billboard_component.h:InvalidateTextureCache",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/core/engine_gui.cpp:EngineGUI_Draw",
+      "target": "function:engine/ecs/prefab_serializer.h:SaveToFile",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/ecs/collider_component.cpp:ApplyToOwner",
+      "target": "function:engine/ecs/collider_component.h:ClearFromOwner",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/ecs/model_asset_cache.cpp:ResolveModelWidePath",
+      "target": "function:engine/ecs/string_utils.h:ToWString",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/ecs/collider_component.cpp:ApplyToOwner",
+      "target": "function:engine/ecs/collider_component.cpp:ClearFromOwner",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/core/engine_gui.cpp:EngineGUI_BeginSceneAssetPreload",
+      "target": "function:engine/scene/scene_asset_preload.cpp:Begin",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/core/engine_gui.cpp:EngineGUI_TickSceneAssetPreload",
+      "target": "function:engine/scene/scene_asset_preload.cpp:Tick",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/core/engine_gui.cpp:EngineGUI_FlushSceneLoadPending",
+      "target": "function:engine/scene/scene_asset_preload.cpp:SceneAssetPreload_BuildTaskList",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

@@ -1,0 +1,740 @@
+{
+  "nodes": [
+    {
+      "id": "file:samples/scripts/SamplePlayerScript.cpp",
+      "type": "file",
+      "name": "SamplePlayerScript.cpp",
+      "filePath": "samples/scripts/SamplePlayerScript.cpp",
+      "summary": "Sample third-person player: WASD/stick movement facing camera-relative direction and third-person camera follow setup.",
+      "tags": [
+        "sample",
+        "scripting",
+        "input",
+        "camera"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:samples/scripts/SamplePlayerScript.h",
+      "type": "file",
+      "name": "SamplePlayerScript.h",
+      "filePath": "samples/scripts/SamplePlayerScript.h",
+      "summary": "SamplePlayerScript declaration with serialized moveSpeed and third-person player lifecycle overrides.",
+      "tags": [
+        "sample",
+        "scripting",
+        "data-model"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:samples/scripts/SampleSpinScript.cpp",
+      "type": "file",
+      "name": "SampleSpinScript.cpp",
+      "filePath": "samples/scripts/SampleSpinScript.cpp",
+      "summary": "Sample Y-axis spinner used to demo parallel-safe OnUpdate, optional busy-wait, and transform rotation.",
+      "tags": [
+        "sample",
+        "scripting",
+        "animation"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:samples/scripts/SampleSpinScript.h",
+      "type": "file",
+      "name": "SampleSpinScript.h",
+      "filePath": "samples/scripts/SampleSpinScript.h",
+      "summary": "SampleSpinScript declaration with degreesPerSecond/busyMillis fields and a parallel-safe update override.",
+      "tags": [
+        "sample",
+        "scripting",
+        "data-model"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:samples/scripts/SampleTriggerLogScript.cpp",
+      "type": "file",
+      "name": "SampleTriggerLogScript.cpp",
+      "filePath": "samples/scripts/SampleTriggerLogScript.cpp",
+      "summary": "Sample trigger-volume script that tints materials on enter/exit, logs debug text, and optionally smoke-tests physics raycasts.",
+      "tags": [
+        "sample",
+        "scripting",
+        "physics",
+        "event-handler"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:samples/scripts/SampleTriggerLogScript.h",
+      "type": "file",
+      "name": "SampleTriggerLogScript.h",
+      "filePath": "samples/scripts/SampleTriggerLogScript.h",
+      "summary": "SampleTriggerLogScript declaration with raycast fields and trigger enter/exit lifecycle overrides.",
+      "tags": [
+        "sample",
+        "scripting",
+        "data-model"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:samples/scripts/SamplePlayerScript.h:SamplePlayerScript",
+      "type": "class",
+      "name": "SamplePlayerScript",
+      "filePath": "samples/scripts/SamplePlayerScript.h",
+      "lineRange": [
+        6,
+        20
+      ],
+      "summary": "Sample Script that moves a character with WASD/stick input while a third-person camera follows.",
+      "tags": [
+        "sample",
+        "scripting",
+        "third-person"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:samples/scripts/SamplePlayerScript.cpp:GetMoveInput",
+      "type": "function",
+      "name": "GetMoveInput",
+      "filePath": "samples/scripts/SamplePlayerScript.cpp",
+      "lineRange": [
+        15,
+        39
+      ],
+      "summary": "Combines WASD keyboard and left-stick controller input into a planar move vector.",
+      "tags": [
+        "sample",
+        "input",
+        "locomotion"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:samples/scripts/SamplePlayerScript.cpp:OnCreate",
+      "type": "function",
+      "name": "OnCreate",
+      "filePath": "samples/scripts/SamplePlayerScript.cpp",
+      "lineRange": [
+        42,
+        62
+      ],
+      "summary": "Configures a kinematic rigidbody, initializes third-person follow camera, and sets play camera mode.",
+      "tags": [
+        "sample",
+        "lifecycle",
+        "camera"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:samples/scripts/SamplePlayerScript.cpp:OnUpdate",
+      "type": "function",
+      "name": "OnUpdate",
+      "filePath": "samples/scripts/SamplePlayerScript.cpp",
+      "lineRange": [
+        64,
+        101
+      ],
+      "summary": "Moves the player in camera-forward space and yaws the body to face the move direction.",
+      "tags": [
+        "sample",
+        "locomotion",
+        "camera"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:samples/scripts/SamplePlayerScript.cpp:OnDestroy",
+      "type": "function",
+      "name": "OnDestroy",
+      "filePath": "samples/scripts/SamplePlayerScript.cpp",
+      "lineRange": [
+        103,
+        107
+      ],
+      "summary": "Clears the third-person camera target and restores the cursor on teardown.",
+      "tags": [
+        "sample",
+        "lifecycle",
+        "camera"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:samples/scripts/SampleSpinScript.h:SampleSpinScript",
+      "type": "class",
+      "name": "SampleSpinScript",
+      "filePath": "samples/scripts/SampleSpinScript.h",
+      "lineRange": [
+        6,
+        17
+      ],
+      "summary": "Sample Script that rotates its owner around Y and optionally burns CPU to demo parallel-safe updates.",
+      "tags": [
+        "sample",
+        "scripting",
+        "animation"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:samples/scripts/SampleSpinScript.cpp:OnUpdate",
+      "type": "function",
+      "name": "OnUpdate",
+      "filePath": "samples/scripts/SampleSpinScript.cpp",
+      "lineRange": [
+        11,
+        32
+      ],
+      "summary": "Increments yaw by degreesPerSecond and optionally busy-waits to stress the job timeline.",
+      "tags": [
+        "sample",
+        "animation",
+        "parallel"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:samples/scripts/SampleSpinScript.cpp:Update_IsParallelSafe",
+      "type": "function",
+      "name": "Update_IsParallelSafe",
+      "filePath": "samples/scripts/SampleSpinScript.cpp",
+      "lineRange": [
+        34,
+        38
+      ],
+      "summary": "Declares this script safe to run on worker threads during parallel script updates.",
+      "tags": [
+        "sample",
+        "parallel",
+        "lifecycle"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:samples/scripts/SampleTriggerLogScript.h:SampleTriggerLogScript",
+      "type": "class",
+      "name": "SampleTriggerLogScript",
+      "filePath": "samples/scripts/SampleTriggerLogScript.h",
+      "lineRange": [
+        7,
+        24
+      ],
+      "summary": "Sample Script that reacts to trigger enter/exit, tints materials, and optionally raycasts for debug HUD text.",
+      "tags": [
+        "sample",
+        "scripting",
+        "physics"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:samples/scripts/SampleTriggerLogScript.cpp:OnCreate",
+      "type": "function",
+      "name": "OnCreate",
+      "filePath": "samples/scripts/SampleTriggerLogScript.cpp",
+      "lineRange": [
+        11,
+        14
+      ],
+      "summary": "Caches the owner's material component for later trigger tinting.",
+      "tags": [
+        "sample",
+        "lifecycle"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:samples/scripts/SampleTriggerLogScript.cpp:OnUpdate",
+      "type": "function",
+      "name": "OnUpdate",
+      "filePath": "samples/scripts/SampleTriggerLogScript.cpp",
+      "lineRange": [
+        16,
+        36
+      ],
+      "summary": "Optionally raycasts forward and writes a short-lived debug pickup message with hit data.",
+      "tags": [
+        "sample",
+        "physics",
+        "debug"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:samples/scripts/SampleTriggerLogScript.cpp:OnTriggerEnter",
+      "type": "function",
+      "name": "OnTriggerEnter",
+      "filePath": "samples/scripts/SampleTriggerLogScript.cpp",
+      "lineRange": [
+        38,
+        44
+      ],
+      "summary": "Tints the owner material and logs a debug message when another collider enters the trigger.",
+      "tags": [
+        "sample",
+        "physics",
+        "event-handler"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:samples/scripts/SampleTriggerLogScript.cpp:OnTriggerExit",
+      "type": "function",
+      "name": "OnTriggerExit",
+      "filePath": "samples/scripts/SampleTriggerLogScript.cpp",
+      "lineRange": [
+        46,
+        52
+      ],
+      "summary": "Restores the owner material color and logs a debug message when the other collider exits.",
+      "tags": [
+        "sample",
+        "physics",
+        "event-handler"
+      ],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:samples/scripts/SamplePlayerScript.h",
+      "target": "class:samples/scripts/SamplePlayerScript.h:SamplePlayerScript",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:samples/scripts/SamplePlayerScript.h",
+      "target": "class:samples/scripts/SamplePlayerScript.h:SamplePlayerScript",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:samples/scripts/SamplePlayerScript.cpp",
+      "target": "function:samples/scripts/SamplePlayerScript.cpp:GetMoveInput",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:samples/scripts/SamplePlayerScript.cpp",
+      "target": "function:samples/scripts/SamplePlayerScript.cpp:GetMoveInput",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:samples/scripts/SamplePlayerScript.cpp",
+      "target": "function:samples/scripts/SamplePlayerScript.cpp:OnCreate",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:samples/scripts/SamplePlayerScript.cpp",
+      "target": "function:samples/scripts/SamplePlayerScript.cpp:OnCreate",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:samples/scripts/SamplePlayerScript.cpp",
+      "target": "function:samples/scripts/SamplePlayerScript.cpp:OnUpdate",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:samples/scripts/SamplePlayerScript.cpp",
+      "target": "function:samples/scripts/SamplePlayerScript.cpp:OnUpdate",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:samples/scripts/SamplePlayerScript.cpp",
+      "target": "function:samples/scripts/SamplePlayerScript.cpp:OnDestroy",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:samples/scripts/SamplePlayerScript.cpp",
+      "target": "function:samples/scripts/SamplePlayerScript.cpp:OnDestroy",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:samples/scripts/SampleSpinScript.h",
+      "target": "class:samples/scripts/SampleSpinScript.h:SampleSpinScript",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:samples/scripts/SampleSpinScript.h",
+      "target": "class:samples/scripts/SampleSpinScript.h:SampleSpinScript",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:samples/scripts/SampleSpinScript.cpp",
+      "target": "function:samples/scripts/SampleSpinScript.cpp:OnUpdate",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:samples/scripts/SampleSpinScript.cpp",
+      "target": "function:samples/scripts/SampleSpinScript.cpp:OnUpdate",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:samples/scripts/SampleSpinScript.cpp",
+      "target": "function:samples/scripts/SampleSpinScript.cpp:Update_IsParallelSafe",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:samples/scripts/SampleSpinScript.cpp",
+      "target": "function:samples/scripts/SampleSpinScript.cpp:Update_IsParallelSafe",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:samples/scripts/SampleTriggerLogScript.h",
+      "target": "class:samples/scripts/SampleTriggerLogScript.h:SampleTriggerLogScript",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:samples/scripts/SampleTriggerLogScript.h",
+      "target": "class:samples/scripts/SampleTriggerLogScript.h:SampleTriggerLogScript",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:samples/scripts/SampleTriggerLogScript.cpp",
+      "target": "function:samples/scripts/SampleTriggerLogScript.cpp:OnCreate",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:samples/scripts/SampleTriggerLogScript.cpp",
+      "target": "function:samples/scripts/SampleTriggerLogScript.cpp:OnCreate",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:samples/scripts/SampleTriggerLogScript.cpp",
+      "target": "function:samples/scripts/SampleTriggerLogScript.cpp:OnUpdate",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:samples/scripts/SampleTriggerLogScript.cpp",
+      "target": "function:samples/scripts/SampleTriggerLogScript.cpp:OnUpdate",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:samples/scripts/SampleTriggerLogScript.cpp",
+      "target": "function:samples/scripts/SampleTriggerLogScript.cpp:OnTriggerEnter",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:samples/scripts/SampleTriggerLogScript.cpp",
+      "target": "function:samples/scripts/SampleTriggerLogScript.cpp:OnTriggerEnter",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:samples/scripts/SampleTriggerLogScript.cpp",
+      "target": "function:samples/scripts/SampleTriggerLogScript.cpp:OnTriggerExit",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:samples/scripts/SampleTriggerLogScript.cpp",
+      "target": "function:samples/scripts/SampleTriggerLogScript.cpp:OnTriggerExit",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:samples/scripts/SamplePlayerScript.cpp",
+      "target": "file:engine/ecs/transform.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:samples/scripts/SamplePlayerScript.cpp",
+      "target": "file:engine/input/controller.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:samples/scripts/SamplePlayerScript.cpp",
+      "target": "file:engine/input/keyboard.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:samples/scripts/SamplePlayerScript.cpp",
+      "target": "file:engine/scripting/script_dll_register.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:samples/scripts/SamplePlayerScript.cpp",
+      "target": "file:engine/scripting/script_runtime_api.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:samples/scripts/SamplePlayerScript.cpp",
+      "target": "file:samples/scripts/SamplePlayerScript.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:samples/scripts/SamplePlayerScript.h",
+      "target": "file:engine/scripting/Script.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:samples/scripts/SamplePlayerScript.h",
+      "target": "file:engine/scripting/script_fields.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:samples/scripts/SampleSpinScript.cpp",
+      "target": "file:engine/ecs/transform.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:samples/scripts/SampleSpinScript.cpp",
+      "target": "file:engine/scripting/script_dll_register.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:samples/scripts/SampleSpinScript.cpp",
+      "target": "file:engine/scripting/script_runtime_api.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:samples/scripts/SampleSpinScript.cpp",
+      "target": "file:samples/scripts/SampleSpinScript.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:samples/scripts/SampleSpinScript.h",
+      "target": "file:engine/scripting/Script.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:samples/scripts/SampleSpinScript.h",
+      "target": "file:engine/scripting/script_fields.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:samples/scripts/SampleTriggerLogScript.cpp",
+      "target": "file:engine/ecs/material_component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:samples/scripts/SampleTriggerLogScript.cpp",
+      "target": "file:engine/scripting/script_dll_register.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:samples/scripts/SampleTriggerLogScript.cpp",
+      "target": "file:engine/scripting/script_runtime_api.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:samples/scripts/SampleTriggerLogScript.cpp",
+      "target": "file:samples/scripts/SampleTriggerLogScript.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:samples/scripts/SampleTriggerLogScript.h",
+      "target": "file:engine/scripting/Script.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:samples/scripts/SampleTriggerLogScript.h",
+      "target": "file:engine/scripting/script_fields.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "class:samples/scripts/SamplePlayerScript.h:SamplePlayerScript",
+      "target": "class:engine/scripting/Script.h:Script",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:samples/scripts/SampleSpinScript.h:SampleSpinScript",
+      "target": "class:engine/scripting/Script.h:Script",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:samples/scripts/SampleTriggerLogScript.h:SampleTriggerLogScript",
+      "target": "class:engine/scripting/Script.h:Script",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "function:samples/scripts/SamplePlayerScript.cpp:GetMoveInput",
+      "target": "function:engine/input/controller.cpp:Controller_GetLeftStick",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:samples/scripts/SamplePlayerScript.cpp:OnCreate",
+      "target": "function:src/app/camera/third_person_camera.cpp:ThirdPersonCamera_Initialize",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:samples/scripts/SamplePlayerScript.cpp:OnCreate",
+      "target": "function:src/app/camera/third_person_camera.cpp:ThirdPersonCamera_SetTarget",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:samples/scripts/SamplePlayerScript.cpp:OnCreate",
+      "target": "function:src/app/camera/third_person_camera.cpp:ThirdPersonCamera_SetMouseSensitivity",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:samples/scripts/SamplePlayerScript.cpp:OnCreate",
+      "target": "function:src/app/camera/third_person_camera.cpp:ThirdPersonCamera_SetPitchLimits",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:samples/scripts/SamplePlayerScript.cpp:OnCreate",
+      "target": "function:src/app/camera/third_person_camera.cpp:ThirdPersonCamera_ShowCursor",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:samples/scripts/SamplePlayerScript.cpp:OnUpdate",
+      "target": "function:engine/scripting/script_runtime_api.cpp:ScriptApi_GetCameraForward",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:samples/scripts/SamplePlayerScript.cpp:OnDestroy",
+      "target": "function:src/app/camera/third_person_camera.cpp:ThirdPersonCamera_SetTarget",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:samples/scripts/SamplePlayerScript.cpp:OnDestroy",
+      "target": "function:src/app/camera/third_person_camera.cpp:ThirdPersonCamera_ShowCursor",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:samples/scripts/SampleTriggerLogScript.cpp:OnUpdate",
+      "target": "function:engine/scripting/script_runtime_api.cpp:ScriptApi_Physics_Raycast",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:samples/scripts/SampleTriggerLogScript.cpp:OnUpdate",
+      "target": "function:engine/scripting/script_runtime_api.cpp:ScriptApi_PickupDebugSetMessage",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:samples/scripts/SampleTriggerLogScript.cpp:OnTriggerEnter",
+      "target": "function:engine/scripting/script_runtime_api.cpp:ScriptApi_PickupDebugSetMessage",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:samples/scripts/SampleTriggerLogScript.cpp:OnTriggerExit",
+      "target": "function:engine/scripting/script_runtime_api.cpp:ScriptApi_PickupDebugSetMessage",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

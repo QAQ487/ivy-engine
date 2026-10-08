@@ -1,0 +1,138 @@
+{
+  "projectRoot": "C:/Users/terry/source/repos/ivy-engine",
+  "batchFiles": [
+    {"path": "engine/rendering/environment/skybox.cpp", "language": "cpp", "sizeLines": 291, "fileCategory": "code"},
+    {"path": "engine/rendering/model/model_util.cpp", "language": "cpp", "sizeLines": 648, "fileCategory": "code"},
+    {"path": "engine/rendering/particle/particle_system.cpp", "language": "cpp", "sizeLines": 710, "fileCategory": "code"},
+    {"path": "engine/rendering/sprite/line_sprite.cpp", "language": "cpp", "sizeLines": 182, "fileCategory": "code"},
+    {"path": "engine/rendering/sprite/line_sprite.h", "language": "c", "sizeLines": 20, "fileCategory": "code"},
+    {"path": "engine/rendering/sprite/sprite.cpp", "language": "cpp", "sizeLines": 382, "fileCategory": "code"},
+    {"path": "engine/rendering/sprite/sprite.h", "language": "c", "sizeLines": 37, "fileCategory": "code"},
+    {"path": "engine/rendering/sprite/texture.cpp", "language": "cpp", "sizeLines": 273, "fileCategory": "code"},
+    {"path": "engine/rendering/sprite/texture.h", "language": "c", "sizeLines": 36, "fileCategory": "code"},
+    {"path": "engine/ui/scene_canvas.cpp", "language": "cpp", "sizeLines": 614, "fileCategory": "code"},
+    {"path": "engine/ui/ui_bar.cpp", "language": "cpp", "sizeLines": 175, "fileCategory": "code"},
+    {"path": "engine/ui/ui_button.cpp", "language": "cpp", "sizeLines": 262, "fileCategory": "code"},
+    {"path": "engine/ui/ui_font.cpp", "language": "cpp", "sizeLines": 163, "fileCategory": "code"},
+    {"path": "engine/ui/ui_font.h", "language": "c", "sizeLines": 29, "fileCategory": "code"},
+    {"path": "engine/ui/ui_sprite.cpp", "language": "cpp", "sizeLines": 157, "fileCategory": "code"},
+    {"path": "engine/ui/ui_text_renderer.cpp", "language": "cpp", "sizeLines": 189, "fileCategory": "code"},
+    {"path": "engine/ui/ui_text_renderer.h", "language": "c", "sizeLines": 43, "fileCategory": "code"},
+    {"path": "src/app/main.cpp", "language": "cpp", "sizeLines": 575, "fileCategory": "code"},
+    {"path": "src/app/main.h", "language": "c", "sizeLines": 49, "fileCategory": "code"},
+    {"path": "src/app/rendering/fade.cpp", "language": "cpp", "sizeLines": 105, "fileCategory": "code"},
+    {"path": "src/app/rendering/fade.h", "language": "c", "sizeLines": 51, "fileCategory": "code"}
+  ],
+  "batchImportData": {
+    "engine/rendering/environment/skybox.cpp": [
+      "engine/ecs/string_utils.h",
+      "engine/rendering/d3d11/renderer.h",
+      "engine/rendering/environment/skybox.h",
+      "engine/rendering/sprite/texture.h",
+      "engine/scene/render_settings.h"
+    ],
+    "engine/rendering/model/model_util.cpp": [
+      "engine/rendering/d3d11/renderer.h",
+      "engine/rendering/model/model_util.h"
+    ],
+    "engine/rendering/particle/particle_system.cpp": [
+      "engine/ecs/string_utils.h",
+      "engine/rendering/d3d11/renderer.h",
+      "engine/rendering/particle/particle_system.h",
+      "engine/rendering/sprite/texture.h"
+    ],
+    "engine/rendering/sprite/line_sprite.cpp": [
+      "engine/rendering/d3d11/renderer.h",
+      "engine/rendering/d3d11/shader.h",
+      "engine/rendering/sprite/line_sprite.h",
+      "engine/rendering/sprite/texture.h"
+    ],
+    "engine/rendering/sprite/line_sprite.h": [],
+    "engine/rendering/sprite/sprite.cpp": [
+      "engine/debug_draw/debug_ofstream.h",
+      "engine/rendering/d3d11/renderer.h",
+      "engine/rendering/d3d11/shader.h",
+      "engine/rendering/sprite/sprite.h",
+      "engine/rendering/sprite/texture.h"
+    ],
+    "engine/rendering/sprite/sprite.h": [],
+    "engine/rendering/sprite/texture.cpp": [
+      "engine/debug_draw/debug_ofstream.h",
+      "engine/rendering/d3d11/renderer.h",
+      "engine/rendering/sprite/texture.h",
+      "engine/ui/ui_font.h"
+    ],
+    "engine/rendering/sprite/texture.h": [],
+    "engine/ui/scene_canvas.cpp": [
+      "engine/core/engine_gui.h",
+      "engine/ecs/string_utils.h",
+      "engine/input/key_logger.h",
+      "engine/rendering/d3d11/renderer.h",
+      "engine/rendering/sprite/sprite.h",
+      "engine/rendering/sprite/texture.h",
+      "engine/ui/scene_canvas.h"
+    ],
+    "engine/ui/ui_bar.cpp": [
+      "engine/ecs/string_utils.h",
+      "engine/rendering/sprite/sprite.h",
+      "engine/rendering/sprite/texture.h",
+      "engine/ui/ui_bar.h"
+    ],
+    "engine/ui/ui_button.cpp": [
+      "engine/audio/audio_manager.h",
+      "engine/core/engine_gui.h",
+      "engine/ecs/string_utils.h",
+      "engine/input/mouse.h",
+      "engine/rendering/sprite/sprite.h",
+      "engine/rendering/sprite/texture.h",
+      "engine/ui/ui_button.h"
+    ],
+    "engine/ui/ui_font.cpp": [
+      "engine/rendering/sprite/texture.h",
+      "engine/ui/ui_font.h"
+    ],
+    "engine/ui/ui_font.h": [],
+    "engine/ui/ui_sprite.cpp": [
+      "engine/ecs/string_utils.h",
+      "engine/rendering/sprite/sprite.h",
+      "engine/rendering/sprite/texture.h",
+      "engine/ui/ui_sprite.h"
+    ],
+    "engine/ui/ui_text_renderer.cpp": [
+      "engine/rendering/sprite/sprite.h",
+      "engine/rendering/sprite/texture.h",
+      "engine/ui/ui_font.h",
+      "engine/ui/ui_text_renderer.h"
+    ],
+    "engine/ui/ui_text_renderer.h": [],
+    "src/app/main.cpp": [
+      "engine/audio/audio_manager.h",
+      "engine/core/debug_system.h",
+      "engine/core/engine_gui.h",
+      "engine/core/job_system.h",
+      "engine/core/system_timer.h",
+      "engine/debug_draw/debug_ofstream.h",
+      "engine/debug_draw/debug_text.h",
+      "engine/input/controller.h",
+      "engine/input/key_logger.h",
+      "engine/input/keyboard.h",
+      "engine/input/mouse.h",
+      "engine/rendering/d3d11/post_process.h",
+      "engine/rendering/d3d11/renderer.h",
+      "engine/rendering/d3d11/shader.h",
+      "engine/rendering/effect/effect_system.h",
+      "engine/rendering/model/model_util.h",
+      "engine/rendering/sprite/line_sprite.h",
+      "engine/rendering/sprite/sprite.h",
+      "engine/rendering/sprite/texture.h",
+      "src/app/main.h"
+    ],
+    "src/app/main.h": [],
+    "src/app/rendering/fade.cpp": [
+      "engine/rendering/sprite/sprite.h",
+      "engine/rendering/sprite/texture.h",
+      "src/app/rendering/fade.h"
+    ],
+    "src/app/rendering/fade.h": []
+  }
+}

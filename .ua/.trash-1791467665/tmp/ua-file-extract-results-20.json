@@ -1,0 +1,65 @@
+{
+  "scriptCompleted": true,
+  "filesAnalyzed": 1,
+  "filesSkipped": [
+    "rom/skybox/MySkybox.dds",
+    "rom/skybox/run.bat",
+    "rom/skybox/texassemble.exe",
+    "shaders/FullscreenVS.hlsl",
+    "shaders/LightingCommon.hlsli",
+    "shaders/ParticlePS.hlsl",
+    "shaders/ParticleVS.hlsl",
+    "shaders/PixelShader2D.hlsl",
+    "shaders/PixelShader3D.hlsl",
+    "shaders/PixelShader3D_DirectionalPixel.hlsl",
+    "shaders/PixelShader3D_Hemisphere.hlsl",
+    "shaders/PixelShader3D_Outline.hlsl",
+    "shaders/PixelShader3D_PBR.hlsl",
+    "shaders/PixelShader3D_PointPixel.hlsl",
+    "shaders/PixelShader3D_Rim.hlsl",
+    "shaders/PixelShader3D_SpotPixel.hlsl",
+    "shaders/PixelShader3D_SurfaceFX.hlsl",
+    "shaders/PixelShader3D_Toon.hlsl",
+    "shaders/PixelShaderUnlit.hlsl",
+    "shaders/PostProcessPS.hlsl",
+    "shaders/ShaderCommon.hlsli",
+    "shaders/SkyboxPS.hlsl",
+    "shaders/SkyboxVS.hlsl",
+    "shaders/VertexShader2D.hlsl"
+  ],
+  "filesUnreadable": [],
+  "analysisOutcomes": {
+    "structure": {
+      "succeeded": 1,
+      "failed": 0
+    },
+    "callGraph": {
+      "succeeded": 0,
+      "failed": 0,
+      "skipped": 1
+    }
+  },
+  "results": [
+    {
+      "path": "rom/tags.json",
+      "language": "json",
+      "fileCategory": "config",
+      "totalLines": 13,
+      "nonEmptyLines": 13,
+      "sections": [
+        {
+          "heading": "tags",
+          "level": 1,
+          "line": 2
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "sectionCount": 1
+      }
+    }
+  ]
+}

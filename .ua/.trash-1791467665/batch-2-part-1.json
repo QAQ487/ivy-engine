@@ -1,0 +1,392 @@
+{
+  "nodes": [
+    {
+      "id": "file:engine/ecs/audio_component.h",
+      "type": "file",
+      "name": "audio_component.h",
+      "summary": "Declares AudioComponent, a GameObject component that queues play/stop and spatial playback commands for the audio system.",
+      "tags": [
+        "component",
+        "audio",
+        "data-model",
+        "serialization"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/ecs/audio_component.h",
+      "languageNotes": "C++ header parsed as C; lifecycle methods are declared and implemented in audio_component.cpp."
+    },
+    {
+      "id": "file:engine/ecs/audio_listener_component.cpp",
+      "type": "file",
+      "name": "audio_listener_component.cpp",
+      "summary": "Implements empty JSON serialize/deserialize for AudioListenerComponent; pose is applied by the listener sync system.",
+      "tags": [
+        "component",
+        "audio",
+        "serialization"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/ecs/audio_listener_component.cpp"
+    },
+    {
+      "id": "file:engine/ecs/audio_listener_component.h",
+      "type": "file",
+      "name": "audio_listener_component.h",
+      "summary": "Declares AudioListenerComponent, a marker component identifying the scene node that owns the 3D audio listener.",
+      "tags": [
+        "component",
+        "audio",
+        "data-model"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/ecs/audio_listener_component.h"
+    },
+    {
+      "id": "file:engine/ecs/billboard_component.h",
+      "type": "file",
+      "name": "billboard_component.h",
+      "summary": "Declares BillboardComponent for textured camera-facing quads, including scene-wide submit helpers separate from VisualComponent.",
+      "tags": [
+        "component",
+        "rendering",
+        "data-model",
+        "serialization"
+      ],
+      "complexity": "moderate",
+      "filePath": "engine/ecs/billboard_component.h"
+    },
+    {
+      "id": "file:engine/ecs/collider_component.h",
+      "type": "file",
+      "name": "collider_component.h",
+      "summary": "Declares ColliderComponent, serializable collider shape settings that apply to or clear a GameObject physics collider.",
+      "tags": [
+        "component",
+        "physics",
+        "data-model",
+        "serialization"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/ecs/collider_component.h"
+    },
+    {
+      "id": "file:engine/ecs/component.h",
+      "type": "file",
+      "name": "component.h",
+      "summary": "Defines the Component base interface: owner pointer, lifecycle hooks, parameter injection, and JSON serialize/deserialize.",
+      "tags": [
+        "type-definition",
+        "component",
+        "data-model"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/ecs/component.h",
+      "languageNotes": "Abstract base with default no-op lifecycle methods; GetTypeName is pure virtual."
+    },
+    {
+      "id": "file:engine/ecs/component_factory.cpp",
+      "type": "file",
+      "name": "component_factory.cpp",
+      "summary": "Implements the ComponentFactory singleton registry used to construct components by type-name string.",
+      "tags": [
+        "factory",
+        "singleton",
+        "component"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/ecs/component_factory.cpp"
+    },
+    {
+      "id": "file:engine/ecs/component_factory.h",
+      "type": "file",
+      "name": "component_factory.h",
+      "summary": "Declares the singleton ComponentFactory and REGISTER_COMPONENT macro for JSON-driven component instantiation.",
+      "tags": [
+        "factory",
+        "singleton",
+        "type-definition"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/ecs/component_factory.h"
+    },
+    {
+      "id": "class:engine/ecs/audio_component.h:AudioComponent",
+      "type": "class",
+      "name": "AudioComponent",
+      "summary": "Clip playback component with bus, volume, loop, autoPlay, and spatial fields; play/stop commands flush on the main thread.",
+      "tags": [
+        "component",
+        "audio",
+        "serialization"
+      ],
+      "complexity": "moderate",
+      "filePath": "engine/ecs/audio_component.h",
+      "lineRange": [
+        8,
+        50
+      ]
+    },
+    {
+      "id": "class:engine/ecs/audio_listener_component.h:AudioListenerComponent",
+      "type": "class",
+      "name": "AudioListenerComponent",
+      "summary": "Marker component naming the audio listener; serialization stores an empty JSON object.",
+      "tags": [
+        "component",
+        "audio",
+        "serialization"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/ecs/audio_listener_component.h",
+      "lineRange": [
+        7,
+        13
+      ]
+    },
+    {
+      "id": "class:engine/ecs/billboard_component.h:BillboardComponent",
+      "type": "class",
+      "name": "BillboardComponent",
+      "summary": "Textured quad billboard with size, color, rotation, and ground-alignment; submits draw data for a scene tree.",
+      "tags": [
+        "component",
+        "rendering",
+        "serialization"
+      ],
+      "complexity": "moderate",
+      "filePath": "engine/ecs/billboard_component.h",
+      "lineRange": [
+        32,
+        62
+      ]
+    },
+    {
+      "id": "class:engine/ecs/collider_component.h:ColliderComponent",
+      "type": "class",
+      "name": "ColliderComponent",
+      "summary": "Stores collider type, extents, trigger flag, and debug visibility; ApplyToOwner builds the physics shape.",
+      "tags": [
+        "component",
+        "physics",
+        "serialization"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/ecs/collider_component.h",
+      "lineRange": [
+        7,
+        25
+      ]
+    },
+    {
+      "id": "class:engine/ecs/component.h:Component",
+      "type": "class",
+      "name": "Component",
+      "summary": "Base type for all GameObject components, defining attach/detach/update/reset and JSON persistence hooks.",
+      "tags": [
+        "type-definition",
+        "component",
+        "lifecycle"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/ecs/component.h",
+      "lineRange": [
+        18,
+        48
+      ]
+    },
+    {
+      "id": "class:engine/ecs/component_factory.h:ComponentFactory",
+      "type": "class",
+      "name": "ComponentFactory",
+      "summary": "Singleton map from GetTypeName strings to creator lambdas used when loading prefabs and scenes.",
+      "tags": [
+        "factory",
+        "singleton",
+        "component"
+      ],
+      "complexity": "simple",
+      "filePath": "engine/ecs/component_factory.h",
+      "lineRange": [
+        25,
+        45
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:engine/ecs/audio_component.h",
+      "target": "class:engine/ecs/audio_component.h:AudioComponent",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/audio_component.h",
+      "target": "class:engine/ecs/audio_component.h:AudioComponent",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/audio_listener_component.h",
+      "target": "class:engine/ecs/audio_listener_component.h:AudioListenerComponent",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/audio_listener_component.h",
+      "target": "class:engine/ecs/audio_listener_component.h:AudioListenerComponent",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/billboard_component.h",
+      "target": "class:engine/ecs/billboard_component.h:BillboardComponent",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/billboard_component.h",
+      "target": "class:engine/ecs/billboard_component.h:BillboardComponent",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/collider_component.h",
+      "target": "class:engine/ecs/collider_component.h:ColliderComponent",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/collider_component.h",
+      "target": "class:engine/ecs/collider_component.h:ColliderComponent",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/component.h",
+      "target": "class:engine/ecs/component.h:Component",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/component.h",
+      "target": "class:engine/ecs/component.h:Component",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/component_factory.h",
+      "target": "class:engine/ecs/component_factory.h:ComponentFactory",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/component_factory.h",
+      "target": "class:engine/ecs/component_factory.h:ComponentFactory",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/audio_component.h",
+      "target": "file:engine/audio/audio_manager.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/ecs/audio_component.h",
+      "target": "file:engine/ecs/component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/ecs/audio_listener_component.cpp",
+      "target": "file:engine/ecs/audio_listener_component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/ecs/audio_listener_component.h",
+      "target": "file:engine/ecs/component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/ecs/billboard_component.h",
+      "target": "file:engine/ecs/component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/ecs/collider_component.h",
+      "target": "file:engine/ecs/component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/ecs/collider_component.h",
+      "target": "file:engine/physics/collider/collider.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/ecs/component_factory.cpp",
+      "target": "file:engine/ecs/component_factory.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/ecs/component_factory.h",
+      "target": "file:engine/ecs/component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "class:engine/ecs/audio_component.h:AudioComponent",
+      "target": "class:engine/ecs/component.h:Component",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:engine/ecs/audio_listener_component.h:AudioListenerComponent",
+      "target": "class:engine/ecs/component.h:Component",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:engine/ecs/billboard_component.h:BillboardComponent",
+      "target": "class:engine/ecs/component.h:Component",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:engine/ecs/collider_component.h:ColliderComponent",
+      "target": "class:engine/ecs/component.h:Component",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    }
+  ]
+}

@@ -1,0 +1,1902 @@
+{
+  "nodes": [
+    {
+      "id": "file:engine/rendering/sprite/sprite.cpp",
+      "type": "file",
+      "name": "sprite.cpp",
+      "filePath": "engine/rendering/sprite/sprite.cpp",
+      "summary": "2D sprite rasterizer that uploads quads (and a radial-fill fan) through the shared 2D shaders, with rotation, atlas UVs, and color tint.",
+      "tags": [
+        "rendering",
+        "sprite",
+        "2d",
+        "d3d11"
+      ],
+      "complexity": "complex",
+      "languageNotes": "Sprite_Draw overloads funnel into one textured-quad path; Sprite_DrawRadialFill builds a triangle fan for circular progress."
+    },
+    {
+      "id": "file:engine/rendering/sprite/sprite.h",
+      "type": "file",
+      "name": "sprite.h",
+      "filePath": "engine/rendering/sprite/sprite.h",
+      "summary": "Public 2D sprite API: initialize/finalize plus draw overloads and radial-fill drawing for circular progress indicators.",
+      "tags": [
+        "rendering",
+        "sprite",
+        "type-definition",
+        "api-handler"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:engine/rendering/sprite/texture.cpp",
+      "type": "file",
+      "name": "texture.cpp",
+      "filePath": "engine/rendering/sprite/texture.cpp",
+      "summary": "Texture slot manager that loads WIC/DirectXTex images, creates RGBA atlases, caches a 1x1 white texture, and loads DDS cubemaps.",
+      "tags": [
+        "rendering",
+        "texture",
+        "resource-cache",
+        "d3d11"
+      ],
+      "complexity": "complex",
+      "languageNotes": "Fixed arrays of 1024 2D textures and 64 cubemaps; TextureAllRelease also clears the UI font cache."
+    },
+    {
+      "id": "file:engine/rendering/sprite/texture.h",
+      "type": "file",
+      "name": "texture.h",
+      "filePath": "engine/rendering/sprite/texture.h",
+      "summary": "Declares texture and cubemap load/bind/release APIs used by sprites, UI, particles, and the skybox.",
+      "tags": [
+        "rendering",
+        "texture",
+        "type-definition",
+        "api-handler"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:engine/ui/scene_canvas.cpp",
+      "type": "file",
+      "name": "scene_canvas.cpp",
+      "filePath": "engine/ui/scene_canvas.cpp",
+      "summary": "Owns the shared in-game UI canvas: JSON load/save of sprites, text, buttons, and bars, plus HUD bindings, button actions, and respawn overlay/timer helpers.",
+      "tags": [
+        "ui",
+        "canvas",
+        "serialization",
+        "api-handler"
+      ],
+      "complexity": "complex",
+      "languageNotes": "Anonymous-namespace JSON helpers plus a button-action registry that defaults LoadScene to SceneCanvas_RequestSceneFile."
+    },
+    {
+      "id": "function:engine/rendering/sprite/sprite.cpp:Sprite_Initialize",
+      "type": "function",
+      "name": "Sprite_Initialize",
+      "filePath": "engine/rendering/sprite/sprite.cpp",
+      "lineRange": [
+        46,
+        72
+      ],
+      "summary": "Creates the 2D sprite vertex buffer and a larger radial-fill vertex/index pair.",
+      "tags": [
+        "initialization",
+        "sprite",
+        "d3d11"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:engine/rendering/sprite/sprite.cpp:Sprite_Finalize",
+      "type": "function",
+      "name": "Sprite_Finalize",
+      "filePath": "engine/rendering/sprite/sprite.cpp",
+      "lineRange": [
+        74,
+        79
+      ],
+      "summary": "Releases sprite and radial-fill GPU buffers.",
+      "tags": [
+        "shutdown",
+        "sprite"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/rendering/sprite/sprite.cpp:Sprite_Draw",
+      "type": "function",
+      "name": "Sprite_Draw",
+      "filePath": "engine/rendering/sprite/sprite.cpp",
+      "lineRange": [
+        92,
+        169
+      ],
+      "summary": "Draws a textured 2D quad with optional atlas UVs, rotation, and color; overloads forward here.",
+      "tags": [
+        "sprite",
+        "draw",
+        "2d"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:engine/rendering/sprite/sprite.cpp:Sprite_DrawRadialFill",
+      "type": "function",
+      "name": "Sprite_DrawRadialFill",
+      "filePath": "engine/rendering/sprite/sprite.cpp",
+      "lineRange": [
+        171,
+        383
+      ],
+      "summary": "Draws a circular-progress sprite by uploading a triangle fan clipped to fill amount and origin.",
+      "tags": [
+        "sprite",
+        "radial-fill",
+        "draw"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:engine/rendering/sprite/texture.cpp:Texture_Initialize",
+      "type": "function",
+      "name": "Texture_Initialize",
+      "filePath": "engine/rendering/sprite/texture.cpp",
+      "lineRange": [
+        35,
+        39
+      ],
+      "summary": "Stores the D3D11 device and context used by later texture loads.",
+      "tags": [
+        "initialization",
+        "texture"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/rendering/sprite/texture.cpp:Texture_Finalize",
+      "type": "function",
+      "name": "Texture_Finalize",
+      "filePath": "engine/rendering/sprite/texture.cpp",
+      "lineRange": [
+        50,
+        53
+      ],
+      "summary": "Releases all 2D textures and cubemaps held by the manager.",
+      "tags": [
+        "shutdown",
+        "texture"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/rendering/sprite/texture.cpp:TextureLoad",
+      "type": "function",
+      "name": "TextureLoad",
+      "filePath": "engine/rendering/sprite/texture.cpp",
+      "lineRange": [
+        55,
+        107
+      ],
+      "summary": "Loads or reuses a texture by wide path via DirectXTex and returns a slot id.",
+      "tags": [
+        "texture-loader",
+        "cache",
+        "d3d11"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:engine/rendering/sprite/texture.cpp:TextureCreateFromRGBA",
+      "type": "function",
+      "name": "TextureCreateFromRGBA",
+      "filePath": "engine/rendering/sprite/texture.cpp",
+      "lineRange": [
+        109,
+        151
+      ],
+      "summary": "Creates a texture slot from raw RGBA bytes, used for baked font atlases.",
+      "tags": [
+        "texture-loader",
+        "font-atlas"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:engine/rendering/sprite/texture.cpp:TextureGetWhiteTexture",
+      "type": "function",
+      "name": "TextureGetWhiteTexture",
+      "filePath": "engine/rendering/sprite/texture.cpp",
+      "lineRange": [
+        153,
+        191
+      ],
+      "summary": "Lazily creates and returns the cached 1x1 white texture id.",
+      "tags": [
+        "texture",
+        "fallback",
+        "cache"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:engine/rendering/sprite/texture.cpp:TextureAllRelease",
+      "type": "function",
+      "name": "TextureAllRelease",
+      "filePath": "engine/rendering/sprite/texture.cpp",
+      "lineRange": [
+        193,
+        199
+      ],
+      "summary": "Releases every 2D texture slot and clears the UI font cache.",
+      "tags": [
+        "texture",
+        "shutdown"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/rendering/sprite/texture.cpp:TextureSetTexture",
+      "type": "function",
+      "name": "TextureSetTexture",
+      "filePath": "engine/rendering/sprite/texture.cpp",
+      "lineRange": [
+        201,
+        208
+      ],
+      "summary": "Binds a texture slot SRV to pixel-shader slot 0, or unbinds if invalid.",
+      "tags": [
+        "texture",
+        "bind",
+        "d3d11"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/rendering/sprite/texture.cpp:TextureGetSize",
+      "type": "function",
+      "name": "TextureGetSize",
+      "filePath": "engine/rendering/sprite/texture.cpp",
+      "lineRange": [
+        210,
+        213
+      ],
+      "summary": "Returns the width and height of a texture slot.",
+      "tags": [
+        "texture",
+        "query"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/rendering/sprite/texture.cpp:CubemapLoad",
+      "type": "function",
+      "name": "CubemapLoad",
+      "filePath": "engine/rendering/sprite/texture.cpp",
+      "lineRange": [
+        235,
+        267
+      ],
+      "summary": "Loads or returns a cached DDS cubemap SRV for skybox rendering.",
+      "tags": [
+        "cubemap",
+        "texture-loader",
+        "dds"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:engine/rendering/sprite/texture.cpp:CubemapReleaseAll",
+      "type": "function",
+      "name": "CubemapReleaseAll",
+      "filePath": "engine/rendering/sprite/texture.cpp",
+      "lineRange": [
+        268,
+        273
+      ],
+      "summary": "Releases every cached cubemap SRV.",
+      "tags": [
+        "cubemap",
+        "shutdown"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ui/scene_canvas.cpp:EnsureDefaultButtonActions",
+      "type": "function",
+      "name": "EnsureDefaultButtonActions",
+      "filePath": "engine/ui/scene_canvas.cpp",
+      "lineRange": [
+        35,
+        57
+      ],
+      "summary": "Registers the built-in LoadScene button action that requests a scene file from the canvas.",
+      "tags": [
+        "ui",
+        "button-action",
+        "registry"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:engine/ui/scene_canvas.cpp:AnchorFromString",
+      "type": "function",
+      "name": "AnchorFromString",
+      "filePath": "engine/ui/scene_canvas.cpp",
+      "lineRange": [
+        59,
+        69
+      ],
+      "summary": "Parses a JSON anchor name into a UIAnchor enum.",
+      "tags": [
+        "ui",
+        "serialization",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ui/scene_canvas.cpp:AnchorToString",
+      "type": "function",
+      "name": "AnchorToString",
+      "filePath": "engine/ui/scene_canvas.cpp",
+      "lineRange": [
+        71,
+        84
+      ],
+      "summary": "Serializes a UIAnchor enum back to its JSON name.",
+      "tags": [
+        "ui",
+        "serialization",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ui/scene_canvas.cpp:TextAlignFromString",
+      "type": "function",
+      "name": "TextAlignFromString",
+      "filePath": "engine/ui/scene_canvas.cpp",
+      "lineRange": [
+        86,
+        90
+      ],
+      "summary": "Parses a text-align string used by UIText elements.",
+      "tags": [
+        "ui",
+        "serialization",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ui/scene_canvas.cpp:TextAlignToString",
+      "type": "function",
+      "name": "TextAlignToString",
+      "filePath": "engine/ui/scene_canvas.cpp",
+      "lineRange": [
+        92,
+        99
+      ],
+      "summary": "Serializes a text-align value for canvas JSON.",
+      "tags": [
+        "ui",
+        "serialization",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ui/scene_canvas.cpp:ReadFloat2",
+      "type": "function",
+      "name": "ReadFloat2",
+      "filePath": "engine/ui/scene_canvas.cpp",
+      "lineRange": [
+        101,
+        106
+      ],
+      "summary": "Reads an XMFLOAT2 from a JSON array.",
+      "tags": [
+        "ui",
+        "serialization",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ui/scene_canvas.cpp:WriteFloat2",
+      "type": "function",
+      "name": "WriteFloat2",
+      "filePath": "engine/ui/scene_canvas.cpp",
+      "lineRange": [
+        108,
+        110
+      ],
+      "summary": "Writes an XMFLOAT2 as a JSON array.",
+      "tags": [
+        "ui",
+        "serialization",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ui/scene_canvas.cpp:ReadColor",
+      "type": "function",
+      "name": "ReadColor",
+      "filePath": "engine/ui/scene_canvas.cpp",
+      "lineRange": [
+        112,
+        120
+      ],
+      "summary": "Reads an RGBA color from JSON with defaults.",
+      "tags": [
+        "ui",
+        "serialization",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ui/scene_canvas.cpp:WriteColor",
+      "type": "function",
+      "name": "WriteColor",
+      "filePath": "engine/ui/scene_canvas.cpp",
+      "lineRange": [
+        122,
+        124
+      ],
+      "summary": "Writes an RGBA color as a JSON array.",
+      "tags": [
+        "ui",
+        "serialization",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ui/scene_canvas.cpp:NormalizeSceneFile",
+      "type": "function",
+      "name": "NormalizeSceneFile",
+      "filePath": "engine/ui/scene_canvas.cpp",
+      "lineRange": [
+        126,
+        140
+      ],
+      "summary": "Normalizes a requested scene path so canvas buttons can load it consistently.",
+      "tags": [
+        "ui",
+        "path",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ui/scene_canvas.cpp:ApplyCommon",
+      "type": "function",
+      "name": "ApplyCommon",
+      "filePath": "engine/ui/scene_canvas.cpp",
+      "lineRange": [
+        142,
+        145
+      ],
+      "summary": "Applies shared JSON fields such as visibility to a freshly loaded UI element.",
+      "tags": [
+        "ui",
+        "deserialization"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ui/scene_canvas.cpp:LoadElementScript",
+      "type": "function",
+      "name": "LoadElementScript",
+      "filePath": "engine/ui/scene_canvas.cpp",
+      "lineRange": [
+        147,
+        152
+      ],
+      "summary": "Attaches a canvas script to an element from JSON.",
+      "tags": [
+        "ui",
+        "scripting",
+        "deserialization"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ui/scene_canvas.cpp:AppendElementScript",
+      "type": "function",
+      "name": "AppendElementScript",
+      "filePath": "engine/ui/scene_canvas.cpp",
+      "lineRange": [
+        154,
+        158
+      ],
+      "summary": "Writes an element script block back into serialized JSON.",
+      "tags": [
+        "ui",
+        "scripting",
+        "serialization"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ui/scene_canvas.cpp:ReadOnClickScript",
+      "type": "function",
+      "name": "ReadOnClickScript",
+      "filePath": "engine/ui/scene_canvas.cpp",
+      "lineRange": [
+        160,
+        169
+      ],
+      "summary": "Reads a button onClick script payload from JSON.",
+      "tags": [
+        "ui",
+        "button",
+        "scripting"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ui/scene_canvas.cpp:BindSceneHudElements",
+      "type": "function",
+      "name": "BindSceneHudElements",
+      "filePath": "engine/ui/scene_canvas.cpp",
+      "lineRange": [
+        171,
+        180
+      ],
+      "summary": "Rebinds well-known HUD pointers (score, timer, red overlay) after canvas reload.",
+      "tags": [
+        "ui",
+        "hud",
+        "binding"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ui/scene_canvas.cpp:LoadSpriteElement",
+      "type": "function",
+      "name": "LoadSpriteElement",
+      "filePath": "engine/ui/scene_canvas.cpp",
+      "lineRange": [
+        182,
+        198
+      ],
+      "summary": "Deserializes a UISprite from canvas JSON including texture path and color.",
+      "tags": [
+        "ui",
+        "sprite",
+        "deserialization"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ui/scene_canvas.cpp:LoadTextElement",
+      "type": "function",
+      "name": "LoadTextElement",
+      "filePath": "engine/ui/scene_canvas.cpp",
+      "lineRange": [
+        200,
+        221
+      ],
+      "summary": "Deserializes a UIText element including font, align, and color.",
+      "tags": [
+        "ui",
+        "text",
+        "deserialization"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:engine/ui/scene_canvas.cpp:LoadButtonElement",
+      "type": "function",
+      "name": "LoadButtonElement",
+      "filePath": "engine/ui/scene_canvas.cpp",
+      "lineRange": [
+        223,
+        267
+      ],
+      "summary": "Deserializes a UIButton with state textures, action, and onClick script.",
+      "tags": [
+        "ui",
+        "button",
+        "deserialization"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:engine/ui/scene_canvas.cpp:LoadBarElement",
+      "type": "function",
+      "name": "LoadBarElement",
+      "filePath": "engine/ui/scene_canvas.cpp",
+      "lineRange": [
+        269,
+        296
+      ],
+      "summary": "Deserializes a UIBar including fill/background textures and value range.",
+      "tags": [
+        "ui",
+        "progress-bar",
+        "deserialization"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:engine/ui/scene_canvas.cpp:SerializeCommon",
+      "type": "function",
+      "name": "SerializeCommon",
+      "filePath": "engine/ui/scene_canvas.cpp",
+      "lineRange": [
+        298,
+        306
+      ],
+      "summary": "Writes shared element fields (name, anchor, position) into JSON.",
+      "tags": [
+        "ui",
+        "serialization"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ui/scene_canvas.cpp:SerializeElementJson",
+      "type": "function",
+      "name": "SerializeElementJson",
+      "filePath": "engine/ui/scene_canvas.cpp",
+      "lineRange": [
+        308,
+        387
+      ],
+      "summary": "Serializes a live UIElement (sprite/text/button/bar) to a JSON object for save/undo.",
+      "tags": [
+        "ui",
+        "serialization",
+        "undo"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:engine/ui/scene_canvas.cpp:SceneCanvas_Initialize",
+      "type": "function",
+      "name": "SceneCanvas_Initialize",
+      "filePath": "engine/ui/scene_canvas.cpp",
+      "lineRange": [
+        390,
+        397
+      ],
+      "summary": "Creates the shared UICanvas, registers default button actions, and binds HUD elements.",
+      "tags": [
+        "ui",
+        "initialization",
+        "canvas"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ui/scene_canvas.cpp:SceneCanvas_Finalize",
+      "type": "function",
+      "name": "SceneCanvas_Finalize",
+      "filePath": "engine/ui/scene_canvas.cpp",
+      "lineRange": [
+        399,
+        410
+      ],
+      "summary": "Destroys the shared canvas and clears HUD element pointers.",
+      "tags": [
+        "ui",
+        "shutdown",
+        "canvas"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ui/scene_canvas.cpp:SceneCanvas_Update",
+      "type": "function",
+      "name": "SceneCanvas_Update",
+      "filePath": "engine/ui/scene_canvas.cpp",
+      "lineRange": [
+        412,
+        416
+      ],
+      "summary": "Ticks the shared scene canvas.",
+      "tags": [
+        "ui",
+        "update",
+        "canvas"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ui/scene_canvas.cpp:SceneCanvas_Draw",
+      "type": "function",
+      "name": "SceneCanvas_Draw",
+      "filePath": "engine/ui/scene_canvas.cpp",
+      "lineRange": [
+        418,
+        422
+      ],
+      "summary": "Draws the shared scene canvas.",
+      "tags": [
+        "ui",
+        "draw",
+        "canvas"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ui/scene_canvas.cpp:SceneCanvas_ClearSceneCanvas",
+      "type": "function",
+      "name": "SceneCanvas_ClearSceneCanvas",
+      "filePath": "engine/ui/scene_canvas.cpp",
+      "lineRange": [
+        429,
+        435
+      ],
+      "summary": "Removes all canvas elements and rebinds HUD pointers.",
+      "tags": [
+        "ui",
+        "canvas",
+        "api-handler"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ui/scene_canvas.cpp:SceneCanvas_LoadSceneCanvas",
+      "type": "function",
+      "name": "SceneCanvas_LoadSceneCanvas",
+      "filePath": "engine/ui/scene_canvas.cpp",
+      "lineRange": [
+        437,
+        472
+      ],
+      "summary": "Rebuilds the canvas from a JSON document by dispatching per-type loaders.",
+      "tags": [
+        "ui",
+        "deserialization",
+        "api-handler"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:engine/ui/scene_canvas.cpp:SceneCanvas_SaveSceneCanvas",
+      "type": "function",
+      "name": "SceneCanvas_SaveSceneCanvas",
+      "filePath": "engine/ui/scene_canvas.cpp",
+      "lineRange": [
+        474,
+        488
+      ],
+      "summary": "Serializes the current canvas element list to JSON.",
+      "tags": [
+        "ui",
+        "serialization",
+        "api-handler"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ui/scene_canvas.cpp:SceneCanvas_SerializeElement",
+      "type": "function",
+      "name": "SceneCanvas_SerializeElement",
+      "filePath": "engine/ui/scene_canvas.cpp",
+      "lineRange": [
+        490,
+        493
+      ],
+      "summary": "Serializes one element to a JSON string for editor undo.",
+      "tags": [
+        "ui",
+        "serialization",
+        "undo"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ui/scene_canvas.cpp:SceneCanvas_GetElementIndex",
+      "type": "function",
+      "name": "SceneCanvas_GetElementIndex",
+      "filePath": "engine/ui/scene_canvas.cpp",
+      "lineRange": [
+        534,
+        538
+      ],
+      "summary": "Returns the index of an element pointer in the canvas list, or -1.",
+      "tags": [
+        "ui",
+        "query",
+        "api-handler"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ui/scene_canvas.cpp:SceneCanvas_RemoveElementInternal",
+      "type": "function",
+      "name": "SceneCanvas_RemoveElementInternal",
+      "filePath": "engine/ui/scene_canvas.cpp",
+      "lineRange": [
+        540,
+        545
+      ],
+      "summary": "Removes an element and refreshes HUD bindings.",
+      "tags": [
+        "ui",
+        "canvas",
+        "api-handler"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ui/scene_canvas.cpp:SceneCanvas_BindButtonAction",
+      "type": "function",
+      "name": "SceneCanvas_BindButtonAction",
+      "filePath": "engine/ui/scene_canvas.cpp",
+      "lineRange": [
+        547,
+        558
+      ],
+      "summary": "Applies a registered action binder to a button by its action name.",
+      "tags": [
+        "ui",
+        "button-action",
+        "api-handler"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ui/scene_canvas.cpp:SceneCanvas_RegisterButtonAction",
+      "type": "function",
+      "name": "SceneCanvas_RegisterButtonAction",
+      "filePath": "engine/ui/scene_canvas.cpp",
+      "lineRange": [
+        560,
+        564
+      ],
+      "summary": "Registers or replaces a named button-action binder.",
+      "tags": [
+        "ui",
+        "button-action",
+        "registry"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ui/scene_canvas.cpp:SceneCanvas_RequestSceneFile",
+      "type": "function",
+      "name": "SceneCanvas_RequestSceneFile",
+      "filePath": "engine/ui/scene_canvas.cpp",
+      "lineRange": [
+        566,
+        570
+      ],
+      "summary": "Queues a scene file (and optional play-on-load) for the next consume.",
+      "tags": [
+        "ui",
+        "scene-load",
+        "api-handler"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ui/scene_canvas.cpp:SceneCanvas_ConsumeRequestedSceneFile",
+      "type": "function",
+      "name": "SceneCanvas_ConsumeRequestedSceneFile",
+      "filePath": "engine/ui/scene_canvas.cpp",
+      "lineRange": [
+        572,
+        580
+      ],
+      "summary": "Returns and clears the pending scene-file request.",
+      "tags": [
+        "ui",
+        "scene-load",
+        "api-handler"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ui/scene_canvas.cpp:SceneCanvas_ShowRedOverlay",
+      "type": "function",
+      "name": "SceneCanvas_ShowRedOverlay",
+      "filePath": "engine/ui/scene_canvas.cpp",
+      "lineRange": [
+        582,
+        587
+      ],
+      "summary": "Shows the full-screen red respawn overlay sprite.",
+      "tags": [
+        "ui",
+        "hud",
+        "overlay"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ui/scene_canvas.cpp:SceneCanvas_HideRedOverlay",
+      "type": "function",
+      "name": "SceneCanvas_HideRedOverlay",
+      "filePath": "engine/ui/scene_canvas.cpp",
+      "lineRange": [
+        589,
+        594
+      ],
+      "summary": "Hides the red respawn overlay.",
+      "tags": [
+        "ui",
+        "hud",
+        "overlay"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ui/scene_canvas.cpp:SceneCanvas_SetRedOverlayAlpha",
+      "type": "function",
+      "name": "SceneCanvas_SetRedOverlayAlpha",
+      "filePath": "engine/ui/scene_canvas.cpp",
+      "lineRange": [
+        596,
+        601
+      ],
+      "summary": "Sets the red overlay sprite alpha.",
+      "tags": [
+        "ui",
+        "hud",
+        "overlay"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ui/scene_canvas.cpp:SceneCanvas_SetTimerSeconds",
+      "type": "function",
+      "name": "SceneCanvas_SetTimerSeconds",
+      "filePath": "engine/ui/scene_canvas.cpp",
+      "lineRange": [
+        603,
+        614
+      ],
+      "summary": "Updates the top-middle scene timer text from a seconds value.",
+      "tags": [
+        "ui",
+        "hud",
+        "timer"
+      ],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:engine/rendering/sprite/sprite.cpp",
+      "target": "function:engine/rendering/sprite/sprite.cpp:Sprite_Initialize",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/rendering/sprite/sprite.cpp",
+      "target": "function:engine/rendering/sprite/sprite.cpp:Sprite_Initialize",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/rendering/sprite/sprite.cpp",
+      "target": "function:engine/rendering/sprite/sprite.cpp:Sprite_Finalize",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/rendering/sprite/sprite.cpp",
+      "target": "function:engine/rendering/sprite/sprite.cpp:Sprite_Finalize",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/rendering/sprite/sprite.cpp",
+      "target": "function:engine/rendering/sprite/sprite.cpp:Sprite_Draw",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/rendering/sprite/sprite.cpp",
+      "target": "function:engine/rendering/sprite/sprite.cpp:Sprite_Draw",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/rendering/sprite/sprite.cpp",
+      "target": "function:engine/rendering/sprite/sprite.cpp:Sprite_DrawRadialFill",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/rendering/sprite/sprite.cpp",
+      "target": "function:engine/rendering/sprite/sprite.cpp:Sprite_DrawRadialFill",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/rendering/sprite/texture.cpp",
+      "target": "function:engine/rendering/sprite/texture.cpp:Texture_Initialize",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/rendering/sprite/texture.cpp",
+      "target": "function:engine/rendering/sprite/texture.cpp:Texture_Initialize",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/rendering/sprite/texture.cpp",
+      "target": "function:engine/rendering/sprite/texture.cpp:Texture_Finalize",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/rendering/sprite/texture.cpp",
+      "target": "function:engine/rendering/sprite/texture.cpp:Texture_Finalize",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/rendering/sprite/texture.cpp",
+      "target": "function:engine/rendering/sprite/texture.cpp:TextureLoad",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/rendering/sprite/texture.cpp",
+      "target": "function:engine/rendering/sprite/texture.cpp:TextureLoad",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/rendering/sprite/texture.cpp",
+      "target": "function:engine/rendering/sprite/texture.cpp:TextureCreateFromRGBA",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/rendering/sprite/texture.cpp",
+      "target": "function:engine/rendering/sprite/texture.cpp:TextureCreateFromRGBA",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/rendering/sprite/texture.cpp",
+      "target": "function:engine/rendering/sprite/texture.cpp:TextureGetWhiteTexture",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/rendering/sprite/texture.cpp",
+      "target": "function:engine/rendering/sprite/texture.cpp:TextureGetWhiteTexture",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/rendering/sprite/texture.cpp",
+      "target": "function:engine/rendering/sprite/texture.cpp:TextureAllRelease",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/rendering/sprite/texture.cpp",
+      "target": "function:engine/rendering/sprite/texture.cpp:TextureAllRelease",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/rendering/sprite/texture.cpp",
+      "target": "function:engine/rendering/sprite/texture.cpp:TextureSetTexture",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/rendering/sprite/texture.cpp",
+      "target": "function:engine/rendering/sprite/texture.cpp:TextureSetTexture",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/rendering/sprite/texture.cpp",
+      "target": "function:engine/rendering/sprite/texture.cpp:TextureGetSize",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/rendering/sprite/texture.cpp",
+      "target": "function:engine/rendering/sprite/texture.cpp:TextureGetSize",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/rendering/sprite/texture.cpp",
+      "target": "function:engine/rendering/sprite/texture.cpp:CubemapLoad",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/rendering/sprite/texture.cpp",
+      "target": "function:engine/rendering/sprite/texture.cpp:CubemapLoad",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/rendering/sprite/texture.cpp",
+      "target": "function:engine/rendering/sprite/texture.cpp:CubemapReleaseAll",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/rendering/sprite/texture.cpp",
+      "target": "function:engine/rendering/sprite/texture.cpp:CubemapReleaseAll",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:EnsureDefaultButtonActions",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:EnsureDefaultButtonActions",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:AnchorFromString",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:AnchorFromString",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:AnchorToString",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:AnchorToString",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:TextAlignFromString",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:TextAlignFromString",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:TextAlignToString",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:TextAlignToString",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:ReadFloat2",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:ReadFloat2",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:WriteFloat2",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:WriteFloat2",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:ReadColor",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:ReadColor",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:WriteColor",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:WriteColor",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:NormalizeSceneFile",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:NormalizeSceneFile",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:ApplyCommon",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:ApplyCommon",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:LoadElementScript",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:LoadElementScript",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:AppendElementScript",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:AppendElementScript",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:ReadOnClickScript",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:ReadOnClickScript",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:BindSceneHudElements",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:BindSceneHudElements",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:LoadSpriteElement",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:LoadSpriteElement",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:LoadTextElement",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:LoadTextElement",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:LoadButtonElement",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:LoadButtonElement",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:LoadBarElement",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:LoadBarElement",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:SerializeCommon",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:SerializeCommon",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:SerializeElementJson",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:SerializeElementJson",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:SceneCanvas_Initialize",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:SceneCanvas_Initialize",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:SceneCanvas_Finalize",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:SceneCanvas_Finalize",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:SceneCanvas_Update",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:SceneCanvas_Update",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:SceneCanvas_Draw",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:SceneCanvas_Draw",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:SceneCanvas_ClearSceneCanvas",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:SceneCanvas_ClearSceneCanvas",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:SceneCanvas_LoadSceneCanvas",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:SceneCanvas_LoadSceneCanvas",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:SceneCanvas_SaveSceneCanvas",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:SceneCanvas_SaveSceneCanvas",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:SceneCanvas_SerializeElement",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:SceneCanvas_SerializeElement",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:SceneCanvas_GetElementIndex",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:SceneCanvas_GetElementIndex",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:SceneCanvas_RemoveElementInternal",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:SceneCanvas_RemoveElementInternal",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:SceneCanvas_BindButtonAction",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:SceneCanvas_BindButtonAction",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:SceneCanvas_RegisterButtonAction",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:SceneCanvas_RegisterButtonAction",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:SceneCanvas_RequestSceneFile",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:SceneCanvas_RequestSceneFile",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:SceneCanvas_ConsumeRequestedSceneFile",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:SceneCanvas_ConsumeRequestedSceneFile",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:SceneCanvas_ShowRedOverlay",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:SceneCanvas_ShowRedOverlay",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:SceneCanvas_HideRedOverlay",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:SceneCanvas_HideRedOverlay",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:SceneCanvas_SetRedOverlayAlpha",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:SceneCanvas_SetRedOverlayAlpha",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:SceneCanvas_SetTimerSeconds",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "function:engine/ui/scene_canvas.cpp:SceneCanvas_SetTimerSeconds",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/rendering/sprite/sprite.cpp",
+      "target": "file:engine/debug_draw/debug_ofstream.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/rendering/sprite/sprite.cpp",
+      "target": "file:engine/rendering/d3d11/renderer.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/rendering/sprite/sprite.cpp",
+      "target": "file:engine/rendering/d3d11/shader.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/rendering/sprite/sprite.cpp",
+      "target": "file:engine/rendering/sprite/sprite.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/rendering/sprite/sprite.cpp",
+      "target": "file:engine/rendering/sprite/texture.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/rendering/sprite/texture.cpp",
+      "target": "file:engine/debug_draw/debug_ofstream.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/rendering/sprite/texture.cpp",
+      "target": "file:engine/rendering/d3d11/renderer.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/rendering/sprite/texture.cpp",
+      "target": "file:engine/rendering/sprite/texture.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/rendering/sprite/texture.cpp",
+      "target": "file:engine/ui/ui_font.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "file:engine/core/engine_gui.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "file:engine/ecs/string_utils.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "file:engine/input/key_logger.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "file:engine/rendering/d3d11/renderer.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "file:engine/rendering/sprite/sprite.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "file:engine/rendering/sprite/texture.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/ui/scene_canvas.cpp",
+      "target": "file:engine/ui/scene_canvas.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:engine/rendering/sprite/sprite.cpp:Sprite_Draw",
+      "target": "function:engine/rendering/sprite/texture.cpp:TextureGetSize",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/rendering/sprite/sprite.cpp:Sprite_Draw",
+      "target": "function:engine/rendering/sprite/texture.cpp:TextureSetTexture",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/rendering/sprite/sprite.cpp:Sprite_DrawRadialFill",
+      "target": "function:engine/rendering/sprite/texture.cpp:TextureSetTexture",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/rendering/sprite/texture.cpp:TextureAllRelease",
+      "target": "function:engine/ui/ui_font.cpp:UIFont_ClearCache",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/ui/scene_canvas.cpp:LoadSpriteElement",
+      "target": "function:engine/ui/ui_sprite.cpp:SetTexturePath",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/ui/scene_canvas.cpp:LoadButtonElement",
+      "target": "function:engine/ui/ui_button.cpp:SetTexturePath",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/ui/scene_canvas.cpp:LoadButtonElement",
+      "target": "function:engine/ui/ui_button.cpp:SetHoverTexturePath",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/ui/scene_canvas.cpp:LoadButtonElement",
+      "target": "function:engine/ui/ui_button.cpp:SetPressedTexturePath",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/ui/scene_canvas.cpp:LoadButtonElement",
+      "target": "function:engine/ui/ui_button.cpp:SetAction",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/ui/scene_canvas.cpp:LoadBarElement",
+      "target": "function:engine/ui/ui_bar.cpp:SetFillTexturePath",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/ui/scene_canvas.cpp:LoadBarElement",
+      "target": "function:engine/ui/ui_bar.cpp:SetBackgroundTexturePath",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

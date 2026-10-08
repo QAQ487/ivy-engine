@@ -1,0 +1,5994 @@
+{
+  "scriptCompleted": true,
+  "filesAnalyzed": 21,
+  "filesSkipped": [],
+  "filesUnreadable": [],
+  "analysisOutcomes": {
+    "structure": {
+      "succeeded": 21,
+      "failed": 0
+    },
+    "callGraph": {
+      "succeeded": 21,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "results": [
+    {
+      "path": "engine/editor/editor_ui_panel.cpp",
+      "language": "cpp",
+      "fileCategory": "code",
+      "totalLines": 535,
+      "nonEmptyLines": 487,
+      "functions": [
+        {
+          "name": "LowerAssetExtension",
+          "startLine": 27,
+          "endLine": 33,
+          "params": [
+            "path"
+          ]
+        },
+        {
+          "name": "AssetPathHasTextureExtension",
+          "startLine": 35,
+          "endLine": 42,
+          "params": [
+            "path"
+          ]
+        },
+        {
+          "name": "AcceptTexturePathDrop",
+          "startLine": 44,
+          "endLine": 57,
+          "params": [
+            "outPath"
+          ]
+        },
+        {
+          "name": "AssetPathHasFontExtension",
+          "startLine": 59,
+          "endLine": 66,
+          "params": [
+            "path"
+          ]
+        },
+        {
+          "name": "DrawFontPathInput",
+          "startLine": 68,
+          "endLine": 81,
+          "params": [
+            "id",
+            "buf",
+            "bufSize"
+          ]
+        },
+        {
+          "name": "DrawTexturePathInput",
+          "startLine": 83,
+          "endLine": 91,
+          "params": [
+            "id",
+            "buf",
+            "bufSize"
+          ]
+        },
+        {
+          "name": "DrawTextAlignCombo",
+          "startLine": 101,
+          "endLine": 109,
+          "params": [
+            "align",
+            "id"
+          ]
+        },
+        {
+          "name": "DrawAnchorCombo",
+          "startLine": 111,
+          "endLine": 123,
+          "params": [
+            "anchor",
+            "id"
+          ]
+        },
+        {
+          "name": "SelectCanvasElement",
+          "startLine": 125,
+          "endLine": 131,
+          "params": [
+            "selectedUiElement",
+            "selectedNode",
+            "element"
+          ]
+        },
+        {
+          "name": "DrawCanvasElementHierarchy",
+          "startLine": 183,
+          "endLine": 205,
+          "params": [
+            "selectedUiElement",
+            "selectedNode"
+          ]
+        },
+        {
+          "name": "DrawCanvasElementProperties",
+          "startLine": 207,
+          "endLine": 533,
+          "params": [
+            "selectedUiElement"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "LowerAssetExtension",
+          "line": 27,
+          "isDefault": false
+        },
+        {
+          "name": "AssetPathHasTextureExtension",
+          "line": 35,
+          "isDefault": false
+        },
+        {
+          "name": "AcceptTexturePathDrop",
+          "line": 44,
+          "isDefault": false
+        },
+        {
+          "name": "AssetPathHasFontExtension",
+          "line": 59,
+          "isDefault": false
+        },
+        {
+          "name": "DrawFontPathInput",
+          "line": 68,
+          "isDefault": false
+        },
+        {
+          "name": "DrawTexturePathInput",
+          "line": 83,
+          "isDefault": false
+        },
+        {
+          "name": "DrawTextAlignCombo",
+          "line": 101,
+          "isDefault": false
+        },
+        {
+          "name": "DrawAnchorCombo",
+          "line": 111,
+          "isDefault": false
+        },
+        {
+          "name": "SelectCanvasElement",
+          "line": 125,
+          "isDefault": false
+        },
+        {
+          "name": "DrawCanvasElementHierarchy",
+          "line": 183,
+          "isDefault": false
+        },
+        {
+          "name": "DrawCanvasElementProperties",
+          "line": 207,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "LowerAssetExtension",
+          "callee": "string",
+          "lineNumber": 29
+        },
+        {
+          "caller": "LowerAssetExtension",
+          "callee": "extension",
+          "lineNumber": 29
+        },
+        {
+          "caller": "LowerAssetExtension",
+          "callee": "fs::path",
+          "lineNumber": 29
+        },
+        {
+          "caller": "LowerAssetExtension",
+          "callee": "std::transform",
+          "lineNumber": 30
+        },
+        {
+          "caller": "LowerAssetExtension",
+          "callee": "begin",
+          "lineNumber": 30
+        },
+        {
+          "caller": "LowerAssetExtension",
+          "callee": "end",
+          "lineNumber": 30
+        },
+        {
+          "caller": "LowerAssetExtension",
+          "callee": "begin",
+          "lineNumber": 30
+        },
+        {
+          "caller": "LowerAssetExtension",
+          "callee": "static_cast<char>",
+          "lineNumber": 31
+        },
+        {
+          "caller": "LowerAssetExtension",
+          "callee": "std::tolower",
+          "lineNumber": 31
+        },
+        {
+          "caller": "AssetPathHasTextureExtension",
+          "callee": "LowerAssetExtension",
+          "lineNumber": 36
+        },
+        {
+          "caller": "AcceptTexturePathDrop",
+          "callee": "ImGui::BeginDragDropTarget",
+          "lineNumber": 46
+        },
+        {
+          "caller": "AcceptTexturePathDrop",
+          "callee": "ImGui::AcceptDragDropPayload",
+          "lineNumber": 47
+        },
+        {
+          "caller": "AcceptTexturePathDrop",
+          "callee": "static_cast<const char*>",
+          "lineNumber": 48
+        },
+        {
+          "caller": "AcceptTexturePathDrop",
+          "callee": "AssetPathHasTextureExtension",
+          "lineNumber": 49
+        },
+        {
+          "caller": "AcceptTexturePathDrop",
+          "callee": "ImGui::EndDragDropTarget",
+          "lineNumber": 54
+        },
+        {
+          "caller": "AssetPathHasFontExtension",
+          "callee": "LowerAssetExtension",
+          "lineNumber": 60
+        },
+        {
+          "caller": "DrawFontPathInput",
+          "callee": "ImGui::InputText",
+          "lineNumber": 69
+        },
+        {
+          "caller": "DrawFontPathInput",
+          "callee": "ImGui::BeginDragDropTarget",
+          "lineNumber": 70
+        },
+        {
+          "caller": "DrawFontPathInput",
+          "callee": "ImGui::AcceptDragDropPayload",
+          "lineNumber": 71
+        },
+        {
+          "caller": "DrawFontPathInput",
+          "callee": "static_cast<const char*>",
+          "lineNumber": 72
+        },
+        {
+          "caller": "DrawFontPathInput",
+          "callee": "AssetPathHasFontExtension",
+          "lineNumber": 73
+        },
+        {
+          "caller": "DrawFontPathInput",
+          "callee": "strncpy_s",
+          "lineNumber": 74
+        },
+        {
+          "caller": "DrawFontPathInput",
+          "callee": "ImGui::EndDragDropTarget",
+          "lineNumber": 78
+        },
+        {
+          "caller": "DrawTexturePathInput",
+          "callee": "ImGui::InputText",
+          "lineNumber": 84
+        },
+        {
+          "caller": "DrawTexturePathInput",
+          "callee": "AcceptTexturePathDrop",
+          "lineNumber": 86
+        },
+        {
+          "caller": "DrawTexturePathInput",
+          "callee": "strncpy_s",
+          "lineNumber": 87
+        },
+        {
+          "caller": "DrawTexturePathInput",
+          "callee": "c_str",
+          "lineNumber": 87
+        },
+        {
+          "caller": "DrawTextAlignCombo",
+          "callee": "static_cast<int>",
+          "lineNumber": 103
+        },
+        {
+          "caller": "DrawTextAlignCombo",
+          "callee": "ImGui::Combo",
+          "lineNumber": 104
+        },
+        {
+          "caller": "DrawTextAlignCombo",
+          "callee": "IM_ARRAYSIZE",
+          "lineNumber": 104
+        },
+        {
+          "caller": "DrawTextAlignCombo",
+          "callee": "static_cast<TextAlign>",
+          "lineNumber": 105
+        },
+        {
+          "caller": "DrawAnchorCombo",
+          "callee": "static_cast<int>",
+          "lineNumber": 117
+        },
+        {
+          "caller": "DrawAnchorCombo",
+          "callee": "ImGui::Combo",
+          "lineNumber": 118
+        },
+        {
+          "caller": "DrawAnchorCombo",
+          "callee": "IM_ARRAYSIZE",
+          "lineNumber": 118
+        },
+        {
+          "caller": "DrawAnchorCombo",
+          "callee": "static_cast<UIAnchor>",
+          "lineNumber": 119
+        },
+        {
+          "caller": "SelectCanvasElement",
+          "callee": "EngineGUI_SetEditMode",
+          "lineNumber": 129
+        },
+        {
+          "caller": "DrawCanvasElementHierarchy",
+          "callee": "SceneCanvas_GetCanvas",
+          "lineNumber": 184
+        },
+        {
+          "caller": "DrawCanvasElementHierarchy",
+          "callee": "ImGui::TextDisabled",
+          "lineNumber": 186
+        },
+        {
+          "caller": "DrawCanvasElementHierarchy",
+          "callee": "GetElements",
+          "lineNumber": 190
+        },
+        {
+          "caller": "DrawCanvasElementHierarchy",
+          "callee": "empty",
+          "lineNumber": 191
+        },
+        {
+          "caller": "DrawCanvasElementHierarchy",
+          "callee": "ImGui::TextDisabled",
+          "lineNumber": 192
+        },
+        {
+          "caller": "DrawCanvasElementHierarchy",
+          "callee": "ImGui::PushID",
+          "lineNumber": 198
+        },
+        {
+          "caller": "DrawCanvasElementHierarchy",
+          "callee": "get",
+          "lineNumber": 198
+        },
+        {
+          "caller": "DrawCanvasElementHierarchy",
+          "callee": "get",
+          "lineNumber": 199
+        },
+        {
+          "caller": "DrawCanvasElementHierarchy",
+          "callee": "std::string",
+          "lineNumber": 200
+        },
+        {
+          "caller": "DrawCanvasElementHierarchy",
+          "callee": "GetUiElementTypeName",
+          "lineNumber": 200
+        },
+        {
+          "caller": "DrawCanvasElementHierarchy",
+          "callee": "get",
+          "lineNumber": 200
+        },
+        {
+          "caller": "DrawCanvasElementHierarchy",
+          "callee": "GetName",
+          "lineNumber": 200
+        },
+        {
+          "caller": "DrawCanvasElementHierarchy",
+          "callee": "ImGui::Selectable",
+          "lineNumber": 201
+        },
+        {
+          "caller": "DrawCanvasElementHierarchy",
+          "callee": "c_str",
+          "lineNumber": 201
+        },
+        {
+          "caller": "DrawCanvasElementHierarchy",
+          "callee": "SelectCanvasElement",
+          "lineNumber": 202
+        },
+        {
+          "caller": "DrawCanvasElementHierarchy",
+          "callee": "get",
+          "lineNumber": 202
+        },
+        {
+          "caller": "DrawCanvasElementHierarchy",
+          "callee": "ImGui::PopID",
+          "lineNumber": 203
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::Text",
+          "lineNumber": 211
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "GetUiElementTypeName",
+          "lineNumber": 211
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "c_str",
+          "lineNumber": 211
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "GetName",
+          "lineNumber": 211
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::Separator",
+          "lineNumber": 212
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "strncpy_s",
+          "lineNumber": 229
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "c_str",
+          "lineNumber": 229
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "GetName",
+          "lineNumber": 229
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "strncpy_s",
+          "lineNumber": 240
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "c_str",
+          "lineNumber": 240
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "GetScriptClass",
+          "lineNumber": 240
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "dynamic_cast<UISprite*>",
+          "lineNumber": 241
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "strncpy_s",
+          "lineNumber": 242
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "c_str",
+          "lineNumber": 242
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "GetTexturePath",
+          "lineNumber": 242
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "dynamic_cast<UIText*>",
+          "lineNumber": 243
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "strncpy_s",
+          "lineNumber": 244
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "c_str",
+          "lineNumber": 244
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "GetText",
+          "lineNumber": 244
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "strncpy_s",
+          "lineNumber": 245
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "c_str",
+          "lineNumber": 245
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "GetFontPath",
+          "lineNumber": 245
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "dynamic_cast<UIButton*>",
+          "lineNumber": 247
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "strncpy_s",
+          "lineNumber": 248
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "c_str",
+          "lineNumber": 248
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "GetText",
+          "lineNumber": 248
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "strncpy_s",
+          "lineNumber": 249
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "c_str",
+          "lineNumber": 249
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "GetAction",
+          "lineNumber": 249
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "strncpy_s",
+          "lineNumber": 250
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "c_str",
+          "lineNumber": 250
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "GetActionScene",
+          "lineNumber": 250
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "strncpy_s",
+          "lineNumber": 251
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "c_str",
+          "lineNumber": 251
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "GetTexturePath",
+          "lineNumber": 251
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "strncpy_s",
+          "lineNumber": 252
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "c_str",
+          "lineNumber": 252
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "GetHoverTexturePath",
+          "lineNumber": 252
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "strncpy_s",
+          "lineNumber": 253
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "c_str",
+          "lineNumber": 253
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "GetPressedTexturePath",
+          "lineNumber": 253
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "strncpy_s",
+          "lineNumber": 254
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "c_str",
+          "lineNumber": 254
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "UIButton::GetFontPath",
+          "lineNumber": 254
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "dynamic_cast<UIBar*>",
+          "lineNumber": 256
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "strncpy_s",
+          "lineNumber": 257
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "c_str",
+          "lineNumber": 257
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "GetLabel",
+          "lineNumber": 257
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::SetNextItemWidth",
+          "lineNumber": 260
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::InputText",
+          "lineNumber": 261
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "SetName",
+          "lineNumber": 263
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "IsVisible",
+          "lineNumber": 265
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::Checkbox",
+          "lineNumber": 266
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "SetVisible",
+          "lineNumber": 267
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "SceneCanvas_GetCanvas",
+          "lineNumber": 269
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::Text",
+          "lineNumber": 270
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "GetElementIndex",
+          "lineNumber": 272
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "EditorUndo_PushUiReorder",
+          "lineNumber": 274
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "GetElementIndex",
+          "lineNumber": 274
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "EngineGUI_MarkSceneDirty",
+          "lineNumber": 275
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::Button",
+          "lineNumber": 278
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImVec2",
+          "lineNumber": 278
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "undoableMove",
+          "lineNumber": 279
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::SameLine",
+          "lineNumber": 280
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::Button",
+          "lineNumber": 281
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImVec2",
+          "lineNumber": 281
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "undoableMove",
+          "lineNumber": 282
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::SameLine",
+          "lineNumber": 283
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::Button",
+          "lineNumber": 284
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImVec2",
+          "lineNumber": 284
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "undoableMove",
+          "lineNumber": 285
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::SameLine",
+          "lineNumber": 286
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::Button",
+          "lineNumber": 287
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImVec2",
+          "lineNumber": 287
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "undoableMove",
+          "lineNumber": 288
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::TextDisabled",
+          "lineNumber": 289
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "GetAnchor",
+          "lineNumber": 292
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::Text",
+          "lineNumber": 293
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::SetNextItemWidth",
+          "lineNumber": 294
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "DrawAnchorCombo",
+          "lineNumber": 295
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "SetAnchor",
+          "lineNumber": 296
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "GetPosition",
+          "lineNumber": 298
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::Text",
+          "lineNumber": 299
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::Text",
+          "lineNumber": 300
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::SameLine",
+          "lineNumber": 300
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::DragFloat",
+          "lineNumber": 301
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "SetPosition",
+          "lineNumber": 301
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::Text",
+          "lineNumber": 302
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::SameLine",
+          "lineNumber": 302
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::DragFloat",
+          "lineNumber": 303
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "SetPosition",
+          "lineNumber": 303
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "dynamic_cast<UISprite*>",
+          "lineNumber": 305
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::Separator",
+          "lineNumber": 306
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::Text",
+          "lineNumber": 307
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "GetWidth",
+          "lineNumber": 308
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "GetHeight",
+          "lineNumber": 309
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::Text",
+          "lineNumber": 310
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::SameLine",
+          "lineNumber": 310
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::DragFloat",
+          "lineNumber": 311
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "SetSize",
+          "lineNumber": 311
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::Text",
+          "lineNumber": 312
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::SameLine",
+          "lineNumber": 312
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::DragFloat",
+          "lineNumber": 313
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "SetSize",
+          "lineNumber": 313
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "GetRotation",
+          "lineNumber": 314
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::Text",
+          "lineNumber": 315
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::SameLine",
+          "lineNumber": 315
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::DragFloat",
+          "lineNumber": 316
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "SetRotation",
+          "lineNumber": 316
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "GetColor",
+          "lineNumber": 317
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::ColorEdit4",
+          "lineNumber": 318
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "SetColor",
+          "lineNumber": 318
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::Text",
+          "lineNumber": 319
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::SetNextItemWidth",
+          "lineNumber": 320
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "DrawTexturePathInput",
+          "lineNumber": 321
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "SetTexturePath",
+          "lineNumber": 322
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "dynamic_cast<UIText*>",
+          "lineNumber": 324
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::Separator",
+          "lineNumber": 325
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::Text",
+          "lineNumber": 326
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::SetNextItemWidth",
+          "lineNumber": 327
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::InputText",
+          "lineNumber": 328
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "SetText",
+          "lineNumber": 329
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "GetAlignment",
+          "lineNumber": 331
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::Text",
+          "lineNumber": 332
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::SetNextItemWidth",
+          "lineNumber": 333
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "DrawTextAlignCombo",
+          "lineNumber": 334
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "SetAlignment",
+          "lineNumber": 335
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "GetFontSize",
+          "lineNumber": 337
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::Text",
+          "lineNumber": 338
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::SameLine",
+          "lineNumber": 338
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::DragFloat",
+          "lineNumber": 339
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "SetFontSize",
+          "lineNumber": 339
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "GetCharacterSpacing",
+          "lineNumber": 341
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::Text",
+          "lineNumber": 342
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::SameLine",
+          "lineNumber": 342
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::DragFloat",
+          "lineNumber": 343
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "SetCharacterSpacing",
+          "lineNumber": 344
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::TextDisabled",
+          "lineNumber": 345
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "GetFontCharWidth",
+          "lineNumber": 347
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "GetFontCharHeight",
+          "lineNumber": 348
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "GetFontCharsPerRow",
+          "lineNumber": 349
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::Text",
+          "lineNumber": 350
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::SameLine",
+          "lineNumber": 350
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::DragFloat",
+          "lineNumber": 351
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::Text",
+          "lineNumber": 352
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::SameLine",
+          "lineNumber": 352
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::DragFloat",
+          "lineNumber": 353
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::Text",
+          "lineNumber": 354
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::SameLine",
+          "lineNumber": 354
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::InputInt",
+          "lineNumber": 355
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::Text",
+          "lineNumber": 356
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::SetNextItemWidth",
+          "lineNumber": 357
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "DrawFontPathInput",
+          "lineNumber": 358
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::TextDisabled",
+          "lineNumber": 360
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "SetFontPath",
+          "lineNumber": 362
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "GetColor",
+          "lineNumber": 363
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::ColorEdit4",
+          "lineNumber": 364
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "SetColor",
+          "lineNumber": 364
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "dynamic_cast<UIButton*>",
+          "lineNumber": 366
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::Separator",
+          "lineNumber": 367
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::Text",
+          "lineNumber": 368
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "GetWidth",
+          "lineNumber": 369
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "GetHeight",
+          "lineNumber": 370
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::Text",
+          "lineNumber": 371
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::SameLine",
+          "lineNumber": 371
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::DragFloat",
+          "lineNumber": 372
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "SetSize",
+          "lineNumber": 372
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::Text",
+          "lineNumber": 373
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::SameLine",
+          "lineNumber": 373
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::DragFloat",
+          "lineNumber": 374
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "SetSize",
+          "lineNumber": 374
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::SetNextItemWidth",
+          "lineNumber": 376
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::InputText",
+          "lineNumber": 377
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "SetText",
+          "lineNumber": 378
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "GetTextScale",
+          "lineNumber": 380
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::Text",
+          "lineNumber": 381
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::SameLine",
+          "lineNumber": 381
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::DragFloat",
+          "lineNumber": 382
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "SetTextScale",
+          "lineNumber": 382
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "GetColor",
+          "lineNumber": 384
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::ColorEdit4",
+          "lineNumber": 385
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "SetColor",
+          "lineNumber": 385
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "GetHoverColor",
+          "lineNumber": 386
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::ColorEdit4",
+          "lineNumber": 387
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "SetHoverColor",
+          "lineNumber": 387
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "GetPressedColor",
+          "lineNumber": 388
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::ColorEdit4",
+          "lineNumber": 389
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "SetPressedColor",
+          "lineNumber": 389
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "GetTextColor",
+          "lineNumber": 390
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::ColorEdit4",
+          "lineNumber": 391
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "SetTextColor",
+          "lineNumber": 391
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "GetTextHoverColor",
+          "lineNumber": 392
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::ColorEdit4",
+          "lineNumber": 393
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "SetTextHoverColor",
+          "lineNumber": 393
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::Text",
+          "lineNumber": 395
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::SetNextItemWidth",
+          "lineNumber": 396
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "DrawTexturePathInput",
+          "lineNumber": 397
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "SetTexturePath",
+          "lineNumber": 398
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::Text",
+          "lineNumber": 399
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::SetNextItemWidth",
+          "lineNumber": 400
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "DrawTexturePathInput",
+          "lineNumber": 401
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "SetHoverTexturePath",
+          "lineNumber": 402
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::Text",
+          "lineNumber": 403
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::SetNextItemWidth",
+          "lineNumber": 404
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "DrawTexturePathInput",
+          "lineNumber": 405
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "SetPressedTexturePath",
+          "lineNumber": 406
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "UIButton::GetFontCharWidth",
+          "lineNumber": 408
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "UIButton::GetFontCharHeight",
+          "lineNumber": 409
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "UIButton::GetFontCharsPerRow",
+          "lineNumber": 410
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::Text",
+          "lineNumber": 412
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::SameLine",
+          "lineNumber": 412
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::DragFloat",
+          "lineNumber": 413
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::Text",
+          "lineNumber": 414
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::SameLine",
+          "lineNumber": 414
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::DragFloat",
+          "lineNumber": 415
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::Text",
+          "lineNumber": 416
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::SameLine",
+          "lineNumber": 416
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::InputInt",
+          "lineNumber": 417
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::Text",
+          "lineNumber": 418
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::SetNextItemWidth",
+          "lineNumber": 419
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "DrawFontPathInput",
+          "lineNumber": 420
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::TextDisabled",
+          "lineNumber": 422
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "UIButton::SetFontPath",
+          "lineNumber": 424
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "GetActionPlayOnLoad",
+          "lineNumber": 426
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "empty",
+          "lineNumber": 428
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "GetAction",
+          "lineNumber": 428
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "c_str",
+          "lineNumber": 428
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "GetAction",
+          "lineNumber": 428
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::SetNextItemWidth",
+          "lineNumber": 429
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::BeginCombo",
+          "lineNumber": 430
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "GetAction",
+          "lineNumber": 432
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::Selectable",
+          "lineNumber": 434
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "strncpy_s",
+          "lineNumber": 435
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "SetAction",
+          "lineNumber": 436
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "SceneCanvas_BindButtonAction",
+          "lineNumber": 437
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::SetItemDefaultFocus",
+          "lineNumber": 440
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::EndCombo",
+          "lineNumber": 442
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::Checkbox",
+          "lineNumber": 444
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "SetAction",
+          "lineNumber": 445
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "SceneCanvas_BindButtonAction",
+          "lineNumber": 446
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::SetNextItemWidth",
+          "lineNumber": 448
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::InputText",
+          "lineNumber": 449
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "SetAction",
+          "lineNumber": 451
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "SceneCanvas_BindButtonAction",
+          "lineNumber": 452
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::SetNextItemWidth",
+          "lineNumber": 454
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::InputText",
+          "lineNumber": 455
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "SetAction",
+          "lineNumber": 457
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "SceneCanvas_BindButtonAction",
+          "lineNumber": 458
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "dynamic_cast<UIBar*>",
+          "lineNumber": 461
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::Separator",
+          "lineNumber": 462
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::Text",
+          "lineNumber": 463
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::SetNextItemWidth",
+          "lineNumber": 464
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::InputText",
+          "lineNumber": 465
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "SetLabel",
+          "lineNumber": 466
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "GetCurrentValue",
+          "lineNumber": 467
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "GetMaxValue",
+          "lineNumber": 468
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::Text",
+          "lineNumber": 469
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::SameLine",
+          "lineNumber": 469
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::DragFloat",
+          "lineNumber": 470
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "SetCurrentValue",
+          "lineNumber": 470
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::Text",
+          "lineNumber": 471
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::SameLine",
+          "lineNumber": 471
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::DragFloat",
+          "lineNumber": 472
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "SetMaxValue",
+          "lineNumber": 472
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "GetBarWidth",
+          "lineNumber": 473
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "GetBarHeight",
+          "lineNumber": 474
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::Text",
+          "lineNumber": 475
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::SameLine",
+          "lineNumber": 475
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::InputInt",
+          "lineNumber": 476
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::Text",
+          "lineNumber": 477
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::SameLine",
+          "lineNumber": 477
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::InputInt",
+          "lineNumber": 478
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "SetBarSize",
+          "lineNumber": 480
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "GetShowText",
+          "lineNumber": 481
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::Checkbox",
+          "lineNumber": 482
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "SetShowText",
+          "lineNumber": 482
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "GetShowValue",
+          "lineNumber": 483
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::Checkbox",
+          "lineNumber": 484
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "SetShowValue",
+          "lineNumber": 484
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "GetCharacterSpacing",
+          "lineNumber": 485
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::Text",
+          "lineNumber": 486
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::SameLine",
+          "lineNumber": 486
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::DragFloat",
+          "lineNumber": 487
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "SetCharacterSpacing",
+          "lineNumber": 487
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "GetBackgroundColor",
+          "lineNumber": 488
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::ColorEdit4",
+          "lineNumber": 489
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "SetBackgroundColor",
+          "lineNumber": 489
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "GetBarColor",
+          "lineNumber": 490
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::ColorEdit4",
+          "lineNumber": 491
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "SetBarColor",
+          "lineNumber": 491
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "GetTextColor",
+          "lineNumber": 492
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::ColorEdit4",
+          "lineNumber": 493
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "SetTextColor",
+          "lineNumber": 493
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::Separator",
+          "lineNumber": 496
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::Text",
+          "lineNumber": 497
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "GetRegisteredNames",
+          "lineNumber": 498
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "UICanvasScriptFactory::Instance",
+          "lineNumber": 498
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::SetNextItemWidth",
+          "lineNumber": 500
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::BeginCombo",
+          "lineNumber": 501
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::Selectable",
+          "lineNumber": 502
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "SetScriptClass",
+          "lineNumber": 504
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "GetScriptClass",
+          "lineNumber": 507
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::Selectable",
+          "lineNumber": 508
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "c_str",
+          "lineNumber": 508
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "strncpy_s",
+          "lineNumber": 509
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "c_str",
+          "lineNumber": 509
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "SetScriptClass",
+          "lineNumber": 510
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::SetItemDefaultFocus",
+          "lineNumber": 513
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::EndCombo",
+          "lineNumber": 515
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::SetNextItemWidth",
+          "lineNumber": 517
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::InputText",
+          "lineNumber": 518
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "SetScriptClass",
+          "lineNumber": 520
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::Separator",
+          "lineNumber": 523
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImGui::Button",
+          "lineNumber": 524
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "ImVec2",
+          "lineNumber": 524
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "EditorUndo_DiscardUiEdit",
+          "lineNumber": 525
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "EditorUndo_PushUiDelete",
+          "lineNumber": 526
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "SceneCanvas_GetCanvas",
+          "lineNumber": 527
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "RemoveElement",
+          "lineNumber": 528
+        },
+        {
+          "caller": "DrawCanvasElementProperties",
+          "callee": "EngineGUI_MarkSceneDirty",
+          "lineNumber": 531
+        }
+      ],
+      "metrics": {
+        "importCount": 11,
+        "exportCount": 11,
+        "functionCount": 11,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "engine/editor/editor_ui_panel.h",
+      "language": "c",
+      "fileCategory": "code",
+      "totalLines": 19,
+      "nonEmptyLines": 14,
+      "classes": [
+        {
+          "name": "GameObject",
+          "startLine": 3,
+          "endLine": 3,
+          "methods": [],
+          "properties": []
+        },
+        {
+          "name": "UIElement",
+          "startLine": 4,
+          "endLine": 4,
+          "methods": [],
+          "properties": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "GameObject",
+          "line": 3,
+          "isDefault": false
+        },
+        {
+          "name": "UIElement",
+          "line": 4,
+          "isDefault": false
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 2,
+        "functionCount": 0,
+        "classCount": 2
+      }
+    },
+    {
+      "path": "engine/editor/editor_undo.h",
+      "language": "c",
+      "fileCategory": "code",
+      "totalLines": 96,
+      "nonEmptyLines": 79,
+      "functions": [
+        {
+          "name": "~EditorCommand",
+          "startLine": 24,
+          "endLine": 24,
+          "params": []
+        },
+        {
+          "name": "IsRecording",
+          "startLine": 45,
+          "endLine": 45,
+          "params": []
+        },
+        {
+          "name": "EditorUndoStack",
+          "startLine": 48,
+          "endLine": 48,
+          "params": []
+        }
+      ],
+      "classes": [
+        {
+          "name": "GameObject",
+          "startLine": 7,
+          "endLine": 7,
+          "methods": [],
+          "properties": []
+        },
+        {
+          "name": "UIElement",
+          "startLine": 8,
+          "endLine": 8,
+          "methods": [],
+          "properties": []
+        },
+        {
+          "name": "NodeRef",
+          "startLine": 12,
+          "endLine": 15,
+          "methods": [],
+          "properties": [
+            "ptr",
+            "name"
+          ]
+        },
+        {
+          "name": "UiElementRef",
+          "startLine": 17,
+          "endLine": 21,
+          "methods": [],
+          "properties": [
+            "ptr",
+            "name",
+            "index"
+          ]
+        },
+        {
+          "name": "EditorCommand",
+          "startLine": 23,
+          "endLine": 28,
+          "methods": [
+            "~EditorCommand",
+            "Undo",
+            "Redo",
+            "Describe"
+          ],
+          "properties": []
+        },
+        {
+          "name": "EditorUndoStack",
+          "startLine": 30,
+          "endLine": 56,
+          "methods": [
+            "Push",
+            "Undo",
+            "Redo",
+            "CanUndo",
+            "CanRedo",
+            "Depth",
+            "TopUndoDescribe",
+            "TopRedoDescribe",
+            "Clear",
+            "IsRecording",
+            "EditorUndoStack",
+            "RebuildLabels"
+          ],
+          "properties": [
+            "kMaxDepth",
+            "m_undo",
+            "m_redo",
+            "m_labels",
+            "m_recording"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "GameObject",
+          "line": 7,
+          "isDefault": false
+        },
+        {
+          "name": "UIElement",
+          "line": 8,
+          "isDefault": false
+        },
+        {
+          "name": "NodeRef",
+          "line": 12,
+          "isDefault": false
+        },
+        {
+          "name": "UiElementRef",
+          "line": 17,
+          "isDefault": false
+        },
+        {
+          "name": "~EditorCommand",
+          "line": 24,
+          "isDefault": false
+        },
+        {
+          "name": "Undo",
+          "line": 25,
+          "isDefault": false
+        },
+        {
+          "name": "Redo",
+          "line": 26,
+          "isDefault": false
+        },
+        {
+          "name": "Describe",
+          "line": 27,
+          "isDefault": false
+        },
+        {
+          "name": "EditorCommand",
+          "line": 23,
+          "isDefault": false
+        },
+        {
+          "name": "Push",
+          "line": 34,
+          "isDefault": false
+        },
+        {
+          "name": "Undo",
+          "line": 35,
+          "isDefault": false
+        },
+        {
+          "name": "Redo",
+          "line": 36,
+          "isDefault": false
+        },
+        {
+          "name": "CanUndo",
+          "line": 37,
+          "isDefault": false
+        },
+        {
+          "name": "CanRedo",
+          "line": 38,
+          "isDefault": false
+        },
+        {
+          "name": "Depth",
+          "line": 39,
+          "isDefault": false
+        },
+        {
+          "name": "TopUndoDescribe",
+          "line": 41,
+          "isDefault": false
+        },
+        {
+          "name": "TopRedoDescribe",
+          "line": 42,
+          "isDefault": false
+        },
+        {
+          "name": "Clear",
+          "line": 43,
+          "isDefault": false
+        },
+        {
+          "name": "IsRecording",
+          "line": 45,
+          "isDefault": false
+        },
+        {
+          "name": "EditorUndoStack",
+          "line": 30,
+          "isDefault": false
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 20,
+        "functionCount": 3,
+        "classCount": 6
+      }
+    },
+    {
+      "path": "engine/editor/ui_gizmo.cpp",
+      "language": "cpp",
+      "fileCategory": "code",
+      "totalLines": 475,
+      "nonEmptyLines": 411,
+      "functions": [
+        {
+          "name": "ViewportLocalToWindow",
+          "startLine": 60,
+          "endLine": 65,
+          "params": [
+            "x",
+            "y"
+          ]
+        },
+        {
+          "name": "IsResizable",
+          "startLine": 67,
+          "endLine": 71,
+          "params": [
+            "element"
+          ]
+        },
+        {
+          "name": "GetElementSize",
+          "startLine": 73,
+          "endLine": 86,
+          "params": [
+            "element",
+            "width",
+            "height"
+          ]
+        },
+        {
+          "name": "SetElementSize",
+          "startLine": 88,
+          "endLine": 98,
+          "params": [
+            "element",
+            "width",
+            "height"
+          ]
+        },
+        {
+          "name": "GetRectCenter",
+          "startLine": 100,
+          "endLine": 103,
+          "params": [
+            "rect",
+            "centerX",
+            "centerY"
+          ]
+        },
+        {
+          "name": "DistancePointToSegment",
+          "startLine": 105,
+          "endLine": 121,
+          "params": [
+            "px",
+            "py",
+            "ax",
+            "ay",
+            "bx",
+            "by"
+          ]
+        },
+        {
+          "name": "HitTestTriangle",
+          "startLine": 123,
+          "endLine": 130,
+          "params": [
+            "px",
+            "py",
+            "x0",
+            "y0",
+            "x1",
+            "y1",
+            "x2",
+            "y2"
+          ]
+        },
+        {
+          "name": "HitTestMoveArrow",
+          "startLine": 132,
+          "endLine": 153,
+          "params": [
+            "mouseX",
+            "mouseY",
+            "pivotX",
+            "pivotY"
+          ]
+        },
+        {
+          "name": "HitTestHandle",
+          "startLine": 155,
+          "endLine": 192,
+          "params": [
+            "mouseX",
+            "mouseY",
+            "rect",
+            "resizable"
+          ]
+        },
+        {
+          "name": "DrawMoveArrow",
+          "startLine": 194,
+          "endLine": 217,
+          "params": [
+            "drawList",
+            "ox",
+            "oy",
+            "horizontal",
+            "hovered"
+          ]
+        },
+        {
+          "name": "DrawHandle",
+          "startLine": 219,
+          "endLine": 229,
+          "params": [
+            "drawList",
+            "x",
+            "y",
+            "hovered"
+          ]
+        },
+        {
+          "name": "ApplyResize",
+          "startLine": 231,
+          "endLine": 294,
+          "params": [
+            "element",
+            "handle",
+            "mouseX",
+            "mouseY"
+          ]
+        },
+        {
+          "name": "ApplyMove",
+          "startLine": 296,
+          "endLine": 315,
+          "params": [
+            "element",
+            "handle",
+            "localMouseX",
+            "localMouseY"
+          ]
+        },
+        {
+          "name": "IsInteracting",
+          "startLine": 321,
+          "endLine": 323,
+          "params": []
+        },
+        {
+          "name": "WouldCaptureMouse",
+          "startLine": 325,
+          "endLine": 334,
+          "params": [
+            "selected",
+            "viewportX",
+            "viewportY"
+          ]
+        },
+        {
+          "name": "HandleInput",
+          "startLine": 336,
+          "endLine": 415,
+          "params": [
+            "selected"
+          ]
+        },
+        {
+          "name": "Draw",
+          "startLine": 417,
+          "endLine": 473,
+          "params": [
+            "selected"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "ViewportLocalToWindow",
+          "line": 60,
+          "isDefault": false
+        },
+        {
+          "name": "IsResizable",
+          "line": 67,
+          "isDefault": false
+        },
+        {
+          "name": "GetElementSize",
+          "line": 73,
+          "isDefault": false
+        },
+        {
+          "name": "SetElementSize",
+          "line": 88,
+          "isDefault": false
+        },
+        {
+          "name": "GetRectCenter",
+          "line": 100,
+          "isDefault": false
+        },
+        {
+          "name": "DistancePointToSegment",
+          "line": 105,
+          "isDefault": false
+        },
+        {
+          "name": "HitTestTriangle",
+          "line": 123,
+          "isDefault": false
+        },
+        {
+          "name": "HitTestMoveArrow",
+          "line": 132,
+          "isDefault": false
+        },
+        {
+          "name": "HitTestHandle",
+          "line": 155,
+          "isDefault": false
+        },
+        {
+          "name": "DrawMoveArrow",
+          "line": 194,
+          "isDefault": false
+        },
+        {
+          "name": "DrawHandle",
+          "line": 219,
+          "isDefault": false
+        },
+        {
+          "name": "ApplyResize",
+          "line": 231,
+          "isDefault": false
+        },
+        {
+          "name": "ApplyMove",
+          "line": 296,
+          "isDefault": false
+        },
+        {
+          "name": "IsInteracting",
+          "line": 321,
+          "isDefault": false
+        },
+        {
+          "name": "WouldCaptureMouse",
+          "line": 325,
+          "isDefault": false
+        },
+        {
+          "name": "HandleInput",
+          "line": 336,
+          "isDefault": false
+        },
+        {
+          "name": "Draw",
+          "line": 417,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "ViewportLocalToWindow",
+          "callee": "EngineGUI_GetGameViewportRect",
+          "lineNumber": 62
+        },
+        {
+          "caller": "IsResizable",
+          "callee": "dynamic_cast<UIButton*>",
+          "lineNumber": 68
+        },
+        {
+          "caller": "IsResizable",
+          "callee": "dynamic_cast<UISprite*>",
+          "lineNumber": 69
+        },
+        {
+          "caller": "IsResizable",
+          "callee": "dynamic_cast<UIBar*>",
+          "lineNumber": 70
+        },
+        {
+          "caller": "GetElementSize",
+          "callee": "dynamic_cast<UIButton*>",
+          "lineNumber": 76
+        },
+        {
+          "caller": "GetElementSize",
+          "callee": "GetWidth",
+          "lineNumber": 77
+        },
+        {
+          "caller": "GetElementSize",
+          "callee": "GetHeight",
+          "lineNumber": 78
+        },
+        {
+          "caller": "GetElementSize",
+          "callee": "dynamic_cast<UISprite*>",
+          "lineNumber": 79
+        },
+        {
+          "caller": "GetElementSize",
+          "callee": "GetWidth",
+          "lineNumber": 80
+        },
+        {
+          "caller": "GetElementSize",
+          "callee": "GetHeight",
+          "lineNumber": 81
+        },
+        {
+          "caller": "GetElementSize",
+          "callee": "dynamic_cast<UIBar*>",
+          "lineNumber": 82
+        },
+        {
+          "caller": "GetElementSize",
+          "callee": "static_cast<float>",
+          "lineNumber": 83
+        },
+        {
+          "caller": "GetElementSize",
+          "callee": "GetBarWidth",
+          "lineNumber": 83
+        },
+        {
+          "caller": "GetElementSize",
+          "callee": "static_cast<float>",
+          "lineNumber": 84
+        },
+        {
+          "caller": "GetElementSize",
+          "callee": "GetBarHeight",
+          "lineNumber": 84
+        },
+        {
+          "caller": "SetElementSize",
+          "callee": "dynamic_cast<UIButton*>",
+          "lineNumber": 91
+        },
+        {
+          "caller": "SetElementSize",
+          "callee": "SetSize",
+          "lineNumber": 92
+        },
+        {
+          "caller": "SetElementSize",
+          "callee": "dynamic_cast<UISprite*>",
+          "lineNumber": 93
+        },
+        {
+          "caller": "SetElementSize",
+          "callee": "SetSize",
+          "lineNumber": 94
+        },
+        {
+          "caller": "SetElementSize",
+          "callee": "dynamic_cast<UIBar*>",
+          "lineNumber": 95
+        },
+        {
+          "caller": "SetElementSize",
+          "callee": "SetBarSize",
+          "lineNumber": 96
+        },
+        {
+          "caller": "SetElementSize",
+          "callee": "static_cast<int>",
+          "lineNumber": 96
+        },
+        {
+          "caller": "SetElementSize",
+          "callee": "std::lround",
+          "lineNumber": 96
+        },
+        {
+          "caller": "SetElementSize",
+          "callee": "static_cast<int>",
+          "lineNumber": 96
+        },
+        {
+          "caller": "SetElementSize",
+          "callee": "std::lround",
+          "lineNumber": 96
+        },
+        {
+          "caller": "DistancePointToSegment",
+          "callee": "std::sqrt",
+          "lineNumber": 112
+        },
+        {
+          "caller": "DistancePointToSegment",
+          "callee": "std::sqrt",
+          "lineNumber": 120
+        },
+        {
+          "caller": "HitTestMoveArrow",
+          "callee": "DistancePointToSegment",
+          "lineNumber": 136
+        },
+        {
+          "caller": "HitTestMoveArrow",
+          "callee": "HitTestTriangle",
+          "lineNumber": 137
+        },
+        {
+          "caller": "HitTestMoveArrow",
+          "callee": "DistancePointToSegment",
+          "lineNumber": 144
+        },
+        {
+          "caller": "HitTestMoveArrow",
+          "callee": "HitTestTriangle",
+          "lineNumber": 145
+        },
+        {
+          "caller": "HitTestHandle",
+          "callee": "GetRectCenter",
+          "lineNumber": 158
+        },
+        {
+          "caller": "HitTestHandle",
+          "callee": "HitTestMoveArrow",
+          "lineNumber": 160
+        },
+        {
+          "caller": "HitTestHandle",
+          "callee": "std::fabs",
+          "lineNumber": 174
+        },
+        {
+          "caller": "HitTestHandle",
+          "callee": "std::fabs",
+          "lineNumber": 174
+        },
+        {
+          "caller": "HitTestHandle",
+          "callee": "isNear",
+          "lineNumber": 178
+        },
+        {
+          "caller": "HitTestHandle",
+          "callee": "isNear",
+          "lineNumber": 179
+        },
+        {
+          "caller": "HitTestHandle",
+          "callee": "isNear",
+          "lineNumber": 180
+        },
+        {
+          "caller": "HitTestHandle",
+          "callee": "isNear",
+          "lineNumber": 181
+        },
+        {
+          "caller": "HitTestHandle",
+          "callee": "isNear",
+          "lineNumber": 182
+        },
+        {
+          "caller": "HitTestHandle",
+          "callee": "isNear",
+          "lineNumber": 183
+        },
+        {
+          "caller": "HitTestHandle",
+          "callee": "isNear",
+          "lineNumber": 184
+        },
+        {
+          "caller": "HitTestHandle",
+          "callee": "isNear",
+          "lineNumber": 185
+        },
+        {
+          "caller": "DrawMoveArrow",
+          "callee": "AddLine",
+          "lineNumber": 202
+        },
+        {
+          "caller": "DrawMoveArrow",
+          "callee": "ImVec2",
+          "lineNumber": 202
+        },
+        {
+          "caller": "DrawMoveArrow",
+          "callee": "ImVec2",
+          "lineNumber": 202
+        },
+        {
+          "caller": "DrawMoveArrow",
+          "callee": "AddTriangleFilled",
+          "lineNumber": 203
+        },
+        {
+          "caller": "DrawMoveArrow",
+          "callee": "ImVec2",
+          "lineNumber": 204
+        },
+        {
+          "caller": "DrawMoveArrow",
+          "callee": "ImVec2",
+          "lineNumber": 205
+        },
+        {
+          "caller": "DrawMoveArrow",
+          "callee": "ImVec2",
+          "lineNumber": 206
+        },
+        {
+          "caller": "DrawMoveArrow",
+          "callee": "AddLine",
+          "lineNumber": 210
+        },
+        {
+          "caller": "DrawMoveArrow",
+          "callee": "ImVec2",
+          "lineNumber": 210
+        },
+        {
+          "caller": "DrawMoveArrow",
+          "callee": "ImVec2",
+          "lineNumber": 210
+        },
+        {
+          "caller": "DrawMoveArrow",
+          "callee": "AddTriangleFilled",
+          "lineNumber": 211
+        },
+        {
+          "caller": "DrawMoveArrow",
+          "callee": "ImVec2",
+          "lineNumber": 212
+        },
+        {
+          "caller": "DrawMoveArrow",
+          "callee": "ImVec2",
+          "lineNumber": 213
+        },
+        {
+          "caller": "DrawMoveArrow",
+          "callee": "ImVec2",
+          "lineNumber": 214
+        },
+        {
+          "caller": "DrawHandle",
+          "callee": "AddRectFilled",
+          "lineNumber": 221
+        },
+        {
+          "caller": "DrawHandle",
+          "callee": "ImVec2",
+          "lineNumber": 222
+        },
+        {
+          "caller": "DrawHandle",
+          "callee": "ImVec2",
+          "lineNumber": 223
+        },
+        {
+          "caller": "DrawHandle",
+          "callee": "AddRect",
+          "lineNumber": 225
+        },
+        {
+          "caller": "DrawHandle",
+          "callee": "ImVec2",
+          "lineNumber": 226
+        },
+        {
+          "caller": "DrawHandle",
+          "callee": "ImVec2",
+          "lineNumber": 227
+        },
+        {
+          "caller": "ApplyResize",
+          "callee": "UIGetLayoutScale",
+          "lineNumber": 232
+        },
+        {
+          "caller": "ApplyResize",
+          "callee": "SetPosition",
+          "lineNumber": 292
+        },
+        {
+          "caller": "ApplyResize",
+          "callee": "SetElementSize",
+          "lineNumber": 293
+        },
+        {
+          "caller": "ApplyMove",
+          "callee": "ScreenDeltaToDesignDelta",
+          "lineNumber": 297
+        },
+        {
+          "caller": "ApplyMove",
+          "callee": "SetPosition",
+          "lineNumber": 313
+        },
+        {
+          "caller": "ApplyMove",
+          "callee": "EngineGUI_MarkSceneDirty",
+          "lineNumber": 314
+        },
+        {
+          "caller": "WouldCaptureMouse",
+          "callee": "IsVisible",
+          "lineNumber": 326
+        },
+        {
+          "caller": "WouldCaptureMouse",
+          "callee": "GetScreenRect",
+          "lineNumber": 330
+        },
+        {
+          "caller": "WouldCaptureMouse",
+          "callee": "HitTestHandle",
+          "lineNumber": 333
+        },
+        {
+          "caller": "WouldCaptureMouse",
+          "callee": "IsResizable",
+          "lineNumber": 333
+        },
+        {
+          "caller": "HandleInput",
+          "callee": "IsVisible",
+          "lineNumber": 337
+        },
+        {
+          "caller": "HandleInput",
+          "callee": "Mouse_IsLeftDown",
+          "lineNumber": 339
+        },
+        {
+          "caller": "HandleInput",
+          "callee": "GetScreenRect",
+          "lineNumber": 345
+        },
+        {
+          "caller": "HandleInput",
+          "callee": "EngineGUI_MouseToViewportLocal",
+          "lineNumber": 352
+        },
+        {
+          "caller": "HandleInput",
+          "callee": "IsResizable",
+          "lineNumber": 353
+        },
+        {
+          "caller": "HandleInput",
+          "callee": "ImGui::GetIO",
+          "lineNumber": 355
+        },
+        {
+          "caller": "HandleInput",
+          "callee": "HitTestHandle",
+          "lineNumber": 356
+        },
+        {
+          "caller": "HandleInput",
+          "callee": "Mouse_IsLeftDown",
+          "lineNumber": 360
+        },
+        {
+          "caller": "HandleInput",
+          "callee": "ImGui::GetIO",
+          "lineNumber": 365
+        },
+        {
+          "caller": "HandleInput",
+          "callee": "SceneCanvas_SerializeElement",
+          "lineNumber": 367
+        },
+        {
+          "caller": "HandleInput",
+          "callee": "EditorUndo_PushUiEdit",
+          "lineNumber": 368
+        },
+        {
+          "caller": "HandleInput",
+          "callee": "clear",
+          "lineNumber": 369
+        },
+        {
+          "caller": "HandleInput",
+          "callee": "HitTestHandle",
+          "lineNumber": 380
+        },
+        {
+          "caller": "HandleInput",
+          "callee": "GetPosition",
+          "lineNumber": 385
+        },
+        {
+          "caller": "HandleInput",
+          "callee": "GetElementSize",
+          "lineNumber": 386
+        },
+        {
+          "caller": "HandleInput",
+          "callee": "SceneCanvas_SerializeElement",
+          "lineNumber": 389
+        },
+        {
+          "caller": "HandleInput",
+          "callee": "ApplyMove",
+          "lineNumber": 398
+        },
+        {
+          "caller": "HandleInput",
+          "callee": "ApplyResize",
+          "lineNumber": 400
+        },
+        {
+          "caller": "HandleInput",
+          "callee": "EngineGUI_MarkSceneDirty",
+          "lineNumber": 401
+        },
+        {
+          "caller": "HandleInput",
+          "callee": "SceneCanvas_SerializeElement",
+          "lineNumber": 407
+        },
+        {
+          "caller": "HandleInput",
+          "callee": "EditorUndo_PushUiEdit",
+          "lineNumber": 408
+        },
+        {
+          "caller": "HandleInput",
+          "callee": "clear",
+          "lineNumber": 409
+        },
+        {
+          "caller": "Draw",
+          "callee": "IsVisible",
+          "lineNumber": 418
+        },
+        {
+          "caller": "Draw",
+          "callee": "GetScreenRect",
+          "lineNumber": 422
+        },
+        {
+          "caller": "Draw",
+          "callee": "ViewportLocalToWindow",
+          "lineNumber": 429
+        },
+        {
+          "caller": "Draw",
+          "callee": "ViewportLocalToWindow",
+          "lineNumber": 430
+        },
+        {
+          "caller": "Draw",
+          "callee": "GetRectCenter",
+          "lineNumber": 434
+        },
+        {
+          "caller": "Draw",
+          "callee": "ViewportLocalToWindow",
+          "lineNumber": 437
+        },
+        {
+          "caller": "Draw",
+          "callee": "GetAnchorScreenPosition",
+          "lineNumber": 439
+        },
+        {
+          "caller": "Draw",
+          "callee": "ViewportLocalToWindow",
+          "lineNumber": 442
+        },
+        {
+          "caller": "Draw",
+          "callee": "ImGui::GetForegroundDrawList",
+          "lineNumber": 444
+        },
+        {
+          "caller": "Draw",
+          "callee": "IsResizable",
+          "lineNumber": 445
+        },
+        {
+          "caller": "Draw",
+          "callee": "AddRect",
+          "lineNumber": 449
+        },
+        {
+          "caller": "Draw",
+          "callee": "ImVec2",
+          "lineNumber": 450
+        },
+        {
+          "caller": "Draw",
+          "callee": "ImVec2",
+          "lineNumber": 451
+        },
+        {
+          "caller": "Draw",
+          "callee": "AddCircleFilled",
+          "lineNumber": 457
+        },
+        {
+          "caller": "Draw",
+          "callee": "ImVec2",
+          "lineNumber": 457
+        },
+        {
+          "caller": "Draw",
+          "callee": "AddCircle",
+          "lineNumber": 458
+        },
+        {
+          "caller": "Draw",
+          "callee": "ImVec2",
+          "lineNumber": 458
+        },
+        {
+          "caller": "Draw",
+          "callee": "DrawMoveArrow",
+          "lineNumber": 460
+        },
+        {
+          "caller": "Draw",
+          "callee": "DrawMoveArrow",
+          "lineNumber": 461
+        },
+        {
+          "caller": "Draw",
+          "callee": "DrawHandle",
+          "lineNumber": 464
+        },
+        {
+          "caller": "Draw",
+          "callee": "DrawHandle",
+          "lineNumber": 465
+        },
+        {
+          "caller": "Draw",
+          "callee": "DrawHandle",
+          "lineNumber": 466
+        },
+        {
+          "caller": "Draw",
+          "callee": "DrawHandle",
+          "lineNumber": 467
+        },
+        {
+          "caller": "Draw",
+          "callee": "DrawHandle",
+          "lineNumber": 468
+        },
+        {
+          "caller": "Draw",
+          "callee": "DrawHandle",
+          "lineNumber": 469
+        },
+        {
+          "caller": "Draw",
+          "callee": "DrawHandle",
+          "lineNumber": 470
+        },
+        {
+          "caller": "Draw",
+          "callee": "DrawHandle",
+          "lineNumber": 471
+        }
+      ],
+      "metrics": {
+        "importCount": 9,
+        "exportCount": 17,
+        "functionCount": 17,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "engine/editor/ui_gizmo.h",
+      "language": "c",
+      "fileCategory": "code",
+      "totalLines": 12,
+      "nonEmptyLines": 8,
+      "classes": [
+        {
+          "name": "UIElement",
+          "startLine": 3,
+          "endLine": 3,
+          "methods": [],
+          "properties": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "UIElement",
+          "line": 3,
+          "isDefault": false
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 1,
+        "functionCount": 0,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "engine/scripting/script_factory.cpp",
+      "language": "cpp",
+      "fileCategory": "code",
+      "totalLines": 339,
+      "nonEmptyLines": 295,
+      "functions": [
+        {
+          "name": "CollectScriptName",
+          "startLine": 16,
+          "endLine": 19,
+          "params": [
+            "name"
+          ]
+        },
+        {
+          "name": "GetLastErrorText",
+          "startLine": 21,
+          "endLine": 24,
+          "params": [
+            "apiName"
+          ]
+        },
+        {
+          "name": "DllEntry::~DllEntry",
+          "startLine": 32,
+          "endLine": 39,
+          "params": []
+        },
+        {
+          "name": "Register",
+          "startLine": 41,
+          "endLine": 43,
+          "params": [
+            "name",
+            "creator"
+          ]
+        },
+        {
+          "name": "Create",
+          "startLine": 45,
+          "endLine": 52,
+          "params": [
+            "name"
+          ]
+        },
+        {
+          "name": "IsRegistered",
+          "startLine": 54,
+          "endLine": 56,
+          "params": [
+            "name"
+          ]
+        },
+        {
+          "name": "IsDllScript",
+          "startLine": 58,
+          "endLine": 60,
+          "params": [
+            "name"
+          ]
+        },
+        {
+          "name": "SerializeScriptProperties",
+          "startLine": 62,
+          "endLine": 93,
+          "params": [
+            "name",
+            "script"
+          ]
+        },
+        {
+          "name": "DeserializeScriptProperties",
+          "startLine": 95,
+          "endLine": 112,
+          "params": [
+            "name",
+            "script",
+            "properties"
+          ]
+        },
+        {
+          "name": "LoadScriptDll",
+          "startLine": 114,
+          "endLine": 219,
+          "params": [
+            "name",
+            "dllPath",
+            "loadedScripts"
+          ]
+        },
+        {
+          "name": "UnloadScriptDll",
+          "startLine": 221,
+          "endLine": 231,
+          "params": [
+            "name"
+          ]
+        },
+        {
+          "name": "ReleaseRetiredDlls",
+          "startLine": 233,
+          "endLine": 235,
+          "params": []
+        },
+        {
+          "name": "InvokeExportOnLoadedDlls",
+          "startLine": 237,
+          "endLine": 258,
+          "params": [
+            "exportName"
+          ]
+        },
+        {
+          "name": "UnloadAllDlls",
+          "startLine": 281,
+          "endLine": 304,
+          "params": []
+        },
+        {
+          "name": "RequestReload",
+          "startLine": 306,
+          "endLine": 316,
+          "params": [
+            "name",
+            "path"
+          ]
+        },
+        {
+          "name": "PendingReloadCount",
+          "startLine": 318,
+          "endLine": 321,
+          "params": []
+        },
+        {
+          "name": "DrainReloadQueue",
+          "startLine": 323,
+          "endLine": 339,
+          "params": [
+            "onReloaded"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "CollectScriptName",
+          "line": 16,
+          "isDefault": false
+        },
+        {
+          "name": "GetLastErrorText",
+          "line": 21,
+          "isDefault": false
+        },
+        {
+          "name": "DllEntry::~DllEntry",
+          "line": 32,
+          "isDefault": false
+        },
+        {
+          "name": "Register",
+          "line": 41,
+          "isDefault": false
+        },
+        {
+          "name": "Create",
+          "line": 45,
+          "isDefault": false
+        },
+        {
+          "name": "IsRegistered",
+          "line": 54,
+          "isDefault": false
+        },
+        {
+          "name": "IsDllScript",
+          "line": 58,
+          "isDefault": false
+        },
+        {
+          "name": "SerializeScriptProperties",
+          "line": 62,
+          "isDefault": false
+        },
+        {
+          "name": "DeserializeScriptProperties",
+          "line": 95,
+          "isDefault": false
+        },
+        {
+          "name": "LoadScriptDll",
+          "line": 114,
+          "isDefault": false
+        },
+        {
+          "name": "UnloadScriptDll",
+          "line": 221,
+          "isDefault": false
+        },
+        {
+          "name": "ReleaseRetiredDlls",
+          "line": 233,
+          "isDefault": false
+        },
+        {
+          "name": "InvokeExportOnLoadedDlls",
+          "line": 237,
+          "isDefault": false
+        },
+        {
+          "name": "UnloadAllDlls",
+          "line": 281,
+          "isDefault": false
+        },
+        {
+          "name": "RequestReload",
+          "line": 306,
+          "isDefault": false
+        },
+        {
+          "name": "PendingReloadCount",
+          "line": 318,
+          "isDefault": false
+        },
+        {
+          "name": "DrainReloadQueue",
+          "line": 323,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "CollectScriptName",
+          "callee": "push_back",
+          "lineNumber": 18
+        },
+        {
+          "caller": "GetLastErrorText",
+          "callee": "std::string",
+          "lineNumber": 22
+        },
+        {
+          "caller": "GetLastErrorText",
+          "callee": "std::to_string",
+          "lineNumber": 23
+        },
+        {
+          "caller": "GetLastErrorText",
+          "callee": "GetLastError",
+          "lineNumber": 23
+        },
+        {
+          "caller": "DllEntry::~DllEntry",
+          "callee": "FreeLibrary",
+          "lineNumber": 34
+        },
+        {
+          "caller": "DllEntry::~DllEntry",
+          "callee": "empty",
+          "lineNumber": 37
+        },
+        {
+          "caller": "DllEntry::~DllEntry",
+          "callee": "DeleteFileA",
+          "lineNumber": 38
+        },
+        {
+          "caller": "DllEntry::~DllEntry",
+          "callee": "c_str",
+          "lineNumber": 38
+        },
+        {
+          "caller": "Register",
+          "callee": "std::move",
+          "lineNumber": 42
+        },
+        {
+          "caller": "Create",
+          "callee": "find",
+          "lineNumber": 46
+        },
+        {
+          "caller": "Create",
+          "callee": "end",
+          "lineNumber": 47
+        },
+        {
+          "caller": "Create",
+          "callee": "second",
+          "lineNumber": 47
+        },
+        {
+          "caller": "Create",
+          "callee": "OutputDebugStringA",
+          "lineNumber": 50
+        },
+        {
+          "caller": "Create",
+          "callee": "c_str",
+          "lineNumber": 50
+        },
+        {
+          "caller": "Create",
+          "callee": "ScriptPtr",
+          "lineNumber": 51
+        },
+        {
+          "caller": "IsRegistered",
+          "callee": "count",
+          "lineNumber": 55
+        },
+        {
+          "caller": "IsDllScript",
+          "callee": "count",
+          "lineNumber": 59
+        },
+        {
+          "caller": "SerializeScriptProperties",
+          "callee": "nlohmann::json::object",
+          "lineNumber": 66
+        },
+        {
+          "caller": "SerializeScriptProperties",
+          "callee": "find",
+          "lineNumber": 68
+        },
+        {
+          "caller": "SerializeScriptProperties",
+          "callee": "end",
+          "lineNumber": 69
+        },
+        {
+          "caller": "SerializeScriptProperties",
+          "callee": "Serialize",
+          "lineNumber": 70
+        },
+        {
+          "caller": "SerializeScriptProperties",
+          "callee": "serialize",
+          "lineNumber": 78
+        },
+        {
+          "caller": "SerializeScriptProperties",
+          "callee": "data",
+          "lineNumber": 78
+        },
+        {
+          "caller": "SerializeScriptProperties",
+          "callee": "static_cast<int>",
+          "lineNumber": 78
+        },
+        {
+          "caller": "SerializeScriptProperties",
+          "callee": "size",
+          "lineNumber": 78
+        },
+        {
+          "caller": "SerializeScriptProperties",
+          "callee": "nlohmann::json::parse",
+          "lineNumber": 82
+        },
+        {
+          "caller": "SerializeScriptProperties",
+          "callee": "data",
+          "lineNumber": 82
+        },
+        {
+          "caller": "SerializeScriptProperties",
+          "callee": "OutputDebugStringA",
+          "lineNumber": 84
+        },
+        {
+          "caller": "SerializeScriptProperties",
+          "callee": "c_str",
+          "lineNumber": 84
+        },
+        {
+          "caller": "SerializeScriptProperties",
+          "callee": "nlohmann::json::object",
+          "lineNumber": 86
+        },
+        {
+          "caller": "SerializeScriptProperties",
+          "callee": "OutputDebugStringA",
+          "lineNumber": 90
+        },
+        {
+          "caller": "SerializeScriptProperties",
+          "callee": "c_str",
+          "lineNumber": 90
+        },
+        {
+          "caller": "SerializeScriptProperties",
+          "callee": "std::to_string",
+          "lineNumber": 91
+        },
+        {
+          "caller": "SerializeScriptProperties",
+          "callee": "nlohmann::json::object",
+          "lineNumber": 92
+        },
+        {
+          "caller": "DeserializeScriptProperties",
+          "callee": "find",
+          "lineNumber": 102
+        },
+        {
+          "caller": "DeserializeScriptProperties",
+          "callee": "end",
+          "lineNumber": 103
+        },
+        {
+          "caller": "DeserializeScriptProperties",
+          "callee": "Deserialize",
+          "lineNumber": 104
+        },
+        {
+          "caller": "DeserializeScriptProperties",
+          "callee": "is_object",
+          "lineNumber": 108
+        },
+        {
+          "caller": "DeserializeScriptProperties",
+          "callee": "dump",
+          "lineNumber": 109
+        },
+        {
+          "caller": "DeserializeScriptProperties",
+          "callee": "dump",
+          "lineNumber": 110
+        },
+        {
+          "caller": "DeserializeScriptProperties",
+          "callee": "nlohmann::json::object",
+          "lineNumber": 110
+        },
+        {
+          "caller": "DeserializeScriptProperties",
+          "callee": "deserialize",
+          "lineNumber": 111
+        },
+        {
+          "caller": "DeserializeScriptProperties",
+          "callee": "c_str",
+          "lineNumber": 111
+        },
+        {
+          "caller": "LoadScriptDll",
+          "callee": "std::to_string",
+          "lineNumber": 118
+        },
+        {
+          "caller": "LoadScriptDll",
+          "callee": "CopyFileA",
+          "lineNumber": 122
+        },
+        {
+          "caller": "LoadScriptDll",
+          "callee": "c_str",
+          "lineNumber": 122
+        },
+        {
+          "caller": "LoadScriptDll",
+          "callee": "c_str",
+          "lineNumber": 122
+        },
+        {
+          "caller": "LoadScriptDll",
+          "callee": "Sleep",
+          "lineNumber": 126
+        },
+        {
+          "caller": "LoadScriptDll",
+          "callee": "OutputDebugStringA",
+          "lineNumber": 129
+        },
+        {
+          "caller": "LoadScriptDll",
+          "callee": "c_str",
+          "lineNumber": 129
+        },
+        {
+          "caller": "LoadScriptDll",
+          "callee": "GetLastErrorText",
+          "lineNumber": 129
+        },
+        {
+          "caller": "LoadScriptDll",
+          "callee": "LoadLibraryA",
+          "lineNumber": 134
+        },
+        {
+          "caller": "LoadScriptDll",
+          "callee": "c_str",
+          "lineNumber": 134
+        },
+        {
+          "caller": "LoadScriptDll",
+          "callee": "OutputDebugStringA",
+          "lineNumber": 136
+        },
+        {
+          "caller": "LoadScriptDll",
+          "callee": "c_str",
+          "lineNumber": 136
+        },
+        {
+          "caller": "LoadScriptDll",
+          "callee": "GetLastErrorText",
+          "lineNumber": 136
+        },
+        {
+          "caller": "LoadScriptDll",
+          "callee": "DeleteFileA",
+          "lineNumber": 138
+        },
+        {
+          "caller": "LoadScriptDll",
+          "callee": "c_str",
+          "lineNumber": 138
+        },
+        {
+          "caller": "LoadScriptDll",
+          "callee": "reinterpret_cast<CreateFn>",
+          "lineNumber": 143
+        },
+        {
+          "caller": "LoadScriptDll",
+          "callee": "GetProcAddress",
+          "lineNumber": 143
+        },
+        {
+          "caller": "LoadScriptDll",
+          "callee": "FreeLibrary",
+          "lineNumber": 145
+        },
+        {
+          "caller": "LoadScriptDll",
+          "callee": "DeleteFileA",
+          "lineNumber": 146
+        },
+        {
+          "caller": "LoadScriptDll",
+          "callee": "c_str",
+          "lineNumber": 146
+        },
+        {
+          "caller": "LoadScriptDll",
+          "callee": "OutputDebugStringA",
+          "lineNumber": 147
+        },
+        {
+          "caller": "LoadScriptDll",
+          "callee": "c_str",
+          "lineNumber": 147
+        },
+        {
+          "caller": "LoadScriptDll",
+          "callee": "reinterpret_cast<DestroyFn>",
+          "lineNumber": 152
+        },
+        {
+          "caller": "LoadScriptDll",
+          "callee": "GetProcAddress",
+          "lineNumber": 152
+        },
+        {
+          "caller": "LoadScriptDll",
+          "callee": "FreeLibrary",
+          "lineNumber": 154
+        },
+        {
+          "caller": "LoadScriptDll",
+          "callee": "DeleteFileA",
+          "lineNumber": 155
+        },
+        {
+          "caller": "LoadScriptDll",
+          "callee": "c_str",
+          "lineNumber": 155
+        },
+        {
+          "caller": "LoadScriptDll",
+          "callee": "OutputDebugStringA",
+          "lineNumber": 156
+        },
+        {
+          "caller": "LoadScriptDll",
+          "callee": "c_str",
+          "lineNumber": 156
+        },
+        {
+          "caller": "LoadScriptDll",
+          "callee": "reinterpret_cast<SerializeScriptFn>",
+          "lineNumber": 160
+        },
+        {
+          "caller": "LoadScriptDll",
+          "callee": "GetProcAddress",
+          "lineNumber": 161
+        },
+        {
+          "caller": "LoadScriptDll",
+          "callee": "reinterpret_cast<DeserializeScriptFn>",
+          "lineNumber": 162
+        },
+        {
+          "caller": "LoadScriptDll",
+          "callee": "GetProcAddress",
+          "lineNumber": 163
+        },
+        {
+          "caller": "LoadScriptDll",
+          "callee": "FreeLibrary",
+          "lineNumber": 165
+        },
+        {
+          "caller": "LoadScriptDll",
+          "callee": "DeleteFileA",
+          "lineNumber": 166
+        },
+        {
+          "caller": "LoadScriptDll",
+          "callee": "c_str",
+          "lineNumber": 166
+        },
+        {
+          "caller": "LoadScriptDll",
+          "callee": "OutputDebugStringA",
+          "lineNumber": 167
+        },
+        {
+          "caller": "LoadScriptDll",
+          "callee": "c_str",
+          "lineNumber": 167
+        },
+        {
+          "caller": "LoadScriptDll",
+          "callee": "reinterpret_cast<EnumerateFn>",
+          "lineNumber": 174
+        },
+        {
+          "caller": "LoadScriptDll",
+          "callee": "GetProcAddress",
+          "lineNumber": 174
+        },
+        {
+          "caller": "LoadScriptDll",
+          "callee": "enumerate",
+          "lineNumber": 177
+        },
+        {
+          "caller": "LoadScriptDll",
+          "callee": "std::sort",
+          "lineNumber": 179
+        },
+        {
+          "caller": "LoadScriptDll",
+          "callee": "begin",
+          "lineNumber": 179
+        },
+        {
+          "caller": "LoadScriptDll",
+          "callee": "end",
+          "lineNumber": 179
+        },
+        {
+          "caller": "LoadScriptDll",
+          "callee": "erase",
+          "lineNumber": 180
+        },
+        {
+          "caller": "LoadScriptDll",
+          "callee": "std::unique",
+          "lineNumber": 180
+        },
+        {
+          "caller": "LoadScriptDll",
+          "callee": "begin",
+          "lineNumber": 180
+        },
+        {
+          "caller": "LoadScriptDll",
+          "callee": "end",
+          "lineNumber": 180
+        },
+        {
+          "caller": "LoadScriptDll",
+          "callee": "end",
+          "lineNumber": 180
+        },
+        {
+          "caller": "LoadScriptDll",
+          "callee": "empty",
+          "lineNumber": 182
+        },
+        {
+          "caller": "LoadScriptDll",
+          "callee": "push_back",
+          "lineNumber": 183
+        },
+        {
+          "caller": "LoadScriptDll",
+          "callee": "std::make_shared<DllEntry>",
+          "lineNumber": 185
+        },
+        {
+          "caller": "LoadScriptDll",
+          "callee": "empty",
+          "lineNumber": 190
+        },
+        {
+          "caller": "LoadScriptDll",
+          "callee": "find",
+          "lineNumber": 192
+        },
+        {
+          "caller": "LoadScriptDll",
+          "callee": "end",
+          "lineNumber": 193
+        },
+        {
+          "caller": "LoadScriptDll",
+          "callee": "std::find",
+          "lineNumber": 194
+        },
+        {
+          "caller": "LoadScriptDll",
+          "callee": "begin",
+          "lineNumber": 194
+        },
+        {
+          "caller": "LoadScriptDll",
+          "callee": "end",
+          "lineNumber": 194
+        },
+        {
+          "caller": "LoadScriptDll",
+          "callee": "end",
+          "lineNumber": 195
+        },
+        {
+          "caller": "LoadScriptDll",
+          "callee": "push_back",
+          "lineNumber": 196
+        },
+        {
+          "caller": "LoadScriptDll",
+          "callee": "Register",
+          "lineNumber": 202
+        },
+        {
+          "caller": "LoadScriptDll",
+          "callee": "fn",
+          "lineNumber": 203
+        },
+        {
+          "caller": "LoadScriptDll",
+          "callee": "c_str",
+          "lineNumber": 203
+        },
+        {
+          "caller": "LoadScriptDll",
+          "callee": "ScriptPtr",
+          "lineNumber": 204
+        },
+        {
+          "caller": "LoadScriptDll",
+          "callee": "destroyFn",
+          "lineNumber": 206
+        },
+        {
+          "caller": "LoadScriptDll",
+          "callee": "push_back",
+          "lineNumber": 210
+        },
+        {
+          "caller": "LoadScriptDll",
+          "callee": "OutputDebugStringA",
+          "lineNumber": 211
+        },
+        {
+          "caller": "LoadScriptDll",
+          "callee": "c_str",
+          "lineNumber": 211
+        },
+        {
+          "caller": "LoadScriptDll",
+          "callee": "LoadFromModule",
+          "lineNumber": 217
+        },
+        {
+          "caller": "LoadScriptDll",
+          "callee": "UICanvasScriptFactory::Instance",
+          "lineNumber": 217
+        },
+        {
+          "caller": "UnloadScriptDll",
+          "callee": "find",
+          "lineNumber": 222
+        },
+        {
+          "caller": "UnloadScriptDll",
+          "callee": "end",
+          "lineNumber": 223
+        },
+        {
+          "caller": "UnloadScriptDll",
+          "callee": "std::find",
+          "lineNumber": 224
+        },
+        {
+          "caller": "UnloadScriptDll",
+          "callee": "begin",
+          "lineNumber": 224
+        },
+        {
+          "caller": "UnloadScriptDll",
+          "callee": "end",
+          "lineNumber": 224
+        },
+        {
+          "caller": "UnloadScriptDll",
+          "callee": "end",
+          "lineNumber": 225
+        },
+        {
+          "caller": "UnloadScriptDll",
+          "callee": "push_back",
+          "lineNumber": 226
+        },
+        {
+          "caller": "UnloadScriptDll",
+          "callee": "erase",
+          "lineNumber": 228
+        },
+        {
+          "caller": "UnloadScriptDll",
+          "callee": "erase",
+          "lineNumber": 229
+        },
+        {
+          "caller": "UnloadScriptDll",
+          "callee": "erase",
+          "lineNumber": 230
+        },
+        {
+          "caller": "ReleaseRetiredDlls",
+          "callee": "clear",
+          "lineNumber": 234
+        },
+        {
+          "caller": "InvokeExportOnLoadedDlls",
+          "callee": "reserve",
+          "lineNumber": 241
+        },
+        {
+          "caller": "InvokeExportOnLoadedDlls",
+          "callee": "size",
+          "lineNumber": 241
+        },
+        {
+          "caller": "InvokeExportOnLoadedDlls",
+          "callee": "std::find",
+          "lineNumber": 244
+        },
+        {
+          "caller": "InvokeExportOnLoadedDlls",
+          "callee": "begin",
+          "lineNumber": 244
+        },
+        {
+          "caller": "InvokeExportOnLoadedDlls",
+          "callee": "end",
+          "lineNumber": 244
+        },
+        {
+          "caller": "InvokeExportOnLoadedDlls",
+          "callee": "end",
+          "lineNumber": 244
+        },
+        {
+          "caller": "InvokeExportOnLoadedDlls",
+          "callee": "push_back",
+          "lineNumber": 246
+        },
+        {
+          "caller": "InvokeExportOnLoadedDlls",
+          "callee": "reinterpret_cast<void(*)()>",
+          "lineNumber": 251
+        },
+        {
+          "caller": "InvokeExportOnLoadedDlls",
+          "callee": "GetProcAddress",
+          "lineNumber": 251
+        },
+        {
+          "caller": "InvokeExportOnLoadedDlls",
+          "callee": "fn",
+          "lineNumber": 253
+        },
+        {
+          "caller": "UnloadAllDlls",
+          "callee": "reserve",
+          "lineNumber": 283
+        },
+        {
+          "caller": "UnloadAllDlls",
+          "callee": "size",
+          "lineNumber": 283
+        },
+        {
+          "caller": "UnloadAllDlls",
+          "callee": "push_back",
+          "lineNumber": 285
+        },
+        {
+          "caller": "UnloadAllDlls",
+          "callee": "reserve",
+          "lineNumber": 288
+        },
+        {
+          "caller": "UnloadAllDlls",
+          "callee": "size",
+          "lineNumber": 288
+        },
+        {
+          "caller": "UnloadAllDlls",
+          "callee": "std::find",
+          "lineNumber": 290
+        },
+        {
+          "caller": "UnloadAllDlls",
+          "callee": "begin",
+          "lineNumber": 290
+        },
+        {
+          "caller": "UnloadAllDlls",
+          "callee": "end",
+          "lineNumber": 290
+        },
+        {
+          "caller": "UnloadAllDlls",
+          "callee": "end",
+          "lineNumber": 290
+        },
+        {
+          "caller": "UnloadAllDlls",
+          "callee": "push_back",
+          "lineNumber": 291
+        },
+        {
+          "caller": "UnloadAllDlls",
+          "callee": "clear",
+          "lineNumber": 294
+        },
+        {
+          "caller": "UnloadAllDlls",
+          "callee": "clear",
+          "lineNumber": 295
+        },
+        {
+          "caller": "UnloadAllDlls",
+          "callee": "erase",
+          "lineNumber": 297
+        },
+        {
+          "caller": "UnloadAllDlls",
+          "callee": "std::find",
+          "lineNumber": 300
+        },
+        {
+          "caller": "UnloadAllDlls",
+          "callee": "begin",
+          "lineNumber": 300
+        },
+        {
+          "caller": "UnloadAllDlls",
+          "callee": "end",
+          "lineNumber": 300
+        },
+        {
+          "caller": "UnloadAllDlls",
+          "callee": "end",
+          "lineNumber": 300
+        },
+        {
+          "caller": "UnloadAllDlls",
+          "callee": "push_back",
+          "lineNumber": 301
+        },
+        {
+          "caller": "UnloadAllDlls",
+          "callee": "ReleaseRetiredDlls",
+          "lineNumber": 303
+        },
+        {
+          "caller": "RequestReload",
+          "callee": "push_back",
+          "lineNumber": 313
+        },
+        {
+          "caller": "RequestReload",
+          "callee": "OutputDebugStringA",
+          "lineNumber": 314
+        },
+        {
+          "caller": "RequestReload",
+          "callee": "c_str",
+          "lineNumber": 314
+        },
+        {
+          "caller": "PendingReloadCount",
+          "callee": "size",
+          "lineNumber": 320
+        },
+        {
+          "caller": "DrainReloadQueue",
+          "callee": "swap",
+          "lineNumber": 329
+        },
+        {
+          "caller": "DrainReloadQueue",
+          "callee": "LoadScriptDll",
+          "lineNumber": 333
+        },
+        {
+          "caller": "DrainReloadQueue",
+          "callee": "onReloaded",
+          "lineNumber": 335
+        },
+        {
+          "caller": "DrainReloadQueue",
+          "callee": "ReleaseRetiredDlls",
+          "lineNumber": 336
+        }
+      ],
+      "metrics": {
+        "importCount": 2,
+        "exportCount": 17,
+        "functionCount": 17,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "engine/scripting/ui_canvas_script.h",
+      "language": "c",
+      "fileCategory": "code",
+      "totalLines": 19,
+      "nonEmptyLines": 14,
+      "functions": [
+        {
+          "name": "~UICanvasScript",
+          "startLine": 9,
+          "endLine": 9,
+          "params": []
+        },
+        {
+          "name": "OnCreate",
+          "startLine": 11,
+          "endLine": 11,
+          "params": [
+            "owner"
+          ]
+        },
+        {
+          "name": "OnUpdate",
+          "startLine": 12,
+          "endLine": 12,
+          "params": [
+            "owner",
+            "dt"
+          ]
+        },
+        {
+          "name": "OnClick",
+          "startLine": 14,
+          "endLine": 14,
+          "params": [
+            "owner"
+          ]
+        },
+        {
+          "name": "OnDestroy",
+          "startLine": 15,
+          "endLine": 15,
+          "params": [
+            "owner"
+          ]
+        },
+        {
+          "name": "Serialize",
+          "startLine": 17,
+          "endLine": 17,
+          "params": []
+        },
+        {
+          "name": "Deserialize",
+          "startLine": 18,
+          "endLine": 18,
+          "params": [
+            "j"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "UIElement",
+          "startLine": 5,
+          "endLine": 5,
+          "methods": [],
+          "properties": []
+        },
+        {
+          "name": "UICanvasScript",
+          "startLine": 7,
+          "endLine": 19,
+          "methods": [
+            "~UICanvasScript",
+            "OnCreate",
+            "OnUpdate",
+            "OnClick",
+            "OnDestroy",
+            "Serialize",
+            "Deserialize"
+          ],
+          "properties": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "UIElement",
+          "line": 5,
+          "isDefault": false
+        },
+        {
+          "name": "~UICanvasScript",
+          "line": 9,
+          "isDefault": false
+        },
+        {
+          "name": "OnCreate",
+          "line": 11,
+          "isDefault": false
+        },
+        {
+          "name": "OnUpdate",
+          "line": 12,
+          "isDefault": false
+        },
+        {
+          "name": "OnClick",
+          "line": 14,
+          "isDefault": false
+        },
+        {
+          "name": "OnDestroy",
+          "line": 15,
+          "isDefault": false
+        },
+        {
+          "name": "Serialize",
+          "line": 17,
+          "isDefault": false
+        },
+        {
+          "name": "Deserialize",
+          "line": 18,
+          "isDefault": false
+        },
+        {
+          "name": "UICanvasScript",
+          "line": 7,
+          "isDefault": false
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 9,
+        "functionCount": 7,
+        "classCount": 2
+      }
+    },
+    {
+      "path": "engine/scripting/ui_canvas_script_dll_exports.cpp",
+      "language": "cpp",
+      "fileCategory": "code",
+      "totalLines": 35,
+      "nonEmptyLines": 29,
+      "functions": [
+        {
+          "name": "DllUICanvasScript_Register",
+          "startLine": 13,
+          "endLine": 15,
+          "params": [
+            "name",
+            "creator"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "DllUICanvasScript_Register",
+          "line": 13,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "DllUICanvasScript_Register",
+          "callee": "GetDllUiRegistry",
+          "lineNumber": 14
+        },
+        {
+          "caller": "DllUICanvasScript_Register",
+          "callee": "std::move",
+          "lineNumber": 14
+        },
+        {
+          "caller": "EnumerateUICanvasScripts",
+          "callee": "GetDllUiRegistry",
+          "lineNumber": 33
+        },
+        {
+          "caller": "EnumerateUICanvasScripts",
+          "callee": "callback",
+          "lineNumber": 34
+        },
+        {
+          "caller": "EnumerateUICanvasScripts",
+          "callee": "c_str",
+          "lineNumber": 34
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "engine/scripting/ui_canvas_script_factory.cpp",
+      "language": "cpp",
+      "fileCategory": "code",
+      "totalLines": 87,
+      "nonEmptyLines": 72,
+      "functions": [
+        {
+          "name": "CollectUiScriptName",
+          "startLine": 8,
+          "endLine": 11,
+          "params": [
+            "name"
+          ]
+        },
+        {
+          "name": "Register",
+          "startLine": 19,
+          "endLine": 21,
+          "params": [
+            "name",
+            "creator"
+          ]
+        },
+        {
+          "name": "Create",
+          "startLine": 23,
+          "endLine": 32,
+          "params": [
+            "name"
+          ]
+        },
+        {
+          "name": "IsRegistered",
+          "startLine": 34,
+          "endLine": 36,
+          "params": [
+            "name"
+          ]
+        },
+        {
+          "name": "GetRegisteredNames",
+          "startLine": 38,
+          "endLine": 45,
+          "params": []
+        },
+        {
+          "name": "LoadFromModule",
+          "startLine": 47,
+          "endLine": 87,
+          "params": [
+            "module",
+            "fallbackName",
+            "keepAlive"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "CollectUiScriptName",
+          "line": 8,
+          "isDefault": false
+        },
+        {
+          "name": "Register",
+          "line": 19,
+          "isDefault": false
+        },
+        {
+          "name": "Create",
+          "line": 23,
+          "isDefault": false
+        },
+        {
+          "name": "IsRegistered",
+          "line": 34,
+          "isDefault": false
+        },
+        {
+          "name": "GetRegisteredNames",
+          "line": 38,
+          "isDefault": false
+        },
+        {
+          "name": "LoadFromModule",
+          "line": 47,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "CollectUiScriptName",
+          "callee": "push_back",
+          "lineNumber": 10
+        },
+        {
+          "caller": "Register",
+          "callee": "std::move",
+          "lineNumber": 20
+        },
+        {
+          "caller": "Create",
+          "callee": "find",
+          "lineNumber": 24
+        },
+        {
+          "caller": "Create",
+          "callee": "end",
+          "lineNumber": 25
+        },
+        {
+          "caller": "Create",
+          "callee": "second",
+          "lineNumber": 26
+        },
+        {
+          "caller": "Create",
+          "callee": "OutputDebugStringA",
+          "lineNumber": 30
+        },
+        {
+          "caller": "Create",
+          "callee": "c_str",
+          "lineNumber": 30
+        },
+        {
+          "caller": "Create",
+          "callee": "ScriptPtr",
+          "lineNumber": 31
+        },
+        {
+          "caller": "IsRegistered",
+          "callee": "count",
+          "lineNumber": 35
+        },
+        {
+          "caller": "GetRegisteredNames",
+          "callee": "reserve",
+          "lineNumber": 40
+        },
+        {
+          "caller": "GetRegisteredNames",
+          "callee": "size",
+          "lineNumber": 40
+        },
+        {
+          "caller": "GetRegisteredNames",
+          "callee": "push_back",
+          "lineNumber": 42
+        },
+        {
+          "caller": "GetRegisteredNames",
+          "callee": "std::sort",
+          "lineNumber": 43
+        },
+        {
+          "caller": "GetRegisteredNames",
+          "callee": "begin",
+          "lineNumber": 43
+        },
+        {
+          "caller": "GetRegisteredNames",
+          "callee": "end",
+          "lineNumber": 43
+        },
+        {
+          "caller": "LoadFromModule",
+          "callee": "reinterpret_cast<CreateFn>",
+          "lineNumber": 53
+        },
+        {
+          "caller": "LoadFromModule",
+          "callee": "GetProcAddress",
+          "lineNumber": 53
+        },
+        {
+          "caller": "LoadFromModule",
+          "callee": "reinterpret_cast<DestroyFn>",
+          "lineNumber": 58
+        },
+        {
+          "caller": "LoadFromModule",
+          "callee": "GetProcAddress",
+          "lineNumber": 58
+        },
+        {
+          "caller": "LoadFromModule",
+          "callee": "reinterpret_cast<EnumerateFn>",
+          "lineNumber": 64
+        },
+        {
+          "caller": "LoadFromModule",
+          "callee": "GetProcAddress",
+          "lineNumber": 64
+        },
+        {
+          "caller": "LoadFromModule",
+          "callee": "enumerateFn",
+          "lineNumber": 67
+        },
+        {
+          "caller": "LoadFromModule",
+          "callee": "std::sort",
+          "lineNumber": 69
+        },
+        {
+          "caller": "LoadFromModule",
+          "callee": "begin",
+          "lineNumber": 69
+        },
+        {
+          "caller": "LoadFromModule",
+          "callee": "end",
+          "lineNumber": 69
+        },
+        {
+          "caller": "LoadFromModule",
+          "callee": "erase",
+          "lineNumber": 70
+        },
+        {
+          "caller": "LoadFromModule",
+          "callee": "std::unique",
+          "lineNumber": 70
+        },
+        {
+          "caller": "LoadFromModule",
+          "callee": "begin",
+          "lineNumber": 70
+        },
+        {
+          "caller": "LoadFromModule",
+          "callee": "end",
+          "lineNumber": 70
+        },
+        {
+          "caller": "LoadFromModule",
+          "callee": "end",
+          "lineNumber": 70
+        },
+        {
+          "caller": "LoadFromModule",
+          "callee": "empty",
+          "lineNumber": 72
+        },
+        {
+          "caller": "LoadFromModule",
+          "callee": "empty",
+          "lineNumber": 72
+        },
+        {
+          "caller": "LoadFromModule",
+          "callee": "push_back",
+          "lineNumber": 73
+        },
+        {
+          "caller": "LoadFromModule",
+          "callee": "empty",
+          "lineNumber": 76
+        },
+        {
+          "caller": "LoadFromModule",
+          "callee": "Register",
+          "lineNumber": 79
+        },
+        {
+          "caller": "LoadFromModule",
+          "callee": "createFn",
+          "lineNumber": 80
+        },
+        {
+          "caller": "LoadFromModule",
+          "callee": "c_str",
+          "lineNumber": 80
+        },
+        {
+          "caller": "LoadFromModule",
+          "callee": "ScriptPtr",
+          "lineNumber": 81
+        },
+        {
+          "caller": "LoadFromModule",
+          "callee": "destroyFn",
+          "lineNumber": 83
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 6,
+        "functionCount": 6,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "engine/scripting/ui_canvas_script_factory.h",
+      "language": "c",
+      "fileCategory": "code",
+      "totalLines": 37,
+      "nonEmptyLines": 30,
+      "functions": [
+        {
+          "name": "UICanvasScriptFactory",
+          "startLine": 34,
+          "endLine": 34,
+          "params": []
+        }
+      ],
+      "classes": [
+        {
+          "name": "UICanvasScriptFactory",
+          "startLine": 11,
+          "endLine": 37,
+          "methods": [
+            "Register",
+            "Create",
+            "IsRegistered",
+            "GetRegisteredNames",
+            "LoadFromModule",
+            "UICanvasScriptFactory"
+          ],
+          "properties": [
+            "m_creators"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "Register",
+          "line": 18,
+          "isDefault": false
+        },
+        {
+          "name": "Create",
+          "line": 19,
+          "isDefault": false
+        },
+        {
+          "name": "IsRegistered",
+          "line": 20,
+          "isDefault": false
+        },
+        {
+          "name": "GetRegisteredNames",
+          "line": 21,
+          "isDefault": false
+        },
+        {
+          "name": "LoadFromModule",
+          "line": 30,
+          "isDefault": false
+        },
+        {
+          "name": "UICanvasScriptFactory",
+          "line": 11,
+          "isDefault": false
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 6,
+        "functionCount": 1,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "engine/scripting/ui_canvas_script_register.h",
+      "language": "c",
+      "fileCategory": "code",
+      "totalLines": 41,
+      "nonEmptyLines": 32,
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "engine/ui/scene_canvas.h",
+      "language": "c",
+      "fileCategory": "code",
+      "totalLines": 51,
+      "nonEmptyLines": 39,
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "engine/ui/ui_bar.h",
+      "language": "c",
+      "fileCategory": "code",
+      "totalLines": 98,
+      "nonEmptyLines": 85,
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "engine/ui/ui_button.h",
+      "language": "c",
+      "fileCategory": "code",
+      "totalLines": 156,
+      "nonEmptyLines": 136,
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "engine/ui/ui_element.cpp",
+      "language": "cpp",
+      "fileCategory": "code",
+      "totalLines": 187,
+      "nonEmptyLines": 156,
+      "functions": [
+        {
+          "name": "GetAnchorDesignPosition",
+          "startLine": 16,
+          "endLine": 54,
+          "params": [
+            "anchor",
+            "screenWidth",
+            "screenHeight",
+            "anchorX",
+            "anchorY"
+          ]
+        },
+        {
+          "name": "~UIElement",
+          "startLine": 58,
+          "endLine": 61,
+          "params": []
+        },
+        {
+          "name": "LoadScriptFromJson",
+          "startLine": 63,
+          "endLine": 67,
+          "params": [
+            "scriptJson"
+          ]
+        },
+        {
+          "name": "SaveScriptToJson",
+          "startLine": 69,
+          "endLine": 71,
+          "params": []
+        },
+        {
+          "name": "SetScriptClass",
+          "startLine": 73,
+          "endLine": 77,
+          "params": [
+            "scriptClass"
+          ]
+        },
+        {
+          "name": "UpdateAttachedScript",
+          "startLine": 84,
+          "endLine": 87,
+          "params": [
+            "elapsed_time"
+          ]
+        },
+        {
+          "name": "InvokeAttachedScriptOnClick",
+          "startLine": 89,
+          "endLine": 92,
+          "params": []
+        },
+        {
+          "name": "TeardownAttachedScript",
+          "startLine": 94,
+          "endLine": 97,
+          "params": []
+        },
+        {
+          "name": "HotReloadAttachedScript",
+          "startLine": 99,
+          "endLine": 102,
+          "params": []
+        },
+        {
+          "name": "UIGetDesignSize",
+          "startLine": 104,
+          "endLine": 109,
+          "params": []
+        },
+        {
+          "name": "UIGetLayoutScale",
+          "startLine": 111,
+          "endLine": 131,
+          "params": []
+        },
+        {
+          "name": "GetScreenPosition",
+          "startLine": 133,
+          "endLine": 136,
+          "params": []
+        },
+        {
+          "name": "GetAnchorScreenPosition",
+          "startLine": 138,
+          "endLine": 141,
+          "params": []
+        },
+        {
+          "name": "GetAnchorScreenPosition",
+          "startLine": 143,
+          "endLine": 150,
+          "params": [
+            "screenWidth",
+            "screenHeight"
+          ]
+        },
+        {
+          "name": "GetScreenPosition",
+          "startLine": 152,
+          "endLine": 167,
+          "params": [
+            "screenWidth",
+            "screenHeight"
+          ]
+        },
+        {
+          "name": "ScreenDeltaToDesignDelta",
+          "startLine": 169,
+          "endLine": 175,
+          "params": [
+            "dx",
+            "dy"
+          ]
+        },
+        {
+          "name": "HitTest",
+          "startLine": 177,
+          "endLine": 187,
+          "params": [
+            "viewportX",
+            "viewportY"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "GetAnchorDesignPosition",
+          "line": 16,
+          "isDefault": false
+        },
+        {
+          "name": "~UIElement",
+          "line": 58,
+          "isDefault": false
+        },
+        {
+          "name": "LoadScriptFromJson",
+          "line": 63,
+          "isDefault": false
+        },
+        {
+          "name": "SaveScriptToJson",
+          "line": 69,
+          "isDefault": false
+        },
+        {
+          "name": "SetScriptClass",
+          "line": 73,
+          "isDefault": false
+        },
+        {
+          "name": "UpdateAttachedScript",
+          "line": 84,
+          "isDefault": false
+        },
+        {
+          "name": "InvokeAttachedScriptOnClick",
+          "line": 89,
+          "isDefault": false
+        },
+        {
+          "name": "TeardownAttachedScript",
+          "line": 94,
+          "isDefault": false
+        },
+        {
+          "name": "HotReloadAttachedScript",
+          "line": 99,
+          "isDefault": false
+        },
+        {
+          "name": "UIGetDesignSize",
+          "line": 104,
+          "isDefault": false
+        },
+        {
+          "name": "UIGetLayoutScale",
+          "line": 111,
+          "isDefault": false
+        },
+        {
+          "name": "GetScreenPosition",
+          "line": 133,
+          "isDefault": false
+        },
+        {
+          "name": "GetAnchorScreenPosition",
+          "line": 138,
+          "isDefault": false
+        },
+        {
+          "name": "GetAnchorScreenPosition",
+          "line": 143,
+          "isDefault": false
+        },
+        {
+          "name": "GetScreenPosition",
+          "line": 152,
+          "isDefault": false
+        },
+        {
+          "name": "ScreenDeltaToDesignDelta",
+          "line": 169,
+          "isDefault": false
+        },
+        {
+          "name": "HitTest",
+          "line": 177,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "~UIElement",
+          "callee": "Teardown",
+          "lineNumber": 60
+        },
+        {
+          "caller": "LoadScriptFromJson",
+          "callee": "std::make_unique<UIElementScriptHost>",
+          "lineNumber": 65
+        },
+        {
+          "caller": "LoadScriptFromJson",
+          "callee": "LoadFromJson",
+          "lineNumber": 66
+        },
+        {
+          "caller": "SaveScriptToJson",
+          "callee": "SaveToJson",
+          "lineNumber": 70
+        },
+        {
+          "caller": "SaveScriptToJson",
+          "callee": "nlohmann::json",
+          "lineNumber": 70
+        },
+        {
+          "caller": "SetScriptClass",
+          "callee": "std::make_unique<UIElementScriptHost>",
+          "lineNumber": 75
+        },
+        {
+          "caller": "SetScriptClass",
+          "callee": "SetScriptClass",
+          "lineNumber": 76
+        },
+        {
+          "caller": "UpdateAttachedScript",
+          "callee": "Update",
+          "lineNumber": 86
+        },
+        {
+          "caller": "InvokeAttachedScriptOnClick",
+          "callee": "InvokeOnClick",
+          "lineNumber": 91
+        },
+        {
+          "caller": "TeardownAttachedScript",
+          "callee": "Teardown",
+          "lineNumber": 96
+        },
+        {
+          "caller": "HotReloadAttachedScript",
+          "callee": "HotReload",
+          "lineNumber": 101
+        },
+        {
+          "caller": "UIGetDesignSize",
+          "callee": "static_cast<float>",
+          "lineNumber": 106
+        },
+        {
+          "caller": "UIGetDesignSize",
+          "callee": "static_cast<float>",
+          "lineNumber": 107
+        },
+        {
+          "caller": "UIGetLayoutScale",
+          "callee": "UIGetDesignSize",
+          "lineNumber": 112
+        },
+        {
+          "caller": "UIGetLayoutScale",
+          "callee": "GetRenderViewportWidth",
+          "lineNumber": 116
+        },
+        {
+          "caller": "UIGetLayoutScale",
+          "callee": "GetRenderViewportHeight",
+          "lineNumber": 117
+        },
+        {
+          "caller": "UIGetLayoutScale",
+          "callee": "EngineGUI_IsPlaying",
+          "lineNumber": 121
+        },
+        {
+          "caller": "UIGetLayoutScale",
+          "callee": "EngineGUI_GetGameViewportRect",
+          "lineNumber": 123
+        },
+        {
+          "caller": "GetScreenPosition",
+          "callee": "UIGetDesignSize",
+          "lineNumber": 134
+        },
+        {
+          "caller": "GetScreenPosition",
+          "callee": "GetScreenPosition",
+          "lineNumber": 135
+        },
+        {
+          "caller": "GetAnchorScreenPosition",
+          "callee": "UIGetDesignSize",
+          "lineNumber": 139
+        },
+        {
+          "caller": "GetAnchorScreenPosition",
+          "callee": "GetAnchorScreenPosition",
+          "lineNumber": 140
+        },
+        {
+          "caller": "GetAnchorScreenPosition",
+          "callee": "GetAnchorDesignPosition",
+          "lineNumber": 146
+        },
+        {
+          "caller": "GetAnchorScreenPosition",
+          "callee": "UIGetLayoutScale",
+          "lineNumber": 148
+        },
+        {
+          "caller": "GetScreenPosition",
+          "callee": "GetAnchorDesignPosition",
+          "lineNumber": 155
+        },
+        {
+          "caller": "GetScreenPosition",
+          "callee": "UIGetLayoutScale",
+          "lineNumber": 162
+        },
+        {
+          "caller": "ScreenDeltaToDesignDelta",
+          "callee": "UIGetLayoutScale",
+          "lineNumber": 170
+        },
+        {
+          "caller": "HitTest",
+          "callee": "GetScreenRect",
+          "lineNumber": 182
+        }
+      ],
+      "metrics": {
+        "importCount": 4,
+        "exportCount": 17,
+        "functionCount": 17,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "engine/ui/ui_element.h",
+      "language": "c",
+      "fileCategory": "code",
+      "totalLines": 109,
+      "nonEmptyLines": 89,
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "engine/ui/ui_element_script_host.cpp",
+      "language": "cpp",
+      "fileCategory": "code",
+      "totalLines": 112,
+      "nonEmptyLines": 93,
+      "functions": [
+        {
+          "name": "SetScriptClass",
+          "startLine": 6,
+          "endLine": 11,
+          "params": [
+            "scriptClass"
+          ]
+        },
+        {
+          "name": "SetProperties",
+          "startLine": 13,
+          "endLine": 17,
+          "params": [
+            "properties"
+          ]
+        },
+        {
+          "name": "LoadFromJson",
+          "startLine": 19,
+          "endLine": 31,
+          "params": [
+            "scriptJson"
+          ]
+        },
+        {
+          "name": "SaveToJson",
+          "startLine": 33,
+          "endLine": 47,
+          "params": []
+        },
+        {
+          "name": "CreateScript",
+          "startLine": 49,
+          "endLine": 65,
+          "params": []
+        },
+        {
+          "name": "Update",
+          "startLine": 67,
+          "endLine": 79,
+          "params": [
+            "owner",
+            "elapsed_time"
+          ]
+        },
+        {
+          "name": "InvokeOnClick",
+          "startLine": 81,
+          "endLine": 93,
+          "params": [
+            "owner"
+          ]
+        },
+        {
+          "name": "Teardown",
+          "startLine": 95,
+          "endLine": 100,
+          "params": [
+            "owner"
+          ]
+        },
+        {
+          "name": "HotReload",
+          "startLine": 102,
+          "endLine": 112,
+          "params": [
+            "owner"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "SetScriptClass",
+          "line": 6,
+          "isDefault": false
+        },
+        {
+          "name": "SetProperties",
+          "line": 13,
+          "isDefault": false
+        },
+        {
+          "name": "LoadFromJson",
+          "line": 19,
+          "isDefault": false
+        },
+        {
+          "name": "SaveToJson",
+          "line": 33,
+          "isDefault": false
+        },
+        {
+          "name": "CreateScript",
+          "line": 49,
+          "isDefault": false
+        },
+        {
+          "name": "Update",
+          "line": 67,
+          "isDefault": false
+        },
+        {
+          "name": "InvokeOnClick",
+          "line": 81,
+          "isDefault": false
+        },
+        {
+          "name": "Teardown",
+          "line": 95,
+          "isDefault": false
+        },
+        {
+          "name": "HotReload",
+          "line": 102,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "SetScriptClass",
+          "callee": "CreateScript",
+          "lineNumber": 10
+        },
+        {
+          "caller": "SetProperties",
+          "callee": "is_object",
+          "lineNumber": 14
+        },
+        {
+          "caller": "SetProperties",
+          "callee": "nlohmann::json::object",
+          "lineNumber": 14
+        },
+        {
+          "caller": "SetProperties",
+          "callee": "is_object",
+          "lineNumber": 15
+        },
+        {
+          "caller": "SetProperties",
+          "callee": "empty",
+          "lineNumber": 15
+        },
+        {
+          "caller": "SetProperties",
+          "callee": "Deserialize",
+          "lineNumber": 16
+        },
+        {
+          "caller": "LoadFromJson",
+          "callee": "is_object",
+          "lineNumber": 20
+        },
+        {
+          "caller": "LoadFromJson",
+          "callee": "clear",
+          "lineNumber": 21
+        },
+        {
+          "caller": "LoadFromJson",
+          "callee": "nlohmann::json::object",
+          "lineNumber": 22
+        },
+        {
+          "caller": "LoadFromJson",
+          "callee": "reset",
+          "lineNumber": 23
+        },
+        {
+          "caller": "LoadFromJson",
+          "callee": "value",
+          "lineNumber": 28
+        },
+        {
+          "caller": "LoadFromJson",
+          "callee": "contains",
+          "lineNumber": 29
+        },
+        {
+          "caller": "LoadFromJson",
+          "callee": "nlohmann::json::object",
+          "lineNumber": 29
+        },
+        {
+          "caller": "LoadFromJson",
+          "callee": "CreateScript",
+          "lineNumber": 30
+        },
+        {
+          "caller": "SaveToJson",
+          "callee": "empty",
+          "lineNumber": 34
+        },
+        {
+          "caller": "SaveToJson",
+          "callee": "nlohmann::json",
+          "lineNumber": 35
+        },
+        {
+          "caller": "SaveToJson",
+          "callee": "Serialize",
+          "lineNumber": 40
+        },
+        {
+          "caller": "SaveToJson",
+          "callee": "is_object",
+          "lineNumber": 41
+        },
+        {
+          "caller": "SaveToJson",
+          "callee": "empty",
+          "lineNumber": 41
+        },
+        {
+          "caller": "SaveToJson",
+          "callee": "is_object",
+          "lineNumber": 43
+        },
+        {
+          "caller": "SaveToJson",
+          "callee": "empty",
+          "lineNumber": 43
+        },
+        {
+          "caller": "CreateScript",
+          "callee": "reset",
+          "lineNumber": 50
+        },
+        {
+          "caller": "CreateScript",
+          "callee": "empty",
+          "lineNumber": 52
+        },
+        {
+          "caller": "CreateScript",
+          "callee": "Create",
+          "lineNumber": 55
+        },
+        {
+          "caller": "CreateScript",
+          "callee": "UICanvasScriptFactory::Instance",
+          "lineNumber": 55
+        },
+        {
+          "caller": "CreateScript",
+          "callee": "OutputDebugStringA",
+          "lineNumber": 59
+        },
+        {
+          "caller": "CreateScript",
+          "callee": "c_str",
+          "lineNumber": 59
+        },
+        {
+          "caller": "CreateScript",
+          "callee": "is_object",
+          "lineNumber": 63
+        },
+        {
+          "caller": "CreateScript",
+          "callee": "empty",
+          "lineNumber": 63
+        },
+        {
+          "caller": "CreateScript",
+          "callee": "Deserialize",
+          "lineNumber": 64
+        },
+        {
+          "caller": "Update",
+          "callee": "EngineGUI_IsPlaying",
+          "lineNumber": 72
+        },
+        {
+          "caller": "Update",
+          "callee": "OnCreate",
+          "lineNumber": 74
+        },
+        {
+          "caller": "Update",
+          "callee": "OnUpdate",
+          "lineNumber": 78
+        },
+        {
+          "caller": "Update",
+          "callee": "static_cast<float>",
+          "lineNumber": 78
+        },
+        {
+          "caller": "InvokeOnClick",
+          "callee": "EngineGUI_IsPlaying",
+          "lineNumber": 86
+        },
+        {
+          "caller": "InvokeOnClick",
+          "callee": "OnCreate",
+          "lineNumber": 88
+        },
+        {
+          "caller": "InvokeOnClick",
+          "callee": "OnClick",
+          "lineNumber": 92
+        },
+        {
+          "caller": "Teardown",
+          "callee": "OnDestroy",
+          "lineNumber": 97
+        },
+        {
+          "caller": "HotReload",
+          "callee": "Teardown",
+          "lineNumber": 103
+        },
+        {
+          "caller": "HotReload",
+          "callee": "reset",
+          "lineNumber": 104
+        },
+        {
+          "caller": "HotReload",
+          "callee": "CreateScript",
+          "lineNumber": 108
+        }
+      ],
+      "metrics": {
+        "importCount": 3,
+        "exportCount": 9,
+        "functionCount": 9,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "engine/ui/ui_element_script_host.h",
+      "language": "c",
+      "fileCategory": "code",
+      "totalLines": 37,
+      "nonEmptyLines": 29,
+      "classes": [
+        {
+          "name": "UIElement",
+          "startLine": 8,
+          "endLine": 8,
+          "methods": [],
+          "properties": []
+        },
+        {
+          "name": "UICanvasScript",
+          "startLine": 9,
+          "endLine": 9,
+          "methods": [],
+          "properties": []
+        },
+        {
+          "name": "UIElementScriptHost",
+          "startLine": 11,
+          "endLine": 37,
+          "methods": [
+            "SetScriptClass",
+            "SetProperties",
+            "LoadFromJson",
+            "SaveToJson",
+            "Update",
+            "InvokeOnClick",
+            "Teardown",
+            "HotReload",
+            "CreateScript"
+          ],
+          "properties": [
+            "m_scriptClass",
+            "m_scriptProperties",
+            "m_script",
+            "m_scriptCreated"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "UIElement",
+          "line": 8,
+          "isDefault": false
+        },
+        {
+          "name": "UICanvasScript",
+          "line": 9,
+          "isDefault": false
+        },
+        {
+          "name": "SetScriptClass",
+          "line": 13,
+          "isDefault": false
+        },
+        {
+          "name": "SetProperties",
+          "line": 14,
+          "isDefault": false
+        },
+        {
+          "name": "LoadFromJson",
+          "line": 15,
+          "isDefault": false
+        },
+        {
+          "name": "SaveToJson",
+          "line": 16,
+          "isDefault": false
+        },
+        {
+          "name": "Update",
+          "line": 21,
+          "isDefault": false
+        },
+        {
+          "name": "InvokeOnClick",
+          "line": 22,
+          "isDefault": false
+        },
+        {
+          "name": "Teardown",
+          "line": 23,
+          "isDefault": false
+        },
+        {
+          "name": "HotReload",
+          "line": 28,
+          "isDefault": false
+        },
+        {
+          "name": "UIElementScriptHost",
+          "line": 11,
+          "isDefault": false
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 11,
+        "functionCount": 0,
+        "classCount": 3
+      }
+    },
+    {
+      "path": "engine/ui/ui_sprite.h",
+      "language": "c",
+      "fileCategory": "code",
+      "totalLines": 110,
+      "nonEmptyLines": 92,
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "engine/ui/ui_text.cpp",
+      "language": "cpp",
+      "fileCategory": "code",
+      "totalLines": 147,
+      "nonEmptyLines": 128,
+      "functions": [
+        {
+          "name": "UIText",
+          "startLine": 11,
+          "endLine": 26,
+          "params": [
+            "name",
+            "position",
+            "anchor",
+            "text"
+          ]
+        },
+        {
+          "name": "Initialize",
+          "startLine": 28,
+          "endLine": 32,
+          "params": []
+        },
+        {
+          "name": "Update",
+          "startLine": 34,
+          "endLine": 36,
+          "params": [
+            "elapsed_time"
+          ]
+        },
+        {
+          "name": "Draw",
+          "startLine": 38,
+          "endLine": 70,
+          "params": []
+        },
+        {
+          "name": "Finalize",
+          "startLine": 72,
+          "endLine": 78,
+          "params": []
+        },
+        {
+          "name": "SetFont",
+          "startLine": 80,
+          "endLine": 99,
+          "params": [
+            "fontTexturePath",
+            "charWidth",
+            "charHeight",
+            "charsPerRow"
+          ]
+        },
+        {
+          "name": "SetFontPath",
+          "startLine": 101,
+          "endLine": 109,
+          "params": [
+            "fontTexturePath",
+            "charWidth",
+            "charHeight",
+            "charsPerRow"
+          ]
+        },
+        {
+          "name": "GetTextWidth",
+          "startLine": 111,
+          "endLine": 116,
+          "params": []
+        },
+        {
+          "name": "GetScreenRect",
+          "startLine": 118,
+          "endLine": 147,
+          "params": [
+            "out"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "UIText",
+          "line": 11,
+          "isDefault": false
+        },
+        {
+          "name": "Initialize",
+          "line": 28,
+          "isDefault": false
+        },
+        {
+          "name": "Update",
+          "line": 34,
+          "isDefault": false
+        },
+        {
+          "name": "Draw",
+          "line": 38,
+          "isDefault": false
+        },
+        {
+          "name": "Finalize",
+          "line": 72,
+          "isDefault": false
+        },
+        {
+          "name": "SetFont",
+          "line": 80,
+          "isDefault": false
+        },
+        {
+          "name": "SetFontPath",
+          "line": 101,
+          "isDefault": false
+        },
+        {
+          "name": "GetTextWidth",
+          "line": 111,
+          "isDefault": false
+        },
+        {
+          "name": "GetScreenRect",
+          "line": 118,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "Update",
+          "callee": "UpdateAttachedScript",
+          "lineNumber": 35
+        },
+        {
+          "caller": "Draw",
+          "callee": "empty",
+          "lineNumber": 39
+        },
+        {
+          "caller": "Draw",
+          "callee": "GetScreenPosition",
+          "lineNumber": 44
+        },
+        {
+          "caller": "Draw",
+          "callee": "UIGetLayoutScale",
+          "lineNumber": 45
+        },
+        {
+          "caller": "Draw",
+          "callee": "SetCharacterSpacing",
+          "lineNumber": 48
+        },
+        {
+          "caller": "Draw",
+          "callee": "GetTextWidth",
+          "lineNumber": 51
+        },
+        {
+          "caller": "Draw",
+          "callee": "Draw",
+          "lineNumber": 65
+        },
+        {
+          "caller": "Finalize",
+          "callee": "TeardownAttachedScript",
+          "lineNumber": 73
+        },
+        {
+          "caller": "Finalize",
+          "callee": "Finalize",
+          "lineNumber": 75
+        },
+        {
+          "caller": "SetFont",
+          "callee": "Finalize",
+          "lineNumber": 86
+        },
+        {
+          "caller": "SetFont",
+          "callee": "Initialize",
+          "lineNumber": 91
+        },
+        {
+          "caller": "SetFont",
+          "callee": "IsInitialized",
+          "lineNumber": 93
+        },
+        {
+          "caller": "SetFont",
+          "callee": "SetCharacterSpacing",
+          "lineNumber": 98
+        },
+        {
+          "caller": "SetFontPath",
+          "callee": "ToWString",
+          "lineNumber": 106
+        },
+        {
+          "caller": "SetFontPath",
+          "callee": "empty",
+          "lineNumber": 107
+        },
+        {
+          "caller": "SetFontPath",
+          "callee": "SetFont",
+          "lineNumber": 108
+        },
+        {
+          "caller": "SetFontPath",
+          "callee": "c_str",
+          "lineNumber": 108
+        },
+        {
+          "caller": "GetTextWidth",
+          "callee": "GetTextWidth",
+          "lineNumber": 115
+        },
+        {
+          "caller": "GetScreenRect",
+          "callee": "empty",
+          "lineNumber": 119
+        },
+        {
+          "caller": "GetScreenRect",
+          "callee": "GetScreenPosition",
+          "lineNumber": 122
+        },
+        {
+          "caller": "GetScreenRect",
+          "callee": "UIGetLayoutScale",
+          "lineNumber": 123
+        },
+        {
+          "caller": "GetScreenRect",
+          "callee": "GetTextWidth",
+          "lineNumber": 125
+        },
+        {
+          "caller": "GetScreenRect",
+          "callee": "GetLineHeight",
+          "lineNumber": 126
+        }
+      ],
+      "metrics": {
+        "importCount": 2,
+        "exportCount": 9,
+        "functionCount": 9,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "engine/ui/ui_text.h",
+      "language": "c",
+      "fileCategory": "code",
+      "totalLines": 104,
+      "nonEmptyLines": 89,
+      "callGraph": [
+        {
+          "caller": "SetCharacterSpacing",
+          "callee": "SetCharacterSpacing",
+          "lineNumber": 76
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0
+      }
+    }
+  ]
+}

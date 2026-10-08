@@ -1,0 +1,2824 @@
+{
+  "nodes": [
+    {
+      "id": "file:engine/ecs/game_object.cpp",
+      "type": "file",
+      "name": "game_object.cpp",
+      "filePath": "engine/ecs/game_object.cpp",
+      "summary": "Implements GameObject update, destructor cleanup, trigger callbacks, collision-ignore lists, transform sync, reparenting, and visual/collider draw.",
+      "tags": [
+        "ecs",
+        "data-model",
+        "lifecycle",
+        "component"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:engine/editor/project_manager.cpp",
+      "type": "file",
+      "name": "project_manager.cpp",
+      "filePath": "engine/editor/project_manager.cpp",
+      "summary": "Implements project create/open/save, recent-list tracking, engine-asset copy, gravity/audio bus activation, and the Windows folder picker.",
+      "tags": [
+        "editor",
+        "service",
+        "project",
+        "asset-pipeline"
+      ],
+      "complexity": "complex",
+      "languageNotes": "Uses Win32 IFileDialog plus nlohmann::json project files; scaffolds a content .sln and build scripts for new projects."
+    },
+    {
+      "id": "file:engine/physics/collider/collider.cpp",
+      "type": "file",
+      "name": "collider.cpp",
+      "filePath": "engine/physics/collider/collider.cpp",
+      "summary": "Implements box, sphere, capsule, cylinder, and mesh colliders: world poses, contact generation, resolution, ray tests, and debug wireframes.",
+      "tags": [
+        "physics",
+        "collision",
+        "data-model",
+        "debug"
+      ],
+      "complexity": "complex",
+      "languageNotes": "Per-shape CheckCollision/ResolveCollision overrides plus shared ResolveContact that writes velocity, friction, and contact flashes."
+    },
+    {
+      "id": "function:engine/ecs/game_object.cpp:IsInsideUpdate",
+      "type": "function",
+      "name": "IsInsideUpdate",
+      "filePath": "engine/ecs/game_object.cpp",
+      "lineRange": [
+        23,
+        25
+      ],
+      "summary": "True while any GameObject::Update is on the call stack.",
+      "tags": [
+        "ecs",
+        "lifecycle",
+        "component"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ecs/game_object.cpp:Update",
+      "type": "function",
+      "name": "Update",
+      "filePath": "engine/ecs/game_object.cpp",
+      "lineRange": [
+        27,
+        42
+      ],
+      "summary": "Ticks 3D emitters, listener tracking, finished-instance sweep, and debug draw.",
+      "tags": [
+        "ecs",
+        "lifecycle",
+        "component"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ecs/game_object.cpp:Update_IsParallelSafe",
+      "type": "function",
+      "name": "Update_IsParallelSafe",
+      "filePath": "engine/ecs/game_object.cpp",
+      "lineRange": [
+        44,
+        60
+      ],
+      "summary": "Reports whether all attached scripts allow parallel Update.",
+      "tags": [
+        "ecs",
+        "lifecycle",
+        "component"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ecs/game_object.cpp:~GameObject",
+      "type": "function",
+      "name": "~GameObject",
+      "filePath": "engine/ecs/game_object.cpp",
+      "lineRange": [
+        62,
+        76
+      ],
+      "summary": "Notifies audio and physics, detaches components, and deletes host-owned colliders.",
+      "tags": [
+        "ecs",
+        "lifecycle",
+        "component"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ecs/game_object.cpp:OnTriggerEnter",
+      "type": "function",
+      "name": "OnTriggerEnter",
+      "filePath": "engine/ecs/game_object.cpp",
+      "lineRange": [
+        78,
+        83
+      ],
+      "summary": "Forwards trigger-enter to the object's Script component.",
+      "tags": [
+        "ecs",
+        "lifecycle",
+        "component"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ecs/game_object.cpp:OnTriggerExit",
+      "type": "function",
+      "name": "OnTriggerExit",
+      "filePath": "engine/ecs/game_object.cpp",
+      "lineRange": [
+        85,
+        90
+      ],
+      "summary": "Forwards trigger-exit to the object's Script component.",
+      "tags": [
+        "ecs",
+        "lifecycle",
+        "component"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ecs/game_object.cpp:AddIgnoreCollisionTag",
+      "type": "function",
+      "name": "AddIgnoreCollisionTag",
+      "filePath": "engine/ecs/game_object.cpp",
+      "lineRange": [
+        92,
+        98
+      ],
+      "summary": "Adds a tag this object should not collide with.",
+      "tags": [
+        "ecs",
+        "lifecycle",
+        "component"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ecs/game_object.cpp:RemoveIgnoreCollisionTag",
+      "type": "function",
+      "name": "RemoveIgnoreCollisionTag",
+      "filePath": "engine/ecs/game_object.cpp",
+      "lineRange": [
+        100,
+        104
+      ],
+      "summary": "Removes a collision-ignore tag.",
+      "tags": [
+        "ecs",
+        "lifecycle",
+        "component"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ecs/game_object.cpp:AddIgnoreCollisionObject",
+      "type": "function",
+      "name": "AddIgnoreCollisionObject",
+      "filePath": "engine/ecs/game_object.cpp",
+      "lineRange": [
+        106,
+        114
+      ],
+      "summary": "Ignores collisions against a specific other GameObject.",
+      "tags": [
+        "ecs",
+        "lifecycle",
+        "component"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ecs/game_object.cpp:RemoveIgnoreCollisionObject",
+      "type": "function",
+      "name": "RemoveIgnoreCollisionObject",
+      "filePath": "engine/ecs/game_object.cpp",
+      "lineRange": [
+        116,
+        120
+      ],
+      "summary": "Stops ignoring a specific GameObject pair.",
+      "tags": [
+        "ecs",
+        "lifecycle",
+        "component"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ecs/game_object.cpp:ClearIgnoreCollisionObjects",
+      "type": "function",
+      "name": "ClearIgnoreCollisionObjects",
+      "filePath": "engine/ecs/game_object.cpp",
+      "lineRange": [
+        122,
+        124
+      ],
+      "summary": "Clears all per-object collision ignores.",
+      "tags": [
+        "ecs",
+        "lifecycle",
+        "component"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ecs/game_object.cpp:IgnoresCollisionWith",
+      "type": "function",
+      "name": "IgnoresCollisionWith",
+      "filePath": "engine/ecs/game_object.cpp",
+      "lineRange": [
+        126,
+        136
+      ],
+      "summary": "True if tags or object-ignore lists skip this pair.",
+      "tags": [
+        "ecs",
+        "lifecycle",
+        "component"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ecs/game_object.cpp:SyncLegacyTransformFromComponents",
+      "type": "function",
+      "name": "SyncLegacyTransformFromComponents",
+      "filePath": "engine/ecs/game_object.cpp",
+      "lineRange": [
+        146,
+        152
+      ],
+      "summary": "Copies Transform component pose into legacy GameObject fields.",
+      "tags": [
+        "ecs",
+        "lifecycle",
+        "component"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ecs/game_object.cpp:SyncComponentsFromLegacyTransform",
+      "type": "function",
+      "name": "SyncComponentsFromLegacyTransform",
+      "filePath": "engine/ecs/game_object.cpp",
+      "lineRange": [
+        154,
+        160
+      ],
+      "summary": "Writes legacy pose back onto the Transform component.",
+      "tags": [
+        "ecs",
+        "lifecycle",
+        "component"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ecs/game_object.cpp:ReparentChild",
+      "type": "function",
+      "name": "ReparentChild",
+      "filePath": "engine/ecs/game_object.cpp",
+      "lineRange": [
+        162,
+        182
+      ],
+      "summary": "Moves a child under a new parent and keeps world pose stable.",
+      "tags": [
+        "ecs",
+        "lifecycle",
+        "component"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ecs/game_object.cpp:GetWorldPose",
+      "type": "function",
+      "name": "GetWorldPose",
+      "filePath": "engine/ecs/game_object.cpp",
+      "lineRange": [
+        184,
+        194
+      ],
+      "summary": "Reads world position, rotation, and scale from Transform.",
+      "tags": [
+        "ecs",
+        "lifecycle",
+        "component"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/ecs/game_object.cpp:DrawVisual",
+      "type": "function",
+      "name": "DrawVisual",
+      "filePath": "engine/ecs/game_object.cpp",
+      "lineRange": [
+        196,
+        267
+      ],
+      "summary": "Draws the visual/model and optional debug collider for this object.",
+      "tags": [
+        "ecs",
+        "lifecycle",
+        "component"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:engine/editor/project_manager.cpp:CopyDirectoryRecursive",
+      "type": "function",
+      "name": "CopyDirectoryRecursive",
+      "filePath": "engine/editor/project_manager.cpp",
+      "lineRange": [
+        24,
+        61
+      ],
+      "summary": "Recursively copies a directory tree, reporting filesystem errors.",
+      "tags": [
+        "editor",
+        "project",
+        "service"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/editor/project_manager.cpp:ReadDefaultSceneFileName",
+      "type": "function",
+      "name": "ReadDefaultSceneFileName",
+      "filePath": "engine/editor/project_manager.cpp",
+      "lineRange": [
+        63,
+        76
+      ],
+      "summary": "Reads the default scene filename from a project root.",
+      "tags": [
+        "editor",
+        "project",
+        "service"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/editor/project_manager.cpp:WriteDefaultSceneFile",
+      "type": "function",
+      "name": "WriteDefaultSceneFile",
+      "filePath": "engine/editor/project_manager.cpp",
+      "lineRange": [
+        78,
+        86
+      ],
+      "summary": "Writes the default-scene marker file under a project root.",
+      "tags": [
+        "editor",
+        "project",
+        "service"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/editor/project_manager.cpp:SanitizeProjectFolderName",
+      "type": "function",
+      "name": "SanitizeProjectFolderName",
+      "filePath": "engine/editor/project_manager.cpp",
+      "lineRange": [
+        88,
+        103
+      ],
+      "summary": "Strips invalid path characters from a project folder name.",
+      "tags": [
+        "editor",
+        "project",
+        "service"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/editor/project_manager.cpp:WriteContentProjectSolution",
+      "type": "function",
+      "name": "WriteContentProjectSolution",
+      "filePath": "engine/editor/project_manager.cpp",
+      "lineRange": [
+        108,
+        155
+      ],
+      "summary": "Writes the content-project Visual Studio solution scaffold.",
+      "tags": [
+        "editor",
+        "project",
+        "service"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/editor/project_manager.cpp:WriteContentBuildScriptsBat",
+      "type": "function",
+      "name": "WriteContentBuildScriptsBat",
+      "filePath": "engine/editor/project_manager.cpp",
+      "lineRange": [
+        157,
+        187
+      ],
+      "summary": "Writes Windows build helper scripts into a new project.",
+      "tags": [
+        "editor",
+        "project",
+        "service"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/editor/project_manager.cpp:Utf8FromWide",
+      "type": "function",
+      "name": "Utf8FromWide",
+      "filePath": "engine/editor/project_manager.cpp",
+      "lineRange": [
+        239,
+        250
+      ],
+      "summary": "Converts a wide Windows string to UTF-8.",
+      "tags": [
+        "editor",
+        "project",
+        "service"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/editor/project_manager.cpp:WideFromUtf8",
+      "type": "function",
+      "name": "WideFromUtf8",
+      "filePath": "engine/editor/project_manager.cpp",
+      "lineRange": [
+        252,
+        262
+      ],
+      "summary": "Converts UTF-8 to a wide Windows string.",
+      "tags": [
+        "editor",
+        "project",
+        "service"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/editor/project_manager.cpp:GetExecutableDirectory",
+      "type": "function",
+      "name": "GetExecutableDirectory",
+      "filePath": "engine/editor/project_manager.cpp",
+      "lineRange": [
+        264,
+        270
+      ],
+      "summary": "Returns the directory of the running editor executable.",
+      "tags": [
+        "editor",
+        "project",
+        "service"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/editor/project_manager.cpp:FindEngineRepoRoot",
+      "type": "function",
+      "name": "FindEngineRepoRoot",
+      "filePath": "engine/editor/project_manager.cpp",
+      "lineRange": [
+        272,
+        291
+      ],
+      "summary": "Walks upward from the exe to locate the engine repository root.",
+      "tags": [
+        "editor",
+        "project",
+        "service"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/editor/project_manager.cpp:RecentListPath",
+      "type": "function",
+      "name": "RecentListPath",
+      "filePath": "engine/editor/project_manager.cpp",
+      "lineRange": [
+        293,
+        303
+      ],
+      "summary": "Returns the path of the recent-projects JSON list.",
+      "tags": [
+        "editor",
+        "project",
+        "service"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/editor/project_manager.cpp:LoadRecentList",
+      "type": "function",
+      "name": "LoadRecentList",
+      "filePath": "engine/editor/project_manager.cpp",
+      "lineRange": [
+        305,
+        326
+      ],
+      "summary": "Loads the recent-projects list from disk.",
+      "tags": [
+        "editor",
+        "project",
+        "service"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/editor/project_manager.cpp:SaveRecentList",
+      "type": "function",
+      "name": "SaveRecentList",
+      "filePath": "engine/editor/project_manager.cpp",
+      "lineRange": [
+        328,
+        341
+      ],
+      "summary": "Writes the recent-projects list to disk.",
+      "tags": [
+        "editor",
+        "project",
+        "service"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/editor/project_manager.cpp:TouchRecent",
+      "type": "function",
+      "name": "TouchRecent",
+      "filePath": "engine/editor/project_manager.cpp",
+      "lineRange": [
+        343,
+        365
+      ],
+      "summary": "Moves a project root to the front of the recent list.",
+      "tags": [
+        "editor",
+        "project",
+        "service"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/editor/project_manager.cpp:MakeDefaultData",
+      "type": "function",
+      "name": "MakeDefaultData",
+      "filePath": "engine/editor/project_manager.cpp",
+      "lineRange": [
+        367,
+        392
+      ],
+      "summary": "Builds default ProjectData for a newly created root.",
+      "tags": [
+        "editor",
+        "project",
+        "service"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/editor/project_manager.cpp:LoadProjectFile",
+      "type": "function",
+      "name": "LoadProjectFile",
+      "filePath": "engine/editor/project_manager.cpp",
+      "lineRange": [
+        394,
+        456
+      ],
+      "summary": "Parses project.json into ProjectData.",
+      "tags": [
+        "editor",
+        "project",
+        "service"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:engine/editor/project_manager.cpp:WriteProjectFile",
+      "type": "function",
+      "name": "WriteProjectFile",
+      "filePath": "engine/editor/project_manager.cpp",
+      "lineRange": [
+        458,
+        493
+      ],
+      "summary": "Serializes ProjectData to project.json.",
+      "tags": [
+        "editor",
+        "project",
+        "service"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/editor/project_manager.cpp:EnsureEngineAssets",
+      "type": "function",
+      "name": "EnsureEngineAssets",
+      "filePath": "engine/editor/project_manager.cpp",
+      "lineRange": [
+        495,
+        525
+      ],
+      "summary": "Copies required engine assets into the project if missing.",
+      "tags": [
+        "editor",
+        "project",
+        "service"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/editor/project_manager.cpp:ActivateRoot",
+      "type": "function",
+      "name": "ActivateRoot",
+      "filePath": "engine/editor/project_manager.cpp",
+      "lineRange": [
+        527,
+        574
+      ],
+      "summary": "Applies gravity, audio buses, UI click SFX, and recent-list state for an opened root.",
+      "tags": [
+        "editor",
+        "project",
+        "service"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/editor/project_manager.cpp:OpenProject",
+      "type": "function",
+      "name": "OpenProject",
+      "filePath": "engine/editor/project_manager.cpp",
+      "lineRange": [
+        576,
+        578
+      ],
+      "summary": "Opens an existing project root and activates it.",
+      "tags": [
+        "editor",
+        "project",
+        "service"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/editor/project_manager.cpp:ScaffoldNewProjectTree",
+      "type": "function",
+      "name": "ScaffoldNewProjectTree",
+      "filePath": "engine/editor/project_manager.cpp",
+      "lineRange": [
+        580,
+        648
+      ],
+      "summary": "Creates folders, default scene, and content project files.",
+      "tags": [
+        "editor",
+        "project",
+        "service"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:engine/editor/project_manager.cpp:CreateProject",
+      "type": "function",
+      "name": "CreateProject",
+      "filePath": "engine/editor/project_manager.cpp",
+      "lineRange": [
+        650,
+        679
+      ],
+      "summary": "Creates a new project under a parent directory.",
+      "tags": [
+        "editor",
+        "project",
+        "service"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/editor/project_manager.cpp:SaveProjectFile",
+      "type": "function",
+      "name": "SaveProjectFile",
+      "filePath": "engine/editor/project_manager.cpp",
+      "lineRange": [
+        681,
+        688
+      ],
+      "summary": "Writes the in-memory project file back to disk.",
+      "tags": [
+        "editor",
+        "project",
+        "service"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/editor/project_manager.cpp:SetLastOpenedScene",
+      "type": "function",
+      "name": "SetLastOpenedScene",
+      "filePath": "engine/editor/project_manager.cpp",
+      "lineRange": [
+        690,
+        692
+      ],
+      "summary": "Records the last opened scene filename.",
+      "tags": [
+        "editor",
+        "project",
+        "service"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/editor/project_manager.cpp:SetDefaultScene",
+      "type": "function",
+      "name": "SetDefaultScene",
+      "filePath": "engine/editor/project_manager.cpp",
+      "lineRange": [
+        694,
+        696
+      ],
+      "summary": "Records the default scene filename.",
+      "tags": [
+        "editor",
+        "project",
+        "service"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/editor/project_manager.cpp:SetEditorUiZoomPercent",
+      "type": "function",
+      "name": "SetEditorUiZoomPercent",
+      "filePath": "engine/editor/project_manager.cpp",
+      "lineRange": [
+        698,
+        700
+      ],
+      "summary": "Stores editor UI zoom in project data.",
+      "tags": [
+        "editor",
+        "project",
+        "service"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/editor/project_manager.cpp:SetPhysicsGravity",
+      "type": "function",
+      "name": "SetPhysicsGravity",
+      "filePath": "engine/editor/project_manager.cpp",
+      "lineRange": [
+        702,
+        706
+      ],
+      "summary": "Writes gravity into project data and the live physics singleton.",
+      "tags": [
+        "editor",
+        "project",
+        "service"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/editor/project_manager.cpp:SetAudioBuses",
+      "type": "function",
+      "name": "SetAudioBuses",
+      "filePath": "engine/editor/project_manager.cpp",
+      "lineRange": [
+        708,
+        713
+      ],
+      "summary": "Writes bus volumes into project data.",
+      "tags": [
+        "editor",
+        "project",
+        "service"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/editor/project_manager.cpp:SetUiClickSound",
+      "type": "function",
+      "name": "SetUiClickSound",
+      "filePath": "engine/editor/project_manager.cpp",
+      "lineRange": [
+        715,
+        718
+      ],
+      "summary": "Preloads the 2D SFX used by UI button clicks.",
+      "tags": [
+        "editor",
+        "project",
+        "service"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/editor/project_manager.cpp:ResolveSceneToLoad",
+      "type": "function",
+      "name": "ResolveSceneToLoad",
+      "filePath": "engine/editor/project_manager.cpp",
+      "lineRange": [
+        720,
+        741
+      ],
+      "summary": "Chooses last-opened vs default scene for startup.",
+      "tags": [
+        "editor",
+        "project",
+        "service"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/editor/project_manager.cpp:BootstrapAtStartup",
+      "type": "function",
+      "name": "BootstrapAtStartup",
+      "filePath": "engine/editor/project_manager.cpp",
+      "lineRange": [
+        743,
+        760
+      ],
+      "summary": "Opens the last project or prompts so the editor can start.",
+      "tags": [
+        "editor",
+        "project",
+        "service"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/editor/project_manager.cpp:CloseProject",
+      "type": "function",
+      "name": "CloseProject",
+      "filePath": "engine/editor/project_manager.cpp",
+      "lineRange": [
+        762,
+        766
+      ],
+      "summary": "Clears the active project root.",
+      "tags": [
+        "editor",
+        "project",
+        "service"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/editor/project_manager.cpp:UpdateWindowTitle",
+      "type": "function",
+      "name": "UpdateWindowTitle",
+      "filePath": "engine/editor/project_manager.cpp",
+      "lineRange": [
+        768,
+        778
+      ],
+      "summary": "Sets the editor window title from the open project name.",
+      "tags": [
+        "editor",
+        "project",
+        "service"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/editor/project_manager.cpp:PickFolder",
+      "type": "function",
+      "name": "PickFolder",
+      "filePath": "engine/editor/project_manager.cpp",
+      "lineRange": [
+        780,
+        851
+      ],
+      "summary": "Shows the Win32 folder picker and returns the chosen path.",
+      "tags": [
+        "editor",
+        "project",
+        "service"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:engine/physics/collider/collider.cpp:GetOwnerPose",
+      "type": "function",
+      "name": "GetOwnerPose",
+      "filePath": "engine/physics/collider/collider.cpp",
+      "lineRange": [
+        29,
+        39
+      ],
+      "summary": "Reads an owner's world position, rotation, and scale for collider math.",
+      "tags": [
+        "physics",
+        "collision",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/physics/collider/collider.cpp:CollisionPairIgnored",
+      "type": "function",
+      "name": "CollisionPairIgnored",
+      "filePath": "engine/physics/collider/collider.cpp",
+      "lineRange": [
+        41,
+        44
+      ],
+      "summary": "True when either GameObject ignores the other via tags or object lists.",
+      "tags": [
+        "physics",
+        "collision",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/physics/collider/collider.cpp:MeshLocalTestRadius",
+      "type": "function",
+      "name": "MeshLocalTestRadius",
+      "filePath": "engine/physics/collider/collider.cpp",
+      "lineRange": [
+        48,
+        53
+      ],
+      "summary": "Converts a world test radius into mesh-local space.",
+      "tags": [
+        "physics",
+        "collision",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/physics/collider/collider.cpp:LocalPenetrationToWorld",
+      "type": "function",
+      "name": "LocalPenetrationToWorld",
+      "filePath": "engine/physics/collider/collider.cpp",
+      "lineRange": [
+        55,
+        72
+      ],
+      "summary": "Transforms a local mesh penetration vector into world space.",
+      "tags": [
+        "physics",
+        "collision",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/physics/collider/collider.cpp:MeshSizePaddingScale",
+      "type": "function",
+      "name": "MeshSizePaddingScale",
+      "filePath": "engine/physics/collider/collider.cpp",
+      "lineRange": [
+        74,
+        82
+      ],
+      "summary": "Computes extra mesh collision padding from local bounds and owner scale.",
+      "tags": [
+        "physics",
+        "collision",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/physics/collider/collider.cpp:StabilizeFloorContactNormal",
+      "type": "function",
+      "name": "StabilizeFloorContactNormal",
+      "filePath": "engine/physics/collider/collider.cpp",
+      "lineRange": [
+        84,
+        89
+      ],
+      "summary": "Snaps near-up contact normals to world up to reduce jitter.",
+      "tags": [
+        "physics",
+        "collision",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/physics/collider/collider.cpp:BuildCylinderWorldFrame",
+      "type": "function",
+      "name": "BuildCylinderWorldFrame",
+      "filePath": "engine/physics/collider/collider.cpp",
+      "lineRange": [
+        100,
+        124
+      ],
+      "summary": "Builds the orthonormal frame used for cylinder contact tests.",
+      "tags": [
+        "physics",
+        "collision",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/physics/collider/collider.cpp:WorldPointToCylinderLocal",
+      "type": "function",
+      "name": "WorldPointToCylinderLocal",
+      "filePath": "engine/physics/collider/collider.cpp",
+      "lineRange": [
+        126,
+        137
+      ],
+      "summary": "Converts a world point into cylinder-local coordinates.",
+      "tags": [
+        "physics",
+        "collision",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/physics/collider/collider.cpp:ClosestPointOnCylinderLocal",
+      "type": "function",
+      "name": "ClosestPointOnCylinderLocal",
+      "filePath": "engine/physics/collider/collider.cpp",
+      "lineRange": [
+        147,
+        158
+      ],
+      "summary": "Finds the closest point on a local cylinder surface.",
+      "tags": [
+        "physics",
+        "collision",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/physics/collider/collider.cpp:SphereCylinder_Contact",
+      "type": "function",
+      "name": "SphereCylinder_Contact",
+      "filePath": "engine/physics/collider/collider.cpp",
+      "lineRange": [
+        160,
+        194
+      ],
+      "summary": "Computes sphere-vs-cylinder contact normal and penetration.",
+      "tags": [
+        "physics",
+        "collision",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/physics/collider/collider.cpp:ClosestPointOnOBB_World",
+      "type": "function",
+      "name": "ClosestPointOnOBB_World",
+      "filePath": "engine/physics/collider/collider.cpp",
+      "lineRange": [
+        202,
+        225
+      ],
+      "summary": "Returns the closest point on a rotated box to a world point.",
+      "tags": [
+        "physics",
+        "collision",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/physics/collider/collider.cpp:SphereOBB_Contact",
+      "type": "function",
+      "name": "SphereOBB_Contact",
+      "filePath": "engine/physics/collider/collider.cpp",
+      "lineRange": [
+        229,
+        260
+      ],
+      "summary": "Computes sphere-vs-OBB contact normal and penetration.",
+      "tags": [
+        "physics",
+        "collision",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/physics/collider/collider.cpp:GetWorldCenter",
+      "type": "function",
+      "name": "GetWorldCenter",
+      "filePath": "engine/physics/collider/collider.cpp",
+      "lineRange": [
+        265,
+        283
+      ],
+      "summary": "Returns the collider center in world space including owner pose.",
+      "tags": [
+        "physics",
+        "collision",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/physics/collider/collider.cpp:GetSize",
+      "type": "function",
+      "name": "GetSize",
+      "filePath": "engine/physics/collider/collider.cpp",
+      "lineRange": [
+        285,
+        287
+      ],
+      "summary": "Returns the box collider's full world-space size.",
+      "tags": [
+        "physics",
+        "collision",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/physics/collider/collider.cpp:RayIntersect",
+      "type": "function",
+      "name": "RayIntersect",
+      "filePath": "engine/physics/collider/collider.cpp",
+      "lineRange": [
+        403,
+        493
+      ],
+      "summary": "Ray-tests the collider shape and returns the nearest hit.",
+      "tags": [
+        "physics",
+        "collision",
+        "utility"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:engine/physics/collider/collider.cpp:RayIntersectSphereWorld",
+      "type": "function",
+      "name": "RayIntersectSphereWorld",
+      "filePath": "engine/physics/collider/collider.cpp",
+      "lineRange": [
+        296,
+        326
+      ],
+      "summary": "Analytic ray-vs-sphere test used by sphere and capsule rays.",
+      "tags": [
+        "physics",
+        "collision",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/physics/collider/collider.cpp:ResolveContact",
+      "type": "function",
+      "name": "ResolveContact",
+      "filePath": "engine/physics/collider/collider.cpp",
+      "lineRange": [
+        512,
+        663
+      ],
+      "summary": "Applies positional correction, bounce, and friction for a solid contact.",
+      "tags": [
+        "physics",
+        "collision",
+        "utility"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:engine/physics/collider/collider.cpp:CheckCollision",
+      "type": "function",
+      "name": "CheckCollision",
+      "filePath": "engine/physics/collider/collider.cpp",
+      "lineRange": [
+        668,
+        809
+      ],
+      "summary": "Dispatches shape-vs-shape overlap tests for the collider pair.",
+      "tags": [
+        "physics",
+        "collision",
+        "utility"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:engine/physics/collider/collider.cpp:ResolveCollision",
+      "type": "function",
+      "name": "ResolveCollision",
+      "filePath": "engine/physics/collider/collider.cpp",
+      "lineRange": [
+        1772,
+        1939
+      ],
+      "summary": "Resolves overlap for the collider pair, including triggers.",
+      "tags": [
+        "physics",
+        "collision",
+        "utility"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:engine/physics/collider/collider.cpp:DebugDraw",
+      "type": "function",
+      "name": "DebugDraw",
+      "filePath": "engine/physics/collider/collider.cpp",
+      "lineRange": [
+        1941,
+        1982
+      ],
+      "summary": "Draws the collider wireframe through DebugDrawer.",
+      "tags": [
+        "physics",
+        "collision",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/physics/collider/collider.cpp:SetMeshData",
+      "type": "function",
+      "name": "SetMeshData",
+      "filePath": "engine/physics/collider/collider.cpp",
+      "lineRange": [
+        1506,
+        1511
+      ],
+      "summary": "Replaces mesh-collider vertices and indices and rebuilds the bounds.",
+      "tags": [
+        "physics",
+        "collision",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/physics/collider/collider.cpp:BuildFromModel",
+      "type": "function",
+      "name": "BuildFromModel",
+      "filePath": "engine/physics/collider/collider.cpp",
+      "lineRange": [
+        1513,
+        1535
+      ],
+      "summary": "Fills a mesh collider from a Model3D's triangles.",
+      "tags": [
+        "physics",
+        "collision",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/physics/collider/collider.cpp:GetWorldAABB",
+      "type": "function",
+      "name": "GetWorldAABB",
+      "filePath": "engine/physics/collider/collider.cpp",
+      "lineRange": [
+        1537,
+        1588
+      ],
+      "summary": "Computes the mesh collider's world-space AABB.",
+      "tags": [
+        "physics",
+        "collision",
+        "utility"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:engine/physics/collider/collider.cpp:CalculateBoundingSphere",
+      "type": "function",
+      "name": "CalculateBoundingSphere",
+      "filePath": "engine/physics/collider/collider.cpp",
+      "lineRange": [
+        1590,
+        1618
+      ],
+      "summary": "Rebuilds the local bounding sphere from mesh vertices.",
+      "tags": [
+        "physics",
+        "collision",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/physics/collider/collider.cpp:GetWorldBoundingSphereRadius",
+      "type": "function",
+      "name": "GetWorldBoundingSphereRadius",
+      "filePath": "engine/physics/collider/collider.cpp",
+      "lineRange": [
+        1620,
+        1636
+      ],
+      "summary": "Returns the mesh bounding radius scaled by the owner.",
+      "tags": [
+        "physics",
+        "collision",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/physics/collider/collider.cpp:Raycast",
+      "type": "function",
+      "name": "Raycast",
+      "filePath": "engine/physics/collider/collider.cpp",
+      "lineRange": [
+        1984,
+        2077
+      ],
+      "summary": "Raycasts the triangle mesh and returns hit point and normal.",
+      "tags": [
+        "physics",
+        "collision",
+        "utility"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:engine/physics/collider/collider.cpp:RayIntersectsTriangle",
+      "type": "function",
+      "name": "RayIntersectsTriangle",
+      "filePath": "engine/physics/collider/collider.cpp",
+      "lineRange": [
+        2080,
+        2117
+      ],
+      "summary": "Möller–Trumbore ray-triangle intersection helper.",
+      "tags": [
+        "physics",
+        "collision",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:engine/physics/collider/collider.cpp:TriangleIntersectsSphere",
+      "type": "function",
+      "name": "TriangleIntersectsSphere",
+      "filePath": "engine/physics/collider/collider.cpp",
+      "lineRange": [
+        2120,
+        2218
+      ],
+      "summary": "Tests a triangle against a sphere and returns contact data.",
+      "tags": [
+        "physics",
+        "collision",
+        "utility"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:engine/physics/collider/collider.cpp:CylinderWorldFrame",
+      "type": "class",
+      "name": "CylinderWorldFrame",
+      "filePath": "engine/physics/collider/collider.cpp",
+      "lineRange": [
+        91,
+        98
+      ],
+      "summary": "Orthonormal cylinder frame (center, axes, radius, half-height) for contact tests.",
+      "tags": [
+        "physics",
+        "collision",
+        "data-model"
+      ],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:engine/ecs/game_object.cpp",
+      "target": "function:engine/ecs/game_object.cpp:IsInsideUpdate",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/game_object.cpp",
+      "target": "function:engine/ecs/game_object.cpp:IsInsideUpdate",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/game_object.cpp",
+      "target": "function:engine/ecs/game_object.cpp:Update",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/game_object.cpp",
+      "target": "function:engine/ecs/game_object.cpp:Update",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/game_object.cpp",
+      "target": "function:engine/ecs/game_object.cpp:Update_IsParallelSafe",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/game_object.cpp",
+      "target": "function:engine/ecs/game_object.cpp:Update_IsParallelSafe",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/game_object.cpp",
+      "target": "function:engine/ecs/game_object.cpp:~GameObject",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/game_object.cpp",
+      "target": "function:engine/ecs/game_object.cpp:~GameObject",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/game_object.cpp",
+      "target": "function:engine/ecs/game_object.cpp:OnTriggerEnter",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/game_object.cpp",
+      "target": "function:engine/ecs/game_object.cpp:OnTriggerEnter",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/game_object.cpp",
+      "target": "function:engine/ecs/game_object.cpp:OnTriggerExit",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/game_object.cpp",
+      "target": "function:engine/ecs/game_object.cpp:OnTriggerExit",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/game_object.cpp",
+      "target": "function:engine/ecs/game_object.cpp:AddIgnoreCollisionTag",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/game_object.cpp",
+      "target": "function:engine/ecs/game_object.cpp:AddIgnoreCollisionTag",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/game_object.cpp",
+      "target": "function:engine/ecs/game_object.cpp:RemoveIgnoreCollisionTag",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/game_object.cpp",
+      "target": "function:engine/ecs/game_object.cpp:RemoveIgnoreCollisionTag",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/game_object.cpp",
+      "target": "function:engine/ecs/game_object.cpp:AddIgnoreCollisionObject",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/game_object.cpp",
+      "target": "function:engine/ecs/game_object.cpp:AddIgnoreCollisionObject",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/game_object.cpp",
+      "target": "function:engine/ecs/game_object.cpp:RemoveIgnoreCollisionObject",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/game_object.cpp",
+      "target": "function:engine/ecs/game_object.cpp:RemoveIgnoreCollisionObject",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/game_object.cpp",
+      "target": "function:engine/ecs/game_object.cpp:ClearIgnoreCollisionObjects",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/game_object.cpp",
+      "target": "function:engine/ecs/game_object.cpp:ClearIgnoreCollisionObjects",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/game_object.cpp",
+      "target": "function:engine/ecs/game_object.cpp:IgnoresCollisionWith",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/game_object.cpp",
+      "target": "function:engine/ecs/game_object.cpp:IgnoresCollisionWith",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/game_object.cpp",
+      "target": "function:engine/ecs/game_object.cpp:SyncLegacyTransformFromComponents",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/game_object.cpp",
+      "target": "function:engine/ecs/game_object.cpp:SyncLegacyTransformFromComponents",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/game_object.cpp",
+      "target": "function:engine/ecs/game_object.cpp:SyncComponentsFromLegacyTransform",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/game_object.cpp",
+      "target": "function:engine/ecs/game_object.cpp:SyncComponentsFromLegacyTransform",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/game_object.cpp",
+      "target": "function:engine/ecs/game_object.cpp:ReparentChild",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/game_object.cpp",
+      "target": "function:engine/ecs/game_object.cpp:ReparentChild",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/game_object.cpp",
+      "target": "function:engine/ecs/game_object.cpp:GetWorldPose",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/game_object.cpp",
+      "target": "function:engine/ecs/game_object.cpp:GetWorldPose",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/game_object.cpp",
+      "target": "function:engine/ecs/game_object.cpp:DrawVisual",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/ecs/game_object.cpp",
+      "target": "function:engine/ecs/game_object.cpp:DrawVisual",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/editor/project_manager.cpp",
+      "target": "function:engine/editor/project_manager.cpp:CopyDirectoryRecursive",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/project_manager.cpp",
+      "target": "function:engine/editor/project_manager.cpp:CopyDirectoryRecursive",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/editor/project_manager.cpp",
+      "target": "function:engine/editor/project_manager.cpp:ReadDefaultSceneFileName",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/project_manager.cpp",
+      "target": "function:engine/editor/project_manager.cpp:ReadDefaultSceneFileName",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/editor/project_manager.cpp",
+      "target": "function:engine/editor/project_manager.cpp:WriteDefaultSceneFile",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/project_manager.cpp",
+      "target": "function:engine/editor/project_manager.cpp:WriteDefaultSceneFile",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/editor/project_manager.cpp",
+      "target": "function:engine/editor/project_manager.cpp:SanitizeProjectFolderName",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/project_manager.cpp",
+      "target": "function:engine/editor/project_manager.cpp:SanitizeProjectFolderName",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/editor/project_manager.cpp",
+      "target": "function:engine/editor/project_manager.cpp:WriteContentProjectSolution",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/project_manager.cpp",
+      "target": "function:engine/editor/project_manager.cpp:WriteContentProjectSolution",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/editor/project_manager.cpp",
+      "target": "function:engine/editor/project_manager.cpp:WriteContentBuildScriptsBat",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/project_manager.cpp",
+      "target": "function:engine/editor/project_manager.cpp:WriteContentBuildScriptsBat",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/editor/project_manager.cpp",
+      "target": "function:engine/editor/project_manager.cpp:Utf8FromWide",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/project_manager.cpp",
+      "target": "function:engine/editor/project_manager.cpp:Utf8FromWide",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/editor/project_manager.cpp",
+      "target": "function:engine/editor/project_manager.cpp:WideFromUtf8",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/project_manager.cpp",
+      "target": "function:engine/editor/project_manager.cpp:WideFromUtf8",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/editor/project_manager.cpp",
+      "target": "function:engine/editor/project_manager.cpp:GetExecutableDirectory",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/project_manager.cpp",
+      "target": "function:engine/editor/project_manager.cpp:GetExecutableDirectory",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/editor/project_manager.cpp",
+      "target": "function:engine/editor/project_manager.cpp:FindEngineRepoRoot",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/project_manager.cpp",
+      "target": "function:engine/editor/project_manager.cpp:FindEngineRepoRoot",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/editor/project_manager.cpp",
+      "target": "function:engine/editor/project_manager.cpp:RecentListPath",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/project_manager.cpp",
+      "target": "function:engine/editor/project_manager.cpp:RecentListPath",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/editor/project_manager.cpp",
+      "target": "function:engine/editor/project_manager.cpp:LoadRecentList",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/project_manager.cpp",
+      "target": "function:engine/editor/project_manager.cpp:LoadRecentList",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/editor/project_manager.cpp",
+      "target": "function:engine/editor/project_manager.cpp:SaveRecentList",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/project_manager.cpp",
+      "target": "function:engine/editor/project_manager.cpp:SaveRecentList",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/editor/project_manager.cpp",
+      "target": "function:engine/editor/project_manager.cpp:TouchRecent",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/project_manager.cpp",
+      "target": "function:engine/editor/project_manager.cpp:TouchRecent",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/editor/project_manager.cpp",
+      "target": "function:engine/editor/project_manager.cpp:MakeDefaultData",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/project_manager.cpp",
+      "target": "function:engine/editor/project_manager.cpp:MakeDefaultData",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/editor/project_manager.cpp",
+      "target": "function:engine/editor/project_manager.cpp:LoadProjectFile",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/project_manager.cpp",
+      "target": "function:engine/editor/project_manager.cpp:LoadProjectFile",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/editor/project_manager.cpp",
+      "target": "function:engine/editor/project_manager.cpp:WriteProjectFile",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/project_manager.cpp",
+      "target": "function:engine/editor/project_manager.cpp:WriteProjectFile",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/editor/project_manager.cpp",
+      "target": "function:engine/editor/project_manager.cpp:EnsureEngineAssets",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/project_manager.cpp",
+      "target": "function:engine/editor/project_manager.cpp:EnsureEngineAssets",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/editor/project_manager.cpp",
+      "target": "function:engine/editor/project_manager.cpp:ActivateRoot",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/project_manager.cpp",
+      "target": "function:engine/editor/project_manager.cpp:ActivateRoot",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/editor/project_manager.cpp",
+      "target": "function:engine/editor/project_manager.cpp:OpenProject",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/project_manager.cpp",
+      "target": "function:engine/editor/project_manager.cpp:OpenProject",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/editor/project_manager.cpp",
+      "target": "function:engine/editor/project_manager.cpp:ScaffoldNewProjectTree",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/project_manager.cpp",
+      "target": "function:engine/editor/project_manager.cpp:ScaffoldNewProjectTree",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/editor/project_manager.cpp",
+      "target": "function:engine/editor/project_manager.cpp:CreateProject",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/project_manager.cpp",
+      "target": "function:engine/editor/project_manager.cpp:CreateProject",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/editor/project_manager.cpp",
+      "target": "function:engine/editor/project_manager.cpp:SaveProjectFile",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/project_manager.cpp",
+      "target": "function:engine/editor/project_manager.cpp:SaveProjectFile",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/editor/project_manager.cpp",
+      "target": "function:engine/editor/project_manager.cpp:SetLastOpenedScene",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/project_manager.cpp",
+      "target": "function:engine/editor/project_manager.cpp:SetLastOpenedScene",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/editor/project_manager.cpp",
+      "target": "function:engine/editor/project_manager.cpp:SetDefaultScene",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/project_manager.cpp",
+      "target": "function:engine/editor/project_manager.cpp:SetDefaultScene",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/editor/project_manager.cpp",
+      "target": "function:engine/editor/project_manager.cpp:SetEditorUiZoomPercent",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/project_manager.cpp",
+      "target": "function:engine/editor/project_manager.cpp:SetEditorUiZoomPercent",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/editor/project_manager.cpp",
+      "target": "function:engine/editor/project_manager.cpp:SetPhysicsGravity",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/project_manager.cpp",
+      "target": "function:engine/editor/project_manager.cpp:SetPhysicsGravity",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/editor/project_manager.cpp",
+      "target": "function:engine/editor/project_manager.cpp:SetAudioBuses",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/project_manager.cpp",
+      "target": "function:engine/editor/project_manager.cpp:SetAudioBuses",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/editor/project_manager.cpp",
+      "target": "function:engine/editor/project_manager.cpp:SetUiClickSound",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/project_manager.cpp",
+      "target": "function:engine/editor/project_manager.cpp:SetUiClickSound",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/editor/project_manager.cpp",
+      "target": "function:engine/editor/project_manager.cpp:ResolveSceneToLoad",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/project_manager.cpp",
+      "target": "function:engine/editor/project_manager.cpp:ResolveSceneToLoad",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/editor/project_manager.cpp",
+      "target": "function:engine/editor/project_manager.cpp:BootstrapAtStartup",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/project_manager.cpp",
+      "target": "function:engine/editor/project_manager.cpp:BootstrapAtStartup",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/editor/project_manager.cpp",
+      "target": "function:engine/editor/project_manager.cpp:CloseProject",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/project_manager.cpp",
+      "target": "function:engine/editor/project_manager.cpp:CloseProject",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/editor/project_manager.cpp",
+      "target": "function:engine/editor/project_manager.cpp:UpdateWindowTitle",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/project_manager.cpp",
+      "target": "function:engine/editor/project_manager.cpp:UpdateWindowTitle",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/editor/project_manager.cpp",
+      "target": "function:engine/editor/project_manager.cpp:PickFolder",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/editor/project_manager.cpp",
+      "target": "function:engine/editor/project_manager.cpp:PickFolder",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/physics/collider/collider.cpp",
+      "target": "function:engine/physics/collider/collider.cpp:GetOwnerPose",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/physics/collider/collider.cpp",
+      "target": "function:engine/physics/collider/collider.cpp:GetOwnerPose",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/physics/collider/collider.cpp",
+      "target": "function:engine/physics/collider/collider.cpp:CollisionPairIgnored",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/physics/collider/collider.cpp",
+      "target": "function:engine/physics/collider/collider.cpp:CollisionPairIgnored",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/physics/collider/collider.cpp",
+      "target": "function:engine/physics/collider/collider.cpp:MeshLocalTestRadius",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/physics/collider/collider.cpp",
+      "target": "function:engine/physics/collider/collider.cpp:MeshLocalTestRadius",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/physics/collider/collider.cpp",
+      "target": "function:engine/physics/collider/collider.cpp:LocalPenetrationToWorld",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/physics/collider/collider.cpp",
+      "target": "function:engine/physics/collider/collider.cpp:LocalPenetrationToWorld",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/physics/collider/collider.cpp",
+      "target": "function:engine/physics/collider/collider.cpp:MeshSizePaddingScale",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/physics/collider/collider.cpp",
+      "target": "function:engine/physics/collider/collider.cpp:MeshSizePaddingScale",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/physics/collider/collider.cpp",
+      "target": "function:engine/physics/collider/collider.cpp:StabilizeFloorContactNormal",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/physics/collider/collider.cpp",
+      "target": "function:engine/physics/collider/collider.cpp:StabilizeFloorContactNormal",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/physics/collider/collider.cpp",
+      "target": "function:engine/physics/collider/collider.cpp:BuildCylinderWorldFrame",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/physics/collider/collider.cpp",
+      "target": "function:engine/physics/collider/collider.cpp:WorldPointToCylinderLocal",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/physics/collider/collider.cpp",
+      "target": "function:engine/physics/collider/collider.cpp:ClosestPointOnCylinderLocal",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/physics/collider/collider.cpp",
+      "target": "function:engine/physics/collider/collider.cpp:SphereCylinder_Contact",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/physics/collider/collider.cpp",
+      "target": "function:engine/physics/collider/collider.cpp:ClosestPointOnOBB_World",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/physics/collider/collider.cpp",
+      "target": "function:engine/physics/collider/collider.cpp:SphereOBB_Contact",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/physics/collider/collider.cpp",
+      "target": "function:engine/physics/collider/collider.cpp:GetWorldCenter",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/physics/collider/collider.cpp",
+      "target": "function:engine/physics/collider/collider.cpp:GetWorldCenter",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/physics/collider/collider.cpp",
+      "target": "function:engine/physics/collider/collider.cpp:GetSize",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/physics/collider/collider.cpp",
+      "target": "function:engine/physics/collider/collider.cpp:GetSize",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/physics/collider/collider.cpp",
+      "target": "function:engine/physics/collider/collider.cpp:RayIntersect",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/physics/collider/collider.cpp",
+      "target": "function:engine/physics/collider/collider.cpp:RayIntersect",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/physics/collider/collider.cpp",
+      "target": "function:engine/physics/collider/collider.cpp:RayIntersectSphereWorld",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/physics/collider/collider.cpp",
+      "target": "function:engine/physics/collider/collider.cpp:RayIntersectSphereWorld",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/physics/collider/collider.cpp",
+      "target": "function:engine/physics/collider/collider.cpp:ResolveContact",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/physics/collider/collider.cpp",
+      "target": "function:engine/physics/collider/collider.cpp:CheckCollision",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/physics/collider/collider.cpp",
+      "target": "function:engine/physics/collider/collider.cpp:CheckCollision",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/physics/collider/collider.cpp",
+      "target": "function:engine/physics/collider/collider.cpp:ResolveCollision",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/physics/collider/collider.cpp",
+      "target": "function:engine/physics/collider/collider.cpp:ResolveCollision",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/physics/collider/collider.cpp",
+      "target": "function:engine/physics/collider/collider.cpp:DebugDraw",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/physics/collider/collider.cpp",
+      "target": "function:engine/physics/collider/collider.cpp:DebugDraw",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/physics/collider/collider.cpp",
+      "target": "function:engine/physics/collider/collider.cpp:SetMeshData",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/physics/collider/collider.cpp",
+      "target": "function:engine/physics/collider/collider.cpp:SetMeshData",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/physics/collider/collider.cpp",
+      "target": "function:engine/physics/collider/collider.cpp:BuildFromModel",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/physics/collider/collider.cpp",
+      "target": "function:engine/physics/collider/collider.cpp:BuildFromModel",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/physics/collider/collider.cpp",
+      "target": "function:engine/physics/collider/collider.cpp:GetWorldAABB",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/physics/collider/collider.cpp",
+      "target": "function:engine/physics/collider/collider.cpp:GetWorldAABB",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/physics/collider/collider.cpp",
+      "target": "function:engine/physics/collider/collider.cpp:CalculateBoundingSphere",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/physics/collider/collider.cpp",
+      "target": "function:engine/physics/collider/collider.cpp:CalculateBoundingSphere",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/physics/collider/collider.cpp",
+      "target": "function:engine/physics/collider/collider.cpp:GetWorldBoundingSphereRadius",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/physics/collider/collider.cpp",
+      "target": "function:engine/physics/collider/collider.cpp:GetWorldBoundingSphereRadius",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/physics/collider/collider.cpp",
+      "target": "function:engine/physics/collider/collider.cpp:Raycast",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/physics/collider/collider.cpp",
+      "target": "function:engine/physics/collider/collider.cpp:Raycast",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/physics/collider/collider.cpp",
+      "target": "function:engine/physics/collider/collider.cpp:RayIntersectsTriangle",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/physics/collider/collider.cpp",
+      "target": "function:engine/physics/collider/collider.cpp:RayIntersectsTriangle",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/physics/collider/collider.cpp",
+      "target": "function:engine/physics/collider/collider.cpp:TriangleIntersectsSphere",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/physics/collider/collider.cpp",
+      "target": "function:engine/physics/collider/collider.cpp:TriangleIntersectsSphere",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/physics/collider/collider.cpp",
+      "target": "class:engine/physics/collider/collider.cpp:CylinderWorldFrame",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:engine/physics/collider/collider.cpp",
+      "target": "class:engine/physics/collider/collider.cpp:CylinderWorldFrame",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:engine/ecs/game_object.cpp",
+      "target": "file:engine/audio/audio_manager.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/ecs/game_object.cpp",
+      "target": "file:engine/core/debug_system.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/ecs/game_object.cpp",
+      "target": "file:engine/ecs/collider_component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/ecs/game_object.cpp",
+      "target": "file:engine/ecs/game_object.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/ecs/game_object.cpp",
+      "target": "file:engine/ecs/material_component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/ecs/game_object.cpp",
+      "target": "file:engine/ecs/transform.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/ecs/game_object.cpp",
+      "target": "file:engine/ecs/visual_component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/ecs/game_object.cpp",
+      "target": "file:engine/physics/core/physics_system.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/ecs/game_object.cpp",
+      "target": "file:engine/rendering/d3d11/shader.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/ecs/game_object.cpp",
+      "target": "file:engine/scene/render_settings.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/ecs/game_object.cpp",
+      "target": "file:engine/scripting/script_component.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/editor/project_manager.cpp",
+      "target": "file:engine/audio/audio_manager.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/editor/project_manager.cpp",
+      "target": "file:engine/editor/project_manager.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/editor/project_manager.cpp",
+      "target": "file:engine/physics/core/rigidbody.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/physics/collider/collider.cpp",
+      "target": "file:engine/core/debug_system.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/physics/collider/collider.cpp",
+      "target": "file:engine/debug_draw/debug_drawer.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/physics/collider/collider.cpp",
+      "target": "file:engine/ecs/game_object.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/physics/collider/collider.cpp",
+      "target": "file:engine/ecs/transform.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/physics/collider/collider.cpp",
+      "target": "file:engine/physics/collider/collider.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/physics/collider/collider.cpp",
+      "target": "file:engine/physics/core/physics_system.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/physics/collider/collider.cpp",
+      "target": "file:engine/physics/core/rigidbody.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:engine/physics/collider/collider.cpp",
+      "target": "file:engine/rendering/d3d11/renderer.h",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:engine/ecs/game_object.cpp:~GameObject",
+      "target": "function:engine/audio/audio_manager.cpp:OnGameObjectDestroyed",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/ecs/game_object.cpp:~GameObject",
+      "target": "function:engine/physics/core/physics_system.cpp:PhysicsSystem_NotifyObjectDestroyed",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/ecs/game_object.cpp:Update_IsParallelSafe",
+      "target": "function:engine/scripting/script_component.h:GetScriptClass",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/ecs/game_object.cpp:GetWorldPose",
+      "target": "function:engine/ecs/transform.h:GetWorldPositionRotationScale",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/ecs/game_object.cpp:DrawVisual",
+      "target": "function:engine/ecs/transform.h:GetWorldPositionRotationScale",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/ecs/game_object.cpp:DrawVisual",
+      "target": "function:engine/physics/collider/collider.cpp:DebugDraw",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/editor/project_manager.cpp:FindEngineRepoRoot",
+      "target": "function:engine/editor/project_manager.h:GetExecutableDirectory",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/editor/project_manager.cpp:RecentListPath",
+      "target": "function:engine/editor/project_manager.h:GetExecutableDirectory",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/editor/project_manager.cpp:EnsureEngineAssets",
+      "target": "function:engine/editor/project_manager.h:GetExecutableDirectory",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/editor/project_manager.cpp:ActivateRoot",
+      "target": "function:engine/physics/core/rigidbody.cpp:Physics_SetGravity",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/editor/project_manager.cpp:ActivateRoot",
+      "target": "function:engine/audio/audio_manager.cpp:SetMasterVolume",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/editor/project_manager.cpp:ActivateRoot",
+      "target": "function:engine/audio/audio_manager.cpp:SetBGMVolume",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/editor/project_manager.cpp:ActivateRoot",
+      "target": "function:engine/audio/audio_manager.cpp:SetSFXVolume",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/editor/project_manager.cpp:ActivateRoot",
+      "target": "function:engine/audio/audio_manager.cpp:SetVoiceVolume",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/editor/project_manager.cpp:ActivateRoot",
+      "target": "function:engine/audio/audio_manager.cpp:SetUiClickSound",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/editor/project_manager.cpp:ActivateRoot",
+      "target": "function:engine/editor/project_manager.h:TouchRecent",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/editor/project_manager.cpp:SetPhysicsGravity",
+      "target": "function:engine/physics/core/rigidbody.cpp:Physics_SetGravity",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/editor/project_manager.cpp:SetUiClickSound",
+      "target": "function:engine/audio/audio_manager.cpp:SetUiClickSound",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/physics/collider/collider.cpp:CollisionPairIgnored",
+      "target": "function:engine/ecs/game_object.cpp:IgnoresCollisionWith",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/physics/collider/collider.cpp:ResolveContact",
+      "target": "function:engine/physics/core/physics_system.cpp:PhysicsSystem_NotifyContactResolved",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/physics/collider/collider.cpp:ResolveContact",
+      "target": "function:engine/physics/core/physics_system.cpp:PhysicsSystem_WasContactPairKnown",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/physics/collider/collider.cpp:ResolveContact",
+      "target": "function:engine/physics/core/physics_system.cpp:PhysicsSystem_QueueContactFlash",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/physics/collider/collider.cpp:DebugDraw",
+      "target": "function:engine/debug_draw/debug_drawer.cpp:DrawBox",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/physics/collider/collider.cpp:DebugDraw",
+      "target": "function:engine/debug_draw/debug_drawer.cpp:DrawSphere",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/physics/collider/collider.cpp:DebugDraw",
+      "target": "function:engine/debug_draw/debug_drawer.cpp:DrawCapsule",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/physics/collider/collider.cpp:DebugDraw",
+      "target": "function:engine/debug_draw/debug_drawer.cpp:DrawCylinder",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:engine/physics/collider/collider.cpp:DebugDraw",
+      "target": "function:engine/debug_draw/debug_drawer.cpp:DrawLinesCached",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

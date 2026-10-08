@@ -1,0 +1,234 @@
+{
+  "projectRoot": "C:/Users/terry/source/repos/ivy-engine",
+  "batchFiles": [
+    {
+      "path": "engine/input/controller.cpp",
+      "language": "cpp",
+      "sizeLines": 184,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/input/controller.h",
+      "language": "c",
+      "sizeLines": 73,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/input/keyboard.cpp",
+      "language": "cpp",
+      "sizeLines": 145,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/input/keyboard.h",
+      "language": "c",
+      "sizeLines": 433,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/rendering/particle/particle_system.h",
+      "language": "c",
+      "sizeLines": 180,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/scene/scene_node.cpp",
+      "language": "cpp",
+      "sizeLines": 13,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/scene/scene_node.h",
+      "language": "c",
+      "sizeLines": 19,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/scripting/Script.h",
+      "language": "c",
+      "sizeLines": 87,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/scripting/script_dll_exports.cpp",
+      "language": "cpp",
+      "sizeLines": 70,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/scripting/script_dll_register.h",
+      "language": "c",
+      "sizeLines": 44,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/scripting/script_fields.h",
+      "language": "c",
+      "sizeLines": 43,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/scripting/script_runtime_api.h",
+      "language": "c",
+      "sizeLines": 367,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ui/ui_canvas.cpp",
+      "language": "cpp",
+      "sizeLines": 445,
+      "fileCategory": "code"
+    },
+    {
+      "path": "engine/ui/ui_canvas.h",
+      "language": "c",
+      "sizeLines": 121,
+      "fileCategory": "code"
+    },
+    {
+      "path": "samples/scripts/SampleFirstPersonScript.cpp",
+      "language": "cpp",
+      "sizeLines": 108,
+      "fileCategory": "code"
+    },
+    {
+      "path": "samples/scripts/SampleFirstPersonScript.h",
+      "language": "c",
+      "sizeLines": 21,
+      "fileCategory": "code"
+    },
+    {
+      "path": "samples/scripts/SamplePlayerScript.cpp",
+      "language": "cpp",
+      "sizeLines": 107,
+      "fileCategory": "code"
+    },
+    {
+      "path": "samples/scripts/SamplePlayerScript.h",
+      "language": "c",
+      "sizeLines": 20,
+      "fileCategory": "code"
+    },
+    {
+      "path": "samples/scripts/SampleSpinScript.cpp",
+      "language": "cpp",
+      "sizeLines": 38,
+      "fileCategory": "code"
+    },
+    {
+      "path": "samples/scripts/SampleSpinScript.h",
+      "language": "c",
+      "sizeLines": 17,
+      "fileCategory": "code"
+    },
+    {
+      "path": "samples/scripts/SampleTriggerLogScript.cpp",
+      "language": "cpp",
+      "sizeLines": 52,
+      "fileCategory": "code"
+    },
+    {
+      "path": "samples/scripts/SampleTriggerLogScript.h",
+      "language": "c",
+      "sizeLines": 24,
+      "fileCategory": "code"
+    }
+  ],
+  "batchImportData": {
+    "engine/input/controller.cpp": [
+      "engine/input/controller.h"
+    ],
+    "engine/input/controller.h": [],
+    "engine/input/keyboard.cpp": [
+      "engine/input/keyboard.h"
+    ],
+    "engine/input/keyboard.h": [],
+    "engine/rendering/particle/particle_system.h": [],
+    "engine/scene/scene_node.cpp": [
+      "engine/scene/scene_node.h"
+    ],
+    "engine/scene/scene_node.h": [
+      "engine/ecs/game_object.h"
+    ],
+    "engine/scripting/Script.h": [
+      "engine/scene/scene_node.h"
+    ],
+    "engine/scripting/script_dll_exports.cpp": [
+      "engine/scripting/Script.h"
+    ],
+    "engine/scripting/script_dll_register.h": [
+      "engine/scripting/Script.h"
+    ],
+    "engine/scripting/script_fields.h": [],
+    "engine/scripting/script_runtime_api.h": [
+      "engine/core/engine_gui.h",
+      "engine/ecs/audio_component.h",
+      "engine/ecs/collider_component.h",
+      "engine/ecs/effect_component.h",
+      "engine/ecs/game_object.h",
+      "engine/ecs/material_component.h",
+      "engine/ecs/transform.h",
+      "engine/ecs/visual_component.h",
+      "engine/input/controller.h",
+      "engine/input/keyboard.h",
+      "engine/physics/collider/collider.h",
+      "engine/rendering/billboard/billboard.h",
+      "engine/rendering/particle/particle_system.h",
+      "engine/scene/scene_node.h",
+      "engine/ui/ui_canvas.h",
+      "engine/ui/ui_element.h",
+      "engine/ui/ui_sprite.h",
+      "engine/ui/ui_text.h"
+    ],
+    "engine/ui/ui_canvas.cpp": [
+      "engine/input/controller.h",
+      "engine/input/key_logger.h",
+      "engine/ui/ui_canvas.h"
+    ],
+    "engine/ui/ui_canvas.h": [],
+    "samples/scripts/SampleFirstPersonScript.cpp": [
+      "engine/ecs/transform.h",
+      "engine/input/controller.h",
+      "engine/input/keyboard.h",
+      "engine/scripting/script_dll_register.h",
+      "engine/scripting/script_runtime_api.h",
+      "samples/scripts/SampleFirstPersonScript.h"
+    ],
+    "samples/scripts/SampleFirstPersonScript.h": [
+      "engine/scripting/Script.h",
+      "engine/scripting/script_fields.h"
+    ],
+    "samples/scripts/SamplePlayerScript.cpp": [
+      "engine/ecs/transform.h",
+      "engine/input/controller.h",
+      "engine/input/keyboard.h",
+      "engine/scripting/script_dll_register.h",
+      "engine/scripting/script_runtime_api.h",
+      "samples/scripts/SamplePlayerScript.h"
+    ],
+    "samples/scripts/SamplePlayerScript.h": [
+      "engine/scripting/Script.h",
+      "engine/scripting/script_fields.h"
+    ],
+    "samples/scripts/SampleSpinScript.cpp": [
+      "engine/ecs/transform.h",
+      "engine/scripting/script_dll_register.h",
+      "engine/scripting/script_runtime_api.h",
+      "samples/scripts/SampleSpinScript.h"
+    ],
+    "samples/scripts/SampleSpinScript.h": [
+      "engine/scripting/Script.h",
+      "engine/scripting/script_fields.h"
+    ],
+    "samples/scripts/SampleTriggerLogScript.cpp": [
+      "engine/ecs/material_component.h",
+      "engine/scripting/script_dll_register.h",
+      "engine/scripting/script_runtime_api.h",
+      "samples/scripts/SampleTriggerLogScript.h"
+    ],
+    "samples/scripts/SampleTriggerLogScript.h": [
+      "engine/scripting/Script.h",
+      "engine/scripting/script_fields.h"
+    ]
+  }
+}

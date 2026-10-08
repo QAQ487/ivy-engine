@@ -1,0 +1,103 @@
+{
+  "nodes": [
+    {
+      "id": "document:docs/adr/0001-runtime-audio-buses-from-project-json.md",
+      "type": "document",
+      "name": "0001-runtime-audio-buses-from-project-json.md",
+      "filePath": "docs/adr/0001-runtime-audio-buses-from-project-json.md",
+      "summary": "Decides that IvyEngineRuntime loads Master, BGM, SFX, and Voice bus volumes plus uiClickSound from project.json at boot so shipped builds match Project Settings Audio.",
+      "tags": ["documentation", "architecture-decision", "audio", "runtime", "project-settings"],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:docs/adr/0002-gui-build-playable-package.md",
+      "type": "document",
+      "name": "0002-gui-build-playable-package.md",
+      "filePath": "docs/adr/0002-gui-build-playable-package.md",
+      "summary": "Defines File → Build Current Project as a full playable package: MSBuild of IvyEngineRuntime and GameScripts, then staging of the renamed host, DLLs, project.json, rom, and current .cso overlays.",
+      "tags": ["documentation", "architecture-decision", "packaging", "deployment", "build-system"],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:docs/adr/0003-gpu-vertex-shader-skin.md",
+      "type": "document",
+      "name": "0003-gpu-vertex-shader-skin.md",
+      "filePath": "docs/adr/0003-gpu-vertex-shader-skin.md",
+      "summary": "Replaces per-frame CPU SkinFromScratch with GPU vertex-shader skinning using the same bind formula, a meshCount×boneCount palette, and CPU-oracle verification until Y Bot positions match.",
+      "tags": ["documentation", "architecture-decision", "skinning", "gpu", "rendering"],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:docs/adr/0004-runtime-gravity-from-project-json.md",
+      "type": "document",
+      "name": "0004-runtime-gravity-from-project-json.md",
+      "filePath": "docs/adr/0004-runtime-gravity-from-project-json.md",
+      "summary": "Applies physics.gravity from project.json in IvyEngineRuntime via the same exe-adjacent lookup as audio buses, so playable packages honor Project Settings Gravity instead of the 9.81 default.",
+      "tags": ["documentation", "architecture-decision", "physics", "runtime", "project-settings"],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:docs/adr/0005-engine-v1-lock.md",
+      "type": "document",
+      "name": "0005-engine-v1-lock.md",
+      "filePath": "docs/adr/0005-engine-v1-lock.md",
+      "summary": "Accepted 2026-09 lock that tags ivy-engine as engine-v1.0-lock for swing-demo, freezing non-additive engine churn with ScriptRuntimeApi at version 41 until an explicit unfreeze.",
+      "tags": ["documentation", "architecture-decision", "versioning", "api-stability", "release"],
+      "complexity": "simple",
+      "languageNotes": "Uses the full Status / Context / Decision / Consequences ADR template; later ADRs in this folder are shorter prose notes."
+    },
+    {
+      "id": "document:docs/adr/0006-first-person-camera-unfreeze.md",
+      "type": "document",
+      "name": "0006-first-person-camera-unfreeze.md",
+      "filePath": "docs/adr/0006-first-person-camera-unfreeze.md",
+      "summary": "Partially unfreezes ADR 0005 for a parallel first-person camera stack (CameraMode::FirstPerson, FirstPersonCamera_*, CameraDirectorSource::FirstPerson, ScriptRuntimeApi v42) without changing TPS or other frozen surfaces.",
+      "tags": ["documentation", "architecture-decision", "camera", "scripting", "versioning"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "document:docs/adr/0001-runtime-audio-buses-from-project-json.md",
+      "target": "document:docs/adr/0004-runtime-gravity-from-project-json.md",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:docs/adr/0002-gui-build-playable-package.md",
+      "target": "document:docs/adr/0001-runtime-audio-buses-from-project-json.md",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:docs/adr/0002-gui-build-playable-package.md",
+      "target": "document:docs/adr/0003-gpu-vertex-shader-skin.md",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:docs/adr/0004-runtime-gravity-from-project-json.md",
+      "target": "document:docs/adr/0001-runtime-audio-buses-from-project-json.md",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:docs/adr/0005-engine-v1-lock.md",
+      "target": "document:docs/adr/0006-first-person-camera-unfreeze.md",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:docs/adr/0006-first-person-camera-unfreeze.md",
+      "target": "document:docs/adr/0005-engine-v1-lock.md",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    }
+  ]
+}
