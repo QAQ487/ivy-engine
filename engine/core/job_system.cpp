@@ -3,6 +3,8 @@
  Brief  : Frame-scoped dependency-graph job system (phase B).
  ===========================================================================**/
 #include "job_system.h"
+#include "frame_timer.h"
+#include "render_thread.h"
 
 #include <algorithm>
 #include <atomic>
@@ -210,6 +212,13 @@ void JobSystem_Init(int workerCount) {
 	g_initialized.store(true, std::memory_order_release);
 }
 
+void JobSystem_BeginFrame() {
+	std::lock_guard<std::mutex> lock(g_timelineMutex);
+	g_timelineWrite.store(0, std::memory_order_relaxed);
+	for (int i = 0; i < kTimelineCapacity; ++i)
+		g_timeline[i] = TimelineEntry{};
+}
+
 void JobSystem_Shutdown() {
 	if (!g_initialized.load(std::memory_order_acquire))
 		return;
@@ -322,6 +331,8 @@ void JobSystem_DebugDraw() {
 		JobSystem_UseParallel() ? "on" : "off",
 		g_remaining.load(std::memory_order_relaxed),
 		g_frameNodes.size());
+	ImGui::Text("Render thread: %s  (3D DrawWorld; ImGui stays on WinMain)",
+		RenderThread_IsRunning() ? "ON" : "OFF");
 	ImGui::TextUnformatted("Toggle: F8  |  Handles are frame-scoped (invalid after WaitAll)");
 	if (ImGui::Button(JobSystem_UseParallel() ? "Disable Parallel" : "Enable Parallel"))
 		JobSystem_SetUseParallel(!JobSystem_UseParallel());
@@ -338,26 +349,72 @@ void JobSystem_DebugDraw() {
 	LONGLONG minStart = 0;
 	LONGLONG maxEnd = 0;
 	bool haveRange = false;
+	auto includeRange = [&](LONGLONG start, LONGLONG end) {
+		if (end <= start)
+			return;
+		if (!haveRange) {
+			minStart = start;
+			maxEnd = end;
+			haveRange = true;
+		}
+		else {
+			if (start < minStart) minStart = start;
+			if (end > maxEnd) maxEnd = end;
+		}
+	};
 	for (int i = 0; i < count; ++i) {
 		const TimelineEntry& e = snapshot[i];
 		if (e.workerIndex < 0)
 			continue;
-		if (!haveRange) {
-			minStart = e.startQpc;
-			maxEnd = e.endQpc;
-			haveRange = true;
-		}
-		else {
-			if (e.startQpc < minStart) minStart = e.startQpc;
-			if (e.endQpc > maxEnd) maxEnd = e.endQpc;
-		}
+		includeRange(e.startQpc, e.endQpc);
 	}
+
+	long long update0 = 0, update1 = 0, draw0 = 0, draw1 = 0, present0 = 0, present1 = 0;
+	FrameTimer_LastInterval(FrameTimerStage::Update, &update0, &update1);
+	FrameTimer_LastInterval(FrameTimerStage::Draw, &draw0, &draw1);
+	FrameTimer_LastInterval(FrameTimerStage::Present, &present0, &present1);
+	includeRange(update0, update1);
+	includeRange(draw0, draw1);
+	includeRange(present0, present1);
 
 	const double range = (haveRange && maxEnd > minStart)
 		? static_cast<double>(maxEnd - minStart)
 		: 1.0;
 	const float barW = ImGui::GetContentRegionAvail().x;
 	const float rowH = 14.0f;
+
+	auto stageMs = [&](LONGLONG start, LONGLONG end) -> double {
+		if (end <= start || g_qpcFreq.QuadPart <= 0)
+			return 0.0;
+		return (1000.0 * static_cast<double>(end - start))
+			/ static_cast<double>(g_qpcFreq.QuadPart);
+	};
+
+	auto drawStageRow = [&](const char* label, LONGLONG start, LONGLONG end, ImU32 color) {
+		ImGui::Text("%s  %.2fms", label, stageMs(start, end));
+		ImGui::SameLine();
+		const ImVec2 cursor = ImGui::GetCursorScreenPos();
+		ImDrawList* dl = ImGui::GetWindowDrawList();
+		dl->AddRectFilled(cursor, ImVec2(cursor.x + barW, cursor.y + rowH),
+			IM_COL32(40, 40, 40, 255));
+		if (end > start && haveRange) {
+			const float x0 = static_cast<float>((start - minStart) / range) * barW;
+			const float x1 = static_cast<float>((end - minStart) / range) * barW;
+			const float width = (x1 > x0 + 1.0f) ? (x1 - x0) : 2.0f;
+			dl->AddRectFilled(
+				ImVec2(cursor.x + x0, cursor.y + 1.0f),
+				ImVec2(cursor.x + x0 + width, cursor.y + rowH - 1.0f),
+				color);
+		}
+		ImGui::Dummy(ImVec2(barW, rowH));
+	};
+
+	ImGui::Separator();
+	ImGui::TextUnformatted("This frame only. Jobs sit inside Main; RT is DrawWorld after WaitAll.");
+	drawStageRow("Main", update0, update1, IM_COL32(90, 180, 90, 255));
+	drawStageRow(RenderThread_IsRunning() ? "RT  " : "Draw",
+		draw0, draw1, IM_COL32(230, 140, 50, 255));
+	drawStageRow("Pres", present0, present1, IM_COL32(220, 200, 70, 255));
 
 	ImGui::Separator();
 	ImGui::TextUnformatted("Per-worker timeline");

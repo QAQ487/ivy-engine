@@ -18,6 +18,10 @@ using JobHandle = JobNode*; // null = done/invalid; FRAME-SCOPED - see brief abo
 void JobSystem_Init(int workerCount);
 void JobSystem_Shutdown();
 
+// Clear the F8 timeline so the overlay shows this frame only (call once per tick
+// before Submit). Does not wait for in-flight jobs.
+void JobSystem_BeginFrame();
+
 // Zero deps. Inline when UseParallel()==false or not inited.
 JobHandle JobSystem_Submit(std::function<void()> job);
 

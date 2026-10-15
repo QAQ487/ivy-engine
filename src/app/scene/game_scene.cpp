@@ -516,9 +516,7 @@ void GameScene::Draw() {
 		SceneCanvas_Draw();
 	if (!preloadActive && EngineGUI_IsPlaying())
 		GameSceneScript_Invoke("GameScene_PostUIDraw");
-#ifndef GAME_RUNTIME
-	EngineGUI_Draw();
-#endif
+	// EngineGUI_Draw (ImGui / F8) runs on WinMain after the render-thread join.
 
 	ResetRenderViewport();
 }

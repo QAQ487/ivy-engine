@@ -8,6 +8,7 @@
 
  ===========================================================================**/
 #include "renderer.h"
+#include "engine/core/frame_timer.h"
 #include "engine/scene/render_settings.h"
 #include <d3d11sdklayers.h> // InfoQueue
 #include <wrl/client.h> // For ComPtr
@@ -633,5 +634,7 @@ void Clear(void) {
 }
 
 void Present(void) {
+	FrameTimer_Begin(FrameTimerStage::Present);
 	if (g_SwapChain) g_SwapChain->Present(0, 0);
+	FrameTimer_End(FrameTimerStage::Present);
 }

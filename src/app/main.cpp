@@ -10,6 +10,7 @@
 #define _CRTDBG_MAP_ALLOC // enable CRT memory leak checking
 #include <stdlib.h>       // for _CrtDumpMemoryLeaks, getenv
 #include <crtdbg.h>       // for _CrtDumpMemoryLeaks
+#include <sstream>
 #include <thread>
 
 #include "main.h"
@@ -32,6 +33,8 @@
 #include "engine/core/system_timer.h"
 #include "engine/core/job_system.h"
 #include "engine/core/debug_system.h"
+#include "engine/core/frame_timer.h"
+#include "engine/core/render_thread.h"
 #include "engine/input/mouse.h"
 #include "engine/input/controller.h"
 #include "debug_camera.h"
@@ -87,6 +90,74 @@ void Finalize(void);
 // Main update/draw loop helpers
 void Update(double current_time, double elapsed_time);
 void Draw(void);
+
+static bool EnvDisableRenderThread() {
+	const char* v = getenv("IVY_DISABLE_RENDER_THREAD");
+	return v && v[0] == '1' && v[1] == '\0';
+}
+
+static void JoinRenderBeforeDeviceTouch() {
+	RenderThread_Join();
+}
+
+static void WaitForRenderThreadWithMessages() {
+	HANDLE done = RenderThread_DoneEvent();
+	if (!done) {
+		RenderThread_Join();
+		return;
+	}
+
+	for (;;) {
+		if (!RenderThread_IsBusy()
+			&& WaitForSingleObject(done, 0) == WAIT_OBJECT_0) {
+			RenderThread_Join();
+			return;
+		}
+
+		const DWORD wait = MsgWaitForMultipleObjects(1, &done, FALSE, INFINITE, QS_ALLINPUT);
+		if (wait == WAIT_OBJECT_0) {
+			RenderThread_Join();
+			return;
+		}
+		if (wait == WAIT_OBJECT_0 + 1) {
+			MSG msg;
+			while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
+				if (msg.message == WM_QUIT) {
+					PostQuitMessage(static_cast<int>(msg.wParam));
+					RenderThread_Join();
+					return;
+				}
+				TranslateMessage(&msg);
+				DispatchMessage(&msg);
+			}
+			continue;
+		}
+		RenderThread_Join();
+		return;
+	}
+}
+
+static void DrawWorld(void);
+static void PresentFrame(void);
+
+static void SubmitDraw() {
+	if (RenderThread_IsRunning()) {
+		FrameTimer_Begin(FrameTimerStage::JoinWait);
+		RenderThread_Kick(&DrawWorld);
+		WaitForRenderThreadWithMessages();
+		FrameTimer_End(FrameTimerStage::JoinWait);
+#ifndef GAME_RUNTIME
+		EngineGUI_Draw();
+#endif
+		PresentFrame();
+		return;
+	}
+	DrawWorld();
+#ifndef GAME_RUNTIME
+	EngineGUI_Draw();
+#endif
+	PresentFrame();
+}
 
 #ifndef GAME_RUNTIME
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -173,6 +244,12 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstanc
 	ShowWindow(hWnd, nCmdShow);
 	UpdateWindow(hWnd);
 
+	// Boot preload (runtime) Presents on WinMain inside Initialize. Start the
+	// render thread only after that exclusive-context work is done. Editor ImGui
+	// stays on WinMain after the join (see SubmitDraw).
+	if (!EnvDisableRenderThread())
+		RenderThread_Start();
+
 	// Main message / game loop
 	MSG	msg;
 	ZeroMemory(&msg, sizeof(MSG));
@@ -224,7 +301,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstanc
 					g_fps = frame_count / fps_elapsed;
 					fps_last_time = current_time;
 					frame_count = 0;
-					printf("FPS: %.1f\n", g_fps);
+					FrameTimer_FlushPrint(g_fps, RenderThread_IsRunning());
 				}
 			}
 
@@ -233,9 +310,14 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstanc
 			// Cap update to ~60 FPS
 			if (elapsed_time >= (1.0 / 60.0)) {
 				exec_last_time = current_time;
+				FrameTimer_BeginFrame();
+				JobSystem_BeginFrame();
+				FrameTimer_Begin(FrameTimerStage::Update);
 				Update(current_time, elapsed_time);
-				Draw();
+				FrameTimer_End(FrameTimerStage::Update);
+				SubmitDraw();
 				keycopy();
+				FrameTimer_EndFrame();
 				frame_count++;
 			}
 		}
@@ -295,6 +377,7 @@ HRESULT	Initialize(HINSTANCE hInstance, HWND hWnd, BOOL bWindow) {
    Finalize and release subsystems
 ===========================================================================**/
 void Finalize(void) {
+	RenderThread_Stop();
 	JobSystem_Shutdown();
 	DebugSystem::Shutdown();
 
@@ -390,7 +473,13 @@ void Update(double current_time, double elapsed_time) {
 /**===========================================================================
    Draw - called each frame after Update
 ===========================================================================**/
-void Draw(void) {
+static void PresentFrame(void) {
+	Present();
+}
+
+static void DrawWorld(void) {
+	FrameTimer_Begin(FrameTimerStage::Draw);
+
 	// Clear the backbuffer and depth/stencil
 	Clear();
 
@@ -458,8 +547,15 @@ void Draw(void) {
 
 	AudioManager::Instance().DrawDebug();
 
-	// Present the rendered frame
-	Present();
+	FrameTimer_End(FrameTimerStage::Draw);
+}
+
+void Draw(void) {
+	DrawWorld();
+#ifndef GAME_RUNTIME
+	EngineGUI_Draw();
+#endif
+	PresentFrame();
 }
 
 /**===========================================================================
@@ -469,6 +565,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
 	// Alt+Enter: borderless windowed fullscreen (handle before ImGui so it always works).
 	if (uMsg == WM_SYSKEYDOWN && wParam == VK_RETURN && (lParam & (1 << 29))) {
+		JoinRenderBeforeDeviceTouch();
 		Renderer_SetWindowMode(Renderer_IsWindowed() ? FALSE : TRUE);
 		return 0;
 	}
@@ -508,10 +605,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
 		// Enter size/move modal loop (user is resizing or moving the window)
 	case WM_ENTERSIZEMOVE:
+		JoinRenderBeforeDeviceTouch();
 		g_inSizeMove = true;
 		return 0;
 
 	case WM_EXITSIZEMOVE:
+		JoinRenderBeforeDeviceTouch();
 		g_inSizeMove = false;
 		g_needResyncTime = true; // request timer resync after resizing/moving
 		Renderer_ResizeToClient();
@@ -522,6 +621,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
 	case WM_SIZE:
 		if (wParam != SIZE_MINIMIZED) {
+			JoinRenderBeforeDeviceTouch();
 			Renderer_ResizeToClient();
 #ifndef GAME_RUNTIME
 			EngineGUI_OnBackbufferResized();
@@ -538,6 +638,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 				suggested->bottom - suggested->top,
 				SWP_NOZORDER | SWP_NOACTIVATE);
 		}
+		JoinRenderBeforeDeviceTouch();
 		Renderer_ResizeToClient();
 #ifndef GAME_RUNTIME
 		EngineGUI_OnBackbufferResized();
@@ -545,6 +646,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 		return 0;
 
 	case WM_CLOSE: // window close requested
+		JoinRenderBeforeDeviceTouch();
 #ifdef _DEBUG
 		if (getenv("IVY_SKIP_CLOSE_CONFIRM")) {
 			DestroyWindow(hWnd);
@@ -567,6 +669,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 		break;
 
 	case WM_DESTROY: // window is being destroyed
+		JoinRenderBeforeDeviceTouch();
 		PostQuitMessage(0); // signal message loop to quit
 		break;
 	}

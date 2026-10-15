@@ -93,6 +93,12 @@
     <ClInclude Include="engine\core\job_system.h">
       <Filter>engine\core</Filter>
     </ClInclude>
+    <ClInclude Include="engine\core\frame_timer.h">
+      <Filter>engine\core</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\core\render_thread.h">
+      <Filter>engine\core</Filter>
+    </ClInclude>
     <ClInclude Include="engine\core\debug_system.h">
       <Filter>engine\core</Filter>
     </ClInclude>
@@ -336,6 +342,12 @@
       <Filter>engine\core</Filter>
     </ClCompile>
     <ClCompile Include="engine\core\job_system.cpp">
+      <Filter>engine\core</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\core\frame_timer.cpp">
+      <Filter>engine\core</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\core\render_thread.cpp">
       <Filter>engine\core</Filter>
     </ClCompile>
     <ClCompile Include="engine\core\debug_system.cpp">
