@@ -398,8 +398,26 @@ void PhysicsSystem_ResolveCollisions() {
 	// requires overlap on X too, this list can only ever produce a superset
 	// of the pairs the exact broad phase would accept anyway; it only changes
 	// how many candidate pairs get tested (perf), never collision outcomes.
-	std::vector<BroadPhaseEntry> entries;
-	entries.reserve(objs.size());
+	// Reuse scratch capacity across the two play-mode resolve calls each
+	// frame. A nested call (OnCollision re-entering resolve) gets a fresh
+	// local vector so the outer list stays valid.
+	static std::vector<BroadPhaseEntry> scratch;
+	static int depth = 0;
+	struct DepthGuard {
+		int& d;
+		explicit DepthGuard(int& depthRef) : d(depthRef) { ++d; }
+		~DepthGuard() { --d; }
+		DepthGuard(const DepthGuard&) = delete;
+		DepthGuard& operator=(const DepthGuard&) = delete;
+	};
+	DepthGuard guard(depth);
+
+	std::vector<BroadPhaseEntry> nested;
+	std::vector<BroadPhaseEntry>& entries = (depth == 1) ? scratch : nested;
+	if (depth == 1)
+		entries.clear();
+	if (entries.capacity() < objs.size())
+		entries.reserve(objs.size());
 	bool anyDynamic = false;
 	bool anyTrigger = false;
 	for (auto* o : objs) {
