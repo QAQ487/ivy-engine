@@ -110,6 +110,8 @@ ProjectAssetIndex& ProjectAssetIndex::Instance() {
 ProjectAssetIndex::Kind ProjectAssetIndex::ClassifyFile(const std::string& relativePath) {
     const fs::path path(relativePath);
     const std::string ext = ToLowerString(path.extension().string());
+    if (ext == ".physmat")
+        return Kind::PhysicsMaterial;
     if (ext == ".efk" || ext == ".efkefc")
         return Kind::Effect;
     if (ext == ".fbx" || ext == ".obj" || ext == ".gltf" || ext == ".glb")

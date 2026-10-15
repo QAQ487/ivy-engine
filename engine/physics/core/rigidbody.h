@@ -53,14 +53,16 @@ public:
 	void SetDrag(float drag) { m_drag = drag; }
 	float GetDrag() const { return m_drag; }
 
-	// Bounce coefficient [0..1+]. Combined as max(self, other) in ResolveContact.
+	// Bounce coefficient [0..1+]. Used as the contact fallback when the collider
+	// has no Physics Material. Combined as max(self, other) in ResolveContact.
 	void SetRestitution(float restitution) {
 		m_restitution = restitution < 0.0f ? 0.0f : restitution;
 	}
 	float GetRestitution() const { return m_restitution; }
 
-	// Surface friction [0..]. Combined as min(self, other) in ResolveContact so a
-	// body with friction 0 (e.g. player) never gets tangential grip from the floor.
+	// Surface friction [0..]. Used as both static and dynamic friction when the
+	// collider has no Physics Material. Combined as min(self, other) so a body
+	// with friction 0 (e.g. player) never gets tangential grip from the floor.
 	void SetFriction(float friction) {
 		m_friction = friction < 0.0f ? 0.0f : friction;
 	}

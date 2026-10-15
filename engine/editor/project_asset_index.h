@@ -16,6 +16,7 @@ public:
         UI,
         Sound,
         Script,
+        PhysicsMaterial,
         Other
     };
 

@@ -11,6 +11,7 @@
 #ifndef COLLIDER_H
 #define COLLIDER_H
 
+#include "engine/physics/physics_material.h"
 #include <DirectXMath.h>
 #include <vector>
 
@@ -44,6 +45,7 @@ protected:
     DirectX::XMFLOAT3 m_center = {0, 0, 0}; // Local offset from GameObject
     DirectX::XMFLOAT3 m_size = {1, 1, 1}; // Default size
     bool m_isTrigger = false; // If true, collision detection occurs but no physical resolution
+    ContactSurface m_contactSurface;
 
 public:
     Collider(ColliderType type, GameObject* owner) : m_type(type), m_owner(owner) {}
@@ -58,6 +60,9 @@ public:
 
     void SetIsTrigger(bool isTrigger) { m_isTrigger = isTrigger; }
     bool IsTrigger() const { return m_isTrigger; }
+
+    void SetContactSurface(const ContactSurface& surface) { m_contactSurface = surface; }
+    const ContactSurface& GetContactSurface() const { return m_contactSurface; }
 
     // World space center (considers owner's scale, rotation, position)
     DirectX::XMFLOAT3 GetWorldCenter() const;

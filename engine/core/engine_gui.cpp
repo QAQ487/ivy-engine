@@ -3880,6 +3880,40 @@ void EngineGUI_Draw() {
                 if (ImGui::Checkbox("Is Trigger", &cc->isTrigger)) {
                     runtimeDirty = true;
                 }
+                {
+                    ImGui::Text("Physics Material");
+                    char matBuf[256];
+                    strncpy_s(matBuf, cc->physicsMaterial.c_str(), sizeof(matBuf) - 1);
+                    matBuf[sizeof(matBuf) - 1] = '\0';
+                    ImGui::SameLine(140);
+                    if (ImGui::InputText("##PhysMat", matBuf, sizeof(matBuf))) {
+                        cc->physicsMaterial = matBuf;
+                        runtimeDirty = true;
+                    }
+                    const char* physMatExts[] = { ".physmat" };
+                    std::string droppedPath;
+                    if (AcceptAssetPathDrop(physMatExts, IM_ARRAYSIZE(physMatExts), droppedPath)) {
+                        cc->physicsMaterial = droppedPath;
+                        runtimeDirty = true;
+                    }
+                    if (!cc->physicsMaterial.empty()) {
+                        ImGui::SameLine();
+                        if (ImGui::Button("Clear##PhysMat")) {
+                            cc->physicsMaterial.clear();
+                            runtimeDirty = true;
+                        }
+                    }
+                    if (Collider* col = g_selNode->GetCollider()) {
+                        const ContactSurface& surface = col->GetContactSurface();
+                        if (surface.assigned) {
+                            ImGui::TextDisabled(
+                                "Static %.3f  Dynamic %.3f  Restitution %.3f",
+                                surface.staticFriction, surface.dynamicFriction, surface.restitution);
+                        } else if (!cc->physicsMaterial.empty()) {
+                            ImGui::TextDisabled("Not loaded; using rigidbody friction/restitution.");
+                        }
+                    }
+                }
                 EditorUndo_EndComponentEdit(g_selNode, "Collider");
                 if (ImGui::Button("Remove Collider")) {
                     EditorUndo_PushRemoveComponent(g_selNode, "Collider");

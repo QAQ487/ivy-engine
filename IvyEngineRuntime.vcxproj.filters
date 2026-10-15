@@ -186,6 +186,9 @@
     <ClInclude Include="engine\physics\collider\collider.h">
       <Filter>engine\physics\collider</Filter>
     </ClInclude>
+    <ClInclude Include="engine\physics\physics_material.h">
+      <Filter>engine\physics</Filter>
+    </ClInclude>
     <ClInclude Include="engine\physics\core\physics_system.h">
       <Filter>engine\physics\core</Filter>
     </ClInclude>
@@ -439,6 +442,9 @@
     </ClCompile>
     <ClCompile Include="engine\physics\collider\collider.cpp">
       <Filter>engine\physics\collider</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\physics\physics_material.cpp">
+      <Filter>engine\physics</Filter>
     </ClCompile>
     <ClCompile Include="engine\physics\core\physics_system.cpp">
       <Filter>engine\physics\core</Filter>

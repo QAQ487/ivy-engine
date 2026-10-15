@@ -14,6 +14,7 @@ public:
     float meshSizePadding = 0.0f;
     bool showDebugCollider = true;
     bool isTrigger = false;
+    std::string physicsMaterial;
 
     const char* GetTypeName() const override { return "Collider"; }
 

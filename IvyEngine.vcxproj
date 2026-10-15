@@ -235,6 +235,7 @@ exit /b 0</Command>
     <ClInclude Include="engine\rendering\billboard\billboard.h" />
     <ClInclude Include="engine\rendering\particle\particle_system.h" />
     <ClInclude Include="engine\physics\collider\collider.h" />
+    <ClInclude Include="engine\physics\physics_material.h" />
     <ClInclude Include="engine\core\easing.h" />
     <ClInclude Include="engine\core\job_system.h" />
     <ClInclude Include="engine\core\frame_timer.h" />
@@ -364,6 +365,7 @@ exit /b 0</Command>
     <ClCompile Include="engine\rendering\particle\particle_system.cpp" />
     <ClCompile Include="src\app\scene\game_scene_script_hooks.cpp" />
     <ClCompile Include="engine\physics\collider\collider.cpp" />
+    <ClCompile Include="engine\physics\physics_material.cpp" />
     <ClCompile Include="engine\core\easing.cpp" />
     <ClCompile Include="engine\core\job_system.cpp" />
     <ClCompile Include="engine\core\frame_timer.cpp" />

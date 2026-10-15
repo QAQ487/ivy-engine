@@ -551,7 +551,30 @@ static void ResolveContact(GameObject* self, GameObject* other,
     float invA = (!kinA && mA > 0.0f) ? 1.0f / mA : 0.0f;
     float invB = (!kinB && mB > 0.0f) ? 1.0f / mB : 0.0f;
     float invSum = invA + invB;
-    const float restitution = (std::max)(rbA.GetRestitution(), rbB.GetRestitution());
+
+    ContactSurface surfA = PhysicsMaterial_FromRigidbody(rbA.GetFriction(), rbA.GetRestitution());
+    ContactSurface surfB = PhysicsMaterial_FromRigidbody(rbB.GetFriction(), rbB.GetRestitution());
+    bool assignedA = false;
+    bool assignedB = false;
+    if (Collider* colA = self->GetCollider()) {
+        if (colA->GetContactSurface().assigned) {
+            surfA = colA->GetContactSurface();
+            assignedA = true;
+        }
+    }
+    if (Collider* colB = other->GetCollider()) {
+        if (colB->GetContactSurface().assigned) {
+            surfB = colB->GetContactSurface();
+            assignedB = true;
+        }
+    }
+    const bool useMaterial = assignedA || assignedB;
+    CombinedContactSurface combined{};
+    if (useMaterial)
+        combined = PhysicsMaterial_Combine(surfA, surfB);
+    const float restitution = useMaterial
+        ? combined.restitution
+        : (std::max)(rbA.GetRestitution(), rbB.GetRestitution());
 
     // Position correction
     float pen = max(0.0f, penetration - slope) * 0.95f;
@@ -600,62 +623,95 @@ static void ResolveContact(GameObject* self, GameObject* other,
         }
     }
 
-    // Coulomb friction along the contact tangent. Combine with min() so a body
-    // with friction 0 (player dash) never gets tangential grip from the floor.
-    const float mu = (std::min)(rbA.GetFriction(), rbB.GetFriction());
-    if (mu > 0.0f && invSum > 0.0f) {
-        vA = rbA.GetVelocity();
-        vB = rbB.GetVelocity();
-        vRel = { vA.x - vB.x, vA.y - vB.y, vA.z - vB.z };
-        const float vn = vRel.x * normal.x + vRel.y * normal.y + vRel.z * normal.z;
-        XMFLOAT3 vT{
-            vRel.x - vn * normal.x,
-            vRel.y - vn * normal.y,
-            vRel.z - vn * normal.z
-        };
-        const float vtLenSq = vT.x * vT.x + vT.y * vT.y + vT.z * vT.z;
-        constexpr float kStickSpeed = 0.05f;
-        constexpr float kStickSpeedSq = kStickSpeed * kStickSpeed;
+    auto killTangentialVelocity = [&]() {
+        if (!kinA) {
+            const float vnA = vA.x * normal.x + vA.y * normal.y + vA.z * normal.z;
+            vA.x = vnA * normal.x;
+            vA.y = vnA * normal.y;
+            vA.z = vnA * normal.z;
+            rbA.SetVelocity(vA);
+        }
+        if (!kinB) {
+            const float vnB = vB.x * normal.x + vB.y * normal.y + vB.z * normal.z;
+            vB.x = vnB * normal.x;
+            vB.y = vnB * normal.y;
+            vB.z = vnB * normal.z;
+            rbB.SetVelocity(vB);
+        }
+    };
 
-        if (vtLenSq < kStickSpeedSq) {
-            // Static-ish stick: kill residual tangential velocity on dynamic bodies.
-            if (!kinA) {
-                const float vnA = vA.x * normal.x + vA.y * normal.y + vA.z * normal.z;
-                vA.x = vnA * normal.x;
-                vA.y = vnA * normal.y;
-                vA.z = vnA * normal.z;
-                rbA.SetVelocity(vA);
-            }
-            if (!kinB) {
-                const float vnB = vB.x * normal.x + vB.y * normal.y + vB.z * normal.z;
-                vB.x = vnB * normal.x;
-                vB.y = vnB * normal.y;
-                vB.z = vnB * normal.z;
-                rbB.SetVelocity(vB);
-            }
-        } else {
+    auto applyFrictionImpulse = [&](float jFriction, const XMFLOAT3& tDir) {
+        if (!kinA) {
+            vA.x += jFriction * invA * tDir.x;
+            vA.y += jFriction * invA * tDir.y;
+            vA.z += jFriction * invA * tDir.z;
+            rbA.SetVelocity(vA);
+        }
+        if (!kinB) {
+            vB.x -= jFriction * invB * tDir.x;
+            vB.y -= jFriction * invB * tDir.y;
+            vB.z -= jFriction * invB * tDir.z;
+            rbB.SetVelocity(vB);
+        }
+    };
+
+    if (useMaterial) {
+        if (invSum > 0.0f) {
+            vA = rbA.GetVelocity();
+            vB = rbB.GetVelocity();
+            vRel = { vA.x - vB.x, vA.y - vB.y, vA.z - vB.z };
+            const float vn = vRel.x * normal.x + vRel.y * normal.y + vRel.z * normal.z;
+            XMFLOAT3 vT{
+                vRel.x - vn * normal.x,
+                vRel.y - vn * normal.y,
+                vRel.z - vn * normal.z
+            };
+            const float vtLenSq = vT.x * vT.x + vT.y * vT.y + vT.z * vT.z;
             const float vtLen = std::sqrt(vtLenSq);
-            const float jNAbs = std::fabs(jNormal);
-            // Strict Coulomb: |jt| <= mu * |jn|. No floor "full-cancel" boost ?
-            // that made mu=0.5 wipe horizontal speed in a few frames.
-            if (jNAbs > 1e-6f) {
+            const ContactFrictionDecision friction = PhysicsMaterial_DecideFriction(
+                vtLen, invSum, std::fabs(jNormal), combined.muStatic, combined.muDynamic);
+            if (friction.mode == ContactFrictionMode::ResidualStick ||
+                friction.mode == ContactFrictionMode::StaticStick) {
+                killTangentialVelocity();
+            } else if (friction.mode == ContactFrictionMode::DynamicClamp &&
+                       friction.jFriction > 0.0f && vtLen > 1e-6f) {
                 const XMFLOAT3 tDir{ -vT.x / vtLen, -vT.y / vtLen, -vT.z / vtLen };
-                float jFriction = vtLen / invSum;
-                const float jMax = mu * jNAbs;
-                if (jFriction > jMax)
-                    jFriction = jMax;
+                applyFrictionImpulse(friction.jFriction, tDir);
+            }
+        }
+    } else {
+        // Coulomb friction along the contact tangent. Combine with min() so a body
+        // with friction 0 (player dash) never gets tangential grip from the floor.
+        const float mu = (std::min)(rbA.GetFriction(), rbB.GetFriction());
+        if (mu > 0.0f && invSum > 0.0f) {
+            vA = rbA.GetVelocity();
+            vB = rbB.GetVelocity();
+            vRel = { vA.x - vB.x, vA.y - vB.y, vA.z - vB.z };
+            const float vn = vRel.x * normal.x + vRel.y * normal.y + vRel.z * normal.z;
+            XMFLOAT3 vT{
+                vRel.x - vn * normal.x,
+                vRel.y - vn * normal.y,
+                vRel.z - vn * normal.z
+            };
+            const float vtLenSq = vT.x * vT.x + vT.y * vT.y + vT.z * vT.z;
+            constexpr float kStickSpeed = 0.05f;
+            constexpr float kStickSpeedSq = kStickSpeed * kStickSpeed;
 
-                if (!kinA) {
-                    vA.x += jFriction * invA * tDir.x;
-                    vA.y += jFriction * invA * tDir.y;
-                    vA.z += jFriction * invA * tDir.z;
-                    rbA.SetVelocity(vA);
-                }
-                if (!kinB) {
-                    vB.x -= jFriction * invB * tDir.x;
-                    vB.y -= jFriction * invB * tDir.y;
-                    vB.z -= jFriction * invB * tDir.z;
-                    rbB.SetVelocity(vB);
+            if (vtLenSq < kStickSpeedSq) {
+                // Static-ish stick: kill residual tangential velocity on dynamic bodies.
+                killTangentialVelocity();
+            } else {
+                const float vtLen = std::sqrt(vtLenSq);
+                const float jNAbs = std::fabs(jNormal);
+                // Strict Coulomb: |jt| <= mu * |jn|. No floor "full-cancel" boost ?
+                // that made mu=0.5 wipe horizontal speed in a few frames.
+                if (jNAbs > 1e-6f) {
+                    const XMFLOAT3 tDir{ -vT.x / vtLen, -vT.y / vtLen, -vT.z / vtLen };
+                    float jFriction = vtLen / invSum;
+                    const float jMax = mu * jNAbs;
+                    if (jFriction > jMax)
+                        jFriction = jMax;
+                    applyFrictionImpulse(jFriction, tDir);
                 }
             }
         }

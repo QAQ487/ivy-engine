@@ -71,9 +71,10 @@ static const char* EntryKindIcon(ProjectAssetIndex::Kind kind) {
     case ProjectAssetIndex::Kind::Texture: return ICON_FA_IMAGE;
     case ProjectAssetIndex::Kind::Effect:  return ICON_FA_FILE;
     case ProjectAssetIndex::Kind::UI:      return ICON_FA_BOXES_STACKED;
-    case ProjectAssetIndex::Kind::Sound:   return ICON_FA_FILE_AUDIO;
-    case ProjectAssetIndex::Kind::Script:  return ICON_FA_FILE_CODE;
-    default:                               return ICON_FA_FILE;
+    case ProjectAssetIndex::Kind::Sound:            return ICON_FA_FILE_AUDIO;
+    case ProjectAssetIndex::Kind::Script:           return ICON_FA_FILE_CODE;
+    case ProjectAssetIndex::Kind::PhysicsMaterial:  return ICON_FA_FILE;
+    default:                                        return ICON_FA_FILE;
     }
 }
 
@@ -82,7 +83,8 @@ static bool EmitsAssetPath(ProjectAssetIndex::Kind kind) {
         kind == ProjectAssetIndex::Kind::Texture ||
         kind == ProjectAssetIndex::Kind::Effect ||
         kind == ProjectAssetIndex::Kind::Sound ||
-        kind == ProjectAssetIndex::Kind::Script;
+        kind == ProjectAssetIndex::Kind::Script ||
+        kind == ProjectAssetIndex::Kind::PhysicsMaterial;
 }
 
 static bool KindHasOpenUse(ProjectAssetIndex::Kind kind) {

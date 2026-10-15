@@ -1,5 +1,6 @@
 ﻿#include "collider_component.h"
 #include "engine/ecs/game_object.h"
+#include "engine/physics/physics_material.h"
 #include "model_asset_cache.h"
 #include "rigidbody_component.h"
 #include "visual_component.h"
@@ -57,8 +58,16 @@ void ColliderComponent::ApplyToOwner() {
         break;
     }
 
-    if (owner->m_collider)
+    if (owner->m_collider) {
         owner->m_collider->SetIsTrigger(isTrigger);
+        ContactSurface surface;
+        if (!physicsMaterial.empty() &&
+            !PhysicsMaterial_LoadFromFile(physicsMaterial, surface)) {
+            OutputDebugStringA(
+                "[ColliderComponent] Physics material load failed; using rigidbody contact fallback.\n");
+        }
+        owner->m_collider->SetContactSurface(surface);
+    }
 
     // Static colliders default to kinematic. Authored RigidbodyComponent keeps
     // its own isKinematic / mass / drag from the scene (do not overwrite).
@@ -77,6 +86,7 @@ std::string ColliderComponent::Serialize() const {
     j["meshSizePadding"] = meshSizePadding;
     j["showDebugCollider"] = showDebugCollider;
     j["isTrigger"] = isTrigger;
+    j["physicsMaterial"] = physicsMaterial;
     return j.dump();
 }
 
@@ -99,6 +109,7 @@ void ColliderComponent::Deserialize(const std::string& jsonStr) {
         meshSizePadding = j.value("meshSizePadding", 0.0f);
         showDebugCollider = j.value("showDebugCollider", true);
         isTrigger = j.value("isTrigger", false);
+        physicsMaterial = j.value("physicsMaterial", "");
     } catch (...) {
         OutputDebugStringA("[ColliderComponent] Deserialize failed.\n");
     }

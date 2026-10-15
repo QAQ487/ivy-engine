@@ -217,6 +217,7 @@ xcopy /y /d /e "$(EngineRoot)rom\*" "$(OutDir)rom\"</Command>
     <ClInclude Include="engine\rendering\billboard\billboard.h" />
     <ClInclude Include="..\ui\LockOnUI.h" />
     <ClInclude Include="engine\physics\collider\collider.h" />
+    <ClInclude Include="engine\physics\physics_material.h" />
     <ClInclude Include="engine\core\easing.h" />
     <ClInclude Include="engine\core\system_timer.h" />
     <ClInclude Include="engine\input\controller.h" />
@@ -280,6 +281,7 @@ xcopy /y /d /e "$(EngineRoot)rom\*" "$(OutDir)rom\"</Command>
     <ClCompile Include="engine\rendering\billboard\billboard.cpp" />
     <ClCompile Include="..\ui\LockOnUI.cpp" />
     <ClCompile Include="engine\physics\collider\collider.cpp" />
+    <ClCompile Include="engine\physics\physics_material.cpp" />
     <ClCompile Include="engine\core\easing.cpp" />
     <ClCompile Include="engine\core\system_timer.cpp" />
     <ClCompile Include="engine\input\controller.cpp" />
