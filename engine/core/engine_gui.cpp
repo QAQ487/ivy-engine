@@ -686,17 +686,19 @@ static bool DrawScriptPropertyField(GameObject* editNode,
         static GameObject* s_editNode = nullptr;
         static std::string s_editKey;
         static char s_strBuf[256] = {};
+        ImGui::Text("%s:", key.c_str()); ImGui::SameLine(80);
+        ImGui::SetNextItemWidth(-1);
         if (s_editNode != editNode || s_editKey != key) {
             s_editNode = editNode; s_editKey = key;
             strncpy_s(s_strBuf, val.get<std::string>().c_str(), sizeof(s_strBuf) - 1);
         }
-        ImGui::Text("%s:", key.c_str()); ImGui::SameLine(80);
-        ImGui::SetNextItemWidth(-1);
         if (ImGui::InputText(wid.c_str(), s_strBuf, sizeof(s_strBuf),
             ImGuiInputTextFlags_EnterReturnsTrue)) {
             val = std::string(s_strBuf);
             return true;
         }
+        if (!ImGui::IsItemActive())
+            strncpy_s(s_strBuf, val.get<std::string>().c_str(), sizeof(s_strBuf) - 1);
     }
     return false;
 }
@@ -1650,7 +1652,9 @@ static void DrawEditorPopups() {
             }
             tags.SaveToFile();
             if (g_selNode) {
+                const int oldTag = g_selNode->GetTagId();
                 g_selNode->SetTag(newId);
+                EditorUndo_PushTag(g_selNode, oldTag, newId);
                 EngineGUI_MarkSceneDirty();
             }
             s_addTagFailed = false;
@@ -3465,6 +3469,8 @@ void EngineGUI_Draw() {
                 EditorUndo_PushRename(g_selNode, oldName, newName);
                 EngineGUI_MarkSceneDirty();
             }
+            if (!ImGui::IsItemActive())
+                strncpy_s(nodeNameBuf, g_selNode->GetName().c_str(), sizeof(nodeNameBuf) - 1);
             ImGui::Spacing();
 
             ImGui::Text("Hierarchy Order");

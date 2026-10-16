@@ -129,7 +129,7 @@ void MaterialComponent::Deserialize(const std::string& jsonStr) {
             color = ReadFloat3(j["color"], color);
         roughness = Clamp01(j.value("roughness", roughness));
         metallic = Clamp01(j.value("metallic", metallic));
-        normalMapPath = j.value("normalMap", normalMapPath);
+        normalMapPath = j.value("normalMap", "");
         normalStrength = j.value("normalStrength", normalStrength);
         shadeSteps = j.value("shadeSteps", shadeSteps);
         shadeSmoothness = j.value("shadeSmoothness", shadeSmoothness);
@@ -140,7 +140,7 @@ void MaterialComponent::Deserialize(const std::string& jsonStr) {
         if (j.contains("shadowTint"))
             shadowTint = ReadFloat3(j["shadowTint"], shadowTint);
         rimStrength = j.value("rimStrength", rimStrength);
-        rampTexturePath = j.value("rampTexture", rampTexturePath);
+        rampTexturePath = j.value("rampTexture", "");
         ReleaseNormalMap();
         ReleaseRampTexture();
     } catch (...) {
