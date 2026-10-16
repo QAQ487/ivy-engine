@@ -12,7 +12,6 @@
 #include <cmath>
 #include "engine/rendering/d3d11/renderer.h" // VERTEX_3D, MATERIAL, GetDevice*, SCREEN_*
 #include "engine/rendering/d3d11/shader.h"
-#include "engine/scene/render_settings.h"
 #include "camera.h"
 #include "engine/rendering/model/model_util.h" // CreateSolidWhiteSRV を利用
 #include "engine/physics/collider/collider.h"
@@ -185,7 +184,9 @@ void Grid::LogicUpdate(double /*elapsed_time*/) {
 void Grid::Draw() {
 	if ((!g_pFillVB && !g_pVB) || g_vertexCount == 0) return;
 
-	Shader3D_Begin(RenderSettings_GetDefaultShader());
+	// Editor overlay only: never use the scene default shader (IBL showcase = PBR).
+	// PBR + bound IBL made the fill quad reflect the skybox (birds as grey blobs).
+	Shader3D_Begin(Shader3DVariant::Standard);
 	SetDepthEnable(false);
 
 	Camera& cam = GetCamera();
@@ -196,23 +197,7 @@ void Grid::Draw() {
 	XMMATRIX T = XMMatrixTranslation(pos.x, pos.y, pos.z);
 	Shader_SetWorldMatrix(T);
 
-	// 1) 背景塗り（グレー）
-	if (g_pFillVB) {
-		MATERIAL mat {}; mat.Diffuse = XMFLOAT4(1, 1, 1, 1);
-		mat.Diffuse = XMFLOAT4(1, 1, 1, 1);
-		mat.Ambient = XMFLOAT4(1, 1, 1, 1);
-		Shader_SetMaterial(mat);
-		if (g_pWhiteSRV) {
-			g_pContext->PSSetShaderResources(0, 1, &g_pWhiteSRV);
-		}
-		UINT stride = sizeof(VERTEX_3D);
-		UINT offset = 0;
-		g_pContext->IASetVertexBuffers(0, 1, &g_pFillVB, &stride, &offset);
-		g_pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		g_pContext->Draw(6, 0);
-	}
-
-	// 2) ライン（従来どおり）
+	// Skip the opaque grey fill quad. It was a 5000x5000 PBR plane and sampled IBL.
 	if (g_pVB) {
 		MATERIAL mat {}; mat.Diffuse = XMFLOAT4(1, 1, 1, 1);
 		mat.Diffuse = XMFLOAT4(1, 1, 1, 1);

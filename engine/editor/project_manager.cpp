@@ -1,6 +1,7 @@
 #include "project_manager.h"
 
 #include "engine/audio/audio_manager.h"
+#include "engine/debug_draw/debug_ofstream.h"
 #include "engine/physics/core/rigidbody.h"
 #include "libraries/nlohmann/json.hpp"
 
@@ -58,6 +59,20 @@ bool CopyDirectoryRecursive(const fs::path& src, const fs::path& dst, std::strin
         }
     }
     return true;
+}
+
+void CopyFileIfMissing(const fs::path& src, const fs::path& dst) {
+    std::error_code ec;
+    if (fs::exists(dst, ec))
+        return;
+    if (!fs::exists(src, ec) || !fs::is_regular_file(src, ec)) {
+        hal::dout << "EnsureEngineAssets: missing source asset " << src.string() << std::endl;
+        return;
+    }
+    fs::create_directories(dst.parent_path(), ec);
+    fs::copy_file(src, dst, fs::copy_options::skip_existing, ec);
+    if (ec)
+        hal::dout << "EnsureEngineAssets: failed to copy " << src.string() << ": " << ec.message() << std::endl;
 }
 
 std::string ReadDefaultSceneFileName(const fs::path& root) {
@@ -531,6 +546,19 @@ void ProjectManager::EnsureEngineAssets(const std::string& rootPath) const {
     const fs::path brandingDst = projectRom / "branding";
     if (fs::exists(brandingSrc, ec))
         CopyDirectoryRecursive(brandingSrc, brandingDst, nullptr);
+
+    // Default IBL: copy each missing file only. Never overwrite custom project IBL.
+    const fs::path iblSrcDir = exeRom / "skybox" / "ibl";
+    const fs::path iblDstDir = projectRom / "skybox" / "ibl";
+    if (!fs::exists(iblSrcDir, ec) || !fs::is_directory(iblSrcDir, ec))
+        hal::dout << "EnsureEngineAssets: missing source directory " << iblSrcDir.string() << std::endl;
+    static const char* kDefaultIblFiles[] = {
+        "irradiance.dds",
+        "prefilter.dds",
+        "brdf_lut.png",
+    };
+    for (const char* name : kDefaultIblFiles)
+        CopyFileIfMissing(iblSrcDir / name, iblDstDir / name);
 }
 
 bool ProjectManager::ActivateRoot(const std::string& rootPath, std::string* errorOut) {
