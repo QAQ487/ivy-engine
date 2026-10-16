@@ -4005,6 +4005,12 @@ void EngineGUI_Draw() {
                     runtimeDirty = true;
                 }
 
+                float angularDrag = rb.GetAngularDrag();
+                if (ImGui::DragFloat("Angular Drag", &angularDrag, 0.01f, 0.0f, 50.0f)) {
+                    rb.SetAngularDrag(angularDrag);
+                    runtimeDirty = true;
+                }
+
                 float restitution = rb.GetRestitution();
                 if (ImGui::DragFloat("Restitution", &restitution, 0.01f, 0.0f, 2.0f)) {
                     rb.SetRestitution(restitution);

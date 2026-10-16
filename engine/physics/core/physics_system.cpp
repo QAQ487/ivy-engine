@@ -221,7 +221,7 @@ namespace {
 			}
 			if (IsDynamic(a))
 				ca->ResolveCollision(cb);
-			if (bDynamic)
+			else if (bDynamic)
 				cb->ResolveCollision(ca);
 			return;
 		}
@@ -271,7 +271,7 @@ namespace {
 				// velocity impulse ? which is the root cause of the player falling
 				// through the floor.
 				if (IsDynamic(a)) ca->ResolveCollision(cb);
-				if (bDynamic)      cb->ResolveCollision(ca);
+				else if (bDynamic) cb->ResolveCollision(ca);
 
 				// Floor-slide: mid-path ground overlap (gravity dip into the floor while
 				// moving fast) aborts at t<1 and truncates horizontal travel so dash
@@ -288,7 +288,7 @@ namespace {
 					if (floorLike) {
 						a->SetPosition({ curPos.x, resolved.y, curPos.z });
 						if (IsDynamic(a)) ca->ResolveCollision(cb);
-						if (bDynamic)      cb->ResolveCollision(ca);
+						else if (bDynamic) cb->ResolveCollision(ca);
 					}
 				}
 				return; // Stop at the first (earliest) collision along the path
@@ -625,9 +625,13 @@ void PhysicsSystem_Update(double elapsed_time) {
 		if (!obj || !obj->IsActive() || !obj->GetCollider()) continue;
 		auto& rb = obj->GetRigidbody();
 		if (IsDynamic(obj)) {
+			rb.SetLocalInverseInertia(
+				Collider_ComputeLocalInverseInertia(obj->GetCollider(), rb.GetMass(), false));
 			DirectX::XMFLOAT3 pos = obj->GetPosition();
-			rb.Integrate(pos, elapsed_time);
+			DirectX::XMFLOAT3 rot = obj->GetRotation();
+			rb.Integrate(pos, rot, elapsed_time);
 			obj->SetPosition(pos);
+			obj->SetRotation(rot);
 		}
 	}
 

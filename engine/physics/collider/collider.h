@@ -240,4 +240,9 @@ private:
                                   float& outPenetration) const;
 };
 
+// Body-space inverse inertia for a collider. Kinematic / non-positive mass
+// returns zeros (infinite inertia). Unknown or missing colliders use a unit cube.
+DirectX::XMFLOAT3 Collider_ComputeLocalInverseInertia(
+    const Collider* collider, float mass, bool kinematic);
+
 #endif

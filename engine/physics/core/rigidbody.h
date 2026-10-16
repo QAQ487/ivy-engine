@@ -27,6 +27,21 @@ enum class ForceMode {
 	VelocityChange  // Add an instant velocity change. Mass-independent.
 };
 
+// Body-space inverse inertia diagonal (world tensor is R * diag * R^T).
+DirectX::XMFLOAT3 Rigidbody_InvInertiaBox(float mass, const DirectX::XMFLOAT3& fullSize);
+DirectX::XMFLOAT3 Rigidbody_InvInertiaSphere(float mass, float radius);
+DirectX::XMFLOAT3 Rigidbody_InvInertiaUnitCube(float mass);
+
+DirectX::XMFLOAT3 Rigidbody_ApplyInvInertiaWorld(
+	const DirectX::XMFLOAT3& localInvInertia,
+	const DirectX::XMFLOAT3& rotationDeg,
+	const DirectX::XMFLOAT3& worldVec);
+
+// Integrate a world-space finite rotation (radians) into a ZYX Euler pose.
+void Rigidbody_ApplyWorldDeltaRotation(
+	DirectX::XMFLOAT3& rotationDeg,
+	const DirectX::XMFLOAT3& dThetaRad);
+
 class Rigidbody {
 private:
 	bool m_useGravity = false;
@@ -34,10 +49,15 @@ private:
 	bool m_gravityOverridden = false;
 	float m_mass = 1.0f;
 	float m_drag = 0.05f;
+	float m_angularDrag = 0.05f;
 	float m_restitution = 0.0f;
 	float m_friction = 0.0f;
 	DirectX::XMFLOAT3 m_velocity = {0, 0, 0};
+	DirectX::XMFLOAT3 m_angularVelocity = {0, 0, 0};
 	DirectX::XMFLOAT3 m_forceAccum = {0, 0, 0};
+	DirectX::XMFLOAT3 m_torqueAccum = {0, 0, 0};
+	DirectX::XMFLOAT3 m_localInvInertia = {6.0f, 6.0f, 6.0f};
+	DirectX::XMFLOAT3 m_lastRotation = {0, 0, 0};
 
 public:
 	void SetUseGravity(bool enable) { m_useGravity = enable; }
@@ -52,6 +72,9 @@ public:
 
 	void SetDrag(float drag) { m_drag = drag; }
 	float GetDrag() const { return m_drag; }
+
+	void SetAngularDrag(float drag) { m_angularDrag = drag < 0.0f ? 0.0f : drag; }
+	float GetAngularDrag() const { return m_angularDrag; }
 
 	// Bounce coefficient [0..1+]. Used as the contact fallback when the collider
 	// has no Physics Material. Combined as max(self, other) in ResolveContact.
@@ -71,13 +94,28 @@ public:
 	void SetVelocity(const DirectX::XMFLOAT3& v) { m_velocity = v; }
 	DirectX::XMFLOAT3 GetVelocity() const { return m_velocity; }
 
+	void SetAngularVelocity(const DirectX::XMFLOAT3& w) { m_angularVelocity = w; }
+	DirectX::XMFLOAT3 GetAngularVelocity() const { return m_angularVelocity; }
+
+	void SetLocalInverseInertia(const DirectX::XMFLOAT3& inv) { m_localInvInertia = inv; }
+	DirectX::XMFLOAT3 GetLocalInverseInertia() const { return m_localInvInertia; }
+
 	void AddForce(const DirectX::XMFLOAT3& force, ForceMode mode = ForceMode::Force);
+	void AddTorque(const DirectX::XMFLOAT3& torque, ForceMode mode = ForceMode::Force);
+	void AddForceAtPosition(const DirectX::XMFLOAT3& force,
+		const DirectX::XMFLOAT3& worldPoint,
+		const DirectX::XMFLOAT3& ownerPosition,
+		const DirectX::XMFLOAT3& ownerRotation,
+		ForceMode mode = ForceMode::Force);
 
 	void ClearAllForces();
-	void ClearAllVelocity() { m_velocity = {0, 0, 0}; }
+	void ClearAllVelocity() {
+		m_velocity = {0, 0, 0};
+		m_angularVelocity = {0, 0, 0};
+	}
 	void ClearVelocity(DirectX::XMFLOAT3 clear_flag);
 
-	void Integrate(DirectX::XMFLOAT3& position, double elapsed_time);
+	void Integrate(DirectX::XMFLOAT3& position, DirectX::XMFLOAT3& rotation, double elapsed_time);
 
 	void StopY() { m_velocity.y = 0.0f; }
 };

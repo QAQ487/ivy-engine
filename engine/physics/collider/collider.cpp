@@ -232,7 +232,8 @@ static bool SphereOBB_Contact(const XMFLOAT3& sphereCenter,
     const XMFLOAT3& boxSize,
     const XMFLOAT3& boxRotDeg,
     XMFLOAT3& outNormal,
-    float& outPenetration) {
+    float& outPenetration,
+    XMFLOAT3* outContact = nullptr) {
     XMFLOAT3 closest = ClosestPointOnOBB_World(sphereCenter, boxCenter, boxSize, boxRotDeg);
     float dx = sphereCenter.x - closest.x;
     float dy = sphereCenter.y - closest.y;
@@ -254,9 +255,52 @@ static bool SphereOBB_Contact(const XMFLOAT3& sphereCenter,
             outNormal.x /= nlen; outNormal.y /= nlen; outNormal.z /= nlen;
             outPenetration = r;
         }
+        if (outContact) {
+            *outContact = {
+                sphereCenter.x - outNormal.x * r,
+                sphereCenter.y - outNormal.y * r,
+                sphereCenter.z - outNormal.z * r
+            };
+        }
         return true;
     }
     return false;
+}
+
+XMFLOAT3 Collider_ComputeLocalInverseInertia(const Collider* collider, float mass, bool kinematic) {
+    if (kinematic || mass <= 0.0f)
+        return {0.0f, 0.0f, 0.0f};
+    if (!collider)
+        return Rigidbody_InvInertiaUnitCube(mass);
+
+    switch (collider->GetType()) {
+    case ColliderType::BOX: {
+        const auto* box = static_cast<const BoxCollider*>(collider);
+        return Rigidbody_InvInertiaBox(mass, box->GetSize());
+    }
+    case ColliderType::SPHERE: {
+        const auto* sphere = static_cast<const SphereCollider*>(collider);
+        return Rigidbody_InvInertiaSphere(mass, sphere->GetRadius());
+    }
+    case ColliderType::CAPSULE: {
+        const auto* cap = static_cast<const CapsuleCollider*>(collider);
+        const float hh = 0.5f * cap->GetHeight();
+        const float r = cap->GetRadius();
+        return Rigidbody_InvInertiaSphere(mass, std::sqrt(r * r + hh * hh));
+    }
+    case ColliderType::CYLINDER: {
+        const auto* cyl = static_cast<const CylinderCollider*>(collider);
+        const float hh = 0.5f * cyl->GetHeight();
+        const float r = cyl->GetRadius();
+        return Rigidbody_InvInertiaSphere(mass, std::sqrt(r * r + hh * hh));
+    }
+    case ColliderType::MESH: {
+        const auto* mesh = static_cast<const MeshCollider*>(collider);
+        return Rigidbody_InvInertiaSphere(mass, mesh->GetWorldBoundingSphereRadius());
+    }
+    default:
+        return Rigidbody_InvInertiaUnitCube(mass);
+    }
 }
 
 //-----------------------------------------------
@@ -509,10 +553,56 @@ bool MeshCollider::RayIntersect(const DirectX::XMFLOAT3& origin,
 //-----------------------------------------------
 // Collision resolution (normal: other -> self)
 //-----------------------------------------------
+enum class ContactSolve : int {
+    Position = 1,
+    Velocity = 2,
+    All = 3
+};
+
+static XMFLOAT3 Cross3(const XMFLOAT3& a, const XMFLOAT3& b) {
+    return {
+        a.y * b.z - a.z * b.y,
+        a.z * b.x - a.x * b.z,
+        a.x * b.y - a.y * b.x
+    };
+}
+
+static XMFLOAT3 PointVelocity(const XMFLOAT3& v, const XMFLOAT3& w, const XMFLOAT3& r) {
+    const XMFLOAT3 wxr = Cross3(w, r);
+    return { v.x + wxr.x, v.y + wxr.y, v.z + wxr.z };
+}
+
+static float AngularDenom(const XMFLOAT3& r, const XMFLOAT3& dir,
+    const XMFLOAT3& localInv, const XMFLOAT3& rotDeg)
+{
+    const XMFLOAT3 rxn = Cross3(r, dir);
+    const XMFLOAT3 Iinv = Rigidbody_ApplyInvInertiaWorld(localInv, rotDeg, rxn);
+    return rxn.x * Iinv.x + rxn.y * Iinv.y + rxn.z * Iinv.z;
+}
+
+static void ApplyBodyImpulse(Rigidbody& rb, bool kinematic, float invMass,
+    const XMFLOAT3& localInv, const XMFLOAT3& rotDeg,
+    const XMFLOAT3& r, const XMFLOAT3& jWorld,
+    XMFLOAT3& vel, XMFLOAT3& omega)
+{
+    if (kinematic) return;
+    vel.x += jWorld.x * invMass;
+    vel.y += jWorld.y * invMass;
+    vel.z += jWorld.z * invMass;
+    const XMFLOAT3 dw = Rigidbody_ApplyInvInertiaWorld(localInv, rotDeg, Cross3(r, jWorld));
+    omega.x += dw.x;
+    omega.y += dw.y;
+    omega.z += dw.z;
+    rb.SetVelocity(vel);
+    rb.SetAngularVelocity(omega);
+}
+
 static void ResolveContact(GameObject* self, GameObject* other,
                            const XMFLOAT3& normal,
                            float penetration,
-                           float slope = 0.0005f) {
+                           float slope = 0.0005f,
+                           const XMFLOAT3* contactPoint = nullptr,
+                           ContactSolve solve = ContactSolve::All) {
     PhysicsSystem_NotifyContactResolved();
 
     // Track contact pairs; red flash markers only on NEW contacts.
@@ -522,11 +612,14 @@ static void ResolveContact(GameObject* self, GameObject* other,
         // Place near self toward other ? midpoint of world centers is wrong
         // for large mesh colliders (field) and sits far from the real hit.
         XMFLOAT3 cA = self->GetPosition();
-        if (Collider* colA = self->GetCollider())
+        if (contactPoint) {
+            cA = *contactPoint;
+        } else if (Collider* colA = self->GetCollider()) {
             cA = colA->GetWorldCenter();
+        }
         constexpr float kAlong = 0.4f;
         constexpr float kNormalLen = 0.55f;
-        const XMFLOAT3 point{
+        const XMFLOAT3 point = contactPoint ? *contactPoint : XMFLOAT3{
             cA.x - normal.x * kAlong,
             cA.y - normal.y * kAlong,
             cA.z - normal.z * kAlong
@@ -552,6 +645,35 @@ static void ResolveContact(GameObject* self, GameObject* other,
     float invB = (!kinB && mB > 0.0f) ? 1.0f / mB : 0.0f;
     float invSum = invA + invB;
 
+    const XMFLOAT3 posA = self->GetPosition();
+    const XMFLOAT3 posB = other->GetPosition();
+    XMFLOAT3 rotA = self->GetRotation();
+    XMFLOAT3 rotB = other->GetRotation();
+    const XMFLOAT3 invIA = kinA ? XMFLOAT3{0, 0, 0}
+        : Collider_ComputeLocalInverseInertia(self->GetCollider(), mA, false);
+    const XMFLOAT3 invIB = kinB ? XMFLOAT3{0, 0, 0}
+        : Collider_ComputeLocalInverseInertia(other->GetCollider(), mB, false);
+    if (!kinA) rbA.SetLocalInverseInertia(invIA);
+    if (!kinB) rbB.SetLocalInverseInertia(invIB);
+
+    const bool hasPoint = contactPoint != nullptr;
+    const XMFLOAT3 rA = hasPoint
+        ? XMFLOAT3{ contactPoint->x - posA.x, contactPoint->y - posA.y, contactPoint->z - posA.z }
+        : XMFLOAT3{ 0, 0, 0 };
+    const XMFLOAT3 rB = hasPoint
+        ? XMFLOAT3{ contactPoint->x - posB.x, contactPoint->y - posB.y, contactPoint->z - posB.z }
+        : XMFLOAT3{ 0, 0, 0 };
+
+    auto effectiveMassInv = [&](const XMFLOAT3& dir) {
+        float k = invA + invB;
+        if (hasPoint) {
+            k += AngularDenom(rA, dir, invIA, rotA);
+            k += AngularDenom(rB, dir, invIB, rotB);
+        }
+        return k;
+    };
+    const float kNormal = effectiveMassInv(normal);
+
     ContactSurface surfA = PhysicsMaterial_FromRigidbody(rbA.GetFriction(), rbA.GetRestitution());
     ContactSurface surfB = PhysicsMaterial_FromRigidbody(rbB.GetFriction(), rbB.GetRestitution());
     bool assignedA = false;
@@ -576,51 +698,114 @@ static void ResolveContact(GameObject* self, GameObject* other,
         ? combined.restitution
         : (std::max)(rbA.GetRestitution(), rbB.GetRestitution());
 
-    // Position correction
+    // Position correction is linear-only. Angular pose at a long lever spends
+    // the impulse on rotation and overwrites Integrate, which fights gravity tip.
+    const bool doPosition = (static_cast<int>(solve) & static_cast<int>(ContactSolve::Position)) != 0;
+    const bool doVelocity = (static_cast<int>(solve) & static_cast<int>(ContactSolve::Velocity)) != 0;
     float pen = max(0.0f, penetration - slope) * 0.95f;
-    if (pen > 0.0f && invSum > 0.0f) {
-        float moveA = invA / invSum;
-        float moveB = invB / invSum;
+    if (doPosition && pen > 0.0f && invSum > 0.0f) {
+        constexpr float kPosBeta = 0.75f;
+        float corr = kPosBeta * pen;
+        constexpr float kMaxLin = 0.2f;
+        if (corr > kMaxLin)
+            corr = kMaxLin;
+        const float moveA = invA / invSum;
+        const float moveB = invB / invSum;
         if (!kinA) {
             XMFLOAT3 p = self->GetPosition();
-            p.x += normal.x * pen * moveA;
-            p.y += normal.y * pen * moveA;
-            p.z += normal.z * pen * moveA;
+            p.x += normal.x * corr * moveA;
+            p.y += normal.y * corr * moveA;
+            p.z += normal.z * corr * moveA;
             self->SetPosition(p);
         }
         if (!kinB) {
             XMFLOAT3 p = other->GetPosition();
-            p.x -= normal.x * pen * moveB;
-            p.y -= normal.y * pen * moveB;
-            p.z -= normal.z * pen * moveB;
+            p.x -= normal.x * corr * moveB;
+            p.y -= normal.y * corr * moveB;
+            p.z -= normal.z * corr * moveB;
             other->SetPosition(p);
         }
     }
 
-    // Relative velocity calculation (impulse)
+    if (!doVelocity)
+        return;
+
+    // Relative velocity at the contact (includes ? ÔøΩ r when a point is supplied).
     XMFLOAT3 vA = rbA.GetVelocity();
     XMFLOAT3 vB = rbB.GetVelocity();
-    XMFLOAT3 vRel{ vA.x - vB.x, vA.y - vB.y, vA.z - vB.z };
+    XMFLOAT3 wA = rbA.GetAngularVelocity();
+    XMFLOAT3 wB = rbB.GetAngularVelocity();
+    const XMFLOAT3 pVelA = PointVelocity(vA, wA, rA);
+    const XMFLOAT3 pVelB = PointVelocity(vB, wB, rB);
+    XMFLOAT3 vRel{ pVelA.x - pVelB.x, pVelA.y - pVelB.y, pVelA.z - pVelB.z };
     float vnRel = vRel.x * normal.x + vRel.y * normal.y + vRel.z * normal.z;
     // Apply the velocity impulse whenever the objects are approaching, even
     // at low speed.  A threshold of 0.01 left slow approaches uncancelled,
     // allowing micro-penetration that turns into position-correction
     // oscillation at low movement speeds (especially against angled walls).
     float jNormal = 0.0f;
-    if (vnRel < -0.001f && invSum > 0.0f) {
-        jNormal = -(1.0f + restitution) * vnRel / invSum;
-        if (!kinA) {
-            vA.x += jNormal * invA * normal.x;
-            vA.y += jNormal * invA * normal.y;
-            vA.z += jNormal * invA * normal.z;
-            rbA.SetVelocity(vA);
+    const float kImpulse = hasPoint ? kNormal : invSum;
+    // Velocity impulses only cancel approach. Depenetration is pose-level so
+    // Baumgarte cannot pump kinetic energy into spin (bias/dt * r).
+    const float bias = 0.0f;
+    if (kImpulse > 1e-8f && vnRel < -0.001f) {
+        float vnTerm = vnRel;
+        if (vnRel < -1.0f)
+            vnTerm = (1.0f + restitution) * vnRel;
+        const float jCandidate = -vnTerm / kImpulse;
+        if (jCandidate > 0.0f) {
+            jNormal = jCandidate;
+            const XMFLOAT3 jn{ jNormal * normal.x, jNormal * normal.y, jNormal * normal.z };
+            ApplyBodyImpulse(rbA, kinA, invA, invIA, rotA, rA, jn, vA, wA);
+            const XMFLOAT3 jnB{ -jn.x, -jn.y, -jn.z };
+            ApplyBodyImpulse(rbB, kinB, invB, invIB, rotB, rB, jnB, vB, wB);
         }
-        if (!kinB) {
-            vB.x -= jNormal * invB * normal.x;
-            vB.y -= jNormal * invB * normal.y;
-            vB.z -= jNormal * invB * normal.z;
-            rbB.SetVelocity(vB);
+    }
+    // Lever in the contact tangent plane: ~0 means the support is under COM along
+    // the normal (face on a floor or ramp). xz-only missed YZ slopes.
+    auto rPerp2 = [&](const XMFLOAT3& r) {
+        const float rn = r.x * normal.x + r.y * normal.y + r.z * normal.z;
+        const float r2 = r.x * r.x + r.y * r.y + r.z * r.z;
+        return (std::max)(0.0f, r2 - rn * rn);
+    };
+    const float rPerp2A = rPerp2(rA);
+    const float rPerp2B = rPerp2(rB);
+    // Flush face contact is r_perp ~ 0. Keep this tight so a downhill edge
+    // can still produce seating torque.
+    constexpr float kFaceSupport = 0.02f;
+    const bool faceA = hasPoint && rPerp2A < kFaceSupport;
+    const bool faceB = hasPoint && rPerp2B < kFaceSupport;
+    // Overhang (large tangent lever): keep tip spin, bleed corkscrew.
+    // Face support: bleed all spin so a seated box does not rock or roll.
+    auto dampTwist = [&](Rigidbody& rb, bool kin, bool face, const XMFLOAT3& r, XMFLOAT3& w) {
+        if (kin) return;
+        if (face) {
+            w.x *= 0.7f;
+            w.y *= 0.7f;
+            w.z *= 0.7f;
+            rb.SetAngularVelocity(w);
+            return;
         }
+        const XMFLOAT3 axis = Cross3(r, normal);
+        const float a2 = axis.x * axis.x + axis.y * axis.y + axis.z * axis.z;
+        if (a2 > 1e-6f) {
+            const float inv = 1.0f / std::sqrt(a2);
+            const float ax = axis.x * inv, ay = axis.y * inv, az = axis.z * inv;
+            const float along = w.x * ax + w.y * ay + w.z * az;
+            constexpr float kKeepPerp = 0.25f;
+            w.x = ax * along + (w.x - ax * along) * kKeepPerp;
+            w.y = ay * along + (w.y - ay * along) * kKeepPerp;
+            w.z = az * along + (w.z - az * along) * kKeepPerp;
+        } else {
+            w.x *= 0.8f;
+            w.y *= 0.8f;
+            w.z *= 0.8f;
+        }
+        rb.SetAngularVelocity(w);
+    };
+    if (hasPoint) {
+        dampTwist(rbA, kinA, faceA, rA, wA);
+        dampTwist(rbB, kinB, faceB, rB, wB);
     }
 
     auto killTangentialVelocity = [&]() {
@@ -640,26 +825,53 @@ static void ResolveContact(GameObject* self, GameObject* other,
         }
     };
 
+    auto isBoxOwner = [](GameObject* go) {
+        Collider* c = go ? go->GetCollider() : nullptr;
+        return c && c->GetType() == ColliderType::BOX;
+    };
+    // Boxes: friction is linear only so a crate slides instead of rolling from
+    // r√óf at an edge. Spheres keep angular friction so balls still roll.
+    const bool skipFricAngA = isBoxOwner(self);
+    const bool skipFricAngB = isBoxOwner(other);
     auto applyFrictionImpulse = [&](float jFriction, const XMFLOAT3& tDir) {
-        if (!kinA) {
-            vA.x += jFriction * invA * tDir.x;
-            vA.y += jFriction * invA * tDir.y;
-            vA.z += jFriction * invA * tDir.z;
-            rbA.SetVelocity(vA);
-        }
-        if (!kinB) {
-            vB.x -= jFriction * invB * tDir.x;
-            vB.y -= jFriction * invB * tDir.y;
-            vB.z -= jFriction * invB * tDir.z;
-            rbB.SetVelocity(vB);
-        }
+        const XMFLOAT3 jF{ jFriction * tDir.x, jFriction * tDir.y, jFriction * tDir.z };
+        const XMFLOAT3 rFricA = skipFricAngA ? XMFLOAT3{ 0, 0, 0 } : rA;
+        const XMFLOAT3 rFricB = skipFricAngB ? XMFLOAT3{ 0, 0, 0 } : rB;
+        ApplyBodyImpulse(rbA, kinA, invA, invIA, rotA, rFricA, jF, vA, wA);
+        const XMFLOAT3 jFB{ -jF.x, -jF.y, -jF.z };
+        ApplyBodyImpulse(rbB, kinB, invB, invIB, rotB, rFricB, jFB, vB, wB);
+    };
+
+    auto contactRelative = [&]() {
+        vA = rbA.GetVelocity();
+        vB = rbB.GetVelocity();
+        wA = rbA.GetAngularVelocity();
+        wB = rbB.GetAngularVelocity();
+        const XMFLOAT3 pa = PointVelocity(vA, wA, rA);
+        const XMFLOAT3 pb = PointVelocity(vB, wB, rB);
+        return XMFLOAT3{ pa.x - pb.x, pa.y - pb.y, pa.z - pb.z };
+    };
+
+    auto maybeSleepAngular = [&]() {
+        if (!hasPoint) return;
+        auto trySleep = [](Rigidbody& rb, bool kin) {
+            if (kin) return;
+            const XMFLOAT3 v = rb.GetVelocity();
+            const XMFLOAT3 w = rb.GetAngularVelocity();
+            const float v2 = v.x * v.x + v.y * v.y + v.z * v.z;
+            const float w2 = w.x * w.x + w.y * w.y + w.z * w.z;
+            if (v2 < 1e-6f && w2 < 1e-5f) {
+                rb.SetVelocity({0, 0, 0});
+                rb.SetAngularVelocity({0, 0, 0});
+            }
+        };
+        trySleep(rbA, kinA);
+        trySleep(rbB, kinB);
     };
 
     if (useMaterial) {
         if (invSum > 0.0f) {
-            vA = rbA.GetVelocity();
-            vB = rbB.GetVelocity();
-            vRel = { vA.x - vB.x, vA.y - vB.y, vA.z - vB.z };
+            vRel = contactRelative();
             const float vn = vRel.x * normal.x + vRel.y * normal.y + vRel.z * normal.z;
             XMFLOAT3 vT{
                 vRel.x - vn * normal.x,
@@ -668,6 +880,14 @@ static void ResolveContact(GameObject* self, GameObject* other,
             };
             const float vtLenSq = vT.x * vT.x + vT.y * vT.y + vT.z * vT.z;
             const float vtLen = std::sqrt(vtLenSq);
+            XMFLOAT3 tDir{ 0, 0, 0 };
+            float kTangent = hasPoint ? kNormal : invSum;
+            if (vtLen > 1e-6f) {
+                tDir = { -vT.x / vtLen, -vT.y / vtLen, -vT.z / vtLen };
+                kTangent = effectiveMassInv(tDir);
+                if (kTangent < 1e-8f)
+                    kTangent = invSum;
+            }
             // Resting contacts often have jn=0 this frame (already separated).
             // Without a normal impulse, Coulomb friction is zero and every pad
             // slides. Approximate the press-in impulse as mg |n.up| dt so that
@@ -675,13 +895,18 @@ static void ResolveContact(GameObject* self, GameObject* other,
             float jNAbs = std::fabs(jNormal);
             if (jNAbs <= 1e-6f) {
                 constexpr float kFixedDt = 1.0f / 60.0f;
-                jNAbs = Physics_GetGravity() * std::fabs(normal.y) * kFixedDt / invSum;
+                jNAbs = Physics_GetGravity() * std::fabs(normal.y) * kFixedDt / (std::max)(kTangent, 1e-8f);
             }
             const ContactFrictionDecision friction = PhysicsMaterial_DecideFriction(
-                vtLen, invSum, jNAbs, combined.muStatic, combined.muDynamic);
+                vtLen, kTangent, jNAbs, combined.muStatic, combined.muDynamic);
             if (friction.mode == ContactFrictionMode::ResidualStick ||
                 friction.mode == ContactFrictionMode::StaticStick) {
-                killTangentialVelocity();
+                if (hasPoint && vtLen > 1e-6f && friction.jFriction > 0.0f) {
+                    applyFrictionImpulse(friction.jFriction, tDir);
+                } else {
+                    killTangentialVelocity();
+                }
+                maybeSleepAngular();
                 // Integrate-then-collide: gravity already moved the body this
                 // frame. Killing vt leaves that downhill step in position, so
                 // high-mu rubber still creeps. Undo this frame's tangent slide.
@@ -701,7 +926,6 @@ static void ResolveContact(GameObject* self, GameObject* other,
                 rewindTangentStep(other, kinB);
             } else if (friction.mode == ContactFrictionMode::DynamicClamp &&
                        friction.jFriction > 0.0f && vtLen > 1e-6f) {
-                const XMFLOAT3 tDir{ -vT.x / vtLen, -vT.y / vtLen, -vT.z / vtLen };
                 applyFrictionImpulse(friction.jFriction, tDir);
             }
         }
@@ -710,9 +934,7 @@ static void ResolveContact(GameObject* self, GameObject* other,
         // with friction 0 (player dash) never gets tangential grip from the floor.
         const float mu = (std::min)(rbA.GetFriction(), rbB.GetFriction());
         if (mu > 0.0f && invSum > 0.0f) {
-            vA = rbA.GetVelocity();
-            vB = rbB.GetVelocity();
-            vRel = { vA.x - vB.x, vA.y - vB.y, vA.z - vB.z };
+            vRel = contactRelative();
             const float vn = vRel.x * normal.x + vRel.y * normal.y + vRel.z * normal.z;
             XMFLOAT3 vT{
                 vRel.x - vn * normal.x,
@@ -724,8 +946,18 @@ static void ResolveContact(GameObject* self, GameObject* other,
             constexpr float kStickSpeedSq = kStickSpeed * kStickSpeed;
 
             if (vtLenSq < kStickSpeedSq) {
-                // Static-ish stick: kill residual tangential velocity on dynamic bodies.
-                killTangentialVelocity();
+                if (hasPoint) {
+                    const float vtLen = std::sqrt((std::max)(vtLenSq, 0.0f));
+                    if (vtLen > 1e-6f) {
+                        const XMFLOAT3 tDir{ -vT.x / vtLen, -vT.y / vtLen, -vT.z / vtLen };
+                        const float kTangent = effectiveMassInv(tDir);
+                        if (kTangent > 1e-8f)
+                            applyFrictionImpulse(vtLen / kTangent, tDir);
+                    }
+                    maybeSleepAngular();
+                } else {
+                    killTangentialVelocity();
+                }
             } else {
                 const float vtLen = std::sqrt(vtLenSq);
                 const float jNAbs = std::fabs(jNormal);
@@ -733,7 +965,8 @@ static void ResolveContact(GameObject* self, GameObject* other,
                 // that made mu=0.5 wipe horizontal speed in a few frames.
                 if (jNAbs > 1e-6f) {
                     const XMFLOAT3 tDir{ -vT.x / vtLen, -vT.y / vtLen, -vT.z / vtLen };
-                    float jFriction = vtLen / invSum;
+                    const float kTangent = hasPoint ? effectiveMassInv(tDir) : invSum;
+                    float jFriction = vtLen / (std::max)(kTangent, 1e-8f);
                     const float jMax = mu * jNAbs;
                     if (jFriction > jMax)
                         jFriction = jMax;
@@ -890,6 +1123,135 @@ bool BoxCollider::CheckCollision(const Collider* other) const {
     }
 }
 
+static void BoxWorldCorners(const XMFLOAT3& center, const XMFLOAT3& size, const XMFLOAT3& rotDeg, XMFLOAT3 out[8]) {
+    XMMATRIX R = XMMatrixRotationRollPitchYaw(
+        XMConvertToRadians(rotDeg.x),
+        XMConvertToRadians(rotDeg.y),
+        XMConvertToRadians(rotDeg.z));
+    const XMFLOAT3 h{ size.x * 0.5f, size.y * 0.5f, size.z * 0.5f };
+    int i = 0;
+    for (int sx = -1; sx <= 1; sx += 2) {
+        for (int sy = -1; sy <= 1; sy += 2) {
+            for (int sz = -1; sz <= 1; sz += 2) {
+                XMVECTOR local = XMVectorSet(sx * h.x, sy * h.y, sz * h.z, 0.0f);
+                XMVECTOR world = XMVector3TransformNormal(local, R) + XMLoadFloat3(&center);
+                XMStoreFloat3(&out[i++], world);
+            }
+        }
+    }
+}
+
+static float BoxSupportAlong(const XMFLOAT3& size, FXMVECTOR ax, FXMVECTOR ay, FXMVECTOR az, FXMVECTOR n) {
+    return 0.5f * size.x * fabsf(XMVectorGetX(XMVector3Dot(n, ax))) +
+           0.5f * size.y * fabsf(XMVectorGetX(XMVector3Dot(n, ay))) +
+           0.5f * size.z * fabsf(XMVectorGetX(XMVector3Dot(n, az)));
+}
+
+static int CollectBoxContactManifold(
+    const XMFLOAT3& centerA, const XMFLOAT3& sizeA, const XMFLOAT3& rotA,
+    const XMFLOAT3& centerB, const XMFLOAT3& sizeB, const XMFLOAT3& rotB,
+    const XMFLOAT3& nBA,
+    XMFLOAT3 outPts[4])
+{
+    XMMATRIX RA = XMMatrixRotationRollPitchYaw(
+        XMConvertToRadians(rotA.x), XMConvertToRadians(rotA.y), XMConvertToRadians(rotA.z));
+    XMMATRIX RB = XMMatrixRotationRollPitchYaw(
+        XMConvertToRadians(rotB.x), XMConvertToRadians(rotB.y), XMConvertToRadians(rotB.z));
+    XMVECTOR axA = XMVector3Normalize(XMVector3TransformNormal(XMVectorSet(1, 0, 0, 0), RA));
+    XMVECTOR ayA = XMVector3Normalize(XMVector3TransformNormal(XMVectorSet(0, 1, 0, 0), RA));
+    XMVECTOR azA = XMVector3Normalize(XMVector3TransformNormal(XMVectorSet(0, 0, 1, 0), RA));
+    XMVECTOR axB = XMVector3Normalize(XMVector3TransformNormal(XMVectorSet(1, 0, 0, 0), RB));
+    XMVECTOR ayB = XMVector3Normalize(XMVector3TransformNormal(XMVectorSet(0, 1, 0, 0), RB));
+    XMVECTOR azB = XMVector3Normalize(XMVector3TransformNormal(XMVectorSet(0, 0, 1, 0), RB));
+    XMVECTOR n = XMLoadFloat3(&nBA);
+    const float projA = BoxSupportAlong(sizeA, axA, ayA, azA, n);
+    const float projB = BoxSupportAlong(sizeB, axB, ayB, azB, n);
+
+    XMFLOAT3 cornersA[8];
+    XMFLOAT3 cornersB[8];
+    BoxWorldCorners(centerA, sizeA, rotA, cornersA);
+    BoxWorldCorners(centerB, sizeB, rotB, cornersB);
+
+    XMFLOAT3 pts[8];
+    int count = 0;
+    auto addPt = [&](const XMFLOAT3& p) {
+        for (int i = 0; i < count; ++i) {
+            const float dx = pts[i].x - p.x;
+            const float dy = pts[i].y - p.y;
+            const float dz = pts[i].z - p.z;
+            if (dx * dx + dy * dy + dz * dz < 1e-4f)
+                return;
+        }
+        if (count < 8)
+            pts[count++] = p;
+    };
+
+    auto considerIncident = [&](const XMFLOAT3* corners,
+        const XMFLOAT3& refCenter, const XMFLOAT3& refSize, const XMFLOAT3& refRot,
+        float projRef, const XMFLOAT3& nn)
+    {
+        for (int i = 0; i < 8; ++i) {
+            const XMFLOAT3& c = corners[i];
+            const float cN = c.x * nn.x + c.y * nn.y + c.z * nn.z;
+            const float refN = refCenter.x * nn.x + refCenter.y * nn.y + refCenter.z * nn.z;
+            const float pen = (refN + projRef) - cN;
+            if (pen <= 1e-4f)
+                continue;
+            const XMFLOAT3 onPlane{
+                c.x - nn.x * pen,
+                c.y - nn.y * pen,
+                c.z - nn.z * pen
+            };
+            const XMFLOAT3 clamped = ClosestPointOnOBB_World(onPlane, refCenter, refSize, refRot);
+            const float dx = clamped.x - onPlane.x;
+            const float dy = clamped.y - onPlane.y;
+            const float dz = clamped.z - onPlane.z;
+            if (dx * dx + dy * dy + dz * dz > 0.0625f)
+                continue;
+            addPt(clamped);
+        }
+    };
+
+    considerIncident(cornersA, centerB, sizeB, rotB, projB, nBA);
+    const XMFLOAT3 nAB{ -nBA.x, -nBA.y, -nBA.z };
+    considerIncident(cornersB, centerA, sizeA, rotA, projA, nAB);
+
+    if (count == 0) {
+        const XMFLOAT3 mid{
+            0.5f * (centerA.x + centerB.x),
+            0.5f * (centerA.y + centerB.y),
+            0.5f * (centerA.z + centerB.z)
+        };
+        outPts[0] = ClosestPointOnOBB_World(mid, centerB, sizeB, rotB);
+        return 1;
+    }
+    if (count <= 4) {
+        for (int i = 0; i < count; ++i)
+            outPts[i] = pts[i];
+        return count;
+    }
+
+    int idx[8];
+    float pens[8];
+    const float refN = centerB.x * nBA.x + centerB.y * nBA.y + centerB.z * nBA.z + projB;
+    for (int i = 0; i < count; ++i) {
+        idx[i] = i;
+        pens[i] = refN - (pts[i].x * nBA.x + pts[i].y * nBA.y + pts[i].z * nBA.z);
+    }
+    for (int a = 0; a < count; ++a) {
+        for (int b = a + 1; b < count; ++b) {
+            if (pens[idx[b]] > pens[idx[a]]) {
+                const int tmp = idx[a];
+                idx[a] = idx[b];
+                idx[b] = tmp;
+            }
+        }
+    }
+    for (int i = 0; i < 4; ++i)
+        outPts[i] = pts[idx[i]];
+    return 4;
+}
+
 void BoxCollider::ResolveCollision(Collider* other) {
     if (!other || !m_owner || !other->GetOwner()) return;
     if (m_isTrigger || other->IsTrigger()) {
@@ -909,12 +1271,12 @@ void BoxCollider::ResolveCollision(Collider* other) {
         XMFLOAT3 centerBox = GetWorldCenter();
         XMFLOAT3 rotBox = m_owner->GetRotation();
 
-        XMFLOAT3 n; float pen = 0.0f;
-        if (SphereOBB_Contact(centerSphere, r, centerBox, sizeA, rotBox, n, pen)) {
+        XMFLOAT3 n; float pen = 0.0f; XMFLOAT3 contact{};
+        if (SphereOBB_Contact(centerSphere, r, centerBox, sizeA, rotBox, n, pen, &contact)) {
             // SphereOBB_Contact returns n as BOX -> SPHERE
             // ResolveContact(Box, Sphere, normal=other->self) so invert for sphere->box
             XMFLOAT3 nInv{ -n.x, -n.y, -n.z };
-            ResolveContact(m_owner, other->GetOwner(), nInv, pen);
+            ResolveContact(m_owner, other->GetOwner(), nInv, pen, 0.0005f, &contact);
         }
         break;
     }
@@ -1043,7 +1405,26 @@ void BoxCollider::ResolveCollision(Collider* other) {
             float signDot = Dot(diff, resolveAxis);
             if (signDot > 0.0f) resolveAxis = XMVectorNegate(resolveAxis);
             XMFLOAT3 n; XMStoreFloat3(&n, resolveAxis);
-            ResolveContact(m_owner, other->GetOwner(), n, resolveOverlap);
+            XMFLOAT3 manifold[4];
+            const int nPts = CollectBoxContactManifold(
+                centerA, sizeA, rotA, centerB, ob->GetSize(), rotB, n, manifold);
+            // One pose correction at the manifold centroid so ÔøΩZ corners cannot
+            // twist around the thin principal axis (Ixx >> Izz inverse).
+            XMFLOAT3 centroid{ 0, 0, 0 };
+            for (int i = 0; i < nPts; ++i) {
+                centroid.x += manifold[i].x;
+                centroid.y += manifold[i].y;
+                centroid.z += manifold[i].z;
+            }
+            const float invN = 1.0f / static_cast<float>(nPts);
+            centroid.x *= invN;
+            centroid.y *= invN;
+            centroid.z *= invN;
+            ResolveContact(m_owner, other->GetOwner(), n, resolveOverlap, 0.0005f, &centroid, ContactSolve::Position);
+            // Normal + friction at the centroid only: a single lever r.z?0 so
+            // torque is the gravity-tip axis, not sequential ÔøΩZ corner twist.
+            for (int iter = 0; iter < 2; ++iter)
+                ResolveContact(m_owner, other->GetOwner(), n, resolveOverlap, 0.0005f, &centroid, ContactSolve::Velocity);
         }
         break;
     }
@@ -1117,7 +1498,14 @@ void SphereCollider::ResolveCollision(Collider* other) {
         float d = std::sqrt(d2);
         n.x /= d; n.y /= d; n.z /= d;
         float pen = (rA + rB) - d;
-        if (pen > 0.0f) ResolveContact(m_owner, other->GetOwner(), n, pen);
+        if (pen > 0.0f) {
+            const XMFLOAT3 contact{
+                cA.x - n.x * rA,
+                cA.y - n.y * rA,
+                cA.z - n.z * rA
+            };
+            ResolveContact(m_owner, other->GetOwner(), n, pen, 0.0005f, &contact);
+        }
         break;
     }
     case ColliderType::BOX:
@@ -1127,9 +1515,9 @@ void SphereCollider::ResolveCollision(Collider* other) {
         float rA = m_radius;
         XMFLOAT3 cB = b->GetWorldCenter();
         XMFLOAT3 rotB = b->GetOwner()->GetRotation();
-        XMFLOAT3 n; float pen = 0.0f;
-        if (SphereOBB_Contact(cA, rA, cB, b->GetSize(), rotB, n, pen)) {
-            ResolveContact(m_owner, other->GetOwner(), n, pen);
+        XMFLOAT3 n; float pen = 0.0f; XMFLOAT3 contact{};
+        if (SphereOBB_Contact(cA, rA, cB, b->GetSize(), rotB, n, pen, &contact)) {
+            ResolveContact(m_owner, other->GetOwner(), n, pen, 0.0005f, &contact);
         }
         break;
     }
@@ -1398,7 +1786,7 @@ void CapsuleCollider::ResolveCollision(Collider* other) {
 
         // Match CheckCollision: closest point on capsule segment ? sphere center.
         // Center-only spheres miss head/feet hits (centerPen<=0 while segPen>0),
-        // and swept narrow-phase returns after that failed resolve Å® tunneling.
+        // and swept narrow-phase returns after that failed resolve ÔøΩÔøΩ tunneling.
         float halfH = m_height * 0.5f;
         XMFLOAT3 rotA = m_owner->GetRotation();
         XMMATRIX rm = XMMatrixRotationRollPitchYaw(
@@ -2048,7 +2436,7 @@ void MeshCollider::DebugDraw(const XMFLOAT4& color) {
     }
 
     // Build flat edge-vertex list for a single batched draw call:
-    // 3 edges Å~ 2 endpoints per triangle.
+    // 3 edges ÔøΩ~ 2 endpoints per triangle.
     std::vector<XMFLOAT3> lineVerts;
     lineVerts.reserve(m_indices.size() * 2);
     for (size_t i = 0; i < m_indices.size(); i += 3) {

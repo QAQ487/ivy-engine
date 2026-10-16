@@ -217,9 +217,12 @@ public:
         if (m_collider)
             return;
 
+        rb.SetLocalInverseInertia(Rigidbody_InvInertiaUnitCube(rb.GetMass()));
         DirectX::XMFLOAT3 pos = m_position;
-        rb.Integrate(pos, elapsed_time);
+        DirectX::XMFLOAT3 rot = m_rotation;
+        rb.Integrate(pos, rot, elapsed_time);
         SetPosition(pos);
+        SetRotation(rot);
     }
 
     // Draw this object and all children.

@@ -26,6 +26,7 @@ std::string RigidbodyComponent::Serialize() const {
     j["isKinematic"] = m_body.IsKinematic();
     j["mass"] = m_body.GetMass();
     j["drag"] = m_body.GetDrag();
+    j["angularDrag"] = m_body.GetAngularDrag();
     j["restitution"] = m_body.GetRestitution();
     j["friction"] = m_body.GetFriction();
     return j.dump();
@@ -38,6 +39,7 @@ void RigidbodyComponent::Deserialize(const std::string& jsonStr) {
         m_body.SetIsKinematic(j.value("isKinematic", false));
         m_body.SetMass(j.value("mass", 1.0f));
         m_body.SetDrag(j.value("drag", 0.05f));
+        m_body.SetAngularDrag(j.value("angularDrag", 0.05f));
         m_body.SetRestitution(j.value("restitution", 0.0f));
         m_body.SetFriction(j.value("friction", 0.0f));
         m_body.ClearAllVelocity();

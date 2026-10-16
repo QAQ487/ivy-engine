@@ -12,6 +12,7 @@
  *     "isKinematic": false,
  *     "mass": 1.0,
  *     "drag": 0.05,
+ *     "angularDrag": 0.05,
  *     "restitution": 0.0,
  *     "friction": 0.0
  *   }
