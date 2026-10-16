@@ -22,6 +22,7 @@
 #include "engine/physics/core/physics_system.h"
 #include <cmath>
 #include <cfloat>
+#include <cstdio>
 
 using namespace DirectX;
 
@@ -41,6 +42,37 @@ void GetOwnerPose(const GameObject* owner, XMFLOAT3& pos, XMFLOAT3& rot, XMFLOAT
 bool CollisionPairIgnored(const GameObject* a, const GameObject* b) {
     if (!a || !b) return true;
     return a->IgnoresCollisionWith(b) || b->IgnoresCollisionWith(a);
+}
+
+const char* ColliderTypeName(ColliderType type) {
+    switch (type) {
+    case ColliderType::BOX: return "Box";
+    case ColliderType::SPHERE: return "Sphere";
+    case ColliderType::CAPSULE: return "Capsule";
+    case ColliderType::MESH: return "Mesh";
+    case ColliderType::CYLINDER: return "Cylinder";
+    default: return "None";
+    }
+}
+
+// Once per unordered pair. Physics queries these every frame; a hit must not spam the log.
+void LogUnsupportedCylinderPair(ColliderType a, ColliderType b) {
+    constexpr int kTypeCount = static_cast<int>(ColliderType::CYLINDER) + 1;
+    static bool logged[kTypeCount][kTypeCount] = {};
+    const int ia = static_cast<int>(a);
+    const int ib = static_cast<int>(b);
+    if (ia < 0 || ia >= kTypeCount || ib < 0 || ib >= kTypeCount)
+        return;
+    if (logged[ia][ib] || logged[ib][ia])
+        return;
+    logged[ia][ib] = true;
+    logged[ib][ia] = true;
+
+    char msg[160];
+    std::snprintf(msg, sizeof(msg),
+        "[Collider] Unsupported cylinder pair: %s vs %s (no collision)\n",
+        ColliderTypeName(a), ColliderTypeName(b));
+    OutputDebugStringA(msg);
 }
 
 // A world-space sphere becomes an ellipsoid in mesh-local space under non-uniform scale.
@@ -1117,8 +1149,10 @@ bool BoxCollider::CheckCollision(const Collider* other) const {
         return dx * dx + dy * dy + dz * dz <= r * r;
     }
     case ColliderType::MESH:
-    case ColliderType::CYLINDER:
         return other->CheckCollision(this);
+    case ColliderType::CYLINDER:
+        LogUnsupportedCylinderPair(ColliderType::BOX, ColliderType::CYLINDER);
+        return false;
     default: return false;
     }
 }
@@ -1429,8 +1463,10 @@ void BoxCollider::ResolveCollision(Collider* other) {
         break;
     }
     case ColliderType::MESH:
-    case ColliderType::CYLINDER:
         other->ResolveCollision(this);
+        return;
+    case ColliderType::CYLINDER:
+        LogUnsupportedCylinderPair(ColliderType::BOX, ColliderType::CYLINDER);
         return;
     default: break;
     }
@@ -1895,7 +1931,8 @@ bool CylinderCollider::CheckCollision(const Collider* other) const {
     case ColliderType::BOX:
     case ColliderType::MESH:
     case ColliderType::CYLINDER:
-        return other->CheckCollision(this);
+        LogUnsupportedCylinderPair(ColliderType::CYLINDER, other->GetType());
+        return false;
     default:
         return false;
     }
@@ -1951,6 +1988,11 @@ void CylinderCollider::ResolveCollision(Collider* other) {
             ResolveContact(other->GetOwner(), m_owner, bestN, bestPen);
         break;
     }
+    case ColliderType::BOX:
+    case ColliderType::MESH:
+    case ColliderType::CYLINDER:
+        LogUnsupportedCylinderPair(ColliderType::CYLINDER, other->GetType());
+        return;
     default:
         break;
     }
@@ -2234,7 +2276,8 @@ bool MeshCollider::CheckCollision(const Collider* other) const {
         }
     }
     else if (other->GetType() == ColliderType::CYLINDER) {
-        return other->CheckCollision(this);
+        LogUnsupportedCylinderPair(ColliderType::MESH, ColliderType::CYLINDER);
+        return false;
     }
     return false;
 }
@@ -2378,7 +2421,7 @@ void MeshCollider::ResolveCollision(Collider* other) {
         break;
     }
     case ColliderType::CYLINDER:
-        other->ResolveCollision(this);
+        LogUnsupportedCylinderPair(ColliderType::MESH, ColliderType::CYLINDER);
         return;
     default:
         break;
