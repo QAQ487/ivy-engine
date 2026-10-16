@@ -50,6 +50,7 @@
 #include "engine/rendering/billboard/billboard.h"
 #include "engine/rendering/particle/particle_system.h"
 #include "engine/rendering/environment/skybox.h"
+#include "engine/rendering/environment/ibl.h"
 #include "engine/rendering/effect/effect_system.h"
 #include "engine/ecs/billboard_component.h"
 #include "engine/ecs/directional_light_component.h"
@@ -333,6 +334,9 @@ void GameScene::Initialize() {
 	if (!Skybox_Initialize()) {
 		MessageBoxA(nullptr, "Skybox_Initialize failed", "Error", MB_OK | MB_ICONERROR);
 	}
+	if (!Ibl_Initialize()) {
+		MessageBoxA(nullptr, "Ibl_Initialize failed", "Error", MB_OK | MB_ICONERROR);
+	}
 	if (!Billboard::Initialize()) {
 		MessageBoxA(nullptr, "Billboard::Initialize failed", "Error", MB_OK | MB_ICONERROR);
 	}
@@ -369,6 +373,7 @@ void GameScene::Finalize() {
 	GameSceneScript_Invoke("GameScene_Finalize");
 	engine::ParticleSystem::Instance().Finalize();
 	Billboard::Finalize();
+	Ibl_Finalize();
 	Skybox_Finalize();
 }
 

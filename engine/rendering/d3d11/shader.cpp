@@ -19,6 +19,7 @@ using namespace DirectX;
 #include "shader.h"
 #include "../lighting/shadow.h"
 #include "../lighting/lighting.h"
+#include "engine/rendering/environment/ibl.h"
 #include "engine/core/system_timer.h"
 
 // MATERIAL ?T?C?Y????
@@ -758,6 +759,8 @@ void Shader3D_Begin(Shader3DVariant variant) {
 	if (bindCount > 0) {
 		g_pContext->PSSetShaderResources(1, bindCount, s_pShadowSRVs);
 	}
+
+	Ibl_Bind(variant);
 }
 
 void Shader3D_UseGpuSkin() {

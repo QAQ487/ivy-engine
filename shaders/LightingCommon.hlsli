@@ -44,7 +44,10 @@ cbuffer LightingBuffer : register(b3)
     float FogStart;
     float FogHeight;
     float FogHeightFalloff;
-    float _padFog;
+    float IblEnabled;
+    float IblIntensity;
+    float EnvRotationYRad;
+    float2 _padIbl;
     matrix World; // object -> world (CPU stores transposed)
 }
 
@@ -52,8 +55,12 @@ Texture2D g_Texture : register(t0);
 Texture2D<float> g_ShadowMap[MAX_LIGHTS] : register(t1);
 Texture2D g_NormalMap : register(t5);
 Texture2D g_RampTexture : register(t6);
+TextureCube g_IrradianceMap : register(t7);
+TextureCube g_PrefilterMap : register(t8);
+Texture2D g_BrdfLut : register(t9);
 SamplerState g_SamplerState : register(s0);
 SamplerComparisonState g_ShadowSampler : register(s1);
+SamplerState g_IblSampler : register(s2);
 
 struct BaseColorResult
 {
@@ -493,8 +500,9 @@ float EvalLightFacingRim(float3 N, float3 V, float3 posOS, float rimStrength, fl
 }
 
 // ---------------------------------------------------------------------------
-// Cook-Torrance PBR (additive; unused by existing variants)
+// Cook-Torrance PBR (PixelShader3D_PBR).
 // G = Schlick-GGX / Smith with k = (roughness+1)^2 / 8 (direct lighting).
+// IBL uses the split-sum LUT, not this G term.
 // ---------------------------------------------------------------------------
 
 static const float kPBR_PI = 3.14159265f;
@@ -582,6 +590,58 @@ float3 EvalSpotPBR(LightParam light, float3 N, float3 V, float3 inPosOS, float3 
     float spotAtten = atten * t;
 
     return EvalCookTorrance(N, V, L, baseColor, roughness, metallic, light.Color.rgb, spotAtten);
+}
+
+float3 RotateYEnv(float3 d, float angleRad)
+{
+    float s, c;
+    sincos(angleRad, s, c);
+    return float3(c * d.x - s * d.z, d.y, s * d.x + c * d.z);
+}
+
+float3 F_SchlickRoughness(float NoV, float3 F0, float roughness)
+{
+    float3 fMax = max(float3(1.0f - roughness, 1.0f - roughness, 1.0f - roughness), F0);
+    return F0 + (fMax - F0) * pow(saturate(1.0f - NoV), 5.0f);
+}
+
+float3 EvalIBL(float3 N_os, float3 posOS, float3 baseColor, float roughness, float metallic)
+{
+    float3 posWS = mul(float4(posOS, 1.0f), World).xyz;
+    float3 Nw = normalize(mul(float4(N_os, 0.0f), World).xyz);
+    float3 Vw = normalize(CameraPosWS - posWS);
+    float NoV = max(dot(Nw, Vw), 1e-4f);
+    float r = saturate(roughness);
+    float3 F0 = lerp(float3(0.04f, 0.04f, 0.04f), baseColor, metallic);
+
+    float3 Nenv = RotateYEnv(Nw, EnvRotationYRad);
+    float3 Renv = RotateYEnv(reflect(-Vw, Nw), EnvRotationYRad);
+
+    float3 irradiance = g_IrradianceMap.Sample(g_IblSampler, Nenv).rgb;
+    float specWidth = 0.0f;
+    float specHeight = 0.0f;
+    float specMips = 0.0f;
+    g_PrefilterMap.GetDimensions(0, specWidth, specHeight, specMips);
+    float lod = r * max(specMips - 1.0f, 0.0f);
+    float3 prefiltered = g_PrefilterMap.SampleLevel(g_IblSampler, Renv, lod).rgb;
+    float2 brdf = g_BrdfLut.Sample(g_IblSampler, float2(NoV, r)).rg;
+
+    float3 F = F_SchlickRoughness(NoV, F0, r);
+    float3 kD = (1.0f - F) * (1.0f - metallic);
+    float3 diffuse = irradiance * baseColor * kD;
+    float3 spec = prefiltered * (F0 * brdf.x + brdf.y);
+    return (diffuse + spec) * IblIntensity;
+}
+
+float3 EvalPbrAmbient(float3 N, float3 posOS, float3 baseRGB, float roughness, float metallic)
+{
+    float3 ambient = EvalHemisphereAmbient(N, baseRGB);
+    float NoV = max(dot(N, normalize(ViewDirOS)), 1e-4f);
+    float3 F0 = lerp(float3(0.04f, 0.04f, 0.04f), baseRGB, metallic);
+    ambient *= lerp(F0, float3(1.0f, 1.0f, 1.0f), pow(saturate(1.0f - NoV), 5.0f));
+    if (IblEnabled > 0.5f)
+        ambient = EvalIBL(N, posOS, baseRGB, roughness, metallic);
+    return ambient;
 }
 
 #endif // LIGHTING_COMMON_HLSLI

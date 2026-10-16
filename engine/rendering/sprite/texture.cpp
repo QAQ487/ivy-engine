@@ -241,18 +241,34 @@ ID3D11ShaderResourceView* CubemapLoad(const wchar_t* fileName) {
 			return g_cubemaps[i].srv;
 	}
 
+	char pathUtf8[MAX_PATH * 3] = {};
+	WideCharToMultiByte(CP_UTF8, 0, fileName, -1, pathUtf8, sizeof(pathUtf8), nullptr, nullptr);
+
 	TexMetadata metadata;
 	ScratchImage image;
 	const HRESULT loadHr = LoadFromDDSFile(fileName, DDS_FLAGS_NONE, &metadata, image);
-	if (FAILED(loadHr) || !metadata.IsCubemap()) {
-		hal::dout << "CubemapLoad failed." << std::endl;
+	if (FAILED(loadHr)) {
+		char msg[512];
+		snprintf(msg, sizeof(msg), "CubemapLoad failed: %s hr=0x%08lX\n",
+			pathUtf8, static_cast<unsigned long>(loadHr));
+		hal::dout << msg;
+		return nullptr;
+	}
+	if (!metadata.IsCubemap()) {
+		hal::dout << "CubemapLoad failed: " << pathUtf8 << " is not a cubemap." << std::endl;
 		return nullptr;
 	}
 
 	ID3D11ShaderResourceView* srv = nullptr;
 	const HRESULT hr = CreateShaderResourceView(
 		g_pDevice, image.GetImages(), image.GetImageCount(), metadata, &srv);
-	if (FAILED(hr)) return nullptr;
+	if (FAILED(hr)) {
+		char msg[512];
+		snprintf(msg, sizeof(msg), "CubemapLoad SRV failed: %s hr=0x%08lX\n",
+			pathUtf8, static_cast<unsigned long>(hr));
+		hal::dout << msg;
+		return nullptr;
+	}
 
 	for (int i = 0; i < MAX_CUBEMAPS; ++i) {
 		if (g_cubemaps[i].srv) continue;

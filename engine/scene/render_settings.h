@@ -23,6 +23,11 @@ struct RenderSettingsData {
     DirectX::XMFLOAT4 skyboxTint = { 1.0f, 1.0f, 1.0f, 1.0f };
     float skyboxExposure = 1.0f;
     float skyboxRotationYDeg = 0.0f;
+    bool iblEnabled = true;
+    float iblIntensity = 1.0f;
+    std::string iblIrradiancePath = "rom/skybox/ibl/irradiance.dds";
+    std::string iblPrefilterPath = "rom/skybox/ibl/prefilter.dds";
+    std::string iblBrdfLutPath = "rom/skybox/ibl/brdf_lut.png";
     DirectX::XMFLOAT4 clearColor = { 0.69f, 0.77f, 0.87f, 1.0f };
     std::string defaultShader = "standard";
     ShadowQuality shadowQuality = ShadowQuality::Medium;

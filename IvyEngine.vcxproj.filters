@@ -275,6 +275,9 @@
     <ClInclude Include="engine\rendering\environment\skybox.h">
       <Filter>engine\rendering\environment</Filter>
     </ClInclude>
+    <ClInclude Include="engine\rendering\environment\ibl.h">
+      <Filter>engine\rendering\environment</Filter>
+    </ClInclude>
     <ClInclude Include="engine\rendering\lighting\lighting.h">
       <Filter>engine\rendering\lighting</Filter>
     </ClInclude>
@@ -644,6 +647,9 @@
       <Filter>engine\rendering\effect</Filter>
     </ClCompile>
     <ClCompile Include="engine\rendering\environment\skybox.cpp">
+      <Filter>engine\rendering\environment</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\rendering\environment\ibl.cpp">
       <Filter>engine\rendering\environment</Filter>
     </ClCompile>
     <ClCompile Include="engine\rendering\lighting\lighting.cpp">

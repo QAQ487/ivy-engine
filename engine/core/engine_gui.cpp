@@ -893,6 +893,9 @@ static void DrawRenderingSettingsWindow(bool* open) {
     ImGui::ColorEdit4("Tint", &rs.skyboxTint.x);
     ImGui::DragFloat("Exposure", &rs.skyboxExposure, 0.05f, 0.1f, 5.0f);
     ImGui::DragFloat("Rotation Y", &rs.skyboxRotationYDeg, 1.0f, -180.0f, 180.0f);
+    if (ImGui::Checkbox("IBL", &rs.iblEnabled))
+        RenderSettings_ReloadSkybox();
+    ImGui::DragFloat("IBL Intensity", &rs.iblIntensity, 0.05f, 0.0f, 5.0f);
     ImGui::ColorEdit4("Clear Color", &rs.clearColor.x);
 
     ImGui::Text("Default Shader");

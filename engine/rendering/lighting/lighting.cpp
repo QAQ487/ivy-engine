@@ -12,6 +12,7 @@
 #include <DirectXMath.h>
 #include "camera.h"
 #include "engine/scene/render_settings.h"
+#include "engine/rendering/environment/ibl.h"
 using namespace DirectX;
 
 namespace {
@@ -38,7 +39,11 @@ namespace {
         float FogStart;
         float FogHeight;
         float FogHeightFalloff;
-        float _padFog;
+        float IblEnabled;
+        float IblIntensity;
+        float EnvRotationYRad;
+        float _padIbl0;
+        float _padIbl1;
         XMFLOAT4X4 World;
     } s_cbData {};
     static_assert(sizeof(CB_LIGHTING) % 16 == 0, "CB_LIGHTING must be 16-byte aligned");
@@ -170,7 +175,11 @@ namespace Lighting {
         s_cbData.FogStart = rs.fogStart;
         s_cbData.FogHeight = rs.fogHeight;
         s_cbData.FogHeightFalloff = rs.fogHeightFalloff;
-        s_cbData._padFog = 0.0f;
+        s_cbData.IblEnabled = Ibl_IsReady() ? 1.0f : 0.0f;
+        s_cbData.IblIntensity = Ibl_Intensity();
+        s_cbData.EnvRotationYRad = XMConvertToRadians(rs.skyboxRotationYDeg);
+        s_cbData._padIbl0 = 0.0f;
+        s_cbData._padIbl1 = 0.0f;
         XMStoreFloat4x4(&s_cbData.World, XMMatrixTranspose(world));
 
         s_ctx->UpdateSubresource(s_cb, 0, nullptr, &s_cbData, 0, 0);

@@ -1,6 +1,7 @@
 #include "render_settings.h"
 
 #include "engine/rendering/environment/skybox.h"
+#include "engine/rendering/environment/ibl.h"
 #include "engine/rendering/d3d11/shader.h"
 #include "engine/rendering/d3d11/renderer.h"
 #include "engine/rendering/lighting/shadow.h"
@@ -118,6 +119,14 @@ void RenderSettings_ApplyFromJson(const nlohmann::json& renderJson) {
         "skyboxExposure", g_renderSettings.skyboxExposure);
     g_renderSettings.skyboxRotationYDeg = renderJson.value(
         "skyboxRotationYDeg", g_renderSettings.skyboxRotationYDeg);
+    g_renderSettings.iblEnabled = renderJson.value("iblEnabled", g_renderSettings.iblEnabled);
+    g_renderSettings.iblIntensity = renderJson.value("iblIntensity", g_renderSettings.iblIntensity);
+    g_renderSettings.iblIrradiancePath = renderJson.value(
+        "iblIrradiance", g_renderSettings.iblIrradiancePath);
+    g_renderSettings.iblPrefilterPath = renderJson.value(
+        "iblPrefilter", g_renderSettings.iblPrefilterPath);
+    g_renderSettings.iblBrdfLutPath = renderJson.value(
+        "iblBrdfLut", g_renderSettings.iblBrdfLutPath);
     g_renderSettings.clearColor = ReadColor4(
         renderJson["clearColor"], g_renderSettings.clearColor);
     g_renderSettings.defaultShader = renderJson.value(
@@ -160,6 +169,11 @@ nlohmann::json RenderSettings_ToJson() {
     };
     render["skyboxExposure"] = g_renderSettings.skyboxExposure;
     render["skyboxRotationYDeg"] = g_renderSettings.skyboxRotationYDeg;
+    render["iblEnabled"] = g_renderSettings.iblEnabled;
+    render["iblIntensity"] = g_renderSettings.iblIntensity;
+    render["iblIrradiance"] = g_renderSettings.iblIrradiancePath;
+    render["iblPrefilter"] = g_renderSettings.iblPrefilterPath;
+    render["iblBrdfLut"] = g_renderSettings.iblBrdfLutPath;
     render["clearColor"] = {
         g_renderSettings.clearColor.x,
         g_renderSettings.clearColor.y,
@@ -183,6 +197,7 @@ nlohmann::json RenderSettings_ToJson() {
 
 void RenderSettings_ReloadSkybox() {
     Skybox_ReloadFromSettings();
+    Ibl_ReloadFromSettings();
 }
 
 Shader3DVariant RenderSettings_GetDefaultShader() {

@@ -18,12 +18,8 @@ void main(
 
     float roughness = Roughness;
     float metallic = Metallic;
-    float NoV = max(dot(N, V), 1e-4f);
-    float3 F0 = lerp(float3(0.04f, 0.04f, 0.04f), base.rgb, metallic);
 
-    float3 ambient = EvalHemisphereAmbient(N, base.rgb);
-    // Fresnel-based environment ambient boost (grazing toward white).
-    ambient *= lerp(F0, float3(1.0f, 1.0f, 1.0f), pow(saturate(1.0f - NoV), 5.0f));
+    float3 ambient = EvalPbrAmbient(N, inPosOS, base.rgb, roughness, metallic);
 
     float3 sumLighting = 0.0f;
     float overallShadow = 1.0f;
