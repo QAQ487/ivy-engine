@@ -324,6 +324,9 @@ __pycache__/
 # tools/**
 # !tools/packages.config
 
+# Local builds of console check tools under tools/ (keep .cpp sources only)
+tools/*.exe
+
 # Tabs Studio
 *.tss
 
