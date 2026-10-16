@@ -22,6 +22,7 @@
 #include "engine/core/job_system.h"
 #include "engine/core/debug_system.h"
 #include "imgui/imgui.h"
+#include "imgui/imgui_internal.h"
 #include "imgui/imgui_impl_win32.h"
 #include "imgui/imgui_impl_dx11.h"
 #include "imgui/icons_font_awesome.h"
@@ -38,6 +39,7 @@
 #include <sstream>
 #include <locale>
 #include <unordered_map>
+#include <unordered_set>
 #include <Windows.h>
 #include <filesystem>
 
@@ -2929,12 +2931,15 @@ void EngineGUI_Update(double elapsed_time) {
 
 // ???? Proxy / scene drawing ??????????????????????????????????????????????????????????????????????????????????????????????????????????
 
+static void SyncPrimitiveCollidersToScale();
+
 static void DrawEditorSceneProxiesNode(GameObject* node) {
     if (!node) return;
     node->DrawVisual(false);
 }
 
 void DrawEditorSceneProxies() {
+    SyncPrimitiveCollidersToScale();
     for (const auto& root : g_sceneNodes)
         if (root) DrawEditorSceneProxiesNode(root.get());
 }
@@ -3107,6 +3112,203 @@ static void DrawSceneNodeHierarchy(GameObject* node, GameObject* rootOwner) {
         for (auto& child : node->GetChildren())
             DrawSceneNodeHierarchy(child.get(), rootOwner);
         ImGui::TreePop();
+    }
+}
+
+struct MeshLocalBounds {
+    DirectX::XMFLOAT3 center = { 0.0f, 0.0f, 0.0f };
+    float hx = 0.0f;
+    float hy = 0.0f;
+    float hz = 0.0f;
+    float sphereRadius = 0.0f;
+    float cylinderRadius = 0.0f;
+};
+
+// Primitive sizes are absolute (collision does not multiply by owner scale).
+// Bake the current world scale into the fit so it matches the resized mesh,
+// not the unscaled FBX vertices.
+static bool ComputeMeshLocalBounds(GameObject* node, MeshLocalBounds& out) {
+    if (!node)
+        return false;
+    VisualComponent* visual = node->GetComponent<VisualComponent>();
+    if (!visual)
+        return false;
+    Model3D* model = visual->GetModel();
+    if (!model)
+        return false;
+    const std::vector<Model3D::VertexPNTC>& verts = model->GetVerticesCPU();
+    if (verts.empty())
+        return false;
+
+    DirectX::XMFLOAT3 scale = { 1.0f, 1.0f, 1.0f };
+    if (const engine::Transform* transform = node->GetTransform()) {
+        DirectX::XMFLOAT3 position, rotation;
+        transform->GetWorldPositionRotationScale(position, rotation, scale);
+    }
+    if (!std::isfinite(scale.x) || !std::isfinite(scale.y) || !std::isfinite(scale.z))
+        return false;
+
+    DirectX::XMFLOAT3 bmin = { FLT_MAX, FLT_MAX, FLT_MAX };
+    DirectX::XMFLOAT3 bmax = { -FLT_MAX, -FLT_MAX, -FLT_MAX };
+    for (const Model3D::VertexPNTC& v : verts) {
+        const float x = v.Position.x * scale.x;
+        const float y = v.Position.y * scale.y;
+        const float z = v.Position.z * scale.z;
+        if (!std::isfinite(x) || !std::isfinite(y) || !std::isfinite(z))
+            return false;
+        bmin.x = (std::min)(bmin.x, x);
+        bmin.y = (std::min)(bmin.y, y);
+        bmin.z = (std::min)(bmin.z, z);
+        bmax.x = (std::max)(bmax.x, x);
+        bmax.y = (std::max)(bmax.y, y);
+        bmax.z = (std::max)(bmax.z, z);
+    }
+
+    out.center = {
+        (bmin.x + bmax.x) * 0.5f,
+        (bmin.y + bmax.y) * 0.5f,
+        (bmin.z + bmax.z) * 0.5f
+    };
+    out.hx = (bmax.x - bmin.x) * 0.5f;
+    out.hy = (bmax.y - bmin.y) * 0.5f;
+    out.hz = (bmax.z - bmin.z) * 0.5f;
+
+    // AABB corners are empty on round meshes (a cone's base is a circle).
+    // Measure the farthest real vertex from the bounds center instead.
+    float maxRadiusSq = 0.0f;
+    float maxCylinderRadiusSq = 0.0f;
+    for (const Model3D::VertexPNTC& v : verts) {
+        const float dx = v.Position.x * scale.x - out.center.x;
+        const float dy = v.Position.y * scale.y - out.center.y;
+        const float dz = v.Position.z * scale.z - out.center.z;
+        maxRadiusSq = (std::max)(maxRadiusSq, dx * dx + dy * dy + dz * dz);
+        maxCylinderRadiusSq = (std::max)(maxCylinderRadiusSq, dx * dx + dz * dz);
+    }
+    out.sphereRadius = std::sqrt(maxRadiusSq);
+    out.cylinderRadius = std::sqrt(maxCylinderRadiusSq);
+    return true;
+}
+
+static bool AutoFitColliderToMesh(GameObject* node, ColliderComponent* cc) {
+    MeshLocalBounds bounds;
+    if (!cc || !ComputeMeshLocalBounds(node, bounds))
+        return false;
+
+    switch (cc->colliderType) {
+    case ColliderType::BOX:
+        cc->colliderCenter = bounds.center;
+        cc->halfExtents = { bounds.hx, bounds.hy, bounds.hz };
+        return true;
+    case ColliderType::SPHERE:
+        cc->colliderCenter = bounds.center;
+        cc->radius = bounds.sphereRadius;
+        return true;
+    case ColliderType::CYLINDER:
+        cc->colliderCenter = bounds.center;
+        cc->radius = bounds.cylinderRadius;
+        cc->height = 2.0f * bounds.hy;
+        return true;
+    case ColliderType::CAPSULE: {
+        // Height is the Y segment between sphere centers. Both cap radii
+        // are already part of the total vertical extent.
+        cc->colliderCenter = bounds.center;
+        const float radius = std::sqrt(bounds.hx * bounds.hx + bounds.hz * bounds.hz);
+        cc->radius = radius;
+        cc->height = (std::max)(0.0f, 2.0f * bounds.hy - 2.0f * radius);
+        return true;
+    }
+    default:
+        return false;
+    }
+}
+
+static bool IsPrimitiveCollider(ColliderType type) {
+    return type == ColliderType::BOX
+        || type == ColliderType::SPHERE
+        || type == ColliderType::CAPSULE
+        || type == ColliderType::CYLINDER;
+}
+
+static bool SameScale(const DirectX::XMFLOAT3& a, const DirectX::XMFLOAT3& b) {
+    return fabsf(a.x - b.x) <= 1.0e-4f
+        && fabsf(a.y - b.y) <= 1.0e-4f
+        && fabsf(a.z - b.z) <= 1.0e-4f;
+}
+
+static DirectX::XMFLOAT3 WorldScaleOf(GameObject* node) {
+    DirectX::XMFLOAT3 scale = { 1.0f, 1.0f, 1.0f };
+    if (!node)
+        return scale;
+    if (const engine::Transform* transform = node->GetTransform()) {
+        DirectX::XMFLOAT3 position, rotation;
+        transform->GetWorldPositionRotationScale(position, rotation, scale);
+    }
+    return scale;
+}
+
+// First time an object is seen, keep its saved collider. After that, a scale
+// change refits immediately so the collider follows the resized mesh.
+static std::unordered_map<GameObject*, DirectX::XMFLOAT3> s_colliderFitScale;
+
+static void RememberColliderFitScale(GameObject* node) {
+    if (node)
+        s_colliderFitScale[node] = WorldScaleOf(node);
+}
+
+void EngineGUI_FitNewCollider(GameObject* node) {
+    if (!node)
+        return;
+    ColliderComponent* cc = node->GetComponent<ColliderComponent>();
+    if (!cc)
+        cc = node->AddComponent<ColliderComponent>();
+    cc->colliderType = ColliderType::BOX;
+    if (AutoFitColliderToMesh(node, cc))
+        RememberColliderFitScale(node);
+    else
+        cc->colliderType = ColliderType::NONE;
+}
+
+static void SyncPrimitiveCollidersToScale() {
+    if (g_isPlaying)
+        return;
+
+    std::unordered_set<GameObject*> visited;
+    std::function<void(GameObject*)> walk = [&](GameObject* node) {
+        if (!node)
+            return;
+        visited.insert(node);
+
+        ColliderComponent* cc = node->GetComponent<ColliderComponent>();
+        if (!cc || !IsPrimitiveCollider(cc->colliderType)) {
+            s_colliderFitScale.erase(node);
+        } else {
+            const DirectX::XMFLOAT3 scale = WorldScaleOf(node);
+            const auto it = s_colliderFitScale.find(node);
+            if (it == s_colliderFitScale.end()) {
+                s_colliderFitScale.emplace(node, scale);
+            } else if (!SameScale(it->second, scale)) {
+                if (AutoFitColliderToMesh(node, cc)) {
+                    node->SyncLegacyTransformFromComponents();
+                    cc->ApplyToOwner();
+                    EngineGUI_MarkSceneDirty();
+                }
+                it->second = scale;
+            }
+        }
+
+        for (const auto& child : node->GetChildren())
+            walk(child.get());
+    };
+
+    for (const auto& root : g_sceneNodes)
+        if (root)
+            walk(root.get());
+
+    for (auto it = s_colliderFitScale.begin(); it != s_colliderFitScale.end(); ) {
+        if (visited.find(it->first) == visited.end())
+            it = s_colliderFitScale.erase(it);
+        else
+            ++it;
     }
 }
 
@@ -3882,6 +4084,8 @@ void EngineGUI_Draw() {
                 ImGui::SameLine(80);
                 if (ImGui::Combo("##ColType", &ct, colTypes, IM_ARRAYSIZE(colTypes))) {
                     cc->colliderType = static_cast<ColliderType>(ct);
+                    if (IsPrimitiveCollider(cc->colliderType) && AutoFitColliderToMesh(g_selNode, cc))
+                        RememberColliderFitScale(g_selNode);
                     runtimeDirty = true;
                 }
                 if (cc->colliderType != ColliderType::NONE) {
@@ -3924,6 +4128,24 @@ void EngineGUI_Draw() {
                 else if (cc->colliderType == ColliderType::MESH) {
                     ImGui::Text("Size Padding:"); ImGui::SameLine(100);
                     if (ImGui::DragFloat("##MSP", &cc->meshSizePadding, 0.01f, 0.0f, 10.0f)) runtimeDirty = true;
+                }
+                if (cc->colliderType == ColliderType::BOX
+                    || cc->colliderType == ColliderType::SPHERE
+                    || cc->colliderType == ColliderType::CAPSULE
+                    || cc->colliderType == ColliderType::CYLINDER) {
+                    static GameObject* s_autoFitFailNode = nullptr;
+                    if (ImGui::Button("Auto-Fit")) {
+                        if (AutoFitColliderToMesh(g_selNode, cc)) {
+                            s_autoFitFailNode = nullptr;
+                            RememberColliderFitScale(g_selNode);
+                            runtimeDirty = true;
+                            ImGui::MarkItemEdited(ImGui::GetItemID());
+                        } else {
+                            s_autoFitFailNode = g_selNode;
+                        }
+                    }
+                    if (s_autoFitFailNode == g_selNode)
+                        ImGui::TextDisabled("Auto-Fit: no usable mesh vertices.");
                 }
                 if (ImGui::Checkbox("Show Debug Collider", &cc->showDebugCollider)) {
                     g_selNode->m_debugCollider = cc->showDebugCollider;
@@ -4370,7 +4592,7 @@ void EngineGUI_Draw() {
                 runtimeDirty = true;
             }
             if (!g_selNode->GetComponent<ColliderComponent>() && ImGui::Button("Add Collider")) {
-                g_selNode->AddComponent<ColliderComponent>();
+                EngineGUI_FitNewCollider(g_selNode);
                 EditorUndo_PushAddComponent(g_selNode, "Collider");
                 runtimeDirty = true;
             }

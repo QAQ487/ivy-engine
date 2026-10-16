@@ -59,6 +59,7 @@ static std::unique_ptr<GameObject> CreateModelGameObject(
     auto* vc = node->AddComponent<VisualComponent>();
     vc->modelPath = assetPath;
     node->AddComponent<ColliderComponent>();
+    EngineGUI_FitNewCollider(node.get());
     return node;
 }
 
