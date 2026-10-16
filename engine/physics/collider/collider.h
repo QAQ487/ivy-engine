@@ -57,6 +57,8 @@ public:
 
     void SetCenter(const DirectX::XMFLOAT3& center) { m_center = center; }  // Set collider's local center
     DirectX::XMFLOAT3 GetCenter() const { return m_center; }
+    // Local center multiplied by the owner's scale, before rotation.
+    DirectX::XMFLOAT3 GetScaledLocalCenter() const;
 
     void SetIsTrigger(bool isTrigger) { m_isTrigger = isTrigger; }
     bool IsTrigger() const { return m_isTrigger; }
@@ -86,9 +88,8 @@ public:
 class BoxCollider : public Collider {
 public:
     BoxCollider(GameObject* owner) : Collider(ColliderType::BOX, owner) {}
-    void SetSize(const DirectX::XMFLOAT3& size) { m_size = size; }  // Box collider full size (world space, not scaled by owner)
-    // Returns the full world-space size of the box (width, height, depth).
-    // This is NOT multiplied by the owner's scale; callers must pass absolute world-space dimensions.
+    void SetSize(const DirectX::XMFLOAT3& size) { m_size = size; }  // Size before owner scale
+    // World size: stored size multiplied by the owner's scale per axis.
     DirectX::XMFLOAT3 GetSize() const;
 
     bool CheckCollision(const Collider* other) const override;
@@ -110,7 +111,8 @@ private:
 public:
     SphereCollider(GameObject* owner) : Collider(ColliderType::SPHERE, owner) {}
     void SetRadius(float r) { m_radius = r; }
-    float GetRadius() const { return m_radius; }
+    // World radius. A sphere uses the largest owner-scale axis.
+    float GetRadius() const;
 
     bool CheckCollision(const Collider* other) const override;
     void ResolveCollision(Collider* other) override;
@@ -134,8 +136,9 @@ public:
     void SetRadius(float r) { m_radius = r; }
     void SetHeight(float h) { m_height = h; }
 
-    float GetRadius() const { return m_radius; }
-    float GetHeight() const { return m_height; }
+    // World radius (max of owner scale X and Z) and world segment height (scale Y).
+    float GetRadius() const;
+    float GetHeight() const;
 
     bool CheckCollision(const Collider* other) const override;
     void ResolveCollision(Collider* other) override;
@@ -147,7 +150,7 @@ public:
 };
 
 //-----------------------------------------------
-// Cylinder Collider - vertical Y-axis disc/slab (radius + height, world units)
+// Cylinder Collider - vertical Y-axis disc/slab (radius + height, before owner scale)
 //-----------------------------------------------
 class CylinderCollider : public Collider {
 private:
@@ -158,8 +161,9 @@ public:
     CylinderCollider(GameObject* owner) : Collider(ColliderType::CYLINDER, owner) {}
     void SetRadius(float r) { m_radius = r; }
     void SetHeight(float h) { m_height = h; }
-    float GetRadius() const { return m_radius; }
-    float GetHeight() const { return m_height; }
+    // World radius (max of owner scale X and Z) and world height (scale Y).
+    float GetRadius() const;
+    float GetHeight() const;
 
     bool CheckCollision(const Collider* other) const override;
     void ResolveCollision(Collider* other) override;

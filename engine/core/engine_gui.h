@@ -51,7 +51,7 @@ void EngineGUI_QueueUnsavedExit();
 
 void DrawEditorSceneProxies();
 void DrawSceneModels();
-// Adds a box collider fitted to the object's mesh when vertices are available.
+// One-shot box fit for a newly created mesh object.
 void EngineGUI_FitNewCollider(GameObject* node);
 
 enum class CameraMode { ThirdPerson = 0, SceneCamera = 1, Intro = 2, FirstPerson = 3 };

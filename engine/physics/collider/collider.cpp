@@ -39,6 +39,23 @@ void GetOwnerPose(const GameObject* owner, XMFLOAT3& pos, XMFLOAT3& rot, XMFLOAT
     scale = owner->GetScale();
 }
 
+float AbsAxis(float v) {
+    if (!std::isfinite(v))
+        return 1.0f;
+    return v < 0.0f ? -v : v;
+}
+
+XMFLOAT3 FiniteOwnerScale(const GameObject* owner) {
+    XMFLOAT3 scale{ 1.0f, 1.0f, 1.0f };
+    if (!owner)
+        return scale;
+    XMFLOAT3 pos, rot;
+    GetOwnerPose(owner, pos, rot, scale);
+    if (!std::isfinite(scale.x) || !std::isfinite(scale.y) || !std::isfinite(scale.z))
+        return { 1.0f, 1.0f, 1.0f };
+    return scale;
+}
+
 bool CollisionPairIgnored(const GameObject* a, const GameObject* b) {
     if (!a || !b) return true;
     return a->IgnoresCollisionWith(b) || b->IgnoresCollisionWith(a);
@@ -338,20 +355,27 @@ XMFLOAT3 Collider_ComputeLocalInverseInertia(const Collider* collider, float mas
 //-----------------------------------------------
 // Collider base functionality - world center from local offset
 //-----------------------------------------------
+XMFLOAT3 Collider::GetScaledLocalCenter() const {
+    const XMFLOAT3 scale = FiniteOwnerScale(m_owner);
+    return {
+        m_center.x * scale.x,
+        m_center.y * scale.y,
+        m_center.z * scale.z
+    };
+}
+
 XMFLOAT3 Collider::GetWorldCenter() const {
     if (!m_owner) return m_center;
     XMFLOAT3 pos, rot, scale;
     GetOwnerPose(m_owner, pos, rot, scale);
-    (void)scale;
 
-    // Center offset follows rotation + translation only (not owner scale),
-    // matching DebugDrawer and editor collider highlight.
     const XMMATRIX rotMatrix = XMMatrixRotationRollPitchYaw(
         XMConvertToRadians(rot.x),
         XMConvertToRadians(rot.y),
         XMConvertToRadians(rot.z));
 
-    XMVECTOR local = XMLoadFloat3(&m_center);
+    const XMFLOAT3 scaledCenter = GetScaledLocalCenter();
+    XMVECTOR local = XMLoadFloat3(&scaledCenter);
     XMVECTOR world = XMVector3TransformCoord(local, rotMatrix) + XMLoadFloat3(&pos);
     XMFLOAT3 w;
     XMStoreFloat3(&w, world);
@@ -359,7 +383,40 @@ XMFLOAT3 Collider::GetWorldCenter() const {
 }
 
 XMFLOAT3 BoxCollider::GetSize() const {
-    return m_size;
+    const XMFLOAT3 scale = FiniteOwnerScale(m_owner);
+    return {
+        m_size.x * AbsAxis(scale.x),
+        m_size.y * AbsAxis(scale.y),
+        m_size.z * AbsAxis(scale.z)
+    };
+}
+
+float SphereCollider::GetRadius() const {
+    const XMFLOAT3 scale = FiniteOwnerScale(m_owner);
+    const float axis = (std::max)({ AbsAxis(scale.x), AbsAxis(scale.y), AbsAxis(scale.z) });
+    return m_radius * axis;
+}
+
+float CapsuleCollider::GetRadius() const {
+    const XMFLOAT3 scale = FiniteOwnerScale(m_owner);
+    const float axis = (std::max)(AbsAxis(scale.x), AbsAxis(scale.z));
+    return m_radius * axis;
+}
+
+float CapsuleCollider::GetHeight() const {
+    const XMFLOAT3 scale = FiniteOwnerScale(m_owner);
+    return m_height * AbsAxis(scale.y);
+}
+
+float CylinderCollider::GetRadius() const {
+    const XMFLOAT3 scale = FiniteOwnerScale(m_owner);
+    const float axis = (std::max)(AbsAxis(scale.x), AbsAxis(scale.z));
+    return m_radius * axis;
+}
+
+float CylinderCollider::GetHeight() const {
+    const XMFLOAT3 scale = FiniteOwnerScale(m_owner);
+    return m_height * AbsAxis(scale.y);
 }
 
 bool Collider::RayIntersect(const DirectX::XMFLOAT3& /*origin*/,
@@ -405,7 +462,7 @@ bool RayIntersectSphereWorld(const XMFLOAT3& origin, const XMFLOAT3& dir,
 bool SphereCollider::RayIntersect(const DirectX::XMFLOAT3& origin,
 	const DirectX::XMFLOAT3& dir, float maxDistance,
 	float& outT, DirectX::XMFLOAT3& outNormal) const {
-	return RayIntersectSphereWorld(origin, dir, GetWorldCenter(), m_radius,
+	return RayIntersectSphereWorld(origin, dir, GetWorldCenter(), GetRadius(),
 		maxDistance, outT, outNormal);
 }
 
@@ -479,10 +536,10 @@ bool BoxCollider::RayIntersect(const DirectX::XMFLOAT3& origin,
 bool CapsuleCollider::RayIntersect(const DirectX::XMFLOAT3& origin,
 	const DirectX::XMFLOAT3& dir, float maxDistance,
 	float& outT, DirectX::XMFLOAT3& outNormal) const {
-	if (!m_owner || maxDistance <= 0.0f || m_radius <= 0.0f) return false;
+	if (!m_owner || maxDistance <= 0.0f || GetRadius() <= 0.0f) return false;
 
 	const XMFLOAT3 center = GetWorldCenter();
-	const float halfHeight = m_height * 0.5f;
+	const float halfHeight = GetHeight() * 0.5f;
 	const XMFLOAT3 rot = m_owner->GetRotation();
 	XMMATRIX rotM = XMMatrixRotationRollPitchYaw(
 		XMConvertToRadians(rot.x),
@@ -513,7 +570,7 @@ bool CapsuleCollider::RayIntersect(const DirectX::XMFLOAT3& origin,
 	const float baoa = XMVectorGetX(XMVector3Dot(ba, oa));
 	const float rdoa = XMVectorGetX(XMVector3Dot(rd, oa));
 	const float oaoa = XMVectorGetX(XMVector3Dot(oa, oa));
-	const float ra = m_radius;
+	const float ra = GetRadius();
 	const float a = baba - bard * bard;
 	float bestT = maxDistance + 1.0f;
 	bool hit = false;
@@ -1482,7 +1539,7 @@ void BoxCollider::DebugDraw(const XMFLOAT4& color) {
     XMFLOAT3 pos, rot, scale;
     GetOwnerPose(m_owner, pos, rot, scale);
     (void)scale;
-    drawer.DrawBox(pos, m_center, GetSize(), rot, color);
+    drawer.DrawBox(pos, GetScaledLocalCenter(), GetSize(), rot, color);
 }
 
 //-----------------------------------------------
@@ -1491,7 +1548,7 @@ void BoxCollider::DebugDraw(const XMFLOAT4& color) {
 bool SphereCollider::CheckCollision(const Collider* other) const {
     if (!other || !m_owner || !other->GetOwner()) return false;
     XMFLOAT3 cA = GetWorldCenter();
-    float rA = m_radius;
+    float rA = GetRadius();
     switch (other->GetType()) {
     case ColliderType::SPHERE:
     {
@@ -1527,7 +1584,7 @@ void SphereCollider::ResolveCollision(Collider* other) {
         const SphereCollider* s = static_cast<const SphereCollider*>(other);
         XMFLOAT3 cA = GetWorldCenter();
         XMFLOAT3 cB = s->GetWorldCenter();
-        float rA = m_radius, rB = s->GetRadius();
+        float rA = GetRadius(), rB = s->GetRadius();
         XMFLOAT3 n{ cA.x - cB.x, cA.y - cB.y, cA.z - cB.z };
         float d2 = n.x * n.x + n.y * n.y + n.z * n.z;
         if (d2 < 1e-12f) { n = { 0, 1, 0 }; d2 = 1.0f; }
@@ -1548,7 +1605,7 @@ void SphereCollider::ResolveCollision(Collider* other) {
     {
         const BoxCollider* b = static_cast<const BoxCollider*>(other);
         XMFLOAT3 cA = GetWorldCenter();
-        float rA = m_radius;
+        float rA = GetRadius();
         XMFLOAT3 cB = b->GetWorldCenter();
         XMFLOAT3 rotB = b->GetOwner()->GetRotation();
         XMFLOAT3 n; float pen = 0.0f; XMFLOAT3 contact{};
@@ -1595,11 +1652,11 @@ void SphereCollider::ResolveCollision(Collider* other) {
             };
             // Start just behind the previous sphere so the surface is hit before center.
             const XMFLOAT3 rayOrigin = {
-                prevCenter.x - rayDir.x * m_radius,
-                prevCenter.y - rayDir.y * m_radius,
-                prevCenter.z - rayDir.z * m_radius
+                prevCenter.x - rayDir.x * GetRadius(),
+                prevCenter.y - rayDir.y * GetRadius(),
+                prevCenter.z - rayDir.z * GetRadius()
             };
-            const float sweepDistance = moveLen + m_radius * 2.0f;
+            const float sweepDistance = moveLen + GetRadius() * 2.0f;
 
             XMFLOAT3 hitPoint, hitNormal;
             const bool rayHit = mesh->Raycast(rayOrigin, rayDir, sweepDistance, hitPoint, hitNormal);
@@ -1617,7 +1674,7 @@ void SphereCollider::ResolveCollision(Collider* other) {
                 }
 
                 XMVECTOR n = XMLoadFloat3(&hitNormal);
-                XMVECTOR surfaceCenterV = XMLoadFloat3(&hitPoint) + (n * m_radius);
+                XMVECTOR surfaceCenterV = XMLoadFloat3(&hitPoint) + (n * GetRadius());
                 XMFLOAT3 surfaceCenter;
                 XMStoreFloat3(&surfaceCenter, surfaceCenterV);
                 m_owner->SetPosition({
@@ -1651,7 +1708,7 @@ void SphereCollider::DebugDraw(const XMFLOAT4& color) {
     XMFLOAT3 pos, rot, scale;
     GetOwnerPose(m_owner, pos, rot, scale);
     (void)scale;
-    drawer.DrawSphere(pos, m_center, m_radius, rot, color);
+    drawer.DrawSphere(pos, GetScaledLocalCenter(), GetRadius(), rot, color);
 }
 
 //-----------------------------------------------
@@ -1661,8 +1718,8 @@ bool CapsuleCollider::CheckCollision(const Collider* other) const {
     if (!other || !m_owner || !other->GetOwner()) return false;
 
     XMFLOAT3 centerA = GetWorldCenter();
-    float radiusA = m_radius;
-    float halfHeightA = m_height * 0.5f;
+    float radiusA = GetRadius();
+    float halfHeightA = GetHeight() * 0.5f;
     XMFLOAT3 rotA = m_owner->GetRotation();
     XMMATRIX rotMatrixA = XMMatrixRotationRollPitchYaw(
         XMConvertToRadians(rotA.x),
@@ -1781,8 +1838,8 @@ void CapsuleCollider::ResolveCollision(Collider* other) {
         XMFLOAT3 sizeB = b->GetSize();
 
         XMFLOAT3 cA = GetWorldCenter();
-        float r = m_radius;
-        float hh = m_height * 0.5f;
+        float r = GetRadius();
+        float hh = GetHeight() * 0.5f;
 
         XMFLOAT3 rotA = m_owner->GetRotation();
         XMMATRIX rm = XMMatrixRotationRollPitchYaw(
@@ -1818,12 +1875,12 @@ void CapsuleCollider::ResolveCollision(Collider* other) {
         const SphereCollider* s = static_cast<const SphereCollider*>(other);
         XMFLOAT3 cA = GetWorldCenter();
         XMFLOAT3 cB = s->GetWorldCenter();
-        float rA = m_radius, rB = s->GetRadius();
+        float rA = GetRadius(), rB = s->GetRadius();
 
         // Match CheckCollision: closest point on capsule segment ? sphere center.
         // Center-only spheres miss head/feet hits (centerPen<=0 while segPen>0),
         // and swept narrow-phase returns after that failed resolve �� tunneling.
-        float halfH = m_height * 0.5f;
+        float halfH = GetHeight() * 0.5f;
         XMFLOAT3 rotA = m_owner->GetRotation();
         XMMATRIX rm = XMMatrixRotationRollPitchYaw(
             XMConvertToRadians(rotA.x), XMConvertToRadians(rotA.y), XMConvertToRadians(rotA.z));
@@ -1857,7 +1914,7 @@ void CapsuleCollider::ResolveCollision(Collider* other) {
         const CapsuleCollider* c = static_cast<const CapsuleCollider*>(other);
         XMFLOAT3 cA = GetWorldCenter();
         XMFLOAT3 cB = c->GetWorldCenter();
-        float rA = m_radius, rB = c->GetRadius();
+        float rA = GetRadius(), rB = c->GetRadius();
         XMFLOAT3 n{ cA.x - cB.x, cA.y - cB.y, cA.z - cB.z };
         float d2 = n.x * n.x + n.y * n.y + n.z * n.z;
         if (d2 < 1e-12f) { n = { 0, 1, 0 }; d2 = 1.0f; }
@@ -1885,7 +1942,7 @@ void CapsuleCollider::DebugDraw(const XMFLOAT4& color) {
     XMFLOAT3 pos, rot, scale;
     GetOwnerPose(m_owner, pos, rot, scale);
     (void)scale;
-    drawer.DrawCapsule(pos, m_center, m_radius, m_height, rot, color);
+    drawer.DrawCapsule(pos, GetScaledLocalCenter(), GetRadius(), GetHeight(), rot, color);
 }
 
 //-----------------------------------------------
@@ -2008,7 +2065,7 @@ void CylinderCollider::DebugDraw(const XMFLOAT4& color) {
     XMFLOAT3 pos, rot, scale;
     GetOwnerPose(m_owner, pos, rot, scale);
     (void)scale;
-    drawer.DrawCylinder(pos, m_center, m_radius, m_height, rot, color);
+    drawer.DrawCylinder(pos, GetScaledLocalCenter(), GetRadius(), GetHeight(), rot, color);
 }
 
 //=============================================================================
