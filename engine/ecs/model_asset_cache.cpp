@@ -210,6 +210,20 @@ std::string ModelAssetCache::FolderPathForDef(const ObjectDef& def) {
     return slash == std::string::npos ? std::string() : def.displayName.substr(0, slash);
 }
 
+bool ModelAssetCache::IsHiddenPrimitiveAlias(const std::string& assetPath) {
+    const std::string key = NormalizeAssetKey(assetPath);
+    const bool underObjectFolder =
+        key.rfind("object/", 0) == 0 ||
+        key.find("/object/") != std::string::npos;
+    if (!underObjectFolder)
+        return false;
+
+    const std::string stem = StemKey(key);
+    return stem == "box_blue" || stem == "box_brown" || stem == "box_green" ||
+        stem == "box_red" || stem == "box_sand" ||
+        stem == "cone_yellow" || stem == "wall";
+}
+
 const std::vector<ModelAssetCache::ObjectDef>& ModelAssetCache::GetObjectDefinitions() const {
     return m_objectDefs;
 }

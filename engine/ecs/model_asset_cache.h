@@ -28,6 +28,11 @@ public:
 
     static ModelAssetCache& Instance();
     static const char* AssetRootPath() { return "rom/model"; }
+    static const char* PrimitiveAssetRootPath() { return "rom/model/primitives"; }
+
+    // Legacy colored boxes / yellow cone / wall — keep files for old scenes,
+    // but hide them from the default mesh picker as duplicate primitive choices.
+    static bool IsHiddenPrimitiveAlias(const std::string& assetPath);
 
     void Initialize();
     void Finalize();

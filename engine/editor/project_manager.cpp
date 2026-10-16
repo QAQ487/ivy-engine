@@ -511,6 +511,15 @@ void ProjectManager::EnsureEngineAssets(const std::string& rootPath) const {
         CopyDirectoryRecursive(src, dst, nullptr);
     }
 
+    // Default primitive meshes: copy only when the project has none. Do not
+    // overlay existing rom/model/object assets (colored boxes, tree, etc.).
+    const fs::path primSrc = exeRom / "model" / "primitives";
+    const fs::path primDst = projectRom / "model" / "primitives";
+    if (fs::exists(primSrc, ec) &&
+        !(fs::exists(primDst, ec) && !fs::is_empty(primDst, ec))) {
+        CopyDirectoryRecursive(primSrc, primDst, nullptr);
+    }
+
     const fs::path shaderSrc = exeRom / "shader";
     const fs::path shaderDst = projectRom / "shader";
     if (fs::exists(shaderSrc, ec))

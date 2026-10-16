@@ -402,6 +402,39 @@ static std::unique_ptr<GameObject> CreateModelGameObject(
     return node;
 }
 
+namespace {
+    struct PrimitiveCreateSpec {
+        const char* menuLabel;
+        const char* displayName;
+        const char* assetPath;
+        ColliderType colliderType;
+        float height;
+    };
+
+    const PrimitiveCreateSpec kDefaultPrimitives[] = {
+        { "Cube",     "Cube",     "rom/model/primitives/Cube.fbx",     ColliderType::BOX,      1.0f },
+        { "Sphere",   "Sphere",   "rom/model/primitives/Sphere.fbx",   ColliderType::SPHERE,   1.0f },
+        { "Cylinder", "Cylinder", "rom/model/primitives/Cylinder.fbx", ColliderType::CYLINDER, 1.0f },
+        { "Cone",     "Cone",     "rom/model/primitives/Cone.fbx",     ColliderType::MESH,     1.0f },
+        // CapsuleCollider height = cylinder segment (sphere centers), not total
+        // extent. Mesh is total H=2 with r=0.5 → segment = 2 - 2*r = 1.
+        { "Capsule",  "Capsule",  "rom/model/primitives/Capsule.fbx",  ColliderType::CAPSULE,  1.0f },
+        { "Donut",    "Donut",    "rom/model/primitives/Donut.fbx",    ColliderType::MESH,     1.0f },
+    };
+}
+
+static std::unique_ptr<GameObject> CreatePrimitiveGameObject(const PrimitiveCreateSpec& spec)
+{
+    auto node = CreateModelGameObject(spec.assetPath, spec.displayName);
+    if (auto* col = node->GetComponent<ColliderComponent>()) {
+        col->colliderType = spec.colliderType;
+        col->radius = 0.5f;
+        col->halfExtents = { 0.5f, 0.5f, 0.5f };
+        col->height = spec.height;
+    }
+    return node;
+}
+
 static float EditorMenuBarHeight() {
     return g_imguiInitialized ? ImGui::GetFrameHeight() : 22.0f;
 }
@@ -1341,6 +1374,13 @@ static void DrawEditorMenuBar() {
     if (ImGui::BeginMenu("GameObject")) {
         if (ImGui::MenuItem("Create Empty"))
             SpawnRootGameObject(CreateEmptyGameObject());
+        if (ImGui::BeginMenu("3D Object")) {
+            for (const PrimitiveCreateSpec& spec : kDefaultPrimitives) {
+                if (ImGui::MenuItem(spec.menuLabel))
+                    SpawnRootGameObject(CreatePrimitiveGameObject(spec));
+            }
+            ImGui::EndMenu();
+        }
         if (ImGui::MenuItem("Camera"))
             SpawnRootGameObject(CreateCameraObject());
         if (ImGui::BeginMenu("Light")) {
@@ -3608,6 +3648,9 @@ void EngineGUI_Draw() {
                 if (ImGui::BeginCombo("##Mesh", preview)) {
                     for (int i = 0; i < (int)defs.size(); ++i) {
                         const bool selected = (i == currentIdx);
+                        if (!selected &&
+                            ModelAssetCache::IsHiddenPrimitiveAlias(defs[i].assetPath))
+                            continue;
                         if (ImGui::Selectable(defs[i].displayName.c_str(), selected)) {
                             if (vc->modelPath != defs[i].assetPath) {
                                 vc->modelPath = defs[i].assetPath;
