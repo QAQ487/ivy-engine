@@ -12,10 +12,9 @@ float ClampNonNegative(float value) {
     return value < 0.0f ? 0.0f : value;
 }
 
-constexpr float kStickSpeed = 0.05f;
 constexpr float kJNormalEpsilon = 1e-6f;
-// ~g*(1/60) for unit mass. Resting contacts often have jn=0 this frame;
-// still test the static cone so ice cannot freeze as hard as rubber.
+// Fallback when ResolveContact cannot estimate mg|n·up|Δt (jn already 0 and
+// no synthetic normal was provided). ~g/60 for unit mass.
 constexpr float kRestingNormalImpulse = 0.16f;
 }
 
@@ -98,9 +97,13 @@ ContactFrictionDecision PhysicsMaterial_DecideFriction(
         muD = muS;
 
     if (jNormalAbs <= kJNormalEpsilon) {
+        // Resting contact with no bounce impulse this frame. Do NOT require
+        // vt < kStickSpeed: on a slope gravity alone makes vt ≈ g sinθ Δt
+        // (~0.09 at 32°/60Hz), which is already above that threshold, so a
+        // high-μ rubber pad would never enter the static cone and would slide.
         const float jStick = vt / invSum;
         const float jMaxStatic = muS * kRestingNormalImpulse;
-        if (vt < kStickSpeed && jStick <= jMaxStatic) {
+        if (jStick <= jMaxStatic) {
             decision.mode = ContactFrictionMode::ResidualStick;
             decision.jFriction = jStick;
             return decision;

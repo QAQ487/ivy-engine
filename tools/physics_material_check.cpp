@@ -94,6 +94,25 @@ int main() {
     Expect(iceRest.mode != ContactFrictionMode::ResidualStick,
         "low-mu ice does not residual-stick when jn is 0");
 
+    // 32° ramp @ 60Hz: gravity kick vt ≈ 0.087. High μ must still stick even
+    // though vt > the old 0.05 "stick speed" gate (that gate made rubber slide).
+    const ContactFrictionDecision slopeStick = PhysicsMaterial_DecideFriction(
+        0.087f, 1.0f, 0.0f, 1.0f, 0.9f);
+    Expect(slopeStick.mode == ContactFrictionMode::ResidualStick,
+        "high-mu resting stick absorbs gravity kick above former kStickSpeed");
+
+    // Synthetic resting normal ≈ mg cos(32°) Δt for unit mass.
+    const float jnSlope = 9.81f * 0.8480f / 60.0f;
+    const ContactFrictionDecision rubberCoulomb = PhysicsMaterial_DecideFriction(
+        0.087f, 1.0f, jnSlope, 1.0f, 0.9f);
+    Expect(rubberCoulomb.mode == ContactFrictionMode::StaticStick,
+        "rubber muS=1 holds on 32deg with mg cosθ normal");
+
+    const ContactFrictionDecision woodCoulomb = PhysicsMaterial_DecideFriction(
+        0.087f, 1.0f, jnSlope, 0.55f, 0.42f);
+    Expect(woodCoulomb.mode == ContactFrictionMode::DynamicClamp,
+        "wood muS=0.55 slides on 32deg with mg cosθ normal");
+
     if (g_failed != 0) {
         std::printf("%d check(s) failed\n", g_failed);
         return 1;

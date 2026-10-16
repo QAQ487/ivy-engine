@@ -668,11 +668,37 @@ static void ResolveContact(GameObject* self, GameObject* other,
             };
             const float vtLenSq = vT.x * vT.x + vT.y * vT.y + vT.z * vT.z;
             const float vtLen = std::sqrt(vtLenSq);
+            // Resting contacts often have jn=0 this frame (already separated).
+            // Without a normal impulse, Coulomb friction is zero and every pad
+            // slides. Approximate the press-in impulse as mg |n.up| dt so that
+            // stick requires mu_s >= tan(theta) on a slope (rubber holds, ice does not).
+            float jNAbs = std::fabs(jNormal);
+            if (jNAbs <= 1e-6f) {
+                constexpr float kFixedDt = 1.0f / 60.0f;
+                jNAbs = Physics_GetGravity() * std::fabs(normal.y) * kFixedDt / invSum;
+            }
             const ContactFrictionDecision friction = PhysicsMaterial_DecideFriction(
-                vtLen, invSum, std::fabs(jNormal), combined.muStatic, combined.muDynamic);
+                vtLen, invSum, jNAbs, combined.muStatic, combined.muDynamic);
             if (friction.mode == ContactFrictionMode::ResidualStick ||
                 friction.mode == ContactFrictionMode::StaticStick) {
                 killTangentialVelocity();
+                // Integrate-then-collide: gravity already moved the body this
+                // frame. Killing vt leaves that downhill step in position, so
+                // high-mu rubber still creeps. Undo this frame's tangent slide.
+                auto rewindTangentStep = [&](GameObject* obj, bool kin) {
+                    if (kin || !obj) return;
+                    const XMFLOAT3 cur = obj->GetPosition();
+                    const XMFLOAT3 prev = obj->m_previousPosition;
+                    const XMFLOAT3 d{ cur.x - prev.x, cur.y - prev.y, cur.z - prev.z };
+                    const float dn = d.x * normal.x + d.y * normal.y + d.z * normal.z;
+                    obj->SetPosition({
+                        cur.x - (d.x - dn * normal.x),
+                        cur.y - (d.y - dn * normal.y),
+                        cur.z - (d.z - dn * normal.z)
+                    });
+                };
+                rewindTangentStep(self, kinA);
+                rewindTangentStep(other, kinB);
             } else if (friction.mode == ContactFrictionMode::DynamicClamp &&
                        friction.jFriction > 0.0f && vtLen > 1e-6f) {
                 const XMFLOAT3 tDir{ -vT.x / vtLen, -vT.y / vtLen, -vT.z / vtLen };

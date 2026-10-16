@@ -38,6 +38,8 @@ ContactSurface PhysicsMaterial_FromRigidbody(float friction, float restitution);
 
 CombinedContactSurface PhysicsMaterial_Combine(const ContactSurface& a, const ContactSurface& b);
 
+// Coulomb friction decision. When jNormalAbs is ~0 (resting contact), callers
+// should pass a synthetic mg|n·up|Δt so slopes can stick (μs >= tanθ).
 ContactFrictionDecision PhysicsMaterial_DecideFriction(
     float vtLen,
     float invSum,
