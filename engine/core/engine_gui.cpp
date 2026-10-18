@@ -53,6 +53,7 @@
 #include "engine/input/mouse.h"
 #include "engine/debug_draw/debug_drawer.h"
 #include "camera.h"
+#include "grid.h"
 
  // Scene-graph / component-system headers
 #include "engine/ecs/transform.h"
@@ -3441,6 +3442,18 @@ void EngineGUI_Draw() {
             if (overlayToggled)
                 g_showUiOverlay = !g_showUiOverlay;
             if (highlightUiOverlay)
+                ImGui::PopStyleColor();
+
+            ImGui::SameLine();
+            const bool highlightGrid = Grid_IsVisible();
+            if (highlightGrid)
+                ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.20f, 0.55f, 0.55f, 1.0f));
+            const bool gridToggled = ToolbarIconButton(
+                highlightGrid ? ICON_FA_BORDER_ALL : ICON_FA_BORDER_NONE,
+                highlightGrid ? "Hide Grid" : "Show Grid");
+            if (gridToggled)
+                Grid_SetVisible(!highlightGrid);
+            if (highlightGrid)
                 ImGui::PopStyleColor();
 
             ImGui::SameLine();

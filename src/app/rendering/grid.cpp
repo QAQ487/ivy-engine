@@ -164,6 +164,7 @@ void Grid::Initialize() {
 		// }
 	}
 
+	m_visible = true;
 	m_isActive = true;
 }
 
@@ -182,6 +183,7 @@ void Grid::LogicUpdate(double /*elapsed_time*/) {
 }
 
 void Grid::Draw() {
+	if (!m_visible) return;
 	if ((!g_pFillVB && !g_pVB) || g_vertexCount == 0) return;
 
 	// Editor overlay only: never use the scene default shader (IBL showcase = PBR).
@@ -228,5 +230,14 @@ void Grid_Finalize() {
 }
 
 void Grid_Draw() {
+	if (!g_grid.IsVisible()) return;
 	g_grid.Draw();
+}
+
+bool Grid_IsVisible() {
+	return g_grid.IsVisible();
+}
+
+void Grid_SetVisible(bool visible) {
+	g_grid.SetVisible(visible);
 }
