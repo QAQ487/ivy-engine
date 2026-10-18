@@ -47,4 +47,18 @@ void DebugCamera_SyncOrbitFromCurrentView();
 // Fly mode: set world position and view angles (degrees).
 void DebugCamera_SetFlyView(DirectX::XMFLOAT3 position, float yawDeg, float pitchDeg);
 
+enum class DebugCameraViewAxis {
+    PosX = 0, // +X: Right
+    NegX = 1, // -X: Left
+    PosY = 2, // +Y: Top
+    NegY = 3, // -Y: Bottom
+    PosZ = 4, // +Z: Front
+    NegZ = 5  // -Z: Back
+};
+
+// Orbit mode: snap camera to an axis-aligned view looking at focal point with smooth transition.
+void DebugCamera_SnapToAxis(DebugCameraViewAxis axis, float durationSec = 0.25f);
+bool DebugCamera_IsTransitioning();
+void DebugCamera_CancelTransition();
+
 #endif // !DEBUG_CAMERA_H

@@ -68,6 +68,7 @@
 #include "engine/audio/audio_manager.h"
 #include "engine/editor/transform_gizmo.h"
 #include "engine/editor/ui_gizmo.h"
+#include "engine/editor/camera_orientation_gizmo.h"
 #include "engine/editor/editor_undo.h"
 #include "engine/ecs/visual_component.h"
 #include "engine/ecs/billboard_component.h"
@@ -2373,6 +2374,7 @@ void EngineGUI_SetCameraMode(CameraMode m) { g_cameraMode = m; }
 const std::string& EngineGUI_GetActiveCameraNodeName() { return g_activeCameraNode; }
 void EngineGUI_SetActiveCameraNodeName(const std::string& n) { g_activeCameraNode = n; }
 void EngineGUI_SetEnabled(bool e) { g_enabled = e; DebugCamera_SetEnabled(e); }
+bool EngineGUI_IsEnabled() { return g_enabled; }
 const std::string& EngineGUI_GetDefaultScenePath() { return SceneLoader_GetDefaultScenePath(); }
 
 std::string EngineGUI_ResolveStartupScenePath() {
@@ -2868,6 +2870,7 @@ void EngineGUI_Update(double elapsed_time) {
         if (clicked && !ImGui::GetIO().WantCaptureMouse
             && !TransformGizmo::IsInteracting()
             && !UiGizmo::IsInteracting()
+            && !CameraOrientationGizmo::IsInteracting()
             && !altHeld) {
             if (!g_isPlaying && g_editMode == EditorEditMode::UI) {
                 float localX = 0.0f;
@@ -4620,6 +4623,7 @@ void EngineGUI_Draw() {
         TransformGizmo::HandleHotkeys();
         if (g_selNode)
             TransformGizmo::Draw(g_selNode);
+        CameraOrientationGizmo::Draw();
     }
 
     if (!sceneLoadBusy && !g_isPlaying && g_editMode == EditorEditMode::UI

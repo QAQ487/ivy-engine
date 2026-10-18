@@ -18,6 +18,7 @@
 #include "engine/core/engine_gui.h"
 #ifndef GAME_RUNTIME
 #include "imgui/imgui.h"
+#include "engine/editor/camera_orientation_gizmo.h"
 #endif
 
 using namespace DirectX;
@@ -41,6 +42,15 @@ namespace {
 
 	// Init flag
 	bool s_inited = false;
+
+	// View snap transition state
+	bool  s_isTransitioning = false;
+	float s_transitionElapsed = 0.0f;
+	float s_transitionDuration = 0.25f;
+	float s_startYaw = 0.0f;
+	float s_targetYaw = 0.0f;
+	float s_startPitch = 0.0f;
+	float s_targetPitch = 0.0f;
 
 	// Orbital state saved when the debug camera is disabled, so that camera
 	// changes made by other systems (e.g. CameraComponent) while the debug
@@ -210,6 +220,7 @@ DebugCameraControlMode DebugCamera_GetControlMode() {
 }
 
 void DebugCamera_SetFlyView(XMFLOAT3 position, float yawDeg, float pitchDeg) {
+	s_isTransitioning = false;
 	s_flyPosition = position;
 	s_yaw = DirectX::XMConvertToRadians(yawDeg);
 	s_pitch = DirectX::XMConvertToRadians(pitchDeg);
@@ -222,6 +233,7 @@ void DebugCamera_SetEnabled(bool enabled) {
 	if (enabled == s_enabled) return;
 
 	if (!enabled) {
+		s_isTransitioning = false;
 		// Ensure the orbital state has been initialised from the current camera
 		// before we snapshot it.  If the user never Alt-dragged (s_inited == false),
 		// s_yaw/s_pitch are still factory defaults (0, 0) which don't reflect the
@@ -269,6 +281,7 @@ void DebugCamera_SetFocalPoint(DirectX::XMFLOAT3 point)
 
 void DebugCamera_SyncOrbitFromCurrentView()
 {
+	s_isTransitioning = false;
 	Camera& cam = GetCamera();
 	const XMFLOAT3 pos = cam.position;
 	const XMFLOAT3 at = cam.at;
@@ -306,11 +319,38 @@ void DebugCamera_Update(double dt) {
 #endif
 	if (!s_enabled) return;
 
-	// If the mouse is over an ImGui window (like your Hierarchy or Properties),
+	// User manual input interrupts transition immediately
+	bool altPressed = Keyboard_IsKeyDown(KK_LEFTALT) || Keyboard_IsKeyDown(KK_RIGHTALT);
+	if ((altPressed && (Mouse_IsLeftDown() || Mouse_IsMiddleDown() || Mouse_IsRightDown())) ||
+		Mouse_IsRightDown()) {
+		s_isTransitioning = false;
+	}
+
+	// Update view snap transition animation if active
+	if (s_isTransitioning) {
+		s_transitionElapsed += static_cast<float>(dt);
+		float t = s_transitionElapsed / s_transitionDuration;
+		if (t >= 1.0f) {
+			t = 1.0f;
+			s_isTransitioning = false;
+			s_yaw = s_targetYaw;
+			s_pitch = s_targetPitch;
+			while (s_yaw > DirectX::XM_PI) s_yaw -= DirectX::XM_2PI;
+			while (s_yaw < -DirectX::XM_PI) s_yaw += DirectX::XM_2PI;
+		} else {
+			// Smoothstep easing (0.2-0.35s natural deceleration)
+			const float u = t * t * (3.0f - 2.0f * t);
+			s_yaw = s_startYaw + (s_targetYaw - s_startYaw) * u;
+			s_pitch = s_startPitch + (s_targetPitch - s_startPitch) * u;
+		}
+		UpdateCameraFromOrbit();
+	}
+
+	// If the mouse is over an ImGui window or orientation gizmo,
 	// do not process camera rotation or zooming.
 #ifndef GAME_RUNTIME
 	const bool ignoreImGuiCapture = EngineGUI_IsDebugCameraPlayInputActive();
-	if (!ignoreImGuiCapture && ImGui::GetIO().WantCaptureMouse) {
+	if (!ignoreImGuiCapture && (ImGui::GetIO().WantCaptureMouse || CameraOrientationGizmo::IsInteracting())) {
 		return;
 	}
 	if (!ignoreImGuiCapture && ImGui::GetIO().WantCaptureKeyboard) {
@@ -324,7 +364,7 @@ void DebugCamera_Update(double dt) {
 	}
 
 	Camera& cam = GetCamera();
-	bool altPressed = Keyboard_IsKeyDown(KK_LEFTALT) || Keyboard_IsKeyDown(KK_RIGHTALT);
+	altPressed = Keyboard_IsKeyDown(KK_LEFTALT) || Keyboard_IsKeyDown(KK_RIGHTALT);
 
 	int dx = 0, dy = 0;
 	Mouse_GetDelta(dx, dy);
@@ -424,3 +464,67 @@ void DebugCamera_Update(double dt) {
 		}
 	}
 }
+
+void DebugCamera_SnapToAxis(DebugCameraViewAxis axis, float durationSec) {
+	if (!s_inited || s_controlMode == DebugCameraControlMode::Fly) {
+		DebugCamera_SyncOrbitFromCurrentView();
+	}
+
+	s_controlMode = DebugCameraControlMode::Orbit;
+	s_enabled = true;
+	s_hasSavedState = false;
+
+	const float kPitchLimit = DirectX::XMConvertToRadians(89.0f);
+	float targetYaw = 0.0f;
+	float targetPitch = 0.0f;
+
+	switch (axis) {
+	case DebugCameraViewAxis::PosX:
+		targetYaw = DirectX::XM_PIDIV2;
+		targetPitch = 0.0f;
+		break;
+	case DebugCameraViewAxis::NegX:
+		targetYaw = -DirectX::XM_PIDIV2;
+		targetPitch = 0.0f;
+		break;
+	case DebugCameraViewAxis::PosY:
+		targetYaw = DirectX::XM_PI;
+		targetPitch = kPitchLimit;
+		break;
+	case DebugCameraViewAxis::NegY:
+		targetYaw = DirectX::XM_PI;
+		targetPitch = -kPitchLimit;
+		break;
+	case DebugCameraViewAxis::PosZ:
+		targetYaw = 0.0f;
+		targetPitch = 0.0f;
+		break;
+	case DebugCameraViewAxis::NegZ:
+		targetYaw = DirectX::XM_PI;
+		targetPitch = 0.0f;
+		break;
+	}
+
+	// Shortest angular path around the circle for yaw
+	float diff = targetYaw - s_yaw;
+	while (diff > DirectX::XM_PI) diff -= DirectX::XM_2PI;
+	while (diff < -DirectX::XM_PI) diff += DirectX::XM_2PI;
+
+	s_startYaw = s_yaw;
+	s_targetYaw = s_yaw + diff;
+	s_startPitch = s_pitch;
+	s_targetPitch = targetPitch;
+
+	s_transitionElapsed = 0.0f;
+	s_transitionDuration = (durationSec > 0.01f) ? durationSec : 0.25f;
+	s_isTransitioning = true;
+}
+
+bool DebugCamera_IsTransitioning() {
+	return s_isTransitioning;
+}
+
+void DebugCamera_CancelTransition() {
+	s_isTransitioning = false;
+}
+

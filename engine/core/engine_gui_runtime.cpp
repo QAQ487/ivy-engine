@@ -119,6 +119,10 @@ void EngineGUI_StopPlay() {
 void EngineGUI_SetEnabled(bool /*enabled*/) {
 }
 
+bool EngineGUI_IsEnabled() {
+    return false;
+}
+
 void EngineGUI_GetGameViewportRect(float& x, float& y, float& width, float& height) {
     x = 0.0f;
     y = 0.0f;

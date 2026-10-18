@@ -30,6 +30,7 @@ bool EngineGUI_PreferPlayVisuals();
 void EngineGUI_StartPlay();
 void EngineGUI_StopPlay();
 void EngineGUI_SetEnabled(bool enabled);
+bool EngineGUI_IsEnabled();
 void EngineGUI_GetGameViewportRect(float& x, float& y, float& width, float& height);
 bool EngineGUI_MouseToViewportLocal(float& x, float& y);
 
