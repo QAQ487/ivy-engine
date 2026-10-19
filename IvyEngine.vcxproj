@@ -43,13 +43,13 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
@@ -217,6 +217,8 @@ exit /b 0</Command>
     <None Include="shaders\SkyboxVS.hlsl" />
     <None Include="shaders\FullscreenVS.hlsl" />
     <None Include="shaders\PostProcessPS.hlsl" />
+    <None Include="shaders\BloomExtractPS.hlsl" />
+    <None Include="shaders\BloomBlurPS.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\ShaderCommon.hlsli" />

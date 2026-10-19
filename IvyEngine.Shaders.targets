@@ -71,11 +71,20 @@
     <HlslShader Include="shaders\PostProcessPS.hlsl">
       <ShaderTarget>ps_5_0</ShaderTarget>
     </HlslShader>
+    <HlslShader Include="shaders\BloomExtractPS.hlsl">
+      <ShaderTarget>ps_5_0</ShaderTarget>
+    </HlslShader>
+    <HlslShader Include="shaders\BloomBlurPS.hlsl">
+      <ShaderTarget>ps_5_0</ShaderTarget>
+    </HlslShader>
   </ItemGroup>
 
   <PropertyGroup>
     <ShaderOutputDir>$(ProjectDir)rom\shader\</ShaderOutputDir>
     <ShaderCommonDir>$(ProjectDir)shaders\</ShaderCommonDir>
+    <FxcToolPath Condition="'$(FxcToolPath)' == '' and '$(WindowsSdkVerBinPath)' != ''">$(WindowsSdkVerBinPath)x64\fxc.exe</FxcToolPath>
+    <FxcToolPath Condition="'$(FxcToolPath)' == '' and Exists('C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\fxc.exe')">C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\fxc.exe</FxcToolPath>
+    <FxcToolPath Condition="'$(FxcToolPath)' == ''">fxc</FxcToolPath>
   </PropertyGroup>
 
   <Target Name="CompileHlslShaders"
@@ -84,7 +93,7 @@
           Inputs="%(HlslShader.Identity);$(ShaderCommonDir)ShaderCommon.hlsli;$(ShaderCommonDir)LightingCommon.hlsli"
           Outputs="$(ShaderOutputDir)%(HlslShader.Filename).cso">
     <MakeDir Directories="$(ShaderOutputDir)" Condition="!Exists('$(ShaderOutputDir)')" />
-    <Exec Command="fxc /nologo /T %(HlslShader.ShaderTarget) /E main /Fo &quot;$(ShaderOutputDir)%(HlslShader.Filename).cso&quot; &quot;%(HlslShader.Identity)&quot;"
+    <Exec Command="&quot;$(FxcToolPath)&quot; /nologo /T %(HlslShader.ShaderTarget) /E main /Fo &quot;$(ShaderOutputDir)%(HlslShader.Filename).cso&quot; &quot;%(HlslShader.Identity)&quot;"
           WorkingDirectory="$(ProjectDir)"
           StandardOutputImportance="Low" />
   </Target>

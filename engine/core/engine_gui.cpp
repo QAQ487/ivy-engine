@@ -747,12 +747,39 @@ static void DrawPostFxShowcaseWindow(bool* open) {
     if (ImGui::SliderFloat("Flicker", &s_fx.flicker, 0.0f, 1.0f, "%.3f"))
         applyFx();
 
+    ImGui::Separator();
+    ImGui::Text("Bloom (Bright Glow)");
+    if (ImGui::SliderFloat("Bloom Intensity", &s_fx.bloomIntensity, 0.0f, 2.5f, "%.2f"))
+        applyFx();
+    if (ImGui::SliderFloat("Bloom Threshold", &s_fx.bloomThreshold, 0.0f, 1.5f, "%.2f"))
+        applyFx();
+    if (ImGui::SliderFloat("Bloom Spread", &s_fx.bloomSpread, 0.1f, 4.0f, "%.2f"))
+        applyFx();
+
     ImGui::Spacing();
     if (ImGui::Button("Off")) {
         s_fx = PostFXParams{};
         applyFx();
     }
     ImGui::SameLine();
+    if (ImGui::Button("Bloom Only")) {
+        s_fx = PostFXParams{};
+        s_fx.bloomIntensity = 0.8f;
+        s_fx.bloomThreshold = 0.7f;
+        s_fx.bloomSpread = 1.2f;
+        applyFx();
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Dreamy Bloom")) {
+        s_fx = PostFXParams{};
+        s_fx.bloomIntensity = 1.5f;
+        s_fx.bloomThreshold = 0.5f;
+        s_fx.bloomSpread = 2.2f;
+        s_fx.contrast = 1.1f;
+        applyFx();
+    }
+
+    ImGui::Spacing();
     if (ImGui::Button("Backrooms VHS")) {
         s_fx = PostFXParams{};
         s_fx.noise = 0.12f;
@@ -789,6 +816,16 @@ static void DrawPostFxShowcaseWindow(bool* open) {
         s_fx = PostFXParams{};
         s_fx.rgbShift = 0.01f;
         s_fx.mosaicBlocks = 32.0f;
+        applyFx();
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Preset: Neon Glow")) {
+        s_fx = PostFXParams{};
+        s_fx.bloomIntensity = 1.2f;
+        s_fx.bloomThreshold = 0.6f;
+        s_fx.bloomSpread = 1.5f;
+        s_fx.rgbShift = 0.003f;
+        s_fx.vignette = 0.35f;
         applyFx();
     }
 

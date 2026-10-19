@@ -20,6 +20,10 @@ struct PostFXParams {
 	float vignette = 0.0f;
 	float scanline = 0.0f;
 	float flicker = 0.0f;
+	// Bloom
+	float bloomIntensity = 0.0f;  // 0 = off, >0 = bloom glow intensity
+	float bloomThreshold = 0.8f;  // luminance cutoff for bright pass (0.0..1.0+)
+	float bloomSpread = 1.0f;     // blur radius / spread multiplier
 };
 
 void PostProcess_Initialize();

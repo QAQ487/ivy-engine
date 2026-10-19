@@ -12,11 +12,14 @@ cbuffer PostProcessBuffer : register(b10)
 	float PP_Flicker;
 	float2 PP_UVOffset;    // PostRT region that holds the game viewport
 	float2 PP_UVScale;
+	float PP_BloomIntensity;
+	float PP_BloomThreshold;
+	float PP_BloomSpread;
 	float PP_Pad0;
-	float PP_Pad1;
 };
 
 Texture2D sceneTex : register(t0);
+Texture2D bloomTex : register(t1);
 SamplerState sampLinearClamp : register(s0);
 
 struct PS_IN
@@ -138,6 +141,12 @@ float4 main(PS_IN input) : SV_TARGET
 		float h = Hash11(PP_Time * 61.0);
 		float dip = (h < 0.3) ? h / 0.3 : 0.0;
 		c *= 1.0 - PP_Flicker * dip;
+	}
+
+	if (PP_BloomIntensity > 0.0)
+	{
+		float3 bloom = bloomTex.Sample(sampLinearClamp, localUv).rgb;
+		c += bloom * PP_BloomIntensity;
 	}
 
 	return float4(c, a);
