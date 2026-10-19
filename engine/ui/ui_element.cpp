@@ -118,13 +118,11 @@ DirectX::XMFLOAT2 UIGetLayoutScale() {
 
     // During editor Update (before SetRenderViewport), the D3D viewport may still
     // be fullscreen while UI is laid out in the inset game viewport.
-    if (!EngineGUI_IsPlaying()) {
-        float vx = 0.0f, vy = 0.0f, vw = 0.0f, vh = 0.0f;
-        EngineGUI_GetGameViewportRect(vx, vy, vw, vh);
-        if (vw > 0.0f && vh > 0.0f) {
-            viewportW = vw;
-            viewportH = vh;
-        }
+    float vx = 0.0f, vy = 0.0f, vw = 0.0f, vh = 0.0f;
+    EngineGUI_GetGameViewportRect(vx, vy, vw, vh);
+    if (vw > 0.0f && vh > 0.0f) {
+        viewportW = vw;
+        viewportH = vh;
     }
 
     return { viewportW / design.x, viewportH / design.y };

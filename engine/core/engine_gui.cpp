@@ -109,6 +109,8 @@ using json = nlohmann::json;
 // ???? State ??????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????
 static bool        g_enabled = true;
 bool              g_isPlaying = false;
+static PlayMode    g_playMode = PlayMode::None;
+static PlayMode    g_pendingPlayMode = PlayMode::Viewport;
 static bool        g_holdPlayVisuals = false;
 static bool        g_isOnStart = true;
 static bool        g_imguiInitialized = false;
@@ -138,6 +140,7 @@ static void SyncImGuiInputAcceptance(bool willProcessImGuiFrame) {
 static SceneAssetPreloader g_sceneAssetPreloader;
 static bool        g_playWhenPreloadDone = false;
 bool               g_sceneLoadPending = false;
+static bool IsSceneLoadBusy();
 static std::string g_pendingSceneLoadPath;
 static CameraMode  g_cameraMode = CameraMode::ThirdPerson;
 static std::string g_activeCameraNode;
@@ -872,8 +875,8 @@ static void DrawShortcutHintsWindow(bool* open) {
         ImGui::TableSetColumnIndex(1);
         ImGui::TextDisabled("");
 
-        row("F2", "Toggle editor GUI");
-        row("F3", "Play / stop");
+        row("F2", "Play in viewport / stop");
+        row("F3", "Play fullscreen / stop");
         row("F6", "Toggle third-person cursor");
         row("F8", "Toggle job-system debug window");
         row("F", "Focus selected object in scene view");
@@ -1334,15 +1337,16 @@ static void DrawEngineStartScreen() {
 }
 
 static void DrawEditorMenuBar() {
+    const bool canMutate = !g_isPlaying && !IsSceneLoadBusy();
     if (ImGui::BeginMenu("File")) {
-        if (ImGui::MenuItem("New Project..."))
+        if (ImGui::MenuItem("New Project...", nullptr, false, canMutate))
             g_pendingFolderPick = PendingFolderPickAction::NewProject;
-        if (ImGui::MenuItem("Open Project..."))
+        if (ImGui::MenuItem("Open Project...", nullptr, false, canMutate))
             g_pendingFolderPick = PendingFolderPickAction::OpenProject;
         if (ImGui::MenuItem("Close Project", nullptr, false,
-                            ProjectManager::Instance().IsOpen()))
+                            canMutate && ProjectManager::Instance().IsOpen()))
             RequestCloseProject();
-        if (ImGui::MenuItem("Save Project", "Ctrl+Shift+S"))
+        if (ImGui::MenuItem("Save Project", "Ctrl+Shift+S", false, canMutate && ProjectManager::Instance().IsOpen()))
             SaveProject();
 
         if (ImGui::BeginMenu("Recent Projects")) {
@@ -1358,7 +1362,7 @@ static void DrawEditorMenuBar() {
                         path == ProjectManager::Instance().GetRootPath();
                     char label[512];
                     snprintf(label, sizeof(label), "%zu  %s", i + 1, path.c_str());
-                    if (ImGui::MenuItem(label, nullptr, isCurrent, !isCurrent))
+                    if (ImGui::MenuItem(label, nullptr, isCurrent, canMutate && !isCurrent))
                         RequestOpenProject(path);
                 }
             }
@@ -1367,19 +1371,19 @@ static void DrawEditorMenuBar() {
 
         ImGui::Separator();
         {
-            const bool canBuild = ProjectManager::Instance().IsOpen() &&
+            const bool canBuild = canMutate && ProjectManager::Instance().IsOpen() &&
                                   !PlayablePackage::IsBuildRunning();
             if (ImGui::MenuItem("Build Current Project...", nullptr, false, canBuild))
                 RequestBuildCurrentProject();
         }
 
         ImGui::Separator();
-        if (ImGui::MenuItem("Save Scene", "Ctrl+S"))
+        if (ImGui::MenuItem("Save Scene", "Ctrl+S", false, canMutate))
             SaveScene();
-        if (ImGui::MenuItem("New Scene..."))
+        if (ImGui::MenuItem("New Scene...", nullptr, false, canMutate))
             g_showNewScenePopup = true;
         ImGui::Separator();
-        if (ImGui::MenuItem("Clear Scene..."))
+        if (ImGui::MenuItem("Clear Scene...", nullptr, false, canMutate))
             ImGui::OpenPopup("ClearSceneConfirm");
         ImGui::EndMenu();
     }
@@ -1416,6 +1420,8 @@ static void DrawEditorMenuBar() {
     }
 
     if (ImGui::BeginMenu("GameObject")) {
+        if (g_isPlaying)
+            ImGui::BeginDisabled(true);
         if (ImGui::MenuItem("Create Empty"))
             SpawnRootGameObject(CreateEmptyGameObject());
         if (ImGui::BeginMenu("3D Object")) {
@@ -1471,6 +1477,8 @@ static void DrawEditorMenuBar() {
             }
             ImGui::EndMenu();
         }
+        if (g_isPlaying)
+            ImGui::EndDisabled();
         ImGui::EndMenu();
     }
 
@@ -1483,12 +1491,16 @@ static void DrawEditorMenuBar() {
     }
 
     if (ImGui::BeginMenu("Project Settings")) {
+        if (g_isPlaying)
+            ImGui::BeginDisabled(true);
         if (ImGui::MenuItem("Default Scene..."))
             g_showDefaultScenePopup = true;
         if (ImGui::MenuItem("Gravity...", nullptr, false, ProjectManager::Instance().IsOpen()))
             g_showGravityPopup = true;
         if (ImGui::MenuItem("Audio...", nullptr, false, ProjectManager::Instance().IsOpen()))
             g_showAudioPopup = true;
+        if (g_isPlaying)
+            ImGui::EndDisabled();
         ImGui::EndMenu();
     }
 
@@ -2121,6 +2133,7 @@ static void NewScene() {
 
 void TeardownPlaySession(bool resetEditorState) {
     g_isPlaying = false;
+    g_playMode = PlayMode::None;
     g_isOnStart = true;
     g_cameraMode = CameraMode::ThirdPerson;
     ThirdPersonCamera_ShowCursor(true);
@@ -2135,7 +2148,9 @@ void TeardownPlaySession(bool resetEditorState) {
 void SoftStopPlayForSceneLoad() {
     if (!g_isPlaying && g_holdPlayVisuals)
         return;
+    g_pendingPlayMode = (g_playMode != PlayMode::None) ? g_playMode : PlayMode::Viewport;
     g_isPlaying = false;
+    g_playMode = PlayMode::None;
     g_isOnStart = true;
     g_holdPlayVisuals = true;
     g_enabled = false;
@@ -2144,6 +2159,7 @@ void SoftStopPlayForSceneLoad() {
 }
 
 void ReturnToStart() {
+    g_playMode = PlayMode::None;
     g_holdPlayVisuals = false;
     TeardownPlaySession(true);
     DebugSystem::ResetTimeScale();
@@ -2204,9 +2220,10 @@ bool EngineGUI_IsDebugCameraPlayInputActive() {
     return g_isPlaying && DebugCamera_IsEnabled();
 }
 
-static void StartPlay() {
+static void StartPlay(PlayMode mode = PlayMode::Viewport) {
     if (g_sceneAssetPreloader.IsActive() || g_sceneLoadPending) {
         g_playWhenPreloadDone = true;
+        g_pendingPlayMode = mode;
         return;
     }
 
@@ -2221,9 +2238,12 @@ static void StartPlay() {
     PrefabRuntime_EnsureSpawnRoot();
     g_isOnStart = false;
     g_isPlaying = true;
+    g_playMode = mode;
+    g_pendingPlayMode = mode;
     g_holdPlayVisuals = false;
+    const bool isViewportPlay = (mode == PlayMode::Viewport);
+    g_enabled = isViewportPlay;
     if (ShouldUseDebugCameraDuringPlay()) {
-        g_enabled = false;
         if (SceneLoader_DebugCameraEnabledOnPlay() && SceneLoader_DebugCameraFlyOnPlay())
             DebugCamera_SetControlMode(DebugCameraControlMode::Fly);
         else
@@ -2231,14 +2251,13 @@ static void StartPlay() {
         DebugCamera_SetEnabled(true);
         ThirdPersonCamera_ShowCursor(true);
     } else {
-        g_enabled = false;
         DebugCamera_SetEnabled(false);
         const bool hideCursor =
             ((g_cameraMode == CameraMode::ThirdPerson) || (g_cameraMode == CameraMode::FirstPerson))
             && HasThirdPersonPlayer();
         ThirdPersonCamera_ShowCursor(!hideCursor);
     }
-    SyncImGuiInputAcceptance(false);
+    SyncImGuiInputAcceptance(isViewportPlay);
 }
 
 void EngineGUI_QueueSceneLoad(const char* filename) {
@@ -2294,7 +2313,7 @@ void EngineGUI_FlushSceneLoadPending() {
     // Match runtime: stay in / re-enter play immediately when deferred.
     if (g_playWhenPreloadDone && !g_sceneAssetPreloader.IsActive()) {
         g_playWhenPreloadDone = false;
-        StartPlay();
+        StartPlay(g_pendingPlayMode);
     }
 }
 
@@ -2307,7 +2326,7 @@ void EngineGUI_TickSceneAssetPreload() {
 
     if (g_playWhenPreloadDone) {
         g_playWhenPreloadDone = false;
-        StartPlay();
+        StartPlay(g_pendingPlayMode);
     }
 }
 
@@ -2402,9 +2421,10 @@ void EngineGUI_Finalize() {
 }
 
 bool EngineGUI_IsPlaying() { return g_isPlaying; }
+PlayMode EngineGUI_GetPlayMode() { return g_playMode; }
 bool EngineGUI_PreferPlayVisuals() { return g_isPlaying || g_holdPlayVisuals; }
 bool EngineGUI_IsOnStart() { return g_isOnStart; }
-void EngineGUI_StartPlay() { StartPlay(); }
+void EngineGUI_StartPlay(PlayMode mode) { StartPlay(mode); }
 void EngineGUI_StopPlay() { ReturnToStart(); }
 CameraMode EngineGUI_GetCameraMode() { return g_cameraMode; }
 void EngineGUI_SetCameraMode(CameraMode m) { g_cameraMode = m; }
@@ -2433,7 +2453,7 @@ void EngineGUI_GetGameViewportRect(float& x, float& y, float& width, float& heig
     const float screenW = GetBackBufferWidth();
     const float screenH = GetBackBufferHeight();
 
-    if (g_isPlaying || !g_enabled) {
+    if (g_playMode == PlayMode::Fullscreen || !g_enabled) {
         x = 0.0f;
         y = 0.0f;
         width = screenW;
@@ -2829,8 +2849,14 @@ void EngineGUI_Update(double elapsed_time) {
 
     // Time-sliced asset preload / scene-switch busy: gate editor interaction.
     if (IsSceneLoadBusy()) {
-        if (KeyLogger_IsTrigger(KK_F3) && !g_isPlaying)
+        if (KeyLogger_IsTrigger(KK_F2) && !g_isPlaying) {
             g_playWhenPreloadDone = true;
+            g_pendingPlayMode = PlayMode::Viewport;
+        }
+        if (KeyLogger_IsTrigger(KK_F3) && !g_isPlaying) {
+            g_playWhenPreloadDone = true;
+            g_pendingPlayMode = PlayMode::Fullscreen;
+        }
         if (KeyLogger_IsTrigger(KK_F8))
             JobSystem_ToggleDebugWindow();
         if (g_sceneAssetPreloader.IsActive())
@@ -2841,19 +2867,20 @@ void EngineGUI_Update(double elapsed_time) {
     }
 
     if (KeyLogger_IsTrigger(KK_F2)) {
-        g_enabled = !g_enabled;
-        DebugCamera_SetEnabled(g_enabled);
-        ThirdPersonCamera_ShowCursor(g_enabled);
+        if (g_isPlaying) {
+            ReturnToStart();
+        }
+        else {
+            StartPlay(PlayMode::Viewport);
+        }
     }
 
     if (KeyLogger_IsTrigger(KK_F3)) {
         if (g_isPlaying) {
             ReturnToStart();
-            g_enabled = true;
-            DebugCamera_SetEnabled(true);
         }
         else {
-            StartPlay();
+            StartPlay(PlayMode::Fullscreen);
         }
     }
 
@@ -2891,7 +2918,7 @@ void EngineGUI_Update(double elapsed_time) {
     }
 
     // F: focus debug camera on selected object
-    if (KeyLogger_IsTrigger(KK_F) && g_selNode) {
+    if (!g_isPlaying && KeyLogger_IsTrigger(KK_F) && g_selNode) {
         if (const engine::Transform* t = g_selNode->GetTransform())
             FocusSelectedObjectWithCamera(t);
     }
@@ -3084,13 +3111,13 @@ static void DrawSceneNodeHierarchy(GameObject* node, GameObject* rootOwner) {
     bool nodeOpen = ImGui::TreeNodeEx(
         reinterpret_cast<void*>(node), flags, "%s", node->GetName().c_str());
 
-    if (ImGui::IsItemClicked(ImGuiMouseButton_Left))
+    if (!g_isPlaying && ImGui::IsItemClicked(ImGuiMouseButton_Left))
     {
         g_selNode = node;
         g_selUiElement = nullptr;
     }
 
-    if (ImGui::BeginPopupContextItem()) {
+    if (!g_isPlaying && ImGui::BeginPopupContextItem()) {
         if (ImGui::MenuItem("Create Empty Child"))
             SpawnChildGameObject(node);
         if (ImGui::MenuItem("Duplicate"))
@@ -3102,7 +3129,7 @@ static void DrawSceneNodeHierarchy(GameObject* node, GameObject* rootOwner) {
     }
 
     // Drag source
-    if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None)) {
+    if (!g_isPlaying && ImGui::BeginDragDropSource(ImGuiDragDropFlags_None)) {
         GameObject* ptr = node;
         ImGui::SetDragDropPayload("HIERARCHY_GO", &ptr, sizeof(ptr));
         ImGui::Text("Move: %s", node->GetName().c_str());
@@ -3110,7 +3137,7 @@ static void DrawSceneNodeHierarchy(GameObject* node, GameObject* rootOwner) {
     }
 
     // Drop target
-    if (ImGui::BeginDragDropTarget()) {
+    if (!g_isPlaying && ImGui::BeginDragDropTarget()) {
         if (const ImGuiPayload* pl = ImGui::AcceptDragDropPayload("HIERARCHY_GO")) {
             GameObject* dragged = *static_cast<GameObject**>(pl->Data);
             if (dragged && dragged != node) {
@@ -3403,18 +3430,11 @@ void EngineGUI_Draw() {
         ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar);
     {
         if (g_isPlaying) {
-            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.20f, 0.55f, 0.20f, 1.0f));
-            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.30f, 0.70f, 0.30f, 1.0f));
-            ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.15f, 0.40f, 0.15f, 1.0f));
-            if (ToolbarIconButton(ICON_FA_PAUSE, "Pause")) {
-                g_isPlaying = false;
-                g_enabled = true;
-                DebugCamera_SetControlMode(DebugCameraControlMode::Orbit);
-                DebugCamera_SetEnabled(true);
-                ThirdPersonCamera_ShowCursor(true);
-                ClearSceneRuntime(false);
-                ApplyEditorColliders();
-                RestoreEditorDebugColliderFlags();
+            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.55f, 0.20f, 0.20f, 1.0f));
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.70f, 0.30f, 0.30f, 1.0f));
+            ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.40f, 0.15f, 0.15f, 1.0f));
+            if (ToolbarIconButton(ICON_FA_STOP, "Stop (F2 / F3)")) {
+                ReturnToStart();
             }
             ImGui::PopStyleColor(3);
         }
@@ -3422,13 +3442,38 @@ void EngineGUI_Draw() {
             ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.20f, 0.40f, 0.70f, 1.0f));
             ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.30f, 0.55f, 0.85f, 1.0f));
             ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.15f, 0.30f, 0.55f, 1.0f));
-            if (ToolbarIconButton(ICON_FA_PLAY, "Play (F3)")) StartPlay();
+            if (ToolbarIconButton(ICON_FA_PLAY, "Play in Viewport (F2)")) {
+                StartPlay(PlayMode::Viewport);
+            }
+            ImGui::SameLine(0.0f, Ui(2.0f));
+            const bool openPlayMenu = ImGui::Button(ICON_FA_CARET_DOWN "##PlayMenuBtn", ImVec2(Ui(16.0f), 0.0f));
+            if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort))
+                ImGui::SetTooltip("Play Mode");
+            if (openPlayMenu)
+                ImGui::OpenPopup("PlayModeDropdownMenu");
+
+            if (ImGui::BeginPopup("PlayModeDropdownMenu")) {
+                if (ImGui::MenuItem("Play in Viewport", "F2")) {
+                    StartPlay(PlayMode::Viewport);
+                }
+                if (ImGui::MenuItem("Play Fullscreen", "F3")) {
+                    StartPlay(PlayMode::Fullscreen);
+                }
+                ImGui::EndPopup();
+            }
             ImGui::PopStyleColor(3);
         }
 
         ImGui::SameLine();
-        if (ToolbarIconButton(ICON_FA_FLOPPY_DISK, "Save Scene (Ctrl+S)"))
-            SaveScene();
+        {
+            const bool canSave = !g_isPlaying && !sceneLoadBusy;
+            if (!canSave)
+                ImGui::BeginDisabled();
+            if (ToolbarIconButton(ICON_FA_FLOPPY_DISK, "Save Scene (Ctrl+S)"))
+                SaveScene();
+            if (!canSave)
+                ImGui::EndDisabled();
+        }
 
         ImGui::SameLine();
         {
@@ -3464,14 +3509,14 @@ void EngineGUI_Draw() {
         if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort))
             ImGui::SetTooltip("Reload Scripts\n%s", g_scriptReloadStatus.c_str());
 
-        ImGui::SameLine();
-        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.55f, 0.20f, 0.20f, 1.0f));
-        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.70f, 0.30f, 0.30f, 1.0f));
-        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.40f, 0.15f, 0.15f, 1.0f));
-        if (ToolbarIconButton(ICON_FA_BACKWARD_STEP, "Return to Start")) ReturnToStart();
-        ImGui::PopStyleColor(3);
-
         if (!g_isPlaying) {
+            ImGui::SameLine();
+            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.55f, 0.20f, 0.20f, 1.0f));
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.70f, 0.30f, 0.30f, 1.0f));
+            ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.40f, 0.15f, 0.15f, 1.0f));
+            if (ToolbarIconButton(ICON_FA_BACKWARD_STEP, "Return to Start")) ReturnToStart();
+            ImGui::PopStyleColor(3);
+
             ImGui::SameLine();
             const bool highlightUiOverlay = g_showUiOverlay;
             if (highlightUiOverlay)
@@ -3506,51 +3551,51 @@ void EngineGUI_Draw() {
                 EngineGUI_SetEditMode(EditorEditMode::UI);
             if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort))
                 ImGui::SetTooltip("UI Edit Mode");
-        }
 
-        ImGui::SameLine();
-        TransformGizmo::DrawToolbarControls();
-
-        ImGui::SameLine();
-        // Camera selector
-        {
-            std::vector<std::string> camNames;
-            std::function<void(GameObject*)> collectCams = [&](GameObject* node) {
-                if (!node) return;
-                if (node->GetComponent<CameraComponent>())
-                    camNames.push_back(node->GetName());
-                for (const auto& child : node->GetChildren())
-                    collectCams(child.get());
-            };
-            for (const auto& node : g_sceneNodes)
-                collectCams(node.get());
-
-            if (g_activeCameraNode.empty() && camNames.size() == 1)
-                g_activeCameraNode = camNames[0];
-
-            std::string currentLabel =
-                (g_cameraMode == CameraMode::ThirdPerson) ? "Third Person"
-                : (g_cameraMode == CameraMode::FirstPerson) ? "First Person"
-                : (g_activeCameraNode.empty() ? "Third Person" : g_activeCameraNode);
-
-            ImGui::Text("Camera:");
             ImGui::SameLine();
-            ImGui::SetNextItemWidth(160.0f);
-            if (ImGui::BeginCombo("##Camera", currentLabel.c_str())) {
-                bool tpSel = (g_cameraMode == CameraMode::ThirdPerson);
-                if (ImGui::Selectable("Third Person", tpSel))
-                    g_cameraMode = CameraMode::ThirdPerson;
-                bool fpSel = (g_cameraMode == CameraMode::FirstPerson);
-                if (ImGui::Selectable("First Person", fpSel))
-                    g_cameraMode = CameraMode::FirstPerson;
-                for (const auto& name : camNames) {
-                    bool sel = (g_cameraMode == CameraMode::SceneCamera && g_activeCameraNode == name);
-                    if (ImGui::Selectable(name.c_str(), sel)) {
-                        g_cameraMode = CameraMode::SceneCamera;
-                        g_activeCameraNode = name;
+            TransformGizmo::DrawToolbarControls();
+
+            ImGui::SameLine();
+            // Camera selector
+            {
+                std::vector<std::string> camNames;
+                std::function<void(GameObject*)> collectCams = [&](GameObject* node) {
+                    if (!node) return;
+                    if (node->GetComponent<CameraComponent>())
+                        camNames.push_back(node->GetName());
+                    for (const auto& child : node->GetChildren())
+                        collectCams(child.get());
+                };
+                for (const auto& node : g_sceneNodes)
+                    collectCams(node.get());
+
+                if (g_activeCameraNode.empty() && camNames.size() == 1)
+                    g_activeCameraNode = camNames[0];
+
+                std::string currentLabel =
+                    (g_cameraMode == CameraMode::ThirdPerson) ? "Third Person"
+                    : (g_cameraMode == CameraMode::FirstPerson) ? "First Person"
+                    : (g_activeCameraNode.empty() ? "Third Person" : g_activeCameraNode);
+
+                ImGui::Text("Camera:");
+                ImGui::SameLine();
+                ImGui::SetNextItemWidth(160.0f);
+                if (ImGui::BeginCombo("##Camera", currentLabel.c_str())) {
+                    bool tpSel = (g_cameraMode == CameraMode::ThirdPerson);
+                    if (ImGui::Selectable("Third Person", tpSel))
+                        g_cameraMode = CameraMode::ThirdPerson;
+                    bool fpSel = (g_cameraMode == CameraMode::FirstPerson);
+                    if (ImGui::Selectable("First Person", fpSel))
+                        g_cameraMode = CameraMode::FirstPerson;
+                    for (const auto& name : camNames) {
+                        bool sel = (g_cameraMode == CameraMode::SceneCamera && g_activeCameraNode == name);
+                        if (ImGui::Selectable(name.c_str(), sel)) {
+                            g_cameraMode = CameraMode::SceneCamera;
+                            g_activeCameraNode = name;
+                        }
                     }
+                    ImGui::EndCombo();
                 }
-                ImGui::EndCombo();
             }
         }
     }
@@ -3562,6 +3607,9 @@ void EngineGUI_Draw() {
     ImGui::Begin("Scene Hierarchy", nullptr,
         ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
     {
+        if (g_isPlaying)
+            ImGui::BeginDisabled(true);
+
         if (ImGui::CollapsingHeader("Game Objects", ImGuiTreeNodeFlags_DefaultOpen)) {
             for (auto& rootNode : g_sceneNodes)
                 if (rootNode) DrawSceneNodeHierarchy(rootNode.get(), rootNode.get());
@@ -3569,7 +3617,7 @@ void EngineGUI_Draw() {
             // Root drop zone
             ImGui::Selectable("##RootDropZone", false,
                 ImGuiSelectableFlags_AllowOverlap, ImVec2(-1, 6));
-            if (ImGui::BeginDragDropTarget()) {
+            if (!g_isPlaying && ImGui::BeginDragDropTarget()) {
                 if (const ImGuiPayload* pl = ImGui::AcceptDragDropPayload("HIERARCHY_GO")) {
                     GameObject* dragged = *static_cast<GameObject**>(pl->Data);
                     if (dragged && dragged->GetParent()) {
@@ -3615,6 +3663,9 @@ void EngineGUI_Draw() {
         if (ImGui::CollapsingHeader("Canvas Elements", ImGuiTreeNodeFlags_DefaultOpen)) {
             EngineGUIUI::DrawCanvasElementHierarchy(g_selUiElement, g_selNode);
         }
+
+        if (g_isPlaying)
+            ImGui::EndDisabled();
     }
     ImGui::End();
 
@@ -3624,6 +3675,9 @@ void EngineGUI_Draw() {
     ImGui::Begin("Properties", nullptr,
         ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
     {
+        if (g_isPlaying)
+            ImGui::BeginDisabled(true);
+
         if (g_selNode) {
             bool runtimeDirty = false;
             static GameObject* s_lastSelNode = nullptr;
@@ -4626,6 +4680,9 @@ void EngineGUI_Draw() {
         else {
             DrawPropertiesEmptyState();
         }
+
+        if (g_isPlaying)
+            ImGui::EndDisabled();
     }
     ImGui::End();
 
@@ -4635,10 +4692,10 @@ void EngineGUI_Draw() {
     ImGui::Begin("Asset Browser", nullptr,
         ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
     {
-        if (sceneLoadBusy)
+        if (sceneLoadBusy || g_isPlaying)
             ImGui::BeginDisabled(true);
         if (GameObject* spawned = MapEditor::ProjectBrowserPanel(g_sceneNodes)) {
-            if (!sceneLoadBusy) {
+            if (!sceneLoadBusy && !g_isPlaying) {
                 g_selNode = spawned;
                 g_selUiElement = nullptr;
                 const int idx = [&]() {
@@ -4651,7 +4708,7 @@ void EngineGUI_Draw() {
                 SyncSceneRuntime();
             }
         }
-        if (sceneLoadBusy)
+        if (sceneLoadBusy || g_isPlaying)
             ImGui::EndDisabled();
     }
     ImGui::End();

@@ -64,12 +64,10 @@ void UIButton::Update(double elapsed_time) {
 
 	float viewportX = static_cast<float>(mouseX);
 	float viewportY = static_cast<float>(mouseY);
-	if (!EngineGUI_IsPlaying()) {
-		float vx = 0.0f, vy = 0.0f, vw = 0.0f, vh = 0.0f;
-		EngineGUI_GetGameViewportRect(vx, vy, vw, vh);
-		viewportX -= vx;
-		viewportY -= vy;
-	}
+	float vx = 0.0f, vy = 0.0f, vw = 0.0f, vh = 0.0f;
+	EngineGUI_GetGameViewportRect(vx, vy, vw, vh);
+	viewportX -= vx;
+	viewportY -= vy;
 	m_isHovered = ContainsPoint(viewportX, viewportY);
 
 	const bool mouseDown = Mouse_IsLeftDown();

@@ -21,13 +21,16 @@ void EngineGUI_OnBackbufferResized();
 // Wireframe overlay for the selected GameObject (mesh + collider), drawn over the 3D viewport.
 void EngineGUI_DrawSelectionIndicator();
 
+enum class PlayMode { None = 0, Viewport = 1, Fullscreen = 2 };
+
 bool EngineGUI_IsPlaying();
+PlayMode EngineGUI_GetPlayMode();
 bool EngineGUI_IsDebugCameraPlayInputActive();
 bool EngineGUI_IsOnStart();
 // True while playing, or during a play→play scene switch before StartPlay resumes.
 // Use for draw presentation only (not simulation).
 bool EngineGUI_PreferPlayVisuals();
-void EngineGUI_StartPlay();
+void EngineGUI_StartPlay(PlayMode mode = PlayMode::Viewport);
 void EngineGUI_StopPlay();
 void EngineGUI_SetEnabled(bool enabled);
 bool EngineGUI_IsEnabled();

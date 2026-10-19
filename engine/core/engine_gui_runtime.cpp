@@ -89,6 +89,10 @@ bool EngineGUI_IsPlaying() {
     return g_runtimePlaying;
 }
 
+PlayMode EngineGUI_GetPlayMode() {
+    return g_runtimePlaying ? PlayMode::Fullscreen : PlayMode::None;
+}
+
 bool EngineGUI_PreferPlayVisuals() {
     return g_runtimePlaying;
 }
@@ -105,7 +109,7 @@ bool EngineGUI_IsOnStart() {
     return !g_runtimePlaying;
 }
 
-void EngineGUI_StartPlay() {
+void EngineGUI_StartPlay(PlayMode /*mode*/) {
     EnterRuntimePlay();
 }
 
