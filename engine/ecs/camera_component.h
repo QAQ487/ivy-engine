@@ -8,7 +8,10 @@ namespace engine { class Transform; }
 class CameraComponent : public Component {
 public:
     bool enabled = true;
+    bool debugFly = false; // Editor orbit/pan/dolly controls while this is the selected play camera.
     float fov = 45.0f;
+    bool orthographic = false;
+    float orthographicHeight = 10.0f;
     float nearClip = 0.5f;
     float farClip = 1000.0f;
 

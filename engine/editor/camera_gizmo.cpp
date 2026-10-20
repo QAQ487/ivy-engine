@@ -3,6 +3,7 @@
 #include "engine/ecs/camera_component.h"
 #include "engine/ecs/game_object.h"
 #include "engine/ecs/transform.h"
+#include "engine/rendering/d3d11/renderer.h"
 #include <cmath>
 #include <vector>
 
@@ -52,10 +53,14 @@ void DrawCamera(DebugDrawer& drawer, const engine::Transform* transform,
     drawer.DrawLine(eye, AddScaled(eye, up, axisLen), { 0.2f, 1.0f, 0.2f, 1.0f });      // up
     drawer.DrawLine(eye, AddScaled(eye, forward, axisLen), { 0.2f, 0.6f, 1.0f, 1.0f }); // forward
 
-    // Near-plane frustum wire (FOV-based).
+    // Preview the projection using the active render viewport aspect ratio.
     const float nearDist = 1.2f;
-    const float halfV = tanf(XMConvertToRadians(camera->fov * 0.5f)) * nearDist;
-    const float halfH = halfV * 1.333f; // approx 4:3; aspect not critical for gizmo
+    const float viewportHeight = GetRenderViewportHeight();
+    const float aspect = viewportHeight > 0.0f ? GetRenderViewportWidth() / viewportHeight : 1.0f;
+    const float halfV = camera->orthographic
+        ? (camera->orthographicHeight > 0.01f ? camera->orthographicHeight : 0.01f) * 0.5f
+        : tanf(XMConvertToRadians(camera->fov * 0.5f)) * nearDist;
+    const float halfH = halfV * aspect;
 
     const XMFLOAT3 center = AddScaled(eye, forward, nearDist);
     const XMFLOAT3 c0 = {
@@ -81,10 +86,22 @@ void DrawCamera(DebugDrawer& drawer, const engine::Transform* transform,
 
     std::vector<XMFLOAT3> lines;
     lines.reserve(32);
-    AppendLine(lines, eye, c0);
-    AppendLine(lines, eye, c1);
-    AppendLine(lines, eye, c2);
-    AppendLine(lines, eye, c3);
+    if (camera->orthographic) {
+        const XMFLOAT3 corners[] = { c0, c1, c2, c3 };
+        XMFLOAT3 back[4];
+        for (int i = 0; i < 4; ++i) {
+            back[i] = AddScaled(corners[i], forward, -nearDist);
+            AppendLine(lines, back[i], corners[i]);
+        }
+        for (int i = 0; i < 4; ++i)
+            AppendLine(lines, back[i], back[(i + 1) % 4]);
+    }
+    else {
+        AppendLine(lines, eye, c0);
+        AppendLine(lines, eye, c1);
+        AppendLine(lines, eye, c2);
+        AppendLine(lines, eye, c3);
+    }
     AppendLine(lines, c0, c1);
     AppendLine(lines, c1, c2);
     AppendLine(lines, c2, c3);

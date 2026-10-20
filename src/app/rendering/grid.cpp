@@ -9,6 +9,7 @@
  ===========================================================================**/
 #include "grid.h"
 #include <vector>
+#include <memory>
 #include <cmath>
 #include "engine/rendering/d3d11/renderer.h" // VERTEX_3D, MATERIAL, GetDevice*, SCREEN_*
 #include "engine/rendering/d3d11/shader.h"
@@ -19,7 +20,9 @@
 
 using namespace DirectX;
 
-static Grid g_grid;
+// Destroy the GameObject while engine singletons are still alive.
+static std::unique_ptr<Grid> g_grid;
+static bool g_gridVisible = true;
 
 static ID3D11Buffer* g_pVB = nullptr;
 static ID3D11Buffer* g_pFillVB = nullptr;           // ”wŒi“h‚è‚Â‚Ô‚µ—p‚ÌVB
@@ -222,22 +225,27 @@ void Grid::Draw() {
 }
 
 void Grid_Initialize() {
-	g_grid.Initialize();
+    if (g_grid) return;
+    g_grid = std::make_unique<Grid>();
+    g_grid->Initialize();
+    g_grid->SetVisible(g_gridVisible);
 }
 
 void Grid_Finalize() {
-	g_grid.Finalize();
+    if (!g_grid) return;
+    g_grid->Finalize();
+    g_grid.reset();
 }
 
 void Grid_Draw() {
-	if (!g_grid.IsVisible()) return;
-	g_grid.Draw();
+    if (g_grid && g_grid->IsVisible()) g_grid->Draw();
 }
 
 bool Grid_IsVisible() {
-	return g_grid.IsVisible();
+    return g_gridVisible;
 }
 
 void Grid_SetVisible(bool visible) {
-	g_grid.SetVisible(visible);
+    g_gridVisible = visible;
+    if (g_grid) g_grid->SetVisible(visible);
 }

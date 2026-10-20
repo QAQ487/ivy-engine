@@ -1,3 +1,5 @@
+#include <cmath>
+#include <algorithm>
 /**===========================================================================
  File   :  [ui_sprite.cpp]
  Author : Terry Yeung
@@ -44,7 +46,7 @@ void UISprite::Update(double elapsed_time) {
 void UISprite::Draw() {
 	if (!m_isVisible) return;
 
-	DirectX::XMFLOAT2 screenPos = GetScreenPosition();
+	DirectX::XMFLOAT2 screenPos = GetDrawPosition();
 	const DirectX::XMFLOAT2 layoutScale = UIGetLayoutScale();
 	const float drawWidth = m_width * layoutScale.x;
 	const float drawHeight = m_height * layoutScale.y;
@@ -113,7 +115,7 @@ bool UISprite::GetScreenRect(UIScreenRect& out) const {
 	if (!m_isVisible)
 		return false;
 
-	DirectX::XMFLOAT2 screenPos = GetScreenPosition();
+	DirectX::XMFLOAT2 screenPos = GetDrawPosition();
 	const DirectX::XMFLOAT2 layoutScale = UIGetLayoutScale();
 	const float drawWidth = m_width * layoutScale.x;
 	const float drawHeight = m_height * layoutScale.y;
@@ -121,8 +123,15 @@ bool UISprite::GetScreenRect(UIScreenRect& out) const {
 	out.left = screenPos.x;
 	out.top = screenPos.y;
 	out.right = screenPos.x + drawWidth;
-	out.bottom = screenPos.y + drawHeight;
-	return true;
+    out.bottom = screenPos.y + drawHeight;
+    if(HasExplicitPivot() && m_rotation!=0) {
+        const float cx=screenPos.x+drawWidth*.5f,cy=screenPos.y+drawHeight*.5f;
+        const float angle=DirectX::XMConvertToRadians(m_rotation);
+        const float extentX=std::fabs(std::cos(angle))*drawWidth*.5f+std::fabs(std::sin(angle))*drawHeight*.5f;
+        const float extentY=std::fabs(std::sin(angle))*drawWidth*.5f+std::fabs(std::cos(angle))*drawHeight*.5f;
+        out={cx-extentX,cy-extentY,cx+extentX,cy+extentY};
+    }
+    return true;
 }
 
 void UISprite::SetTexture(const wchar_t* texturePath) {
@@ -154,4 +163,17 @@ void UISprite::ClearSourceRect() {
 	m_srcY = 0;
 	m_srcW = 0;
 	m_srcH = 0;
+}
+
+DirectX::XMFLOAT2 UISprite::GetDrawPosition() const {
+    auto position=GetScreenPosition();
+    if(HasExplicitPivot() && m_rotation!=0) {
+        const auto scale=UIGetLayoutScale(),pivot=GetPivot();
+        const float dx=(.5f-pivot.x)*m_width*scale.x;
+        const float dy=(pivot.y-.5f)*m_height*scale.y;
+        const float angle=DirectX::XMConvertToRadians(m_rotation),c=std::cos(angle),s=std::sin(angle);
+        position.x+=dx*c-dy*s-dx;
+        position.y+=dx*s+dy*c-dy;
+    }
+    return position;
 }

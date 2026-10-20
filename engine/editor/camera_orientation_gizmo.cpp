@@ -1,4 +1,4 @@
-#include "camera_orientation_gizmo.h"
+﻿#include "camera_orientation_gizmo.h"
 
 #ifndef GAME_RUNTIME
 #include "camera.h"
@@ -74,6 +74,8 @@ bool GetGizmoCenter(float& outX, float& outY) {
 namespace CameraOrientationGizmo {
 
 bool IsInteracting() {
+    if(DebugCamera_Is2DView()) return false;
+    if(ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow)) return false;
     float cx = 0.0f, cy = 0.0f;
     if (!GetGizmoCenter(cx, cy))
         return false;
@@ -121,7 +123,7 @@ void Draw() {
         const float dist = sqrtf(dx * dx + dy * dy);
         const float hitRadius = kAxes[i].isPositive ? 11.5f : 8.5f;
 
-        if (dist <= hitRadius) {
+        if (!ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow) && dist <= hitRadius) {
             // Prioritize endpoints closer to viewer in depth
             if (proj[i].depthZ < bestDepth) {
                 bestDepth = proj[i].depthZ;
@@ -134,7 +136,7 @@ void Draw() {
     const float centerDy = mouse.y - centerY;
     const bool isOverDisk = (centerDx * centerDx + centerDy * centerDy) <= (kGizmoRadius * kGizmoRadius);
 
-    if (isOverDisk || hoveredIndex >= 0) {
+    if (!ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow) && (isOverDisk || hoveredIndex >= 0)) {
         ImGui::GetIO().WantCaptureMouse = true;
     }
 
@@ -152,7 +154,7 @@ void Draw() {
         return a.depthZ > b.depthZ; // Farthest (most positive depth) first
     });
 
-    ImDrawList* dl = ImGui::GetForegroundDrawList();
+    ImDrawList* dl = ImGui::GetBackgroundDrawList();
 
     // Background disc
     dl->AddCircleFilled(center, kGizmoRadius, IM_COL32(30, 32, 36, 175), 32);

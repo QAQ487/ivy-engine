@@ -616,7 +616,7 @@ bool ProjectManager::OpenProject(const std::string& rootPath, std::string* error
 
 bool ProjectManager::ScaffoldNewProjectTree(const std::string& rootPath,
                                             const std::string& projectName,
-                                            std::string* errorOut) {
+                                            std::string* errorOut, bool template2D) {
     std::error_code ec;
     const fs::path root = rootPath;
     fs::create_directories(root / "rom" / "scene", ec);
@@ -626,6 +626,8 @@ bool ProjectManager::ScaffoldNewProjectTree(const std::string& rootPath,
     fs::create_directories(root / "rom" / "prefabs", ec);
     fs::create_directories(root / "game" / "scripts" / "bin", ec);
 
+    EnsureEngineAssets(rootPath);
+
     {
         std::ofstream scene(root / "rom" / "scene" / "scene_main.json", std::ios::trunc);
         if (!scene.is_open()) {
@@ -633,11 +635,54 @@ bool ProjectManager::ScaffoldNewProjectTree(const std::string& rootPath,
                 *errorOut = "Failed to create scene_main.json";
             return false;
         }
-        scene << kBlankSceneJson;
+        json initial = json::parse(kBlankSceneJson);
+        if (template2D) {
+            initial["settings"]["renderPath"] = "2d";
+            initial["settings"]["physicsMode"] = "none";
+            initial["settings"]["camera"] = {{"mode", "scene"}, {"node", "Camera2D"}};
+            initial["settings"]["render"]["fogEnabled"] = false;
+            json transform = {
+                {"posX", 0.0}, {"posY", 0.0}, {"posZ", -10.0},
+                {"rotX", 0.0}, {"rotY", 0.0}, {"rotZ", 0.0},
+                {"scaleX", 1.0}, {"scaleY", 1.0}, {"scaleZ", 1.0}
+            };
+            initial["nodes"] = json::array();
+            initial["nodes"].push_back({
+                {"name", "Camera2D"}, {"tag", 0}, {"children", json::array()},
+                {"components", {{"SceneTransform", transform}, {"Camera", {
+                    {"enabled", true}, {"orthographic", true},
+                    {"orthographicHeight", 10.0}, {"nearClip", 0.1}, {"farClip", 100.0}
+                }}}}
+            });
+            std::string texture = "rom/branding/ivy_logo.png";
+            if (!fs::exists(root / texture, ec)) {
+                texture = "rom/texture/white.png";
+                static const unsigned char pixel[] = {
+                    137,80,78,71,13,10,26,10,0,0,0,13,73,72,68,82,
+                    0,0,0,1,0,0,0,1,8,6,0,0,0,31,21,196,137,
+                    0,0,0,11,73,68,65,84,120,156,99,248,15,4,0,9,251,3,253,
+                    251,94,107,43,0,0,0,0,73,69,78,68,174,66,96,130
+                };
+                std::ofstream image(root / texture, std::ios::binary);
+                image.write(reinterpret_cast<const char*>(pixel), sizeof(pixel));
+                if (!image) {
+                    if (errorOut) *errorOut = "Failed to create 2D template texture";
+                    return false;
+                }
+            }
+            transform["posZ"] = 0.0;
+            initial["nodes"].push_back({
+                {"name", "Sprite"}, {"tag", 0}, {"children", json::array()},
+                {"components", {{"SceneTransform", transform}, {"SpriteRenderer", {
+                    {"texture", texture}, {"pixelsPerUnit", texture == "rom/texture/white.png" ? 1.0 : 150.0},
+                    {"pivot", {0.5, 0.5}}, {"tint", {1.0, 1.0, 1.0, 1.0}},
+                    {"sortingLayer", 0}, {"orderInLayer", 0}
+                }}}}
+            });
+        }
+        scene << initial.dump(4);
     }
     WriteDefaultSceneFile(root, "scene_main.json");
-
-    EnsureEngineAssets(rootPath);
 
     // Prefer copying GameScripts template from the engine repo when available.
     const fs::path engineRoot = ProjectManager::FindEngineRepoRoot();
@@ -685,7 +730,7 @@ bool ProjectManager::ScaffoldNewProjectTree(const std::string& rootPath,
 }
 
 bool ProjectManager::CreateProject(const std::string& parentDir, const std::string& projectName,
-                                   std::string* errorOut) {
+                                   std::string* errorOut, bool template2D) {
     const std::string folderName = SanitizeProjectFolderName(projectName);
     if (parentDir.empty()) {
         if (errorOut)
@@ -709,7 +754,7 @@ bool ProjectManager::CreateProject(const std::string& parentDir, const std::stri
     }
 
     if (!ScaffoldNewProjectTree(root.string(), projectName.empty() ? folderName : projectName,
-                                errorOut)) {
+                                errorOut, template2D)) {
         return false;
     }
     return ActivateRoot(root.string(), errorOut);

@@ -15,6 +15,9 @@
 #include "engine/input/key_logger.h"
 #include "engine/input/mouse.h"
 #include "camera.h"
+#include "engine/rendering/d3d11/renderer.h"
+#include <algorithm>
+#include <cmath>
 #include "engine/core/engine_gui.h"
 #ifndef GAME_RUNTIME
 #include "imgui/imgui.h"
@@ -26,7 +29,7 @@ using namespace DirectX;
 namespace {
 	bool  s_enabled = false;
 	DebugCameraControlMode s_controlMode = DebugCameraControlMode::Orbit;
-	float s_yaw = 0.0f;
+	float s_yaw = DirectX::XM_PI; // Orbit: eye on -Z, looking toward +Z.
 	float s_pitch = 0.0f;
 	float s_distance = 10.0f;  // Distance from focal point
 	XMFLOAT3 s_focalPoint = { 0.0f, 0.0f, 0.0f };  // Point to orbit around
@@ -208,6 +211,20 @@ namespace {
 	}
 }
 
+static bool s_editor2D=false;
+static Camera s_view3D;
+bool DebugCamera_Is2DView() { return s_editor2D; }
+void DebugCamera_Set2DView(bool enabled) {
+    if(enabled && !s_editor2D) s_view3D=GetCamera();
+    if(enabled) {
+        auto& cam=GetCamera();
+        cam.orthographic=true; cam.orthographicHeight=10;
+        cam.SetPosition({cam.position.x,cam.position.y,-10});
+        cam.SetTarget({cam.position.x,cam.position.y,0}); cam.SetUp({0,1,0});
+    } else if(s_editor2D) SetCamera(s_view3D);
+    s_editor2D=enabled;
+    DebugCamera_SyncOrbitFromCurrentView();
+}
 bool DebugCamera_IsEnabled() { return s_enabled; }
 
 void DebugCamera_SetControlMode(DebugCameraControlMode mode) {
@@ -229,8 +246,29 @@ void DebugCamera_SetFlyView(XMFLOAT3 position, float yawDeg, float pitchDeg) {
 	ApplyFlyViewToCamera();
 }
 
+static Camera s_editorLens;
+static Camera s_beforePlayView;
+static bool s_hasBeforePlayView=false;
+void DebugCamera_SaveEditorView() { s_beforePlayView=GetCamera(); s_hasBeforePlayView=true; }
+void DebugCamera_RestoreEditorView() {
+    if(!s_hasBeforePlayView) return;
+    SetCamera(s_beforePlayView); s_editorLens=s_beforePlayView;
+    DebugCamera_SyncOrbitFromCurrentView(); s_hasBeforePlayView=false;
+}
+void DebugCamera_ResetEditorView(bool view2D) {
+    s_editor2D=false; s_hasBeforePlayView=false;
+    SetCamera(Camera{}); s_view3D=GetCamera();
+    DebugCamera_Set2DView(view2D);
+}
 void DebugCamera_SetEnabled(bool enabled) {
 	if (enabled == s_enabled) return;
+    if(enabled) {
+        auto& camera=GetCamera();
+        camera.fov=s_editorLens.fov; camera.nearClip=s_editorLens.nearClip;
+        camera.farClip=s_editorLens.farClip; camera.orthographic=s_editorLens.orthographic;
+        camera.orthographicHeight=s_editorLens.orthographicHeight;
+    } else s_editorLens=GetCamera();
+
 
 	if (!enabled) {
 		s_isTransitioning = false;
@@ -358,8 +396,30 @@ void DebugCamera_Update(double dt) {
 	}
 #endif
 
-	if (s_controlMode == DebugCameraControlMode::Fly) {
-		UpdateFlyMode(dt);
+	#ifndef GAME_RUNTIME
+    if(s_editor2D && !EngineGUI_IsPlaying()) {
+        auto& camera=GetCamera();
+        camera.orthographic=true;
+        int dx=0,dy=0; Mouse_GetDelta(dx,dy);
+        float vx,vy,vw,viewportHeight;
+        EngineGUI_GetGameViewportRect(vx,vy,vw,viewportHeight);
+        int mx,my; Mouse_GetPosition(mx,my);
+        if(mx<vx || mx>=vx+vw || my<vy || my>=vy+viewportHeight) return;
+        const float vh=(std::max)(1.0f,viewportHeight);
+        if(Mouse_IsMiddleDown() || (altPressed && Mouse_IsLeftDown())) {
+            const float scale=camera.orthographicHeight/vh;
+            const XMFLOAT3 delta{-dx*scale,dy*scale,0};
+            camera.position.x+=delta.x; camera.position.y+=delta.y;
+            camera.at.x+=delta.x; camera.at.y+=delta.y;
+            s_focalPoint.x+=delta.x; s_focalPoint.y+=delta.y;
+        }
+        const float wheel=Mouse_GetWheelDelta()/120.0f;
+        camera.orthographicHeight=(std::max)(0.01f,(std::min)(10000.0f,camera.orthographicHeight*std::pow(0.9f,wheel)));
+        return;
+    }
+#endif
+    if (s_controlMode == DebugCameraControlMode::Fly) {
+        UpdateFlyMode(dt);
 		return;
 	}
 
@@ -427,42 +487,28 @@ void DebugCamera_Update(double dt) {
 		UpdateCameraFromOrbit();
 	}
 
-	// Unity-style fly: RMB + WASD (+ Shift boost, Space/Ctrl up/down)
-	if (Mouse_IsRightDown()) {
-		XMFLOAT3 pos = cam.position;
-		XMFLOAT3 f = GetForward();
-		XMFLOAT3 r = GetRight();
-
-		XMVECTOR vf_flat = XMVector3Normalize(XMVectorSet(f.x, 0, f.z, 0));
-		XMFLOAT3 fFlat; XMStoreFloat3(&fFlat, vf_flat);
-
-		float speed = s_moveSpeed * static_cast<float>(dt);
-		if (Keyboard_IsKeyDown(KK_LEFTSHIFT)) speed *= s_boostMult;
-
-		bool moved = false;
-		if (Keyboard_IsKeyDown(KK_W)) { pos.x += fFlat.x * speed; pos.z += fFlat.z * speed; moved = true; }
-		if (Keyboard_IsKeyDown(KK_S)) { pos.x -= fFlat.x * speed; pos.z -= fFlat.z * speed; moved = true; }
-		if (Keyboard_IsKeyDown(KK_A)) { pos.x -= r.x * speed; pos.z -= r.z * speed; moved = true; }
-		if (Keyboard_IsKeyDown(KK_D)) { pos.x += r.x * speed; pos.z += r.z * speed; moved = true; }
-		if (Keyboard_IsKeyDown(KK_SPACE)) { pos.y += speed; moved = true; }
-		if (Keyboard_IsKeyDown(KK_LEFTCONTROL)) { pos.y -= speed; moved = true; }
-
-		if (moved) {
-			XMVECTOR vOldPos = XMLoadFloat3(&cam.position);
-			XMVECTOR vNewPos = XMLoadFloat3(&pos);
-			XMVECTOR vDelta = XMVectorSubtract(vNewPos, vOldPos);
-
-			XMVECTOR vFocal = XMLoadFloat3(&s_focalPoint);
-			vFocal = XMVectorAdd(vFocal, vDelta);
-			XMStoreFloat3(&s_focalPoint, vFocal);
-
-			cam.SetPosition(pos);
-
-			XMFLOAT3 fw = GetForward();
-			XMFLOAT3 at = { pos.x + fw.x, pos.y + fw.y, pos.z + fw.z };
-			cam.SetTarget(at);
-		}
-	}
+    // Translate the current view; orbit angles describe eye-from-pivot, not forward.
+    if (Mouse_IsRightDown() && !altPressed) {
+        const XMFLOAT3 forward = cam.GetForward();
+        XMFLOAT3 right;
+        XMStoreFloat3(&right, XMVector3Normalize(XMVector3Cross(
+            XMLoadFloat3(&cam.up), XMLoadFloat3(&forward))));
+        float speed = s_moveSpeed * static_cast<float>(dt);
+        if (Keyboard_IsKeyDown(KK_LEFTSHIFT)) speed *= s_boostMult;
+        XMFLOAT3 delta{};
+        if (Keyboard_IsKeyDown(KK_W)) { delta.x+=forward.x*speed; delta.y+=forward.y*speed; delta.z+=forward.z*speed; }
+        if (Keyboard_IsKeyDown(KK_S)) { delta.x-=forward.x*speed; delta.y-=forward.y*speed; delta.z-=forward.z*speed; }
+        if (Keyboard_IsKeyDown(KK_A)) { delta.x-=right.x*speed; delta.y-=right.y*speed; delta.z-=right.z*speed; }
+        if (Keyboard_IsKeyDown(KK_D)) { delta.x+=right.x*speed; delta.y+=right.y*speed; delta.z+=right.z*speed; }
+        if (Keyboard_IsKeyDown(KK_SPACE)) delta.y+=speed;
+        if (Keyboard_IsKeyDown(KK_LEFTCONTROL)) delta.y-=speed;
+        if (delta.x!=0 || delta.y!=0 || delta.z!=0) {
+            if (!s_inited) InitFromCameraOnce();
+            cam.SetPosition({cam.position.x+delta.x,cam.position.y+delta.y,cam.position.z+delta.z});
+            cam.SetTarget({cam.at.x+delta.x,cam.at.y+delta.y,cam.at.z+delta.z});
+            s_focalPoint.x+=delta.x; s_focalPoint.y+=delta.y; s_focalPoint.z+=delta.z;
+        }
+    }
 }
 
 void DebugCamera_SnapToAxis(DebugCameraViewAxis axis, float durationSec) {

@@ -1,3 +1,4 @@
+#include "engine/scene/scene_loader.h"
 /*****************************************************
  * File: engine/components/visual_component.cpp
  * Project: d3d11_engine
@@ -236,6 +237,7 @@ void VisualComponent::SetAnimationSpeed(float speed) {
 }
 
 void VisualComponent::Update(double elapsed_time) {
+    if(SceneLoader_Is2D()) return;
     if (!playAnimation) return;
 
     if (!m_animInstance || !m_animationsLoaded)

@@ -64,3 +64,9 @@ char* SceneLoader_GetSaveFileNameBuffer();
 
 bool SceneLoader_DebugCameraEnabledOnPlay();
 bool SceneLoader_DebugCameraFlyOnPlay();
+
+bool SceneLoader_Is2D();
+bool SceneLoader_Uses3DPhysics();
+bool SceneLoader_Uses2DPhysics();
+
+void SceneLoader_SetExecutionMode(bool scene2D, bool physics3D, bool physics2D=false);

@@ -1,0 +1,123 @@
+{
+    "version": 4,
+    "nodes": [
+        {
+            "name": "Camera2D",
+            "tag": 0,
+            "components": {
+                "SceneTransform": {
+                    "posX": 0,
+                    "posY": 0,
+                    "posZ": -10,
+                    "rotX": 0,
+                    "rotY": 0,
+                    "rotZ": 0,
+                    "scaleX": 1,
+                    "scaleY": 1,
+                    "scaleZ": 1
+                },
+                "Camera": {
+                    "enabled": true,
+                    "orthographic": true,
+                    "orthographicHeight": 10,
+                    "nearClip": 0.1,
+                    "farClip": 100
+                }
+            },
+            "children": []
+        },
+        {
+            "name": "Back Sprite",
+            "tag": 0,
+            "components": {
+                "SceneTransform": {
+                    "posX": -1,
+                    "posY": 0,
+                    "posZ": 0,
+                    "rotX": 0,
+                    "rotY": 0,
+                    "rotZ": 0,
+                    "scaleX": 1,
+                    "scaleY": 1,
+                    "scaleZ": 1
+                },
+                "SpriteRenderer": {
+                    "texture": "rom/branding/ivy_logo.png",
+                    "pixelsPerUnit": 150,
+                    "pivot": [
+                        0.5,
+                        0.5
+                    ],
+                    "tint": [
+                        0.3,
+                        0.6,
+                        1,
+                        0.8
+                    ],
+                    "sortingLayer": 0,
+                    "orderInLayer": 0
+                }
+            },
+            "children": []
+        },
+        {
+            "name": "Front Sprite",
+            "tag": 0,
+            "components": {
+                "SceneTransform": {
+                    "posX": 1,
+                    "posY": 0,
+                    "posZ": 0,
+                    "rotX": 0,
+                    "rotY": 0,
+                    "rotZ": 0,
+                    "scaleX": 1,
+                    "scaleY": 1,
+                    "scaleZ": 1
+                },
+                "SpriteRenderer": {
+                    "texture": "rom/branding/ivy_logo.png",
+                    "pixelsPerUnit": 150,
+                    "pivot": [
+                        0.5,
+                        0.5
+                    ],
+                    "tint": [
+                        1,
+                        1,
+                        1,
+                        0.8
+                    ],
+                    "sortingLayer": 0,
+                    "orderInLayer": 1
+                }
+            },
+            "children": []
+        }
+    ],
+    "settings": {
+        "render": {
+            "skyboxEnabled": false,
+            "fogEnabled": false,
+            "shadowQuality": "low",
+            "skyboxTint": [
+                1,
+                1,
+                1,
+                1
+            ],
+            "clearColor": [
+                0.08,
+                0.1,
+                0.14,
+                1
+            ]
+        },
+        "camera": {
+            "mode": "scene",
+            "node": "Camera2D"
+        },
+        "renderPath": "2d",
+        "physicsMode": "none"
+    }
+}

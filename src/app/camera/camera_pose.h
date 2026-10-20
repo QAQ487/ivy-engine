@@ -12,6 +12,8 @@ struct CameraPose {
 	DirectX::XMFLOAT3 lookAt = { 0.0f, 0.0f, 0.0f };
 	DirectX::XMFLOAT3 up     = { 0.0f, 1.0f, 0.0f };
 	float fov      = 45.0f;
+    bool orthographic = false;
+    float orthographicHeight = 10.0f;
 	float nearClip = 0.5f;
 	float farClip  = 1000.0f;
 };

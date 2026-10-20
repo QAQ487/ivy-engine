@@ -1,4 +1,4 @@
-/**===========================================================================
+﻿/**===========================================================================
  File   :  [ui_bar.h]
  Author : Terry Yeung
  Date   : 2025/11/17
@@ -55,6 +55,7 @@ public:
     void Finalize() override;
 
     bool GetScreenRect(UIScreenRect& out) const override;
+    DirectX::XMFLOAT2 GetPivotDesignSize() const {return {float(m_barWidth),float(m_barHeight)};}
     
     // Update bar values
     void SetCurrentValue(float value) { m_currentValue = value; }

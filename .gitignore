@@ -396,3 +396,8 @@ FodyWeavers.xsd
 /rom/shader/BloomExtractPS.cso
 /rom/shader/BloomBlurPS.cso
 /interactive-visual-engine.code-workspace
+/tools/collider-components-test-build/
+
+/tools/phase6-test-build/
+
+/tools/physics2d-test-build/

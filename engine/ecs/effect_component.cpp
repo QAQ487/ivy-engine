@@ -1,3 +1,4 @@
+#include "engine/scene/scene_loader.h"
 #include "effect_component.h"
 #include "effect_system_flush.h"
 
@@ -53,6 +54,7 @@ void EffectComponent::OnDetach() {
 }
 
 void EffectComponent::Update(double /*elapsed_time*/) {
+    if(SceneLoader_Is2D()) return;
     if (!owner || !owner->IsActive()) return;
 
     m_cmdCheckExists = true;

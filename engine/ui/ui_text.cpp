@@ -45,11 +45,11 @@ void UIText::Draw() {
 	const DirectX::XMFLOAT2 layoutScale = UIGetLayoutScale();
 	const float drawFontSize = m_fontSize * layoutScale.x;
 
-	m_textRenderer.SetCharacterSpacing(m_characterSpacing * layoutScale.x);
+	m_textRenderer.SetCharacterSpacing(HasExplicitPivot()?m_characterSpacing:m_characterSpacing * layoutScale.x);
 
 	float alignmentOffset = 0.0f;
-	const float textWidth = m_textRenderer.GetTextWidth(m_text, drawFontSize);
-	switch (m_alignment) {
+	const float textWidth = HasExplicitPivot()?GetPivotDesignSize().x*layoutScale.x:m_textRenderer.GetTextWidth(m_text, drawFontSize);
+	switch (HasExplicitPivot() ? TextAlign::LEFT : m_alignment) {
 	case TextAlign::LEFT:
 		alignmentOffset = 0.0f;
 		break;
@@ -112,7 +112,9 @@ float UIText::GetTextWidth() const {
 	if (!m_rendererInitialized) {
 		return 0.0f;
 	}
-	return m_textRenderer.GetTextWidth(m_text, m_fontSize);
+	auto measurement=m_textRenderer;
+    measurement.SetCharacterSpacing(m_characterSpacing);
+    return measurement.GetTextWidth(m_text, m_fontSize);
 }
 
 bool UIText::GetScreenRect(UIScreenRect& out) const {
@@ -122,11 +124,11 @@ bool UIText::GetScreenRect(UIScreenRect& out) const {
 	DirectX::XMFLOAT2 screenPos = GetScreenPosition();
 	const DirectX::XMFLOAT2 layoutScale = UIGetLayoutScale();
 	const float drawFontSize = m_fontSize * layoutScale.x;
-	const float textWidth = m_textRenderer.GetTextWidth(m_text, drawFontSize);
-	const float textHeight = m_textRenderer.GetLineHeight(drawFontSize);
+	const float textWidth = HasExplicitPivot()?GetPivotDesignSize().x*layoutScale.x:m_textRenderer.GetTextWidth(m_text, drawFontSize);
+	const float textHeight = HasExplicitPivot()?GetPivotDesignSize().y*layoutScale.x:m_textRenderer.GetLineHeight(drawFontSize);
 
 	float alignmentOffset = 0.0f;
-	switch (m_alignment) {
+	switch (HasExplicitPivot() ? TextAlign::LEFT : m_alignment) {
 	case TextAlign::LEFT:
 		alignmentOffset = 0.0f;
 		break;
@@ -144,4 +146,11 @@ bool UIText::GetScreenRect(UIScreenRect& out) const {
 	out.right = left + textWidth;
 	out.bottom = screenPos.y + textHeight;
 	return true;
+}
+
+DirectX::XMFLOAT2 UIText::GetPivotDesignSize() const {
+    if(!m_rendererInitialized) return {};
+    std::size_t lines=1;
+    for(char c:m_text) if(c=='\n') ++lines;
+    return {GetTextWidth(),m_textRenderer.GetLineHeight(m_fontSize)*float(lines)};
 }

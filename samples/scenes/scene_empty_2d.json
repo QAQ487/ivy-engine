@@ -1,0 +1,80 @@
+{
+    "canvas": {
+        "name": "scene",
+        "elements": []
+    },
+    "nodes": [
+        {
+            "children": [],
+            "components": {
+                "AudioListener": {},
+                "Camera": {
+                    "debugFly": false,
+                    "enabled": true,
+                    "farClip": 100.0,
+                    "fov": 45.0,
+                    "nearClip": 0.10000000149011612,
+                    "orthographic": true,
+                    "orthographicHeight": 6.0
+                },
+                "SceneTransform": {
+                    "posX": 0.0,
+                    "posY": 0.0,
+                    "posZ": -10.0,
+                    "rotX": 0.0,
+                    "rotY": 0.0,
+                    "rotZ": 0.0,
+                    "scaleX": 1.0,
+                    "scaleY": 1.0,
+                    "scaleZ": 1.0
+                }
+            },
+            "name": "Camera2D",
+            "tag": 0
+        }
+    ],
+    "settings": {
+        "camera": {
+            "mode": "scene",
+            "node": "Camera2D"
+        },
+        "physicsMode": "none",
+        "render": {
+            "clearColor": [
+                0.07999999821186066,
+                0.10000000149011612,
+                0.14000000059604645,
+                1.0
+            ],
+            "defaultShader": "standard",
+            "fogColor": [
+                0.6899999976158142,
+                0.7699999809265137,
+                0.8700000047683716
+            ],
+            "fogDensity": 0.019999999552965164,
+            "fogEnabled": false,
+            "fogHeight": 5.0,
+            "fogHeightFalloff": 0.15000000596046448,
+            "fogStart": 10.0,
+            "iblBrdfLut": "rom/skybox/ibl/brdf_lut.png",
+            "iblEnabled": true,
+            "iblIntensity": 1.0,
+            "iblIrradiance": "rom/skybox/ibl/irradiance.dds",
+            "iblPrefilter": "rom/skybox/ibl/prefilter.dds",
+            "shadowQuality": "medium",
+            "skyboxCubemap": "rom/skybox/MySkybox.dds",
+            "skyboxEnabled": false,
+            "skyboxExposure": 1.0,
+            "skyboxRotationYDeg": 0.0,
+            "skyboxTint": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+            ]
+        },
+        "renderPath": "2d"
+    },
+    "version": 4
+}

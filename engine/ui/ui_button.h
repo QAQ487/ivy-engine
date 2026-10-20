@@ -1,4 +1,4 @@
-/**===========================================================================
+﻿/**===========================================================================
  File   :  [ui_button.h]
  Author : Terry Yeung
  Date   : 2025/11/17
@@ -141,6 +141,7 @@ public:
     bool IsPressed() const { return m_isPressed; }
     
     bool GetScreenRect(UIScreenRect& out) const override;
+    DirectX::XMFLOAT2 GetPivotDesignSize() const {return {m_width,m_height};}
     bool ContainsPoint(float x, float y) const;
     
     // Static font configuration for all buttons using UITextRenderer

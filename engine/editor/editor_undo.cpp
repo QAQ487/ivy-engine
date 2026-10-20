@@ -1,12 +1,14 @@
-#include "editor_undo.h"
+﻿#include "editor_undo.h"
 
 #include "engine/core/engine_gui.h"
 #include "engine/core/engine_gui_internal.h"
 #include "engine/ecs/audio_component.h"
 #include "engine/ecs/audio_listener_component.h"
 #include "engine/ecs/billboard_component.h"
+#include "engine/ecs/sprite_renderer_component.h"
+#include "engine/ecs/sprite_animator_component.h"
 #include "engine/ecs/camera_component.h"
-#include "engine/ecs/collider_component.h"
+#include "engine/ecs/collider_component_access.h"
 #include "engine/ecs/component.h"
 #include "engine/ecs/component_factory.h"
 #include "engine/ecs/directional_light_component.h"
@@ -16,6 +18,7 @@
 #include "engine/ecs/point_light_component.h"
 #include "engine/ecs/prefab_serializer.h"
 #include "engine/ecs/rigidbody_component.h"
+#include "engine/ecs/physics2d_components.h"
 #include "engine/ecs/spot_light_component.h"
 #include "engine/ecs/transform.h"
 #include "engine/ecs/visual_component.h"
@@ -143,8 +146,8 @@ void ApplyComponentPostDeserialize(GameObject* node, const std::string& compType
 	if (!node) return;
 	if (compType == "SceneTransform") {
 		node->SyncLegacyTransformFromComponents();
-	} else if (compType == "Collider") {
-		if (auto* col = node->GetComponent<ColliderComponent>())
+	} else if (IsColliderComponentType(compType)) {
+		if (auto* col = FindColliderComponent(node))
 			col->ApplyToOwner();
 	} else if (compType == "Audio") {
 		if (auto* ac = node->GetComponent<AudioComponent>())
@@ -456,9 +459,13 @@ void RemoveComponentByTypeName(GameObject* node, const std::string& typeName) {
 	if (typeName == "SceneTransform") node->RemoveComponent<engine::Transform>();
 	else if (typeName == "visual") node->RemoveComponent<VisualComponent>();
 	else if (typeName == "Material") node->RemoveComponent<MaterialComponent>();
+	else if (typeName == "Rigidbody2D") node->RemoveComponent<Rigidbody2DComponent>();
+	else if (typeName == "Collider2D") node->RemoveComponent<Collider2DComponent>();
 	else if (typeName == "Rigidbody") node->RemoveComponent<RigidbodyComponent>();
-	else if (typeName == "Collider") node->RemoveComponent<ColliderComponent>();
+	else if (IsColliderComponentType(typeName)) RemoveColliderComponent(node);
 	else if (typeName == "Billboard") node->RemoveComponent<BillboardComponent>();
+	else if (typeName == "SpriteRenderer") node->RemoveComponent<SpriteRendererComponent>();
+	else if (typeName == "SpriteAnimator") node->RemoveComponent<SpriteAnimatorComponent>();
 	else if (typeName == "Effect") node->RemoveComponent<EffectComponent>();
 	else if (typeName == "Audio") node->RemoveComponent<AudioComponent>();
 	else if (typeName == "AudioListener") node->RemoveComponent<AudioListenerComponent>();

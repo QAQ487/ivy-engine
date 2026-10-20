@@ -1,8 +1,16 @@
-﻿#include "scene_loader.h"
+#include "engine/physics/2d/physics2d.h"
+#include "engine/ecs/physics2d_components.h"
+#include "engine/ecs/sprite_animator_component.h"
+#include "scene_execution_policy.h"
+#include "engine/core/engine_gui.h"
+#include "engine/scene/scene_camera.h"
+#include "camera.h"
+#include "engine/ecs/sprite_renderer_component.h"
+#include "scene_loader.h"
 
 #include "engine/scene/render_settings.h"
 #include "engine/ecs/component_factory.h"
-#include "engine/ecs/collider_component.h"
+#include "engine/ecs/collider_component_access.h"
 #include "engine/ecs/effect_component.h"
 #include "engine/audio/audio_manager.h"
 #include "engine/ecs/audio_component.h"
@@ -63,6 +71,15 @@ static std::string g_defaultSceneFileName = "scene01.json";
 static std::string g_defaultScenePath = SCENE_DIR + g_defaultSceneFileName;
 static std::string g_currentScenePath;
 static char g_saveFileName[128] = "scene01.json";
+static bool g_scene2D=false, g_physics3D=true, g_physics2D=false;
+bool SceneLoader_Is2D(){return g_scene2D;}
+bool SceneLoader_Uses2DPhysics(){return g_physics2D;}
+bool SceneLoader_Uses3DPhysics(){return g_physics3D;}
+void SceneLoader_SetExecutionMode(bool scene2D, bool physics3D, bool physics2D) {
+    Physics2D_Reset(); g_physics2D=scene2D && physics2D;
+    g_scene2D=scene2D; g_physics3D=!scene2D && physics3D;
+    PhysicsSystem_ClearTriggerPairs(); PhysicsSystem_ClearDebugDrawQueue();
+}
 static bool g_debugCameraEnabledOnPlay = false;
 static bool g_debugCameraFlyOnPlay = false;
 
@@ -92,15 +109,37 @@ static std::string ToLowerString(const std::string& value) {
 
 static json BuildSceneSettingsJson() {
     json settings;
+    SceneExecutionPolicy{g_scene2D,g_physics3D,g_physics2D}.WriteSettings(settings);
     settings["render"] = RenderSettings_ToJson();
+    const auto mode=EngineGUI_GetCameraMode();
+    settings["camera"]={{"mode",mode==CameraMode::ThirdPerson?"thirdPerson":mode==CameraMode::FirstPerson?"firstPerson":"scene"},
+        {"node",EngineGUI_GetActiveCameraNodeName()}};
     return settings;
 }
 
 static void ApplySceneSettings(const json& root) {
+    const auto policy=SceneExecutionPolicy::FromSettings(root.value("settings",json::object()));
+    g_scene2D=policy.scene2D; g_physics3D=policy.physics3D; g_physics2D=policy.physics2D;
+    EngineGUI_SetCameraMode(CameraMode::SceneCamera);
+    std::string preferred;
+    if(root.contains("settings") && root["settings"].is_object()) {
+        const auto camera=root["settings"].value("camera",json::object());
+        if(camera.is_object()) {
+            preferred=camera.value("node",std::string{});
+            const auto mode=camera.value("mode",std::string("scene"));
+            if(mode=="thirdPerson") EngineGUI_SetCameraMode(CameraMode::ThirdPerson);
+            if(mode=="firstPerson") EngineGUI_SetCameraMode(CameraMode::FirstPerson);
+        }
+    }
+    EngineGUI_SetActiveCameraNodeName(SceneCameraResolveDefault(g_sceneNodes,preferred));
+    SetCamera(Camera{}); // Never inherit a previous scene's pose/projection.
     g_debugCameraEnabledOnPlay = false;
     g_debugCameraFlyOnPlay = false;
     DebugCamera_SetControlMode(DebugCameraControlMode::Orbit);
     RenderSettings_ResetToDefaults();
+#ifndef GAME_RUNTIME
+    DebugCamera_ResetEditorView(g_scene2D);
+#endif
 
     if (!root.contains("settings") || !root["settings"].is_object()) {
         RenderSettings_ReloadSkybox();
@@ -165,6 +204,15 @@ void SceneLoader_RegisterComponentTypes() {
         []() -> std::unique_ptr<Component> {
             return std::make_unique<engine::Transform>();
         });
+    REGISTER_COMPONENT(BoxColliderComponent);
+    REGISTER_COMPONENT(SphereColliderComponent);
+    REGISTER_COMPONENT(CapsuleColliderComponent);
+    REGISTER_COMPONENT(CylinderColliderComponent);
+    REGISTER_COMPONENT(MeshColliderComponent);
+    ComponentFactory::Instance().Register("Rigidbody2D", []() -> std::unique_ptr<Component> {return std::make_unique<Rigidbody2DComponent>();});
+    ComponentFactory::Instance().Register("Collider2D", []() -> std::unique_ptr<Component> {return std::make_unique<Collider2DComponent>();});
+    ComponentFactory::Instance().Register("SpriteAnimator", []() -> std::unique_ptr<Component> {return std::make_unique<SpriteAnimatorComponent>();});
+    ComponentFactory::Instance().Register("SpriteRenderer", []() -> std::unique_ptr<Component> { return std::make_unique<SpriteRendererComponent>(); });
     ComponentFactory::Instance().Register("visual",
         []() -> std::unique_ptr<Component> {
             return std::make_unique<VisualComponent>();
@@ -236,7 +284,7 @@ void ApplyEditorColliders() {
 void RestoreEditorDebugColliderFlags() {
     std::function<void(GameObject*)> visit = [&](GameObject* node) {
         if (!node) return;
-        if (auto* cc = node->GetComponent<ColliderComponent>())
+        if (auto* cc = FindColliderComponent(node))
             node->m_debugCollider = cc->showDebugCollider;
         for (const auto& child : node->GetChildren())
             visit(child.get());
@@ -469,7 +517,7 @@ std::unique_ptr<GameObject> GameObjectFromLegacyBlock(const json& jb) {
     else
         node->SetTag(Tag::TAG_NONE);
 
-    if (auto* cc = node->GetComponent<ColliderComponent>()) {
+    if (auto* cc = FindColliderComponent(node)) {
         cc->colliderType = static_cast<ColliderType>(jb.value("colliderType", 0));
         if (jb.contains("colliderCenter")) {
             cc->colliderCenter.x = jb["colliderCenter"].value("x", 0.0f);
@@ -619,6 +667,10 @@ bool SceneLoader_SaveToFile(const char* filename) {
 }
 
 void SceneLoader_ClearSceneNodes() {
+    g_scene2D=false; g_physics3D=true; g_physics2D=false;
+    EngineGUI_SetCameraMode(CameraMode::SceneCamera);
+    EngineGUI_SetActiveCameraNodeName("");
+    SetCamera(Camera{});
     ClearSceneRuntime();
     g_sceneNodes.clear();
     SceneCanvas_ClearSceneCanvas();
@@ -639,6 +691,7 @@ void TeardownAllScripts() {
 }
 
 void TeardownScenePlaySession(bool resetTransforms) {
+    Physics2D_Reset();
     // Drop deferred Collider* wire draws before any object teardown (F11 viz).
     PhysicsSystem_ClearDebugDrawQueue();
     PrefabRuntime_FlushDestroyed();
@@ -681,6 +734,7 @@ void DrawSceneModels() {
 
 static void SnapshotStartTransformsNode(GameObject* node) {
     if (!node) return;
+    if(auto* sprite=node->GetComponent<SpriteRendererComponent>()) sprite->SnapshotStartState();
     if (engine::Transform* t = node->GetComponent<engine::Transform>())
         t->SnapshotStartState();
     for (const auto& child : node->GetChildren())

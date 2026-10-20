@@ -1,6 +1,6 @@
 /**===========================================================================
  File   : scene_asset_preload.h
- Brief  : Time-sliced warming of shared models + animation clips (main thread,
+ Brief  : Time-sliced warming of shared models, textures + animation clips (main thread,
           D3D11 / LoadFBX). Editor builds tasks from loaded GameObjects; GAME_RUNTIME
           may also build tasks by scanning scene JSON files at boot.
  ===========================================================================**/
@@ -16,6 +16,7 @@ class GameObject;
 
 struct SceneAssetPreloadTask {
 	std::string modelPath;
+	std::string texturePath;
 	// clip name -> FBX path (EnsureAnimation needs both)
 	std::vector<std::pair<std::string, std::string>> animations;
 	std::string displayLabel;
@@ -43,8 +44,9 @@ public:
 
 private:
 	struct Step {
-		enum class Kind { Model, Animation } kind = Kind::Model;
+		enum class Kind { Model, Animation, Texture } kind = Kind::Model;
 		std::string modelPath;
+		std::string texturePath;
 		std::string clipName;
 		std::string animPath;
 		std::string fileLabel;

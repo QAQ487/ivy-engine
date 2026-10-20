@@ -103,6 +103,8 @@ CameraPose CameraPose_FromGlobal() {
 	pose.lookAt = cam.at;
 	pose.up = cam.up;
 	pose.fov = cam.fov;
+    pose.orthographic = cam.orthographic;
+    pose.orthographicHeight = cam.orthographicHeight;
 	pose.nearClip = cam.nearClip;
 	pose.farClip = cam.farClip;
 	return pose;
@@ -114,11 +116,15 @@ void CameraPose_ApplyToGlobal(const CameraPose& pose) {
 	cam.SetTarget(pose.lookAt);
 	cam.SetUp(pose.up);
 	cam.SetFov(pose.fov);
+    cam.orthographic = pose.orthographic;
+    cam.orthographicHeight = pose.orthographicHeight;
 	cam.SetClip(pose.nearClip, pose.farClip);
 }
 
 CameraPose CameraPose_Lerp(const CameraPose& a, const CameraPose& b, float t) {
 	t = (t < 0.0f) ? 0.0f : ((t > 1.0f) ? 1.0f : t);
+
+	if (a.orthographic != b.orthographic) return t <= 0.0f ? a : b;
 
 	XMFLOAT3 fwdA, fwdB;
 	float distA = kSceneLookDistance, distB = kSceneLookDistance;
@@ -126,6 +132,8 @@ CameraPose CameraPose_Lerp(const CameraPose& a, const CameraPose& b, float t) {
 	ExtractLook(b, fwdB, distB);
 
 	CameraPose out;
+    out.orthographic = b.orthographic;
+    out.orthographicHeight = LerpFloat(a.orthographicHeight, b.orthographicHeight, t);
 	out.eye = LerpVec(a.eye, b.eye, t);
 	const XMFLOAT3 forward = SlerpDir(fwdA, fwdB, t, fwdB);
 	const float dist = LerpFloat(distA, distB, t);
@@ -154,6 +162,8 @@ CameraPose CameraPose_FromComponent(const CameraComponent* cam, const engine::Tr
 	};
 	pose.up = viewUp;
 	pose.fov = cam->fov;
+    pose.orthographic = cam->orthographic;
+    pose.orthographicHeight = cam->orthographicHeight;
 	pose.nearClip = cam->nearClip;
 	pose.farClip = cam->farClip;
 	return pose;
@@ -189,6 +199,8 @@ void CameraPose_WriteToNode(engine::Transform* transform, CameraComponent* cam, 
 	transform->SetFromLocalMatrix(world);
 
 	cam->fov = pose.fov;
+    cam->orthographic = pose.orthographic;
+    cam->orthographicHeight = pose.orthographicHeight;
 	cam->nearClip = pose.nearClip;
 	cam->farClip = pose.farClip;
 	cam->enabled = true;

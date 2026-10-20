@@ -5,10 +5,8 @@
 #include "rigidbody_component.h"
 #include "visual_component.h"
 
-#include "libraries/nlohmann/json.hpp"
 #include <Windows.h>
 
-using json = nlohmann::json;
 
 void ColliderComponent::ClearFromOwner() {
     if (!owner) return;
@@ -74,43 +72,4 @@ void ColliderComponent::ApplyToOwner() {
     const bool hadRigidbody = owner->HasComponent<RigidbodyComponent>();
     if (!hadRigidbody)
         owner->GetRigidbody().SetIsKinematic(true);
-}
-
-std::string ColliderComponent::Serialize() const {
-    json j;
-    j["colliderType"] = static_cast<int>(colliderType);
-    j["colliderCenter"] = { {"x", colliderCenter.x}, {"y", colliderCenter.y}, {"z", colliderCenter.z} };
-    j["halfExtents"] = { {"x", halfExtents.x}, {"y", halfExtents.y}, {"z", halfExtents.z} };
-    j["radius"] = radius;
-    j["height"] = height;
-    j["meshSizePadding"] = meshSizePadding;
-    j["showDebugCollider"] = showDebugCollider;
-    j["isTrigger"] = isTrigger;
-    j["physicsMaterial"] = physicsMaterial;
-    return j.dump();
-}
-
-void ColliderComponent::Deserialize(const std::string& jsonStr) {
-    try {
-        json j = json::parse(jsonStr);
-        colliderType = static_cast<ColliderType>(j.value("colliderType", 0));
-        if (j.contains("colliderCenter")) {
-            colliderCenter.x = j["colliderCenter"].value("x", 0.0f);
-            colliderCenter.y = j["colliderCenter"].value("y", 0.0f);
-            colliderCenter.z = j["colliderCenter"].value("z", 0.0f);
-        }
-        if (j.contains("halfExtents")) {
-            halfExtents.x = j["halfExtents"].value("x", 0.5f);
-            halfExtents.y = j["halfExtents"].value("y", 0.5f);
-            halfExtents.z = j["halfExtents"].value("z", 0.5f);
-        }
-        radius = j.value("radius", 0.5f);
-        height = j.value("height", 2.0f);
-        meshSizePadding = j.value("meshSizePadding", 0.0f);
-        showDebugCollider = j.value("showDebugCollider", true);
-        isTrigger = j.value("isTrigger", false);
-        physicsMaterial = j.value("physicsMaterial", "");
-    } catch (...) {
-        OutputDebugStringA("[ColliderComponent] Deserialize failed.\n");
-    }
 }

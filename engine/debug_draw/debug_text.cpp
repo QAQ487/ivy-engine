@@ -8,6 +8,7 @@
 
  ===========================================================================**/
 #include "debug_text.h"
+#include "engine/core/frame_capture.h"
 #include "WICTextureLoader11.h"
 using namespace DirectX;
 #include <D3Dcompiler.h>
@@ -397,7 +398,8 @@ namespace hal
 		m_pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 		// ?|???S???`?�{????s
-		m_pContext->DrawIndexed(m_CharacterCount * 6, 0, 0);
+		FrameCapture_RecordTextDraw();
+        m_pContext->DrawIndexed(m_CharacterCount * 6, 0, 0);
 
 		// ?`???A?u?????h?X?e?[?g??[?x?X?e???V???X?e?[?g????X?^???C?U?[?X?e?[?g???????
 		m_pContext->OMSetBlendState(pPreviousBlendState.Get(), previous_blend_factor, 0xffffffff);

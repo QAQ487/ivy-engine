@@ -52,7 +52,7 @@ void Texture_Finalize() {
 	CubemapReleaseAll();
 }
 
-int TextureLoad(const wchar_t* ptr_file_name, bool mipmap) {
+static int TextureLoadInternal(const wchar_t* ptr_file_name, bool mipmap, bool reportErrors) {
 	// ???????????????t?@?C????????????
 	for (int i = 0; i < MAX_TEXTURES; i++) {
 		if (!g_textures[i].m_ptr_Texture) continue; // ?????e?N?X?`??????????????????X?L?b?v
@@ -76,7 +76,7 @@ int TextureLoad(const wchar_t* ptr_file_name, bool mipmap) {
 				nullptr, nullptr);
 			char msg[512];
 			snprintf(msg, sizeof(msg), "Failed to load texture:\n%s", pathUtf8);
-			MessageBoxA(nullptr, msg, "Texture Error", MB_OK | MB_ICONERROR);
+			if (reportErrors) MessageBoxA(nullptr, msg, "Texture Error", MB_OK | MB_ICONERROR);
 			return -1;
 		}
 		// ???t?@?C????T?C?Y??ï
@@ -95,7 +95,7 @@ int TextureLoad(const wchar_t* ptr_file_name, bool mipmap) {
 		// ?V?F?[?_?[???\?[?X?p?b?N?r???[?????
 		HRESULT hr = CreateShaderResourceView(g_pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_textures[i].m_ptr_Texture);
 		if (FAILED(hr)) {
-			MessageBoxA(nullptr, "Failed to create texture shader resource view.", "Texture Error", MB_OK | MB_ICONERROR);
+			if (reportErrors) MessageBoxA(nullptr, "Failed to create texture shader resource view.", "Texture Error", MB_OK | MB_ICONERROR);
 			break;
 		}
 
@@ -287,3 +287,6 @@ void CubemapReleaseAll() {
 		entry.filename.clear();
 	}
 }
+
+int TextureLoad(const wchar_t* path, bool mipmap) { return TextureLoadInternal(path,mipmap,true); }
+int TextureLoadQuiet(const wchar_t* path, bool mipmap) { return TextureLoadInternal(path,mipmap,false); }

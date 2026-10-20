@@ -1,3 +1,6 @@
+﻿#include "engine/editor/pivot_presets.h"
+#include <tuple>
+#include "engine/scene/scene_camera.h"
 /******************************************************
  * File: engine_gui.cpp
  * Project: d3d11_engine
@@ -72,15 +75,18 @@
 #include "engine/editor/editor_undo.h"
 #include "engine/ecs/visual_component.h"
 #include "engine/ecs/billboard_component.h"
+#include "engine/ecs/sprite_renderer_component.h"
+#include "engine/ecs/sprite_animator_component.h"
 #include "engine/ecs/material_component.h"
 #include "engine/ecs/rigidbody_component.h"
+#include "engine/ecs/physics2d_components.h"
 #include "engine/ecs/directional_light_component.h"
 #include "engine/ecs/point_light_component.h"
 #include "engine/ecs/spot_light_component.h"
 #include "engine/ecs/camera_component.h"
 #include "engine/editor/light_gizmo.h"
 #include "engine/editor/camera_gizmo.h"
-#include "engine/ecs/collider_component.h"
+#include "engine/ecs/collider_component_access.h"
 #include "engine/ecs/effect_component.h"
 #include "engine/ecs/audio_component.h"
 #include "engine/ecs/audio_listener_component.h"
@@ -142,7 +148,7 @@ static bool        g_playWhenPreloadDone = false;
 bool               g_sceneLoadPending = false;
 static bool IsSceneLoadBusy();
 static std::string g_pendingSceneLoadPath;
-static CameraMode  g_cameraMode = CameraMode::ThirdPerson;
+static CameraMode  g_cameraMode = CameraMode::SceneCamera;
 static std::string g_activeCameraNode;
 static float g_scrollSensitivity = 1.0f;
 static char  g_newSceneName[128] = "new_scene";
@@ -158,6 +164,7 @@ static bool  g_showDefaultScenePopup = false;
 static bool  g_showGravityPopup = false;
 static bool  g_showAudioPopup = false;
 static bool  g_showUiOverlay = true;
+static bool g_newProject2D=false;
 static bool  g_showNewProjectPopup = false;
 static char  g_newProjectName[128] = "NewProject";
 static std::string g_newProjectParentDir;
@@ -431,7 +438,7 @@ namespace {
 static std::unique_ptr<GameObject> CreatePrimitiveGameObject(const PrimitiveCreateSpec& spec)
 {
     auto node = CreateModelGameObject(spec.assetPath, spec.displayName);
-    if (auto* col = node->GetComponent<ColliderComponent>()) {
+    if (auto* col = FindColliderComponent(node)) {
         col->colliderType = spec.colliderType;
         col->radius = 0.5f;
         col->halfExtents = { 0.5f, 0.5f, 0.5f };
@@ -521,12 +528,23 @@ static std::unique_ptr<GameObject> CreateSpotLightObject() {
     return node;
 }
 
-static std::unique_ptr<GameObject> CreateCameraObject() {
-    auto node = std::make_unique<GameObject>("Camera");
+static std::unique_ptr<GameObject> CreateCameraObject(bool debugFly = false) {
+    const std::string base = debugFly ? "Debug Camera" : "Camera";
+    std::vector<std::string> names;
+    std::function<void(GameObject*)> collect = [&](GameObject* n) {
+        if(!n) return;
+        names.push_back(n->GetName());
+        for(const auto& child:n->GetChildren()) collect(child.get());
+    };
+    for(const auto& root:g_sceneNodes) collect(root.get());
+    std::string name=base;
+    for(int suffix=2;std::find(names.begin(),names.end(),name)!=names.end();++suffix)
+        name=base+" "+std::to_string(suffix);
+    auto node = std::make_unique<GameObject>(name);
     auto* t = node->AddComponent<engine::Transform>();
     t->localPosition = { 0.0f, 20.0f, -20.0f };
     t->localRotation = { 35.0f, 0.0f, 0.0f };
-    node->AddComponent<CameraComponent>();
+    node->AddComponent<CameraComponent>()->debugFly = debugFly;
     node->AddComponent<AudioListenerComponent>();
     return node;
 }
@@ -909,6 +927,25 @@ static void DrawRenderingSettingsWindow(bool* open) {
     if (!ImGui::Begin("Rendering Settings", open, ImGuiWindowFlags_AlwaysAutoResize))
         return;
 
+    ImGui::BeginDisabled(EngineGUI_IsPlaying());
+    bool scene2D=SceneLoader_Is2D();
+    if(ImGui::Checkbox("2D Scene",&scene2D)) {
+        SceneLoader_SetExecutionMode(scene2D,!scene2D);
+        EngineGUI_MarkSceneDirty();
+    }
+    if(!scene2D) {
+        bool physics3D=SceneLoader_Uses3DPhysics();
+        if(ImGui::Checkbox("3D Physics",&physics3D)) {
+            SceneLoader_SetExecutionMode(false,physics3D); EngineGUI_MarkSceneDirty();
+        }
+    } else {
+        bool physics2D=SceneLoader_Uses2DPhysics();
+        if(ImGui::Checkbox("2D Physics (Box2D)",&physics2D)) {
+            SceneLoader_SetExecutionMode(true,false,physics2D); EngineGUI_MarkSceneDirty();
+        }
+        ImGui::TextDisabled("Sprite rendering; 3D physics and effects disabled.");
+    }
+    ImGui::EndDisabled();
     RenderSettingsData& rs = RenderSettings_Get();
     static char cubemapBuf[256] = {};
     static std::string syncedCubemapPath;
@@ -1431,8 +1468,17 @@ static void DrawEditorMenuBar() {
             }
             ImGui::EndMenu();
         }
-        if (ImGui::MenuItem("Camera"))
-            SpawnRootGameObject(CreateCameraObject());
+        if (ImGui::BeginMenu("Camera")) {
+            if (ImGui::MenuItem("Camera")) SpawnRootGameObject(CreateCameraObject());
+            if (ImGui::MenuItem("Debug Camera")) {
+                SpawnRootGameObject(CreateCameraObject(true));
+                if(g_selNode) {
+                    EngineGUI_SetCameraMode(CameraMode::SceneCamera);
+                    EngineGUI_SetActiveCameraNodeName(g_selNode->GetName());
+                }
+            }
+            ImGui::EndMenu();
+        }
         if (ImGui::BeginMenu("Light")) {
             if (ImGui::MenuItem("Directional Light"))
                 SpawnRootGameObject(CreateDirectionalLightObject());
@@ -1571,7 +1617,7 @@ static void ExecutePendingEditorAction() {
     case PendingEditorAction::CreateProject:
         if (!createParent.empty()) {
             std::string error;
-            if (!ProjectManager::Instance().CreateProject(createParent, createName, &error)) {
+            if (!ProjectManager::Instance().CreateProject(createParent, createName, &error,g_newProject2D)) {
                 MessageBoxA(GetWindowHandle(),
                             error.empty() ? "Failed to create project." : error.c_str(),
                             "New Project", MB_OK | MB_ICONERROR);
@@ -1647,6 +1693,7 @@ static void DrawEditorPopups() {
         ImGui::OpenPopup("NewProjectPopup");
     ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
     if (ImGui::BeginPopupModal("NewProjectPopup", &g_showNewProjectPopup, ImGuiWindowFlags_AlwaysAutoResize)) {
+        ImGui::Checkbox("2D Project",&g_newProject2D);
         ImGui::Text("New Project Name");
         ImGui::SetNextItemWidth(280.0f);
         ImGui::InputText("##NewProjectNameModal", g_newProjectName, IM_ARRAYSIZE(g_newProjectName));
@@ -1662,7 +1709,7 @@ static void DrawEditorPopups() {
             }
             else {
                 std::string error;
-                if (!ProjectManager::Instance().CreateProject(g_newProjectParentDir, name, &error)) {
+                if (!ProjectManager::Instance().CreateProject(g_newProjectParentDir, name, &error,g_newProject2D)) {
                     MessageBoxA(GetWindowHandle(),
                                 error.empty() ? "Failed to create project." : error.c_str(),
                                 "New Project", MB_OK | MB_ICONERROR);
@@ -2135,7 +2182,6 @@ void TeardownPlaySession(bool resetEditorState) {
     g_isPlaying = false;
     g_playMode = PlayMode::None;
     g_isOnStart = true;
-    g_cameraMode = CameraMode::ThirdPerson;
     ThirdPersonCamera_ShowCursor(true);
     ThirdPersonCamera_SetTarget(nullptr, nullptr);
     FirstPersonCamera_SetTarget(nullptr, nullptr);
@@ -2150,10 +2196,10 @@ void SoftStopPlayForSceneLoad() {
         return;
     g_pendingPlayMode = (g_playMode != PlayMode::None) ? g_playMode : PlayMode::Viewport;
     g_isPlaying = false;
-    g_playMode = PlayMode::None;
+    g_playMode = g_pendingPlayMode;
     g_isOnStart = true;
     g_holdPlayVisuals = true;
-    g_enabled = false;
+    g_enabled = (g_playMode == PlayMode::Viewport);
     DebugCamera_SetEnabled(false);
     DebugSystem::ResetTimeScale();
 }
@@ -2167,6 +2213,7 @@ void ReturnToStart() {
     g_editMode = EditorEditMode::Scene3D;
     DebugCamera_SetControlMode(DebugCameraControlMode::Orbit);
     DebugCamera_SetEnabled(true);
+    DebugCamera_RestoreEditorView();
     ApplyEditorColliders();
     RestoreEditorDebugColliderFlags();
     SyncImGuiInputAcceptance(true);
@@ -2213,7 +2260,7 @@ static bool HasThirdPersonPlayer() {
 static bool ShouldUseDebugCameraDuringPlay() {
     if (SceneLoader_DebugCameraEnabledOnPlay())
         return true;
-    return !HasCameraComponentInScene() && !HasThirdPersonPlayer();
+    return false; // Editor navigation must not silently become the game camera.
 }
 
 bool EngineGUI_IsDebugCameraPlayInputActive() {
@@ -2227,6 +2274,7 @@ static void StartPlay(PlayMode mode = PlayMode::Viewport) {
         return;
     }
 
+    DebugCamera_SaveEditorView();
     SnapshotSceneStartTransforms();
     SyncSceneRuntime();
     // Instant scene switches (cached preload) can StartPlay in the same frame as
@@ -2257,6 +2305,7 @@ static void StartPlay(PlayMode mode = PlayMode::Viewport) {
             && HasThirdPersonPlayer();
         ThirdPersonCamera_ShowCursor(!hideCursor);
     }
+    SceneCameraBeginPlay();
     SyncImGuiInputAcceptance(isViewportPlay);
 }
 
@@ -2291,7 +2340,8 @@ void EngineGUI_FlushSceneLoadPending() {
 
     if (!SceneLoader_LoadFromFile(path.c_str())) {
         g_sceneLoadPending = false;
-        g_holdPlayVisuals = false;
+        g_playWhenPreloadDone = false;
+        if (g_holdPlayVisuals) ReturnToStart();
         return;
     }
 
@@ -2400,6 +2450,7 @@ void EngineGUI_Initialize(HWND hwnd, ID3D11Device* device,
 }
 
 void EngineGUI_Finalize() {
+
     SceneLoader_StopScriptWatcher();
 
     TeardownPlaySession(false);
@@ -2424,7 +2475,11 @@ bool EngineGUI_IsPlaying() { return g_isPlaying; }
 PlayMode EngineGUI_GetPlayMode() { return g_playMode; }
 bool EngineGUI_PreferPlayVisuals() { return g_isPlaying || g_holdPlayVisuals; }
 bool EngineGUI_IsOnStart() { return g_isOnStart; }
-void EngineGUI_StartPlay(PlayMode mode) { StartPlay(mode); }
+void EngineGUI_StartPlay(PlayMode mode) {
+    if (mode == PlayMode::None)
+        mode = g_holdPlayVisuals ? g_pendingPlayMode : PlayMode::Viewport;
+    StartPlay(mode);
+}
 void EngineGUI_StopPlay() { ReturnToStart(); }
 CameraMode EngineGUI_GetCameraMode() { return g_cameraMode; }
 void EngineGUI_SetCameraMode(CameraMode m) { g_cameraMode = m; }
@@ -2653,7 +2708,7 @@ static void DrawSelectionColliderHighlight(GameObject* node, DebugDrawer& drawer
     using namespace DirectX;
     if (!node) return;
 
-    auto* cc = node->GetComponent<ColliderComponent>();
+    auto* cc = FindColliderComponent(node);
     if (!cc || cc->colliderType == ColliderType::NONE) return;
 
     static const XMFLOAT4 kColliderColor = { 0.0f, 1.0f, 1.0f, 1.0f };
@@ -2738,18 +2793,30 @@ static void DrawSelectionHighlight() {
 
     SetDepthEnable(false);
 
-    if (!g_isPlaying) {
+    if (!EngineGUI_PreferPlayVisuals()) {
         LightGizmo::DrawSceneLights(g_sceneNodes, drawer);
         CameraGizmo::DrawSceneCameras(g_sceneNodes, drawer);
     }
 
-    if (g_selNode && !g_isPlaying) {
+    if (g_selNode && !EngineGUI_PreferPlayVisuals()) {
         if (const engine::Transform* t = g_selNode->GetComponent<engine::Transform>()) {
             if (!NodeHasLightComponent(g_selNode) && !NodeHasCameraComponent(g_selNode)) {
                 Model3D* model = nullptr;
                 if (auto* vc = g_selNode->GetComponent<VisualComponent>())
                     model = vc->GetModel();
-                if (model && !model->GetVerticesCPU().empty()) {
+                if (auto* sprite=g_selNode->GetComponent<SpriteRendererComponent>()) {
+                    const auto size=sprite->GetWorldSize();
+                    XMFLOAT3 corners[4];
+                    const XMFLOAT3 local[4]={
+                        {-sprite->pivot.x*size.x,-sprite->pivot.y*size.y,0},
+                        {(1-sprite->pivot.x)*size.x,-sprite->pivot.y*size.y,0},
+                        {(1-sprite->pivot.x)*size.x,(1-sprite->pivot.y)*size.y,0},
+                        {-sprite->pivot.x*size.x,(1-sprite->pivot.y)*size.y,0}};
+                    for(int i=0;i<4;++i)
+                        XMStoreFloat3(&corners[i],XMVector3TransformCoord(XMLoadFloat3(&local[i]),t->GetWorldMatrix()));
+                    for(int i=0;i<4;++i) drawer.DrawLine(corners[i],corners[(i+1)%4],kMeshColor);
+                }
+                else if (model && !model->GetVerticesCPU().empty()) {
                     DrawMeshWireframeHighlight(model->GetVerticesCPU(),
                         t->localPosition, t->localScale, t->localRotation, drawer, kMeshColor);
                 }
@@ -2774,6 +2841,28 @@ static void FocusSelectedObjectWithCamera(const engine::Transform* t) {
 
     Camera& cam = GetCamera();
     using namespace DirectX;
+    if(DebugCamera_Is2DView()) {
+        const auto position=t->GetWorldPosition();
+        float height=2;
+        if(g_selNode) if(auto* sprite=g_selNode->GetComponent<SpriteRendererComponent>()) {
+            const auto size=sprite->GetWorldSize();
+            XMFLOAT3 wp,wr,ws; t->GetWorldPositionRotationScale(wp,wr,ws);
+            float vx,vy,vw,vh; EngineGUI_GetGameViewportRect(vx,vy,vw,vh);
+            const float aspect=(std::max)(0.01f,vw/(std::max)(1.0f,vh));
+            float radiusX=0,radiusY=0;
+            for(int i=0;i<4;++i) {
+                const auto local=XMVectorSet(((i&1)?1-sprite->pivot.x:-sprite->pivot.x)*size.x,
+                    ((i&2)?1-sprite->pivot.y:-sprite->pivot.y)*size.y,0,1);
+                XMFLOAT3 corner; XMStoreFloat3(&corner,XMVector3TransformCoord(local,t->GetWorldMatrix()));
+                radiusX=(std::max)(radiusX,std::fabs(corner.x-position.x));
+                radiusY=(std::max)(radiusY,std::fabs(corner.y-position.y));
+            }
+            height=(std::max)(2.0f,(std::max)(radiusY,radiusX/aspect)*3.0f);
+        }
+        cam.SetPosition({position.x,position.y,position.z-10});
+        cam.SetTarget(position); cam.orthographicHeight=height;
+        DebugCamera_SyncOrbitFromCurrentView(); return;
+    }
 
     const XMVECTOR vPos = XMLoadFloat3(&cam.position);
     const XMVECTOR vAt = XMLoadFloat3(&cam.at);
@@ -2918,7 +3007,7 @@ void EngineGUI_Update(double elapsed_time) {
     }
 
     // F: focus debug camera on selected object
-    if (!g_isPlaying && KeyLogger_IsTrigger(KK_F) && g_selNode) {
+    if (!g_isPlaying && !ImGui::GetIO().WantCaptureKeyboard && KeyLogger_IsTrigger(KK_F) && g_selNode) {
         if (const engine::Transform* t = g_selNode->GetTransform())
             FocusSelectedObjectWithCamera(t);
     }
@@ -2971,7 +3060,12 @@ void EngineGUI_Update(double elapsed_time) {
 
             std::function<void(GameObject*)> pickNode = [&](GameObject* node) {
                 if (!node || !node->IsActive()) return;
-                if (const engine::Transform* tr = node->GetTransform()) {
+                if(SceneLoader_Is2D()) {
+                    if(auto* sprite=node->GetComponent<SpriteRendererComponent>(); sprite && sprite->HitTestRay(rayOrg,rayDir)) {
+                        auto* previous=bestNode?bestNode->GetComponent<SpriteRendererComponent>():nullptr;
+                        if(!previous || std::tie(sprite->sortingLayer,sprite->orderInLayer)>=std::tie(previous->sortingLayer,previous->orderInLayer)) bestNode=node;
+                    }
+                } else if (const engine::Transform* tr = node->GetTransform()) {
                     float t = -1.0f;
                     if (auto* vc = node->GetComponent<VisualComponent>()) {
                         if (Model3D* model = vc->GetModel()) {
@@ -3295,7 +3389,7 @@ static bool AutoFitColliderToMesh(GameObject* node, ColliderComponent* cc) {
 void EngineGUI_FitNewCollider(GameObject* node) {
     if (!node)
         return;
-    ColliderComponent* cc = node->GetComponent<ColliderComponent>();
+    ColliderComponent* cc = FindColliderComponent(node);
     if (!cc)
         cc = node->AddComponent<ColliderComponent>();
     cc->colliderType = ColliderType::BOX;
@@ -3312,11 +3406,12 @@ void EngineGUI_OnBackbufferResized() {
 }
 
 void EngineGUI_Draw() {
+    const bool playVisuals=EngineGUI_PreferPlayVisuals();
     // Play mode sets g_enabled=false (hides editor chrome). Still draw the
     // Job System overlay when F8 has opened it so it survives play.
     const bool willProcessImGuiFrame =
         g_enabled || (JobSystem_IsDebugWindowVisible() && g_imguiInitialized);
-    SyncImGuiInputAcceptance(willProcessImGuiFrame);
+    SyncImGuiInputAcceptance(willProcessImGuiFrame && !g_holdPlayVisuals);
 
     if (!g_enabled) {
         if (!JobSystem_IsDebugWindowVisible() || !g_imguiInitialized)
@@ -3386,7 +3481,8 @@ void EngineGUI_Draw() {
 
     const bool sceneLoadBusy = IsSceneLoadBusy();
     const bool preloadActive = g_sceneAssetPreloader.IsActive();
-    if (sceneLoadBusy)
+    const bool showSceneLoadModal=sceneLoadBusy && !g_holdPlayVisuals;
+    if (showSceneLoadModal)
         ImGui::OpenPopup("SceneAssetPreloadModal");
 
     if (!sceneLoadBusy) {
@@ -3395,7 +3491,7 @@ void EngineGUI_Draw() {
         if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiMod_Shift | ImGuiKey_S))
             SaveProject();
         // RouteAlways: default RouteFocused fails when focus is on the game viewport.
-        if (!g_isPlaying && !ImGui::GetIO().WantTextInput) {
+        if (!playVisuals && !ImGui::GetIO().WantTextInput) {
             if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_Z, ImGuiInputFlags_RouteAlways)) {
                 if (EditorUndo_Undo()) {
                     EngineGUI_MarkSceneDirty();
@@ -3429,7 +3525,7 @@ void EngineGUI_Draw() {
         ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize |
         ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar);
     {
-        if (g_isPlaying) {
+        if (playVisuals) {
             ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.55f, 0.20f, 0.20f, 1.0f));
             ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.70f, 0.30f, 0.30f, 1.0f));
             ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.40f, 0.15f, 0.15f, 1.0f));
@@ -3466,7 +3562,7 @@ void EngineGUI_Draw() {
 
         ImGui::SameLine();
         {
-            const bool canSave = !g_isPlaying && !sceneLoadBusy;
+            const bool canSave = !playVisuals && !sceneLoadBusy;
             if (!canSave)
                 ImGui::BeginDisabled();
             if (ToolbarIconButton(ICON_FA_FLOPPY_DISK, "Save Scene (Ctrl+S)"))
@@ -3477,7 +3573,7 @@ void EngineGUI_Draw() {
 
         ImGui::SameLine();
         {
-            const bool canEditUndo = !g_isPlaying && !sceneLoadBusy;
+            const bool canEditUndo = !playVisuals && !sceneLoadBusy;
             if (!canEditUndo || !EditorUndoStack::Instance().CanUndo())
                 ImGui::BeginDisabled();
             const bool undoPressed = ToolbarIconButton(ICON_FA_ROTATE_LEFT, "Undo (Ctrl+Z)");
@@ -3509,7 +3605,7 @@ void EngineGUI_Draw() {
         if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort))
             ImGui::SetTooltip("Reload Scripts\n%s", g_scriptReloadStatus.c_str());
 
-        if (!g_isPlaying) {
+        if (!playVisuals) {
             ImGui::SameLine();
             ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.55f, 0.20f, 0.20f, 1.0f));
             ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.70f, 0.30f, 0.30f, 1.0f));
@@ -3553,6 +3649,10 @@ void EngineGUI_Draw() {
                 ImGui::SetTooltip("UI Edit Mode");
 
             ImGui::SameLine();
+            bool view2D=DebugCamera_Is2DView();
+            ImGui::BeginDisabled(playVisuals);
+            if(ImGui::Checkbox("2D View",&view2D)) DebugCamera_Set2DView(view2D);
+            ImGui::EndDisabled(); ImGui::SameLine();
             TransformGizmo::DrawToolbarControls();
 
             ImGui::SameLine();
@@ -3560,8 +3660,9 @@ void EngineGUI_Draw() {
             {
                 std::vector<std::string> camNames;
                 std::function<void(GameObject*)> collectCams = [&](GameObject* node) {
-                    if (!node) return;
-                    if (node->GetComponent<CameraComponent>())
+                    if (!node || !node->IsActive()) return;
+                    if (auto* camera = node->GetComponent<CameraComponent>();
+                        camera && camera->enabled && node->GetComponent<engine::Transform>())
                         camNames.push_back(node->GetName());
                     for (const auto& child : node->GetChildren())
                         collectCams(child.get());
@@ -3572,26 +3673,21 @@ void EngineGUI_Draw() {
                 if (g_activeCameraNode.empty() && camNames.size() == 1)
                     g_activeCameraNode = camNames[0];
 
-                std::string currentLabel =
-                    (g_cameraMode == CameraMode::ThirdPerson) ? "Third Person"
-                    : (g_cameraMode == CameraMode::FirstPerson) ? "First Person"
-                    : (g_activeCameraNode.empty() ? "Third Person" : g_activeCameraNode);
+                const bool validSelection = g_cameraMode == CameraMode::SceneCamera
+                    && std::count(camNames.begin(),camNames.end(),g_activeCameraNode)==1;
+                const std::string currentLabel = validSelection ? g_activeCameraNode
+                    : camNames.empty() ? "No enabled game camera" : "Select game camera";
 
                 ImGui::Text("Camera:");
                 ImGui::SameLine();
                 ImGui::SetNextItemWidth(160.0f);
                 if (ImGui::BeginCombo("##Camera", currentLabel.c_str())) {
-                    bool tpSel = (g_cameraMode == CameraMode::ThirdPerson);
-                    if (ImGui::Selectable("Third Person", tpSel))
-                        g_cameraMode = CameraMode::ThirdPerson;
-                    bool fpSel = (g_cameraMode == CameraMode::FirstPerson);
-                    if (ImGui::Selectable("First Person", fpSel))
-                        g_cameraMode = CameraMode::FirstPerson;
                     for (const auto& name : camNames) {
                         bool sel = (g_cameraMode == CameraMode::SceneCamera && g_activeCameraNode == name);
                         if (ImGui::Selectable(name.c_str(), sel)) {
                             g_cameraMode = CameraMode::SceneCamera;
                             g_activeCameraNode = name;
+                            EngineGUI_MarkSceneDirty();
                         }
                     }
                     ImGui::EndCombo();
@@ -3607,7 +3703,7 @@ void EngineGUI_Draw() {
     ImGui::Begin("Scene Hierarchy", nullptr,
         ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
     {
-        if (g_isPlaying)
+        if (playVisuals)
             ImGui::BeginDisabled(true);
 
         if (ImGui::CollapsingHeader("Game Objects", ImGuiTreeNodeFlags_DefaultOpen)) {
@@ -3617,7 +3713,7 @@ void EngineGUI_Draw() {
             // Root drop zone
             ImGui::Selectable("##RootDropZone", false,
                 ImGuiSelectableFlags_AllowOverlap, ImVec2(-1, 6));
-            if (!g_isPlaying && ImGui::BeginDragDropTarget()) {
+            if (!playVisuals && ImGui::BeginDragDropTarget()) {
                 if (const ImGuiPayload* pl = ImGui::AcceptDragDropPayload("HIERARCHY_GO")) {
                     GameObject* dragged = *static_cast<GameObject**>(pl->Data);
                     if (dragged && dragged->GetParent()) {
@@ -3664,7 +3760,7 @@ void EngineGUI_Draw() {
             EngineGUIUI::DrawCanvasElementHierarchy(g_selUiElement, g_selNode);
         }
 
-        if (g_isPlaying)
+        if (playVisuals)
             ImGui::EndDisabled();
     }
     ImGui::End();
@@ -3675,7 +3771,7 @@ void EngineGUI_Draw() {
     ImGui::Begin("Properties", nullptr,
         ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
     {
-        if (g_isPlaying)
+        if (playVisuals)
             ImGui::BeginDisabled(true);
 
         if (g_selNode) {
@@ -4043,7 +4139,14 @@ void EngineGUI_Draw() {
                 EditorUndo_BeginComponentEdit(g_selNode, "Camera");
                 if (ImGui::Checkbox("Enabled", &cam->enabled))
                     runtimeDirty = true;
-                if (ImGui::DragFloat("FOV", &cam->fov, 0.5f, 1.0f, 179.0f))
+                if (ImGui::Checkbox("Editor Camera Controls on Play", &cam->debugFly)) runtimeDirty = true;
+                if (ImGui::Checkbox("Orthographic", &cam->orthographic))
+                    runtimeDirty = true;
+                if (cam->orthographic) {
+                    if (ImGui::DragFloat("View Height", &cam->orthographicHeight, 0.1f, 0.01f, 100000.0f))
+                        runtimeDirty = true;
+                }
+                else if (ImGui::DragFloat("FOV", &cam->fov, 0.5f, 1.0f, 179.0f))
                     runtimeDirty = true;
                 if (ImGui::DragFloat("Near Clip", &cam->nearClip, 0.01f, 0.01f, 100.0f))
                     runtimeDirty = true;
@@ -4105,21 +4208,17 @@ void EngineGUI_Draw() {
                 ImGui::Spacing();
             }
 
-            if (ColliderComponent* cc = g_selNode->GetComponent<ColliderComponent>()) {
+            if (ColliderComponent* cc = FindColliderComponent(g_selNode)) {
                 ImGui::Separator();
-                ImGui::Text("Collider");
-                EditorUndo_BeginComponentEdit(g_selNode, "Collider");
-                const char* colTypes[] = { "NONE","BOX","SPHERE","CAPSULE","MESH","CYLINDER" };
-                int ct = static_cast<int>(cc->colliderType);
-                ImGui::SameLine(80);
+                const char* colliderTypeName=cc->GetTypeName();
+                const char* colliderLabels[]={"Collider (Legacy)","Box Collider","Sphere Collider","Capsule Collider","Mesh Collider","Cylinder Collider"};
+                const int colliderIndex=static_cast<int>(cc->colliderType);
+                ImGui::TextUnformatted(colliderIndex>=0&&colliderIndex<IM_ARRAYSIZE(colliderLabels)?colliderLabels[colliderIndex]:"Collider (Legacy)");
+                EditorUndo_BeginComponentEdit(g_selNode, colliderTypeName);
                 auto noteColliderEdit = [&](bool edited) {
                     if (edited)
                         runtimeDirty = true;
                 };
-                if (ImGui::Combo("##ColType", &ct, colTypes, IM_ARRAYSIZE(colTypes))) {
-                    cc->colliderType = static_cast<ColliderType>(ct);
-                    runtimeDirty = true;
-                }
                 if (cc->colliderType != ColliderType::NONE) {
                     ImGui::Text("Center");
                     ImGui::Text("X:"); ImGui::SameLine(40);
@@ -4219,10 +4318,10 @@ void EngineGUI_Draw() {
                         }
                     }
                 }
-                EditorUndo_EndComponentEdit(g_selNode, "Collider");
+                EditorUndo_EndComponentEdit(g_selNode, colliderTypeName);
                 if (ImGui::Button("Remove Collider")) {
-                    EditorUndo_PushRemoveComponent(g_selNode, "Collider");
-                    g_selNode->RemoveComponent<ColliderComponent>();
+                    EditorUndo_PushRemoveComponent(g_selNode, colliderTypeName);
+                    RemoveColliderComponent(g_selNode);
                     runtimeDirty = true;
                 }
                 ImGui::Spacing();
@@ -4553,6 +4652,227 @@ void EngineGUI_Draw() {
                 ImGui::Spacing();
             }
 
+            // 2D physics settings are authored before Play; runtime owns the bodies.
+            if (auto* body = g_selNode->GetComponent<Rigidbody2DComponent>()) {
+                ImGui::Separator();
+                ImGui::TextUnformatted("Rigidbody 2D");
+                ImGui::PushID("Rigidbody2D");
+                ImGui::BeginDisabled(EngineGUI_IsPlaying());
+                EditorUndo_BeginComponentEdit(g_selNode, "Rigidbody2D");
+                ImGui::PushItemWidth(-1);
+                ImGui::TextUnformatted("Body Type");
+                int type = static_cast<int>(body->bodyType);
+                if (ImGui::Combo("##Type", &type, "Static\0Dynamic\0Kinematic\0")) {
+                    body->bodyType = static_cast<BodyType2D>(type);
+                    runtimeDirty = true;
+                }
+                auto number = [&](const char* label, float* value, float minimum, float maximum) {
+                    ImGui::TextUnformatted(label);
+                    std::string id = std::string("##") + label;
+                    if (ImGui::DragFloat(id.c_str(), value, 0.01f, minimum, maximum)) runtimeDirty = true;
+                };
+                number("Mass", &body->mass, 0.001f, 100000.0f);
+                number("Gravity Scale", &body->gravityScale, -100.0f, 100.0f);
+                number("Linear Damping", &body->linearDamping, 0.0f, 100.0f);
+                ImGui::TextUnformatted("Initial Velocity (XY)");
+                if (ImGui::DragFloat2("##Velocity", &body->initialVelocity.x, 0.01f)) runtimeDirty = true;
+                if (ImGui::Checkbox("Fixed Rotation", &body->fixedRotation)) runtimeDirty = true;
+                if (ImGui::Checkbox("Continuous Collision", &body->bullet)) runtimeDirty = true;
+                ImGui::PopItemWidth();
+                ImGui::TextWrapped("Dynamic and kinematic bodies must be root objects with uniform positive XY scale. Edit physics settings before Play.");
+                EditorUndo_EndComponentEdit(g_selNode, "Rigidbody2D");
+                if (ImGui::Button("Remove Rigidbody 2D")) {
+                    EditorUndo_PushRemoveComponent(g_selNode, "Rigidbody2D");
+                    g_selNode->RemoveComponent<Rigidbody2DComponent>();
+                    runtimeDirty = true;
+                }
+                ImGui::EndDisabled();
+                ImGui::PopID();
+            }
+            if (auto* collider = g_selNode->GetComponent<Collider2DComponent>()) {
+                ImGui::Separator();
+                ImGui::TextUnformatted("Collider 2D");
+                ImGui::PushID("Collider2D");
+                EditorUndo_BeginComponentEdit(g_selNode, "Collider2D");
+                if (ImGui::Checkbox("Show Debug Collider", &collider->showDebugCollider)) runtimeDirty = true;
+                EditorUndo_EndComponentEdit(g_selNode, "Collider2D");
+                ImGui::BeginDisabled(EngineGUI_IsPlaying());
+                EditorUndo_BeginComponentEdit(g_selNode, "Collider2D");
+                ImGui::PushItemWidth(-1);
+                if (ImGui::Checkbox("Enabled", &collider->enabled)) runtimeDirty = true;
+                ImGui::TextUnformatted("Shape");
+                int shape = static_cast<int>(collider->shape);
+                if (ImGui::Combo("##Shape", &shape, "Box\0Circle\0")) {
+                    collider->shape = static_cast<Shape2D>(shape);
+                    runtimeDirty = true;
+                }
+                if (collider->shape == Shape2D::Box) {
+                    ImGui::TextUnformatted("Size (XY)");
+                    if (ImGui::DragFloat2("##Size", &collider->size.x, 0.01f, 0.001f, 100000.0f)) runtimeDirty = true;
+                } else {
+                    ImGui::TextUnformatted("Radius");
+                    if (ImGui::DragFloat("##Radius", &collider->radius, 0.01f, 0.001f, 100000.0f)) runtimeDirty = true;
+                }
+                ImGui::TextUnformatted("Offset (XY)");
+                if (ImGui::DragFloat2("##Offset", &collider->offset.x, 0.01f)) runtimeDirty = true;
+                if (ImGui::Checkbox("Trigger", &collider->isTrigger)) runtimeDirty = true;
+                ImGui::TextUnformatted("Friction");
+                if (ImGui::DragFloat("##Friction", &collider->friction, 0.01f, 0.0f, 1.0f)) runtimeDirty = true;
+                ImGui::TextUnformatted("Restitution");
+                if (ImGui::DragFloat("##Restitution", &collider->restitution, 0.01f, 0.0f, 1.0f)) runtimeDirty = true;
+                ImGui::TextUnformatted("Category Bits (hex)");
+                if (ImGui::InputScalar("##Category", ImGuiDataType_U32, &collider->categoryBits, nullptr, nullptr, "%08X", ImGuiInputTextFlags_CharsHexadecimal)) runtimeDirty = true;
+                ImGui::TextUnformatted("Mask Bits (hex)");
+                if (ImGui::InputScalar("##Mask", ImGuiDataType_U32, &collider->maskBits, nullptr, nullptr, "%08X", ImGuiInputTextFlags_CharsHexadecimal)) runtimeDirty = true;
+                ImGui::PopItemWidth();
+                ImGui::TextWrapped("Box size and circle radius use local world units. Use uniform positive XY scale; settings are locked during Play.");
+                EditorUndo_EndComponentEdit(g_selNode, "Collider2D");
+                if (ImGui::Button("Remove Collider 2D")) {
+                    EditorUndo_PushRemoveComponent(g_selNode, "Collider2D");
+                    g_selNode->RemoveComponent<Collider2DComponent>();
+                    runtimeDirty = true;
+                }
+                ImGui::EndDisabled();
+                ImGui::PopID();
+            }
+
+            if (SpriteRendererComponent* sprite = g_selNode->GetComponent<SpriteRendererComponent>()) {
+                ImGui::Separator();
+                ImGui::Text("Sprite Renderer");
+                ImGui::PushID("SpriteRenderer");
+                EditorUndo_BeginComponentEdit(g_selNode, "SpriteRenderer");
+                char textureBuf[1024];
+                strncpy_s(textureBuf, sprite->texturePath.c_str(), _TRUNCATE);
+                if (ImGui::InputText("Texture", textureBuf, sizeof(textureBuf))) {
+                    sprite->texturePath = textureBuf;
+                    runtimeDirty = true;
+                }
+                const char* extensions[] = { ".png", ".jpg", ".jpeg", ".bmp" };
+                std::string droppedPath;
+                if (AcceptAssetPathDrop(extensions, IM_ARRAYSIZE(extensions), droppedPath)) {
+                    sprite->texturePath = droppedPath;
+                    runtimeDirty = true;
+                }
+                if (ImGui::DragFloat("Pixels Per Unit", &sprite->pixelsPerUnit, 1.0f, 0.01f, 100000.0f))
+                    runtimeDirty = true;
+                if (ImGui::DragFloat4("Source Rect", &sprite->sourceRect.x, 1.0f, 0.0f, 100000.0f))
+                    runtimeDirty = true;
+                ImGui::TextDisabled("Source rect: x, y, width, height in pixels. Zero size uses full texture.");
+                if(DrawPivotPreset("Pivot",sprite->pivot,sprite)) runtimeDirty=true;
+                if (ImGui::ColorEdit4("Tint", &sprite->tint.x)) runtimeDirty = true;
+                if (ImGui::Checkbox("Flip X", &sprite->flipX)) runtimeDirty = true;
+                if (ImGui::Checkbox("Flip Y", &sprite->flipY)) runtimeDirty = true;
+                if (ImGui::InputInt("Sorting Layer", &sprite->sortingLayer)) runtimeDirty = true;
+                if (ImGui::InputInt("Order In Layer", &sprite->orderInLayer)) runtimeDirty = true;
+                EditorUndo_EndComponentEdit(g_selNode, "SpriteRenderer");
+                if (ImGui::Button("Remove Sprite Renderer")) {
+                    EditorUndo_PushRemoveComponent(g_selNode, "SpriteRenderer");
+                    g_selNode->RemoveComponent<SpriteRendererComponent>();
+                    runtimeDirty = true;
+                }
+                ImGui::PopID();
+                ImGui::Spacing();
+            }
+
+            if (auto* animator = g_selNode->GetComponent<SpriteAnimatorComponent>()) {
+                ImGui::Separator();
+                ImGui::Text("Sprite Animator");
+                ImGui::PushID("SpriteAnimator");
+                EditorUndo_BeginComponentEdit(g_selNode, "SpriteAnimator");
+                bool changed = false;
+                char defaultName[256];
+                strncpy_s(defaultName, animator->defaultClip.c_str(), _TRUNCATE);
+                if (ImGui::InputText("Default Clip", defaultName, sizeof(defaultName))) {
+                    animator->defaultClip = defaultName;
+                    changed = true;
+                }
+                changed |= ImGui::Checkbox("Auto Play", &animator->autoPlay);
+                static char newClipName[256] = "idle";
+                ImGui::InputText("New Clip Name", newClipName, sizeof(newClipName));
+                if (ImGui::Button("Add Clip") && newClipName[0]) {
+                    changed |= animator->clips.emplace(newClipName, SpriteAnimationClip{}).second;
+                }
+                static char metadataPath[1024] = "";
+                static char importName[256] = "idle";
+                static bool importFailed = false;
+                ImGui::InputText("Sheet Metadata JSON", metadataPath, sizeof(metadataPath));
+                const char* jsonExtensions[] = { ".json" };
+                std::string metadataDrop;
+                if (AcceptAssetPathDrop(jsonExtensions, IM_ARRAYSIZE(jsonExtensions), metadataDrop))
+                    strncpy_s(metadataPath, metadataDrop.c_str(), _TRUNCATE);
+                ImGui::InputText("Import Clip Name", importName, sizeof(importName));
+                if (ImGui::Button("Import Sheet")) {
+                    const bool imported = animator->ImportSheet(metadataPath, importName);
+                    importFailed = !imported;
+                    changed |= imported;
+                }
+                if (importFailed) ImGui::TextDisabled("Import failed. Check metadata path and frame rectangles.");
+                for (auto it = animator->clips.begin(); it != animator->clips.end();) {
+                    ImGui::PushID(it->first.c_str());
+                    bool removeClip = false;
+                    if (ImGui::TreeNode("Clip", "%s", it->first.c_str())) {
+                        auto& clip = it->second;
+                        char texture[1024];
+                        strncpy_s(texture, clip.texture.c_str(), _TRUNCATE);
+                        if (ImGui::InputText("Texture", texture, sizeof(texture))) {
+                            clip.texture = texture;
+                            changed = true;
+                        }
+                        const char* extensions[] = { ".png", ".jpg", ".jpeg", ".bmp" };
+                        std::string droppedPath;
+                        if (AcceptAssetPathDrop(extensions, IM_ARRAYSIZE(extensions), droppedPath)) {
+                            clip.texture = droppedPath;
+                            changed = true;
+                        }
+                        float fps = static_cast<float>(clip.fps);
+                        if (ImGui::DragFloat("FPS", &fps, 0.1f, 0.01f, 1000.0f)) {
+                            clip.fps = (std::max)(0.01f, fps);
+                            changed = true;
+                        }
+                        changed |= ImGui::Checkbox("Loop", &clip.loop);
+                        for (size_t i = 0; i < clip.frames.size();) {
+                            ImGui::PushID(static_cast<int>(i));
+                            auto& frame = clip.frames[i];
+                            float rect[] = {frame.x, frame.y, frame.w, frame.h};
+                            if (ImGui::DragFloat4("Frame XYWH", rect, 1.0f, 0.0f, 100000.0f)) {
+                                frame = {rect[0], rect[1], (std::max)(1.0f, rect[2]), (std::max)(1.0f, rect[3])};
+                                changed = true;
+                            }
+                            const bool removeFrame = ImGui::Button("Remove Frame");
+                            ImGui::PopID();
+                            if (removeFrame) {
+                                clip.frames.erase(clip.frames.begin() + i);
+                                changed = true;
+                            } else ++i;
+                        }
+                        if (ImGui::Button("Add Frame")) {
+                            clip.frames.push_back(SpriteAnimationFrame{});
+                            changed = true;
+                        }
+                        removeClip = ImGui::Button("Remove Clip");
+                        ImGui::TreePop();
+                    }
+                    ImGui::PopID();
+                    if (removeClip) {
+                        if (animator->defaultClip == it->first) animator->defaultClip.clear();
+                        it = animator->clips.erase(it);
+                        changed = true;
+                    } else ++it;
+                }
+                if (changed) {
+                    animator->OnReset();
+                    runtimeDirty = true;
+                }
+                EditorUndo_EndComponentEdit(g_selNode, "SpriteAnimator");
+                if (ImGui::Button("Remove Sprite Animator")) {
+                    EditorUndo_PushRemoveComponent(g_selNode, "SpriteAnimator");
+                    g_selNode->RemoveComponent<SpriteAnimatorComponent>();
+                    runtimeDirty = true;
+                }
+                ImGui::PopID();
+                ImGui::Spacing();
+            }
+
             if (BillboardComponent* bbc = g_selNode->GetComponent<BillboardComponent>()) {
                 ImGui::Separator();
                 ImGui::Text("Billboard");
@@ -4602,50 +4922,52 @@ void EngineGUI_Draw() {
             ImGui::Text("Components:");
             for (const auto& kv : g_selNode->GetComponents())
                 ImGui::BulletText("%s", kv.second->GetTypeName());
-            if (!g_selNode->GetComponent<engine::Transform>() && ImGui::Button("Add Transform")) {
-                g_selNode->AddComponent<engine::Transform>();
-                EditorUndo_PushAddComponent(g_selNode, "SceneTransform");
-                runtimeDirty = true;
-            }
-            if (!g_selNode->GetComponent<BillboardComponent>() && ImGui::Button("Add Billboard")) {
-                g_selNode->AddComponent<BillboardComponent>();
-                EditorUndo_PushAddComponent(g_selNode, "Billboard");
-                runtimeDirty = true;
-            }
-            if (!g_selNode->GetComponent<MaterialComponent>() && ImGui::Button("Add Material")) {
-                g_selNode->AddComponent<MaterialComponent>();
-                EditorUndo_PushAddComponent(g_selNode, "Material");
-                runtimeDirty = true;
-            }
-            if (!g_selNode->GetComponent<RigidbodyComponent>() && ImGui::Button("Add Rigidbody")) {
-                g_selNode->AddComponent<RigidbodyComponent>();
-                EditorUndo_PushAddComponent(g_selNode, "Rigidbody");
-                runtimeDirty = true;
-            }
-            if (!g_selNode->GetComponent<ColliderComponent>() && ImGui::Button("Add Collider")) {
-                g_selNode->AddComponent<ColliderComponent>();
-                EditorUndo_PushAddComponent(g_selNode, "Collider");
-                runtimeDirty = true;
-            }
-            if (!g_selNode->GetComponent<ScriptComponent>() && ImGui::Button("Add Script")) {
-                g_selNode->AddComponent<ScriptComponent>();
-                EditorUndo_PushAddComponent(g_selNode, "Script");
-                runtimeDirty = true;
-            }
-            if (!g_selNode->GetComponent<EffectComponent>() && ImGui::Button("Add Effect")) {
-                g_selNode->AddComponent<EffectComponent>();
-                EditorUndo_PushAddComponent(g_selNode, "Effect");
-                runtimeDirty = true;
-            }
-            if (!g_selNode->GetComponent<AudioComponent>() && ImGui::Button("Add Audio")) {
-                g_selNode->AddComponent<AudioComponent>();
-                EditorUndo_PushAddComponent(g_selNode, "Audio");
-                runtimeDirty = true;
-            }
-            if (!g_selNode->GetComponent<AudioListenerComponent>() && ImGui::Button("Add AudioListener")) {
-                g_selNode->AddComponent<AudioListenerComponent>();
-                EditorUndo_PushAddComponent(g_selNode, "AudioListener");
-                runtimeDirty = true;
+            ImGui::SetNextItemWidth(-1);
+            if (ImGui::BeginCombo("##AddComponent", "Add Component...", ImGuiComboFlags_HeightLarge)) {
+                static ImGuiTextFilter componentFilter;
+                const bool opening=ImGui::IsWindowAppearing();
+                if(opening) {componentFilter.Clear();ImGui::SetKeyboardFocusHere();}
+                componentFilter.Draw("##ComponentSearch", -1);
+                ImGui::Separator();
+                int availableCount=0;
+                auto option=[&](const char* label,const char* typeName,bool available,auto create) {
+                    if(!available||!componentFilter.PassFilter(label))return;
+                    ++availableCount;
+                    if(ImGui::Selectable(label)) {
+                        create();
+                        EditorUndo_PushAddComponent(g_selNode,typeName);
+                        runtimeDirty=true;
+                        ImGui::CloseCurrentPopup();
+                    }
+                };
+                option("Transform","SceneTransform",!g_selNode->GetComponent<engine::Transform>(),[&] {g_selNode->AddComponent<engine::Transform>();});
+                option("Visual","visual",!g_selNode->GetComponent<VisualComponent>(),[&] {g_selNode->AddComponent<VisualComponent>();});
+                option("Sprite Renderer","SpriteRenderer",!g_selNode->GetComponent<SpriteRendererComponent>(),[&] {g_selNode->AddComponent<SpriteRendererComponent>();});
+                option("Sprite Animator","SpriteAnimator",!g_selNode->GetComponent<SpriteAnimatorComponent>(),[&] {g_selNode->AddComponent<SpriteAnimatorComponent>();});
+                option("Billboard","Billboard",!g_selNode->GetComponent<BillboardComponent>(),[&] {g_selNode->AddComponent<BillboardComponent>();});
+                option("Material","Material",!g_selNode->GetComponent<MaterialComponent>(),[&] {g_selNode->AddComponent<MaterialComponent>();});
+                option("Camera","Camera",!g_selNode->GetComponent<CameraComponent>(),[&] {g_selNode->AddComponent<CameraComponent>();});
+                option("Directional Light","DirectionalLight",!g_selNode->GetComponent<DirectionalLightComponent>(),[&] {g_selNode->AddComponent<DirectionalLightComponent>();});
+                option("Point Light","PointLight",!g_selNode->GetComponent<PointLightComponent>(),[&] {g_selNode->AddComponent<PointLightComponent>();});
+                option("Spot Light","SpotLight",!g_selNode->GetComponent<SpotLightComponent>(),[&] {g_selNode->AddComponent<SpotLightComponent>();});
+                option("Rigidbody 3D","Rigidbody",!g_selNode->GetComponent<RigidbodyComponent>(),[&] {g_selNode->AddComponent<RigidbodyComponent>();});
+                option("Rigidbody 2D","Rigidbody2D",!g_selNode->GetComponent<Rigidbody2DComponent>(),[&] {g_selNode->AddComponent<Rigidbody2DComponent>();});
+                option("Script","Script",!g_selNode->GetComponent<ScriptComponent>(),[&] {g_selNode->AddComponent<ScriptComponent>();});
+                option("Effect","Effect",!g_selNode->GetComponent<EffectComponent>(),[&] {g_selNode->AddComponent<EffectComponent>();});
+                option("Audio","Audio",!g_selNode->GetComponent<AudioComponent>(),[&] {g_selNode->AddComponent<AudioComponent>();});
+                option("Audio Listener","AudioListener",!g_selNode->GetComponent<AudioListenerComponent>(),[&] {g_selNode->AddComponent<AudioListenerComponent>();});
+                const auto* currentCollider=FindColliderComponent(g_selNode);
+                const bool canAdd3D=!currentCollider||currentCollider->colliderType==ColliderType::NONE;
+                auto removeEmptyCollider=[&] {if(currentCollider)RemoveColliderComponent(g_selNode);};
+                option("Box Collider 3D","BoxCollider",canAdd3D,[&] {removeEmptyCollider();g_selNode->AddComponent<BoxColliderComponent>();});
+                option("Sphere Collider 3D","SphereCollider",canAdd3D,[&] {removeEmptyCollider();g_selNode->AddComponent<SphereColliderComponent>();});
+                option("Capsule Collider 3D","CapsuleCollider",canAdd3D,[&] {removeEmptyCollider();g_selNode->AddComponent<CapsuleColliderComponent>();});
+                option("Cylinder Collider 3D","CylinderCollider",canAdd3D,[&] {removeEmptyCollider();g_selNode->AddComponent<CylinderColliderComponent>();});
+                option("Mesh Collider 3D","MeshCollider",canAdd3D,[&] {removeEmptyCollider();g_selNode->AddComponent<MeshColliderComponent>();});
+                option("Box Collider 2D","Collider2D",!g_selNode->GetComponent<Collider2DComponent>(),[&] {g_selNode->AddComponent<Collider2DComponent>()->shape=Shape2D::Box;});
+                option("Circle Collider 2D","Collider2D",!g_selNode->GetComponent<Collider2DComponent>(),[&] {g_selNode->AddComponent<Collider2DComponent>()->shape=Shape2D::Circle;});
+                if(!availableCount)ImGui::TextDisabled("No matching components available.");
+                ImGui::EndCombo();
             }
             ImGui::Spacing();
 
@@ -4681,7 +5003,7 @@ void EngineGUI_Draw() {
             DrawPropertiesEmptyState();
         }
 
-        if (g_isPlaying)
+        if (playVisuals)
             ImGui::EndDisabled();
     }
     ImGui::End();
@@ -4692,10 +5014,10 @@ void EngineGUI_Draw() {
     ImGui::Begin("Asset Browser", nullptr,
         ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
     {
-        if (sceneLoadBusy || g_isPlaying)
+        if (sceneLoadBusy || playVisuals)
             ImGui::BeginDisabled(true);
         if (GameObject* spawned = MapEditor::ProjectBrowserPanel(g_sceneNodes)) {
-            if (!sceneLoadBusy && !g_isPlaying) {
+            if (!sceneLoadBusy && !playVisuals) {
                 g_selNode = spawned;
                 g_selUiElement = nullptr;
                 const int idx = [&]() {
@@ -4708,28 +5030,79 @@ void EngineGUI_Draw() {
                 SyncSceneRuntime();
             }
         }
-        if (sceneLoadBusy || g_isPlaying)
+        if (sceneLoadBusy || playVisuals)
             ImGui::EndDisabled();
     }
     ImGui::End();
 
-    if (!sceneLoadBusy && !g_isPlaying && g_editMode == EditorEditMode::Scene3D) {
+    // Custom viewport target does not add an ImGui window over the scene.
+    float dropX,dropY,dropW,dropH;
+    EngineGUI_GetGameViewportRect(dropX,dropY,dropW,dropH);
+    const ImRect dropRect(ImVec2(dropX,dropY),ImVec2(dropX+dropW,dropY+dropH));
+    if(!sceneLoadBusy && !playVisuals && g_editMode==EditorEditMode::Scene3D
+        && !ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow)
+        && ImGui::BeginDragDropTargetViewport(ImGui::GetMainViewport(),&dropRect)) {
+        if(const auto* payload=ImGui::AcceptDragDropPayload("ASSET_PATH")) {
+            const std::string path=static_cast<const char*>(payload->Data);
+            std::string ext=fs::path(path).extension().string();
+            std::transform(ext.begin(),ext.end(),ext.begin(),[](unsigned char c){return char(std::tolower(c));});
+            if(ext==".png" || ext==".jpg" || ext==".jpeg" || ext==".bmp") {
+                const auto mouse=ImGui::GetIO().MousePos;
+                DirectX::XMVECTOR origin,direction;
+                if(BuildPickRay(int(mouse.x),int(mouse.y),origin,direction)) {
+                    const float dz=DirectX::XMVectorGetZ(direction);
+                    const float distance=std::fabs(dz)>1e-6f?-DirectX::XMVectorGetZ(origin)/dz:-1;
+                    if(distance>=0) {
+                        auto node=std::make_unique<GameObject>(fs::path(path).stem().string());
+                        auto* transform=node->AddComponent<engine::Transform>();
+                        DirectX::XMStoreFloat3(&transform->localPosition,DirectX::XMVectorMultiplyAdd(direction,DirectX::XMVectorReplicate(distance),origin));
+                        node->AddComponent<SpriteRendererComponent>()->texturePath=path;
+                        SpawnRootGameObject(std::move(node));
+                    }
+                }
+            }
+        }
+        ImGui::EndDragDropTarget();
+    }
+    float gizmoX,gizmoY,gizmoW,gizmoH;
+    EngineGUI_GetGameViewportRect(gizmoX,gizmoY,gizmoW,gizmoH);
+    auto* gizmoLayer=ImGui::GetBackgroundDrawList();
+    gizmoLayer->PushClipRect(ImVec2(gizmoX,gizmoY),ImVec2(gizmoX+gizmoW,gizmoY+gizmoH),true);
+    if(!playVisuals && DebugCamera_Is2DView() && Grid_IsVisible() && gizmoH>0) {
+        const auto& camera=GetCamera();
+        const float units=camera.orthographicHeight/gizmoH;
+        float step=std::pow(10.0f,std::floor(std::log10((std::max)(0.0001f,units*50.0f))));
+        if(step/units<25) step*=5;
+        const float centerX=camera.position.x, centerY=camera.position.y;
+        const float halfW=gizmoW*units*0.5f, halfH=gizmoH*units*0.5f;
+        for(float x=std::floor((centerX-halfW)/step)*step;x<centerX+halfW;x+=step) {
+            const float px=gizmoX+gizmoW*0.5f+(x-centerX)/units;
+            gizmoLayer->AddLine(ImVec2(px,gizmoY),ImVec2(px,gizmoY+gizmoH),IM_COL32(150,150,150,45));
+        }
+        for(float y=std::floor((centerY-halfH)/step)*step;y<centerY+halfH;y+=step) {
+            const float py=gizmoY+gizmoH*0.5f-(y-centerY)/units;
+            gizmoLayer->AddLine(ImVec2(gizmoX,py),ImVec2(gizmoX+gizmoW,py),IM_COL32(150,150,150,45));
+        }
+    }
+    if (!sceneLoadBusy && !playVisuals && g_editMode == EditorEditMode::Scene3D) {
         TransformGizmo::HandleHotkeys();
         if (g_selNode)
             TransformGizmo::Draw(g_selNode);
-        CameraOrientationGizmo::Draw();
+        if(!DebugCamera_Is2DView()) CameraOrientationGizmo::Draw();
     }
 
-    if (!sceneLoadBusy && !g_isPlaying && g_editMode == EditorEditMode::UI
+    if (!sceneLoadBusy && !playVisuals && g_editMode == EditorEditMode::UI
         && g_selUiElement && g_showUiOverlay) {
         UiGizmo::Draw(g_selUiElement);
     }
+
+    gizmoLayer->PopClipRect();
 
     JobSystem_DebugDraw();
 
     // Whole-screen modal dim (same path as UnsavedChangesPopup) ? not
     // BackgroundDrawList, which sits under opaque panel windows.
-    if (sceneLoadBusy) {
+    if (showSceneLoadModal) {
         const ImGuiViewport* viewport = ImGui::GetMainViewport();
         ImGui::SetNextWindowPos(viewport->GetCenter(), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
         ImGui::SetNextWindowSize(ImVec2(420.0f, 0.0f), ImGuiCond_Always);

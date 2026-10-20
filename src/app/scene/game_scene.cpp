@@ -1,3 +1,6 @@
+#include "engine/physics/2d/physics2d.h"
+#include "engine/ecs/sprite_renderer_component.h"
+#include "engine/scene/scene_camera.h"
 /**===========================================================================
 
  File   :  [game_scene.cpp]
@@ -289,9 +292,16 @@ void ApplyRuntimeWindowTitleFromNearbyProject() {
 } // namespace
 #endif // GAME_RUNTIME
 
-void GameScene::Initialize() {
-	srand((unsigned int)time(nullptr));
-
+namespace {
+bool s_scene3DReady=false;
+void ReleaseScene3D() {
+    if(!s_scene3DReady) return;
+    engine::ParticleSystem::Instance().Finalize(); Billboard::Finalize();
+    Ibl_Finalize(); Skybox_Finalize(); Shadow::Finalize();
+    s_scene3DReady=false;
+}
+void EnsureScene3D() {
+    if(s_scene3DReady) return;
 	// Cascaded shadow maps (quality from Render Settings; default = Medium)
 	{
 		const ShadowQualityPreset shadowPreset = RenderSettings_GetShadowPreset();
@@ -301,6 +311,26 @@ void GameScene::Initialize() {
 		}
 		Shadow::SetBackfaceDepth(false);
 	}
+
+	// Billboard system
+	if (!Skybox_Initialize()) {
+		MessageBoxA(nullptr, "Skybox_Initialize failed", "Error", MB_OK | MB_ICONERROR);
+	}
+	if (!Ibl_Initialize()) {
+		MessageBoxA(nullptr, "Ibl_Initialize failed", "Error", MB_OK | MB_ICONERROR);
+	}
+	if (!Billboard::Initialize()) {
+		MessageBoxA(nullptr, "Billboard::Initialize failed", "Error", MB_OK | MB_ICONERROR);
+	}
+	if (!engine::ParticleSystem::Instance().Initialize()) {
+		MessageBoxA(nullptr, "ParticleSystem::Initialize failed", "Error", MB_OK | MB_ICONERROR);
+	}
+    s_scene3DReady=true;
+    RenderSettings_ReloadSkybox();
+}
+}
+void GameScene::Initialize() {
+	srand((unsigned int)time(nullptr));
 
 	Lighting::SetAmbientColor({ 0.6f, 0.7f, 0.8f });
 
@@ -330,19 +360,7 @@ void GameScene::Initialize() {
 #endif
 	}
 
-	// Billboard system
-	if (!Skybox_Initialize()) {
-		MessageBoxA(nullptr, "Skybox_Initialize failed", "Error", MB_OK | MB_ICONERROR);
-	}
-	if (!Ibl_Initialize()) {
-		MessageBoxA(nullptr, "Ibl_Initialize failed", "Error", MB_OK | MB_ICONERROR);
-	}
-	if (!Billboard::Initialize()) {
-		MessageBoxA(nullptr, "Billboard::Initialize failed", "Error", MB_OK | MB_ICONERROR);
-	}
-	if (!engine::ParticleSystem::Instance().Initialize()) {
-		MessageBoxA(nullptr, "ParticleSystem::Initialize failed", "Error", MB_OK | MB_ICONERROR);
-	}
+    if(!SceneLoader_Is2D() && !SceneLoader_GetCurrentScenePath().empty()) EnsureScene3D();
 	if (!GameSceneScript_InvokeBool("GameScene_Initialize")) {
 		MessageBoxA(nullptr, "GameScene_Initialize failed", "Error", MB_OK | MB_ICONERROR);
 	}
@@ -354,6 +372,7 @@ void GameScene::Initialize() {
 }
 
 void GameScene::Finalize() {
+
 	const std::vector<GameObject*> activeObjects = m_objects;
 	for (auto* obj : activeObjects) {
 		if (!obj) continue;
@@ -369,31 +388,29 @@ void GameScene::Finalize() {
 	Grid_Finalize();
 #endif
 
-	Shadow::Finalize();
+	ReleaseScene3D();
 	GameSceneScript_Invoke("GameScene_Finalize");
-	engine::ParticleSystem::Instance().Finalize();
-	Billboard::Finalize();
-	Ibl_Finalize();
-	Skybox_Finalize();
 }
 
 void GameScene::Update(double elapsed_time) {
 	// Edit mode must not simulate: gravity, velocity, and collision resolution
 	// would move authored poses (Unity keeps objects parked until Play).
-	if (EngineGUI_IsPlaying())
+	if (EngineGUI_IsPlaying() && SceneLoader_Uses3DPhysics())
 		PhysicsSystem_Update(elapsed_time);
 
 	// Snapshot dynamic object positions before running scripts.
 	// This captures the post-physics (pre-orbit) position so the swept collision
 	// pass below can detect tunneling caused by orbit and other script-driven moves.
 	// Also run in edit mode so the first Play frame sweeps from the authored pose.
-	PhysicsSystem_SavePositions();
+	if(SceneLoader_Uses3DPhysics()) PhysicsSystem_SavePositions();
 
-	Billboard::ClearDrawList();
+	if(!SceneLoader_Is2D()) Billboard::ClearDrawList();
 
 	// Non-player scene roots. TAG_PLAYER roots are updated in the player batch
 	// below (EngineGUI skips them so snapshot ¨ jobs ¨ flushes can own them).
 	EngineGUI_Update(elapsed_time);
+    if(SceneLoader_Is2D()) ReleaseScene3D();
+    else if(!SceneLoader_GetCurrentScenePath().empty()) EnsureScene3D();
 
 	if (EngineGUI_IsPlaying()) {
 		// Copy m_objects to guard against iterator invalidation from any
@@ -442,16 +459,18 @@ void GameScene::Update(double elapsed_time) {
 		}
 
 		// Main-thread flushes after the player batch (run every frame).
-		VisualSystem_UploadSkinning();
+		if(!SceneLoader_Is2D()) VisualSystem_UploadSkinning();
 		AudioSystem_FlushCommands();
 		EffectSystem_FlushCommands();
 		PrefabRuntime_FlushSpawned();
 		PrefabRuntime_FlushDestroyed();
 
-		// Post-script swept collision: after all scripts (EngineGUI + players).
-		PhysicsSystem_ResolveCollisions();
+		if(SceneLoader_Uses2DPhysics()) {Physics2D_Update(elapsed_time); Physics2D_DispatchEvents();}
 
-		engine::ParticleSystem::Instance().Tick(static_cast<float>(elapsed_time));
+		// Post-script swept collision: after all scripts (EngineGUI + players).
+		if(SceneLoader_Uses3DPhysics()) PhysicsSystem_ResolveCollisions();
+
+		if(!SceneLoader_Is2D()) engine::ParticleSystem::Instance().Tick(static_cast<float>(elapsed_time));
 
 		// Always update follow producer while playing so blends back from
 		// DeathCam/Intro have a live pose. Director picks active source.
@@ -462,7 +481,7 @@ void GameScene::Update(double elapsed_time) {
 	}
 	else {
 		PrefabRuntime_FlushDestroyed();
-		engine::ParticleSystem::Instance().Reset();
+		if(s_scene3DReady) engine::ParticleSystem::Instance().Reset();
 	}
 
 	if (!DebugCamera_IsEnabled())
@@ -471,7 +490,7 @@ void GameScene::Update(double elapsed_time) {
 	DebugCamera_Update(elapsed_time);
 	AudioListenerSync_Tick(SceneLoader_GetSceneNodes());
 
-	Billboard::Update(elapsed_time);
+	if(!SceneLoader_Is2D()) Billboard::Update(elapsed_time);
 	if (EngineGUI_IsPlaying())
 		GameSceneScript_InvokeWithDouble("GameScene_Update", elapsed_time);
 	else
@@ -480,11 +499,11 @@ void GameScene::Update(double elapsed_time) {
 	SceneCanvas_Update(elapsed_time);
 	bool playOnLoad = false;
 	if (const std::string nextScene = SceneCanvas_ConsumeRequestedSceneFile(&playOnLoad); !nextScene.empty()) {
+        const PlayMode resumeMode=EngineGUI_GetPlayMode()==PlayMode::Fullscreen?PlayMode::Fullscreen:PlayMode::Viewport;
 		if (!SceneTransition_TryHandleSceneRequest(
 				SceneLoader_GetCurrentScenePath(), nextScene, playOnLoad)) {
-			EngineGUI_LoadFromFile(nextScene.c_str());
-			if (playOnLoad)
-				EngineGUI_StartPlay();
+            if (EngineGUI_LoadFromFile(nextScene.c_str()) && playOnLoad)
+                EngineGUI_StartPlay(resumeMode);
 		}
 	}
 }
@@ -499,19 +518,48 @@ void GameScene::Draw() {
 #else
 	const bool preloadActive = false;
 #endif
-	if (!preloadActive)
-		Object_Draw();
+    const bool missingGameCamera = !DebugCamera_IsEnabled()
+        && EngineGUI_GetCameraMode()==CameraMode::SceneCamera
+        && SceneCameraResolveDefault(SceneLoader_GetSceneNodes(),EngineGUI_GetActiveCameraNodeName()).empty();
+    if(missingGameCamera) {
+        Renderer_BindBackBuffer();
+        ID3D11RenderTargetView* target=nullptr;
+        GetDeviceContext()->OMGetRenderTargets(1,&target,nullptr);
+        if(target) {
+            const float emptyColor[4]={0.08f,0.1f,0.14f,1.0f};
+            GetDeviceContext()->ClearRenderTargetView(target,emptyColor);
+            target->Release();
+        }
+        SceneCanvas_Draw();
+        ResetRenderViewport();
+        return;
+    }
+    if(!preloadActive && SceneLoader_Is2D()) {
+        ReleaseScene3D(); Renderer_BindBackBuffer();
+        ID3D11RenderTargetView* target=nullptr;
+        GetDeviceContext()->OMGetRenderTargets(1,&target,nullptr);
+        if(target) {
+            const auto c=RenderSettings_GetConst().clearColor;
+            const float color[]={c.x,c.y,c.z,c.w};
+            GetDeviceContext()->ClearRenderTargetView(target,color); target->Release();
+        }
+        SetRenderViewport(vx,vy,vw,vh);
+    } else if(!preloadActive) { EnsureScene3D(); Object_Draw(); }
+
+
+	if (!preloadActive) DrawSceneSprites();
 
 	// Effekseer into PostRT (same game viewport as the 3D scene).
 	SetRenderViewport(vx, vy, vw, vh);
-	if (!preloadActive)
+	if (!preloadActive && !SceneLoader_Is2D())
 		EffectSystem::Draw3D();
 
-	if (!preloadActive)
+	if (!preloadActive && !SceneLoader_Is2D())
 		PostProcess_Draw();
 
 	// Post resolve leaves the game viewport bound; re-assert for UI overlays.
 	SetRenderViewport(vx, vy, vw, vh);
+    if (!preloadActive) Physics2D_DrawDebugColliders();
 
 #ifndef GAME_RUNTIME
 	if (!preloadActive)

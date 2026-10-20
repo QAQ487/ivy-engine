@@ -1,0 +1,22 @@
+{
+  "warmupFrames": 300,
+  "requestedSamples": 300,
+  "backBufferWidth": 1280,
+  "backBufferHeight": 720,
+  "frameIntervalMeanMs": 16.6675,
+  "frameIntervalSamples": 300,
+  "updateMeanMs": 0.212564,
+  "updateSamples": 300,
+  "drawMeanMs": 1.37999,
+  "drawSamples": 300,
+  "gpuMeanMs": 0.0270243,
+  "gpuValidSamples": 300,
+  "iaVerticesMean": 36,
+  "pipelineSamples": 300,
+  "spriteDrawCallsMean": 0,
+  "spriteDrawSamples": 300,
+  "textDrawCallsMean": 1,
+  "memoryValid": true,
+  "workingSetBytes": 96464896,
+  "privateBytes": 134217728
+}

@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted — 2026-09
+Superseded by ADR 0007 — 2026-10-20. The decision below records the historical freeze.
 
 ## Context
 

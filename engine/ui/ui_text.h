@@ -1,4 +1,4 @@
-/**===========================================================================
+﻿/**===========================================================================
  File   :  [ui_text.h]
  Author : Terry Yeung
  Date   : 2025/11/22
@@ -56,6 +56,7 @@ public:
     void Finalize() override;
 
     bool GetScreenRect(UIScreenRect& out) const override;
+    DirectX::XMFLOAT2 GetPivotDesignSize() const;
     
     // Set text content
     void SetText(const std::string& text) { m_text = text; }

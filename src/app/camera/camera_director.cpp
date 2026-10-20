@@ -1,3 +1,4 @@
+﻿#include "engine/scene/scene_camera.h"
 #include "camera_director.h"
 #include "camera.h"
 #include "debug_camera.h"
@@ -112,6 +113,15 @@ void CameraDirector_Initialize() {
 	s_initialized = true;
 }
 
+void CameraDirector_BeginPlay(const std::vector<std::unique_ptr<GameObject>>& roots) {
+    if(!s_initialized) CameraDirector_Initialize();
+    s_source=SourceFromCameraMode(EngineGUI_GetCameraMode());
+    s_appliedSource=s_source;
+    s_blending=false;
+    s_blendT=0;
+    CameraDirector_Update(0,roots);
+}
+
 void CameraDirector_SetSource(CameraDirectorSource source) {
 	if (!s_initialized)
 		CameraDirector_Initialize();
@@ -160,7 +170,12 @@ void CameraDirector_Update(double elapsed_time, const std::vector<std::unique_pt
 		s_appliedSource = desired;
 	}
 
-	CameraPose targetPose = CameraPose_FromGlobal();
+	if (s_source == CameraDirectorSource::SceneNode) {
+        const auto resolved=SceneCameraResolveDefault(roots,EngineGUI_GetActiveCameraNodeName());
+        if(resolved.empty()) { SetCamera(Camera{}); s_blending=false; return; }
+        EngineGUI_SetActiveCameraNodeName(resolved);
+    }
+    CameraPose targetPose = CameraPose_FromGlobal();
 	if (!TrySampleActiveSource(roots, s_source, targetPose)) {
 		// Keep last global pose if source unavailable (e.g. empty DeathCam name).
 		if (!s_blending)

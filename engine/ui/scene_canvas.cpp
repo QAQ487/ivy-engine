@@ -142,6 +142,7 @@ namespace {
 	void ApplyCommon(UIElement* element, const json& item) {
 		if (!element) return;
 		element->SetVisible(item.value("visible", true));
+        if(item.contains("pivot")) element->SetPivot(ReadFloat2(item["pivot"],0,1));
 	}
 
 	void LoadElementScript(UIElement* element, const json& item) {
@@ -302,6 +303,7 @@ namespace {
 		item["anchor"] = AnchorToString(element.GetAnchor());
 		item["position"] = WriteFloat2(element.GetPosition());
 		item["visible"] = element.IsVisible();
+        if(element.HasExplicitPivot()) item["pivot"]=WriteFloat2(element.GetPivot());
 		return item;
 	}
 

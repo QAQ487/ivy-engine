@@ -1,3 +1,4 @@
+﻿#include "engine/scene/scene_loader.h"
 #include "render_settings.h"
 
 #include "engine/rendering/environment/skybox.h"
@@ -93,6 +94,7 @@ ShadowQuality RenderSettings_ShadowQualityFromId(const std::string& id) {
 }
 
 void RenderSettings_ApplyShadowQuality() {
+    if(SceneLoader_Is2D()) return;
     if (!GetDevice() || !GetDeviceContext())
         return;
 
@@ -114,7 +116,7 @@ void RenderSettings_ApplyFromJson(const nlohmann::json& renderJson) {
     g_renderSettings.skyboxCubemapPath = renderJson.value(
         "skyboxCubemap", g_renderSettings.skyboxCubemapPath);
     g_renderSettings.skyboxTint = ReadColor4(
-        renderJson["skyboxTint"], g_renderSettings.skyboxTint);
+        renderJson.value("skyboxTint", nlohmann::json{}), g_renderSettings.skyboxTint);
     g_renderSettings.skyboxExposure = renderJson.value(
         "skyboxExposure", g_renderSettings.skyboxExposure);
     g_renderSettings.skyboxRotationYDeg = renderJson.value(
@@ -128,7 +130,7 @@ void RenderSettings_ApplyFromJson(const nlohmann::json& renderJson) {
     g_renderSettings.iblBrdfLutPath = renderJson.value(
         "iblBrdfLut", g_renderSettings.iblBrdfLutPath);
     g_renderSettings.clearColor = ReadColor4(
-        renderJson["clearColor"], g_renderSettings.clearColor);
+        renderJson.value("clearColor", nlohmann::json{}), g_renderSettings.clearColor);
     g_renderSettings.defaultShader = renderJson.value(
         "defaultShader", g_renderSettings.defaultShader);
 
@@ -196,6 +198,7 @@ nlohmann::json RenderSettings_ToJson() {
 }
 
 void RenderSettings_ReloadSkybox() {
+    if(SceneLoader_Is2D()) return;
     Skybox_ReloadFromSettings();
     Ibl_ReloadFromSettings();
 }

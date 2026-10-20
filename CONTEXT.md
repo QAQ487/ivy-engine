@@ -72,6 +72,6 @@ _Avoid_: hacking ThirdPerson distance to zero, treating SceneCamera as FPS
 Play camera mode that follows a `TAG_PLAYER` target at a distance (magnet Push/Pull/Orbit). Scripts attach via `ThirdPersonCamera_SetTarget`.
 _Avoid_: follow cam, TPS as the only play camera
 
-## Engine freeze
+## Engine development status
 
-2026-09: engine frozen at `engine-v1.0-lock` for swing-demo development; additive changes require explicit unfreeze. ADR 0006 unfreezes only the first-person camera path (and its ScriptRuntimeApi appends).
+2026-10-20: engine development is fully unfrozen by explicit owner decision (ADR 0007). All engine systems are open to feature development, bug fixes, refactoring, and non-additive changes within the requested task scope; no further subsystem unfreeze is required. `engine-v1.0-lock` remains a historical baseline, not a restriction on current development. Existing content-project and ScriptRuntimeApi compatibility requirements still apply unless explicitly changed for a task.

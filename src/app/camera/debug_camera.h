@@ -26,6 +26,8 @@ enum class DebugCameraControlMode {
 };
 
 void DebugCamera_Update(double dt);
+void DebugCamera_Set2DView(bool enabled);
+bool DebugCamera_Is2DView();
 bool DebugCamera_IsEnabled();
 void DebugCamera_SetEnabled(bool enabled);
 
@@ -60,5 +62,12 @@ enum class DebugCameraViewAxis {
 void DebugCamera_SnapToAxis(DebugCameraViewAxis axis, float durationSec = 0.25f);
 bool DebugCamera_IsTransitioning();
 void DebugCamera_CancelTransition();
+
+
+
+void DebugCamera_SaveEditorView();
+void DebugCamera_RestoreEditorView();
+
+void DebugCamera_ResetEditorView(bool view2D);
 
 #endif // !DEBUG_CAMERA_H

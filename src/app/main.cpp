@@ -1,3 +1,8 @@
+#include "engine/scene/scene_loader.h"
+#include "engine/core/frame_capture.h"
+#if defined(_DEBUG) && !defined(GAME_RUNTIME)
+#include "tools/play_scene_switch_check.h"
+#endif
 /**===========================================================================
 
  File   :  [main.cpp]
@@ -170,6 +175,17 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg
 int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstance*/,
 	_In_ LPSTR /*lpCmdLine*/, _In_ int nCmdShow) {
 	_CrtDumpMemoryLeaks(); // dump memory leaks at process exit (if any)
+    // Boot assets belong to the executable, regardless of the launcher's cwd.
+    wchar_t executablePath[32768]{};
+    const DWORD pathLength=GetModuleFileNameW(nullptr,executablePath,32768);
+    if(pathLength==0||pathLength>=32768)return -1;
+    for(DWORD i=pathLength;i>0;--i) {
+        if(executablePath[i-1]==L'\\'||executablePath[i-1]==L'/') {
+            executablePath[i-1]=L'\0';
+            if(!SetCurrentDirectoryW(executablePath))return -1;
+            break;
+        }
+    }
 
 	// Set per-monitor DPI awareness BEFORE any window is created so that
 	// Windows reports mouse coordinates without any DPI virtualization.
@@ -194,6 +210,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstanc
 	const DWORD windowStyle = WS_OVERLAPPEDWINDOW;
 	int clientW = SCREEN_WIDTH;
 	int clientH = SCREEN_HEIGHT;
+    if(getenv("IVY_FRAME_CAPTURE")) {clientW=1280;clientH=720;}
 
 	HMONITOR primaryMon = MonitorFromPoint(POINT{ 0, 0 }, MONITOR_DEFAULTTOPRIMARY);
 	MONITORINFO mi = {};
@@ -310,14 +327,22 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstanc
 			// Cap update to ~60 FPS
 			if (elapsed_time >= (1.0 / 60.0)) {
 				exec_last_time = current_time;
+				FrameCapture_BeginFrame();
 				FrameTimer_BeginFrame();
 				JobSystem_BeginFrame();
 				FrameTimer_Begin(FrameTimerStage::Update);
 				Update(current_time, elapsed_time);
+#if defined(_DEBUG) && !defined(GAME_RUNTIME)
+                PlaySceneSwitchCheck_Tick();
+#endif
 				FrameTimer_End(FrameTimerStage::Update);
 				SubmitDraw();
+#if defined(_DEBUG) && !defined(GAME_RUNTIME)
+                PlaySceneSwitchCheck_AfterDraw();
+#endif
 				keycopy();
 				FrameTimer_EndFrame();
+                FrameCapture_EndFrame();
 				frame_count++;
 			}
 		}
@@ -377,7 +402,9 @@ HRESULT	Initialize(HINSTANCE hInstance, HWND hWnd, BOOL bWindow) {
    Finalize and release subsystems
 ===========================================================================**/
 void Finalize(void) {
+
 	RenderThread_Stop();
+    FrameCapture_Shutdown();
 	JobSystem_Shutdown();
 	DebugSystem::Shutdown();
 
@@ -421,7 +448,7 @@ void Update(double current_time, double elapsed_time) {
 #endif
 
 	// Update global effect system (uses elapsed_time)
-	EffectSystem::Update(elapsed_time);
+	if(!SceneLoader_Is2D()) EffectSystem::Update(elapsed_time);
 
 	// Update fade system
 	Fade_Update();
@@ -436,7 +463,7 @@ void Update(double current_time, double elapsed_time) {
 
 	DebugSystem::UpdateTimeScalePulse(static_cast<float>(elapsed_time * 1000.0));
 	const float ts = DebugSystem::GetTimeScale();
-	const double scaled_dt = fixed_dt * static_cast<double>(ts);
+	const double scaled_dt = (SceneLoader_Uses2DPhysics()?elapsed_time:fixed_dt) * static_cast<double>(ts);
 	PostProcess_Update(static_cast<float>(elapsed_time * static_cast<double>(ts)));
 
 #ifndef GAME_RUNTIME
@@ -478,6 +505,7 @@ static void PresentFrame(void) {
 }
 
 static void DrawWorld(void) {
+    FrameCapture_BeginDraw();
 	FrameTimer_Begin(FrameTimerStage::Draw);
 
 	// Clear the backbuffer and depth/stencil
@@ -548,6 +576,7 @@ static void DrawWorld(void) {
 	AudioManager::Instance().DrawDebug();
 
 	FrameTimer_End(FrameTimerStage::Draw);
+    FrameCapture_EndDraw();
 }
 
 void Draw(void) {

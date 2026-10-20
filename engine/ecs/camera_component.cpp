@@ -68,13 +68,18 @@ void CameraComponent::ApplyToGlobalCamera(const engine::Transform* transform) co
     cam.SetTarget({ eye.x + forward.x, eye.y + forward.y, eye.z + forward.z });
     cam.SetUp(viewUp);
     cam.SetFov(fov);
+    cam.orthographic = orthographic;
+    cam.orthographicHeight = orthographicHeight;
     cam.SetClip(nearClip, farClip);
 }
 
 std::string CameraComponent::Serialize() const {
     nlohmann::json j;
     j["enabled"] = enabled;
+    j["debugFly"] = debugFly;
     j["fov"] = fov;
+    j["orthographic"] = orthographic;
+    j["orthographicHeight"] = orthographicHeight;
     j["nearClip"] = nearClip;
     j["farClip"] = farClip;
     return j.dump();
@@ -84,7 +89,11 @@ void CameraComponent::Deserialize(const std::string& jsonStr) {
     try {
         auto j = nlohmann::json::parse(jsonStr);
         enabled = j.value("enabled", true);
+        debugFly = j.value("debugFly", false);
         fov = j.value("fov", 45.0f);
+        orthographic = j.value("orthographic", false);
+        orthographicHeight = j.value("orthographicHeight", 10.0f);
+        if (!(orthographicHeight > 0.001f)) orthographicHeight = 10.0f;
         nearClip = j.value("nearClip", 0.5f);
         farClip = j.value("farClip", 1000.0f);
     } catch (...) {

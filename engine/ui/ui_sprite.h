@@ -1,4 +1,4 @@
-/**===========================================================================
+﻿/**===========================================================================
  File   :  [ui_sprite.h]
  Author : Terry Yeung
  Date   : 2025/11/02
@@ -70,6 +70,8 @@ public:
     void Finalize() override;
 
     bool GetScreenRect(UIScreenRect& out) const override;
+    DirectX::XMFLOAT2 GetDrawPosition() const;
+    DirectX::XMFLOAT2 GetPivotDesignSize() const {return {m_width,m_height};}
     
     // Set the texture to display
     void SetTexture(int textureId) { m_textureId = textureId; }

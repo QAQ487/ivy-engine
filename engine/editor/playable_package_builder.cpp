@@ -330,6 +330,9 @@ bool AssemblePackage(const Request& request, const fs::path& engineRoot,
         return false;
     if (!CopyOneFile(engineOut / "libfbxsdk.dll", dest / "libfbxsdk.dll", errorOut))
         return false;
+    if (!CopyOneFile(engineRoot / "libraries" / "box2d" / "LICENSE",
+                     dest / "licenses" / "Box2D.txt", errorOut))
+        return false;
     if (!CopyOneFile(content / ProjectManager::kProjectFileName,
                      dest / ProjectManager::kProjectFileName, errorOut))
         return false;

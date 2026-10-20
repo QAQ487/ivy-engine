@@ -1,4 +1,4 @@
-/**===========================================================================
+﻿/**===========================================================================
  File   :  camera_director.h
  Brief  :  Sole writer to global Camera. Blends Follow / SceneNode / Intro.
  ===========================================================================**/
@@ -19,6 +19,8 @@ enum class CameraDirectorSource {
 };
 
 void CameraDirector_Initialize();
+// Play/scene entry cuts directly; gameplay SetSource retains blending.
+void CameraDirector_BeginPlay(const std::vector<std::unique_ptr<GameObject>>& roots);
 void CameraDirector_Update(double elapsed_time, const std::vector<std::unique_ptr<GameObject>>& roots);
 
 void CameraDirector_SetSource(CameraDirectorSource source);

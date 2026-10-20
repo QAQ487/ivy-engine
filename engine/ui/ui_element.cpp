@@ -1,3 +1,11 @@
+﻿#include "ui_pivot_math.h"
+#include "ui_sprite.h"
+#include "ui_button.h"
+#include "ui_bar.h"
+#include "ui_text.h"
+#include <unordered_map>
+#include <algorithm>
+#include <cmath>
 /**===========================================================================
  File   :  [ui_element.cpp]
  Author : Terry Yeung
@@ -12,6 +20,9 @@
 #include "main.h"
 
 namespace {
+// Sidecar keeps existing UI object layouts and virtual slots unchanged for script DLLs.
+std::unordered_map<const UIElement*,DirectX::XMFLOAT2> g_uiPivots;
+
 
 void GetAnchorDesignPosition(UIAnchor anchor, float screenWidth, float screenHeight,
     float& anchorX, float& anchorY)
@@ -56,6 +67,7 @@ void GetAnchorDesignPosition(UIAnchor anchor, float screenWidth, float screenHei
 } // namespace
 
 UIElement::~UIElement() {
+    g_uiPivots.erase(this);
     if (m_scriptHost)
         m_scriptHost->Teardown(*this);
 }
@@ -156,10 +168,16 @@ DirectX::XMFLOAT2 UIElement::GetScreenPosition(float screenWidth, float screenHe
     DirectX::XMFLOAT2 screenPos;
     screenPos.x = anchorX + m_position.x;
     screenPos.y = anchorY + m_position.y;
-
     const DirectX::XMFLOAT2 layoutScale = UIGetLayoutScale();
     screenPos.x *= layoutScale.x;
     screenPos.y *= layoutScale.y;
+    if(HasExplicitPivot()) {
+        const auto size=GetPivotDesignSize();
+        const float heightScale=dynamic_cast<const UIText*>(this)?layoutScale.x:layoutScale.y;
+        screenPos=UIPivotTopLeft({anchorX*layoutScale.x,anchorY*layoutScale.y},
+            {m_position.x*layoutScale.x,m_position.y*layoutScale.y},
+            {size.x*layoutScale.x,size.y*heightScale},GetPivot());
+    }
 
     return screenPos;
 }
@@ -182,4 +200,26 @@ bool UIElement::HitTest(float viewportX, float viewportY) const {
 
     return viewportX >= rect.left && viewportX <= rect.right
         && viewportY >= rect.top && viewportY <= rect.bottom;
+}
+
+void UIElement::SetPivot(DirectX::XMFLOAT2 pivot) {
+    if(!std::isfinite(pivot.x)||!std::isfinite(pivot.y)) return;
+    g_uiPivots[this]={(std::max)(0.0f,(std::min)(1.0f,pivot.x)),(std::max)(0.0f,(std::min)(1.0f,pivot.y))};
+}
+DirectX::XMFLOAT2 UIElement::GetPivotScreenPosition() const {
+    const auto anchor=GetAnchorScreenPosition(), scale=UIGetLayoutScale();
+    return {anchor.x+m_position.x*scale.x,anchor.y+m_position.y*scale.y};
+}
+
+DirectX::XMFLOAT2 UIElement::GetPivot() const {
+    const auto it=g_uiPivots.find(this);
+    return it==g_uiPivots.end()?DirectX::XMFLOAT2{0,1}:it->second;
+}
+bool UIElement::HasExplicitPivot() const {return g_uiPivots.find(this)!=g_uiPivots.end();}
+DirectX::XMFLOAT2 UIElement::GetPivotDesignSize() const {
+    if(const auto* sprite=dynamic_cast<const UISprite*>(this)) return sprite->GetPivotDesignSize();
+    if(const auto* button=dynamic_cast<const UIButton*>(this)) return button->GetPivotDesignSize();
+    if(const auto* bar=dynamic_cast<const UIBar*>(this)) return bar->GetPivotDesignSize();
+    if(const auto* text=dynamic_cast<const UIText*>(this)) return text->GetPivotDesignSize();
+    return {};
 }

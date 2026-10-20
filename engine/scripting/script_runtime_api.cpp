@@ -1,4 +1,5 @@
 ﻿#include "script_runtime_api.h"
+#include "engine/ecs/collider_component_access.h"
 
 #include "camera.h"
 #include "camera_director.h"
@@ -23,6 +24,12 @@
 #include "engine/audio/audio_manager.h"
 #include "engine/ecs/visual_component.h"
 #include "engine/ecs/material_component.h"
+#if defined(SCRIPT_RUNTIME_API_HOST)
+#include "engine/ecs/physics2d_components.h"
+#include "engine/physics/2d/physics2d.h"
+#include "engine/ecs/sprite_animator_component.h"
+#include "engine/ecs/sprite_renderer_component.h"
+#endif
 #include "engine/rendering/d3d11/post_process.h"
 #include "engine/physics/core/physics_system.h"
 #include "engine/core/debug_system.h"
@@ -32,7 +39,7 @@
 #include <string>
 
 namespace {
-constexpr std::uint32_t kScriptRuntimeApiVersion = 42;
+constexpr std::uint32_t kScriptRuntimeApiVersion = 44;
 
 template <typename T>
 T* FindComponentByTypeName(GameObject& object, const char* typeName) {
@@ -55,6 +62,52 @@ const T* FindComponentByTypeName(const GameObject& object, const char* typeName)
 }
 
 #if defined(SCRIPT_RUNTIME_API_HOST)
+bool Host_Physics2DSetVelocity(GameObject* object, DirectX::XMFLOAT2 velocity) {
+    auto* body = object ? FindComponentByTypeName<Rigidbody2DComponent>(*object, "Rigidbody2D") : nullptr;
+    if (!body || body->bodyType != BodyType2D::Dynamic || !std::isfinite(velocity.x) || !std::isfinite(velocity.y)) return false;
+    body->velocity = velocity;
+    return true;
+}
+bool Host_Physics2DGetVelocity(GameObject* object, DirectX::XMFLOAT2* velocity) {
+    auto* body = object ? FindComponentByTypeName<Rigidbody2DComponent>(*object, "Rigidbody2D") : nullptr;
+    if (!body || !velocity) return false;
+    *velocity = body->velocity;
+    return true;
+}
+bool Host_Physics2DMovePosition(GameObject* object, DirectX::XMFLOAT2 position) {
+    auto* body = object ? FindComponentByTypeName<Rigidbody2DComponent>(*object, "Rigidbody2D") : nullptr;
+    return body && body->bodyType == BodyType2D::Kinematic && body->MovePosition(position);
+}
+bool Host_Physics2DRaycast(DirectX::XMFLOAT2 origin, DirectX::XMFLOAT2 direction, float distance, GameObject** outObject, DirectX::XMFLOAT2* outPoint, DirectX::XMFLOAT2* outNormal, float* outDistance, std::uint32_t mask, bool includeTriggers) {
+    Physics2DRayHit hit{};
+    if (outObject) *outObject = nullptr;
+    if (!Physics2D_Raycast(origin, direction, distance, hit, mask, includeTriggers)) return false;
+    if (outObject) *outObject = hit.object;
+    if (outPoint) *outPoint = hit.point;
+    if (outNormal) *outNormal = hit.normal;
+    if (outDistance) *outDistance = hit.distance;
+    return true;
+}
+bool Host_SpritePlay(GameObject* object, const char* clipName, bool restart) {
+    auto* animator = object ? FindComponentByTypeName<SpriteAnimatorComponent>(*object, "SpriteAnimator") : nullptr;
+    return animator && clipName ? animator->Play(clipName, restart) : false;
+}
+void Host_SpritePause(GameObject* object) {
+    auto* animator = object ? FindComponentByTypeName<SpriteAnimatorComponent>(*object, "SpriteAnimator") : nullptr;
+    if (animator) animator->Pause();
+}
+void Host_SpriteStop(GameObject* object) {
+    auto* animator = object ? FindComponentByTypeName<SpriteAnimatorComponent>(*object, "SpriteAnimator") : nullptr;
+    if (animator) animator->Stop();
+}
+void Host_SpriteSetFlip(GameObject* object, bool flipX, bool flipY) {
+    auto* sprite = object ? FindComponentByTypeName<SpriteRendererComponent>(*object, "SpriteRenderer") : nullptr;
+    if (sprite) { sprite->flipX = flipX; sprite->flipY = flipY; }
+}
+void Host_SpriteSetTint(GameObject* object, DirectX::XMFLOAT4 tint) {
+    auto* sprite = object ? FindComponentByTypeName<SpriteRendererComponent>(*object, "SpriteRenderer") : nullptr;
+    if (sprite) sprite->tint = tint;
+}
 SceneBase* Host_GetCurrentScene() {
     return SceneManager::Instance().GetCurrentScene();
 }
@@ -676,6 +729,16 @@ const ScriptRuntimeApi g_scriptRuntimeApi = {
     &FirstPersonCamera_SetPitchLimits,
     &FirstPersonCamera_ShowCursor,
     &FirstPersonCamera_IsCursorVisible,
+    &Host_SpritePlay,
+    &Host_SpritePause,
+    &Host_SpriteStop,
+    &Host_SpriteSetFlip,
+    &Host_SpriteSetTint,
+    &Host_Physics2DSetVelocity,
+    &Host_Physics2DGetVelocity,
+    &Host_Physics2DMovePosition,
+    &Host_Physics2DRaycast,
+
 };
 #else
 using GetApiFn = const ScriptRuntimeApi* (*)();
@@ -685,12 +748,17 @@ const ScriptRuntimeApi* ResolveScriptRuntimeApi() {
     if (!module)
         return nullptr;
 
-    auto getApi = reinterpret_cast<GetApiFn>(GetProcAddress(module, "ScriptRuntimeApi_Get"));
+    auto getApi = reinterpret_cast<GetApiFn>(GetProcAddress(module, "ScriptRuntimeApi_GetV44"));
+    if (!getApi)
+        getApi = reinterpret_cast<GetApiFn>(GetProcAddress(module, "ScriptRuntimeApi_GetV43"));
+    if (!getApi)
+        getApi = reinterpret_cast<GetApiFn>(GetProcAddress(module, "ScriptRuntimeApi_Get"));
     if (!getApi)
         return nullptr;
 
     const ScriptRuntimeApi* api = getApi();
-    return (api && api->version == kScriptRuntimeApiVersion) ? api : nullptr;
+    // v42 provides the stable prefix; sprite wrappers gate access to the v43 tail.
+    return (api && api->version >= 42) ? api : nullptr;
 }
 #endif
 } // namespace
@@ -698,6 +766,27 @@ const ScriptRuntimeApi* ResolveScriptRuntimeApi() {
 #if defined(SCRIPT_RUNTIME_API_HOST)
 extern "C" __declspec(dllexport)
 const ScriptRuntimeApi* ScriptRuntimeApi_Get() {
+    // Existing v42 DLLs require an exact version match. Keep their export stable.
+    static const ScriptRuntimeApi legacyApi = [] {
+        ScriptRuntimeApi api = g_scriptRuntimeApi;
+        api.version = 42;
+        return api;
+    }();
+    return &legacyApi;
+}
+
+extern "C" __declspec(dllexport)
+const ScriptRuntimeApi* ScriptRuntimeApi_GetV43() {
+    static const ScriptRuntimeApi api = [] {
+        ScriptRuntimeApi copy = g_scriptRuntimeApi;
+        copy.version = 43;
+        return copy;
+    }();
+    return &api;
+}
+
+extern "C" __declspec(dllexport)
+const ScriptRuntimeApi* ScriptRuntimeApi_GetV44() {
     return &g_scriptRuntimeApi;
 }
 
@@ -944,7 +1033,7 @@ const engine::Transform* ScriptApi_FindTransform(const engine::GameObject& objec
 }
 
 ColliderComponent* ScriptApi_FindColliderComponent(engine::GameObject& object) {
-    return FindComponentByTypeName<ColliderComponent>(object, "Collider");
+    return FindColliderComponent(&object);
 }
 
 EffectComponent* ScriptApi_FindEffectComponent(engine::GameObject& object) {
@@ -1494,4 +1583,45 @@ void ScriptApi_PrefabSetBeforeDestroyCallback(void (*callback)(GameObject* obj))
     const ScriptRuntimeApi* api = ScriptRuntimeApi_GetHost();
     if (api && api->prefabSetBeforeDestroyCallback)
         api->prefabSetBeforeDestroyCallback(callback);
+}
+
+bool ScriptApi_SpritePlay(GameObject* object, const char* clipName, bool restart) {
+    const auto* api = ScriptRuntimeApi_GetHost();
+    return api && api->version >= 43 && api->spritePlay ? api->spritePlay(object, clipName, restart) : false;
+}
+void ScriptApi_SpritePause(GameObject* object) {
+    const auto* api = ScriptRuntimeApi_GetHost();
+    if (api && api->version >= 43 && api->spritePause) api->spritePause(object);
+}
+void ScriptApi_SpriteStop(GameObject* object) {
+    const auto* api = ScriptRuntimeApi_GetHost();
+    if (api && api->version >= 43 && api->spriteStop) api->spriteStop(object);
+}
+void ScriptApi_SpriteSetFlip(GameObject* object, bool flipX, bool flipY) {
+    const auto* api = ScriptRuntimeApi_GetHost();
+    if (api && api->version >= 43 && api->spriteSetFlip) api->spriteSetFlip(object, flipX, flipY);
+}
+void ScriptApi_SpriteSetTint(GameObject* object, DirectX::XMFLOAT4 tint) {
+    const auto* api = ScriptRuntimeApi_GetHost();
+    if (api && api->version >= 43 && api->spriteSetTint) api->spriteSetTint(object, tint);
+}
+
+bool ScriptApi_Physics2DSetVelocity(GameObject* object, DirectX::XMFLOAT2 velocity) {
+    const auto* api = ScriptRuntimeApi_GetHost();
+    return api && api->version >= 44 && api->physics2DSetVelocity && api->physics2DSetVelocity(object, velocity);
+}
+
+bool ScriptApi_Physics2DGetVelocity(GameObject* object, DirectX::XMFLOAT2* velocity) {
+    const auto* api = ScriptRuntimeApi_GetHost();
+    return api && api->version >= 44 && api->physics2DGetVelocity && api->physics2DGetVelocity(object, velocity);
+}
+
+bool ScriptApi_Physics2DMovePosition(GameObject* object, DirectX::XMFLOAT2 position) {
+    const auto* api = ScriptRuntimeApi_GetHost();
+    return api && api->version >= 44 && api->physics2DMovePosition && api->physics2DMovePosition(object, position);
+}
+
+bool ScriptApi_Physics2DRaycast(DirectX::XMFLOAT2 origin, DirectX::XMFLOAT2 direction, float distance, GameObject** outObject, DirectX::XMFLOAT2* outPoint, DirectX::XMFLOAT2* outNormal, float* outDistance, std::uint32_t mask, bool includeTriggers) {
+    const auto* api = ScriptRuntimeApi_GetHost();
+    return api && api->version >= 44 && api->physics2DRaycast && api->physics2DRaycast(origin, direction, distance, outObject, outPoint, outNormal, outDistance, mask, includeTriggers);
 }

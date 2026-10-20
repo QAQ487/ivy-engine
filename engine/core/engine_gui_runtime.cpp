@@ -1,3 +1,4 @@
+#include "engine/scene/scene_camera.h"
 #include "engine_gui.h"
 #include "engine/scene/scene_loader.h"
 #include "engine/ecs/model_asset_cache.h"
@@ -13,7 +14,7 @@
 #include <Windows.h>
 
 static bool g_runtimePlaying = false;
-static CameraMode g_cameraMode = CameraMode::ThirdPerson;
+static CameraMode g_cameraMode = CameraMode::SceneCamera;
 static std::string g_activeCameraNode;
 
 static bool HasThirdPersonPlayerNode(GameObject* node) {
@@ -43,6 +44,7 @@ static void EnterRuntimePlay() {
     PhysicsSystem_SavePositions();
     g_runtimePlaying = true;
     DebugCamera_SetEnabled(false);
+    SceneCameraBeginPlay();
     const bool hideCursor =
         ((g_cameraMode == CameraMode::ThirdPerson) || (g_cameraMode == CameraMode::FirstPerson))
         && HasThirdPersonPlayer();

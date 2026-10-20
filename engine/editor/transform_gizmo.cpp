@@ -1,10 +1,11 @@
-#include "transform_gizmo.h"
+﻿#include "transform_gizmo.h"
 
 #include "engine/core/engine_gui.h"
 #include "engine/ecs/game_object.h"
 #include "engine/ecs/transform.h"
 #include "engine/editor/editor_undo.h"
 #include "camera.h"
+#include "debug_camera.h"
 #include "engine/input/mouse.h"
 #include "imgui/imgui.h"
 #include "imgui/icons_font_awesome.h"
@@ -102,7 +103,15 @@ static void BuildCameraMatrices(const Camera& cam, float vw, float vh,
     BuildImGuizmoLookAt(eye, at, up, view);
 
     const float aspect = (vh > 0.0f) ? (vw / vh) : 1.0f;
-    BuildImGuizmoPerspective(cam.fov, aspect, cam.nearClip, cam.farClip, proj);
+    if (cam.orthographic) {
+        const float height = (std::max)(0.001f, cam.orthographicHeight);
+        std::memset(proj, 0, sizeof(float) * 16);
+        proj[0] = 2.0f / (height * aspect);
+        proj[5] = 2.0f / height;
+        proj[10] = 2.0f / (cam.farClip - cam.nearClip);
+        proj[14] = -(cam.farClip + cam.nearClip) / (cam.farClip - cam.nearClip);
+        proj[15] = 1.0f;
+    } else BuildImGuizmoPerspective(cam.fov, aspect, cam.nearClip, cam.farClip, proj);
 }
 
 static XMFLOAT3 EulerZyxDegreesFromRotationMatrix(XMMATRIX rot) {
@@ -317,10 +326,10 @@ void Draw(GameObject* selected) {
     EngineGUI_GetGameViewportRect(vx, vy, vw, vh);
     if (vw <= 0.0f || vh <= 0.0f) return;
 
-    ImGuizmo::SetDrawlist(ImGui::GetForegroundDrawList());
+    ImGuizmo::SetDrawlist(ImGui::GetBackgroundDrawList());
     ImGuizmo::SetRect(vx, vy, vw, vh);
-    ImGuizmo::SetOrthographic(false);
-    ImGuizmo::Enable(true);
+    ImGuizmo::SetOrthographic(GetCamera().orthographic);
+    ImGuizmo::Enable(!ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow));
 
     float view[16], proj[16], matrix[16];
     BuildCameraMatrices(GetCamera(), vw, vh, view, proj);
@@ -343,11 +352,22 @@ void Draw(GameObject* selected) {
     if (!s_wasUsing)
         s_beforeJson = transform->Serialize();
 
+    const auto operation=DebugCamera_Is2DView()
+        ? (g_operation==ImGuizmo::TRANSLATE ? ImGuizmo::OPERATION(ImGuizmo::TRANSLATE_X|ImGuizmo::TRANSLATE_Y)
+          : g_operation==ImGuizmo::ROTATE ? ImGuizmo::ROTATE_Z
+          : ImGuizmo::OPERATION(ImGuizmo::SCALE_X|ImGuizmo::SCALE_Y)) : g_operation;
     const bool changed = ImGuizmo::Manipulate(
-        view, proj, g_operation, g_mode, matrix);
+        view, proj, operation, g_mode, matrix);
 
     if (changed) {
+        const float savedZ=transform->localPosition.z, savedRX=transform->localRotation.x,
+            savedRY=transform->localRotation.y, savedSZ=transform->localScale.z;
         ApplyMatrixToTransform(transform, selected, matrix, g_mode, g_operation);
+        if(DebugCamera_Is2DView()) {
+            transform->localPosition.z=savedZ; transform->localRotation.x=savedRX;
+            transform->localRotation.y=savedRY; transform->localScale.z=savedSZ;
+            selected->SyncLegacyTransformFromComponents();
+        }
         transform->SnapshotStartState();
         EngineGUI_MarkSceneDirty();
     }

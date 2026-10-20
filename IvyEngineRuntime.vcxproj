@@ -541,4 +541,23 @@ xcopy /y /d /e "$(ProjectDir)rom\*" "$(OutDir)rom\"</Command>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
+  <ItemGroup>
+    <ClInclude Include="engine\ecs\sprite_renderer_component.h" />
+    <ClInclude Include="engine\scene\scene_execution_policy.h" />
+    <ClCompile Include="engine\ecs\sprite_renderer_component.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="engine\ecs\sprite_animation.h" />
+    <ClInclude Include="engine\ecs\sprite_animator_component.h" />
+    <ClCompile Include="engine\ecs\sprite_animator_component.cpp" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ClCompile Include="engine\ecs\physics2d_components.cpp"><AdditionalIncludeDirectories>$(ProjectDir)libraries\box2d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories></ClCompile>
+    <ClCompile Include="engine\physics\2d\physics2d.cpp"><AdditionalIncludeDirectories>$(ProjectDir)libraries\box2d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories></ClCompile>
+    <ClCompile Include="engine\physics\2d\physics2d_world.cpp"><AdditionalIncludeDirectories>$(ProjectDir)libraries\box2d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories></ClCompile>
+    <ClCompile Include="libraries\box2d\src\*.c"><ForcedIncludeFiles /><CompileAs>CompileAsC</CompileAs><LanguageStandard_C>stdc17</LanguageStandard_C><PrecompiledHeader>NotUsing</PrecompiledHeader><ObjectFileName>$(IntDir)box2d_%(Filename).obj</ObjectFileName><PreprocessorDefinitions>BOX2D_DISABLE_SIMD;%(PreprocessorDefinitions)</PreprocessorDefinitions><AdditionalIncludeDirectories>$(ProjectDir)libraries\box2d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories></ClCompile>
+  </ItemGroup>
+  <ItemGroup><ClCompile Include="engine\ecs\collider_component_serialization.cpp" /></ItemGroup>
+  <ItemGroup><ClCompile Include="engine\core\frame_capture.cpp" /></ItemGroup>
 </Project>

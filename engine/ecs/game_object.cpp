@@ -1,8 +1,11 @@
-﻿#include "engine/ecs/game_object.h"
+#include "engine/physics/2d/physics2d.h"
+#include "sprite_animator_component.h"
+#include "engine/scene/scene_loader.h"
+#include "engine/ecs/game_object.h"
 #include "transform.h"
 #include "visual_component.h"
 #include "material_component.h"
-#include "collider_component.h"
+#include "collider_component_access.h"
 #include "engine/scripting/script_component.h"
 #include "engine/scene/render_settings.h"
 #include "engine/rendering/d3d11/shader.h"
@@ -30,10 +33,11 @@ void GameObject::Update(double elapsed_time) {
     g_gameObjectUpdateDepth.fetch_add(1, std::memory_order_relaxed);
 
     for (auto& kv : m_components)
-        kv.second->Update(elapsed_time);
+        if(kv.second->GetTypeName()!=std::string("SpriteAnimator")) kv.second->Update(elapsed_time);
 
     LogicUpdate(elapsed_time);
-    IntegratePhysics(elapsed_time);
+    if(auto* animator=GetComponent<SpriteAnimatorComponent>()) animator->Update(elapsed_time);
+    if(SceneLoader_Uses3DPhysics()) IntegratePhysics(elapsed_time);
 
     for (auto& child : m_children)
         if (child) child->Update(elapsed_time);
@@ -64,6 +68,7 @@ GameObject::~GameObject() {
     // reference this object, so a playing sound's next Update() can't
     // dereference a freed GameObject.
     AudioManager::Instance().OnGameObjectDestroyed(this);
+    Physics2D_Remove(this);
     PhysicsSystem_NotifyObjectDestroyed(this);
 
     for (auto& kv : m_components)
@@ -251,7 +256,7 @@ void GameObject::DrawVisual(bool useRealModel) {
         }
     }
 
-    if (auto* cc = GetComponent<ColliderComponent>())
+    if (auto* cc = FindColliderComponent(this))
         m_debugCollider = cc->showDebugCollider;
 
 #if defined(GAME_RUNTIME)

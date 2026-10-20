@@ -1,0 +1,1208 @@
+{
+    "canvas": {
+        "elements": [
+            {
+                "alignment": "LEFT",
+                "anchor": "TOP_LEFT",
+                "characterSpacing": 16.0,
+                "color": {
+                    "a": 0.95,
+                    "b": 1.0,
+                    "g": 1.0,
+                    "r": 1.0
+                },
+                "font": {
+                    "charHeight": 32.0,
+                    "charWidth": 32.0,
+                    "charsPerRow": 16,
+                    "texture": "rom/texture/consolab_ascii_512.png"
+                },
+                "fontSize": 1.0,
+                "name": "Hint1",
+                "position": {
+                    "x": 24.0,
+                    "y": 24.0
+                },
+                "text": "Cylinder pairs. Press Play. Green fallers should rest on the blue shape.",
+                "type": "text",
+                "visible": true
+            },
+            {
+                "alignment": "LEFT",
+                "anchor": "TOP_LEFT",
+                "characterSpacing": 16.0,
+                "color": {
+                    "a": 0.95,
+                    "b": 1.0,
+                    "g": 1.0,
+                    "r": 1.0
+                },
+                "font": {
+                    "charHeight": 32.0,
+                    "charWidth": 32.0,
+                    "charsPerRow": 16,
+                    "texture": "rom/texture/consolab_ascii_512.png"
+                },
+                "fontSize": 1.0,
+                "name": "Hint2",
+                "position": {
+                    "x": 24.0,
+                    "y": 56.0
+                },
+                "text": "Red fallers are unsupported and should pass through with no crash.",
+                "type": "text",
+                "visible": true
+            },
+            {
+                "alignment": "LEFT",
+                "anchor": "TOP_LEFT",
+                "characterSpacing": 16.0,
+                "color": {
+                    "a": 0.95,
+                    "b": 1.0,
+                    "g": 1.0,
+                    "r": 1.0
+                },
+                "font": {
+                    "charHeight": 32.0,
+                    "charWidth": 32.0,
+                    "charsPerRow": 16,
+                    "texture": "rom/texture/consolab_ascii_512.png"
+                },
+                "fontSize": 1.0,
+                "name": "Hint3",
+                "position": {
+                    "x": 24.0,
+                    "y": 88.0
+                },
+                "text": "Box and mesh then stop on the ground. Cylinders fall through the ground too.",
+                "type": "text",
+                "visible": true
+            }
+        ],
+        "name": "scene"
+    },
+    "nodes": [
+        {
+            "children": [],
+            "components": {
+                "DirectionalLight": {
+                    "castShadows": true,
+                    "color": [
+                        1.0,
+                        0.97,
+                        0.92
+                    ],
+                    "enabled": true,
+                    "intensity": 1.1,
+                    "specColor": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ],
+                    "specPower": 32.0
+                },
+                "SceneTransform": {
+                    "posX": 16.0,
+                    "posY": 12.0,
+                    "posZ": 6.0,
+                    "rotX": 50.0,
+                    "rotY": -35.0,
+                    "rotZ": 0.0,
+                    "scaleX": 1.0,
+                    "scaleY": 1.0,
+                    "scaleZ": 1.0
+                }
+            },
+            "name": "Directional Light",
+            "tag": 0
+        },
+        {
+            "children": [],
+            "components": {
+                "Collider": {
+                    "colliderCenter": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    },
+                    "colliderType": 1,
+                    "halfExtents": {
+                        "x": 28.0,
+                        "y": 0.5,
+                        "z": 16.0
+                    },
+                    "height": 1.0,
+                    "isTrigger": false,
+                    "meshSizePadding": 0.0,
+                    "radius": 0.5,
+                    "showDebugCollider": false
+                },
+                "SceneTransform": {
+                    "posX": 16.0,
+                    "posY": -0.5,
+                    "posZ": 6.0,
+                    "rotX": 0.0,
+                    "rotY": 0.0,
+                    "rotZ": 0.0,
+                    "scaleX": 56.0,
+                    "scaleY": 1.0,
+                    "scaleZ": 32.0
+                },
+                "visual": {
+                    "model": "rom/model/object/Box_Brown.fbx",
+                    "shader": "standard"
+                }
+            },
+            "name": "Ground",
+            "tag": 2
+        },
+        {
+            "children": [],
+            "components": {
+                "Collider": {
+                    "colliderCenter": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    },
+                    "colliderType": 5,
+                    "halfExtents": {
+                        "x": 0.5,
+                        "y": 0.5,
+                        "z": 0.5
+                    },
+                    "height": 1.6,
+                    "isTrigger": false,
+                    "meshSizePadding": 0.0,
+                    "radius": 0.9,
+                    "showDebugCollider": true
+                },
+                "Material": {
+                    "color": [
+                        0.25,
+                        0.45,
+                        0.95
+                    ],
+                    "metallic": 0.0,
+                    "roughness": 0.6
+                },
+                "SceneTransform": {
+                    "posX": 0.0,
+                    "posY": 0.8,
+                    "posZ": 0.0,
+                    "rotX": 0.0,
+                    "rotY": 0.0,
+                    "rotZ": 0.0,
+                    "scaleX": 1.8,
+                    "scaleY": 1.6,
+                    "scaleZ": 1.8
+                },
+                "visual": {
+                    "model": "rom/model/object/Box_Blue.fbx",
+                    "shader": "standard"
+                }
+            },
+            "name": "StaticCylinder_SphereFalls",
+            "tag": 0
+        },
+        {
+            "children": [],
+            "components": {
+                "Collider": {
+                    "colliderCenter": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    },
+                    "colliderType": 2,
+                    "halfExtents": {
+                        "x": 0.5,
+                        "y": 0.5,
+                        "z": 0.5
+                    },
+                    "height": 1.0,
+                    "isTrigger": false,
+                    "meshSizePadding": 0.0,
+                    "radius": 0.45,
+                    "showDebugCollider": true
+                },
+                "Material": {
+                    "color": [
+                        0.2,
+                        0.85,
+                        0.35
+                    ],
+                    "metallic": 0.0,
+                    "roughness": 0.45
+                },
+                "Rigidbody": {
+                    "angularDrag": 0.2,
+                    "drag": 0.05,
+                    "friction": 0.8,
+                    "isKinematic": false,
+                    "mass": 1.0,
+                    "restitution": 0.0,
+                    "useGravity": true
+                },
+                "SceneTransform": {
+                    "posX": 0.0,
+                    "posY": 5.0,
+                    "posZ": 0.0,
+                    "rotX": 0.0,
+                    "rotY": 0.0,
+                    "rotZ": 0.0,
+                    "scaleX": 0.9,
+                    "scaleY": 0.9,
+                    "scaleZ": 0.9
+                },
+                "visual": {
+                    "model": "rom/model/object/Box_Green.fbx",
+                    "shader": "standard"
+                }
+            },
+            "name": "DynamicSphere_OnCylinder",
+            "tag": 0
+        },
+        {
+            "children": [],
+            "components": {
+                "Collider": {
+                    "colliderCenter": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    },
+                    "colliderType": 2,
+                    "halfExtents": {
+                        "x": 0.5,
+                        "y": 0.5,
+                        "z": 0.5
+                    },
+                    "height": 1.0,
+                    "isTrigger": false,
+                    "meshSizePadding": 0.0,
+                    "radius": 1.2,
+                    "showDebugCollider": true
+                },
+                "Material": {
+                    "color": [
+                        0.25,
+                        0.45,
+                        0.95
+                    ],
+                    "metallic": 0.0,
+                    "roughness": 0.6
+                },
+                "SceneTransform": {
+                    "posX": 8.0,
+                    "posY": 1.2,
+                    "posZ": 0.0,
+                    "rotX": 0.0,
+                    "rotY": 0.0,
+                    "rotZ": 0.0,
+                    "scaleX": 2.4,
+                    "scaleY": 2.4,
+                    "scaleZ": 2.4
+                },
+                "visual": {
+                    "model": "rom/model/object/Box_Blue.fbx",
+                    "shader": "standard"
+                }
+            },
+            "name": "StaticSphere_CylinderFalls",
+            "tag": 0
+        },
+        {
+            "children": [],
+            "components": {
+                "Collider": {
+                    "colliderCenter": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    },
+                    "colliderType": 5,
+                    "halfExtents": {
+                        "x": 0.5,
+                        "y": 0.5,
+                        "z": 0.5
+                    },
+                    "height": 1.0,
+                    "isTrigger": false,
+                    "meshSizePadding": 0.0,
+                    "radius": 0.35,
+                    "showDebugCollider": true
+                },
+                "Material": {
+                    "color": [
+                        0.2,
+                        0.85,
+                        0.35
+                    ],
+                    "metallic": 0.0,
+                    "roughness": 0.45
+                },
+                "Rigidbody": {
+                    "angularDrag": 0.2,
+                    "drag": 0.05,
+                    "friction": 0.8,
+                    "isKinematic": false,
+                    "mass": 1.0,
+                    "restitution": 0.0,
+                    "useGravity": true
+                },
+                "SceneTransform": {
+                    "posX": 8.0,
+                    "posY": 5.0,
+                    "posZ": 0.0,
+                    "rotX": 0.0,
+                    "rotY": 0.0,
+                    "rotZ": 0.0,
+                    "scaleX": 0.7,
+                    "scaleY": 1.0,
+                    "scaleZ": 0.7
+                },
+                "visual": {
+                    "model": "rom/model/object/Box_Green.fbx",
+                    "shader": "standard"
+                }
+            },
+            "name": "DynamicCylinder_OnSphere",
+            "tag": 0
+        },
+        {
+            "children": [],
+            "components": {
+                "Collider": {
+                    "colliderCenter": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    },
+                    "colliderType": 5,
+                    "halfExtents": {
+                        "x": 0.5,
+                        "y": 0.5,
+                        "z": 0.5
+                    },
+                    "height": 1.6,
+                    "isTrigger": false,
+                    "meshSizePadding": 0.0,
+                    "radius": 0.9,
+                    "showDebugCollider": true
+                },
+                "Material": {
+                    "color": [
+                        0.25,
+                        0.45,
+                        0.95
+                    ],
+                    "metallic": 0.0,
+                    "roughness": 0.6
+                },
+                "SceneTransform": {
+                    "posX": 16.0,
+                    "posY": 0.8,
+                    "posZ": 0.0,
+                    "rotX": 0.0,
+                    "rotY": 0.0,
+                    "rotZ": 0.0,
+                    "scaleX": 1.8,
+                    "scaleY": 1.6,
+                    "scaleZ": 1.8
+                },
+                "visual": {
+                    "model": "rom/model/object/Box_Blue.fbx",
+                    "shader": "standard"
+                }
+            },
+            "name": "StaticCylinder_CapsuleFalls",
+            "tag": 0
+        },
+        {
+            "children": [],
+            "components": {
+                "Collider": {
+                    "colliderCenter": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    },
+                    "colliderType": 3,
+                    "halfExtents": {
+                        "x": 0.5,
+                        "y": 0.5,
+                        "z": 0.5
+                    },
+                    "height": 1.0,
+                    "isTrigger": false,
+                    "meshSizePadding": 0.0,
+                    "radius": 0.35,
+                    "showDebugCollider": true
+                },
+                "Material": {
+                    "color": [
+                        0.2,
+                        0.85,
+                        0.35
+                    ],
+                    "metallic": 0.0,
+                    "roughness": 0.45
+                },
+                "Rigidbody": {
+                    "angularDrag": 0.2,
+                    "drag": 0.05,
+                    "friction": 0.8,
+                    "isKinematic": false,
+                    "mass": 1.0,
+                    "restitution": 0.0,
+                    "useGravity": true
+                },
+                "SceneTransform": {
+                    "posX": 16.0,
+                    "posY": 5.0,
+                    "posZ": 0.0,
+                    "rotX": 0.0,
+                    "rotY": 0.0,
+                    "rotZ": 0.0,
+                    "scaleX": 0.7,
+                    "scaleY": 1.7,
+                    "scaleZ": 0.7
+                },
+                "visual": {
+                    "model": "rom/model/object/Box_Green.fbx",
+                    "shader": "standard"
+                }
+            },
+            "name": "DynamicCapsule_OnCylinder",
+            "tag": 0
+        },
+        {
+            "children": [],
+            "components": {
+                "Collider": {
+                    "colliderCenter": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    },
+                    "colliderType": 3,
+                    "halfExtents": {
+                        "x": 0.5,
+                        "y": 0.5,
+                        "z": 0.5
+                    },
+                    "height": 1.2,
+                    "isTrigger": false,
+                    "meshSizePadding": 0.0,
+                    "radius": 0.45,
+                    "showDebugCollider": true
+                },
+                "Material": {
+                    "color": [
+                        0.25,
+                        0.45,
+                        0.95
+                    ],
+                    "metallic": 0.0,
+                    "roughness": 0.6
+                },
+                "SceneTransform": {
+                    "posX": 24.0,
+                    "posY": 1.05,
+                    "posZ": 0.0,
+                    "rotX": 0.0,
+                    "rotY": 0.0,
+                    "rotZ": 0.0,
+                    "scaleX": 0.9,
+                    "scaleY": 2.1,
+                    "scaleZ": 0.9
+                },
+                "visual": {
+                    "model": "rom/model/object/Box_Blue.fbx",
+                    "shader": "standard"
+                }
+            },
+            "name": "StaticCapsule_CylinderFalls",
+            "tag": 0
+        },
+        {
+            "children": [],
+            "components": {
+                "Collider": {
+                    "colliderCenter": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    },
+                    "colliderType": 5,
+                    "halfExtents": {
+                        "x": 0.5,
+                        "y": 0.5,
+                        "z": 0.5
+                    },
+                    "height": 1.0,
+                    "isTrigger": false,
+                    "meshSizePadding": 0.0,
+                    "radius": 0.35,
+                    "showDebugCollider": true
+                },
+                "Material": {
+                    "color": [
+                        0.2,
+                        0.85,
+                        0.35
+                    ],
+                    "metallic": 0.0,
+                    "roughness": 0.45
+                },
+                "Rigidbody": {
+                    "angularDrag": 0.2,
+                    "drag": 0.05,
+                    "friction": 0.8,
+                    "isKinematic": false,
+                    "mass": 1.0,
+                    "restitution": 0.0,
+                    "useGravity": true
+                },
+                "SceneTransform": {
+                    "posX": 24.0,
+                    "posY": 5.0,
+                    "posZ": 0.0,
+                    "rotX": 0.0,
+                    "rotY": 0.0,
+                    "rotZ": 0.0,
+                    "scaleX": 0.7,
+                    "scaleY": 1.0,
+                    "scaleZ": 0.7
+                },
+                "visual": {
+                    "model": "rom/model/object/Box_Green.fbx",
+                    "shader": "standard"
+                }
+            },
+            "name": "DynamicCylinder_OnCapsule",
+            "tag": 0
+        },
+        {
+            "children": [],
+            "components": {
+                "Collider": {
+                    "colliderCenter": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    },
+                    "colliderType": 5,
+                    "halfExtents": {
+                        "x": 0.5,
+                        "y": 0.5,
+                        "z": 0.5
+                    },
+                    "height": 1.6,
+                    "isTrigger": false,
+                    "meshSizePadding": 0.0,
+                    "radius": 0.9,
+                    "showDebugCollider": true
+                },
+                "Material": {
+                    "color": [
+                        0.25,
+                        0.45,
+                        0.95
+                    ],
+                    "metallic": 0.0,
+                    "roughness": 0.6
+                },
+                "SceneTransform": {
+                    "posX": 0.0,
+                    "posY": 0.8,
+                    "posZ": 12.0,
+                    "rotX": 0.0,
+                    "rotY": 0.0,
+                    "rotZ": 0.0,
+                    "scaleX": 1.8,
+                    "scaleY": 1.6,
+                    "scaleZ": 1.8
+                },
+                "visual": {
+                    "model": "rom/model/object/Box_Blue.fbx",
+                    "shader": "standard"
+                }
+            },
+            "name": "StaticCylinder_BoxFalls",
+            "tag": 0
+        },
+        {
+            "children": [],
+            "components": {
+                "Collider": {
+                    "colliderCenter": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    },
+                    "colliderType": 1,
+                    "halfExtents": {
+                        "x": 0.4,
+                        "y": 0.4,
+                        "z": 0.4
+                    },
+                    "height": 1.0,
+                    "isTrigger": false,
+                    "meshSizePadding": 0.0,
+                    "radius": 0.5,
+                    "showDebugCollider": true
+                },
+                "Material": {
+                    "color": [
+                        0.9,
+                        0.25,
+                        0.2
+                    ],
+                    "metallic": 0.0,
+                    "roughness": 0.5
+                },
+                "Rigidbody": {
+                    "angularDrag": 0.2,
+                    "drag": 0.05,
+                    "friction": 0.4,
+                    "isKinematic": false,
+                    "mass": 1.0,
+                    "restitution": 0.0,
+                    "useGravity": true
+                },
+                "SceneTransform": {
+                    "posX": 0.0,
+                    "posY": 5.0,
+                    "posZ": 12.0,
+                    "rotX": 0.0,
+                    "rotY": 0.0,
+                    "rotZ": 0.0,
+                    "scaleX": 0.8,
+                    "scaleY": 0.8,
+                    "scaleZ": 0.8
+                },
+                "visual": {
+                    "model": "rom/model/object/Box_Red.fbx",
+                    "shader": "standard"
+                }
+            },
+            "name": "DynamicBox_ThroughCylinder",
+            "tag": 0
+        },
+        {
+            "children": [],
+            "components": {
+                "Collider": {
+                    "colliderCenter": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    },
+                    "colliderType": 1,
+                    "halfExtents": {
+                        "x": 0.9,
+                        "y": 0.8,
+                        "z": 0.9
+                    },
+                    "height": 1.0,
+                    "isTrigger": false,
+                    "meshSizePadding": 0.0,
+                    "radius": 0.5,
+                    "showDebugCollider": true
+                },
+                "Material": {
+                    "color": [
+                        0.25,
+                        0.45,
+                        0.95
+                    ],
+                    "metallic": 0.0,
+                    "roughness": 0.6
+                },
+                "SceneTransform": {
+                    "posX": 8.0,
+                    "posY": 0.8,
+                    "posZ": 12.0,
+                    "rotX": 0.0,
+                    "rotY": 0.0,
+                    "rotZ": 0.0,
+                    "scaleX": 1.8,
+                    "scaleY": 1.6,
+                    "scaleZ": 1.8
+                },
+                "visual": {
+                    "model": "rom/model/object/Box_Blue.fbx",
+                    "shader": "standard"
+                }
+            },
+            "name": "StaticBox_CylinderFalls",
+            "tag": 0
+        },
+        {
+            "children": [],
+            "components": {
+                "Collider": {
+                    "colliderCenter": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    },
+                    "colliderType": 5,
+                    "halfExtents": {
+                        "x": 0.5,
+                        "y": 0.5,
+                        "z": 0.5
+                    },
+                    "height": 1.0,
+                    "isTrigger": false,
+                    "meshSizePadding": 0.0,
+                    "radius": 0.45,
+                    "showDebugCollider": true
+                },
+                "Material": {
+                    "color": [
+                        0.9,
+                        0.25,
+                        0.2
+                    ],
+                    "metallic": 0.0,
+                    "roughness": 0.5
+                },
+                "Rigidbody": {
+                    "angularDrag": 0.2,
+                    "drag": 0.05,
+                    "friction": 0.4,
+                    "isKinematic": false,
+                    "mass": 1.0,
+                    "restitution": 0.0,
+                    "useGravity": true
+                },
+                "SceneTransform": {
+                    "posX": 8.0,
+                    "posY": 5.0,
+                    "posZ": 12.0,
+                    "rotX": 0.0,
+                    "rotY": 0.0,
+                    "rotZ": 0.0,
+                    "scaleX": 0.9,
+                    "scaleY": 1.0,
+                    "scaleZ": 0.9
+                },
+                "visual": {
+                    "model": "rom/model/object/Box_Red.fbx",
+                    "shader": "standard"
+                }
+            },
+            "name": "DynamicCylinder_ThroughBox",
+            "tag": 0
+        },
+        {
+            "children": [],
+            "components": {
+                "Collider": {
+                    "colliderCenter": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    },
+                    "colliderType": 5,
+                    "halfExtents": {
+                        "x": 0.5,
+                        "y": 0.5,
+                        "z": 0.5
+                    },
+                    "height": 1.6,
+                    "isTrigger": false,
+                    "meshSizePadding": 0.0,
+                    "radius": 0.9,
+                    "showDebugCollider": true
+                },
+                "Material": {
+                    "color": [
+                        0.25,
+                        0.45,
+                        0.95
+                    ],
+                    "metallic": 0.0,
+                    "roughness": 0.6
+                },
+                "SceneTransform": {
+                    "posX": 16.0,
+                    "posY": 0.8,
+                    "posZ": 12.0,
+                    "rotX": 0.0,
+                    "rotY": 0.0,
+                    "rotZ": 0.0,
+                    "scaleX": 1.8,
+                    "scaleY": 1.6,
+                    "scaleZ": 1.8
+                },
+                "visual": {
+                    "model": "rom/model/object/Box_Blue.fbx",
+                    "shader": "standard"
+                }
+            },
+            "name": "StaticCylinder_MeshFalls",
+            "tag": 0
+        },
+        {
+            "children": [],
+            "components": {
+                "Collider": {
+                    "colliderCenter": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    },
+                    "colliderType": 4,
+                    "halfExtents": {
+                        "x": 0.5,
+                        "y": 0.5,
+                        "z": 0.5
+                    },
+                    "height": 1.0,
+                    "isTrigger": false,
+                    "meshSizePadding": 0.0,
+                    "radius": 0.5,
+                    "showDebugCollider": true
+                },
+                "Material": {
+                    "color": [
+                        0.9,
+                        0.25,
+                        0.2
+                    ],
+                    "metallic": 0.0,
+                    "roughness": 0.5
+                },
+                "Rigidbody": {
+                    "angularDrag": 0.2,
+                    "drag": 0.05,
+                    "friction": 0.4,
+                    "isKinematic": false,
+                    "mass": 1.0,
+                    "restitution": 0.0,
+                    "useGravity": true
+                },
+                "SceneTransform": {
+                    "posX": 16.0,
+                    "posY": 5.0,
+                    "posZ": 12.0,
+                    "rotX": 0.0,
+                    "rotY": 0.0,
+                    "rotZ": 0.0,
+                    "scaleX": 0.8,
+                    "scaleY": 0.8,
+                    "scaleZ": 0.8
+                },
+                "visual": {
+                    "model": "rom/model/object/Box_Red.fbx",
+                    "shader": "standard"
+                }
+            },
+            "name": "DynamicMesh_ThroughCylinder",
+            "tag": 0
+        },
+        {
+            "children": [],
+            "components": {
+                "Collider": {
+                    "colliderCenter": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    },
+                    "colliderType": 4,
+                    "halfExtents": {
+                        "x": 0.5,
+                        "y": 0.5,
+                        "z": 0.5
+                    },
+                    "height": 1.0,
+                    "isTrigger": false,
+                    "meshSizePadding": 0.0,
+                    "radius": 0.5,
+                    "showDebugCollider": true
+                },
+                "Material": {
+                    "color": [
+                        0.25,
+                        0.45,
+                        0.95
+                    ],
+                    "metallic": 0.0,
+                    "roughness": 0.6
+                },
+                "SceneTransform": {
+                    "posX": 24.0,
+                    "posY": 0.8,
+                    "posZ": 12.0,
+                    "rotX": 0.0,
+                    "rotY": 0.0,
+                    "rotZ": 0.0,
+                    "scaleX": 1.8,
+                    "scaleY": 1.6,
+                    "scaleZ": 1.8
+                },
+                "visual": {
+                    "model": "rom/model/object/Box_Blue.fbx",
+                    "shader": "standard"
+                }
+            },
+            "name": "StaticMesh_CylinderFalls",
+            "tag": 0
+        },
+        {
+            "children": [],
+            "components": {
+                "Collider": {
+                    "colliderCenter": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    },
+                    "colliderType": 5,
+                    "halfExtents": {
+                        "x": 0.5,
+                        "y": 0.5,
+                        "z": 0.5
+                    },
+                    "height": 1.0,
+                    "isTrigger": false,
+                    "meshSizePadding": 0.0,
+                    "radius": 0.45,
+                    "showDebugCollider": true
+                },
+                "Material": {
+                    "color": [
+                        0.9,
+                        0.25,
+                        0.2
+                    ],
+                    "metallic": 0.0,
+                    "roughness": 0.5
+                },
+                "Rigidbody": {
+                    "angularDrag": 0.2,
+                    "drag": 0.05,
+                    "friction": 0.4,
+                    "isKinematic": false,
+                    "mass": 1.0,
+                    "restitution": 0.0,
+                    "useGravity": true
+                },
+                "SceneTransform": {
+                    "posX": 24.0,
+                    "posY": 5.0,
+                    "posZ": 12.0,
+                    "rotX": 0.0,
+                    "rotY": 0.0,
+                    "rotZ": 0.0,
+                    "scaleX": 0.9,
+                    "scaleY": 1.0,
+                    "scaleZ": 0.9
+                },
+                "visual": {
+                    "model": "rom/model/object/Box_Red.fbx",
+                    "shader": "standard"
+                }
+            },
+            "name": "DynamicCylinder_ThroughMesh",
+            "tag": 0
+        },
+        {
+            "children": [],
+            "components": {
+                "Collider": {
+                    "colliderCenter": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    },
+                    "colliderType": 5,
+                    "halfExtents": {
+                        "x": 0.5,
+                        "y": 0.5,
+                        "z": 0.5
+                    },
+                    "height": 1.2,
+                    "isTrigger": false,
+                    "meshSizePadding": 0.0,
+                    "radius": 0.55,
+                    "showDebugCollider": true
+                },
+                "Material": {
+                    "color": [
+                        0.9,
+                        0.75,
+                        0.3
+                    ],
+                    "metallic": 0.0,
+                    "roughness": 0.55
+                },
+                "Rigidbody": {
+                    "angularDrag": 0.2,
+                    "drag": 0.05,
+                    "friction": 0.4,
+                    "isKinematic": false,
+                    "mass": 1.0,
+                    "restitution": 0.0,
+                    "useGravity": true
+                },
+                "SceneTransform": {
+                    "posX": 32.0,
+                    "posY": 2.2,
+                    "posZ": 12.0,
+                    "rotX": 0.0,
+                    "rotY": 0.0,
+                    "rotZ": 0.0,
+                    "scaleX": 1.1,
+                    "scaleY": 1.2,
+                    "scaleZ": 1.1
+                },
+                "visual": {
+                    "model": "rom/model/object/Box_Sand.fbx",
+                    "shader": "standard"
+                }
+            },
+            "name": "DynamicCylinder_PairA",
+            "tag": 0
+        },
+        {
+            "children": [],
+            "components": {
+                "Collider": {
+                    "colliderCenter": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    },
+                    "colliderType": 5,
+                    "halfExtents": {
+                        "x": 0.5,
+                        "y": 0.5,
+                        "z": 0.5
+                    },
+                    "height": 1.2,
+                    "isTrigger": false,
+                    "meshSizePadding": 0.0,
+                    "radius": 0.55,
+                    "showDebugCollider": true
+                },
+                "Material": {
+                    "color": [
+                        0.9,
+                        0.25,
+                        0.2
+                    ],
+                    "metallic": 0.0,
+                    "roughness": 0.5
+                },
+                "Rigidbody": {
+                    "angularDrag": 0.2,
+                    "drag": 0.05,
+                    "friction": 0.4,
+                    "isKinematic": false,
+                    "mass": 1.0,
+                    "restitution": 0.0,
+                    "useGravity": true
+                },
+                "SceneTransform": {
+                    "posX": 32.0,
+                    "posY": 2.7,
+                    "posZ": 12.0,
+                    "rotX": 0.0,
+                    "rotY": 0.0,
+                    "rotZ": 0.0,
+                    "scaleX": 1.1,
+                    "scaleY": 1.2,
+                    "scaleZ": 1.1
+                },
+                "visual": {
+                    "model": "rom/model/object/Box_Red.fbx",
+                    "shader": "standard"
+                }
+            },
+            "name": "DynamicCylinder_PairB",
+            "tag": 0
+        },
+        {
+            "name": "RegressionCamera3D",
+            "tag": 0,
+            "children": [],
+            "components": {
+                "Camera": {
+                    "enabled": true,
+                    "orthographic": false,
+                    "fov": 65,
+                    "nearClip": 0.1,
+                    "farClip": 200
+                },
+                "SceneTransform": {
+                    "posX": 16,
+                    "posY": 20,
+                    "posZ": -25,
+                    "rotX": 30,
+                    "rotY": 0,
+                    "rotZ": 0,
+                    "scaleX": 1,
+                    "scaleY": 1,
+                    "scaleZ": 1
+                }
+            }
+        }
+    ],
+    "settings": {
+        "render": {
+            "clearColor": [
+                0.69,
+                0.77,
+                0.87,
+                1.0
+            ],
+            "defaultShader": "standard",
+            "fogColor": [
+                0.69,
+                0.77,
+                0.87
+            ],
+            "fogDensity": 0.02,
+            "fogEnabled": false,
+            "fogHeight": 5.0,
+            "fogHeightFalloff": 0.15,
+            "fogStart": 10.0,
+            "shadowQuality": "medium",
+            "skyboxCubemap": "rom/skybox/MySkybox.dds",
+            "skyboxEnabled": true,
+            "skyboxExposure": 1.0,
+            "skyboxRotationYDeg": 0.0,
+            "skyboxTint": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+            ]
+        },
+        "debugCamera": {
+            "mode": "orbit",
+            "enabledOnPlay": false,
+            "position": {
+                "x": 16.0,
+                "y": 2.0,
+                "z": 6.0
+            },
+            "yawDeg": 0.0,
+            "pitchDeg": -25.0
+        },
+        "camera": {
+            "mode": "scene",
+            "node": "RegressionCamera3D"
+        },
+        "renderPath": "3d",
+        "physicsMode": "3d"
+    },
+    "version": 4
+}

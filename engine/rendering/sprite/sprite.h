@@ -35,4 +35,10 @@ void Sprite_DrawRadialFill(int texid, float X, float Y, float width, float heigh
     float fillAmount, float startAngle, bool clockwise,
     DirectX::XMFLOAT4 color = {1.0f, 1.0f, 1.0f, 1.0f});
 
+
+// World-space XY quad. UV rect is normalized (left, top, right, bottom).
+void Sprite_DrawWorld(int texture, float width, float height, DirectX::XMFLOAT2 pivot,
+    DirectX::XMFLOAT4 uv, DirectX::XMFLOAT4 color, const DirectX::XMMATRIX& world,
+    const DirectX::XMMATRIX& view, const DirectX::XMMATRIX& projection);
+
 #endif // !SPRITE_H

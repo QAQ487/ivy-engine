@@ -1,3 +1,4 @@
+﻿#include "engine/ecs/sprite_animator_component.h"
 /**===========================================================================
  File   : scene_asset_preload.cpp
  Brief  : BuildTaskList (+ JSON scene scan) + time-budgeted SceneAssetPreloader.
@@ -7,6 +8,8 @@
 #include "engine/ecs/game_object.h"
 #include "engine/ecs/model_asset_cache.h"
 #include "engine/ecs/visual_component.h"
+#include "engine/ecs/sprite_renderer_component.h"
+#include "engine/rendering/sprite/texture.h"
 #include "engine/rendering/model/model.h"
 #include "libraries/nlohmann/json.hpp"
 
@@ -86,6 +89,24 @@ void MergeVisualPaths(const std::string& modelPath,
 		task.animations.push_back(std::move(clip));
 }
 
+bool IsProjectRelativeRomPath(const std::string& path);
+
+void MergeTexturePath(const std::string& texturePath,
+    std::vector<SceneAssetPreloadTask>& outTasks,
+    std::unordered_map<std::string, size_t>& assetIndex)
+{
+    if (!IsProjectRelativeRomPath(texturePath))
+        return;
+    const std::string key = "texture:" + NormalizePathKey(texturePath);
+    if (assetIndex.find(key) != assetIndex.end())
+        return;
+    SceneAssetPreloadTask task;
+    task.texturePath = texturePath;
+    task.displayLabel = FilenameLabel(texturePath);
+    assetIndex.emplace(key, outTasks.size());
+    outTasks.push_back(std::move(task));
+}
+
 void CollectVisual(GameObject* node,
 	std::vector<SceneAssetPreloadTask>& outTasks,
 	std::unordered_map<std::string, size_t>& modelIndex)
@@ -96,6 +117,11 @@ void CollectVisual(GameObject* node,
 	if (VisualComponent* vc = node->GetComponent<VisualComponent>()) {
 		MergeVisualPaths(vc->modelPath, vc->animationPaths, outTasks, modelIndex);
 	}
+
+    if(auto* animator=node->GetComponent<SpriteAnimatorComponent>())
+        for(const auto& entry:animator->clips) MergeTexturePath(entry.second.texture,outTasks,modelIndex);
+    if (auto* sprite = node->GetComponent<SpriteRendererComponent>())
+        MergeTexturePath(sprite->texturePath, outTasks, modelIndex);
 
 	for (const auto& child : node->GetChildren())
 		CollectVisual(child.get(), outTasks, modelIndex);
@@ -232,6 +258,16 @@ void WalkJsonNode(const json& node,
 
 	if (node.contains("components") && node["components"].is_object()) {
 		const json& comps = node["components"];
+        if(comps.contains("SpriteAnimator") && comps["SpriteAnimator"].is_object()) {
+            const auto clips=comps["SpriteAnimator"].value("clips",json::object());
+            if(clips.is_object()) for(const auto& clip:clips)
+                if(clip.is_object()) MergeTexturePath(clip.value("texture",std::string{}),outTasks,modelIndex);
+        }
+        if (comps.contains("SpriteRenderer") && comps["SpriteRenderer"].is_object()) {
+            const auto& sprite = comps["SpriteRenderer"];
+            if (sprite.contains("texture") && sprite["texture"].is_string())
+                MergeTexturePath(sprite["texture"].get<std::string>(), outTasks, modelIndex);
+        }
 		if (comps.contains("visual"))
 			CollectVisualFromJson(comps["visual"], outTasks, modelIndex);
 	}
@@ -307,7 +343,14 @@ void SceneAssetPreloader::Begin(const std::vector<SceneAssetPreloadTask>& tasks)
 	m_total = 0;
 	m_currentLabel.clear();
 
-	for (const auto& task : tasks) {
+    for (const auto& task : tasks) {
+        if (!task.texturePath.empty()) {
+            Step step;
+            step.kind = Step::Kind::Texture;
+            step.texturePath = task.texturePath;
+            step.fileLabel = FilenameLabel(task.texturePath);
+            m_steps.push_back(std::move(step));
+        }
 		if (!task.modelPath.empty()) {
 			Step step;
 			step.kind = Step::Kind::Model;
@@ -365,7 +408,13 @@ bool SceneAssetPreloader::RunOneStep() {
 	const Step& step = m_steps[m_next];
 	RebuildLabel();
 
-	if (step.kind == Step::Kind::Model) {
+    if (step.kind == Step::Kind::Texture) {
+        const auto path = std::filesystem::u8path(step.texturePath).wstring();
+        if (TextureLoadQuiet(path.c_str(), true) < 0)
+            OutputDebugStringA(("[SceneAssetPreload] texture load failed: "
+                + step.texturePath + "\n").c_str());
+    }
+    else if (step.kind == Step::Kind::Model) {
 		Model3D* model = ModelAssetCache::Instance().GetModel(step.modelPath);
 		if (!model) {
 			OutputDebugStringA(("[SceneAssetPreload] GetModel failed: "

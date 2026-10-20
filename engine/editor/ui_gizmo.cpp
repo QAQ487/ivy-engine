@@ -1,4 +1,4 @@
-#include "ui_gizmo.h"
+﻿#include "ui_gizmo.h"
 
 #include "engine/core/engine_gui.h"
 #include "engine/editor/editor_undo.h"
@@ -65,6 +65,7 @@ void ViewportLocalToWindow(float& x, float& y) {
 }
 
 bool IsResizable(UIElement* element) {
+    if(auto* sprite=dynamic_cast<UISprite*>(element); sprite && sprite->HasExplicitPivot() && sprite->GetRotation()!=0) return false;
     return dynamic_cast<UIButton*>(element) != nullptr
         || dynamic_cast<UISprite*>(element) != nullptr
         || dynamic_cast<UIBar*>(element) != nullptr;
@@ -95,11 +96,6 @@ void SetElementSize(UIElement* element, float width, float height) {
     } else if (auto* bar = dynamic_cast<UIBar*>(element)) {
         bar->SetBarSize(static_cast<int>(std::lround(width)), static_cast<int>(std::lround(height)));
     }
-}
-
-void GetRectCenter(const UIScreenRect& rect, float& centerX, float& centerY) {
-    centerX = (rect.left + rect.right) * 0.5f;
-    centerY = (rect.top + rect.bottom) * 0.5f;
 }
 
 float DistancePointToSegment(float px, float py, float ax, float ay, float bx, float by) {
@@ -152,10 +148,9 @@ GizmoHandle HitTestMoveArrow(float mouseX, float mouseY, float pivotX, float piv
     return GizmoHandle::None;
 }
 
-GizmoHandle HitTestHandle(float mouseX, float mouseY, const UIScreenRect& rect, bool resizable) {
-    float pivotX = 0.0f;
-    float pivotY = 0.0f;
-    GetRectCenter(rect, pivotX, pivotY);
+GizmoHandle HitTestHandle(float mouseX, float mouseY, const UIScreenRect& rect, bool resizable, const DirectX::XMFLOAT2& pivot) {
+    const float pivotX = pivot.x;
+    const float pivotY = pivot.y;
 
     if (GizmoHandle arrow = HitTestMoveArrow(mouseX, mouseY, pivotX, pivotY);
         arrow != GizmoHandle::None) {
@@ -167,8 +162,8 @@ GizmoHandle HitTestHandle(float mouseX, float mouseY, const UIScreenRect& rect, 
     const float right = rect.right;
     const float top = rect.top;
     const float bottom = rect.bottom;
-    const float midX = pivotX;
-    const float midY = pivotY;
+    const float midX = (left + right) * 0.5f;
+    const float midY = (top + bottom) * 0.5f;
 
     auto isNear = [&](float x, float y) {
         return std::fabs(mouseX - x) <= hs && std::fabs(mouseY - y) <= hs;
@@ -289,6 +284,11 @@ void ApplyResize(UIElement* element, GizmoHandle handle, float mouseX, float mou
     DirectX::XMFLOAT2 position = g_startPosition;
     position.x += (left - g_startRect.left) / layoutScale.x;
     position.y += (top - g_startRect.top) / layoutScale.y;
+    if (element->HasExplicitPivot()) {
+        const DirectX::XMFLOAT2 pivot = element->GetPivot();
+        position.x += pivot.x * (width - g_startSize.x);
+        position.y += (1.0f - pivot.y) * (height - g_startSize.y);
+    }
     element->SetPosition(position);
     SetElementSize(element, width, height);
 }
@@ -330,7 +330,7 @@ bool WouldCaptureMouse(UIElement* selected, float viewportX, float viewportY) {
     if (!selected->GetScreenRect(localRect))
         return false;
 
-    return HitTestHandle(viewportX, viewportY, localRect, IsResizable(selected)) != GizmoHandle::None;
+    return HitTestHandle(viewportX, viewportY, localRect, IsResizable(selected), selected->GetPivotScreenPosition()) != GizmoHandle::None;
 }
 
 void HandleInput(UIElement* selected) {
@@ -353,7 +353,7 @@ void HandleInput(UIElement* selected) {
     const bool resizable = IsResizable(selected);
 
     if (mouseInViewport && !ImGui::GetIO().WantCaptureMouse)
-        g_hoverHandle = HitTestHandle(localMouseX, localMouseY, localRect, resizable);
+        g_hoverHandle = HitTestHandle(localMouseX, localMouseY, localRect, resizable, selected->GetPivotScreenPosition());
     else
         g_hoverHandle = GizmoHandle::None;
 
@@ -377,7 +377,7 @@ void HandleInput(UIElement* selected) {
     }
 
     if (clicked && !g_interacting) {
-        const GizmoHandle hit = HitTestHandle(localMouseX, localMouseY, localRect, resizable);
+        const GizmoHandle hit = HitTestHandle(localMouseX, localMouseY, localRect, resizable, selected->GetPivotScreenPosition());
         if (hit != GizmoHandle::None) {
             g_interacting = true;
             g_activeHandle = hit;
@@ -429,11 +429,9 @@ void Draw(UIElement* selected) {
     ViewportLocalToWindow(winLeft, winTop);
     ViewportLocalToWindow(winRight, winBottom);
 
-    float pivotLocalX = 0.0f;
-    float pivotLocalY = 0.0f;
-    GetRectCenter(localRect, pivotLocalX, pivotLocalY);
-    float pivotWinX = pivotLocalX;
-    float pivotWinY = pivotLocalY;
+    const DirectX::XMFLOAT2 pivotLocal = selected->GetPivotScreenPosition();
+    float pivotWinX = pivotLocal.x;
+    float pivotWinY = pivotLocal.y;
     ViewportLocalToWindow(pivotWinX, pivotWinY);
 
     DirectX::XMFLOAT2 anchorLocal = selected->GetAnchorScreenPosition();
@@ -441,7 +439,7 @@ void Draw(UIElement* selected) {
     float anchorWinY = anchorLocal.y;
     ViewportLocalToWindow(anchorWinX, anchorWinY);
 
-    ImDrawList* drawList = ImGui::GetForegroundDrawList();
+    ImDrawList* drawList = ImGui::GetBackgroundDrawList();
     const bool resizable = IsResizable(selected);
     const float midX = (winLeft + winRight) * 0.5f;
     const float midY = (winTop + winBottom) * 0.5f;

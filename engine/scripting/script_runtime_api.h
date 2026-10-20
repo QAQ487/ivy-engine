@@ -214,6 +214,18 @@ struct ScriptRuntimeApi {
     void (*firstPersonCameraSetPitchLimits)(float minPitch, float maxPitch);
     void (*firstPersonCameraShowCursor)(bool show);
     bool (*firstPersonCameraIsCursorVisible)();
+
+    // v43 — world sprite animation (append-only)
+    bool (*spritePlay)(GameObject* object, const char* clipName, bool restart);
+    void (*spritePause)(GameObject* object);
+    void (*spriteStop)(GameObject* object);
+    void (*spriteSetFlip)(GameObject* object, bool flipX, bool flipY);
+    void (*spriteSetTint)(GameObject* object, DirectX::XMFLOAT4 tint);
+    bool (*physics2DSetVelocity)(GameObject*, DirectX::XMFLOAT2);
+    bool (*physics2DGetVelocity)(GameObject*, DirectX::XMFLOAT2*);
+    bool (*physics2DMovePosition)(GameObject*, DirectX::XMFLOAT2);
+    bool (*physics2DRaycast)(DirectX::XMFLOAT2, DirectX::XMFLOAT2, float, GameObject**, DirectX::XMFLOAT2*, DirectX::XMFLOAT2*, float*, std::uint32_t, bool);
+
 };
 
 const ScriptRuntimeApi* ScriptRuntimeApi_GetHost();
@@ -365,3 +377,18 @@ GameObject* ScriptApi_PrefabInstantiate(const char* prefabPath,
                                       bool startActive = true);
 void ScriptApi_PrefabDestroy(GameObject* obj);
 void ScriptApi_PrefabSetBeforeDestroyCallback(void (*callback)(GameObject* obj));
+
+// World sprite controls; missing objects/components safely return false or do nothing.
+bool ScriptApi_SpritePlay(GameObject* object, const char* clipName, bool restart = false);
+void ScriptApi_SpritePause(GameObject* object);
+void ScriptApi_SpriteStop(GameObject* object);
+void ScriptApi_SpriteSetFlip(GameObject* object, bool flipX, bool flipY);
+void ScriptApi_SpriteSetTint(GameObject* object, DirectX::XMFLOAT4 tint);
+
+bool ScriptApi_Physics2DSetVelocity(GameObject* object, DirectX::XMFLOAT2 velocity);
+
+bool ScriptApi_Physics2DGetVelocity(GameObject* object, DirectX::XMFLOAT2* velocity);
+
+bool ScriptApi_Physics2DMovePosition(GameObject* object, DirectX::XMFLOAT2 position);
+
+bool ScriptApi_Physics2DRaycast(DirectX::XMFLOAT2 origin, DirectX::XMFLOAT2 direction, float distance, GameObject** outObject, DirectX::XMFLOAT2* outPoint, DirectX::XMFLOAT2* outNormal, float* outDistance, std::uint32_t mask = 0xffffffffu, bool includeTriggers = false);

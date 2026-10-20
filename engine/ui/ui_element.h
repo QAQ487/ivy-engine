@@ -1,4 +1,4 @@
-/**===========================================================================
+﻿/**===========================================================================
  File   :  [ui_element.h]
  Author : Terry Yeung
  Date   : 2025/11/02
@@ -76,6 +76,13 @@ public:
     
     void SetAnchor(UIAnchor anchor) { m_anchor = anchor; }
     UIAnchor GetAnchor() const { return m_anchor; }
+    // Sprite-compatible pivot coordinates: bottom-left=(0,0), top-left=(0,1).
+    void SetPivot(DirectX::XMFLOAT2 pivot);
+    DirectX::XMFLOAT2 GetPivot() const;
+    bool HasExplicitPivot() const;
+    DirectX::XMFLOAT2 GetPivotScreenPosition() const;
+    DirectX::XMFLOAT2 GetPivotDesignSize() const;
+
     
     const std::string& GetName() const { return m_name; }
     void SetName(const std::string& name) { m_name = name; }

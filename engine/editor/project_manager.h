@@ -52,7 +52,7 @@ public:
     bool OpenProject(const std::string& rootPath, std::string* errorOut = nullptr);
     void CloseProject();
     bool CreateProject(const std::string& parentDir, const std::string& projectName,
-                       std::string* errorOut = nullptr);
+                       std::string* errorOut = nullptr, bool template2D = false);
     // Writes project.json from current in-memory state (does not save the scene file).
     bool SaveProjectFile(std::string* errorOut = nullptr);
 
@@ -90,7 +90,7 @@ private:
     ProjectData MakeDefaultData(const std::string& rootPath, const std::string& name) const;
     void EnsureEngineAssets(const std::string& rootPath) const;
     bool ScaffoldNewProjectTree(const std::string& rootPath, const std::string& projectName,
-                                std::string* errorOut);
+                                std::string* errorOut, bool template2D);
     void LoadRecentList();
     void SaveRecentList() const;
     static std::string RecentListPath();

@@ -17,6 +17,7 @@
 #include <float.h>
 #include "engine/debug_draw/debug_ofstream.h"
 #include "sprite.h"
+#include "engine/core/frame_capture.h"
 
 #include <algorithm>
 #include <vector>
@@ -24,6 +25,7 @@ using namespace DirectX;
 
 static constexpr int NUM_VERTEX = 4;  // ???_??
 
+static ID3D11RasterizerState* g_worldRasterizer = nullptr;
 static ID3D11Buffer* g_pVertexBuffer = nullptr; // ???_?o?b?t?@
 static ID3D11Buffer* g_pRadialVertexBuffer = nullptr; // Radial fill vertex buffer
 static ID3D11Buffer* g_pRadialIndexBuffer = nullptr; // Radial fill index buffer
@@ -72,6 +74,7 @@ void Sprite_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext) {
 }
 
 void Sprite_Finalize(void) {
+    if(g_worldRasterizer) { g_worldRasterizer->Release(); g_worldRasterizer=nullptr; }
 	if (g_pVertexBuffer) { g_pVertexBuffer->Release(); g_pVertexBuffer = nullptr; }
 	if (g_pIndexBuffer) { g_pIndexBuffer->Release(); g_pIndexBuffer = nullptr; }
 	if (g_pRadialVertexBuffer) { g_pRadialVertexBuffer->Release(); g_pRadialVertexBuffer = nullptr; }
@@ -165,7 +168,8 @@ void Sprite_Draw(int texid, float X, float Y, float width, float height, int tx,
 	g_pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	// ?`??
-	g_pContext->DrawIndexed(6, 0, 0);
+	FrameCapture_RecordSpriteDraw();
+    g_pContext->DrawIndexed(6, 0, 0);
 }
 
 void Sprite_DrawRadialFill(int texid, float X, float Y, float width, float height,
@@ -379,5 +383,39 @@ void Sprite_DrawRadialFill(int texid, float X, float Y, float width, float heigh
 	g_pContext->IASetIndexBuffer(g_pRadialIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
 	g_pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-	g_pContext->DrawIndexed((UINT) indices.size(), 0, 0);
+	FrameCapture_RecordSpriteDraw();
+    g_pContext->DrawIndexed((UINT) indices.size(), 0, 0);
+}
+void Sprite_DrawWorld(int texture, float width, float height, XMFLOAT2 pivot,
+    XMFLOAT4 uv, XMFLOAT4 color, const XMMATRIX& world,
+    const XMMATRIX& view, const XMMATRIX& projection) {
+    if(texture<0 || !g_pVertexBuffer || width<=0 || height<=0) return;
+    const float l=-pivot.x*width, r=l+width, b=-pivot.y*height, t=b+height;
+    const Vertex vertices[4]={
+        {{l,t,0},{1,1,1,1},{uv.x,uv.y}},{{r,t,0},{1,1,1,1},{uv.z,uv.y}},
+        {{r,b,0},{1,1,1,1},{uv.z,uv.w}},{{l,b,0},{1,1,1,1},{uv.x,uv.w}}};
+    D3D11_MAPPED_SUBRESOURCE mapped{};
+    if(FAILED(g_pContext->Map(g_pVertexBuffer,0,D3D11_MAP_WRITE_DISCARD,0,&mapped))) return;
+    memcpy(mapped.pData,vertices,sizeof(vertices));
+    g_pContext->Unmap(g_pVertexBuffer,0);
+    if(!g_worldRasterizer) {
+        D3D11_RASTERIZER_DESC desc{};
+        desc.FillMode=D3D11_FILL_SOLID; desc.CullMode=D3D11_CULL_NONE;
+        desc.DepthClipEnable=TRUE;
+        if(FAILED(g_pDevice->CreateRasterizerState(&desc,&g_worldRasterizer))) return;
+    }
+    ID3D11RasterizerState* previousRasterizer=nullptr;
+    g_pContext->RSGetState(&previousRasterizer);
+    g_pContext->RSSetState(g_worldRasterizer);
+    Shader2D_Begin(); SetDepthEnable(false); Shader_SetColor(color);
+    TextureSetTexture(texture); Shader_SetViewMatrix(view);
+    Shader_SetProjectionMatrix(projection); Shader_SetWorldMatrix(world);
+    UINT stride=sizeof(Vertex), offset=0;
+    g_pContext->IASetVertexBuffers(0,1,&g_pVertexBuffer,&stride,&offset);
+    g_pContext->IASetIndexBuffer(g_pIndexBuffer,DXGI_FORMAT_R32_UINT,0);
+    g_pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    FrameCapture_RecordSpriteDraw();
+    g_pContext->DrawIndexed(6,0,0);
+    g_pContext->RSSetState(previousRasterizer);
+    if(previousRasterizer) previousRasterizer->Release();
 }

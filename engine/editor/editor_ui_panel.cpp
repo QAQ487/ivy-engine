@@ -1,6 +1,7 @@
 ﻿#include "editor_ui_panel.h"
 #include "engine/core/engine_gui.h"
 #include "engine/editor/editor_undo.h"
+#include "engine/editor/pivot_presets.h"
 
 #include "imgui/imgui.h"
 #include "../ui/scene_canvas.h"
@@ -110,9 +111,9 @@ bool DrawTextAlignCombo(TextAlign* align, const char* id) {
 
 bool DrawAnchorCombo(UIAnchor* anchor, const char* id) {
     static const char* anchorNames[] = {
-        "TOP_LEFT", "TOP_CENTER", "TOP_RIGHT",
-        "CENTER_LEFT", "CENTER", "CENTER_RIGHT",
-        "BOTTOM_LEFT", "BOTTOM_CENTER", "BOTTOM_RIGHT"
+        "Top Left", "Top Center", "Top Right",
+        "Middle Left", "Center", "Middle Right",
+        "Bottom Left", "Bottom Center", "Bottom Right"
     };
     int current = static_cast<int>(*anchor);
     if (ImGui::Combo(id, &current, anchorNames, IM_ARRAYSIZE(anchorNames))) {
@@ -146,7 +147,8 @@ UIText* CreateCanvasText() {
     text->SetFontPath("rom/font/LemonSlice.ttf", 32.0f, 32.0f, 16);
     text->SetFontSize(1.5f);
     text->SetCharacterSpacing(32.0f);
-    text->SetAlignment(TextAlign::CENTER);
+    text->SetAlignment(TextAlign::LEFT);
+    text->SetPivot({0,1});
     return text;
 }
 
@@ -208,6 +210,8 @@ void DrawCanvasElementProperties(UIElement*& selectedUiElement) {
     UIElement* element = selectedUiElement;
     if (!element) return;
 
+    ImGui::PushTextWrapPos(0);
+    ImGui::PushItemWidth(-1);
     ImGui::Text("%s: %s", GetUiElementTypeName(element), element->GetName().c_str());
     ImGui::Separator();
 
@@ -258,7 +262,9 @@ void DrawCanvasElementProperties(UIElement*& selectedUiElement) {
     }
 
     ImGui::SetNextItemWidth(-1);
-    if (ImGui::InputText("Name##UIName", s_uiNameBuf, sizeof(s_uiNameBuf),
+    ImGui::TextUnformatted("Name");
+    ImGui::SetNextItemWidth(-1);
+    if (ImGui::InputText("##Name##UIName", s_uiNameBuf, sizeof(s_uiNameBuf),
         ImGuiInputTextFlags_EnterReturnsTrue))
         element->SetName(s_uiNameBuf);
 
@@ -275,16 +281,17 @@ void DrawCanvasElementProperties(UIElement*& selectedUiElement) {
                 EngineGUI_MarkSceneDirty();
             }
         };
-        if (ImGui::Button("Back", ImVec2(70, 0)))
+        const float orderWidth=(std::max)(1.0f,(ImGui::GetContentRegionAvail().x-3*ImGui::GetStyle().ItemSpacing.x)/4);
+        if (ImGui::Button("Back", ImVec2(orderWidth, 0)))
             undoableMove(&UICanvas::MoveElementToBack);
         ImGui::SameLine();
-        if (ImGui::Button("Down", ImVec2(70, 0)))
+        if (ImGui::Button("Down", ImVec2(orderWidth, 0)))
             undoableMove(&UICanvas::MoveElementBackward);
         ImGui::SameLine();
-        if (ImGui::Button("Up", ImVec2(70, 0)))
+        if (ImGui::Button("Up", ImVec2(orderWidth, 0)))
             undoableMove(&UICanvas::MoveElementForward);
         ImGui::SameLine();
-        if (ImGui::Button("Top", ImVec2(70, 0)))
+        if (ImGui::Button("Top", ImVec2(orderWidth, 0)))
             undoableMove(&UICanvas::MoveElementToFront);
         ImGui::TextDisabled("Later elements draw on top.");
     }
@@ -295,11 +302,15 @@ void DrawCanvasElementProperties(UIElement*& selectedUiElement) {
     if (DrawAnchorCombo(&anchor, "##UIAnchor"))
         element->SetAnchor(anchor);
 
+    DirectX::XMFLOAT2 pivot = element->GetPivot();
+    if (DrawPivotPreset("Pivot", pivot, element))
+        element->SetPivot(pivot);
+
     DirectX::XMFLOAT2 pos = element->GetPosition();
     ImGui::Text("Position");
-    ImGui::Text("X:"); ImGui::SameLine(40);
+    ImGui::Text("X:"); ImGui::SetNextItemWidth(-1);
     if (ImGui::DragFloat("##UIPosX", &pos.x, 1.0f)) element->SetPosition(pos);
-    ImGui::Text("Y:"); ImGui::SameLine(40);
+    ImGui::Text("Y:"); ImGui::SetNextItemWidth(-1);
     if (ImGui::DragFloat("##UIPosY", &pos.y, 1.0f)) element->SetPosition(pos);
 
     if (auto* sprite = dynamic_cast<UISprite*>(element)) {
@@ -307,15 +318,18 @@ void DrawCanvasElementProperties(UIElement*& selectedUiElement) {
         ImGui::Text("Sprite");
         float width = sprite->GetWidth();
         float height = sprite->GetHeight();
-        ImGui::Text("Width:"); ImGui::SameLine(80);
+        ImGui::Text("Width:"); ImGui::SetNextItemWidth(-1);
         if (ImGui::DragFloat("##SpriteW", &width, 1.0f, 1.0f, 4096.0f)) sprite->SetSize(width, height);
-        ImGui::Text("Height:"); ImGui::SameLine(80);
+        ImGui::Text("Height:"); ImGui::SetNextItemWidth(-1);
         if (ImGui::DragFloat("##SpriteH", &height, 1.0f, 1.0f, 4096.0f)) sprite->SetSize(width, height);
+        if(sprite->HasExplicitPivot() && sprite->GetRotation()!=0) ImGui::TextDisabled("Rotated sprite: resize with Width / Height.");
         float rotation = sprite->GetRotation();
-        ImGui::Text("Rotation:"); ImGui::SameLine(80);
+        ImGui::Text("Rotation:"); ImGui::SetNextItemWidth(-1);
         if (ImGui::DragFloat("##SpriteRot", &rotation, 1.0f)) sprite->SetRotation(rotation);
         DirectX::XMFLOAT4 color = sprite->GetColor();
-        if (ImGui::ColorEdit4("Color##Sprite", &color.x)) sprite->SetColor(color);
+        ImGui::TextUnformatted("Color");
+        ImGui::SetNextItemWidth(-1);
+        if (ImGui::ColorEdit4("##Color##Sprite", &color.x)) sprite->SetColor(color);
         ImGui::Text("Texture Path");
         ImGui::SetNextItemWidth(-1);
         if (DrawTexturePathInput("##SpriteTex", s_textureBuf, sizeof(s_textureBuf)))
@@ -325,21 +339,26 @@ void DrawCanvasElementProperties(UIElement*& selectedUiElement) {
         ImGui::Separator();
         ImGui::Text("Text");
         ImGui::SetNextItemWidth(-1);
-        if (ImGui::InputText("Text##UITextValue", s_textBuf, sizeof(s_textBuf)))
+        ImGui::TextUnformatted("Text");
+        ImGui::SetNextItemWidth(-1);
+        if (ImGui::InputText("##Text##UITextValue", s_textBuf, sizeof(s_textBuf)))
             text->SetText(s_textBuf);
 
         TextAlign alignment = text->GetAlignment();
         ImGui::Text("Alignment");
         ImGui::SetNextItemWidth(-1);
+        ImGui::BeginDisabled(text->HasExplicitPivot());
         if (DrawTextAlignCombo(&alignment, "##UITextAlign"))
             text->SetAlignment(alignment);
+        ImGui::EndDisabled();
+        if(text->HasExplicitPivot()) ImGui::TextDisabled("Pivot positions the text block.");
 
         float fontSize = text->GetFontSize();
-        ImGui::Text("Font Size:"); ImGui::SameLine(90);
+        ImGui::Text("Font Size:"); ImGui::SetNextItemWidth(-1);
         if (ImGui::DragFloat("##UIFontSize", &fontSize, 0.1f, 0.1f, 10.0f)) text->SetFontSize(fontSize);
 
         float charSpacing = text->GetCharacterSpacing();
-        ImGui::Text("Char Spacing:"); ImGui::SameLine(90);
+        ImGui::Text("Char Spacing:"); ImGui::SetNextItemWidth(-1);
         if (ImGui::DragFloat("##UITextSpacing", &charSpacing, 0.5f, 0.0f, 128.0f))
             text->SetCharacterSpacing(charSpacing);
         ImGui::TextDisabled("Advance per character; use >= char width to avoid overlap.");
@@ -347,11 +366,11 @@ void DrawCanvasElementProperties(UIElement*& selectedUiElement) {
         float charWidth = text->GetFontCharWidth();
         float charHeight = text->GetFontCharHeight();
         int charsPerRow = text->GetFontCharsPerRow();
-        ImGui::Text("Char W:"); ImGui::SameLine(90);
+        ImGui::Text("Char W:"); ImGui::SetNextItemWidth(-1);
         bool fontChanged = ImGui::DragFloat("##UITextCharW", &charWidth, 1.0f, 1.0f, 256.0f);
-        ImGui::Text("Char H:"); ImGui::SameLine(90);
+        ImGui::Text("Char H:"); ImGui::SetNextItemWidth(-1);
         fontChanged |= ImGui::DragFloat("##UITextCharH", &charHeight, 1.0f, 1.0f, 256.0f);
-        ImGui::Text("Per Row:"); ImGui::SameLine(90);
+        ImGui::Text("Per Row:"); ImGui::SetNextItemWidth(-1);
         fontChanged |= ImGui::InputInt("##UITextCharsRow", &charsPerRow);
         ImGui::Text("Font Path");
         ImGui::SetNextItemWidth(-1);
@@ -361,36 +380,50 @@ void DrawCanvasElementProperties(UIElement*& selectedUiElement) {
         if (fontChanged && s_fontPathBuf[0] != '\0')
             text->SetFontPath(s_fontPathBuf, charWidth, charHeight, charsPerRow);
         DirectX::XMFLOAT4 color = text->GetColor();
-        if (ImGui::ColorEdit4("Color##Text", &color.x)) text->SetColor(color);
+        ImGui::TextUnformatted("Color");
+        ImGui::SetNextItemWidth(-1);
+        if (ImGui::ColorEdit4("##Color##Text", &color.x)) text->SetColor(color);
     }
     else if (auto* button = dynamic_cast<UIButton*>(element)) {
         ImGui::Separator();
         ImGui::Text("Button");
         float width = button->GetWidth();
         float height = button->GetHeight();
-        ImGui::Text("Width:"); ImGui::SameLine(80);
+        ImGui::Text("Width:"); ImGui::SetNextItemWidth(-1);
         if (ImGui::DragFloat("##ButtonW", &width, 1.0f, 1.0f, 4096.0f)) button->SetSize(width, height);
-        ImGui::Text("Height:"); ImGui::SameLine(80);
+        ImGui::Text("Height:"); ImGui::SetNextItemWidth(-1);
         if (ImGui::DragFloat("##ButtonH", &height, 1.0f, 1.0f, 4096.0f)) button->SetSize(width, height);
 
         ImGui::SetNextItemWidth(-1);
-        if (ImGui::InputText("Text##ButtonText", s_buttonTextBuf, sizeof(s_buttonTextBuf)))
+        ImGui::TextUnformatted("Text");
+        ImGui::SetNextItemWidth(-1);
+        if (ImGui::InputText("##Text##ButtonText", s_buttonTextBuf, sizeof(s_buttonTextBuf)))
             button->SetText(s_buttonTextBuf);
 
         float textScale = button->GetTextScale();
-        ImGui::Text("Text Scale:"); ImGui::SameLine(90);
+        ImGui::Text("Text Scale:"); ImGui::SetNextItemWidth(-1);
         if (ImGui::DragFloat("##ButtonTextScale", &textScale, 0.1f, 0.1f, 10.0f)) button->SetTextScale(textScale);
 
         DirectX::XMFLOAT4 bgColor = button->GetColor();
-        if (ImGui::ColorEdit4("BG Color", &bgColor.x)) button->SetColor(bgColor);
+        ImGui::TextUnformatted("BG Color");
+        ImGui::SetNextItemWidth(-1);
+        if (ImGui::ColorEdit4("##BG Color", &bgColor.x)) button->SetColor(bgColor);
         DirectX::XMFLOAT4 hoverColor = button->GetHoverColor();
-        if (ImGui::ColorEdit4("Hover BG", &hoverColor.x)) button->SetHoverColor(hoverColor);
+        ImGui::TextUnformatted("Hover BG");
+        ImGui::SetNextItemWidth(-1);
+        if (ImGui::ColorEdit4("##Hover BG", &hoverColor.x)) button->SetHoverColor(hoverColor);
         DirectX::XMFLOAT4 pressedColor = button->GetPressedColor();
-        if (ImGui::ColorEdit4("Pressed BG", &pressedColor.x)) button->SetPressedColor(pressedColor);
+        ImGui::TextUnformatted("Pressed BG");
+        ImGui::SetNextItemWidth(-1);
+        if (ImGui::ColorEdit4("##Pressed BG", &pressedColor.x)) button->SetPressedColor(pressedColor);
         DirectX::XMFLOAT4 textColor = button->GetTextColor();
-        if (ImGui::ColorEdit4("Text Color", &textColor.x)) button->SetTextColor(textColor);
+        ImGui::TextUnformatted("Text Color");
+        ImGui::SetNextItemWidth(-1);
+        if (ImGui::ColorEdit4("##Text Color", &textColor.x)) button->SetTextColor(textColor);
         DirectX::XMFLOAT4 textHoverColor = button->GetTextHoverColor();
-        if (ImGui::ColorEdit4("Hover Text", &textHoverColor.x)) button->SetTextHoverColor(textHoverColor);
+        ImGui::TextUnformatted("Hover Text");
+        ImGui::SetNextItemWidth(-1);
+        if (ImGui::ColorEdit4("##Hover Text", &textHoverColor.x)) button->SetTextHoverColor(textHoverColor);
 
         ImGui::Text("Texture Path");
         ImGui::SetNextItemWidth(-1);
@@ -409,11 +442,11 @@ void DrawCanvasElementProperties(UIElement*& selectedUiElement) {
         float charHeight = UIButton::GetFontCharHeight();
         int charsPerRow = UIButton::GetFontCharsPerRow();
         bool fontChanged = false;
-        ImGui::Text("Char W:"); ImGui::SameLine(90);
+        ImGui::Text("Char W:"); ImGui::SetNextItemWidth(-1);
         fontChanged |= ImGui::DragFloat("##UIButtonCharW", &charWidth, 1.0f, 1.0f, 256.0f);
-        ImGui::Text("Char H:"); ImGui::SameLine(90);
+        ImGui::Text("Char H:"); ImGui::SetNextItemWidth(-1);
         fontChanged |= ImGui::DragFloat("##UIButtonCharH", &charHeight, 1.0f, 1.0f, 256.0f);
-        ImGui::Text("Per Row:"); ImGui::SameLine(90);
+        ImGui::Text("Per Row:"); ImGui::SetNextItemWidth(-1);
         fontChanged |= ImGui::InputInt("##UIButtonCharsRow", &charsPerRow);
         ImGui::Text("Font Path");
         ImGui::SetNextItemWidth(-1);
@@ -427,7 +460,9 @@ void DrawCanvasElementProperties(UIElement*& selectedUiElement) {
         const char* scriptOptions[] = { "", "LoadScene", "ExitGame" };
         const char* currentScript = (button->GetAction().empty()) ? "(none)" : button->GetAction().c_str();
         ImGui::SetNextItemWidth(-1);
-        if (ImGui::BeginCombo("OnClick Script", currentScript)) {
+        ImGui::TextUnformatted("OnClick Script");
+        ImGui::SetNextItemWidth(-1);
+        if (ImGui::BeginCombo("##OnClick Script", currentScript)) {
             for (const char* script : scriptOptions) {
                 const bool selected = button->GetAction() == script;
                 const char* label = (script[0] == '\0') ? "(none)" : script;
@@ -446,13 +481,17 @@ void DrawCanvasElementProperties(UIElement*& selectedUiElement) {
             SceneCanvas_BindButtonAction(button);
         }
         ImGui::SetNextItemWidth(-1);
-        if (ImGui::InputText("Custom Script##ButtonScript", s_buttonScriptBuf, sizeof(s_buttonScriptBuf),
+        ImGui::TextUnformatted("Custom Script");
+        ImGui::SetNextItemWidth(-1);
+        if (ImGui::InputText("##Custom Script##ButtonScript", s_buttonScriptBuf, sizeof(s_buttonScriptBuf),
             ImGuiInputTextFlags_EnterReturnsTrue)) {
             button->SetAction(s_buttonScriptBuf, s_buttonSceneBuf, playOnLoad);
             SceneCanvas_BindButtonAction(button);
         }
         ImGui::SetNextItemWidth(-1);
-        if (ImGui::InputText("Scene##ButtonScene", s_buttonSceneBuf, sizeof(s_buttonSceneBuf),
+        ImGui::TextUnformatted("Scene");
+        ImGui::SetNextItemWidth(-1);
+        if (ImGui::InputText("##Scene##ButtonScene", s_buttonSceneBuf, sizeof(s_buttonSceneBuf),
             ImGuiInputTextFlags_EnterReturnsTrue)) {
             button->SetAction(s_buttonScriptBuf, s_buttonSceneBuf, playOnLoad);
             SceneCanvas_BindButtonAction(button);
@@ -462,19 +501,21 @@ void DrawCanvasElementProperties(UIElement*& selectedUiElement) {
         ImGui::Separator();
         ImGui::Text("Bar");
         ImGui::SetNextItemWidth(-1);
-        if (ImGui::InputText("Label##BarLabel", s_barLabelBuf, sizeof(s_barLabelBuf)))
+        ImGui::TextUnformatted("Label");
+        ImGui::SetNextItemWidth(-1);
+        if (ImGui::InputText("##Label##BarLabel", s_barLabelBuf, sizeof(s_barLabelBuf)))
             bar->SetLabel(s_barLabelBuf);
         float currentValue = bar->GetCurrentValue();
         float maxValue = bar->GetMaxValue();
-        ImGui::Text("Current:"); ImGui::SameLine(90);
+        ImGui::Text("Current:"); ImGui::SetNextItemWidth(-1);
         if (ImGui::DragFloat("##BarCurrent", &currentValue, 1.0f)) bar->SetCurrentValue(currentValue);
-        ImGui::Text("Max:"); ImGui::SameLine(90);
+        ImGui::Text("Max:"); ImGui::SetNextItemWidth(-1);
         if (ImGui::DragFloat("##BarMax", &maxValue, 1.0f, 0.001f, 100000.0f)) bar->SetMaxValue(maxValue);
         int barWidth = bar->GetBarWidth();
         int barHeight = bar->GetBarHeight();
-        ImGui::Text("Width:"); ImGui::SameLine(90);
+        ImGui::Text("Width:"); ImGui::SetNextItemWidth(-1);
         bool sizeChanged = ImGui::InputInt("##BarWidth", &barWidth);
-        ImGui::Text("Height:"); ImGui::SameLine(90);
+        ImGui::Text("Height:"); ImGui::SetNextItemWidth(-1);
         sizeChanged |= ImGui::InputInt("##BarHeight", &barHeight);
         if (sizeChanged)
             bar->SetBarSize((std::max)(1, barWidth), (std::max)(1, barHeight));
@@ -483,14 +524,20 @@ void DrawCanvasElementProperties(UIElement*& selectedUiElement) {
         bool showValue = bar->GetShowValue();
         if (ImGui::Checkbox("Show Value", &showValue)) bar->SetShowValue(showValue);
         float spacing = bar->GetCharacterSpacing();
-        ImGui::Text("Spacing:"); ImGui::SameLine(90);
+        ImGui::Text("Spacing:"); ImGui::SetNextItemWidth(-1);
         if (ImGui::DragFloat("##BarSpacing", &spacing, 0.5f, 0.0f, 100.0f)) bar->SetCharacterSpacing(spacing);
         DirectX::XMFLOAT4 bg = bar->GetBackgroundColor();
-        if (ImGui::ColorEdit4("BG Color##Bar", &bg.x)) bar->SetBackgroundColor(bg);
+        ImGui::TextUnformatted("BG Color");
+        ImGui::SetNextItemWidth(-1);
+        if (ImGui::ColorEdit4("##BG Color##Bar", &bg.x)) bar->SetBackgroundColor(bg);
         DirectX::XMFLOAT4 fill = bar->GetBarColor();
-        if (ImGui::ColorEdit4("Fill Color##Bar", &fill.x)) bar->SetBarColor(fill);
+        ImGui::TextUnformatted("Fill Color");
+        ImGui::SetNextItemWidth(-1);
+        if (ImGui::ColorEdit4("##Fill Color##Bar", &fill.x)) bar->SetBarColor(fill);
         DirectX::XMFLOAT4 textColor = bar->GetTextColor();
-        if (ImGui::ColorEdit4("Text Color##Bar", &textColor.x)) bar->SetTextColor(textColor);
+        ImGui::TextUnformatted("Text Color");
+        ImGui::SetNextItemWidth(-1);
+        if (ImGui::ColorEdit4("##Text Color##Bar", &textColor.x)) bar->SetTextColor(textColor);
     }
 
     ImGui::Separator();
@@ -498,7 +545,9 @@ void DrawCanvasElementProperties(UIElement*& selectedUiElement) {
     const std::vector<std::string> uiScripts = UICanvasScriptFactory::Instance().GetRegisteredNames();
     const char* currentUiScript = s_uiScriptClassBuf[0] ? s_uiScriptClassBuf : "(none)";
     ImGui::SetNextItemWidth(-1);
-    if (ImGui::BeginCombo("Script Class##UiScript", currentUiScript)) {
+    ImGui::TextUnformatted("Script Class");
+    ImGui::SetNextItemWidth(-1);
+    if (ImGui::BeginCombo("##Script Class##UiScript", currentUiScript)) {
         if (ImGui::Selectable("(none)", s_uiScriptClassBuf[0] == '\0')) {
             s_uiScriptClassBuf[0] = '\0';
             element->SetScriptClass("");
@@ -515,7 +564,9 @@ void DrawCanvasElementProperties(UIElement*& selectedUiElement) {
         ImGui::EndCombo();
     }
     ImGui::SetNextItemWidth(-1);
-    if (ImGui::InputText("Custom##UiScriptCustom", s_uiScriptClassBuf, sizeof(s_uiScriptClassBuf),
+    ImGui::TextUnformatted("Custom");
+    ImGui::SetNextItemWidth(-1);
+    if (ImGui::InputText("##Custom##UiScriptCustom", s_uiScriptClassBuf, sizeof(s_uiScriptClassBuf),
         ImGuiInputTextFlags_EnterReturnsTrue)) {
         element->SetScriptClass(s_uiScriptClassBuf);
     }
@@ -530,6 +581,8 @@ void DrawCanvasElementProperties(UIElement*& selectedUiElement) {
         s_uiEditElement = nullptr;
         EngineGUI_MarkSceneDirty();
     }
+    ImGui::PopItemWidth();
+    ImGui::PopTextWrapPos();
 }
 
 } // namespace EngineGUIUI

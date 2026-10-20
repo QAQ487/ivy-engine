@@ -1,5 +1,5 @@
 ﻿#include "scene_runtime.h"
-#include "engine/ecs/collider_component.h"
+#include "engine/ecs/collider_component_access.h"
 #include "scene_manager.h"
 
 #include <algorithm>
@@ -14,7 +14,7 @@ void SceneRuntime::Clear(SceneBase* scene, bool destroyColliders) {
     for (GameObject* obj : m_registered) {
         if (!obj) continue;
         if (destroyColliders) {
-            if (auto* cc = obj->GetComponent<ColliderComponent>())
+            if (auto* cc = FindColliderComponent(obj))
                 cc->ClearFromOwner();
         }
         scene->RemoveObject(obj);
@@ -27,7 +27,7 @@ void SceneRuntime::ApplyCollidersTree(GameObject* node) {
 
     node->SyncLegacyTransformFromComponents();
 
-    if (auto* cc = node->GetComponent<ColliderComponent>())
+    if (auto* cc = FindColliderComponent(node))
         cc->ApplyToOwner();
 
     for (const auto& child : node->GetChildren())
@@ -46,7 +46,7 @@ void SceneRuntime::RegisterTree(GameObject* node, SceneBase* scene) {
 
     node->SyncLegacyTransformFromComponents();
 
-    if (auto* cc = node->GetComponent<ColliderComponent>()) {
+    if (auto* cc = FindColliderComponent(node)) {
         cc->ApplyToOwner();
         if (node->GetCollider()) {
             scene->AddObject(node);
@@ -76,7 +76,7 @@ void SceneRuntime::UnregisterTree(GameObject* node, SceneBase* scene, bool destr
     auto it = std::find(m_registered.begin(), m_registered.end(), node);
     if (it != m_registered.end()) {
         if (destroyColliders) {
-            if (auto* cc = node->GetComponent<ColliderComponent>())
+            if (auto* cc = FindColliderComponent(node))
                 cc->ClearFromOwner();
         }
         scene->RemoveObject(node);

@@ -31,6 +31,8 @@ public:
 	XMFLOAT3 at;
 	XMFLOAT3 up;
 	float fov;
+    bool orthographic = false;
+    float orthographicHeight = 10.0f;
 	float nearClip;
 	float farClip;
 };

@@ -45,9 +45,14 @@ XMMATRIX Camera::GetViewMatrix() const {
 }
 
 XMMATRIX Camera::GetProjMatrix(float screenWidth, float screenHeight) const {
-	return XMMatrixPerspectiveFovLH(
+	const float aspect = screenWidth > 0.0f && screenHeight > 0.0f ? screenWidth / screenHeight : 1.0f;
+    if (orthographic) {
+        const float height = orthographicHeight > 0.001f ? orthographicHeight : 0.001f;
+        return XMMatrixOrthographicLH(height * aspect, height, nearClip, farClip);
+    }
+    return XMMatrixPerspectiveFovLH(
 		XMConvertToRadians(fov),
-		screenWidth / screenHeight,
+		aspect,
 		nearClip, farClip
 	);
 }

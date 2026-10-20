@@ -39,11 +39,40 @@ public:
     bool isTrigger = false;
     std::string physicsMaterial;
 
-    const char* GetTypeName() const override { return "Collider"; }
+    const char* GetTypeName() const override {
+        switch(colliderType) {
+        case ColliderType::BOX:return "BoxCollider";
+        case ColliderType::SPHERE:return "SphereCollider";
+        case ColliderType::CAPSULE:return "CapsuleCollider";
+        case ColliderType::CYLINDER:return "CylinderCollider";
+        case ColliderType::MESH:return "MeshCollider";
+        default:return "Collider";
+        }
+    }
 
     void ApplyToOwner();
     void ClearFromOwner();
 
     std::string Serialize() const override;
+    std::string SerializeShape(ColliderType shape) const;
     void Deserialize(const std::string& jsonStr) override;
 };
+
+
+// Shape-specific authored components share the existing 3D solver adapter.
+#define IVY_SHAPE_COLLIDER_COMPONENT(Name, Shape) \
+class Name##ColliderComponent final : public ColliderComponent { \
+public: \
+    Name##ColliderComponent() {colliderType=ColliderType::Shape;} \
+    const char* GetTypeName() const override {return #Name "Collider";} \
+    std::string Serialize() const override {return SerializeShape(ColliderType::Shape);} \
+    void Deserialize(const std::string& data) override { \
+        ColliderComponent::Deserialize(data);colliderType=ColliderType::Shape; \
+    } \
+};
+IVY_SHAPE_COLLIDER_COMPONENT(Box, BOX)
+IVY_SHAPE_COLLIDER_COMPONENT(Sphere, SPHERE)
+IVY_SHAPE_COLLIDER_COMPONENT(Capsule, CAPSULE)
+IVY_SHAPE_COLLIDER_COMPONENT(Cylinder, CYLINDER)
+IVY_SHAPE_COLLIDER_COMPONENT(Mesh, MESH)
+#undef IVY_SHAPE_COLLIDER_COMPONENT

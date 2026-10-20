@@ -30,7 +30,8 @@ bool EngineGUI_IsOnStart();
 // True while playing, or during a play→play scene switch before StartPlay resumes.
 // Use for draw presentation only (not simulation).
 bool EngineGUI_PreferPlayVisuals();
-void EngineGUI_StartPlay(PlayMode mode = PlayMode::Viewport);
+// None resumes the held mode during scene loads; otherwise starts viewport play.
+void EngineGUI_StartPlay(PlayMode mode = PlayMode::None);
 void EngineGUI_StopPlay();
 void EngineGUI_SetEnabled(bool enabled);
 bool EngineGUI_IsEnabled();
