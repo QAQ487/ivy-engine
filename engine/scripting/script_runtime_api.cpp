@@ -39,7 +39,7 @@
 #include <string>
 
 namespace {
-constexpr std::uint32_t kScriptRuntimeApiVersion = 44;
+constexpr std::uint32_t kScriptRuntimeApiVersion = 45;
 
 template <typename T>
 T* FindComponentByTypeName(GameObject& object, const char* typeName) {
@@ -241,6 +241,18 @@ float Host_GetRenderViewportWidth() {
 
 float Host_GetRenderViewportHeight() {
     return GetRenderViewportHeight();
+}
+
+void Host_GetGameViewportRect(float* x, float* y, float* width, float* height) {
+    float viewportX = 0.0f;
+    float viewportY = 0.0f;
+    float viewportWidth = 0.0f;
+    float viewportHeight = 0.0f;
+    EngineGUI_GetGameViewportRect(viewportX, viewportY, viewportWidth, viewportHeight);
+    if (x) *x = viewportX;
+    if (y) *y = viewportY;
+    if (width) *width = viewportWidth;
+    if (height) *height = viewportHeight;
 }
 
 ID3D11Device* Host_GetD3DDevice() {
@@ -738,6 +750,7 @@ const ScriptRuntimeApi g_scriptRuntimeApi = {
     &Host_Physics2DGetVelocity,
     &Host_Physics2DMovePosition,
     &Host_Physics2DRaycast,
+    &Host_GetGameViewportRect,
 
 };
 #else
@@ -748,7 +761,9 @@ const ScriptRuntimeApi* ResolveScriptRuntimeApi() {
     if (!module)
         return nullptr;
 
-    auto getApi = reinterpret_cast<GetApiFn>(GetProcAddress(module, "ScriptRuntimeApi_GetV44"));
+    auto getApi = reinterpret_cast<GetApiFn>(GetProcAddress(module, "ScriptRuntimeApi_GetV45"));
+    if (!getApi)
+        getApi = reinterpret_cast<GetApiFn>(GetProcAddress(module, "ScriptRuntimeApi_GetV44"));
     if (!getApi)
         getApi = reinterpret_cast<GetApiFn>(GetProcAddress(module, "ScriptRuntimeApi_GetV43"));
     if (!getApi)
@@ -787,6 +802,16 @@ const ScriptRuntimeApi* ScriptRuntimeApi_GetV43() {
 
 extern "C" __declspec(dllexport)
 const ScriptRuntimeApi* ScriptRuntimeApi_GetV44() {
+    static const ScriptRuntimeApi api = [] {
+        ScriptRuntimeApi copy = g_scriptRuntimeApi;
+        copy.version = 44;
+        return copy;
+    }();
+    return &api;
+}
+
+extern "C" __declspec(dllexport)
+const ScriptRuntimeApi* ScriptRuntimeApi_GetV45() {
     return &g_scriptRuntimeApi;
 }
 
@@ -1624,4 +1649,11 @@ bool ScriptApi_Physics2DMovePosition(GameObject* object, DirectX::XMFLOAT2 posit
 bool ScriptApi_Physics2DRaycast(DirectX::XMFLOAT2 origin, DirectX::XMFLOAT2 direction, float distance, GameObject** outObject, DirectX::XMFLOAT2* outPoint, DirectX::XMFLOAT2* outNormal, float* outDistance, std::uint32_t mask, bool includeTriggers) {
     const auto* api = ScriptRuntimeApi_GetHost();
     return api && api->version >= 44 && api->physics2DRaycast && api->physics2DRaycast(origin, direction, distance, outObject, outPoint, outNormal, outDistance, mask, includeTriggers);
+}
+
+void ScriptApi_GetGameViewportRect(float& x, float& y, float& width, float& height) {
+    x = y = width = height = 0.0f;
+    const auto* api = ScriptRuntimeApi_GetHost();
+    if (api && api->version >= 45 && api->getGameViewportRect)
+        api->getGameViewportRect(&x, &y, &width, &height);
 }

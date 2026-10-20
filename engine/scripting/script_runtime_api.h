@@ -225,6 +225,7 @@ struct ScriptRuntimeApi {
     bool (*physics2DGetVelocity)(GameObject*, DirectX::XMFLOAT2*);
     bool (*physics2DMovePosition)(GameObject*, DirectX::XMFLOAT2);
     bool (*physics2DRaycast)(DirectX::XMFLOAT2, DirectX::XMFLOAT2, float, GameObject**, DirectX::XMFLOAT2*, DirectX::XMFLOAT2*, float*, std::uint32_t, bool);
+    void (*getGameViewportRect)(float*, float*, float*, float*);
 
 };
 
@@ -392,3 +393,4 @@ bool ScriptApi_Physics2DGetVelocity(GameObject* object, DirectX::XMFLOAT2* veloc
 bool ScriptApi_Physics2DMovePosition(GameObject* object, DirectX::XMFLOAT2 position);
 
 bool ScriptApi_Physics2DRaycast(DirectX::XMFLOAT2 origin, DirectX::XMFLOAT2 direction, float distance, GameObject** outObject, DirectX::XMFLOAT2* outPoint, DirectX::XMFLOAT2* outNormal, float* outDistance, std::uint32_t mask = 0xffffffffu, bool includeTriggers = false);
+void ScriptApi_GetGameViewportRect(float& x, float& y, float& width, float& height);
