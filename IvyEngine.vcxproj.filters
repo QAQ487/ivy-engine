@@ -79,6 +79,9 @@
     <Filter Include="libraries\box2d">
       <UniqueIdentifier>{d46945ac-14f1-4f77-a3fc-872f7c857ed8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="libraries\box2d\src">
+      <UniqueIdentifier>{a8c6bf15-7f7a-4b84-9bb3-c022bc748da1}</UniqueIdentifier>
+    </Filter>
     <Filter Include="libraries\imgui">
       <UniqueIdentifier>{29377383-b7f5-4e4a-b5e6-aab99389c2ce}</UniqueIdentifier>
     </Filter>
@@ -943,8 +946,110 @@
     <ClCompile Include="engine\physics\2d\physics2d_world.cpp">
       <Filter>engine\physics\2d</Filter>
     </ClCompile>
-    <ClCompile Include="libraries\box2d\src\*.c">
-      <Filter>libraries\box2d</Filter>
+    <ClCompile Include="libraries\box2d\src\aabb.c">
+      <Filter>libraries\box2d\src</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\box2d\src\arena_allocator.c">
+      <Filter>libraries\box2d\src</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\box2d\src\array.c">
+      <Filter>libraries\box2d\src</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\box2d\src\bitset.c">
+      <Filter>libraries\box2d\src</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\box2d\src\body.c">
+      <Filter>libraries\box2d\src</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\box2d\src\broad_phase.c">
+      <Filter>libraries\box2d\src</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\box2d\src\constraint_graph.c">
+      <Filter>libraries\box2d\src</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\box2d\src\contact_solver.c">
+      <Filter>libraries\box2d\src</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\box2d\src\contact.c">
+      <Filter>libraries\box2d\src</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\box2d\src\core.c">
+      <Filter>libraries\box2d\src</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\box2d\src\distance_joint.c">
+      <Filter>libraries\box2d\src</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\box2d\src\distance.c">
+      <Filter>libraries\box2d\src</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\box2d\src\dynamic_tree.c">
+      <Filter>libraries\box2d\src</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\box2d\src\geometry.c">
+      <Filter>libraries\box2d\src</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\box2d\src\hull.c">
+      <Filter>libraries\box2d\src</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\box2d\src\id_pool.c">
+      <Filter>libraries\box2d\src</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\box2d\src\island.c">
+      <Filter>libraries\box2d\src</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\box2d\src\joint.c">
+      <Filter>libraries\box2d\src</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\box2d\src\manifold.c">
+      <Filter>libraries\box2d\src</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\box2d\src\math_functions.c">
+      <Filter>libraries\box2d\src</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\box2d\src\motor_joint.c">
+      <Filter>libraries\box2d\src</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\box2d\src\mouse_joint.c">
+      <Filter>libraries\box2d\src</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\box2d\src\mover.c">
+      <Filter>libraries\box2d\src</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\box2d\src\prismatic_joint.c">
+      <Filter>libraries\box2d\src</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\box2d\src\revolute_joint.c">
+      <Filter>libraries\box2d\src</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\box2d\src\sensor.c">
+      <Filter>libraries\box2d\src</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\box2d\src\shape.c">
+      <Filter>libraries\box2d\src</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\box2d\src\solver_set.c">
+      <Filter>libraries\box2d\src</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\box2d\src\solver.c">
+      <Filter>libraries\box2d\src</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\box2d\src\table.c">
+      <Filter>libraries\box2d\src</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\box2d\src\timer.c">
+      <Filter>libraries\box2d\src</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\box2d\src\types.c">
+      <Filter>libraries\box2d\src</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\box2d\src\weld_joint.c">
+      <Filter>libraries\box2d\src</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\box2d\src\wheel_joint.c">
+      <Filter>libraries\box2d\src</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\box2d\src\world.c">
+      <Filter>libraries\box2d\src</Filter>
     </ClCompile>
     <ClCompile Include="engine\core\frame_capture.cpp">
       <Filter>engine\core</Filter>
