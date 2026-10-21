@@ -31,6 +31,9 @@
     <Filter Include="engine\physics\core">
       <UniqueIdentifier>{f061b99d-1926-466c-bd9b-b2fed83a9a34}</UniqueIdentifier>
     </Filter>
+    <Filter Include="engine\physics\2d">
+      <UniqueIdentifier>{61d2cba1-aebd-4f43-9dd2-b327e8f3b41a}</UniqueIdentifier>
+    </Filter>
     <Filter Include="engine\rendering">
       <UniqueIdentifier>{59b804d6-c544-4af6-ab6a-d055a3f5965d}</UniqueIdentifier>
     </Filter>
@@ -71,6 +74,10 @@
       <UniqueIdentifier>{3b7a7f6f-4080-476d-a0ef-a24225fe6215}</UniqueIdentifier>
     </Filter>
     <Filter Include="libraries\imguizmo">
+      <UniqueIdentifier>{7b0e7b70-73e1-4c61-a09c-01eae88a84f1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="libraries\box2d">
+      <UniqueIdentifier>{d46945ac-14f1-4f77-a3fc-872f7c857ed8}</UniqueIdentifier>
     </Filter>
     <Filter Include="libraries\imgui">
       <UniqueIdentifier>{29377383-b7f5-4e4a-b5e6-aab99389c2ce}</UniqueIdentifier>
@@ -904,5 +911,43 @@
     <None Include="shaders\PixelShader3D_Outline.hlsl">
       <Filter>shaders</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="engine\ecs\sprite_renderer_component.h">
+      <Filter>engine\ecs</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\ecs\sprite_animation.h">
+      <Filter>engine\ecs</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\ecs\sprite_animator_component.h">
+      <Filter>engine\ecs</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\scene\scene_execution_policy.h">
+      <Filter>engine\scene</Filter>
+    </ClInclude>
+    <ClCompile Include="engine\ecs\sprite_renderer_component.cpp">
+      <Filter>engine\ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\ecs\sprite_animator_component.cpp">
+      <Filter>engine\ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\ecs\physics2d_components.cpp">
+      <Filter>engine\ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\ecs\collider_component_serialization.cpp">
+      <Filter>engine\ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\physics\2d\physics2d.cpp">
+      <Filter>engine\physics\2d</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\physics\2d\physics2d_world.cpp">
+      <Filter>engine\physics\2d</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\box2d\src\*.c">
+      <Filter>libraries\box2d</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\core\frame_capture.cpp">
+      <Filter>engine\core</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
