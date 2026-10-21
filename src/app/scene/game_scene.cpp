@@ -548,6 +548,10 @@ void GameScene::Draw() {
 
 
 	if (!preloadActive) DrawSceneSprites();
+	// 2D scenes skip Object_Draw(), where the deferred debug queues are flushed.
+	// Flush queued script debug lines after sprites so they remain visible above the scene.
+	if (!preloadActive && SceneLoader_Is2D())
+		DebugDrawer::FlushLineQueue();
 
 	// Effekseer into PostRT (same game viewport as the 3D scene).
 	SetRenderViewport(vx, vy, vw, vh);

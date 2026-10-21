@@ -227,6 +227,11 @@ struct ScriptRuntimeApi {
     bool (*physics2DRaycast)(DirectX::XMFLOAT2, DirectX::XMFLOAT2, float, GameObject**, DirectX::XMFLOAT2*, DirectX::XMFLOAT2*, float*, std::uint32_t, bool);
     void (*getGameViewportRect)(float*, float*, float*, float*);
 
+    // v46 — deferred debug geometry, queued during Update and flushed after scene drawing.
+    void (*debugDrawLine)(DirectX::XMFLOAT3 start,
+                          DirectX::XMFLOAT3 end,
+                          DirectX::XMFLOAT4 color);
+
 };
 
 const ScriptRuntimeApi* ScriptRuntimeApi_GetHost();
@@ -362,6 +367,9 @@ void ScriptApi_DebugDrawSphereWire(DirectX::XMFLOAT3 position,
                                    float radius,
                                    DirectX::XMFLOAT3 rotation = {0.0f, 0.0f, 0.0f},
                                    DirectX::XMFLOAT4 color = {0.2f, 0.8f, 1.0f, 0.95f});
+void ScriptApi_DebugDrawLine(DirectX::XMFLOAT3 start,
+                             DirectX::XMFLOAT3 end,
+                             DirectX::XMFLOAT4 color = {0.2f, 0.8f, 1.0f, 0.95f});
 
 UICanvas* ScriptApi_SceneCanvasGetCanvas();
 void ScriptApi_SceneCanvasSetTimerSeconds(float seconds);

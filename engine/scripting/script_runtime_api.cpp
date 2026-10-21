@@ -39,7 +39,7 @@
 #include <string>
 
 namespace {
-constexpr std::uint32_t kScriptRuntimeApiVersion = 45;
+constexpr std::uint32_t kScriptRuntimeApiVersion = 46;
 
 template <typename T>
 T* FindComponentByTypeName(GameObject& object, const char* typeName) {
@@ -233,6 +233,12 @@ void Host_DebugDrawSphereWire(DirectX::XMFLOAT3 position,
                               DirectX::XMFLOAT3 rotation,
                               DirectX::XMFLOAT4 color) {
     DebugDrawer::QueueSphere(position, center, radius, rotation, color);
+}
+
+void Host_DebugDrawLine(DirectX::XMFLOAT3 start,
+                        DirectX::XMFLOAT3 end,
+                        DirectX::XMFLOAT4 color) {
+    DebugDrawer::QueueLine(start, end, color);
 }
 
 float Host_GetRenderViewportWidth() {
@@ -751,6 +757,7 @@ const ScriptRuntimeApi g_scriptRuntimeApi = {
     &Host_Physics2DMovePosition,
     &Host_Physics2DRaycast,
     &Host_GetGameViewportRect,
+    &Host_DebugDrawLine,
 
 };
 #else
@@ -761,7 +768,9 @@ const ScriptRuntimeApi* ResolveScriptRuntimeApi() {
     if (!module)
         return nullptr;
 
-    auto getApi = reinterpret_cast<GetApiFn>(GetProcAddress(module, "ScriptRuntimeApi_GetV45"));
+    auto getApi = reinterpret_cast<GetApiFn>(GetProcAddress(module, "ScriptRuntimeApi_GetV46"));
+    if (!getApi)
+        getApi = reinterpret_cast<GetApiFn>(GetProcAddress(module, "ScriptRuntimeApi_GetV45"));
     if (!getApi)
         getApi = reinterpret_cast<GetApiFn>(GetProcAddress(module, "ScriptRuntimeApi_GetV44"));
     if (!getApi)
@@ -812,6 +821,16 @@ const ScriptRuntimeApi* ScriptRuntimeApi_GetV44() {
 
 extern "C" __declspec(dllexport)
 const ScriptRuntimeApi* ScriptRuntimeApi_GetV45() {
+    static const ScriptRuntimeApi api = [] {
+        ScriptRuntimeApi copy = g_scriptRuntimeApi;
+        copy.version = 45;
+        return copy;
+    }();
+    return &api;
+}
+
+extern "C" __declspec(dllexport)
+const ScriptRuntimeApi* ScriptRuntimeApi_GetV46() {
     return &g_scriptRuntimeApi;
 }
 
@@ -1545,6 +1564,14 @@ void ScriptApi_DebugDrawSphereWire(DirectX::XMFLOAT3 position,
     const ScriptRuntimeApi* api = ScriptRuntimeApi_GetHost();
     if (api && api->debugDrawSphereWire)
         api->debugDrawSphereWire(position, center, radius, rotation, color);
+}
+
+void ScriptApi_DebugDrawLine(DirectX::XMFLOAT3 start,
+                             DirectX::XMFLOAT3 end,
+                             DirectX::XMFLOAT4 color) {
+    const ScriptRuntimeApi* api = ScriptRuntimeApi_GetHost();
+    if (api && api->version >= 46 && api->debugDrawLine)
+        api->debugDrawLine(start, end, color);
 }
 
 UICanvas* ScriptApi_SceneCanvasGetCanvas() {
