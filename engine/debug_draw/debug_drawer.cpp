@@ -770,8 +770,27 @@ void DebugDrawer::FlushLineQueue() {
 		return;
 	}
 
+	Shader3D_Begin();
+	SetDepthEnable(false);
+	Camera& cam = GetCamera();
+	Shader_SetProjectionMatrix(cam.GetProjMatrix(GetRenderViewportWidth(), GetRenderViewportHeight()));
+	Shader_SetViewMatrix(cam.GetViewMatrix());
+
+	// Batch adjacent equal colours without changing transparent line ordering.
+	std::vector<DirectX::XMFLOAT3> vertices;
+	vertices.reserve(s_lineQueue.size() * 2);
+	auto color = s_lineQueue.front().color;
 	for (const auto& req : s_lineQueue) {
-		drawer.DrawLine(req.start, req.end, req.color);
+		if (req.color.x != color.x || req.color.y != color.y ||
+			req.color.z != color.z || req.color.w != color.w) {
+			drawer.DrawLinesCached(vertices, color);
+			vertices.clear();
+			color = req.color;
+		}
+		vertices.push_back(req.start);
+		vertices.push_back(req.end);
 	}
+	drawer.DrawLinesCached(vertices, color);
 	s_lineQueue.clear();
+	SetDepthEnable(true);
 }

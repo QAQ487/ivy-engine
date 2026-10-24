@@ -16,6 +16,7 @@
  *     the standalone ::GameObject does not have a GetTransform() shortcut.
  *****************************************************/
 #include "engine_gui.h"
+#include "play_fps_overlay.h"
 #include "engine_gui_internal.h"
 #include "engine/scene/scene_loader.h"
 #include "engine/scene/scene_asset_preload.h"
@@ -190,7 +191,7 @@ static constexpr float kEditorViewportAspect =
     (1080.0f - 58.0f - 250.0f);
 
 // Editor UI zoom (100 / 125 / 150 / 175 / 200). Default 100%; persisted to rom/editor/ui_prefs.json.
-static constexpr const char* kUiPrefsPath = "rom/editor/ui_prefs.json";
+static constexpr const char* kUiPrefsPath = PlayFpsOverlay::kPrefsPath;
 static constexpr int kUiZoomPercents[] = { 100, 125, 150, 175, 200 };
 static int g_uiZoomPercent = 100;
 static float g_uiZoom = 1.0f;
@@ -212,6 +213,7 @@ static void SaveUiPrefs() {
         fs::create_directories("rom/editor", ec);
         json j;
         j["uiZoomPercent"] = g_uiZoomPercent;
+        PlayFpsOverlay::WritePrefs(j);
         std::ofstream file(kUiPrefsPath);
         if (file.is_open())
             file << j.dump(2);
@@ -221,6 +223,7 @@ static void SaveUiPrefs() {
 }
 
 static void LoadUiPrefs() {
+    PlayFpsOverlay::SetEnabled(false);
     g_uiZoomPercent = 100;
     g_uiZoom = 1.0f;
     try {
@@ -228,6 +231,7 @@ static void LoadUiPrefs() {
         if (!file.is_open()) return;
         json j;
         file >> j;
+        PlayFpsOverlay::LoadPrefs(j);
         const int percent = j.value("uiZoomPercent", 100);
         if (IsValidUiZoomPercent(percent)) {
             g_uiZoomPercent = percent;
@@ -1062,6 +1066,8 @@ static void ApplyProjectSessionState() {
     if (!project.IsOpen())
         return;
 
+    PlayFpsOverlay::LoadFromFile();
+
     const int zoom = project.GetEditorUiZoomPercent();
     if (IsValidUiZoomPercent(zoom))
         ApplyUiZoom(zoom);
@@ -1551,6 +1557,10 @@ static void DrawEditorMenuBar() {
     }
 
     if (ImGui::BeginMenu("Engine Settings")) {
+        if (ImGui::MenuItem("Show FPS When Playing", nullptr, PlayFpsOverlay::IsEnabled())) {
+            PlayFpsOverlay::SetEnabled(!PlayFpsOverlay::IsEnabled());
+            SaveUiPrefs();
+        }
         if (ImGui::BeginMenu("UI Scale")) {
             for (int percent : kUiZoomPercents) {
                 char label[16];
@@ -2057,7 +2067,7 @@ static void DrawEditorPopups() {
         const char* configs[] = { "Debug", "Release" };
         ImGui::SetNextItemWidth(160.0f);
         ImGui::Combo("Configuration", &g_buildConfigIndex, configs, IM_ARRAYSIZE(configs));
-        ImGui::TextDisabled("Debug shows the bottom-left FPS overlay. Release does not.");
+        ImGui::TextDisabled("Play FPS overlay follows Engine Settings > Show FPS When Playing in both configurations.");
 
         const std::string destReason = PlayablePackage::DestinationRefusalReason(
             ProjectManager::Instance().GetRootPath(), g_buildDest);

@@ -34,6 +34,7 @@ void SpriteRendererComponent::Deserialize(const std::string& data) {
     sortingLayer=j.value("sortingLayer",0); orderInLayer=j.value("orderInLayer",0);
 }
 void SpriteRendererComponent::Draw() const {
+    if (tint.w == 0.0f) return;
     const auto texturePath=EffectiveTexture();
     const auto sourceRect=EffectiveRect();
     if (!owner || texturePath.empty() || !(pixelsPerUnit > 0.001f)) return;
@@ -62,7 +63,8 @@ void DrawSceneSprites() {
     std::vector<SpriteRendererComponent*> sprites;
     std::function<void(GameObject*)> visit = [&](GameObject* node) {
         if(!node || !node->IsActive()) return;
-        if(auto* sprite=node->GetComponent<SpriteRendererComponent>()) sprites.push_back(sprite);
+        if(auto* sprite=node->GetComponent<SpriteRendererComponent>(); sprite && sprite->tint.w != 0.0f)
+            sprites.push_back(sprite);
         for(const auto& child:node->GetChildren()) visit(child.get());
     };
     for(const auto& root:SceneLoader_GetSceneNodes()) visit(root.get());

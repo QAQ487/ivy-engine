@@ -46,6 +46,7 @@
 #include "engine/debug_draw/debug_text.h"
 #include "engine/debug_draw/debug_ofstream.h"
 #include "engine/core/engine_gui.h"
+#include "engine/core/play_fps_overlay.h"
 
 #ifndef GAME_RUNTIME
 #include "imgui/imgui.h"
@@ -543,35 +544,39 @@ static void DrawWorld(void) {
 		}
 	}
 
-	// FPS debug text (bottom-left, half default size)
-#if defined(DEBUG) || defined(_DEBUG)
-	const float screenWf = GetBackBufferWidth();
-	const float screenHf = GetBackBufferHeight();
-	const UINT screenW = static_cast<UINT>(screenWf);
-	const UINT screenH = static_cast<UINT>(screenHf);
-	constexpr float kFpsCharSpacing = 16.0f;
-	constexpr float kFpsLineSpacing = 16.0f;
-	constexpr float kFpsMargin = 8.0f;
+	// Play FPS text follows Engine Settings in Debug and Release.
+	if (PlayFpsOverlay::ShouldDraw(EngineGUI_IsPlaying())) {
+		float viewportX, viewportY, viewportWidth, viewportHeight;
+		EngineGUI_GetGameViewportRect(viewportX, viewportY, viewportWidth, viewportHeight);
+		if (viewportWidth > 0.0f && viewportHeight > 0.0f) {
+			const float screenWf = GetBackBufferWidth();
+			const float screenHf = GetBackBufferHeight();
+			const UINT screenW = static_cast<UINT>(screenWf);
+			const UINT screenH = static_cast<UINT>(screenHf);
+			constexpr float kFpsCharSpacing = 16.0f;
+			constexpr float kFpsLineSpacing = 16.0f;
+			constexpr float kFpsMargin = 8.0f;
 
-	std::stringstream ss;
-	ss << "FPS:" << static_cast<int>(g_fps);
-	const std::string fpsText = ss.str();
+			std::stringstream ss;
+			ss << "FPS:" << static_cast<int>(g_fps);
+			const std::string fpsText = ss.str();
 
-	hal::DebugText dt(GetDevice(), GetDeviceContext(),
-		L"rom/texture/consolab_ascii_512.png",
-		screenW, screenH,
-		0.0f, 0.0f,
-		0, 0,
-		kFpsLineSpacing, kFpsCharSpacing);
+			hal::DebugText dt(GetDevice(), GetDeviceContext(),
+				L"rom/texture/consolab_ascii_512.png",
+				screenW, screenH,
+				0.0f, 0.0f,
+				0, 0,
+				kFpsLineSpacing, kFpsCharSpacing);
 
-	float fpsTextW = 0.0f;
-	float fpsTextH = 0.0f;
-	dt.MeasureText(fpsText.c_str(), fpsTextW, fpsTextH);
-	dt.SetOffset(kFpsMargin, screenHf - fpsTextH - kFpsMargin);
-	dt.SetText(fpsText.c_str(), { 0.1f, 0.5f, 0.2f, 1.0f });
-	dt.Draw();
-	dt.Clear();
-#endif
+			float fpsTextW = 0.0f;
+			float fpsTextH = 0.0f;
+			dt.MeasureText(fpsText.c_str(), fpsTextW, fpsTextH);
+			dt.SetOffset(viewportX + kFpsMargin, viewportY + viewportHeight - fpsTextH - kFpsMargin);
+			dt.SetText(fpsText.c_str(), { 0.1f, 0.5f, 0.2f, 1.0f });
+			dt.Draw();
+			dt.Clear();
+		}
+	}
 
 	AudioManager::Instance().DrawDebug();
 

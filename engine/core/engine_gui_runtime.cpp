@@ -1,5 +1,6 @@
 #include "engine/scene/scene_camera.h"
 #include "engine_gui.h"
+#include "play_fps_overlay.h"
 #include "engine/scene/scene_loader.h"
 #include "engine/ecs/model_asset_cache.h"
 #include "engine/ecs/game_object.h"
@@ -54,6 +55,7 @@ static void EnterRuntimePlay() {
 void EngineGUI_Initialize(HWND /*hwnd*/, ID3D11Device* /*device*/,
     ID3D11DeviceContext* /*context*/)
 {
+    PlayFpsOverlay::LoadFromFile();
     ModelAssetCache::Instance().RefreshAssetDirectory();
     SceneLoader_Initialize(false);
 }
