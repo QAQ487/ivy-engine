@@ -51,12 +51,20 @@ void SpriteRendererComponent::Draw() const {
     const float h=sourceRect.w>0?sourceRect.w:float(size.y);
     DirectX::XMFLOAT4 uv{sourceRect.x/size.x,sourceRect.y/size.y,
         (sourceRect.x+w)/size.x,(sourceRect.y+h)/size.y};
+    auto drawTint = tint;
+    if (hasRenderTint) {
+        drawTint.x = renderTint.x;
+        drawTint.y = renderTint.y;
+        drawTint.z = renderTint.z;
+    }
     if(flipX) std::swap(uv.x,uv.z);
     if(flipY) std::swap(uv.y,uv.w);
     const auto* transform=owner->GetComponent<engine::Transform>();
     const auto& camera=GetCamera();
-    Sprite_DrawWorld(texture,w/pixelsPerUnit,h/pixelsPerUnit,pivot,uv,tint,
-        transform?transform->GetWorldMatrix():DirectX::XMMatrixIdentity(),
+    auto world = transform ? transform->GetWorldMatrix() : DirectX::XMMatrixIdentity();
+    world.r[3] = DirectX::XMVectorAdd(world.r[3], DirectX::XMVectorSet(renderOffset.x, renderOffset.y, 0.0f, 0.0f));
+    Sprite_DrawWorld(texture,w/pixelsPerUnit,h/pixelsPerUnit,pivot,uv,drawTint,
+        world,
         camera.GetViewMatrix(),camera.GetProjMatrix(GetRenderViewportWidth(),GetRenderViewportHeight()));
 }
 void DrawSceneSprites() {
