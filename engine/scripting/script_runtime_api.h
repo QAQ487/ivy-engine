@@ -232,9 +232,12 @@ struct ScriptRuntimeApi {
                           DirectX::XMFLOAT3 end,
                           DirectX::XMFLOAT4 color);
 
+    // v47 — share the host F11 state with gameplay collision visualizers.
+    bool (*collisionVizEnabled)();
 };
 
 const ScriptRuntimeApi* ScriptRuntimeApi_GetHost();
+bool ScriptApi_CollisionVizEnabled();
 
 SceneBase* ScriptApi_GetCurrentScene();
 engine::Transform* ScriptApi_FindTransform(engine::GameObject& object);

@@ -39,7 +39,7 @@
 #include <string>
 
 namespace {
-constexpr std::uint32_t kScriptRuntimeApiVersion = 46;
+constexpr std::uint32_t kScriptRuntimeApiVersion = 47;
 
 template <typename T>
 T* FindComponentByTypeName(GameObject& object, const char* typeName) {
@@ -758,6 +758,7 @@ const ScriptRuntimeApi g_scriptRuntimeApi = {
     &Host_Physics2DRaycast,
     &Host_GetGameViewportRect,
     &Host_DebugDrawLine,
+    &DebugSystem::CollisionVizEnabled,
 
 };
 #else
@@ -768,7 +769,9 @@ const ScriptRuntimeApi* ResolveScriptRuntimeApi() {
     if (!module)
         return nullptr;
 
-    auto getApi = reinterpret_cast<GetApiFn>(GetProcAddress(module, "ScriptRuntimeApi_GetV46"));
+    auto getApi = reinterpret_cast<GetApiFn>(GetProcAddress(module, "ScriptRuntimeApi_GetV47"));
+    if (!getApi)
+        getApi = reinterpret_cast<GetApiFn>(GetProcAddress(module, "ScriptRuntimeApi_GetV46"));
     if (!getApi)
         getApi = reinterpret_cast<GetApiFn>(GetProcAddress(module, "ScriptRuntimeApi_GetV45"));
     if (!getApi)
@@ -831,6 +834,16 @@ const ScriptRuntimeApi* ScriptRuntimeApi_GetV45() {
 
 extern "C" __declspec(dllexport)
 const ScriptRuntimeApi* ScriptRuntimeApi_GetV46() {
+    static const ScriptRuntimeApi api = [] {
+        ScriptRuntimeApi copy = g_scriptRuntimeApi;
+        copy.version = 46;
+        return copy;
+    }();
+    return &api;
+}
+
+extern "C" __declspec(dllexport)
+const ScriptRuntimeApi* ScriptRuntimeApi_GetV47() {
     return &g_scriptRuntimeApi;
 }
 
@@ -1564,6 +1577,11 @@ void ScriptApi_DebugDrawSphereWire(DirectX::XMFLOAT3 position,
     const ScriptRuntimeApi* api = ScriptRuntimeApi_GetHost();
     if (api && api->debugDrawSphereWire)
         api->debugDrawSphereWire(position, center, radius, rotation, color);
+}
+
+bool ScriptApi_CollisionVizEnabled() {
+    const ScriptRuntimeApi* api = ScriptRuntimeApi_GetHost();
+    return api && api->version >= 47 && api->collisionVizEnabled && api->collisionVizEnabled();
 }
 
 void ScriptApi_DebugDrawLine(DirectX::XMFLOAT3 start,
