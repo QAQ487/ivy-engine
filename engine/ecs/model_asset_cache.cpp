@@ -7,6 +7,7 @@
 #include <locale>
 #include <sstream>
 #include <Windows.h>
+#include <stdexcept>
 
 namespace fs = std::filesystem;
 
@@ -265,4 +266,31 @@ Model3D* ModelAssetCache::GetModel(const std::string& modelName) {
     Model3D* raw = model.get();
     m_modelCache.emplace(cacheKey, std::move(model));
     return raw;
+}
+
+
+bool ModelAssetCache::BeginContentReload() {
+    if (m_contentReload) return true;
+    m_previousModels.clear();
+    // Stage only models referenced by the incoming scene. Old scene resources
+    // remain in m_modelCache until commit; stale unused entries must not block reload.
+    m_contentReload = true;
+    return true;
+}
+void ModelAssetCache::EndContentReload(bool commit) {
+    if (!m_contentReload) return;
+    if (commit) m_modelCache.swap(m_previousModels);
+    m_previousModels.clear();
+    m_contentReload = false;
+}
+
+bool ModelAssetCache::PrepareContentModel(const std::string& modelName) {
+    if (!m_contentReload || modelName.empty()) return true;
+    const auto* def = FindObjectDef(m_objectDefs, modelName);
+    const auto key = def ? def->lowerName : NormalizeAssetKey(modelName);
+    if (m_previousModels.count(key)) return true;
+    auto model = std::make_unique<Model3D>();
+    if (!model->LoadFBXQuiet(ResolveModelWidePath(modelName, def).c_str())) return false;
+    m_previousModels.emplace(key, std::move(model));
+    return true;
 }

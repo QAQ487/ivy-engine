@@ -33,6 +33,7 @@ namespace EffectSystem {
     // ��~/�S��~/���݊m�F
     void Stop(int handle);
     void StopAll();
+    bool ReloadContent();
     bool Exists(int handle);
 
     // Transform ����

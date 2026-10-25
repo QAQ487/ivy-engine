@@ -309,7 +309,7 @@ void ScriptFactory::RequestReload(const std::string& name,
     std::lock_guard<std::mutex> lk(m_reloadMutex);
     // Overwrite any existing pending reload for this name
     for (auto& p : m_pendingReloads) {
-        if (p.name == name) { p.path = path; return; }
+        if (p.name == name) { p.path = path; p.observed = std::chrono::steady_clock::now(); return; }
     }
     m_pendingReloads.push_back({ name, path });
     OutputDebugStringA(("[ScriptFactory] Queued reload: " + name
@@ -331,7 +331,12 @@ void ScriptFactory::DrainReloadQueue(
     std::vector<PendingReload> queue;
     {
         std::lock_guard<std::mutex> lk(m_reloadMutex);
-        queue.swap(m_pendingReloads);
+        const auto now = std::chrono::steady_clock::now();
+        auto it = m_pendingReloads.begin();
+        while (it != m_pendingReloads.end()) {
+            if (now - it->observed >= std::chrono::milliseconds(500)) { queue.push_back(*it); it = m_pendingReloads.erase(it); }
+            else ++it;
+        }
     }
     if (queue.empty()) return;
     ReloadFeedback feedback;

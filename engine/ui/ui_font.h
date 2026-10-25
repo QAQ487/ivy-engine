@@ -27,3 +27,5 @@ const UIFont* UIFont_Get(const wchar_t* ttfPath);
 void UIFont_ClearCache();
 bool UIFont_IsTrueTypePath(const wchar_t* path);
 bool UIFont_IsTrueTypePath(const std::string& path);
+
+bool UIFont_Reload(const wchar_t* path);

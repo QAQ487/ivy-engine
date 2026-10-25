@@ -338,8 +338,8 @@ XMFLOAT4 ParticleEmitter::RandomRange(const XMFLOAT4& minValue, const XMFLOAT4& 
 }
 
 ID3D11ShaderResourceView* ParticleEmitter::GetTextureSRV() const {
-	if (m_textureSrv)
-		return m_textureSrv;
+	if (m_textureId >= 0)
+		return TextureGetSRV(m_textureId);
 	if (m_config.texturePath.empty())
 		return nullptr;
 

@@ -14,7 +14,7 @@
 #include <Windows.h>
 
 ID3D11ShaderResourceView* BillboardComponent::GetTextureSRV() {
-    if (m_textureSrv) return m_textureSrv;
+    if (m_textureId >= 0) return TextureGetSRV(m_textureId);
     if (texturePath.empty()) return nullptr;
 
     const std::wstring wpath = ToWString(texturePath);

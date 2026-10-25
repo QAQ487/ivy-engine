@@ -43,7 +43,7 @@ public:
             m_pending = true;
             return {};
         }
-        if (!m_pending || m_clock - m_changedAt < 0.3) return {};
+        if (!m_pending || m_clock - m_changedAt < 0.5) return {};
         std::string content;
         if (!Read(m_path, content)) return {};
         Stamp after;

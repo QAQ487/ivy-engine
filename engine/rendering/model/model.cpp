@@ -362,7 +362,9 @@ bool Model3D::LoadOBJ(const wchar_t* objPath, const wchar_t* fallbackTex) {
 /**===========================================================================
    ��FBX ���[�_�[��
  ===========================================================================**/
-bool Model3D::LoadFBX(const wchar_t* fbxPath, const wchar_t* /*fallbackTex*/) {
+bool Model3D::LoadFBX(const wchar_t* fbxPath, const wchar_t*) { return LoadFBXInternal(fbxPath, true); }
+bool Model3D::LoadFBXQuiet(const wchar_t* fbxPath) { return LoadFBXInternal(fbxPath, false); }
+bool Model3D::LoadFBXInternal(const wchar_t* fbxPath, bool reportErrors) {
 	Release();
 
 	FbxShared& shared = GetFbxShared();
@@ -377,14 +379,14 @@ bool Model3D::LoadFBX(const wchar_t* fbxPath, const wchar_t* /*fallbackTex*/) {
 	}
 	if (!importer->Initialize(path_utf8.c_str(), -1, shared.mgr->GetIOSettings())) {
 		importer->Destroy();
-		MessageBoxA(nullptr, "Failed to open FBX file.", "Error", MB_OK | MB_ICONERROR);
+		if (reportErrors) MessageBoxA(nullptr, "Failed to open FBX file.", "Error", MB_OK | MB_ICONERROR);
 		return false;
 	}
 	m_baseScene = FbxScene::Create(shared.mgr, "scene");
 	if (!importer->Import(m_baseScene)) {
 		importer->Destroy();
 		if (m_baseScene) { m_baseScene->Destroy(); m_baseScene = nullptr; }
-		MessageBoxA(nullptr, "Failed to import FBX file.", "Error", MB_OK | MB_ICONERROR);
+		if (reportErrors) MessageBoxA(nullptr, "Failed to import FBX file.", "Error", MB_OK | MB_ICONERROR);
 		return false;
 	}
 	importer->Destroy();
@@ -429,7 +431,7 @@ bool Model3D::LoadFBX(const wchar_t* fbxPath, const wchar_t* /*fallbackTex*/) {
 		pick(m_baseScene->GetRootNode());
 	}
 	if (!m_mesh || !m_meshNode) {
-		MessageBoxA(nullptr, "FBX: mesh not found.", "Error", MB_OK | MB_ICONERROR);
+		if (reportErrors) MessageBoxA(nullptr, "FBX: mesh not found.", "Error", MB_OK | MB_ICONERROR);
 		return false;
 	}
 
@@ -811,7 +813,7 @@ bool Model3D::LoadFBX(const wchar_t* fbxPath, const wchar_t* /*fallbackTex*/) {
 	Traverse(m_baseScene->GetRootNode());
 
 	if (m_verticesCPU.empty() || m_cpIndexOfVertex.size() != m_verticesCPU.size()) {
-		MessageBoxA(nullptr, "FBX has no valid polygons.", "Error", MB_OK | MB_ICONERROR);
+		if (reportErrors) MessageBoxA(nullptr, "FBX has no valid polygons.", "Error", MB_OK | MB_ICONERROR);
 		return false;
 	}
 
@@ -827,7 +829,7 @@ bool Model3D::LoadFBX(const wchar_t* fbxPath, const wchar_t* /*fallbackTex*/) {
 		D3D11_SUBRESOURCE_DATA init {};
 		init.pSysMem = m_verticesCPU.data();
 		if (FAILED(GetDevice()->CreateBuffer(&bd, &init, &m_pVB)) || !m_pVB) {
-			MessageBoxA(nullptr, "FBX: failed to create vertex buffer.", "Error", MB_OK | MB_ICONERROR);
+			if (reportErrors) MessageBoxA(nullptr, "FBX: failed to create vertex buffer.", "Error", MB_OK | MB_ICONERROR);
 			return false;
 		}
 	}
@@ -844,7 +846,7 @@ bool Model3D::LoadFBX(const wchar_t* fbxPath, const wchar_t* /*fallbackTex*/) {
 		D3D11_SUBRESOURCE_DATA init {};
 		init.pSysMem = idx.data();
 		if (FAILED(GetDevice()->CreateBuffer(&bd, &init, &m_pIB)) || !m_pIB) {
-			MessageBoxA(nullptr, "FBX: failed to create index buffer.", "Error", MB_OK | MB_ICONERROR);
+			if (reportErrors) MessageBoxA(nullptr, "FBX: failed to create index buffer.", "Error", MB_OK | MB_ICONERROR);
 			return false;
 		}
 	}

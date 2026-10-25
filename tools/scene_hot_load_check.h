@@ -4,6 +4,7 @@
 #include "engine/scene/prepared_scene.h"
 #include <chrono>
 #include <cstdlib>
+#include "DirectXTex.h"
 
 namespace {
 class SceneHotLoadThrowComponent : public Component {
@@ -23,6 +24,17 @@ static void SceneHotLoadCheck_Tick(double elapsed) {
     static GameObject* savedNode = nullptr;
     static Camera savedCamera;
     static int switchMode = 0, heldFrames = 0;
+    static fs::path textureFolder, textureFile, replacementFile, prefabFile, modelFile;
+    static size_t cubeVertices = 0;
+    static int textureId = -1, textureRound = 0;
+    static double longestTextureReload = 0;
+    auto writeTexture = [&](const fs::path& file, size_t width) {
+        DirectX::ScratchImage image;
+        if (FAILED(image.Initialize2D(DXGI_FORMAT_R8G8B8A8_UNORM, width, 4, 1, 1))) return false;
+        std::memset(image.GetPixels(), int(width), image.GetPixelsSize());
+        return SUCCEEDED(DirectX::SaveToWICFile(*image.GetImage(0,0,0), DirectX::WIC_FLAGS_NONE,
+            DirectX::GetWICCodec(DirectX::WIC_CODEC_PNG), file.c_str()));
+    };
     if (phase < 0) return;
     total += elapsed; waited += elapsed;
     auto fail = [&](const char* message) {
@@ -31,8 +43,15 @@ static void SceneHotLoadCheck_Tick(double elapsed) {
             int(EngineGUI_IsSceneDirty()), int(g_sceneReloadConflict.has_value()), int(g_sceneLoadPending),
             g_sceneFileMonitor.Path().c_str(), SceneLoader_GetCurrentScenePath().c_str(), g_sceneNodes.size(),
             g_monitoredSceneRevision, SceneLoader_GetContentRevision());
+        std::fprintf(stderr, "content=%s pending=%d queued=%zu root=%s error=%s\n", g_contentReloadStatus.c_str(), int(g_contentMonitor.Pending()), g_contentChanges.size(), g_contentProjectRoot.c_str(), g_contentMonitor.Error().c_str());
         std::fflush(stderr);
         if (!original.empty()) ProjectManager::Instance().SetLastOpenedScene(fs::path(original).filename().string());
+        std::error_code cleanupError;
+        if (!textureFile.empty()) fs::remove(textureFile, cleanupError);
+        if (!replacementFile.empty()) fs::remove(replacementFile, cleanupError);
+        if (!textureFolder.empty()) fs::remove(textureFolder, cleanupError);
+        if (!prefabFile.empty()) fs::remove(prefabFile, cleanupError);
+        if (!modelFile.empty()) fs::remove(modelFile, cleanupError);
         EngineGUI_ClearSceneDirty(); phase = -1; PostQuitMessage(2);
     };
     auto name = []() { return g_sceneNodes.empty() ? std::string{} : g_sceneNodes.front()->GetName(); };
@@ -45,8 +64,8 @@ static void SceneHotLoadCheck_Tick(double elapsed) {
                 {"text", "HUD" + std::to_string(version)}}})}}}};
     };
     auto write = [&](const json& root) { std::ofstream file(path, std::ios::binary); file << root.dump(); };
-    auto next = [&](int target) { phase = target; waited = 0; };
-    if (total > 90) { fail("timed out"); return; }
+    auto next = [&](int target) { phase = target; waited = 0; std::printf("SCENE_HOT_LOAD_CHECK phase=%d\n", target); std::fflush(stdout); };
+    if (total > 120) { fail("timed out"); return; }
     if (phase == 14 || phase == 15) {
         const auto expected = switchMode == 0 ? PlayMode::Fullscreen : PlayMode::Viewport;
         if (EngineGUI_GetPlayMode() != expected || !EngineGUI_PreferPlayVisuals()
@@ -160,11 +179,8 @@ static void SceneHotLoadCheck_Tick(double elapsed) {
         EngineGUI_StartPlay(PlayMode::Viewport); write(scene(5)); next(7); return;
     }
     if (phase == 7 && waited > 1.5) {
-        if (!EngineGUI_IsPlaying() || name() != "Version4") { fail("hot-load ran during Play"); return; }
-        if (GetReloadLightState(true, EngineGUI_PreferPlayVisuals(), false, g_sceneReloadLight) != ReloadLightState::Paused
-            || GetReloadLightState(true, EngineGUI_PreferPlayVisuals(), false, g_scriptReloadLight) != ReloadLightState::Paused) {
-            fail("reload lights did not pause during Play"); return;
-        }
+        if (IsSceneLoadBusy()) return;
+        if (!EngineGUI_IsPlaying() || name() != "Version5" || EngineGUI_GetPlayMode() != PlayMode::Viewport) { fail("Play hot-load did not restart viewport scene"); return; }
         EngineGUI_StopPlay(); next(8); return;
     }
     if (phase == 8 && name() == "Version5") {
@@ -212,6 +228,7 @@ static void SceneHotLoadCheck_Tick(double elapsed) {
         next(17); return;
     }
     if (phase == 17) {
+        if (ScriptFactory::Instance().PendingReloadCount()) return;
         if (!g_scriptReloadLight.failed || g_scriptReloadStatus.find("MissingIndicatorCheck") == std::string::npos) {
             fail("script failure did not set error light/detail"); return;
         }
@@ -219,7 +236,120 @@ static void SceneHotLoadCheck_Tick(double elapsed) {
     }
     if (phase == 18 && !g_scriptReloadLight.failed) {
         if (g_scriptReloadLight.brightUntil <= ImGui::GetTime()) { fail("script recovery did not brighten light"); return; }
-        std::printf("SCENE_HOT_LOAD_CHECK PASS: incremental nested hierarchy/budget/missing file/failed transactions/nodes/Canvas/settings/camera/selection/Undo/dirty choices/Play deferral/self save/fullscreen+viewport scene switches/scene+script status lights\n");
+        EngineGUI_LoadFromFileCore(path.c_str()); next(19); return;
+    }
+    if (phase == 19) {
+        EngineGUI_StartPlay(PlayMode::Fullscreen); write(scene(8)); next(20); return;
+    }
+    if (phase == 20 && name() == "Version8" && EngineGUI_IsPlaying()) {
+        if (EngineGUI_GetPlayMode() != PlayMode::Fullscreen) { fail("fullscreen hot reload lost Play mode"); return; }
+        EngineGUI_StopPlay(); EngineGUI_StartPlay(PlayMode::Viewport); write(scene(9)); next(21); return;
+    }
+    if (phase == 21 && name() == "Version9" && EngineGUI_IsPlaying()) {
+        if (EngineGUI_GetPlayMode() != PlayMode::Viewport) { fail("viewport hot reload lost Play mode"); return; }
+        EngineGUI_StopPlay(); EngineGUI_LoadFromFileCore(original.c_str()); next(22); return;
+    }
+    if (phase == 22 && SceneLoader_GetCurrentScenePath() == original) {
+        textureFolder = fs::path("rom/texture") / ("__ivy_reload_check_" + std::to_string(GetCurrentProcessId()));
+        textureFile = textureFolder / "first.png"; replacementFile = textureFolder / "second.png";
+        fs::create_directories(textureFolder);
+        if (!writeTexture(textureFile, 4)) { fail("cannot create texture fixture"); return; }
+        auto root = scene(10);
+        root["nodes"][0]["components"]["SpriteRenderer"] = {{"texture", textureFile.generic_string()}};
+        write(root); EngineGUI_LoadFromFileCore(path.c_str()); next(23); return;
+    }
+    if (phase == 23 && name() == "Version10" && waited > 1.5) {
+        const auto entries = ProjectAssetIndex::Instance().GetFolderContents(textureFolder.lexically_relative("rom").generic_string());
+        if (entries.empty()) { if (waited > 2.0) fail("new texture did not appear in asset index"); return; }
+        textureId = TextureLoadQuiet(textureFile.c_str(), false);
+        savedNode = g_sceneNodes.front().get(); textureRound = 0;
+        EngineGUI_StartPlay(PlayMode::Fullscreen);
+        if (!writeTexture(textureFile, 8)) { fail("cannot replace texture"); return; }
+        next(24); return;
+    }
+    if (phase == 24) {
+        if (TextureGetSize(textureId).x != unsigned(8 + textureRound)) {
+            if (waited > 2.0) fail("texture did not auto reload within two seconds");
+            return;
+        }
+        longestTextureReload = (std::max)(longestTextureReload, waited);
+        const auto mode = textureRound % 2 == 0 ? PlayMode::Fullscreen : PlayMode::Viewport;
+        if (!EngineGUI_IsPlaying() || EngineGUI_GetPlayMode() != mode || g_sceneNodes.front().get() != savedNode
+            || TextureLoadQuiet(textureFile.c_str(), false) != textureId) { fail("texture update rebuilt scene, changed ID or lost Play mode"); return; }
+        if (++textureRound < 20) {
+            EngineGUI_StopPlay(); EngineGUI_StartPlay(textureRound % 2 == 0 ? PlayMode::Fullscreen : PlayMode::Viewport);
+            if (!writeTexture(textureFile, 8 + textureRound)) { fail("cannot replace texture"); return; }
+            next(24); return;
+        }
+        { std::ofstream file(textureFile, std::ios::binary); file << "partial PNG"; }
+        next(25); return;
+    }
+    if (phase == 25 && waited > 1.5) {
+        if (!g_contentReloadLight.failed && waited < 3.0) return;
+        if (TextureGetSize(textureId).x != 27 || g_sceneNodes.front().get() != savedNode || !g_contentReloadLight.failed) {
+            fail("invalid texture damaged live scene or failed to report error"); return;
+        }
+        if (!writeTexture(textureFile, 27) || !writeTexture(replacementFile, 32)) { fail("cannot restore texture"); return; }
+        auto root = scene(11);
+        root["nodes"][0]["components"]["SpriteRenderer"] = {{"texture", replacementFile.generic_string()}};
+        write(root); next(26); return;
+    }
+    if (phase == 26 && name() == "Version11" && EngineGUI_IsPlaying()) {
+        auto* sprite = g_sceneNodes.front()->GetComponent<SpriteRendererComponent>();
+        if (!sprite || sprite->texturePath != replacementFile.generic_string()) { fail("scene texture reference did not reload"); return; }
+        prefabFile = fs::path("rom/prefabs") / ("__ivy_reload_check_" + std::to_string(GetCurrentProcessId()) + ".json");
+        fs::create_directories(prefabFile.parent_path());
+        { std::ofstream file(prefabFile); file << json::parse(PrefabSerializer::Serialize(*g_sceneNodes.front())).dump(); }
+        auto root = scene(12); root["nodes"][0]["prefabAssetPath"] = prefabFile.generic_string();
+        write(root); next(27); return;
+    }
+    if (phase == 27 && name() == "Version12" && EngineGUI_IsPlaying()) {
+        std::string data; SceneFileMonitor::Read(prefabFile.string(), data);
+        auto prefab = json::parse(data); prefab["components"]["SpriteRenderer"]["pixelsPerUnit"] = 32.0;
+        { std::ofstream file(prefabFile); file << prefab.dump(); }
+        next(28); return;
+    }
+    if (phase == 28) {
+        auto* sprite = g_sceneNodes.front()->GetComponent<SpriteRendererComponent>();
+        if (!sprite || sprite->pixelsPerUnit != 32.0f || !EngineGUI_IsPlaying()) return;
+        EngineGUI_StopPlay(); EngineGUI_LoadFromFileCore(original.c_str()); next(29); return;
+    }
+    if (phase == 29 && SceneLoader_GetCurrentScenePath() == original) {
+        modelFile = fs::path("rom/model") / ("__ivy_reload_check_" + std::to_string(GetCurrentProcessId()) + ".fbx");
+        fs::copy_file("rom/model/primitives/Cube.fbx", modelFile, fs::copy_options::overwrite_existing);
+        auto root = scene(13); root["settings"]["renderPath"] = "3d";
+        root["nodes"][0]["components"]["visual"] = {{"model", modelFile.generic_string()}};
+        write(root); EngineGUI_LoadFromFileCore(path.c_str()); next(30); return;
+    }
+    if (phase == 30 && name() == "Version13") {
+        auto* model = ModelAssetCache::Instance().GetModel(modelFile.generic_string());
+        if (!model) { fail("model fixture did not load"); return; }
+        cubeVertices = model->GetVerticesCPU().size();
+        EngineGUI_StartPlay(PlayMode::Viewport);
+        fs::copy_file("rom/model/primitives/Sphere.fbx", modelFile, fs::copy_options::overwrite_existing);
+        next(31); return;
+    }
+    if (phase == 31) {
+        auto* model = ModelAssetCache::Instance().GetModel(modelFile.generic_string());
+        if (!model || model->GetVerticesCPU().size() == cubeVertices || !EngineGUI_IsPlaying()) return;
+        savedNode = g_sceneNodes.front().get();
+        { std::ofstream file(modelFile, std::ios::binary); file << "broken FBX"; }
+        next(32); return;
+    }
+    if (phase == 32 && waited > 2.0) {
+        if (!g_sceneReloadLight.failed && waited < 4.0) return;
+        if (!g_sceneReloadLight.failed || g_sceneNodes.front().get() != savedNode || !EngineGUI_IsPlaying()) { fail("invalid model damaged live scene"); return; }
+        fs::copy_file("rom/model/primitives/Cube.fbx", modelFile, fs::copy_options::overwrite_existing);
+        next(33); return;
+    }
+    if (phase == 33) {
+        auto* model = ModelAssetCache::Instance().GetModel(modelFile.generic_string());
+        if (!model || model->GetVerticesCPU().size() != cubeVertices || !EngineGUI_IsPlaying()) return;
+        EngineGUI_StopPlay(); EngineGUI_LoadFromFileCore(original.c_str()); next(34); return;
+    }
+    if (phase == 34 && SceneLoader_GetCurrentScenePath() == original) {
+        fs::remove(textureFile); fs::remove(replacementFile); fs::remove(textureFolder); fs::remove(prefabFile); fs::remove(modelFile);
+        std::printf("SCENE_HOT_LOAD_CHECK PASS: rollback, Canvas/settings, dirty conflicts, self save, fullscreen+viewport Play hot reload, DLL recovery, asset index, 20 live texture updates (max %.3fs), invalid texture rollback, new texture reference, prefab reload, live model replacement/invalid rollback/recovery\n", longestTextureReload);
         std::fflush(stdout); phase = -1; PostQuitMessage(0);
     }
 }

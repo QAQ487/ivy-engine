@@ -16,6 +16,7 @@
  *   auto script = ScriptFactory::Instance().Create("EnemyScript");
  *****************************************************/
 #pragma once
+#include <chrono>
 
 #include "Script.h"
 #include <functional>
@@ -109,6 +110,7 @@ private:
     struct PendingReload {
         std::string name;
         std::string path;
+        std::chrono::steady_clock::time_point observed = std::chrono::steady_clock::now();
     };
     std::vector<PendingReload> m_pendingReloads;
     mutable std::mutex         m_reloadMutex;

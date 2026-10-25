@@ -82,3 +82,6 @@ bool EngineGUI_IsUiEditMode();
 
 // Called on the main thread after the editor frame has been presented.
 void EngineGUI_NotifyFramePresented();
+
+// Request an immediate content/index reconciliation from the Editor browser.
+void EngineGUI_RequestContentRefresh();

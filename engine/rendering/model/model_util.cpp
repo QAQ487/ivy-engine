@@ -22,6 +22,7 @@
 
 #include <fbxsdk.h>
 #include "engine/rendering/d3d11/renderer.h"
+#include <filesystem>
 
 #pragma comment(lib, "windowscodecs.lib")
 
@@ -34,6 +35,16 @@ static std::unordered_map<std::wstring, ID3D11ShaderResourceView*> g_srvCache;
 // Releases the cache's AddRef'd reference on every cached SRV. Must be called
 // before the D3D11 device is destroyed (e.g. from the app's shutdown sequence),
 // otherwise every model texture ever loaded stays alive for the process lifetime.
+bool ModelUtil_IsTextureCached(const wchar_t* path) {
+    std::error_code ec;
+    auto key = std::filesystem::absolute(path, ec).lexically_normal().wstring();
+    if (ec) return false;
+    for (const auto& entry : g_srvCache) {
+        auto cached = std::filesystem::absolute(entry.first, ec).lexically_normal().wstring();
+        if (!ec && _wcsicmp(key.c_str(), cached.c_str()) == 0) return true;
+    }
+    return false;
+}
 void ModelUtil_ReleaseTextureCache() {
 	for (auto& kv : g_srvCache) {
 		if (kv.second) kv.second->Release();

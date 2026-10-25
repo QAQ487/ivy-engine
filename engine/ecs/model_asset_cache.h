@@ -39,6 +39,9 @@ public:
     bool IsFinalized() const { return m_finalized; }
 
     void RefreshAssetDirectory();
+    bool BeginContentReload();
+    bool PrepareContentModel(const std::string& path);
+    void EndContentReload(bool commit);
     const std::vector<ObjectDef>& GetObjectDefinitions() const;
     const ModelFolderNode& GetFolderTree() const { return m_folderTree; }
     std::vector<const ObjectDef*> GetObjectDefinitionsInFolder(
@@ -53,6 +56,8 @@ private:
     static std::string FolderPathForDef(const ObjectDef& def);
 
     bool m_finalized = false;
+    bool m_contentReload = false;
+    std::map<std::string, std::unique_ptr<Model3D>> m_previousModels;
     ModelFolderNode m_folderTree;
     std::vector<ObjectDef> m_objectDefs;
     std::map<std::string, std::unique_ptr<Model3D>> m_modelCache;

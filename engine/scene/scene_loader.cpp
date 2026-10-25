@@ -24,6 +24,7 @@
 #include "engine/ecs/prefab_runtime.h"
 #include "engine/ecs/transform.h"
 #include "engine/ecs/visual_component.h"
+#include "engine/ecs/model_asset_cache.h"
 #include "engine/ecs/billboard_component.h"
 #include "engine/ecs/material_component.h"
 #include "engine/ecs/rigidbody_component.h"
@@ -675,6 +676,7 @@ void SceneLoader_ApplyPrepared(std::shared_ptr<PreparedScene> prepared, bool pre
     if (!prepared) return;
     SceneLoader_PrepareForSceneReload();
     g_sceneNodes = std::move(prepared->nodes);
+    ModelAssetCache::Instance().EndContentReload(true);
     for (auto& node : g_sceneNodes) node->AttachPreparedComponents();
     SceneCanvas_ApplyPrepared(std::move(prepared->canvas), prepared->canvasJson);
     ApplySceneSettings(*prepared, preserveEditorView);

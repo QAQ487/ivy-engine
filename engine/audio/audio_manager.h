@@ -82,6 +82,7 @@ public:
 
     void Stop(const std::string& id);
     void StopAll();
+    bool ReloadContent(const std::string& path);
     void StopAllByType(AudioType type);
     bool IsPlaying(const std::string& id);
 

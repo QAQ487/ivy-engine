@@ -149,6 +149,20 @@ namespace EffectSystem {
         return Load(reinterpret_cast<const char16_t*>(path));
     }
 
+    bool ReloadContent() {
+        if (g_manager == nullptr) return true;
+        g_manager->GetSetting()->SetIsFileCacheEnabled(false);
+        std::vector<std::pair<int, ::Effekseer::EffectRef>> candidates;
+        for (const auto& entry : g_effectCache) {
+            auto effect = ::Effekseer::Effect::Create(g_manager, reinterpret_cast<const char16_t*>(entry.first.c_str()));
+            if (effect == nullptr) { g_manager->GetSetting()->SetIsFileCacheEnabled(true); return false; }
+            candidates.emplace_back(entry.second, effect);
+        }
+        StopAll();
+        for (const auto& entry : candidates) g_effects[entry.first] = entry.second;
+        g_manager->GetSetting()->SetIsFileCacheEnabled(true);
+        return true;
+    }
     int LoadCached(const wchar_t* path) {
         if (path == nullptr || *path == L'\0') {
             OutputDebugStringW(L"[EffectSystem] LoadCached invalid path.\n");

@@ -603,8 +603,10 @@ GameObject* ProjectBrowserPanel(std::vector<std::unique_ptr<GameObject>>& nodes)
         s_initialized = true;
     }
 
-    if (ImGui::Button("Refresh##ProjectBrowser", ImVec2(90, 0)))
+    if (ImGui::Button("Refresh##ProjectBrowser", ImVec2(90, 0))) {
+        EngineGUI_RequestContentRefresh();
         index.Refresh();
+    }
     ImGui::SameLine();
     DrawBreadcrumb(s_selectedFolder);
     ImGui::SameLine();

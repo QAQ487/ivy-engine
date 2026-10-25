@@ -77,6 +77,9 @@
 #include "engine/editor/ui_gizmo.h"
 #include "engine/editor/camera_orientation_gizmo.h"
 #include "engine/editor/editor_undo.h"
+#include "engine/editor/content_file_monitor.h"
+#include "engine/ui/ui_font.h"
+#include "engine/rendering/effect/effect_system.h"
 #include "engine/ecs/visual_component.h"
 #include "engine/ecs/billboard_component.h"
 #include "engine/ecs/sprite_renderer_component.h"
@@ -95,6 +98,7 @@
 #include "engine/ecs/audio_component.h"
 #include "engine/ecs/audio_listener_component.h"
 #include "engine/ecs/model_asset_cache.h"
+#include "engine/rendering/model/model_util.h"
 #include "engine/scene/scene_runtime.h"
 #include "engine/ecs/prefab_runtime.h"
 #include "engine/scripting/script_component.h"
@@ -172,7 +176,7 @@ static void LogSceneLoading(const char* event) {
 }
 void EngineGUI_NotifyFramePresented() {
     // Play transitions retain their existing scene presentation instead of an editor modal.
-    if (!g_loadingDrawn && !g_holdPlayVisuals) return;
+    if (!g_loadingDrawn && !g_holdPlayVisuals && !(g_isPlaying && g_sceneLoadPending)) return;
     g_loadingDrawn = false;
     if (g_sceneLoadPending && !g_loadingPresented) {
         g_loadingPresented = true;
@@ -367,6 +371,20 @@ static ReloadLightState GetReloadLightState(bool active, bool paused, bool pendi
     if (pending) return ReloadLightState::Pending;
     return light.failed ? ReloadLightState::Failed : ReloadLightState::Watching;
 }
+static void LogContentReload(const std::string& message) {
+    std::error_code ec;
+    const auto size = std::filesystem::file_size("content_hot_reload.log", ec);
+    std::ofstream log("content_hot_reload.log", !ec && size > 1024 * 1024 ? std::ios::trunc : std::ios::app);
+    log << message << std::endl;
+}
+static std::string g_contentProjectRoot;
+static ContentFileMonitor g_contentMonitor;
+void EngineGUI_RequestContentRefresh() { g_contentMonitor.RefreshSoon(); }
+static std::vector<ContentFileMonitor::Change> g_contentChanges;
+static ReloadLight g_contentReloadLight;
+static std::string g_contentReloadStatus = "Watching project content";
+static bool g_contentSceneReload = false;
+static PlayMode g_contentPlayMode = PlayMode::None;
 static SceneFileMonitor g_sceneFileMonitor;
 static unsigned long long g_monitoredSceneRevision = 0;
 static std::optional<SceneFileMonitor::Version> g_sceneReloadConflict;
@@ -381,6 +399,55 @@ static void ResetSceneHotLoad() {
     g_sceneReloadStatus = "Watching current scene JSON";
 }
 static void QueueSceneHotLoad(SceneFileMonitor::Version version) {
+    // Validate referenced images before legacy deserializers can show a modal or
+    // replace the live scene with a missing/partially written resource.
+    std::vector<std::string> models;
+    std::vector<std::string> prefabs;
+    try {
+        const auto root = nlohmann::json::parse(version.content);
+        std::function<void(const nlohmann::json&, const std::string&)> validate;
+        validate = [&](const nlohmann::json& value, const std::string& key) {
+            if (value.is_object()) { for (auto it = value.begin(); it != value.end(); ++it) validate(it.value(), it.key()); return; }
+            if (value.is_array()) { for (const auto& child : value) validate(child, key); return; }
+            if (!value.is_string()) return;
+            if (key == "prefabAssetPath" && value.get<std::string>().size()) {
+                const auto prefab = value.get<std::string>();
+                if (std::find(prefabs.begin(), prefabs.end(), prefab) != prefabs.end()) return;
+                prefabs.push_back(prefab);
+                std::string content;
+                if (!SceneFileMonitor::Read(prefab, content)) throw std::runtime_error("Cannot read prefab: " + prefab);
+                validate(nlohmann::json::parse(content), "");
+                return;
+            }
+            if ((key == "model" || key == "proxy_model") && value.get<std::string>().size()) models.push_back(value.get<std::string>());
+            if (key != "texture" && key != "texturePath" && key != "normalMap" && key != "rampTexture" && key != "surfaceFxTexture" && key != "font") return;
+            const auto path = value.get<std::string>();
+            if (path.empty()) return;
+            const auto file = std::filesystem::u8path(path);
+            auto ext = file.extension().string();
+            std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) { return char(std::tolower(c)); });
+            if (ext == ".png" || ext == ".jpg" || ext == ".jpeg" || ext == ".dds" || ext == ".tga")
+                if (!TextureValidateFile(file.c_str())) throw std::runtime_error("Cannot read texture: " + path);
+        };
+        validate(root, "");
+    } catch (const std::exception& error) {
+        g_sceneReloadLight.Failure(); g_sceneReloadStatus = "Scene reload failed: " + std::string(error.what());
+        LogContentReload(g_sceneReloadStatus);
+        return;
+    }
+    ModelUtil_ReleaseTextureCache();
+    if (!ModelAssetCache::Instance().BeginContentReload()) {
+        g_sceneReloadLight.Failure();
+        g_sceneReloadStatus = "Model reload failed; current scene retained";
+        return;
+    }
+    for (const auto& model : models) {
+        if (!ModelAssetCache::Instance().PrepareContentModel(model)) {
+            ModelAssetCache::Instance().EndContentReload(false);
+            g_sceneReloadLight.Failure(); g_sceneReloadStatus = "Model reload failed; current scene retained: " + model;
+            LogContentReload(g_sceneReloadStatus); return;
+        }
+    }
     EngineGUI_QueueSceneLoad(version.path.c_str());
     g_pendingSceneHotLoad = std::move(version);
 }
@@ -2458,6 +2525,7 @@ void EngineGUI_FlushSceneLoadPending() {
     if (!g_scenePreparation) {
         g_preparationHotLoad = g_pendingSceneHotLoad.has_value();
         if (g_preparationHotLoad && path != SceneLoader_GetCurrentScenePath()) {
+            ModelAssetCache::Instance().EndContentReload(false);
             g_pendingSceneHotLoad.reset(); g_sceneLoadPending = false; g_playWhenPreloadDone = false;
             return;
         }
@@ -2488,7 +2556,9 @@ void EngineGUI_FlushSceneLoadPending() {
             g_sceneReloadLight.Failure();
             g_sceneReloadStatus = "Scene reload failed: " + error;
             LogSceneLoading("failed");
-            g_scenePreparation.reset(); g_pendingSceneLoadPath.clear();
+            g_scenePreparation.reset();
+            ModelAssetCache::Instance().EndContentReload(false);
+            g_pendingSceneLoadPath.clear();
             g_sceneLoadPending = false; g_playWhenPreloadDone = false;
             if (g_holdPlayVisuals) ReturnToStart();
             return;
@@ -2499,11 +2569,18 @@ void EngineGUI_FlushSceneLoadPending() {
         return;
     }
     const bool hotLoad = g_preparationHotLoad;
+    if (hotLoad && g_isPlaying) {
+        g_contentPlayMode = g_playMode;
+        SoftStopPlayForSceneLoad();
+        g_playWhenPreloadDone = true;
+        g_pendingPlayMode = g_contentPlayMode;
+    }
     auto prepared = SceneLoader_PreparationResult(*g_scenePreparation);
     g_stageStarted = std::chrono::steady_clock::now();
     LogSceneLoading("apply_begin");
     // Preparation must succeed before any old scripts/runtime are torn down.
     SceneLoader_ApplyPrepared(std::move(prepared), hotLoad);
+    ModelAssetCache::Instance().EndContentReload(true);
     LogSceneLoading("apply_complete");
     if (hotLoad) g_sceneReloadLight.Success();
     else g_sceneReloadLight = {};
@@ -3082,10 +3159,14 @@ void EngineGUI_Update(double elapsed_time) {
     if (g_sceneLoadPending)
         EngineGUI_FlushSceneLoadPending();
 
-    if (!g_isPlaying) {
+    if (!IsSceneLoadBusy()) {
         SceneLoader_ScanScriptDllsForChanges(false);
+        const bool reloadDuringPlay = g_isPlaying && ScriptFactory::Instance().PendingReloadCount() != 0;
+        bool dllChanged = false;
         SceneLoader_DrainScriptReloadQueue(
-            [](const std::string& name) {
+            [&](const std::string& name) {
+                dllChanged = true;
+                if (reloadDuringPlay) return;
                 int reloadedCount = 0;
                 std::function<void(GameObject*)> visit = [&](GameObject* node) {
                     if (!node) return;
@@ -3113,6 +3194,7 @@ void EngineGUI_Update(double elapsed_time) {
                 g_scriptReloadStatus = "Reloaded script: " + name
                     + " on " + std::to_string(reloadedCount) + " component(s)";
             });
+        if (dllChanged && reloadDuringPlay) g_contentSceneReload = true;
         const auto& feedback = ScriptFactory::Instance().GetLastReloadFeedback();
         if (feedback.revision != g_scriptFeedbackRevision) {
             g_scriptFeedbackRevision = feedback.revision;
@@ -3123,9 +3205,108 @@ void EngineGUI_Update(double elapsed_time) {
         }
     }
 
+    if (ProjectManager::Instance().IsOpen()) {
+        const auto& projectRoot = ProjectManager::Instance().GetRootPath();
+        if (g_contentProjectRoot != projectRoot) {
+            g_contentChanges.clear(); g_contentSceneReload = false;
+            ModelAssetCache::Instance().EndContentReload(false);
+            g_contentProjectRoot = projectRoot;
+            g_contentReloadLight = {}; g_contentReloadStatus = "Watching project content";
+        }
+        const auto root = std::filesystem::u8path(projectRoot) / "rom";
+        auto changes = g_contentMonitor.Poll(root);
+        g_contentChanges.insert(g_contentChanges.end(), changes.begin(), changes.end());
+        if (!IsSceneLoadBusy() && !g_contentChanges.empty()) {
+            const bool directoryChanged = std::any_of(g_contentChanges.begin(), g_contentChanges.end(),
+                [](const auto& change) { return change.added || change.removed; });
+            if (directoryChanged) {
+                ProjectAssetIndex::Instance().Refresh();
+                SceneLoader_RefreshSceneAssets();
+            }
+            for (const auto& change : g_contentChanges) {
+                const std::string path = ContentFileMonitor::Utf8Path(std::filesystem::path("rom") / std::filesystem::u8path(change.path));
+                auto ext = std::filesystem::u8path(path).extension().string();
+                std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) { return char(std::tolower(c)); });
+                if (!SceneLoader_GetCurrentScenePath().empty() && std::filesystem::absolute(path).lexically_normal() == std::filesystem::absolute(SceneLoader_GetCurrentScenePath()).lexically_normal()) {
+                    std::string content;
+                    if (change.removed) {
+                        g_contentReloadLight.Failure(); g_contentReloadStatus = "Current scene removed; live scene retained: " + path;
+                        LogContentReload(g_contentReloadStatus);
+                    } else if (SceneFileMonitor::Read(path, content) && content != SceneLoader_GetCurrentSceneContent()) g_contentSceneReload = true;
+                    continue;
+                }
+                if (ext == ".dll") continue; // ScriptFactory owns DLL validation and module lifetime.
+                if (change.added && SceneLoader_GetCurrentSceneContent().find(path) == std::string::npos) continue;
+                if (change.removed) {
+                    g_contentReloadLight.Failure();
+                    g_contentReloadStatus = "Content removed; existing resources retained: " + path;
+                    LogContentReload(g_contentReloadStatus);
+                    continue;
+                }
+                if (ext == ".png" || ext == ".jpg" || ext == ".jpeg" || ext == ".dds" || ext == ".tga") {
+                    const auto widePath = std::filesystem::u8path(path).wstring();
+                    const auto cube = CubemapReload(widePath.c_str());
+                    if (cube == TextureReloadResult::Reloaded) RenderSettings_ReloadSkybox();
+                    const auto result = cube != TextureReloadResult::NotLoaded ? cube : TextureReload(widePath.c_str());
+                    if (result == TextureReloadResult::Failed) {
+                        g_contentReloadLight.Failure(); g_contentReloadStatus = "Texture reload failed; previous version retained: " + path;
+                        LogContentReload(g_contentReloadStatus);
+                    } else {
+                        if (path.rfind("rom/effects/", 0) == 0 && !EffectSystem::ReloadContent()) {
+                            g_contentReloadLight.Failure(); g_contentReloadStatus = "Effect resource reload failed: " + path;
+                            LogContentReload(g_contentReloadStatus); continue;
+                        }
+                        g_contentReloadLight.Success(); g_contentReloadStatus = "Texture updated: " + path;
+                        // Shared model/material textures also need their owning components rebuilt.
+                        if ((change.added && result == TextureReloadResult::NotLoaded && SceneLoader_GetCurrentSceneContent().find(path) != std::string::npos) || (!change.added && (result == TextureReloadResult::NotLoaded || ModelUtil_IsTextureCached(widePath.c_str()) || path.rfind("rom/model/", 0) == 0 || path.rfind("rom/effects/", 0) == 0))) g_contentSceneReload = true;
+                    }
+                    continue;
+                }
+                if ((ext == ".ttf" || ext == ".otf") && !UIFont_Reload(std::filesystem::u8path(path).c_str())) {
+                    g_contentReloadLight.Failure(); g_contentReloadStatus = "Invalid font; previous version retained: " + path;
+                    LogContentReload(g_contentReloadStatus); continue;
+                }
+                if (path.rfind("rom/effects/", 0) == 0 && !EffectSystem::ReloadContent()) {
+                    g_contentReloadLight.Failure(); g_contentReloadStatus = "Invalid effect; previous version retained: " + path;
+                    LogContentReload(g_contentReloadStatus); continue;
+                }
+                if (ext == ".wav" && !AudioManager::Instance().ReloadContent(path)) {
+                    g_contentReloadLight.Failure(); g_contentReloadStatus = "Invalid audio; previous version retained: " + path;
+                    LogContentReload(g_contentReloadStatus); continue;
+                }
+                if (ext == ".json" || ext == ".physmat") {
+                    std::string content;
+                    if (!SceneFileMonitor::Read(path, content) || nlohmann::json::parse(content, nullptr, false).is_discarded()) {
+                        g_contentReloadLight.Failure(); g_contentReloadStatus = "Invalid content; previous scene retained: " + path;
+                        LogContentReload(g_contentReloadStatus); continue;
+                    }
+                }
+                if (!change.added || SceneLoader_GetCurrentSceneContent().find(path) != std::string::npos) g_contentSceneReload = true;
+            }
+            g_contentChanges.clear();
+        }
+        if (g_contentSceneReload && !IsSceneLoadBusy() && !g_sceneReloadConflict) {
+            const auto& path = SceneLoader_GetCurrentScenePath();
+            std::string content;
+            if (!path.empty() && SceneFileMonitor::Read(path, content)) {
+                if (!g_isPlaying && EngineGUI_IsSceneDirty()) g_sceneReloadConflict = SceneFileMonitor::Version{path, std::move(content)};
+                else QueueSceneHotLoad({path, std::move(content)});
+            }
+            g_contentSceneReload = false;
+        }
+        if (!g_contentMonitor.Error().empty()) {
+            g_contentReloadLight.Failure();
+            if (g_contentReloadStatus != g_contentMonitor.Error()) LogContentReload(g_contentMonitor.Error());
+            g_contentReloadStatus = g_contentMonitor.Error();
+        }
+    } else {
+        if (!g_contentProjectRoot.empty()) { g_contentMonitor.Stop(); g_contentProjectRoot.clear(); }
+        g_contentChanges.clear(); g_contentSceneReload = false;
+    }
+
     if (!ProjectManager::Instance().IsOpen()) {
         ResetSceneHotLoad();
-    } else if (!g_isPlaying && !IsSceneLoadBusy()) {
+    } else if (!IsSceneLoadBusy()) {
         const auto revision = SceneLoader_GetContentRevision();
         if (g_monitoredSceneRevision != revision) {
             g_sceneFileMonitor.SetBaseline(SceneLoader_GetCurrentScenePath(), SceneLoader_GetCurrentSceneContent());
@@ -3134,11 +3315,16 @@ void EngineGUI_Update(double elapsed_time) {
             g_sceneReloadConflict.reset();
         }
         // An existing conflict can absorb newer writes without opening another modal.
+
+        // Project scenes share the content batch; the legacy monitor covers scenes
+        // opened outside rom/ (including standalone transactional host fixtures).
+        const auto relativeScene = SceneLoader_GetCurrentScenePath().empty() ? std::filesystem::path{} : std::filesystem::absolute(SceneLoader_GetCurrentScenePath()).lexically_normal().lexically_relative(std::filesystem::absolute("rom").lexically_normal());
+        const bool contentOwnsScene = !relativeScene.empty() && *relativeScene.begin() != "..";
         if (auto version = g_sceneFileMonitor.Poll(elapsed_time)) {
-            g_sceneReloadConflict = std::move(*version);
+            if (!contentOwnsScene) g_sceneReloadConflict = std::move(*version);
         }
         if (g_sceneReloadConflict && !ImGui::GetTopMostPopupModal() && !g_showUnsavedChangesPopup) {
-            if (!EngineGUI_IsSceneDirty()) {
+            if (g_isPlaying || !EngineGUI_IsSceneDirty()) {
                 QueueSceneHotLoad(std::move(*g_sceneReloadConflict));
                 g_sceneReloadConflict.reset();
             }
@@ -3635,7 +3821,7 @@ static void DrawReloadLight(const char* id, const char* name, ReloadLightState s
     if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort)) {
         ImGui::BeginTooltip();
         ImGui::Text("%s: %s", name, status);
-        if (state == ReloadLightState::Paused) ImGui::TextUnformatted("Hot-load applies only outside Play with an open project.");
+        if (state == ReloadLightState::Paused) ImGui::TextUnformatted("Hot-load requires an open project.");
         ImGui::TextUnformatted(detail.c_str());
         ImGui::EndTooltip();
     }
@@ -3763,7 +3949,7 @@ void EngineGUI_Draw() {
     {
         const float lightSize = Ui(18.0f);
         const float lightGap = Ui(4.0f);
-        const float lightsX = ImGui::GetWindowContentRegionMax().x - lightSize * 2 - lightGap;
+        const float lightsX = ImGui::GetWindowContentRegionMax().x - lightSize * 3 - lightGap * 2;
         const float lightsY = ImGui::GetCursorPosY() + (ImGui::GetFrameHeight() - lightSize) * 0.5f;
         const auto toolbarPos = ImGui::GetWindowPos();
         const auto contentMin = ImGui::GetWindowContentRegionMin();
@@ -3942,12 +4128,16 @@ void EngineGUI_Draw() {
         ImGui::SetCursorPos(ImVec2(lightsX, lightsY));
         const bool projectOpen = ProjectManager::Instance().IsOpen();
         DrawReloadLight("##SceneReloadLight", "Scene JSON",
-            GetReloadLightState(projectOpen && !SceneLoader_GetCurrentScenePath().empty(), playVisuals,
+            GetReloadLightState(projectOpen && !SceneLoader_GetCurrentScenePath().empty(), false,
                 sceneLoadBusy || g_sceneReloadConflict.has_value() || g_sceneFileMonitor.HasPendingChange(), g_sceneReloadLight),
             g_sceneReloadLight, g_sceneReloadStatus);
         ImGui::SameLine(0.0f, lightGap);
+        DrawReloadLight("##ContentReloadLight", "Content",
+            GetReloadLightState(projectOpen, false, g_contentMonitor.Pending() || !g_contentChanges.empty() || g_contentSceneReload,
+                g_contentReloadLight), g_contentReloadLight, g_contentReloadStatus);
+        ImGui::SameLine(0.0f, lightGap);
         DrawReloadLight("##ScriptReloadLight", "Script DLL",
-            GetReloadLightState(projectOpen, playVisuals, ScriptFactory::Instance().PendingReloadCount() != 0, g_scriptReloadLight),
+            GetReloadLightState(projectOpen, false, ScriptFactory::Instance().PendingReloadCount() != 0, g_scriptReloadLight),
             g_scriptReloadLight, g_scriptReloadStatus);
     }
     ImGui::End();

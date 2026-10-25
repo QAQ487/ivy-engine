@@ -186,8 +186,7 @@ void Skybox_ReloadFromSettings() {
         return;
     }
 
-    if (s_cubemapSrv && path == s_loadedCubemapPath)
-        return;
+
 
     s_loadedCubemapPath.clear();
 

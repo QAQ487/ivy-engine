@@ -8,6 +8,7 @@
 #include "texture.h"
 #include "engine/ui/ui_font.h"
 #include <string>
+#include <filesystem>
 #include <cstdio>
 #include <Windows.h>
  // #include "direct3d.h" // SAFE_RELEASE
@@ -20,6 +21,7 @@ static constexpr int MAX_TEXTURES = 1024; // ???e?N?X?`????
 
 struct Texture {
 	std::wstring  m_filename;
+	bool mipmap = true;
 	unsigned int m_width = 0;
 	unsigned int m_height = 0;
 	ID3D11ShaderResourceView* m_ptr_Texture = nullptr; // ?e?N?X?`???i?Q?C?R?????????????????j// ?P??????P??
@@ -52,11 +54,24 @@ void Texture_Finalize() {
 	CubemapReleaseAll();
 }
 
+static std::wstring TexturePathKey(const std::filesystem::path& path) {
+    std::error_code ec;
+    const auto absolute = std::filesystem::absolute(path, ec);
+    return (ec ? path : absolute).lexically_normal().wstring();
+}
+static HRESULT ReadTextureImage(const wchar_t* path, TexMetadata& metadata, ScratchImage& image) {
+    const auto ext = std::filesystem::path(path).extension().wstring();
+    if (_wcsicmp(ext.c_str(), L".dds") == 0) return LoadFromDDSFile(path, DDS_FLAGS_NONE, &metadata, image);
+    if (_wcsicmp(ext.c_str(), L".tga") == 0) return LoadFromTGAFile(path, &metadata, image);
+    return LoadFromWICFile(path, WIC_FLAGS_NONE, &metadata, image);
+}
+
 static int TextureLoadInternal(const wchar_t* ptr_file_name, bool mipmap, bool reportErrors) {
+    if (!ptr_file_name || !ptr_file_name[0] || !g_pDevice) return -1;
 	// ???????????????t?@?C????????????
 	for (int i = 0; i < MAX_TEXTURES; i++) {
 		if (!g_textures[i].m_ptr_Texture) continue; // ?????e?N?X?`??????????????????X?L?b?v
-		if (g_textures[i].m_filename == ptr_file_name) { // ?????????t?@?C??????e?N?X?`??????????????????A????e?N?X?`????ID????
+		if (_wcsicmp(TexturePathKey(g_textures[i].m_filename).c_str(), TexturePathKey(ptr_file_name).c_str()) == 0) { // ?????????t?@?C??????e?N?X?`??????????????????A????e?N?X?`????ID????
 			return i;
 		}
 	}
@@ -69,7 +84,7 @@ static int TextureLoadInternal(const wchar_t* ptr_file_name, bool mipmap, bool r
 		/* ?e?N?X?`???????? */
 		TexMetadata metadata;
 		ScratchImage image;
-		HRESULT loadHr = LoadFromWICFile(ptr_file_name, WIC_FLAGS_NONE, &metadata, image);
+		HRESULT loadHr = ReadTextureImage(ptr_file_name, metadata, image);
 		if (FAILED(loadHr)) {
 			char pathUtf8[MAX_PATH * 3] = {};
 			WideCharToMultiByte(CP_UTF8, 0, ptr_file_name, -1, pathUtf8, sizeof(pathUtf8),
@@ -99,6 +114,7 @@ static int TextureLoadInternal(const wchar_t* ptr_file_name, bool mipmap, bool r
 			break;
 		}
 
+		g_textures[i].mipmap = mipmap;
 		g_textures[i].m_filename = ptr_file_name; // ?t?@?C????????
 
 		return i;
@@ -112,8 +128,14 @@ int TextureCreateFromRGBA(const wchar_t* name, const unsigned char* rgba, int wi
 
 	for (int i = 0; i < MAX_TEXTURES; i++) {
 		if (!g_textures[i].m_ptr_Texture) continue;
-		if (g_textures[i].m_filename == name)
-			return i;
+		if (g_textures[i].m_filename == name) {
+            if (g_textures[i].m_width != static_cast<unsigned>(width) || g_textures[i].m_height != static_cast<unsigned>(height)) return -1;
+            ID3D11Resource* resource = nullptr;
+            g_textures[i].m_ptr_Texture->GetResource(&resource);
+            g_pContext->UpdateSubresource(resource, 0, nullptr, rgba, static_cast<UINT>(width * 4), 0);
+            resource->Release();
+            return i;
+        }
 	}
 
 	for (int i = 0; i < MAX_TEXTURES; i++) {
@@ -237,7 +259,7 @@ ID3D11ShaderResourceView* CubemapLoad(const wchar_t* fileName) {
 
 	for (int i = 0; i < MAX_CUBEMAPS; ++i) {
 		if (!g_cubemaps[i].srv) continue;
-		if (g_cubemaps[i].filename == fileName)
+		if (_wcsicmp(TexturePathKey(g_cubemaps[i].filename).c_str(), TexturePathKey(fileName).c_str()) == 0)
 			return g_cubemaps[i].srv;
 	}
 
@@ -290,3 +312,47 @@ void CubemapReleaseAll() {
 
 int TextureLoad(const wchar_t* path, bool mipmap) { return TextureLoadInternal(path,mipmap,true); }
 int TextureLoadQuiet(const wchar_t* path, bool mipmap) { return TextureLoadInternal(path,mipmap,false); }
+
+
+TextureReloadResult TextureReload(const wchar_t* path) {
+    if (!path || !g_pDevice) return TextureReloadResult::Failed;
+    TexMetadata metadata; ScratchImage image;
+    if (FAILED(ReadTextureImage(path, metadata, image))) return TextureReloadResult::Failed;
+    const auto key = TexturePathKey(path);
+    for (auto& slot : g_textures) {
+        if (!slot.m_ptr_Texture || _wcsicmp(TexturePathKey(slot.m_filename).c_str(), key.c_str()) != 0) continue;
+        HRESULT hr = S_OK;
+        if (slot.mipmap && metadata.mipLevels == 1) {
+            ScratchImage chain;
+            hr = GenerateMipMaps(image.GetImages(), image.GetImageCount(), metadata, TEX_FILTER_DEFAULT, 0, chain);
+            if (FAILED(hr)) return TextureReloadResult::Failed;
+            image = std::move(chain); metadata = image.GetMetadata();
+        }
+        ID3D11ShaderResourceView* replacement = nullptr;
+        if (FAILED(CreateShaderResourceView(g_pDevice, image.GetImages(), image.GetImageCount(), metadata, &replacement))) return TextureReloadResult::Failed;
+        auto* previous = slot.m_ptr_Texture;
+        slot.m_ptr_Texture = replacement; slot.m_width = static_cast<unsigned int>(metadata.width); slot.m_height = static_cast<unsigned int>(metadata.height);
+        previous->Release();
+        return TextureReloadResult::Reloaded;
+    }
+    return TextureReloadResult::NotLoaded;
+}
+
+TextureReloadResult CubemapReload(const wchar_t* path) {
+    for (auto& slot : g_cubemaps) {
+        if (!slot.srv || _wcsicmp(TexturePathKey(slot.filename).c_str(), TexturePathKey(path).c_str())) continue;
+        TexMetadata metadata; ScratchImage image;
+        if (FAILED(LoadFromDDSFile(path, DDS_FLAGS_NONE, &metadata, image)) || !metadata.IsCubemap()) return TextureReloadResult::Failed;
+        ID3D11ShaderResourceView* replacement = nullptr;
+        if (FAILED(CreateShaderResourceView(g_pDevice, image.GetImages(), image.GetImageCount(), metadata, &replacement))) return TextureReloadResult::Failed;
+        auto* previous = slot.srv; slot.srv = replacement; previous->Release();
+        return TextureReloadResult::Reloaded;
+    }
+    return TextureReloadResult::NotLoaded;
+}
+
+bool TextureValidateFile(const wchar_t* path) {
+    if (!path || !path[0]) return false;
+    TexMetadata metadata; ScratchImage image;
+    return SUCCEEDED(ReadTextureImage(path, metadata, image));
+}

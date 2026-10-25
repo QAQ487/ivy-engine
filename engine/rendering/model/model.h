@@ -57,6 +57,7 @@ public:
 
     bool LoadOBJ(const wchar_t* objPath, const wchar_t* fallbackTex = nullptr);
     bool LoadFBX(const wchar_t* fbxPath, const wchar_t* fallbackTex = nullptr);
+    bool LoadFBXQuiet(const wchar_t* fbxPath);
 
     fbxsdk::FbxNode* FindBone(const char* name) const;
     fbxsdk::FbxNode* FindBone(const wchar_t* name) const;
@@ -131,6 +132,7 @@ public:
     static std::unique_ptr<Model3D> CreateAnimInstanceFrom(const Model3D& shared);
 
 private:
+    bool LoadFBXInternal(const wchar_t* fbxPath, bool reportErrors);
     bool m_isAnimInstance = false;
     bool m_sharesCachedVB = false;
     bool m_gpuSkinEligible = false;

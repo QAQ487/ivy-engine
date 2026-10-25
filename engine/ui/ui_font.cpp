@@ -9,6 +9,7 @@
 #include <cstdio>
 #include <cwctype>
 #include <map>
+#include <filesystem>
 #include <string>
 #include <vector>
 #include <Windows.h>
@@ -69,8 +70,17 @@ namespace {
 
 	bool BakeFont(const wchar_t* ttfPath, UIFont& out) {
 		const std::vector<unsigned char> ttf = LoadFile(ttfPath);
-		if (ttf.empty())
-			return false;
+		if (ttf.size() < 12) return false;
+        const int offset = stbtt_GetFontOffsetForIndex(ttf.data(), 0);
+        if (offset < 0 || static_cast<size_t>(offset) + 12 > ttf.size()) return false;
+        const size_t tables = (size_t(ttf[offset + 4]) << 8) | ttf[offset + 5];
+        if (static_cast<size_t>(offset) + 12 + tables * 16 > ttf.size()) return false;
+        auto read32 = [&](size_t pos) { return (size_t(ttf[pos]) << 24) | (size_t(ttf[pos+1]) << 16) | (size_t(ttf[pos+2]) << 8) | ttf[pos+3]; };
+        for (size_t n = 0; n < tables; ++n) {
+            const size_t table = static_cast<size_t>(offset) + 12 + n * 16;
+            const auto begin = read32(table + 8), length = read32(table + 12);
+            if (begin > ttf.size() || length > ttf.size() - begin) return false;
+        }
 
 		stbtt_fontinfo info{};
 		if (!stbtt_InitFont(&info, ttf.data(), stbtt_GetFontOffsetForIndex(ttf.data(), 0)))
@@ -160,4 +170,15 @@ const UIFont* UIFont_Get(const wchar_t* ttfPath) {
 
 void UIFont_ClearCache() {
 	g_fonts.clear();
+}
+
+bool UIFont_Reload(const wchar_t* path) {
+    const auto key = std::filesystem::absolute(path).lexically_normal().wstring();
+    for (auto& entry : g_fonts) {
+        if (_wcsicmp(std::filesystem::absolute(entry.first).lexically_normal().c_str(), key.c_str()) != 0) continue;
+        UIFont candidate;
+        if (!BakeFont(entry.first.c_str(), candidate)) return false;
+        entry.second = candidate;
+    }
+    return true;
 }

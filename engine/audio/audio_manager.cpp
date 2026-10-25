@@ -14,6 +14,7 @@
 
  // Internal structure to hold all data for a single sound
 struct Playback {
+    std::string contentPath;
     AudioType type;
     bool      is3D;
     bool      isLooping;
@@ -144,6 +145,7 @@ void AudioManager::Update() {
 // Helper: Load WAV from disk
 // ---------------------------------------------------------------------------
 bool AudioManager::LoadWav(const std::string& path, Playback* outSource) {
+    outSource->contentPath = path;
     HMMIO hmmio = mmioOpenA(const_cast<LPSTR>(path.c_str()), nullptr, MMIO_READ);
     if (!hmmio) return false;
 
@@ -993,6 +995,7 @@ AudioPlaybackId AudioManager::StartInstanceFromLoaded(const std::string& loadedI
 
     const Playback* loaded = it->second.get();
     auto playback = std::make_unique<Playback>();
+    playback->contentPath = loaded->contentPath;
     playback->type = loaded->type;
     playback->is3D = loaded->is3D;
     playback->isLooping = false;
@@ -1119,4 +1122,30 @@ void AudioManager::TryLoadBusVolumesFromNearbyProject() {
         return;
     const fs::path nearby = fs::path(exePath).parent_path() / "project.json";
     LoadBusVolumesFromProjectFile(nearby.string());
+}
+
+bool AudioManager::ReloadContent(const std::string& path) {
+    Playback candidate{};
+    if (!LoadWav(path, &candidate)) return false;
+    const auto key = std::filesystem::absolute(path).lexically_normal().wstring();
+    auto matches = [&](const Playback& source) {
+        if (source.contentPath.empty()) return false;
+        return _wcsicmp(std::filesystem::absolute(source.contentPath).lexically_normal().c_str(), key.c_str()) == 0;
+    };
+    for (auto it = m_sources.begin(); it != m_sources.end();) {
+        if (matches(*it->second)) { DestroyPlaybackVoice(it->second.get()); it = m_sources.erase(it); }
+        else ++it;
+    }
+    for (auto it = m_instances.begin(); it != m_instances.end();) {
+        if (matches(*it->second)) { DestroyPlaybackVoice(it->second.get()); it = m_instances.erase(it); }
+        else ++it;
+    }
+    for (auto& entry : m_loadedAudio) {
+        auto& source = *entry.second;
+        if (!matches(source)) continue;
+        DestroyPlaybackVoice(&source);
+        source.audioData = candidate.audioData;
+        source.wfx = candidate.wfx;
+    }
+    return true;
 }

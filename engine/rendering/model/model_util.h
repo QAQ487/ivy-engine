@@ -54,6 +54,7 @@ ID3D11ShaderResourceView* CreateSolidWhiteSRV();
 // Releases all SRVs held by the internal texture cache. Call once during
 // shutdown, before the D3D11 device is destroyed.
 void ModelUtil_ReleaseTextureCache();
+bool ModelUtil_IsTextureCached(const wchar_t* path);
 
 // �C�ӐF/�s���N/�� 1x1 �e�N�X�`���쐬
 ID3D11ShaderResourceView* CreateSolidColorSRV(uint8_t r, uint8_t g, uint8_t b, uint8_t a = 255);

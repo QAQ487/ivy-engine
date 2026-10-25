@@ -108,6 +108,7 @@ void Ibl_ReloadFromSettings() {
 }
 
 void Ibl_Bind(Shader3DVariant variant) {
+    s_brdfLut = TextureGetSRV(s_brdfLutTexId);
     if (!s_context)
         return;
 
