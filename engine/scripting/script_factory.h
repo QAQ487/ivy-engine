@@ -62,6 +62,14 @@ public:
     void RequestReload(const std::string& name, const std::string& dllPath);
     size_t PendingReloadCount() const;
 
+    struct ReloadFeedback {
+        unsigned long long revision = 0;
+        bool failed = false;
+        std::string error;
+    };
+    // Main-thread result of the latest drained batch; no class-layout/ABI change.
+    const ReloadFeedback& GetLastReloadFeedback() const;
+
     // Called from main thread each frame ? executes queued reloads.
     // Calls onReloaded(name) for each script that was successfully reloaded.
     void DrainReloadQueue(const std::function<void(const std::string&)>& onReloaded);

@@ -24,6 +24,8 @@ void SceneCanvas_Draw();
 UICanvas* SceneCanvas_GetCanvas();
 
 void SceneCanvas_ClearSceneCanvas();
+std::unique_ptr<UICanvas> SceneCanvas_Prepare(const nlohmann::json& canvasJson);
+void SceneCanvas_ApplyPrepared(std::unique_ptr<UICanvas> canvas, const nlohmann::json& canvasJson);
 void SceneCanvas_LoadSceneCanvas(const nlohmann::json& canvasJson);
 nlohmann::json SceneCanvas_SaveSceneCanvas();
 

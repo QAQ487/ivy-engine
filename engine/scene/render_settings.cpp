@@ -1,5 +1,7 @@
-﻿#include "engine/scene/scene_loader.h"
+#include "engine/scene/scene_loader.h"
 #include "render_settings.h"
+#include <stdexcept>
+#include "scene_json_validation.h"
 
 #include "engine/rendering/environment/skybox.h"
 #include "engine/rendering/environment/ibl.h"
@@ -109,52 +111,65 @@ void RenderSettings_ApplyShadowQuality() {
     Shadow::SetBackfaceDepth(backface);
 }
 
-void RenderSettings_ApplyFromJson(const nlohmann::json& renderJson) {
-    if (!renderJson.is_object()) return;
+RenderSettingsData RenderSettings_ParseJson(const nlohmann::json& renderJson, RenderSettingsData settings) {
+    if (!renderJson.is_object()) throw std::runtime_error("render settings must be an object");
+    auto types = RenderSettings_ToJson();
+    // The legacy format accepts either a quality ID or an integer.
+    types.erase("shadowQuality");
+    SceneJson_ValidateTypes(renderJson, types, "settings.render");
+    if (renderJson.contains("shadowQuality") && !renderJson["shadowQuality"].is_string()
+        && !renderJson["shadowQuality"].is_number_integer())
+        throw std::runtime_error("Invalid type: settings.render.shadowQuality");
 
-    g_renderSettings.skyboxEnabled = renderJson.value("skyboxEnabled", g_renderSettings.skyboxEnabled);
-    g_renderSettings.skyboxCubemapPath = renderJson.value(
-        "skyboxCubemap", g_renderSettings.skyboxCubemapPath);
-    g_renderSettings.skyboxTint = ReadColor4(
-        renderJson.value("skyboxTint", nlohmann::json{}), g_renderSettings.skyboxTint);
-    g_renderSettings.skyboxExposure = renderJson.value(
-        "skyboxExposure", g_renderSettings.skyboxExposure);
-    g_renderSettings.skyboxRotationYDeg = renderJson.value(
-        "skyboxRotationYDeg", g_renderSettings.skyboxRotationYDeg);
-    g_renderSettings.iblEnabled = renderJson.value("iblEnabled", g_renderSettings.iblEnabled);
-    g_renderSettings.iblIntensity = renderJson.value("iblIntensity", g_renderSettings.iblIntensity);
-    g_renderSettings.iblIrradiancePath = renderJson.value(
-        "iblIrradiance", g_renderSettings.iblIrradiancePath);
-    g_renderSettings.iblPrefilterPath = renderJson.value(
-        "iblPrefilter", g_renderSettings.iblPrefilterPath);
-    g_renderSettings.iblBrdfLutPath = renderJson.value(
-        "iblBrdfLut", g_renderSettings.iblBrdfLutPath);
-    g_renderSettings.clearColor = ReadColor4(
-        renderJson.value("clearColor", nlohmann::json{}), g_renderSettings.clearColor);
-    g_renderSettings.defaultShader = renderJson.value(
-        "defaultShader", g_renderSettings.defaultShader);
+    settings.skyboxEnabled = renderJson.value("skyboxEnabled", settings.skyboxEnabled);
+    settings.skyboxCubemapPath = renderJson.value(
+        "skyboxCubemap", settings.skyboxCubemapPath);
+    settings.skyboxTint = ReadColor4(
+        renderJson.value("skyboxTint", nlohmann::json{}), settings.skyboxTint);
+    settings.skyboxExposure = renderJson.value(
+        "skyboxExposure", settings.skyboxExposure);
+    settings.skyboxRotationYDeg = renderJson.value(
+        "skyboxRotationYDeg", settings.skyboxRotationYDeg);
+    settings.iblEnabled = renderJson.value("iblEnabled", settings.iblEnabled);
+    settings.iblIntensity = renderJson.value("iblIntensity", settings.iblIntensity);
+    settings.iblIrradiancePath = renderJson.value(
+        "iblIrradiance", settings.iblIrradiancePath);
+    settings.iblPrefilterPath = renderJson.value(
+        "iblPrefilter", settings.iblPrefilterPath);
+    settings.iblBrdfLutPath = renderJson.value(
+        "iblBrdfLut", settings.iblBrdfLutPath);
+    settings.clearColor = ReadColor4(
+        renderJson.value("clearColor", nlohmann::json{}), settings.clearColor);
+    settings.defaultShader = renderJson.value(
+        "defaultShader", settings.defaultShader);
 
     if (renderJson.contains("shadowQuality")) {
         if (renderJson["shadowQuality"].is_string())
-            g_renderSettings.shadowQuality = RenderSettings_ShadowQualityFromId(
+            settings.shadowQuality = RenderSettings_ShadowQualityFromId(
                 renderJson["shadowQuality"].get<std::string>());
         else if (renderJson["shadowQuality"].is_number_integer()) {
             const int q = renderJson["shadowQuality"].get<int>();
-            if (q <= 0) g_renderSettings.shadowQuality = ShadowQuality::Low;
-            else if (q >= 2) g_renderSettings.shadowQuality = ShadowQuality::High;
-            else g_renderSettings.shadowQuality = ShadowQuality::Medium;
+            if (q <= 0) settings.shadowQuality = ShadowQuality::Low;
+            else if (q >= 2) settings.shadowQuality = ShadowQuality::High;
+            else settings.shadowQuality = ShadowQuality::Medium;
         }
     }
 
-    g_renderSettings.fogEnabled = renderJson.value("fogEnabled", g_renderSettings.fogEnabled);
+    settings.fogEnabled = renderJson.value("fogEnabled", settings.fogEnabled);
     if (renderJson.contains("fogColor"))
-        g_renderSettings.fogColor = ReadColor3(renderJson["fogColor"], g_renderSettings.fogColor);
-    g_renderSettings.fogDensity = renderJson.value("fogDensity", g_renderSettings.fogDensity);
-    g_renderSettings.fogStart = renderJson.value("fogStart", g_renderSettings.fogStart);
-    g_renderSettings.fogHeight = renderJson.value("fogHeight", g_renderSettings.fogHeight);
-    g_renderSettings.fogHeightFalloff = renderJson.value(
-        "fogHeightFalloff", g_renderSettings.fogHeightFalloff);
+        settings.fogColor = ReadColor3(renderJson["fogColor"], settings.fogColor);
+    settings.fogDensity = renderJson.value("fogDensity", settings.fogDensity);
+    settings.fogStart = renderJson.value("fogStart", settings.fogStart);
+    settings.fogHeight = renderJson.value("fogHeight", settings.fogHeight);
+    settings.fogHeightFalloff = renderJson.value(
+        "fogHeightFalloff", settings.fogHeightFalloff);
 
+    return settings;
+}
+
+void RenderSettings_ApplyFromJson(const nlohmann::json& renderJson) {
+    if (!renderJson.is_object()) return;
+    g_renderSettings = RenderSettings_ParseJson(renderJson, g_renderSettings);
     RenderSettings_ReloadSkybox();
     RenderSettings_ApplyShadowQuality();
 }

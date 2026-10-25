@@ -32,6 +32,12 @@ void SceneLoader_RefreshSceneAssets();
 void SceneLoader_SetDefaultSceneFileName(const std::string& fileName, bool persist);
 void SceneLoader_CopySceneFileName(const std::string& fileName);
 
+struct PreparedScene;
+std::shared_ptr<PreparedScene> SceneLoader_PrepareFromContent(const std::string& path,
+    const std::string& content, std::string& error);
+void SceneLoader_ApplyPrepared(std::shared_ptr<PreparedScene> prepared, bool preserveEditorView = false);
+const std::string& SceneLoader_GetCurrentSceneContent();
+unsigned long long SceneLoader_GetContentRevision();
 bool SceneLoader_LoadFromFile(const char* filename);
 bool SceneLoader_SaveToFile(const char* filename);
 void SceneLoader_ClearSceneNodes();

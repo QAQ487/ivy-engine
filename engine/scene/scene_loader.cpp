@@ -7,6 +7,9 @@
 #include "camera.h"
 #include "engine/ecs/sprite_renderer_component.h"
 #include "scene_loader.h"
+#include "prepared_scene.h"
+#include "scene_file_monitor.h"
+#include "scene_json_validation.h"
 
 #include "engine/scene/render_settings.h"
 #include "engine/ecs/component_factory.h"
@@ -69,7 +72,10 @@ static std::vector<SceneAssetEntry> g_sceneAssets;
 static bool g_sceneAssetsScanned = false;
 static std::string g_defaultSceneFileName = "scene01.json";
 static std::string g_defaultScenePath = SCENE_DIR + g_defaultSceneFileName;
-static std::string g_currentScenePath;
+static std::string g_currentScenePath, g_currentSceneContent;
+static unsigned long long g_contentRevision = 0;
+const std::string& SceneLoader_GetCurrentSceneContent() { return g_currentSceneContent; }
+unsigned long long SceneLoader_GetContentRevision() { return g_contentRevision; }
 static char g_saveFileName[128] = "scene01.json";
 static bool g_scene2D=false, g_physics3D=true, g_physics2D=false;
 bool SceneLoader_Is2D(){return g_scene2D;}
@@ -117,68 +123,51 @@ static json BuildSceneSettingsJson() {
     return settings;
 }
 
-static void ApplySceneSettings(const json& root) {
-    const auto policy=SceneExecutionPolicy::FromSettings(root.value("settings",json::object()));
-    g_scene2D=policy.scene2D; g_physics3D=policy.physics3D; g_physics2D=policy.physics2D;
-    EngineGUI_SetCameraMode(CameraMode::SceneCamera);
-    std::string preferred;
-    if(root.contains("settings") && root["settings"].is_object()) {
-        const auto camera=root["settings"].value("camera",json::object());
-        if(camera.is_object()) {
-            preferred=camera.value("node",std::string{});
-            const auto mode=camera.value("mode",std::string("scene"));
-            if(mode=="thirdPerson") EngineGUI_SetCameraMode(CameraMode::ThirdPerson);
-            if(mode=="firstPerson") EngineGUI_SetCameraMode(CameraMode::FirstPerson);
+static void PrepareSceneSettings(const json& root, PreparedScene& prepared) {
+    const auto settings = root.value("settings", json::object());
+    if (!settings.is_object()) throw std::runtime_error("settings must be an object");
+    prepared.policy = SceneExecutionPolicy::FromSettings(settings);
+    const auto camera = settings.value("camera", json::object());
+    if (!camera.is_object()) throw std::runtime_error("camera must be an object");
+    prepared.preferredCamera = camera.value("node", std::string{});
+    const auto mode = camera.value("mode", std::string("scene"));
+    if (mode == "thirdPerson") prepared.cameraMode = CameraMode::ThirdPerson;
+    if (mode == "firstPerson") prepared.cameraMode = CameraMode::FirstPerson;
+    if (settings.contains("render")) prepared.render = RenderSettings_ParseJson(settings["render"]);
+    const auto dc = settings.value("debugCamera", json::object());
+    if (!dc.is_object()) throw std::runtime_error("debugCamera must be an object");
+    prepared.debugFly = ToLowerString(dc.value("mode", std::string("orbit"))) == "fly";
+    prepared.debugOnPlay = dc.value("enabledOnPlay", false);
+    prepared.yaw = dc.value("yawDeg", 0.0f); prepared.pitch = dc.value("pitchDeg", -15.0f);
+    if (dc.contains("position")) {
+        const auto& pos = dc["position"];
+        if (!pos.is_object()) throw std::runtime_error("debugCamera.position must be an object");
+        prepared.debugPosition = true;
+        prepared.position = {pos.value("x", 0.0f), pos.value("y", 3.0f), pos.value("z", -6.0f)};
+    }
+}
+
+static void ApplySceneSettings(const PreparedScene& prepared, bool preserveEditorView) {
+    g_scene2D = prepared.policy.scene2D; g_physics3D = prepared.policy.physics3D; g_physics2D = prepared.policy.physics2D;
+    EngineGUI_SetCameraMode(prepared.cameraMode);
+    EngineGUI_SetActiveCameraNodeName(SceneCameraResolveDefault(g_sceneNodes, prepared.preferredCamera));
+    g_debugCameraEnabledOnPlay = prepared.debugOnPlay;
+    g_debugCameraFlyOnPlay = prepared.debugFly;
+    if (!preserveEditorView) {
+        SetCamera(Camera{});
+        DebugCamera_SetControlMode(DebugCameraControlMode::Orbit);
+#ifndef GAME_RUNTIME
+        DebugCamera_ResetEditorView(g_scene2D);
+#endif
+        if (!prepared.debugOnPlay && prepared.debugFly) DebugCamera_SetControlMode(DebugCameraControlMode::Fly);
+        if (prepared.debugPosition) {
+            if (prepared.debugFly) DebugCamera_SetFlyView(prepared.position, prepared.yaw, prepared.pitch);
+            else DebugCamera_SetFocalPoint(prepared.position);
         }
     }
-    EngineGUI_SetActiveCameraNodeName(SceneCameraResolveDefault(g_sceneNodes,preferred));
-    SetCamera(Camera{}); // Never inherit a previous scene's pose/projection.
-    g_debugCameraEnabledOnPlay = false;
-    g_debugCameraFlyOnPlay = false;
-    DebugCamera_SetControlMode(DebugCameraControlMode::Orbit);
-    RenderSettings_ResetToDefaults();
-#ifndef GAME_RUNTIME
-    DebugCamera_ResetEditorView(g_scene2D);
-#endif
-
-    if (!root.contains("settings") || !root["settings"].is_object()) {
-        RenderSettings_ReloadSkybox();
-        RenderSettings_ApplyShadowQuality();
-        return;
-    }
-
-    const json& settings = root["settings"];
-    if (settings.contains("render") && settings["render"].is_object())
-        RenderSettings_ApplyFromJson(settings["render"]);
-    else {
-        RenderSettings_ReloadSkybox();
-        RenderSettings_ApplyShadowQuality();
-    }
-
-    if (!settings.contains("debugCamera") || !settings["debugCamera"].is_object()) return;
-
-    const json& dc = settings["debugCamera"];
-    const std::string mode = ToLowerString(dc.value("mode", "orbit"));
-    g_debugCameraFlyOnPlay = (mode == "fly");
-    g_debugCameraEnabledOnPlay = dc.value("enabledOnPlay", false);
-
-    // Editor keeps orbit camera enabled. Fly mode applies only when play starts.
-    if (!g_debugCameraEnabledOnPlay && g_debugCameraFlyOnPlay)
-        DebugCamera_SetControlMode(DebugCameraControlMode::Fly);
-
-    if (dc.contains("position") && dc["position"].is_object()) {
-        const json& pos = dc["position"];
-        const float x = pos.value("x", 0.0f);
-        const float y = pos.value("y", 3.0f);
-        const float z = pos.value("z", -6.0f);
-        const float yawDeg = dc.value("yawDeg", 0.0f);
-        const float pitchDeg = dc.value("pitchDeg", -15.0f);
-
-        if (g_debugCameraFlyOnPlay)
-            DebugCamera_SetFlyView({ x, y, z }, yawDeg, pitchDeg);
-        else
-            DebugCamera_SetFocalPoint({ x, y, z });
-    }
+    RenderSettings_Get() = prepared.render;
+    RenderSettings_ReloadSkybox();
+    RenderSettings_ApplyShadowQuality();
 }
 
 static std::string ResolveRuntimeScriptBinDir() {
@@ -543,101 +532,112 @@ static void InvokeGameplaySessionReset() {
 }
 
 static void SceneLoader_PrepareForSceneReload() {
-    PrefabRuntime_FlushDestroyed();
-    TeardownAllScripts();
-    PrefabRuntime_DestroyAllSpawnedChildren();
-
-    if (SceneBase* scene = SceneManager::Instance().GetCurrentScene()) {
-        SceneRuntime::Instance().Clear(scene, true);
-        scene->ClearObjects();
-    }
-
+    TeardownScenePlaySession(false);
     PrefabRuntime_ResetSessionState();
-    InvokeGameplaySessionReset();
+}
+
+std::shared_ptr<PreparedScene> SceneLoader_PrepareFromContent(const std::string& path,
+    const std::string& content, std::string& error) {
+    error.clear();
+    try {
+        const auto root = json::parse(content);
+        if (!root.is_object()) throw std::runtime_error("scene root must be an object");
+        for (const auto* key : {"nodes", "blocks"})
+            if (root.contains(key) && !root[key].is_array()) throw std::runtime_error(std::string(key) + " must be an array");
+        auto prepared = std::make_shared<PreparedScene>();
+        prepared->path = path; prepared->content = content;
+        PrepareSceneSettings(root, *prepared);
+        if (root.contains("blocks") && root["blocks"].is_array()) {
+            for (const auto& jb : root["blocks"]) {
+                if (!jb.is_object()) throw std::runtime_error("block must be an object");
+                if (auto node = GameObjectFromLegacyBlock(jb))
+                    prepared->nodes.push_back(std::move(node));
+            }
+        }
+
+        if (root.contains("nodes") && root["nodes"].is_array()) {
+            for (const auto& jn : root["nodes"]) {
+                if (!jn.is_object()) throw std::runtime_error("node must be an object");
+                if (jn.contains("components") && !jn["components"].is_object()) throw std::runtime_error("components must be an object");
+                std::unique_ptr<GameObject> node;
+
+                if (jn.contains("prefabAssetPath") && jn["prefabAssetPath"].is_string()) {
+                    const std::string prefabPath = jn["prefabAssetPath"].get<std::string>();
+                    std::string prefabContent;
+                    if (!SceneFileMonitor::Read(prefabPath, prefabContent)) throw std::runtime_error("Cannot read prefab: " + prefabPath);
+                    node = PrefabSerializer::DeserializeForScene(prefabContent);
+                    if (node) {
+                        if (jn.contains("name") && jn["name"].is_string())
+                            node->SetName(jn["name"].get<std::string>());
+                        if (jn.contains("tag") && jn["tag"].is_number_integer()) {
+                            const int tagValue = jn["tag"].get<int>();
+                            if (TagRegistry::Instance().IsValid(tagValue))
+                                node->SetTag(tagValue);
+                        }
+                        if (jn.contains("components") && jn["components"].is_object() &&
+                            jn["components"].contains("SceneTransform")) {
+                            if (engine::Transform* t = node->GetTransform()) {
+                                const auto& st = jn["components"]["SceneTransform"];
+                                t->localPosition.x = st.value("posX", t->localPosition.x);
+                                t->localPosition.y = st.value("posY", t->localPosition.y);
+                                t->localPosition.z = st.value("posZ", t->localPosition.z);
+                                t->localRotation.x = st.value("rotX", t->localRotation.x);
+                                t->localRotation.y = st.value("rotY", t->localRotation.y);
+                                t->localRotation.z = st.value("rotZ", t->localRotation.z);
+                                t->localScale.x = st.value("scaleX", t->localScale.x);
+                                t->localScale.y = st.value("scaleY", t->localScale.y);
+                                t->localScale.z = st.value("scaleZ", t->localScale.z);
+                                t->SnapshotStartState();
+                                node->SyncLegacyTransformFromComponents();
+                            }
+                        }
+                        node->SetPrefabAssetPath(prefabPath);
+                    }
+                } else {
+                    node = PrefabSerializer::DeserializeForScene(jn.dump());
+                }
+
+                if (node) prepared->nodes.push_back(std::move(node));
+            }
+        }
+
+
+        prepared->canvasJson = root.value("canvas", json::object());
+        prepared->canvas = SceneCanvas_Prepare(prepared->canvasJson);
+        return prepared;
+    } catch (const std::exception& e) {
+        error = e.what();
+    } catch (...) {
+        error = "Scene deserialization failed";
+    }
+    OutputDebugStringA(("[SceneLoader] " + error + "\n").c_str());
+    return {};
+}
+
+void SceneLoader_ApplyPrepared(std::shared_ptr<PreparedScene> prepared, bool preserveEditorView) {
+    if (!prepared) return;
+    SceneLoader_PrepareForSceneReload();
+    g_sceneNodes = std::move(prepared->nodes);
+    for (auto& node : g_sceneNodes) node->AttachPreparedComponents();
+    SceneCanvas_ApplyPrepared(std::move(prepared->canvas), prepared->canvasJson);
+    ApplySceneSettings(*prepared, preserveEditorView);
+    std::error_code ec;
+    const fs::path scenePath(prepared->path);
+    const auto relativePath = fs::relative(scenePath, SCENE_DIR, ec);
+    SceneLoader_CopySceneFileName(!ec ? relativePath.generic_string() : scenePath.filename().generic_string());
+    g_currentScenePath = prepared->path;
+    g_currentSceneContent = std::move(prepared->content);
+    ++g_contentRevision;
+    SyncSceneRuntime();
 }
 
 bool SceneLoader_LoadFromFile(const char* filename) {
-    std::ifstream file(filename);
-    if (!file.is_open())
-		return false;
-
-    SceneLoader_PrepareForSceneReload();
-
-    json root;
-    try { file >> root; }
-    catch (...) {
-        OutputDebugStringA("[SceneLoader] Failed to parse scene JSON.\n");
-        return false;
-    }
-
-    g_sceneNodes.clear();
-
-    if (root.contains("blocks") && root["blocks"].is_array()) {
-        for (const auto& jb : root["blocks"]) {
-            if (auto node = GameObjectFromLegacyBlock(jb))
-                g_sceneNodes.push_back(std::move(node));
-        }
-    }
-
-    if (root.contains("nodes") && root["nodes"].is_array()) {
-        for (const auto& jn : root["nodes"]) {
-            std::unique_ptr<GameObject> node;
-
-            if (jn.contains("prefabAssetPath") && jn["prefabAssetPath"].is_string()) {
-                const std::string prefabPath = jn["prefabAssetPath"].get<std::string>();
-                node = PrefabSerializer::LoadFromFile(prefabPath);
-                if (node) {
-                    if (jn.contains("name") && jn["name"].is_string())
-                        node->SetName(jn["name"].get<std::string>());
-                    if (jn.contains("tag") && jn["tag"].is_number_integer()) {
-                        const int tagValue = jn["tag"].get<int>();
-                        if (TagRegistry::Instance().IsValid(tagValue))
-                            node->SetTag(tagValue);
-                    }
-                    if (jn.contains("components") && jn["components"].is_object() &&
-                        jn["components"].contains("SceneTransform")) {
-                        if (engine::Transform* t = node->GetTransform()) {
-                            const auto& st = jn["components"]["SceneTransform"];
-                            t->localPosition.x = st.value("posX", t->localPosition.x);
-                            t->localPosition.y = st.value("posY", t->localPosition.y);
-                            t->localPosition.z = st.value("posZ", t->localPosition.z);
-                            t->localRotation.x = st.value("rotX", t->localRotation.x);
-                            t->localRotation.y = st.value("rotY", t->localRotation.y);
-                            t->localRotation.z = st.value("rotZ", t->localRotation.z);
-                            t->localScale.x = st.value("scaleX", t->localScale.x);
-                            t->localScale.y = st.value("scaleY", t->localScale.y);
-                            t->localScale.z = st.value("scaleZ", t->localScale.z);
-                            t->SnapshotStartState();
-                            node->SyncLegacyTransformFromComponents();
-                        }
-                    }
-                    node->SetPrefabAssetPath(prefabPath);
-                }
-            } else {
-                node = PrefabSerializer::Deserialize(jn.dump());
-            }
-
-            if (node) g_sceneNodes.push_back(std::move(node));
-        }
-    }
-
-    if (root.contains("canvas") && root["canvas"].is_object())
-        SceneCanvas_LoadSceneCanvas(root["canvas"]);
-    else
-        SceneCanvas_ClearSceneCanvas();
-
-    ApplySceneSettings(root);
-
-    std::error_code ec;
-    fs::path scenePath(filename);
-    fs::path relativePath = fs::relative(scenePath, SCENE_DIR, ec);
-    if (!ec)
-        SceneLoader_CopySceneFileName(relativePath.generic_string());
-    else
-        SceneLoader_CopySceneFileName(scenePath.filename().generic_string());
-
-    g_currentScenePath = filename;
-    SyncSceneRuntime();
+    if (!filename || !filename[0]) return false;
+    std::string content, error;
+    if (!SceneFileMonitor::Read(filename, content)) return false;
+    auto prepared = SceneLoader_PrepareFromContent(filename, content, error);
+    if (!prepared) return false;
+    SceneLoader_ApplyPrepared(std::move(prepared));
     return true;
 }
 
@@ -660,13 +660,22 @@ bool SceneLoader_SaveToFile(const char* filename) {
     root["nodes"] = nodes;
     root["canvas"] = SceneCanvas_SaveSceneCanvas();
 
-    std::ofstream file(filename);
+    std::ofstream file(filename, std::ios::binary);
     if (!file.is_open()) return false;
-    file << root.dump(4);
+    const auto content = root.dump(4);
+    file << content;
+    file.close();
+    if (!file) return false;
+    std::error_code ec;
+    if (!g_currentScenePath.empty() && fs::equivalent(filename, g_currentScenePath, ec) && !ec) {
+        g_currentSceneContent = content;
+        ++g_contentRevision;
+    }
     return true;
 }
 
 void SceneLoader_ClearSceneNodes() {
+    g_currentScenePath.clear(); g_currentSceneContent.clear(); ++g_contentRevision;
     g_scene2D=false; g_physics3D=true; g_physics2D=false;
     EngineGUI_SetCameraMode(CameraMode::SceneCamera);
     EngineGUI_SetActiveCameraNodeName("");

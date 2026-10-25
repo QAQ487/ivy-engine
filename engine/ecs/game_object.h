@@ -123,6 +123,18 @@ public:
         m_components[key] = std::move(comp);
     }
 
+    // Store prepared data without registering audio/effects in the live world.
+    void AddPreparedComponent(std::unique_ptr<Component> comp) {
+        if (!comp) return;
+        comp->owner = this;
+        const std::type_index key(typeid(*comp));
+        m_components[key] = std::move(comp);
+    }
+    void AttachPreparedComponents() {
+        for (auto& entry : m_components) entry.second->OnAttach();
+        for (auto& child : m_children) child->AttachPreparedComponents();
+    }
+
     // Return a pointer to the first component of type T, or nullptr.
     template<typename T>
     T* GetComponent() {

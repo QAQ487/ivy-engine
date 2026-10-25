@@ -20,6 +20,7 @@
 #include "engine_gui_internal.h"
 #include "engine/scene/scene_loader.h"
 #include "engine/scene/scene_asset_preload.h"
+#include "engine/scene/scene_file_monitor.h"
 #include "engine/scene/render_settings.h"
 #include "engine/rendering/d3d11/shader.h"
 #include "engine/rendering/d3d11/post_process.h"
@@ -322,6 +323,49 @@ void EngineGUI_QueueUnsavedExit() {
 
 const std::string PREFAB_DIR = "rom/prefabs/";
 
+enum class ReloadLightState { Paused, Watching, Pending, Failed };
+struct ReloadLight {
+    bool failed = false;
+    double brightUntil = 0;
+    void Success() { failed = false; brightUntil = ImGui::GetTime() + 1.2; }
+    void Failure() { failed = true; brightUntil = 0; }
+};
+static ReloadLight g_sceneReloadLight, g_scriptReloadLight;
+static unsigned long long g_scriptFeedbackRevision = 0;
+static ReloadLightState GetReloadLightState(bool active, bool paused, bool pending, const ReloadLight& light) {
+    if (!active || paused) return ReloadLightState::Paused;
+    if (pending) return ReloadLightState::Pending;
+    return light.failed ? ReloadLightState::Failed : ReloadLightState::Watching;
+}
+static SceneFileMonitor g_sceneFileMonitor;
+static unsigned long long g_monitoredSceneRevision = 0;
+static std::optional<SceneFileMonitor::Version> g_sceneReloadConflict;
+static std::optional<SceneFileMonitor::Version> g_pendingSceneHotLoad;
+static std::string g_sceneReloadStatus = "Watching current scene JSON";
+static void ResetSceneHotLoad() {
+    g_sceneFileMonitor.Reset();
+    g_sceneReloadLight = {};
+    g_sceneReloadConflict.reset();
+    g_pendingSceneHotLoad.reset();
+    g_monitoredSceneRevision = 0;
+    g_sceneReloadStatus = "Watching current scene JSON";
+}
+static void QueueSceneHotLoad(SceneFileMonitor::Version version) {
+    EngineGUI_QueueSceneLoad(version.path.c_str());
+    g_pendingSceneHotLoad = std::move(version);
+}
+static void ResolveSceneReloadConflict(bool loadDisk) {
+    if (!g_sceneReloadConflict) return;
+    if (loadDisk) QueueSceneHotLoad(std::move(*g_sceneReloadConflict));
+    else {
+        g_sceneReloadStatus = "External scene version ignored; Editor changes kept";
+        g_sceneReloadLight = {};
+    }
+    g_sceneReloadConflict.reset();
+}
+#ifdef _DEBUG
+static void SceneHotLoadCheck_Tick(double elapsed);
+#endif
 static std::string g_scriptReloadStatus = "Script DLL reload: not initialized";
 
 static void SaveScene();
@@ -1087,6 +1131,8 @@ static void ApplyProjectSessionState() {
     SceneLoader_UnloadScriptDlls();
     SceneLoader_LoadScriptDlls();
     g_scriptReloadStatus = "Watching script DLLs";
+    g_scriptReloadLight = {};
+    g_scriptFeedbackRevision = ScriptFactory::Instance().GetLastReloadFeedback().revision;
 }
 
 static bool SwitchToOpenedProject() {
@@ -1096,6 +1142,7 @@ static bool SwitchToOpenedProject() {
     if (g_isPlaying)
         ReturnToStart();
 
+    ResetSceneHotLoad();
     ApplyProjectSessionState();
 
     std::string scenePath = ProjectManager::Instance().ResolveSceneToLoad();
@@ -1132,6 +1179,7 @@ static void RequestOpenProject(const std::string& rootPath) {
 }
 
 static void CloseOpenedProject() {
+    ResetSceneHotLoad();
     if (!ProjectManager::Instance().IsOpen())
         return;
 
@@ -1976,6 +2024,29 @@ static void DrawEditorPopups() {
     if (audioPopupWasOpen && !g_showAudioPopup)
         ProjectManager::Instance().SaveProjectFile(nullptr);
 
+    if (g_sceneReloadConflict && EngineGUI_IsSceneDirty() && !g_isPlaying && !IsSceneLoadBusy()
+        && !ImGui::GetTopMostPopupModal() && !g_showUnsavedChangesPopup)
+        ImGui::OpenPopup("SceneJsonChangedPopup");
+    if (ImGui::BeginPopupModal("SceneJsonChangedPopup", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+        if (!g_sceneReloadConflict || g_sceneReloadConflict->path != SceneLoader_GetCurrentScenePath()) {
+            g_sceneReloadConflict.reset();
+            ImGui::CloseCurrentPopup();
+        } else {
+            ImGui::TextUnformatted("The scene JSON changed outside the Editor.");
+            ImGui::TextUnformatted("The Editor has unsaved changes.");
+            if (ImGui::Button("Load disk version (discard Editor changes)")) {
+                ResolveSceneReloadConflict(true);
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Keep Editor changes")) {
+                ResolveSceneReloadConflict(false);
+                ImGui::CloseCurrentPopup();
+            }
+        }
+        ImGui::EndPopup();
+    }
+
     if (g_showUnsavedChangesPopup)
         ImGui::OpenPopup("UnsavedChangesPopup");
     ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
@@ -2278,6 +2349,7 @@ bool EngineGUI_IsDebugCameraPlayInputActive() {
 }
 
 static void StartPlay(PlayMode mode = PlayMode::Viewport) {
+    if (g_sceneReloadConflict) return;
     if (g_sceneAssetPreloader.IsActive() || g_sceneLoadPending) {
         g_playWhenPreloadDone = true;
         g_pendingPlayMode = mode;
@@ -2324,6 +2396,8 @@ void EngineGUI_QueueSceneLoad(const char* filename) {
     // cannot auto-play into the wrong scene.
     g_playWhenPreloadDone = false;
     g_sceneLoadPending = true;
+    g_pendingSceneHotLoad.reset();
+    g_sceneReloadConflict.reset();
     g_pendingSceneLoadPath = filename ? filename : "";
 }
 
@@ -2344,20 +2418,35 @@ void EngineGUI_FlushSceneLoadPending() {
     const std::string path = std::move(g_pendingSceneLoadPath);
     g_pendingSceneLoadPath.clear();
 
-    // Tear down the previous play world immediately before replacing nodes
-    // (SoftStop no longer clears early ? matches runtime atomic load).
-    TeardownScenePlaySession(false);
-
-    if (!SceneLoader_LoadFromFile(path.c_str())) {
+    const bool hotLoad = g_pendingSceneHotLoad.has_value();
+    if (hotLoad && path != SceneLoader_GetCurrentScenePath()) {
+        g_pendingSceneHotLoad.reset();
+        g_sceneLoadPending = false;
+        g_playWhenPreloadDone = false;
+        return;
+    }
+    std::string content, error;
+    if (hotLoad) content = std::move(g_pendingSceneHotLoad->content);
+    const bool readable = hotLoad || SceneFileMonitor::Read(path, content);
+    g_pendingSceneHotLoad.reset();
+    auto prepared = readable ? SceneLoader_PrepareFromContent(path, content, error) : nullptr;
+    if (!prepared) {
+        g_sceneReloadLight.Failure();
+        g_sceneReloadStatus = "Scene reload failed: " + (readable ? error : "Cannot read " + path);
         g_sceneLoadPending = false;
         g_playWhenPreloadDone = false;
         if (g_holdPlayVisuals) ReturnToStart();
         return;
     }
+    // Preparation must succeed before any old scripts/runtime are torn down.
+    SceneLoader_ApplyPrepared(std::move(prepared), hotLoad);
+    if (hotLoad) g_sceneReloadLight.Success();
+    else g_sceneReloadLight = {};
+    g_sceneReloadStatus = hotLoad ? "Scene JSON reloaded" : "Watching current scene JSON";
 
     g_selNode = nullptr;
     g_selUiElement = nullptr;
-    EngineGUI_SetEditMode(EditorEditMode::Scene3D);
+    if (!hotLoad) EngineGUI_SetEditMode(EditorEditMode::Scene3D);
     EngineGUI_ClearSceneDirty();
     EditorUndo_Clear();
 
@@ -2410,6 +2499,8 @@ void EngineGUI_Initialize(HWND hwnd, ID3D11Device* device,
     if (ProjectManager::Instance().IsOpen()) {
         SceneLoader_LoadScriptDlls();
         g_scriptReloadStatus = "Watching script DLLs";
+        g_scriptReloadLight = {};
+        g_scriptFeedbackRevision = ScriptFactory::Instance().GetLastReloadFeedback().revision;
     }
     else {
         g_scriptReloadStatus = "No project open";
@@ -2907,6 +2998,9 @@ static void FocusSelectedObjectWithCamera(const engine::Transform* t) {
 // ???? EngineGUI_Update ????????????????????????????????????????????????????????????????????????????????????????????????????????????????????
 
 void EngineGUI_Update(double elapsed_time) {
+#ifdef _DEBUG
+    SceneHotLoadCheck_Tick(elapsed_time);
+#endif
 
     // Finish a queued scene switch (JSON + preload Begin) after the prior
     // frame already Presented the dim-only overlay.
@@ -2944,6 +3038,36 @@ void EngineGUI_Update(double elapsed_time) {
                 g_scriptReloadStatus = "Reloaded script: " + name
                     + " on " + std::to_string(reloadedCount) + " component(s)";
             });
+        const auto& feedback = ScriptFactory::Instance().GetLastReloadFeedback();
+        if (feedback.revision != g_scriptFeedbackRevision) {
+            g_scriptFeedbackRevision = feedback.revision;
+            if (feedback.failed) {
+                g_scriptReloadLight.Failure();
+                g_scriptReloadStatus = "Script reload failed: " + feedback.error;
+            } else g_scriptReloadLight.Success();
+        }
+    }
+
+    if (!ProjectManager::Instance().IsOpen()) {
+        ResetSceneHotLoad();
+    } else if (!g_isPlaying && !IsSceneLoadBusy()) {
+        const auto revision = SceneLoader_GetContentRevision();
+        if (g_monitoredSceneRevision != revision) {
+            g_sceneFileMonitor.SetBaseline(SceneLoader_GetCurrentScenePath(), SceneLoader_GetCurrentSceneContent());
+            g_monitoredSceneRevision = revision;
+            g_sceneReloadLight.failed = false;
+            g_sceneReloadConflict.reset();
+        }
+        // An existing conflict can absorb newer writes without opening another modal.
+        if (auto version = g_sceneFileMonitor.Poll(elapsed_time)) {
+            g_sceneReloadConflict = std::move(*version);
+        }
+        if (g_sceneReloadConflict && !ImGui::GetTopMostPopupModal() && !g_showUnsavedChangesPopup) {
+            if (!EngineGUI_IsSceneDirty()) {
+                QueueSceneHotLoad(std::move(*g_sceneReloadConflict));
+                g_sceneReloadConflict.reset();
+            }
+        }
     }
 
     // Time-sliced asset preload / scene-switch busy: gate editor interaction.
@@ -3415,6 +3539,33 @@ void EngineGUI_OnBackbufferResized() {
     ImGui_ImplDX11_CreateDeviceObjects();
 }
 
+static void DrawReloadLight(const char* id, const char* name, ReloadLightState state,
+    const ReloadLight& light, const std::string& detail) {
+    const float size = Ui(18.0f);
+    const auto origin = ImGui::GetCursorScreenPos();
+    ImGui::InvisibleButton(id, ImVec2(size, size));
+    const bool bright = state == ReloadLightState::Watching && ImGui::GetTime() < light.brightUntil;
+    ImU32 color;
+    const char* status;
+    switch (state) {
+    case ReloadLightState::Paused: color = IM_COL32(110, 115, 125, 255); status = "Paused / inactive"; break;
+    case ReloadLightState::Pending: color = IM_COL32(245, 190, 55, 255); status = "Waiting / processing"; break;
+    case ReloadLightState::Failed: color = IM_COL32(235, 75, 75, 255); status = "Reload failed"; break;
+    default: color = bright ? IM_COL32(135, 255, 165, 255) : IM_COL32(60, 165, 95, 255);
+        status = bright ? "Reload succeeded" : "Watching"; break;
+    }
+    const ImVec2 center(origin.x + size * 0.5f, origin.y + size * 0.5f);
+    if (bright) ImGui::GetWindowDrawList()->AddCircleFilled(center, Ui(7.0f), IM_COL32(90, 255, 140, 65));
+    ImGui::GetWindowDrawList()->AddCircleFilled(center, Ui(4.0f), color);
+    if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort)) {
+        ImGui::BeginTooltip();
+        ImGui::Text("%s: %s", name, status);
+        if (state == ReloadLightState::Paused) ImGui::TextUnformatted("Hot-load applies only outside Play with an open project.");
+        ImGui::TextUnformatted(detail.c_str());
+        ImGui::EndTooltip();
+    }
+}
+
 void EngineGUI_Draw() {
     const bool playVisuals=EngineGUI_PreferPlayVisuals();
     // Play mode sets g_enabled=false (hides editor chrome). Still draw the
@@ -3535,6 +3686,14 @@ void EngineGUI_Draw() {
         ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize |
         ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar);
     {
+        const float lightSize = Ui(18.0f);
+        const float lightGap = Ui(4.0f);
+        const float lightsX = ImGui::GetWindowContentRegionMax().x - lightSize * 2 - lightGap;
+        const float lightsY = ImGui::GetCursorPosY() + (ImGui::GetFrameHeight() - lightSize) * 0.5f;
+        const auto toolbarPos = ImGui::GetWindowPos();
+        const auto contentMin = ImGui::GetWindowContentRegionMin();
+        ImGui::PushClipRect(ImVec2(contentMin.x + toolbarPos.x, contentMin.y + toolbarPos.y),
+            ImVec2(toolbarPos.x + lightsX - Ui(4.0f), toolbarPos.y + ImGui::GetWindowContentRegionMax().y), true);
         if (playVisuals) {
             ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.55f, 0.20f, 0.20f, 1.0f));
             ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.70f, 0.30f, 0.30f, 1.0f));
@@ -3613,7 +3772,7 @@ void EngineGUI_Draw() {
         if (ImGui::Button(ICON_FA_ARROWS_ROTATE, ImVec2(Ui(28.0f), 0.0f)))
             SceneLoader_ScanScriptDllsForChanges(true);
         if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort))
-            ImGui::SetTooltip("Reload Scripts\n%s", g_scriptReloadStatus.c_str());
+            ImGui::SetTooltip("Reload Scripts");
 
         if (!playVisuals) {
             ImGui::SameLine();
@@ -3704,6 +3863,17 @@ void EngineGUI_Draw() {
                 }
             }
         }
+        ImGui::PopClipRect();
+        ImGui::SetCursorPos(ImVec2(lightsX, lightsY));
+        const bool projectOpen = ProjectManager::Instance().IsOpen();
+        DrawReloadLight("##SceneReloadLight", "Scene JSON",
+            GetReloadLightState(projectOpen && !SceneLoader_GetCurrentScenePath().empty(), playVisuals,
+                sceneLoadBusy || g_sceneReloadConflict.has_value() || g_sceneFileMonitor.HasPendingChange(), g_sceneReloadLight),
+            g_sceneReloadLight, g_sceneReloadStatus);
+        ImGui::SameLine(0.0f, lightGap);
+        DrawReloadLight("##ScriptReloadLight", "Script DLL",
+            GetReloadLightState(projectOpen, playVisuals, ScriptFactory::Instance().PendingReloadCount() != 0, g_scriptReloadLight),
+            g_scriptReloadLight, g_scriptReloadStatus);
     }
     ImGui::End();
 
@@ -5150,3 +5320,7 @@ void EngineGUI_Draw() {
 
     ConsumePendingFolderPick();
 }
+
+#ifdef _DEBUG
+#include "tools/scene_hot_load_check.h"
+#endif

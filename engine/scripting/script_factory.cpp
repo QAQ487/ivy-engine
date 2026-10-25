@@ -12,6 +12,7 @@
 
 namespace {
     std::vector<std::string>* g_enumeratedScripts = nullptr;
+    ScriptFactory::ReloadFeedback g_reloadFeedback;
 
     void CollectScriptName(const char* name) {
         if (g_enumeratedScripts && name && *name)
@@ -320,6 +321,10 @@ size_t ScriptFactory::PendingReloadCount() const {
     return m_pendingReloads.size();
 }
 
+const ScriptFactory::ReloadFeedback& ScriptFactory::GetLastReloadFeedback() const {
+    return g_reloadFeedback;
+}
+
 void ScriptFactory::DrainReloadQueue(
     const std::function<void(const std::string&)>& onReloaded)
 {
@@ -328,12 +333,20 @@ void ScriptFactory::DrainReloadQueue(
         std::lock_guard<std::mutex> lk(m_reloadMutex);
         queue.swap(m_pendingReloads);
     }
+    if (queue.empty()) return;
+    ReloadFeedback feedback;
+    feedback.revision = g_reloadFeedback.revision + 1;
     for (const auto& r : queue) {
         std::vector<std::string> loadedScripts;
         if (LoadScriptDll(r.name, r.path, &loadedScripts)) {
             for (const std::string& scriptName : loadedScripts)
                 onReloaded(scriptName);
             ReleaseRetiredDlls();
+        } else {
+            feedback.failed = true;
+            if (!feedback.error.empty()) feedback.error += "\n";
+            feedback.error += "Cannot reload " + r.name + " from " + r.path + ". See debug output for details.";
         }
     }
+    g_reloadFeedback = std::move(feedback);
 }

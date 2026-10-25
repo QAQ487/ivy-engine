@@ -13,6 +13,7 @@
 #include <cmath>
 #include <cstdio>
 #include <map>
+#include <stdexcept>
 #include <string>
 #include <Windows.h>
 
@@ -180,12 +181,12 @@ namespace {
 		g_timerText = dynamic_cast<UIText*>(g_canvas->GetElement("TimerText"));
 	}
 
-	void LoadSpriteElement(const json& item) {
+	void LoadSpriteElement(UICanvas& canvas, const json& item, bool preparing = false) {
 		const std::string name = item.value("name", "Sprite");
 		const auto pos = ReadFloat2(item.value("position", json::object()));
 		const UIAnchor anchor = AnchorFromString(item.value("anchor", "CENTER"));
 		const json size = item.value("size", json::object());
-		UISprite* sprite = g_canvas->AddSprite(
+		UISprite* sprite = canvas.AddSprite(
 			name, pos, anchor,
 			size.value("width", 64.0f),
 			size.value("height", 64.0f));
@@ -198,11 +199,11 @@ namespace {
 		ApplyCommon(sprite, item);
 	}
 
-	void LoadTextElement(const json& item) {
+	void LoadTextElement(UICanvas& canvas, const json& item, bool preparing = false) {
 		const std::string name = item.value("name", "Text");
 		const auto pos = ReadFloat2(item.value("position", json::object()));
 		const UIAnchor anchor = AnchorFromString(item.value("anchor", "CENTER"));
-		UIText* text = g_canvas->AddText(name, pos, anchor, item.value("text", ""));
+		UIText* text = canvas.AddText(name, pos, anchor, item.value("text", ""));
 		text->SetColor(ReadColor(item.value("color", json::object()), text->GetColor()));
 		text->SetFontSize(item.value("fontSize", 1.0f));
 		text->SetAlignment(TextAlignFromString(item.value("alignment", "LEFT")));
@@ -221,12 +222,12 @@ namespace {
 		ApplyCommon(text, item);
 	}
 
-	void LoadButtonElement(const json& item) {
+	void LoadButtonElement(UICanvas& canvas, const json& item, bool preparing = false) {
 		const std::string name = item.value("name", "Button");
 		const auto pos = ReadFloat2(item.value("position", json::object()));
 		const UIAnchor anchor = AnchorFromString(item.value("anchor", "CENTER"));
 		const json size = item.value("size", json::object());
-		UIButton* button = g_canvas->AddButton(
+		UIButton* button = canvas.AddButton(
 			name, pos, anchor,
 			size.value("width", 200.0f),
 			size.value("height", 60.0f));
@@ -248,7 +249,7 @@ namespace {
 
 		const json font = item.value("font", json::object());
 		const std::string fontTexture = font.value("texture", "");
-		if (!fontTexture.empty()) {
+		if (!preparing && !fontTexture.empty()) {
 			UIButton::SetFontPath(
 				fontTexture,
 				font.value("charWidth", 32.0f),
@@ -261,17 +262,17 @@ namespace {
 		const std::string scene = onClick.value("scene", "");
 		const bool playOnLoad = onClick.value("play", false);
 		button->SetAction(action, scene, playOnLoad);
-		SceneCanvas_BindButtonAction(button);
+		if (!preparing) SceneCanvas_BindButtonAction(button);
 
 		LoadElementScript(button, item);
 		ApplyCommon(button, item);
 	}
 
-	void LoadBarElement(const json& item) {
+	void LoadBarElement(UICanvas& canvas, const json& item, bool preparing = false) {
 		const std::string name = item.value("name", "Bar");
 		const auto pos = ReadFloat2(item.value("position", json::object()));
 		const UIAnchor anchor = AnchorFromString(item.value("anchor", "TOP_LEFT"));
-		UIBar* bar = g_canvas->AddBar(
+		UIBar* bar = canvas.AddBar(
 			name,
 			pos,
 			anchor,
@@ -436,41 +437,55 @@ void SceneCanvas_ClearSceneCanvas()
 	BindSceneHudElements();
 }
 
+std::unique_ptr<UICanvas> SceneCanvas_Prepare(const nlohmann::json& canvasJson)
+{
+    auto canvas = std::make_unique<UICanvas>("scene");
+    if (!canvasJson.is_object()) throw std::runtime_error("canvas must be an object");
+    if (canvasJson.contains("elements")) {
+        const auto& elements = canvasJson["elements"];
+        if (!elements.is_array()) throw std::runtime_error("canvas.elements must be an array");
+        for (const auto& item : elements) {
+            if (!item.is_object()) throw std::runtime_error("canvas element must be an object");
+            const auto type = item.value("type", std::string{});
+            if (type == "sprite") LoadSpriteElement(*canvas, item, true);
+            else if (type == "text") LoadTextElement(*canvas, item, true);
+            else if (type == "button") {
+                // Validate shared font now; apply it only after the scene commits.
+                const auto font = item.value("font", json::object());
+                font.value("texture", std::string{});
+                font.value("charWidth", 32.0f); font.value("charHeight", 32.0f);
+                font.value("charsPerRow", 16);
+                LoadButtonElement(*canvas, item, true);
+            }
+            else if (type == "bar") LoadBarElement(*canvas, item, true);
+        }
+    }
+    return canvas;
+}
+
+void SceneCanvas_ApplyPrepared(std::unique_ptr<UICanvas> canvas, const nlohmann::json& canvasJson)
+{
+    if (g_canvas) g_canvas->Finalize();
+    g_canvas = std::move(canvas);
+    if (canvasJson.contains("elements")) {
+        for (const auto& item : canvasJson["elements"]) {
+            if (item.value("type", std::string{}) != "button") continue;
+            const auto font = item.value("font", json::object());
+            const auto path = font.value("texture", std::string{});
+            if (!path.empty()) UIButton::SetFontPath(path, font.value("charWidth", 32.0f),
+                font.value("charHeight", 32.0f), font.value("charsPerRow", 16));
+        }
+    }
+    for (const auto& element : g_canvas->GetElements())
+        if (auto* button = dynamic_cast<UIButton*>(element.get())) SceneCanvas_BindButtonAction(button);
+    g_canvas->Initialize();
+    BindSceneHudElements();
+}
+
 void SceneCanvas_LoadSceneCanvas(const nlohmann::json& canvasJson)
 {
-	if (!g_canvas)
-		g_canvas = std::make_unique<UICanvas>("scene");
-
-	g_canvas->ClearElements();
-
-	if (!canvasJson.is_object()) {
-		BindSceneHudElements();
-		return;
-	}
-
-	const auto elementsIt = canvasJson.find("elements");
-	if (elementsIt != canvasJson.end() && elementsIt->is_array()) {
-		for (const json& item : *elementsIt) {
-			if (!item.is_object()) continue;
-
-			const std::string type = item.value("type", "");
-			if (type == "sprite") {
-				LoadSpriteElement(item);
-			}
-			else if (type == "text") {
-				LoadTextElement(item);
-			}
-			else if (type == "button") {
-				LoadButtonElement(item);
-			}
-			else if (type == "bar") {
-				LoadBarElement(item);
-			}
-		}
-	}
-
-	g_canvas->Initialize();
-	BindSceneHudElements();
+    auto canvas = SceneCanvas_Prepare(canvasJson);
+    SceneCanvas_ApplyPrepared(std::move(canvas), canvasJson);
 }
 
 nlohmann::json SceneCanvas_SaveSceneCanvas()
@@ -512,13 +527,13 @@ UIElement* SceneCanvas_InsertElementJson(const std::string& elementJson, int ind
 	const size_t before = g_canvas->GetElementCount();
 	const std::string type = item.value("type", "");
 	if (type == "sprite")
-		LoadSpriteElement(item);
+		LoadSpriteElement(*g_canvas, item);
 	else if (type == "text")
-		LoadTextElement(item);
+		LoadTextElement(*g_canvas, item);
 	else if (type == "button")
-		LoadButtonElement(item);
+		LoadButtonElement(*g_canvas, item);
 	else if (type == "bar")
-		LoadBarElement(item);
+		LoadBarElement(*g_canvas, item);
 	else
 		return nullptr;
 

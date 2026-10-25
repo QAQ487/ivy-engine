@@ -10,6 +10,7 @@
 #include "prefab_serializer.h"
 #include "component_factory.h"
 #include "tag_registry.h"
+#include "engine/scene/scene_json_validation.h"
 
 #include <fstream>
 #include <sstream>
@@ -50,7 +51,12 @@ static json SerializeNode(const GameObject& node) {
     return j;
 }
 
-static std::unique_ptr<GameObject> DeserializeNode(const json& j) {
+static std::unique_ptr<GameObject> DeserializeNode(const json& j, bool strict = false) {
+    if (strict) {
+        if (!j.is_object()) throw std::runtime_error("scene node must be an object");
+        if (j.contains("components") && !j["components"].is_object()) throw std::runtime_error("components must be an object");
+        if (j.contains("children") && !j["children"].is_array()) throw std::runtime_error("children must be an array");
+    }
     std::string name = j.value("name", "GameObject");
     auto node = std::make_unique<GameObject>(name);
 
@@ -74,15 +80,17 @@ static std::unique_ptr<GameObject> DeserializeNode(const json& j) {
             std::string data = it.value().is_string()
                                ? it.value().get<std::string>()
                                : it.value().dump();
+            if (strict) SceneJson_ValidateTypes(json::parse(data), json::parse(comp->Serialize()), typeName);
             comp->Deserialize(data);
-            node->AddComponentRaw(std::move(comp));
+            if (strict) node->AddPreparedComponent(std::move(comp));
+            else node->AddComponentRaw(std::move(comp));
         }
     }
 
     // Recurse into children.
     if (j.contains("children") && j["children"].is_array()) {
         for (const auto& childJson : j["children"]) {
-            auto child = DeserializeNode(childJson);
+            auto child = DeserializeNode(childJson, strict);
             if (child) node->AddChild(std::move(child));
         }
     }
@@ -161,4 +169,11 @@ std::unique_ptr<GameObject> PrefabSerializer::LoadFromFile(
     std::ostringstream ss;
     ss << f.rdbuf();
     return Deserialize(ss.str());
+}
+
+std::unique_ptr<GameObject> PrefabSerializer::DeserializeForScene(const std::string& data) {
+    const auto root = json::parse(data);
+    const auto* node = FindPrefabNodeJson(root);
+    if (!node) throw std::runtime_error("No prefab node found");
+    return DeserializeNode(*node, true);
 }

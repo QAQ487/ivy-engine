@@ -45,6 +45,7 @@ void RenderSettings_ResetToDefaults();
 RenderSettingsData& RenderSettings_Get();
 const RenderSettingsData& RenderSettings_GetConst();
 
+RenderSettingsData RenderSettings_ParseJson(const nlohmann::json& renderJson, RenderSettingsData settings = {});
 void RenderSettings_ApplyFromJson(const nlohmann::json& renderJson);
 nlohmann::json RenderSettings_ToJson();
 
