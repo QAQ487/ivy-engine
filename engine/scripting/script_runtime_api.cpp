@@ -39,7 +39,7 @@
 #include <string>
 
 namespace {
-constexpr std::uint32_t kScriptRuntimeApiVersion = 47;
+constexpr std::uint32_t kScriptRuntimeApiVersion = 48;
 
 template <typename T>
 T* FindComponentByTypeName(GameObject& object, const char* typeName) {
@@ -759,6 +759,7 @@ const ScriptRuntimeApi g_scriptRuntimeApi = {
     &Host_GetGameViewportRect,
     &Host_DebugDrawLine,
     &DebugSystem::CollisionVizEnabled,
+    &EngineGUI_RequestExitGame,
 
 };
 #else
@@ -769,7 +770,9 @@ const ScriptRuntimeApi* ResolveScriptRuntimeApi() {
     if (!module)
         return nullptr;
 
-    auto getApi = reinterpret_cast<GetApiFn>(GetProcAddress(module, "ScriptRuntimeApi_GetV47"));
+    auto getApi = reinterpret_cast<GetApiFn>(GetProcAddress(module, "ScriptRuntimeApi_GetV48"));
+    if (!getApi)
+        getApi = reinterpret_cast<GetApiFn>(GetProcAddress(module, "ScriptRuntimeApi_GetV47"));
     if (!getApi)
         getApi = reinterpret_cast<GetApiFn>(GetProcAddress(module, "ScriptRuntimeApi_GetV46"));
     if (!getApi)
@@ -844,6 +847,16 @@ const ScriptRuntimeApi* ScriptRuntimeApi_GetV46() {
 
 extern "C" __declspec(dllexport)
 const ScriptRuntimeApi* ScriptRuntimeApi_GetV47() {
+    static const ScriptRuntimeApi api = [] {
+        ScriptRuntimeApi copy = g_scriptRuntimeApi;
+        copy.version = 47;
+        return copy;
+    }();
+    return &api;
+}
+
+extern "C" __declspec(dllexport)
+const ScriptRuntimeApi* ScriptRuntimeApi_GetV48() {
     return &g_scriptRuntimeApi;
 }
 
@@ -1303,6 +1316,13 @@ bool ScriptApi_TryGetColliderFootprint(const Collider& collider,
     const ScriptRuntimeApi* api = ScriptRuntimeApi_GetHost();
     return api && api->colliderTryGetFootprint
         && api->colliderTryGetFootprint(&collider, &outCenter, &outSize);
+}
+
+bool ScriptApi_RequestExitGame() {
+    const auto* api = ScriptRuntimeApi_GetHost();
+    if (!api || api->version < 48 || !api->requestExitGame) return false;
+    api->requestExitGame();
+    return true;
 }
 
 void ScriptApi_EngineGUIStopPlay() {

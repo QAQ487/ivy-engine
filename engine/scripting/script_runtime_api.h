@@ -234,6 +234,9 @@ struct ScriptRuntimeApi {
 
     // v47 — share the host F11 state with gameplay collision visualizers.
     bool (*collisionVizEnabled)();
+
+    // v48 - deferred game exit, preserving the v42-v47 prefix.
+    void (*requestExitGame)();
 };
 
 const ScriptRuntimeApi* ScriptRuntimeApi_GetHost();
@@ -289,6 +292,7 @@ bool ScriptApi_TryGetColliderFootprint(const Collider& collider,
                                        DirectX::XMFLOAT3& outCenter,
                                        DirectX::XMFLOAT3& outSize);
 void ScriptApi_EngineGUIStopPlay();
+bool ScriptApi_RequestExitGame();
 void ScriptApi_CameraSetPosition(DirectX::XMFLOAT3 position);
 void ScriptApi_CameraSetTarget(DirectX::XMFLOAT3 target);
 void ScriptApi_CameraSetUp(DirectX::XMFLOAT3 up);

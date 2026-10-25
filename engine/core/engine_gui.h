@@ -33,6 +33,8 @@ bool EngineGUI_PreferPlayVisuals();
 // None resumes the held mode during scene loads; otherwise starts viewport play.
 void EngineGUI_StartPlay(PlayMode mode = PlayMode::None);
 void EngineGUI_StopPlay();
+// Deferred until the next host update: stop Editor Play or close Runtime.
+void EngineGUI_RequestExitGame();
 void EngineGUI_SetEnabled(bool enabled);
 bool EngineGUI_IsEnabled();
 void EngineGUI_GetGameViewportRect(float& x, float& y, float& width, float& height);

@@ -13,8 +13,11 @@
 #include "engine/input/mouse.h"
 
 #include <Windows.h>
+#include <atomic>
 
 static bool g_runtimePlaying = false;
+static std::atomic<bool> g_exitGameRequested{false};
+static HWND g_runtimeWindow = nullptr;
 static CameraMode g_cameraMode = CameraMode::SceneCamera;
 static std::string g_activeCameraNode;
 
@@ -52,9 +55,11 @@ static void EnterRuntimePlay() {
     ThirdPersonCamera_ShowCursor(!hideCursor);
 }
 
-void EngineGUI_Initialize(HWND /*hwnd*/, ID3D11Device* /*device*/,
+void EngineGUI_Initialize(HWND hwnd, ID3D11Device* /*device*/,
     ID3D11DeviceContext* /*context*/)
 {
+    g_runtimeWindow = hwnd;
+    g_exitGameRequested.store(false);
     PlayFpsOverlay::LoadFromFile();
     ModelAssetCache::Instance().RefreshAssetDirectory();
     SceneLoader_Initialize(false);
@@ -67,6 +72,10 @@ void EngineGUI_Finalize() {
 }
 
 void EngineGUI_Update(double elapsed_time) {
+    if (g_exitGameRequested.exchange(false)) {
+        if (g_runtimeWindow) PostMessageW(g_runtimeWindow, WM_APP + 48, 0, 0);
+        return;
+    }
     if (!g_runtimePlaying) return;
 
     // In the editor build, engine_gui.cpp owns updating the scene graph while playing.
@@ -116,6 +125,8 @@ bool EngineGUI_IsOnStart() {
 void EngineGUI_StartPlay(PlayMode /*mode*/) {
     EnterRuntimePlay();
 }
+
+void EngineGUI_RequestExitGame() { g_exitGameRequested.store(true); }
 
 void EngineGUI_StopPlay() {
     TeardownScenePlaySession(true);

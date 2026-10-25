@@ -682,6 +682,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 #endif
 		return 0;
 
+#ifdef GAME_RUNTIME
+    // A confirmed in-game exit bypasses the separate window-close dialog.
+    case WM_APP + 48:
+        JoinRenderBeforeDeviceTouch();
+        DestroyWindow(hWnd);
+        return 0;
+#endif
 	case WM_CLOSE: // window close requested
 		JoinRenderBeforeDeviceTouch();
 #ifdef _DEBUG
