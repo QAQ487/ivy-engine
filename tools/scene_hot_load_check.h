@@ -1,6 +1,7 @@
 #pragma once
 // Opt-in Debug host check. Uses only its own temporary scene files.
 #include "engine/ecs/component_factory.h"
+#include "engine/scene/prepared_scene.h"
 #include <chrono>
 #include <cstdlib>
 
@@ -45,7 +46,7 @@ static void SceneHotLoadCheck_Tick(double elapsed) {
     };
     auto write = [&](const json& root) { std::ofstream file(path, std::ios::binary); file << root.dump(); };
     auto next = [&](int target) { phase = target; waited = 0; };
-    if (total > 30) { fail("timed out"); return; }
+    if (total > 90) { fail("timed out"); return; }
     if (phase == 14 || phase == 15) {
         const auto expected = switchMode == 0 ? PlayMode::Fullscreen : PlayMode::Viewport;
         if (EngineGUI_GetPlayMode() != expected || !EngineGUI_PreferPlayVisuals()
@@ -54,9 +55,21 @@ static void SceneHotLoadCheck_Tick(double elapsed) {
         }
         if (g_sceneLoadPending || g_holdPlayVisuals) ++heldFrames;
     }
+    static size_t startupPrevious = 0;
+    static unsigned startupBuildFrames = 0;
+    if (phase == 0 && g_scenePreparation && !SceneLoader_PreparationReading(*g_scenePreparation)) {
+        const auto completed = SceneLoader_PreparationCompleted(*g_scenePreparation);
+        if (completed < startupPrevious) { fail("startup object progress went backwards"); return; }
+        if (completed > startupPrevious) ++startupBuildFrames;
+        startupPrevious = completed;
+    }
     if (IsSceneLoadBusy()) return;
     if (phase == 0) {
         if (!ProjectManager::Instance().IsOpen() || SceneLoader_GetCurrentScenePath().empty()) return;
+        if (startupPrevious > 512 && startupBuildFrames < 2) {
+            fail("large startup scene was not spread across frames"); return;
+        }
+        total = 0; // Startup loading has its own wall-clock allowance in the launcher.
         original = SceneLoader_GetCurrentScenePath();
         const auto folder = fs::temp_directory_path() / ("ivy-scene-hotload-" + std::to_string(GetCurrentProcessId()));
         fs::create_directories(folder); path = (folder / "scene.json").string();
@@ -80,6 +93,33 @@ static void SceneHotLoadCheck_Tick(double elapsed) {
                 fail("failed preparation changed live scene"); return;
             }
         }
+        // One-node ticks must pause inside a large child list, without changing the live scene.
+        auto large = scene(8);
+        auto& children = large["nodes"][0]["children"] = json::array();
+        for (int i = 0; i < 256; ++i) children.push_back({{"name", "Child" + std::to_string(i)},
+            {"components", {{"SceneTransform", {{"posX", float(i)}}}}},
+            {"children", json::array({{{"name", "Grandchild"}, {"components", json::object()}}})}});
+        const auto source = large.dump();
+        auto incremental = SceneLoader_BeginPreparation(path, &source, false);
+        size_t previous = 0; int ticks = 0;
+        while (!SceneLoader_TickPreparation(*incremental, 0.0)) {
+            const auto count = SceneLoader_PreparationCompleted(*incremental);
+            if (count < previous || count > previous + 1 || g_sceneNodes.front().get() != savedNode) {
+                fail("incremental preparation mutated live scene or skipped node budget"); return;
+            }
+            previous = count; ++ticks;
+        }
+        auto built = SceneLoader_PreparationResult(*incremental);
+        auto synchronous = SceneLoader_PrepareFromContent(path, source, error);
+        if (!built || !synchronous || ticks < 513 || SceneLoader_PreparationTotal(*incremental) != 513
+            || built->nodes[0]->GetChildren().size() != 256
+            || PrefabSerializer::Serialize(*built->nodes[0]) != PrefabSerializer::Serialize(*synchronous->nodes[0])) {
+            fail("incremental hierarchy differs from synchronous preparation"); return;
+        }
+        auto missing = SceneLoader_BeginPreparation(path + ".missing", nullptr, false);
+        while (!SceneLoader_TickPreparation(*missing)) {}
+        if (SceneLoader_PreparationResult(*missing) || SceneLoader_PreparationError(*missing).empty()
+            || g_sceneNodes.front().get() != savedNode) { fail("missing file transaction changed scene"); return; }
         GetCamera().position = {17, 23, -31}; GetCamera().at = {17, 23, 0};
         DebugCamera_SyncOrbitFromCurrentView(); savedCamera = GetCamera();
         EngineGUI_SetEditMode(EditorEditMode::UI); g_selNode = savedNode;
@@ -179,7 +219,7 @@ static void SceneHotLoadCheck_Tick(double elapsed) {
     }
     if (phase == 18 && !g_scriptReloadLight.failed) {
         if (g_scriptReloadLight.brightUntil <= ImGui::GetTime()) { fail("script recovery did not brighten light"); return; }
-        std::printf("SCENE_HOT_LOAD_CHECK PASS: failed transactions/nodes/Canvas/settings/camera/selection/Undo/dirty choices/Play deferral/self save/fullscreen+viewport scene switches/scene+script status lights\n");
+        std::printf("SCENE_HOT_LOAD_CHECK PASS: incremental nested hierarchy/budget/missing file/failed transactions/nodes/Canvas/settings/camera/selection/Undo/dirty choices/Play deferral/self save/fullscreen+viewport scene switches/scene+script status lights\n");
         std::fflush(stdout); phase = -1; PostQuitMessage(0);
     }
 }

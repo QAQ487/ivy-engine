@@ -12,7 +12,7 @@ try {
     $stdout = Join-Path $logPath 'check.log'
     $stderr = Join-Path $logPath 'check.err.log'
     $process = Start-Process -FilePath $EditorExe -WorkingDirectory $env:TEMP -WindowStyle Hidden -RedirectStandardOutput $stdout -RedirectStandardError $stderr -PassThru
-    if (!$process.WaitForExit(60000)) { throw "Timed out: PID $($process.Id). See $logPath" }
+    if (!$process.WaitForExit(120000)) { throw "Timed out: PID $($process.Id). See $logPath" }
     $process.Refresh()
     if ($process.ExitCode -ne 0 -or !(Select-String -LiteralPath $stdout -Pattern '^SCENE_HOT_LOAD_CHECK PASS:' -Quiet)) {
         Get-Content -LiteralPath $stderr -Tail 10

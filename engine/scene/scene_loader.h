@@ -76,3 +76,13 @@ bool SceneLoader_Uses3DPhysics();
 bool SceneLoader_Uses2DPhysics();
 
 void SceneLoader_SetExecutionMode(bool scene2D, bool physics3D, bool physics2D=false);
+
+struct ScenePreparationJob;
+std::shared_ptr<ScenePreparationJob> SceneLoader_BeginPreparation(const std::string& path,
+    const std::string* content = nullptr, bool background = true);
+bool SceneLoader_TickPreparation(ScenePreparationJob& job, double budgetMs = 4.0);
+bool SceneLoader_PreparationReading(const ScenePreparationJob& job);
+size_t SceneLoader_PreparationCompleted(const ScenePreparationJob& job);
+size_t SceneLoader_PreparationTotal(const ScenePreparationJob& job);
+std::shared_ptr<PreparedScene> SceneLoader_PreparationResult(const ScenePreparationJob& job);
+std::string SceneLoader_PreparationError(const ScenePreparationJob& job);

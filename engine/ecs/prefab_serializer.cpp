@@ -51,7 +51,7 @@ static json SerializeNode(const GameObject& node) {
     return j;
 }
 
-static std::unique_ptr<GameObject> DeserializeNode(const json& j, bool strict = false) {
+static std::unique_ptr<GameObject> DeserializeNode(const json& j, bool strict = false, bool children = true) {
     if (strict) {
         if (!j.is_object()) throw std::runtime_error("scene node must be an object");
         if (j.contains("components") && !j["components"].is_object()) throw std::runtime_error("components must be an object");
@@ -88,7 +88,7 @@ static std::unique_ptr<GameObject> DeserializeNode(const json& j, bool strict = 
     }
 
     // Recurse into children.
-    if (j.contains("children") && j["children"].is_array()) {
+    if (children && j.contains("children") && j["children"].is_array()) {
         for (const auto& childJson : j["children"]) {
             auto child = DeserializeNode(childJson, strict);
             if (child) node->AddChild(std::move(child));
@@ -177,3 +177,5 @@ std::unique_ptr<GameObject> PrefabSerializer::DeserializeForScene(const std::str
     if (!node) throw std::runtime_error("No prefab node found");
     return DeserializeNode(*node, true);
 }
+
+std::unique_ptr<GameObject> PrefabSerializer::DeserializeSceneNode(const json& node) { return DeserializeNode(node, true, false); }

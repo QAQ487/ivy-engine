@@ -27,10 +27,12 @@
 #pragma once
 #include <memory>
 #include <string>
+#include "libraries/nlohmann/json.hpp"
 #include "engine/ecs/game_object.h"
 
 class PrefabSerializer {
 public:
+    static std::unique_ptr<GameObject> DeserializeSceneNode(const nlohmann::json& node);
     // „Ÿ„Ÿ Save „Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ
     static std::string Serialize(const GameObject& root);
     static bool        SaveToFile(const GameObject& root, const std::string& filePath);

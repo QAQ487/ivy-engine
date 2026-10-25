@@ -77,3 +77,6 @@ void EngineGUI_SetEditMode(EditorEditMode mode);
 bool EngineGUI_IsUiEditMode();
 
 #endif // ENGINE_GUI_H
+
+// Called on the main thread after the editor frame has been presented.
+void EngineGUI_NotifyFramePresented();

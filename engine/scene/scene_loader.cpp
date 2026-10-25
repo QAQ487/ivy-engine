@@ -45,6 +45,8 @@
 #include <filesystem>
 #include <fstream>
 #include <functional>
+#include <future>
+#include <chrono>
 #include <locale>
 #include <unordered_map>
 
@@ -536,82 +538,137 @@ static void SceneLoader_PrepareForSceneReload() {
     PrefabRuntime_ResetSessionState();
 }
 
-std::shared_ptr<PreparedScene> SceneLoader_PrepareFromContent(const std::string& path,
-    const std::string& content, std::string& error) {
-    error.clear();
+namespace {
+struct PreparationEntry { json node, overrides; size_t parent = SIZE_MAX; bool legacy = false; };
+struct PreparationInput { json root; std::string content; std::vector<PreparationEntry> entries; };
+PreparationInput ReadPreparation(const std::string& path, std::string content, bool supplied) {
+    if (!supplied && !SceneFileMonitor::Read(path, content)) throw std::runtime_error("Cannot read " + path);
+    PreparationInput input;
+    input.content = std::move(content);
+    input.root = json::parse(input.content);
+    const auto& root = input.root;
+    if (!root.is_object()) throw std::runtime_error("scene root must be an object");
+    for (const auto* key : {"nodes", "blocks"})
+        if (root.contains(key) && !root[key].is_array()) throw std::runtime_error(std::string(key) + " must be an array");
+    if (root.contains("blocks")) for (const auto& block : root["blocks"]) {
+        if (!block.is_object()) throw std::runtime_error("block must be an object");
+        input.entries.push_back({block, json(), SIZE_MAX, true});
+    }
+    std::function<void(const json&, size_t, const json&)> flatten = [&](const json& source, size_t parent, const json& overrides) {
+        if (!source.is_object()) throw std::runtime_error("scene node must be an object");
+        if (source.contains("children") && !source["children"].is_array()) throw std::runtime_error("children must be an array");
+        json shallow = json::object();
+        for (auto it = source.begin(); it != source.end(); ++it)
+            if (it.key() != "children") shallow[it.key()] = it.value();
+        const size_t index = input.entries.size();
+        input.entries.push_back({std::move(shallow), overrides, parent, false});
+        if (source.contains("children")) for (const auto& child : source["children"]) flatten(child, index, json());
+    };
+    if (root.contains("nodes")) for (const auto& node : root["nodes"]) {
+        if (!node.is_object()) throw std::runtime_error("node must be an object");
+        if (node.contains("components") && !node["components"].is_object()) throw std::runtime_error("components must be an object");
+        if (node.contains("prefabAssetPath") && node["prefabAssetPath"].is_string()) {
+            const auto prefabPath = node["prefabAssetPath"].get<std::string>();
+            std::string data;
+            if (!SceneFileMonitor::Read(prefabPath, data)) throw std::runtime_error("Cannot read prefab: " + prefabPath);
+            auto prefab = json::parse(data);
+            const json* resolved = &prefab;
+            if (prefab.contains("nodes") && prefab["nodes"].is_array()) {
+                resolved = nullptr;
+                for (const auto& candidate : prefab["nodes"]) if (candidate.is_object()) { resolved = &candidate; break; }
+            } else if (prefab.contains("prefab") && prefab["prefab"].is_object()) resolved = &prefab["prefab"];
+            if (!resolved) throw std::runtime_error("No prefab node found");
+            flatten(*resolved, SIZE_MAX, node);
+        } else flatten(node, SIZE_MAX, json());
+    }
+    return input;
+}
+}
+struct ScenePreparationJob {
+    std::future<PreparationInput> reader;
+    PreparationInput input;
+    std::shared_ptr<PreparedScene> prepared;
+    std::vector<GameObject*> objects;
+    std::string path, error;
+    size_t next = 0;
+    bool reading = true, done = false;
+};
+std::shared_ptr<ScenePreparationJob> SceneLoader_BeginPreparation(const std::string& path, const std::string* content, bool background) {
+    auto job = std::make_shared<ScenePreparationJob>();
+    job->path = path;
+    job->reader = std::async(background ? std::launch::async : std::launch::deferred,
+        ReadPreparation, path, content ? *content : std::string(), content != nullptr);
+    return job;
+}
+bool SceneLoader_TickPreparation(ScenePreparationJob& job, double budgetMs) {
+    if (job.done) return true;
+    const auto start = std::chrono::steady_clock::now();
     try {
-        const auto root = json::parse(content);
-        if (!root.is_object()) throw std::runtime_error("scene root must be an object");
-        for (const auto* key : {"nodes", "blocks"})
-            if (root.contains(key) && !root[key].is_array()) throw std::runtime_error(std::string(key) + " must be an array");
-        auto prepared = std::make_shared<PreparedScene>();
-        prepared->path = path; prepared->content = content;
-        PrepareSceneSettings(root, *prepared);
-        if (root.contains("blocks") && root["blocks"].is_array()) {
-            for (const auto& jb : root["blocks"]) {
-                if (!jb.is_object()) throw std::runtime_error("block must be an object");
-                if (auto node = GameObjectFromLegacyBlock(jb))
-                    prepared->nodes.push_back(std::move(node));
-            }
+        if (job.reading) {
+            if (job.reader.wait_for(std::chrono::seconds(0)) == std::future_status::timeout) return false;
+            job.input = job.reader.get(); job.reading = false;
+            job.prepared = std::make_shared<PreparedScene>();
+            job.prepared->path = job.path; job.prepared->content = std::move(job.input.content);
+            PrepareSceneSettings(job.input.root, *job.prepared);
+            job.objects.reserve(job.input.entries.size());
+            return false;
         }
-
-        if (root.contains("nodes") && root["nodes"].is_array()) {
-            for (const auto& jn : root["nodes"]) {
-                if (!jn.is_object()) throw std::runtime_error("node must be an object");
-                if (jn.contains("components") && !jn["components"].is_object()) throw std::runtime_error("components must be an object");
-                std::unique_ptr<GameObject> node;
-
-                if (jn.contains("prefabAssetPath") && jn["prefabAssetPath"].is_string()) {
-                    const std::string prefabPath = jn["prefabAssetPath"].get<std::string>();
-                    std::string prefabContent;
-                    if (!SceneFileMonitor::Read(prefabPath, prefabContent)) throw std::runtime_error("Cannot read prefab: " + prefabPath);
-                    node = PrefabSerializer::DeserializeForScene(prefabContent);
-                    if (node) {
-                        if (jn.contains("name") && jn["name"].is_string())
-                            node->SetName(jn["name"].get<std::string>());
-                        if (jn.contains("tag") && jn["tag"].is_number_integer()) {
-                            const int tagValue = jn["tag"].get<int>();
-                            if (TagRegistry::Instance().IsValid(tagValue))
-                                node->SetTag(tagValue);
-                        }
-                        if (jn.contains("components") && jn["components"].is_object() &&
-                            jn["components"].contains("SceneTransform")) {
-                            if (engine::Transform* t = node->GetTransform()) {
-                                const auto& st = jn["components"]["SceneTransform"];
-                                t->localPosition.x = st.value("posX", t->localPosition.x);
-                                t->localPosition.y = st.value("posY", t->localPosition.y);
-                                t->localPosition.z = st.value("posZ", t->localPosition.z);
-                                t->localRotation.x = st.value("rotX", t->localRotation.x);
-                                t->localRotation.y = st.value("rotY", t->localRotation.y);
-                                t->localRotation.z = st.value("rotZ", t->localRotation.z);
-                                t->localScale.x = st.value("scaleX", t->localScale.x);
-                                t->localScale.y = st.value("scaleY", t->localScale.y);
-                                t->localScale.z = st.value("scaleZ", t->localScale.z);
-                                t->SnapshotStartState();
-                                node->SyncLegacyTransformFromComponents();
-                            }
-                        }
-                        node->SetPrefabAssetPath(prefabPath);
+        while (job.next < job.input.entries.size()) {
+            const auto& entry = job.input.entries[job.next];
+            auto node = entry.legacy ? GameObjectFromLegacyBlock(entry.node) : PrefabSerializer::DeserializeSceneNode(entry.node);
+            if (!entry.overrides.is_null()) {
+                const auto& jn = entry.overrides;
+                const std::string prefabPath = jn["prefabAssetPath"].get<std::string>();
+                if (jn.contains("name") && jn["name"].is_string())
+                    node->SetName(jn["name"].get<std::string>());
+                if (jn.contains("tag") && jn["tag"].is_number_integer()) {
+                    const int tagValue = jn["tag"].get<int>();
+                    if (TagRegistry::Instance().IsValid(tagValue))
+                        node->SetTag(tagValue);
+                }
+                if (jn.contains("components") && jn["components"].is_object() &&
+                    jn["components"].contains("SceneTransform")) {
+                    if (engine::Transform* t = node->GetTransform()) {
+                        const auto& st = jn["components"]["SceneTransform"];
+                        t->localPosition.x = st.value("posX", t->localPosition.x);
+                        t->localPosition.y = st.value("posY", t->localPosition.y);
+                        t->localPosition.z = st.value("posZ", t->localPosition.z);
+                        t->localRotation.x = st.value("rotX", t->localRotation.x);
+                        t->localRotation.y = st.value("rotY", t->localRotation.y);
+                        t->localRotation.z = st.value("rotZ", t->localRotation.z);
+                        t->localScale.x = st.value("scaleX", t->localScale.x);
+                        t->localScale.y = st.value("scaleY", t->localScale.y);
+                        t->localScale.z = st.value("scaleZ", t->localScale.z);
+                        t->SnapshotStartState();
+                        node->SyncLegacyTransformFromComponents();
                     }
-                } else {
-                    node = PrefabSerializer::DeserializeForScene(jn.dump());
                 }
 
-                if (node) prepared->nodes.push_back(std::move(node));
+                node->SetPrefabAssetPath(prefabPath);
             }
+            auto* raw = node.get();
+            if (entry.parent == SIZE_MAX) job.prepared->nodes.push_back(std::move(node));
+            else job.objects.at(entry.parent)->AddChild(std::move(node));
+            job.objects.push_back(raw); ++job.next;
+            if (std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - start).count() >= budgetMs) return false;
         }
-
-
-        prepared->canvasJson = root.value("canvas", json::object());
-        prepared->canvas = SceneCanvas_Prepare(prepared->canvasJson);
-        return prepared;
-    } catch (const std::exception& e) {
-        error = e.what();
-    } catch (...) {
-        error = "Scene deserialization failed";
-    }
-    OutputDebugStringA(("[SceneLoader] " + error + "\n").c_str());
-    return {};
+        job.prepared->canvasJson = job.input.root.value("canvas", json::object());
+        job.prepared->canvas = SceneCanvas_Prepare(job.prepared->canvasJson);
+        job.done = true;
+    } catch (const std::exception& e) { job.error = e.what(); job.prepared.reset(); job.done = true; }
+    catch (...) { job.error = "Scene deserialization failed"; job.prepared.reset(); job.done = true; }
+    return job.done;
+}
+bool SceneLoader_PreparationReading(const ScenePreparationJob& job) { return job.reading; }
+size_t SceneLoader_PreparationCompleted(const ScenePreparationJob& job) { return job.next; }
+size_t SceneLoader_PreparationTotal(const ScenePreparationJob& job) { return job.input.entries.size(); }
+std::shared_ptr<PreparedScene> SceneLoader_PreparationResult(const ScenePreparationJob& job) { return job.done ? job.prepared : nullptr; }
+std::string SceneLoader_PreparationError(const ScenePreparationJob& job) { return job.error; }
+std::shared_ptr<PreparedScene> SceneLoader_PrepareFromContent(const std::string& path, const std::string& content, std::string& error) {
+    auto job = SceneLoader_BeginPreparation(path, &content, false);
+    while (!SceneLoader_TickPreparation(*job, 4.0)) {}
+    error = SceneLoader_PreparationError(*job);
+    return SceneLoader_PreparationResult(*job);
 }
 
 void SceneLoader_ApplyPrepared(std::shared_ptr<PreparedScene> prepared, bool preserveEditorView) {

@@ -503,6 +503,9 @@ void Update(double current_time, double elapsed_time) {
 ===========================================================================**/
 static void PresentFrame(void) {
 	Present();
+#ifndef GAME_RUNTIME
+    EngineGUI_NotifyFramePresented();
+#endif
 }
 
 static void DrawWorld(void) {

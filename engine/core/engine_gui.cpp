@@ -33,6 +33,7 @@
 #include "imgui/icons_font_awesome.h"
 
 #include <cstdio>
+#include <chrono>
 #include <algorithm>
 #include <cctype>
 #include <cmath>
@@ -150,6 +151,33 @@ static bool        g_playWhenPreloadDone = false;
 bool               g_sceneLoadPending = false;
 static bool IsSceneLoadBusy();
 static std::string g_pendingSceneLoadPath;
+static std::shared_ptr<ScenePreparationJob> g_scenePreparation;
+static bool g_loadingPresented = false, g_loadingDrawn = false, g_sceneReadyToApply = false;
+static bool g_preparationHotLoad = false;
+static std::string g_sceneLoadError;
+static const char* g_loadingStage = "Reading scene...";
+static std::chrono::steady_clock::time_point g_loadStarted, g_stageStarted;
+static double g_longestPreparationTick = 0.0;
+static void LogSceneLoading(const char* event) {
+    static std::ofstream log("editor_scene_loading.log", std::ios::trunc);
+    static unsigned events = 0;
+    if (++events > 512) return;
+    const auto now = std::chrono::steady_clock::now();
+    log << event << " elapsed_ms=" << std::chrono::duration<double, std::milli>(now-g_loadStarted).count()
+        << " stage_ms=" << std::chrono::duration<double, std::milli>(now-g_stageStarted).count()
+        << " nodes=" << (g_scenePreparation ? SceneLoader_PreparationCompleted(*g_scenePreparation) : 0)
+        << " max_tick_ms=" << g_longestPreparationTick << std::endl;
+}
+void EngineGUI_NotifyFramePresented() {
+    // Play transitions retain their existing scene presentation instead of an editor modal.
+    if (!g_loadingDrawn && !g_holdPlayVisuals) return;
+    g_loadingDrawn = false;
+    if (g_sceneLoadPending && !g_loadingPresented) {
+        g_loadingPresented = true;
+        LogSceneLoading(g_sceneReadyToApply ? "apply_screen_presented" : "loading_screen_presented");
+    }
+}
+
 static CameraMode  g_cameraMode = CameraMode::SceneCamera;
 static std::string g_activeCameraNode;
 static float g_scrollSensitivity = 1.0f;
@@ -2392,6 +2420,14 @@ static void StartPlay(PlayMode mode = PlayMode::Viewport) {
 }
 
 void EngineGUI_QueueSceneLoad(const char* filename) {
+    if (g_sceneLoadPending || g_sceneAssetPreloader.IsActive()) return;
+    g_loadingPresented = false; g_loadingDrawn = false; g_sceneReadyToApply = false;
+    g_scenePreparation.reset(); g_sceneLoadError.clear();
+    g_loadingStage = "Reading scene...";
+    g_loadStarted = g_stageStarted = std::chrono::steady_clock::now();
+    g_longestPreparationTick = 0.0;
+    LogSceneLoading("queued");
+
     // Amendment 1: each new scene switch resets deferred play so a stale F3
     // cannot auto-play into the wrong scene.
     g_playWhenPreloadDone = false;
@@ -2415,31 +2451,58 @@ void EngineGUI_FlushSceneLoadPending() {
         return;
     }
 
-    const std::string path = std::move(g_pendingSceneLoadPath);
-    g_pendingSceneLoadPath.clear();
-
-    const bool hotLoad = g_pendingSceneHotLoad.has_value();
-    if (hotLoad && path != SceneLoader_GetCurrentScenePath()) {
+    if (!g_loadingPresented) return;
+    const std::string path = g_pendingSceneLoadPath;
+    if (!g_scenePreparation) {
+        g_preparationHotLoad = g_pendingSceneHotLoad.has_value();
+        if (g_preparationHotLoad && path != SceneLoader_GetCurrentScenePath()) {
+            g_pendingSceneHotLoad.reset(); g_sceneLoadPending = false; g_playWhenPreloadDone = false;
+            return;
+        }
+        g_stageStarted = std::chrono::steady_clock::now();
+        LogSceneLoading("read_begin");
+        g_scenePreparation = SceneLoader_BeginPreparation(path,
+            g_preparationHotLoad ? &g_pendingSceneHotLoad->content : nullptr);
         g_pendingSceneHotLoad.reset();
-        g_sceneLoadPending = false;
-        g_playWhenPreloadDone = false;
         return;
     }
-    std::string content, error;
-    if (hotLoad) content = std::move(g_pendingSceneHotLoad->content);
-    const bool readable = hotLoad || SceneFileMonitor::Read(path, content);
-    g_pendingSceneHotLoad.reset();
-    auto prepared = readable ? SceneLoader_PrepareFromContent(path, content, error) : nullptr;
-    if (!prepared) {
-        g_sceneReloadLight.Failure();
-        g_sceneReloadStatus = "Scene reload failed: " + (readable ? error : "Cannot read " + path);
-        g_sceneLoadPending = false;
-        g_playWhenPreloadDone = false;
-        if (g_holdPlayVisuals) ReturnToStart();
+    if (!g_sceneReadyToApply) {
+        const auto start = std::chrono::steady_clock::now();
+        const bool wasReading = SceneLoader_PreparationReading(*g_scenePreparation);
+        const bool done = SceneLoader_TickPreparation(*g_scenePreparation, 4.0);
+        g_longestPreparationTick = (std::max)(g_longestPreparationTick,
+            std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now()-start).count());
+        if (wasReading && !SceneLoader_PreparationReading(*g_scenePreparation)) {
+            LogSceneLoading("read_complete"); g_stageStarted = std::chrono::steady_clock::now();
+        }
+        if (!done) {
+            g_loadingStage = SceneLoader_PreparationReading(*g_scenePreparation) ? "Reading / parsing scene..." : "Creating objects...";
+            return;
+        }
+        if (!SceneLoader_PreparationResult(*g_scenePreparation)) {
+            const auto error = SceneLoader_PreparationError(*g_scenePreparation);
+            // Hot-load reports through the existing status light without blocking later disk fixes.
+            g_sceneLoadError = g_preparationHotLoad ? std::string() : error;
+            g_sceneReloadLight.Failure();
+            g_sceneReloadStatus = "Scene reload failed: " + error;
+            LogSceneLoading("failed");
+            g_scenePreparation.reset(); g_pendingSceneLoadPath.clear();
+            g_sceneLoadPending = false; g_playWhenPreloadDone = false;
+            if (g_holdPlayVisuals) ReturnToStart();
+            return;
+        }
+        LogSceneLoading("objects_complete");
+        g_loadingStage = "Applying scene...";
+        g_sceneReadyToApply = true; g_loadingPresented = false;
         return;
     }
+    const bool hotLoad = g_preparationHotLoad;
+    auto prepared = SceneLoader_PreparationResult(*g_scenePreparation);
+    g_stageStarted = std::chrono::steady_clock::now();
+    LogSceneLoading("apply_begin");
     // Preparation must succeed before any old scripts/runtime are torn down.
     SceneLoader_ApplyPrepared(std::move(prepared), hotLoad);
+    LogSceneLoading("apply_complete");
     if (hotLoad) g_sceneReloadLight.Success();
     else g_sceneReloadLight = {};
     g_sceneReloadStatus = hotLoad ? "Scene JSON reloaded" : "Watching current scene JSON";
@@ -2455,8 +2518,13 @@ void EngineGUI_FlushSceneLoadPending() {
         ProjectManager::Instance().SetLastOpenedScene(filePath.filename().string());
     }
 
+    g_loadingStage = "Preloading assets...";
+    g_stageStarted = std::chrono::steady_clock::now();
     EngineGUI_BeginSceneAssetPreload();
+    LogSceneLoading("preload_begin");
+    g_scenePreparation.reset(); g_pendingSceneLoadPath.clear();
     g_sceneLoadPending = false;
+    if (!g_sceneAssetPreloader.IsActive()) LogSceneLoading("complete");
 
     // Empty preload never becomes Active, so Tick never resumes play.
     // Match runtime: stay in / re-enter play immediately when deferred.
@@ -2473,6 +2541,7 @@ void EngineGUI_TickSceneAssetPreload() {
     if (!g_sceneAssetPreloader.Tick())
         return;
 
+    LogSceneLoading("complete");
     if (g_playWhenPreloadDone) {
         g_playWhenPreloadDone = false;
         StartPlay(g_pendingPlayMode);
@@ -2551,6 +2620,9 @@ void EngineGUI_Initialize(HWND hwnd, ID3D11Device* device,
 }
 
 void EngineGUI_Finalize() {
+    // Joining the JSON-only worker precedes scene/runtime teardown.
+    g_scenePreparation.reset();
+    g_sceneLoadPending = false;
 
     SceneLoader_StopScriptWatcher();
 
@@ -3002,8 +3074,7 @@ void EngineGUI_Update(double elapsed_time) {
     SceneHotLoadCheck_Tick(elapsed_time);
 #endif
 
-    // Finish a queued scene switch (JSON + preload Begin) after the prior
-    // frame already Presented the dim-only overlay.
+    // Advance only after the loading stage has actually been presented.
     if (g_sceneLoadPending)
         EngineGUI_FlushSceneLoadPending();
 
@@ -5293,7 +5364,17 @@ void EngineGUI_Draw() {
             ImGuiWindowFlags_NoSavedSettings |
             ImGuiWindowFlags_AlwaysAutoResize;
         if (ImGui::BeginPopupModal("SceneAssetPreloadModal", nullptr, loadFlags)) {
-            ImGui::TextUnformatted("Loading scene...");
+            g_loadingDrawn = true;
+            ImGui::TextUnformatted(g_loadingStage);
+            if (g_sceneLoadPending && g_scenePreparation && !SceneLoader_PreparationReading(*g_scenePreparation) && !g_sceneReadyToApply) {
+                const auto completed = SceneLoader_PreparationCompleted(*g_scenePreparation);
+                const auto total = SceneLoader_PreparationTotal(*g_scenePreparation);
+                const std::string label = std::to_string(completed) + " / " + std::to_string(total);
+                ImGui::ProgressBar(total ? float(completed)/float(total) : 1.0f, ImVec2(-1.0f, 0.0f), label.c_str());
+            } else if (g_sceneLoadPending) {
+                const char* dots[] = {"Working", "Working.", "Working..", "Working..."};
+                ImGui::TextUnformatted(dots[int(ImGui::GetTime()*3.0) % 4]);
+            }
             if (preloadActive) {
                 const std::string& label = g_sceneAssetPreloader.CurrentLabel();
                 if (!label.empty())
@@ -5303,6 +5384,17 @@ void EngineGUI_Draw() {
             }
             ImGui::EndPopup();
         }
+    }
+
+    if (!sceneLoadBusy && ImGui::BeginPopupModal("SceneAssetPreloadModal", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+        ImGui::CloseCurrentPopup(); ImGui::EndPopup();
+    }
+    if (!g_sceneLoadError.empty()) ImGui::OpenPopup("Scene load failed");
+    if (ImGui::BeginPopupModal("Scene load failed", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+        if (g_sceneLoadError.empty()) ImGui::CloseCurrentPopup();
+        else ImGui::TextWrapped("%s", g_sceneLoadError.c_str());
+        if (ImGui::Button("OK")) { g_sceneLoadError.clear(); ImGui::CloseCurrentPopup(); }
+        ImGui::EndPopup();
     }
 
     // Abandon unfinished inspector component-edit capture when no widget is active
