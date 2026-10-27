@@ -1,5 +1,6 @@
 #include "engine/scene/scene_loader.h"
 #include "engine/core/frame_capture.h"
+#include "engine/testing/runtime_test_bridge.h"
 #if defined(_DEBUG) && !defined(GAME_RUNTIME)
 #include "tools/play_scene_switch_check.h"
 #endif
@@ -253,6 +254,10 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstanc
 		NULL
 	);
 
+#if defined(IVY_RUNTIME_TEST_BRIDGE_AVAILABLE)
+    ivy::testing::Bridge runtimeTestBridge;
+    const bool runtimeTestEnabled = runtimeTestBridge.StartFromEnvironment();
+#endif
 	// Initialize application systems
 	if (FAILED(Initialize(hInstance, hWnd, true))) {
 		return -1; // initialization failed
@@ -344,11 +349,23 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstanc
 				keycopy();
 				FrameTimer_EndFrame();
                 FrameCapture_EndFrame();
+#if defined(IVY_RUNTIME_TEST_BRIDGE_AVAILABLE)
+                if (runtimeTestEnabled) {
+                    // Update workers and render work have joined. Copy only on WinMain.
+                    const std::string scene = SceneLoader_GetCurrentScenePath();
+                    const bool ready = !scene.empty() && !EngineGUI_IsSceneAssetPreloadActive();
+                    if (runtimeTestBridge.PublishAndTakeQuit(ready, EngineGUI_IsPlaying(), scene))
+                        EngineGUI_RequestExitGame();
+                }
+#endif
 				frame_count++;
 			}
 		}
 	} // while
 
+#if defined(IVY_RUNTIME_TEST_BRIDGE_AVAILABLE)
+    runtimeTestBridge.Stop();
+#endif
 	Finalize();
 
 	return (int)msg.wParam;

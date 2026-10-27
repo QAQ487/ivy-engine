@@ -655,4 +655,8 @@
     </None>
     <None Include="shaders\LightingCommon.hlsli" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="engine\testing\runtime_test_bridge.h" />
+    <ClCompile Include="engine\testing\runtime_test_bridge.cpp" />
+  </ItemGroup>
 </Project>
