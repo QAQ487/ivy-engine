@@ -137,9 +137,9 @@ Harness `--serve` 最多 15 秒，自行正常退出；Python subprocess tests �
 - [x] **Phase 0 — Runtime 環境驗證**：fresh Debug x64 build、隔離 script-free 3D sample package；已登入 Windows Session 1 成功執行 update／draw、取得 GPU samples，exit 0。
 - [x] **Phase 1 — 最小 Runtime Test Bridge**：opt-in、本機 named pipe、current-user DACL、hello／status／quit、有限指令與 timeout、可取消 I/O、Python stdlib client、正常 shutdown。
 - [x] **Phase 2 — Keyboard 測試輸入**：內部注入、standalone checks、full Debug build 同 Session 2 fresh runtime 整合通過；唔代表角色操作或玩法驗收。
-- [ ] **Phase 3 — Object 狀態觀察與 PNG 截圖**：部分實作；固定診斷鏡頭下移動、觀察同 PNG 已實測一致通過，但退出 crash 未修、角色仍係方塊組合，詳見最新 checkpoint。
-- [ ] **Phase 4 — 固定移動／跳躍／落地驗收 runner**：部分實作；移動／觀察／截圖 assertion runner 已加入並實測通過，跳躍／落地未涵蓋。
-- [ ] **Phase 5 — Mouse／controller／遊戲事件**：部分實作；Slice A（mouse 內部注入＋bridge `mouse` verb＋測試模式視角觀察）已通過 runtime 驗收，controller stick／遊戲事件／mouse 點擊 UI 未開始。
+- [ ] **Phase 3 — Object 狀態觀察與 PNG 截圖**：部分實作；固定診斷鏡頭下移動、觀察同 PNG 已實測一致通過，角色仍係方塊組合，詳見最新 checkpoint。
+- [x] **Phase 4 — 固定移動驗收 runner（範圍縮減）**：已完成（縮減範圍）；acceptance runner 實測移動／觀察／PNG 截圖斷言 PASS 同 clean shutdown（exit 0 正常退出）；明確指出跳躍／落地（jumping／landing）尚未實作亦未進行測試。
+- [ ] **Phase 5 — Mouse／controller／遊戲事件**：部分實作；Slice A（mouse 內部注入、bridge `mouse` verb、測試模式視角觀察同標準 runtime acceptance 驗收）已完成，Slice B controller 及其他剩餘項目未開始。
 - [ ] **Phase 6 — Agent 互動探索**：未開始。
 
 ### Phase 1 已執行驗證
@@ -249,3 +249,39 @@ Harness `--serve` 最多 15 秒，自行正常退出；Python subprocess tests �
   - teardown trace 修復後完整行到 `main.cpp: static destruction reached`。
 - 因此本文件早前各段寫嘅「quit 之後 `0xC0000005`／KNOWN_FAILURE／Terry 暫時延後」已被今次修復取代；相關未修狀態唔再成立。
 - 診斷 code 保留但預設關閉，只喺設定 `IVY_RUNTIME_TEST_CRASH_TRACE=1` 時輸出。
+
+### 2026-10-28 Mouse Runtime Acceptance Runner 工具（Phase 5 Slice A 自動化驗收）
+
+- **工具定位**：
+  - `tools/runtime_bridge_mouse_acceptance.py`：純標準函式庫之 import-safe 執行期滑鼠驗收 runner，支援 `--exe` 與 `--out-dir`，絕不修改預設場景或引擎原始碼。
+  - `tools/runtime_bridge_mouse_acceptance_check.py`：純邏輯單元測試（包含損毀 PNG 辨識、樣本非空／漂移／非有限座標防護、timeout 拒絕判定、崩潰退出偵測、CLI 參數驗證）。
+- **呼叫方式**：
+  - 單獨執行（需由 Windows 互動 session 啟動，`--out-dir` 必須為未存在之新目錄）：
+    ```text
+    py -3 tools/runtime_bridge_mouse_acceptance.py --exe <isolated_player_fixture>\IvyEngineRuntime.exe --out-dir <new_dir>
+    ```
+  - 經由整合檢查腳本（第二個參數可選傳入 exe）：
+    ```text
+    tools\run_runtime_bridge_checks.cmd <check_dir> <isolated_player_fixture>\IvyEngineRuntime.exe
+    ```
+- **前提條件與環境**：
+  - 獨立 player fixture 由呼叫端提供（包含已註冊 `SamplePlayerScript`、地標及方塊角色之場景）。
+  - 自動設定環境變數：`IVY_RUNTIME_TEST_BRIDGE=1`、`IVY_RUNTIME_TEST_RUN_ID`、`IVY_RUNTIME_TEST_OUTPUT_DIR`、`IVY_RUNTIME_TEST_FIXED_CAMERA=1`、`IVY_SKIP_CLOSE_CONFIRM=1`。
+- **驗證項目與誠實說明**：
+  - Ready、playing 與 observe Player 前置條件驗證。
+  - 正向注入 `dx=4, dy=0, wheel=0, buttons=[], updates=60` 並等候 `completed` 與 `remainingUpdates=0`；反向注入 `dx=-4` 相同配置並確認完成。
+  - 畫面驗收：擷取 `before`、`afterForward`、`afterReverse` 三張 1920×1080 真實 PNG（校驗 signature、IHDR 尺寸與 SHA256）。
+  - **誠實記錄**：Hash 改變僅證明前後幀存在畫面視覺差異，並不代表相機精確 yaw 角度或反向操作能完全還原至初始 byte 相同之構圖。
+  - 角色隔離：在注入滑鼠期間持續抽樣觀測 Player（非空樣本，至少抽樣），驗證 Player 座標在容差（0.05）內完全不變（有限數值）、XZ 速度全程為 0。
+  - 邊界請求拒絕：驗證 dx601、extra key、duplicate LEFT、invalid SIDE、wheel999 必須收到明確 `ok: false`（`error: invalid_request`）；若發生 exception 或 timeout 視為 FAIL。
+  - 乾淨關閉：必須收到 `quit` receipt 且程序必須以 exit 0 退出；timeout 或 crash 視為 FAIL。
+- **2026-10-28 驗證結果**：
+  - 因 C++ 源碼無改動，重用已驗證 build（exe SHA256 `0708f5de43ab760f07e522a8875193e7677b6493bc451a5560a407bc6f1098b1`），無需重新編譯。
+  - 標準檢查 `CHECKS_EXIT=0`：涵蓋 13 項 client tests 及 9 項 mouse acceptance unit tests。
+  - 新 runner 真實 runtime 驗證 PASS（Windows Session 2）：
+    - 抽樣 40 samples，`maxDrift` 為 0（角色座標完全隔離）。
+    - 正向／反向各 60 Updates 完成（`completed` 與 `remainingUpdates=0`）。
+    - 5 項邊界非法請求收到明確 `invalid_request` 拒絕。
+    - 擷取 3 張真實 PNG 且 SHA256 digest 各自獨立（Hash 差異不代表相機精確 yaw 角度證明）。
+    - 收到 `quit` receipt 且原生 exit 0 退出，child 程序已正常清理（`childCleanedUp: true`）。
+  - 驗證證據：`x64/phase2a-agent/mouse-standard-61cc999a/result.json`。
