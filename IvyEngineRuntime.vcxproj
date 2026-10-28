@@ -564,4 +564,8 @@ xcopy /y /d /e "$(ProjectDir)rom\*" "$(OutDir)rom\"</Command>
     <ClInclude Include="engine\testing\runtime_test_bridge.h" />
     <ClCompile Include="engine\testing\runtime_test_bridge.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="samples\scripts\SamplePlayerScript.h" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
+    <ClCompile Include="samples\scripts\SamplePlayerScript.cpp" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
+  </ItemGroup>
 </Project>

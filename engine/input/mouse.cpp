@@ -8,8 +8,41 @@
 
  ===========================================================================**/
 #include "mouse.h"
-#include "engine/rendering/d3d11/renderer.h"
 #include <windowsx.h> // GET_X_LPARAM / GET_Y_LPARAM
+
+float GetClientWidth();
+float GetClientHeight();
+float GetBackBufferWidth();
+float GetBackBufferHeight();
+void Renderer_ClientToBackbuffer(float clientX, float clientY, float& backbufferX, float& backbufferY);
+
+#if defined(_DEBUG) && defined(GAME_RUNTIME)
+static bool g_mouseInjectionActive = false;
+static int g_injectedDx = 0;
+static int g_injectedDy = 0;
+static unsigned int g_injectedButtons = 0;
+static int g_injectedWheel = 0;
+
+void Mouse_TestInject(int dx, int dy, unsigned int buttonsMask, int wheel) {
+    g_mouseInjectionActive = true;
+    g_injectedDx = dx;
+    g_injectedDy = dy;
+    g_injectedButtons = buttonsMask;
+    g_injectedWheel = wheel;
+}
+
+void Mouse_ClearInjection() {
+    g_mouseInjectionActive = false;
+    g_injectedDx = 0;
+    g_injectedDy = 0;
+    g_injectedButtons = 0;
+    g_injectedWheel = 0;
+}
+
+bool Mouse_IsInjectionActive() {
+    return g_mouseInjectionActive;
+}
+#endif
 
 namespace {
     // Client coordinates from the latest Win32 message.
@@ -58,6 +91,9 @@ namespace {
 }
 
 void Mouse_Initialize() {
+#if defined(_DEBUG) && defined(GAME_RUNTIME)
+    Mouse_ClearInjection();
+#endif
     g_lastClientX = g_lastClientY = 0;
     g_hasLast = false;
     g_hwnd = nullptr;
@@ -117,6 +153,15 @@ void Mouse_ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, HWND hWnd) {
 }
 
 void Mouse_GetDelta(int& dx, int& dy) {
+#if defined(_DEBUG) && defined(GAME_RUNTIME)
+    if (g_mouseInjectionActive) {
+        dx = g_injectedDx;
+        dy = g_injectedDy;
+        g_injectedDx = 0;
+        g_injectedDy = 0;
+        return;
+    }
+#endif
     float scaleX = 1.0f;
     float scaleY = 1.0f;
     if (GetClientWidth() > 0.0f && GetClientHeight() > 0.0f) {
@@ -128,18 +173,47 @@ void Mouse_GetDelta(int& dx, int& dy) {
     g_dx = g_dy = 0;
 }
 
-bool Mouse_IsLeftDown() { return g_lDown; }
-bool Mouse_IsRightDown() { return g_rDown; }
-bool Mouse_IsMiddleDown() { return g_mDown; }
+bool Mouse_IsLeftDown() {
+#if defined(_DEBUG) && defined(GAME_RUNTIME)
+    if (g_mouseInjectionActive) return (g_injectedButtons & MOUSE_BUTTON_LEFT) != 0;
+#endif
+    return g_lDown;
+}
+
+bool Mouse_IsRightDown() {
+#if defined(_DEBUG) && defined(GAME_RUNTIME)
+    if (g_mouseInjectionActive) return (g_injectedButtons & MOUSE_BUTTON_RIGHT) != 0;
+#endif
+    return g_rDown;
+}
+
+bool Mouse_IsMiddleDown() {
+#if defined(_DEBUG) && defined(GAME_RUNTIME)
+    if (g_mouseInjectionActive) return (g_injectedButtons & MOUSE_BUTTON_MIDDLE) != 0;
+#endif
+    return g_mDown;
+}
 
 int Mouse_GetWheelDelta() {
+#if defined(_DEBUG) && defined(GAME_RUNTIME)
+    if (g_mouseInjectionActive) {
+        int delta = g_injectedWheel;
+        g_injectedWheel = 0;
+        return delta;
+    }
+#endif
     int delta = g_wheelDelta;
     g_wheelDelta = 0;
     return delta;
 }
 
-void Mouse_ClearWheel()
-{
+void Mouse_ClearWheel() {
+#if defined(_DEBUG) && defined(GAME_RUNTIME)
+    if (g_mouseInjectionActive) {
+        g_injectedWheel = 0;
+        return;
+    }
+#endif
     g_wheelDelta = 0;
 }
 

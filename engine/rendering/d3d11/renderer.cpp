@@ -638,3 +638,32 @@ void Present(void) {
 	if (g_SwapChain) g_SwapChain->Present(0, 0);
 	FrameTimer_End(FrameTimerStage::Present);
 }
+
+
+#if defined(_DEBUG) && defined(GAME_RUNTIME)
+#include "libraries/directxtex/DirectXTex.h"
+#pragma comment(lib, "windowscodecs.lib")
+
+bool Renderer_CaptureBackBufferPNG(const wchar_t* filePath, uint32_t* outW, uint32_t* outH) {
+    if (!g_SwapChain || !g_D3DDevice || !g_ImmediateContext || !filePath) return false;
+    ID3D11Texture2D* pBackBuffer = nullptr;
+    HRESULT hr = g_SwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&pBackBuffer));
+    if (FAILED(hr) || !pBackBuffer) return false;
+
+    D3D11_TEXTURE2D_DESC desc = {};
+    pBackBuffer->GetDesc(&desc);
+    if (outW) *outW = desc.Width;
+    if (outH) *outH = desc.Height;
+
+    DirectX::ScratchImage scratch;
+    hr = DirectX::CaptureTexture(g_D3DDevice, g_ImmediateContext, pBackBuffer, scratch);
+    pBackBuffer->Release();
+    if (FAILED(hr)) return false;
+
+    const DirectX::Image* img = scratch.GetImage(0, 0, 0);
+    if (!img) return false;
+
+    hr = DirectX::SaveToWICFile(*img, DirectX::WIC_FLAGS_NONE, DirectX::GetWICCodec(DirectX::WIC_CODEC_PNG), filePath);
+    return SUCCEEDED(hr);
+}
+#endif

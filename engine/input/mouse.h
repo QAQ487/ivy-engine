@@ -12,6 +12,19 @@
 
 #include <windows.h>
 
+enum Mouse_ButtonMask {
+    MOUSE_BUTTON_NONE = 0,
+    MOUSE_BUTTON_LEFT = 1 << 0,
+    MOUSE_BUTTON_RIGHT = 1 << 1,
+    MOUSE_BUTTON_MIDDLE = 1 << 2
+};
+
+#if defined(_DEBUG) && defined(GAME_RUNTIME)
+void Mouse_TestInject(int dx, int dy, unsigned int buttonsMask, int wheel = 0);
+void Mouse_ClearInjection();
+bool Mouse_IsInjectionActive();
+#endif
+
 void Mouse_Initialize();
 void Mouse_ResetFrame();              // call once per frame (resets delta)
 void Mouse_ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, HWND hWnd);

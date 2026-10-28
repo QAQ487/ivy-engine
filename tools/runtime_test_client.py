@@ -97,9 +97,10 @@ class Client:
             if b==b"\n": return json.loads(data)
             data+=b
         raise ValueError("oversize response")
-    def request(self,verb,request_id):
-        deadline=time.monotonic()+self.timeout
-        q=dict(protocolVersion=1,requestId=request_id,runId=self.run_id,verb=verb)
+    def request(self,verb,request_id,payload=None,*,deadline=None):
+        deadline=min(deadline if deadline is not None else math.inf,time.monotonic()+self.timeout)
+        q=dict(payload or {})
+        q.update(protocolVersion=1,requestId=request_id,runId=self.run_id,verb=verb)
         self.send_raw(json.dumps(q,separators=(",",":")).encode()+b"\n",deadline)
         r=self.read_response(deadline)
         if r.get("protocolVersion")!=1 or r.get("runId")!=self.run_id or r.get("requestId")!=request_id:
@@ -111,16 +112,135 @@ class Client:
             self.send_raw(b"\n",deadline)
         return r
 
+    def observe(self, target, request_id):
+        if not isinstance(target, str) or not (1 <= len(target) <= 64):
+            raise ValueError("target must be a non-empty string <= 64 chars")
+        return self.request("observe", request_id, {"target": target})
+
+    def capture(self, request_id, completion_timeout=5.0):
+        if type(request_id) is not int or not 1 <= request_id < 2147483647:
+            raise ValueError("request ID must leave room for completion polls")
+        if not math.isfinite(completion_timeout) or not 0 < completion_timeout <= 10:
+            raise ValueError("completion timeout must be in (0,10]")
+        try:
+            deadline = time.monotonic() + completion_timeout
+            result = self.request("capture", request_id, deadline=deadline)
+            if not result.get("ok"): return result
+            operation_id = request_id
+            while time.monotonic() < deadline:
+                request_id += 1
+                if request_id > 2147483647: raise ValueError("request ID exhausted")
+                result = self.request("status", request_id, deadline=deadline)
+                if not result.get("ok"): raise RuntimeError("capture status rejected: " + str(result))
+                operation = result.get("capture", {})
+                if operation.get("requestId") != operation_id: raise RuntimeError("capture operation identity mismatch")
+                if operation.get("status") == "completed": return result
+                if operation.get("status") == "failed": raise RuntimeError("capture failed: " + str(operation.get("error")))
+                time.sleep(min(.01, max(0, deadline - time.monotonic())))
+            raise TimeoutError("capture completion deadline")
+        except (OSError, ValueError, RuntimeError, TimeoutError):
+            self.close()
+            raise
+
+    def keyboard(self,keys,updates,request_id,completion_timeout=7.0):
+        allowed={"W","A","S","D","SPACE","UP","DOWN","LEFT","RIGHT"}
+        if not isinstance(keys,(list,tuple)) or not 1<=len(keys)<=9 or any(not isinstance(k,str) or k not in allowed for k in keys) or len(set(keys))!=len(keys):
+            raise ValueError("keys must be unique whitelist names")
+        if type(updates) is not int or not 1<=updates<=120:
+            raise ValueError("updates must be an integer in [1,120]")
+        if type(request_id) is not int or not 1<=request_id<2147483647:
+            raise ValueError("request ID must leave room for completion polls")
+        if not math.isfinite(completion_timeout) or not 0<completion_timeout<=10:
+            raise ValueError("completion timeout must be in (0,10]")
+        try:
+            deadline=time.monotonic()+completion_timeout
+            result=self.request("keyboard",request_id,{"keys":list(keys),"updates":updates},deadline=deadline)
+            if not result.get("ok"): return result
+            operation_id=request_id
+            while time.monotonic()<deadline:
+                request_id+=1
+                if request_id>2147483647: raise ValueError("request ID exhausted")
+                result=self.request("status",request_id,deadline=deadline)
+                if not result.get("ok"): raise RuntimeError("keyboard status rejected: "+str(result))
+                operation=result.get("keyboard",{})
+                if operation.get("requestId")!=operation_id: raise RuntimeError("keyboard operation identity mismatch")
+                if operation.get("status")=="completed": return result
+                if operation.get("status")=="cancelled": raise RuntimeError("keyboard operation cancelled")
+                time.sleep(min(.01,max(0,deadline-time.monotonic())))
+            raise TimeoutError("keyboard completion deadline")
+        except (OSError,ValueError,RuntimeError,TimeoutError):
+            self.close()
+            raise
+
+    def mouse(self,dx,dy,buttons,updates,request_id,wheel=0,completion_timeout=7.0):
+        if type(dx) is not int or not -600<=dx<=600:
+            raise ValueError("dx must be an integer in [-600,600]")
+        if type(dy) is not int or not -600<=dy<=600:
+            raise ValueError("dy must be an integer in [-600,600]")
+        allowed={"LEFT","RIGHT","MIDDLE"}
+        if not isinstance(buttons,(list,tuple)) or len(buttons)>3 or any(not isinstance(b,str) or b not in allowed for b in buttons) or len(set(buttons))!=len(buttons):
+            raise ValueError("buttons must be unique subset of LEFT,RIGHT,MIDDLE")
+        if type(wheel) is not int or not -120<=wheel<=120:
+            raise ValueError("wheel must be an integer in [-120,120]")
+        if type(updates) is not int or not 1<=updates<=120:
+            raise ValueError("updates must be an integer in [1,120]")
+        if type(request_id) is not int or not 1<=request_id<2147483647:
+            raise ValueError("request ID must leave room for completion polls")
+        if not math.isfinite(completion_timeout) or not 0<completion_timeout<=10:
+            raise ValueError("completion timeout must be in (0,10]")
+        try:
+            deadline=time.monotonic()+completion_timeout
+            payload={"dx":dx,"dy":dy,"buttons":list(buttons),"wheel":wheel,"updates":updates}
+            result=self.request("mouse",request_id,payload,deadline=deadline)
+            if not result.get("ok"): return result
+            operation_id=request_id
+            while time.monotonic()<deadline:
+                request_id+=1
+                if request_id>2147483647: raise ValueError("request ID exhausted")
+                result=self.request("status",request_id,deadline=deadline)
+                if not result.get("ok"): raise RuntimeError("mouse status rejected: "+str(result))
+                operation=result.get("mouse",{})
+                if operation.get("requestId")!=operation_id: raise RuntimeError("mouse operation identity mismatch")
+                if operation.get("status")=="completed": return result
+                if operation.get("status")=="cancelled": raise RuntimeError("mouse operation cancelled")
+                time.sleep(min(.01,max(0,deadline-time.monotonic())))
+            raise TimeoutError("mouse completion deadline")
+        except (OSError,ValueError,RuntimeError,TimeoutError):
+            self.close()
+            raise
+
 def main():
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument("--pid",type=int,required=True)
     p.add_argument("--run-id",required=True)
     p.add_argument("--request-id",type=int,required=True,help="strictly increasing across the run")
     p.add_argument("--timeout",type=float,default=2)
-    p.add_argument("verb",choices=("hello","status","quit"))
+    p.add_argument("verb",choices=("hello","status","quit","keyboard","observe","capture","mouse"))
+    p.add_argument("--keys",nargs="+")
+    p.add_argument("--updates",type=int)
+    p.add_argument("--completion-timeout",type=float,default=7)
+    p.add_argument("--target",type=str)
+    p.add_argument("--dx",type=int,default=0)
+    p.add_argument("--dy",type=int,default=0)
+    p.add_argument("--buttons",nargs="*",default=[])
+    p.add_argument("--wheel",type=int,default=0)
     a=p.parse_args()
+    if a.verb=="keyboard" and (a.keys is None or a.updates is None): p.error("keyboard requires --keys and --updates")
+    if a.verb!="keyboard" and (a.keys is not None): p.error("keys payload requires keyboard verb")
+    if a.verb=="mouse" and a.updates is None: p.error("mouse requires --updates")
+    if a.verb=="observe" and not a.target: p.error("observe requires --target")
     try:
-        with Client(a.pid,a.run_id,a.timeout) as c: r=c.request(a.verb,a.request_id)
+        with Client(a.pid,a.run_id,a.timeout) as c:
+            if a.verb=="keyboard":
+                r=c.keyboard(a.keys,a.updates,a.request_id,a.completion_timeout)
+            elif a.verb=="mouse":
+                r=c.mouse(a.dx,a.dy,a.buttons,a.updates,a.request_id,a.wheel,a.completion_timeout)
+            elif a.verb=="observe":
+                r=c.observe(a.target,a.request_id)
+            elif a.verb=="capture":
+                r=c.capture(a.request_id,a.completion_timeout)
+            else:
+                r=c.request(a.verb,a.request_id)
         print(json.dumps(r,ensure_ascii=False))
         return 0 if r.get("ok") is True else 1
     except (OSError,ValueError,RuntimeError,TimeoutError) as e:

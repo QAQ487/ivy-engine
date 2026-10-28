@@ -403,6 +403,13 @@ bool Keyboard_IsKeyUp(Keyboard_Keys key, const Keyboard_State* pState);
 // �L�[�{�[�h�̏�Ԃ���Z�b�g����
 void Keyboard_Reset(void);
 
+#if defined(_DEBUG) && defined(GAME_RUNTIME)
+// Owner-thread internal override; isolates all physical keys until cleared.
+void Keyboard_TestInject(const Keyboard_Keys* keys, int count);
+void Keyboard_ClearInjection();
+bool Keyboard_IsInjectionActive();
+#endif
+
 // �L�[�{�[�h����̂��߂̃E�H���ǂ����b�Z�[�W�v���V�[�W���t�b�N�֐�
 void Keyboard_ProcessMessage(UINT message, WPARAM wParam, LPARAM lParam);
 

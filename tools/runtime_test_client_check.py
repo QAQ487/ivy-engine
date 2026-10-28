@@ -10,6 +10,73 @@ import uuid
 from runtime_test_client import Client
 
 class ClientChecks(unittest.TestCase):
+    def test_real_keyboard_completion(self):
+        run=uuid.uuid4().hex
+        env=dict(os.environ, IVY_RUNTIME_TEST_BRIDGE="1", IVY_RUNTIME_TEST_RUN_ID=run)
+        p=subprocess.Popen([os.environ["IVY_BRIDGE_HARNESS"],"--serve"],env=env,stdout=subprocess.PIPE,text=True)
+        try:
+            with Client(p.pid,run,timeout=2) as c:
+                r=c.keyboard(["W","SPACE"],5,1)
+                self.assertTrue(r["ok"])
+                self.assertEqual(r["keyboard"]["status"],"completed")
+                self.assertEqual(r["keyboard"]["requestId"],1)
+                self.assertEqual(r["keyboard"]["remainingUpdates"],0)
+                self.assertTrue(c.request("quit",r["requestId"]+1)["ok"])
+            self.assertEqual(p.wait(timeout=3),0)
+        finally:
+            if p.poll() is None: p.kill();p.wait(timeout=3)
+            p.stdout.close()
+
+    def test_keyboard_completion_timeout_closes_connection(self):
+        run=uuid.uuid4().hex
+        env=dict(os.environ, IVY_RUNTIME_TEST_BRIDGE="1", IVY_RUNTIME_TEST_RUN_ID=run)
+        p=subprocess.Popen([os.environ["IVY_BRIDGE_HARNESS"],"--stall"],env=env,stdout=subprocess.PIPE,text=True)
+        try:
+            with Client(p.pid,run) as c:
+                start=time.monotonic()
+                with self.assertRaises(TimeoutError): c.keyboard(["W"],1,1,completion_timeout=.2)
+                self.assertLess(time.monotonic()-start,.6)
+                self.assertIsNone(c.handle)
+            with Client(p.pid,run) as c:
+                self.assertEqual(c.request("status",1000)["keyboard"]["status"],"cancelled")
+                self.assertTrue(c.request("quit",1001)["ok"])
+            self.assertEqual(p.wait(timeout=3),0)
+        finally:
+            if p.poll() is None: p.kill();p.wait(timeout=3)
+            p.stdout.close()
+
+    def test_real_keyboard_cli_completion(self):
+        run=uuid.uuid4().hex
+        env=dict(os.environ, IVY_RUNTIME_TEST_BRIDGE="1", IVY_RUNTIME_TEST_RUN_ID=run)
+        p=subprocess.Popen([os.environ["IVY_BRIDGE_HARNESS"],"--serve"],env=env,stdout=subprocess.PIPE,text=True)
+        try:
+            cli=subprocess.run([sys.executable,os.path.join(os.path.dirname(__file__),"runtime_test_client.py"),
+                "--pid",str(p.pid),"--run-id",run,"--request-id","1","keyboard","--keys","W","SPACE","--updates","1"],
+                capture_output=True,text=True,timeout=10)
+            self.assertEqual(cli.returncode,0,cli.stderr)
+            r=json.loads(cli.stdout)
+            self.assertEqual(r["keyboard"]["status"],"completed")
+            with Client(p.pid,run) as c: self.assertTrue(c.request("quit",r["requestId"]+1)["ok"])
+            self.assertEqual(p.wait(timeout=3),0)
+        finally:
+            if p.poll() is None: p.kill();p.wait(timeout=3)
+            p.stdout.close()
+
+    def test_keyboard_client_rejects_invalid_payload_before_send(self):
+        run=uuid.uuid4().hex
+        env=dict(os.environ, IVY_RUNTIME_TEST_BRIDGE="1", IVY_RUNTIME_TEST_RUN_ID=run)
+        p=subprocess.Popen([os.environ["IVY_BRIDGE_HARNESS"],"--serve"],env=env,stdout=subprocess.PIPE,text=True)
+        try:
+            with Client(p.pid,run) as c:
+                for keys,updates in ((["W"],True),(["W"],1.0),(["W"],0),(["W"],121),(["W","W"],1),(["ESCAPE"],1),([],1),("W",1),([True],1)):
+                    with self.subTest(keys=keys,updates=updates):
+                        with self.assertRaises(ValueError): c.keyboard(keys,updates,1)
+                self.assertTrue(c.request("quit",1)["ok"])
+            self.assertEqual(p.wait(timeout=3),0)
+        finally:
+            if p.poll() is None: p.kill();p.wait(timeout=3)
+            p.stdout.close()
+
     def test_real_hello_status_quit(self):
         run=uuid.uuid4().hex
         env=dict(os.environ, IVY_RUNTIME_TEST_BRIDGE="1", IVY_RUNTIME_TEST_RUN_ID=run)
@@ -35,7 +102,7 @@ class ClientChecks(unittest.TestCase):
                 c.send_raw(b"{\n")
                 self.assertEqual(c.read_response()["error"],"malformed_json")
                 self.assertEqual(c.request("act",1)["error"],"unknown_verb")
-                self.assertEqual(c.request("capture",2)["error"],"unknown_verb")
+                self.assertEqual(c.request("simulate",2)["error"],"unknown_verb")
                 self.assertEqual(c.request("hello",2)["error"],"duplicate_request_id")
                 c.send_raw(b'{"protocolVersion":99,"requestId":3,"runId":"'+run.encode()+b'","verb":"hello"}\n')
                 self.assertEqual(c.read_response()["error"],"unsupported_version")
@@ -118,6 +185,47 @@ class ClientChecks(unittest.TestCase):
         with self.assertRaises(TimeoutError):
             Client(12345, "missing-"+uuid.uuid4().hex, timeout=.15)
         self.assertLess(time.monotonic()-start, 1)
+
+    def test_observe_client_validation(self):
+        c=Client.__new__(Client)
+        with self.assertRaises(ValueError): c.observe("", 1)
+        with self.assertRaises(ValueError): c.observe("x"*65, 1)
+        with self.assertRaises(ValueError): c.observe(123, 1)
+
+    def test_mouse_client_validation(self):
+        c=Client.__new__(Client)
+        for bad_dx in (-601, 601, "0", 1.5, True):
+            with self.subTest(bad_dx=bad_dx):
+                with self.assertRaises(ValueError): c.mouse(bad_dx, 0, [], 5, 1)
+        for bad_dy in (-601, 601, "0", 1.5, True):
+            with self.subTest(bad_dy=bad_dy):
+                with self.assertRaises(ValueError): c.mouse(0, bad_dy, [], 5, 1)
+        for bad_buttons in (["X"], ["LEFT", "LEFT"], ["LEFT", "RIGHT", "MIDDLE", "LEFT"], "LEFT", [1]):
+            with self.subTest(bad_buttons=bad_buttons):
+                with self.assertRaises(ValueError): c.mouse(0, 0, bad_buttons, 5, 1)
+        for bad_wheel in (-121, 121, "0", 1.5):
+            with self.subTest(bad_wheel=bad_wheel):
+                with self.assertRaises(ValueError): c.mouse(0, 0, [], 5, 1, wheel=bad_wheel)
+        for bad_updates in (0, 121, True, 1.5, "5"):
+            with self.subTest(bad_updates=bad_updates):
+                with self.assertRaises(ValueError): c.mouse(0, 0, [], bad_updates, 1)
+
+    def test_real_mouse_completion(self):
+        run=uuid.uuid4().hex
+        env=dict(os.environ, IVY_RUNTIME_TEST_BRIDGE="1", IVY_RUNTIME_TEST_RUN_ID=run)
+        p=subprocess.Popen([os.environ["IVY_BRIDGE_HARNESS"],"--serve"],env=env,stdout=subprocess.PIPE,text=True)
+        try:
+            with Client(p.pid,run,timeout=2) as c:
+                r=c.mouse(15,-25,["LEFT"],5,1,wheel=10)
+                self.assertTrue(r["ok"])
+                self.assertEqual(r["mouse"]["status"],"completed")
+                self.assertEqual(r["mouse"]["requestId"],1)
+                self.assertEqual(r["mouse"]["remainingUpdates"],0)
+                self.assertTrue(c.request("quit",r["requestId"]+1)["ok"])
+            self.assertEqual(p.wait(timeout=3),0)
+        finally:
+            if p.poll() is None: p.kill();p.wait(timeout=3)
+            p.stdout.close()
 
 if __name__ == "__main__":
     unittest.main()

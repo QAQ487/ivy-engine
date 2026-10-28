@@ -1,6 +1,6 @@
-/**===========================================================================
+ï»¿/**===========================================================================
  File   : key_logger.h
- Title  : “ü—Í‚Ì‹L˜^
+ Title  : å…¥åŠ›ã®è¨˜éŒ²
  Author : Terry Yeung
  Date   : 2025/6/27
  Brief  :
@@ -13,12 +13,12 @@ void KeyLogger_Initialize();
 void KeyLogger_Update(double now_time);
 
 static void Keyboard_SetKeyDown(Keyboard_State* state, Keyboard_Keys key, bool down);
-bool KeyLogger_IsPressed(Keyboard_Keys key);     // ƒL[‚ªŒ»İ‰Ÿ‚³‚ê‚Ä‚¢‚é‚©‚Ç‚¤‚©i‰Ÿ‚µ‘±‚¯‚Ä‚¢‚éŠÔ truej
-bool KeyLogger_IsTrigger(Keyboard_Keys key);     // ƒL[‚ª¡ƒtƒŒ[ƒ€‚Å‰Ÿ‚³‚ê‚½uŠÔ‚©i1ƒtƒŒ[ƒ€‚¾‚¯ truej
-bool KeyLogger_IsRelease(Keyboard_Keys key);     // ƒL[‚ª¡ƒtƒŒ[ƒ€‚Å—£‚³‚ê‚½uŠÔ‚©i1ƒtƒŒ[ƒ€‚¾‚¯ truej
-bool KeyLogger_IsDoubleTap(Keyboard_Keys key);   // ƒL[‚ª‘f‘‚­2‰ñ‰Ÿ‚³‚ê‚½‚©iƒ_ƒuƒ‹ƒ^ƒbƒvA—áF0.3•bˆÈ“àj
-bool KeyLogger_IsRepeat(Keyboard_Keys key);      // ƒL[‚ª‰Ÿ‚µ‘±‚¯‚ç‚ê‚Ä‚¢‚Äˆê’èŠÔ‚²‚Æ‚É true ‚ğ•Ô‚·i—áF0.25•b‚²‚Æj
-bool KeyLogger_IsLongPress(Keyboard_Keys key);   // ƒL[‚ªˆê’èŠÔˆÈãi—áF1•bˆÈãj‰Ÿ‚³‚ê‚Ä‚¢‚é‚©‚Ç‚¤‚©
-double KeyLogger_GetHoldTime(Keyboard_Keys key); // ƒL[‚ªŒ»İ‚Ç‚ê‚­‚ç‚¢‚ÌŠÔ‰Ÿ‚³‚ê‘±‚¯‚Ä‚¢‚é‚©i•b”j
+bool KeyLogger_IsPressed(Keyboard_Keys key);     // ã‚­ãƒ¼ãŒç¾åœ¨æŠ¼ã•ã‚Œã¦ã„ã‚‹ã‹ã©ã†ã‹ï¼ˆæŠ¼ã—ç¶šã‘ã¦ã„ã‚‹é–“ trueï¼‰
+bool KeyLogger_IsTrigger(Keyboard_Keys key);     // ã‚­ãƒ¼ãŒä»Šãƒ•ãƒ¬ãƒ¼ãƒ ã§æŠ¼ã•ã‚ŒãŸç¬é–“ã‹ï¼ˆ1ãƒ•ãƒ¬ãƒ¼ãƒ ã ã‘ trueï¼‰
+bool KeyLogger_IsRelease(Keyboard_Keys key);     // ã‚­ãƒ¼ãŒä»Šãƒ•ãƒ¬ãƒ¼ãƒ ã§é›¢ã•ã‚ŒãŸç¬é–“ã‹ï¼ˆ1ãƒ•ãƒ¬ãƒ¼ãƒ ã ã‘ trueï¼‰
+bool KeyLogger_IsDoubleTap(Keyboard_Keys key);   // ã‚­ãƒ¼ãŒç´ æ—©ã2å›æŠ¼ã•ã‚ŒãŸã‹ï¼ˆãƒ€ãƒ–ãƒ«ã‚¿ãƒƒãƒ—ã€ä¾‹ï¼š0.3ç§’ä»¥å†…ï¼‰
+bool KeyLogger_IsRepeat(Keyboard_Keys key);      // ã‚­ãƒ¼ãŒæŠ¼ã—ç¶šã‘ã‚‰ã‚Œã¦ã„ã¦ä¸€å®šæ™‚é–“ã”ã¨ã« true ã‚’è¿”ã™ï¼ˆä¾‹ï¼š0.25ç§’ã”ã¨ï¼‰
+bool KeyLogger_IsLongPress(Keyboard_Keys key);   // ã‚­ãƒ¼ãŒä¸€å®šæ™‚é–“ä»¥ä¸Šï¼ˆä¾‹ï¼š1ç§’ä»¥ä¸Šï¼‰æŠ¼ã•ã‚Œã¦ã„ã‚‹ã‹ã©ã†ã‹
+double KeyLogger_GetHoldTime(Keyboard_Keys key); // ã‚­ãƒ¼ãŒç¾åœ¨ã©ã‚Œãã‚‰ã„ã®æ™‚é–“æŠ¼ã•ã‚Œç¶šã‘ã¦ã„ã‚‹ã‹ï¼ˆç§’æ•°ï¼‰
 
 #endif // !KEY_LOGGER_H

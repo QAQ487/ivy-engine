@@ -3,12 +3,14 @@
 #include <windows.h>
 #include <aclapi.h>
 #include <iostream>
+#include "engine/input/key_logger.h"
 #include <stdexcept>
 #include <vector>
 using namespace ivy::testing;
 void check(bool b, const char* message) { if (!b) { std::cerr << "FAIL " << message << std::endl; std::exit(1); } }
 int main(int argc, char** argv) {
     if(argc>1) {
+        KeyLogger_Initialize();
         Bridge server;
         check(server.StartFromEnvironment(), "harness bridge starts");
         std::cout << server.PipeName() << std::endl;
@@ -16,6 +18,11 @@ int main(int argc, char** argv) {
         const auto deadline=GetTickCount64()+(cancel ? 250 : 15000);
         while(GetTickCount64()<deadline) {
             if(server.PublishAndTakeQuit(true,true,"fixture.json")) { server.Stop(); return 0; }
+            if(std::string(argv[1])!="--stall") {
+                server.PollAndApplyInput(true);
+                KeyLogger_Update(static_cast<double>(GetTickCount64())/1000.0);
+                server.FinishInputUpdate();
+            }
             Sleep(2);
         }
         server.Stop();
@@ -55,7 +62,44 @@ int main(int argc, char** argv) {
     p.Publish(true, true, "rom/scene/test.json");
     r = p.Request(R"({"protocolVersion":1,"requestId":5,"runId":"test-run","verb":"status"})");
     check(r["ready"] == true && r["playing"] == true && r["scene"] == "rom/scene/test.json", "copied main-thread snapshot");
-    check(r["capabilities"] == Json::array({"hello","status","quit"}), "minimal capabilities");
+    Protocol keyboard("keyboard", 123, 7);
+    keyboard.Publish(true, true, "fixture");
+    auto keyReply = keyboard.Request(R"({"protocolVersion":1,"requestId":1,"runId":"keyboard","verb":"keyboard","keys":["W"],"updates":1})");
+    check(keyReply.value("ok", false), "keyboard extended payload accepted");
+    for(const auto& badUpdates : {Json(0),Json(121),Json(true),Json(1.5),Json(4294967297ULL),Json(-1)}) {
+        Protocol invalid("keyboard",123,7); invalid.Publish(true,true,"fixture");
+        auto bad=Json{{"protocolVersion",1},{"requestId",1},{"runId","keyboard"},{"verb","keyboard"},{"keys",{"W"}},{"updates",badUpdates}};
+        check(invalid.Request(bad.dump()).value("error","")=="invalid_request","reject invalid or overflowing updates before narrowing");
+    }
+    for(const auto& badKeys : {Json::array(),Json::array({"W","W"}),Json::array({"ESCAPE"}),Json::array({true}),Json("W")}) {
+        Protocol invalid("keyboard",123,7); invalid.Publish(true,true,"fixture");
+        auto bad=Json{{"protocolVersion",1},{"requestId",1},{"runId","keyboard"},{"verb","keyboard"},{"keys",badKeys},{"updates",1}};
+        check(!invalid.Request(bad.dump()).value("ok",true),"reject duplicate/unknown/invalid keys");
+    }
+    Protocol policy("policy",123,7);
+    Json input{{"protocolVersion",1},{"requestId",1},{"runId","policy"},{"verb","keyboard"},{"keys",{"W"}},{"updates",120}};
+    check(policy.Request(input.dump()).value("error","")=="not_ready","input rejected before ready");
+    policy.Publish(true,false,"fixture"); input["requestId"]=2;
+    check(policy.Request(input.dump()).value("error","")=="not_ready","input rejected when not playing");
+    policy.Publish(true,true,"fixture");input["requestId"]=3;input["extra"]=true;
+    check(policy.Request(input.dump()).value("error","")=="invalid_request","extra payload rejected");
+    input.erase("extra");input["protocolVersion"]=true;
+    check(policy.Request(input.dump()).value("error","")=="invalid_request","boolean version rejected");
+    input["protocolVersion"]=2;
+    check(policy.Request(input.dump()).value("error","")=="unsupported_version","keyboard version checked");
+    input["protocolVersion"]=1;input["runId"]="wrong";
+    check(policy.Request(input.dump()).value("error","")=="run_mismatch","keyboard run checked");
+    input["runId"]="policy";
+    check(policy.Request(input.dump()).value("ok",false),"schema/version/run errors did not consume ID");
+    input["requestId"]=4;
+    check(policy.Request(input.dump()).value("error","")=="queue_full","one queued input slot");
+    policy.CancelKeyboard();
+    input["requestId"]=5;input["keys"]=Json::array({"W","A","S","D","SPACE","UP","DOWN","LEFT","RIGHT"});
+    check(policy.Request(input.dump()).value("ok",false),"all nine whitelist keys supported");
+    policy.BeginInput(false,GetTickCount64());
+    auto cancelled=policy.Request(R"({"protocolVersion":1,"requestId":6,"runId":"policy","verb":"status"})");
+    check(cancelled["keyboard"]["status"]=="cancelled","not-playing cancels queued input");
+    check(r["capabilities"] == Json::array({"hello","status","quit","keyboard","observe","capture","mouse"}), "capabilities include observe, capture, and mouse");
     r = p.Request(R"({"protocolVersion":1,"requestId":6,"runId":"test-run","verb":"quit"})");
     check(r.value("requiresReceipt", false), "quit requires receipt before main-thread exit");
     check(!p.TakeQuit(), "no quit before receipt");

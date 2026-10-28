@@ -45,6 +45,7 @@ constexpr float kTraumaRollDeg = 3.0f;
 constexpr float kSpeedFovBoost = 18.0f;
 constexpr float kSpeedFovSmooth = 6.0f;
 constexpr float kFovEpsilon = 0.01f;
+constexpr float kTestCameraPitch = 15.0f;
 
 XMFLOAT3* s_targetPos = nullptr;
 float*    s_targetYaw = nullptr;
@@ -83,6 +84,18 @@ float s_speedFactor01 = 0.0f;
 float s_speedFovCurrent = kBaseFov;
 
 std::unique_ptr<GameObject> s_followCamNode;
+
+#if defined(_DEBUG) && defined(GAME_RUNTIME)
+bool FixedCameraRequested() {
+	static const bool requested = [] {
+		char value[8]{};
+		const DWORD len = GetEnvironmentVariableA("IVY_RUNTIME_TEST_FIXED_CAMERA", value, 8);
+		return len == 1 && value[0] == '1';
+	}();
+	return requested;
+}
+#endif
+
 
 float Clampf(float v, float lo, float hi) {
 	if (v < lo) return lo;
@@ -266,8 +279,22 @@ void ThirdPersonCamera_Update(double elapsed_time) {
 	const bool orbitLookLocked = (s_magnetMode == ThirdPersonMagnetMode::Orbit && s_orbitLocked);
 	const bool magnetFaceLocked = IsPullOrPushMode(s_magnetMode) && s_hasMagnetTarget;
 
+	const bool fixedCamera =
+#if defined(_DEBUG) && defined(GAME_RUNTIME)
+		FixedCameraRequested();
+#else
+		false;
+#endif
+
 	int dx = 0, dy = 0;
-	if (s_cursorHidden && hWnd) {
+	if (fixedCamera) {
+		s_pitch = kTestCameraPitch;
+#if defined(_DEBUG) && defined(GAME_RUNTIME)
+		if (Mouse_IsInjectionActive()) {
+			Mouse_GetDelta(dx, dy);
+		}
+#endif
+	} else if (s_cursorHidden && hWnd) {
 		const int centerX = (int)(GetClientWidth() * 0.5f);
 		const int centerY = (int)(GetClientHeight() * 0.5f);
 
@@ -283,7 +310,7 @@ void ThirdPersonCamera_Update(double elapsed_time) {
 		SetCursorPos(screenCenter.x, screenCenter.y);
 	}
 
-	{ int unused_dx, unused_dy; Mouse_GetDelta(unused_dx, unused_dy); }
+	if (!fixedCamera) { int unused_dx, unused_dy; Mouse_GetDelta(unused_dx, unused_dy); }
 
 	if (magnetFaceLocked) {
 		float desiredYaw = 0.0f;
@@ -300,7 +327,10 @@ void ThirdPersonCamera_Update(double elapsed_time) {
 		s_pitch += dy * s_mouseSensitivity;
 
 		XMFLOAT2 rightStick = Controller_GetRightStick();
-		*s_targetYaw = NormalizeYawDeg(*s_targetYaw + rightStick.x * s_controllerSensitivity * dt);
+		if (!fixedCamera) {
+			*s_targetYaw = NormalizeYawDeg(*s_targetYaw + rightStick.x * s_controllerSensitivity * dt);
+			s_pitch -= rightStick.y * s_controllerSensitivity * dt;
+		}
 		s_pitch -= rightStick.y * s_controllerSensitivity * dt;
 
 		if (s_pitch < s_minPitch) s_pitch = s_minPitch;

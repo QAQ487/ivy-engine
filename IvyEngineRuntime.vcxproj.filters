@@ -659,4 +659,8 @@
     <ClInclude Include="engine\testing\runtime_test_bridge.h" />
     <ClCompile Include="engine\testing\runtime_test_bridge.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="samples\scripts\SamplePlayerScript.h" />
+    <ClCompile Include="samples\scripts\SamplePlayerScript.cpp" />
+  </ItemGroup>
 </Project>

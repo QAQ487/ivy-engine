@@ -1,6 +1,9 @@
 #include "engine/scene/scene_loader.h"
 #include "engine/core/frame_capture.h"
 #include "engine/testing/runtime_test_bridge.h"
+#if defined(IVY_RUNTIME_TEST_BRIDGE_AVAILABLE)
+static ivy::testing::Bridge* g_pRuntimeTestBridge = nullptr;
+#endif
 #if defined(_DEBUG) && !defined(GAME_RUNTIME)
 #include "tools/play_scene_switch_check.h"
 #endif
@@ -256,7 +259,12 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstanc
 
 #if defined(IVY_RUNTIME_TEST_BRIDGE_AVAILABLE)
     ivy::testing::Bridge runtimeTestBridge;
+    bool Renderer_CaptureBackBufferPNG(const wchar_t* filePath, uint32_t* outW, uint32_t* outH);
     const bool runtimeTestEnabled = runtimeTestBridge.StartFromEnvironment();
+    if (runtimeTestEnabled) {
+        runtimeTestBridge.SetCaptureHandler(&Renderer_CaptureBackBufferPNG);
+        g_pRuntimeTestBridge = &runtimeTestBridge;
+    }
 #endif
 	// Initialize application systems
 	if (FAILED(Initialize(hInstance, hWnd, true))) {
@@ -337,7 +345,15 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstanc
 				FrameTimer_BeginFrame();
 				JobSystem_BeginFrame();
 				FrameTimer_Begin(FrameTimerStage::Update);
+#if defined(IVY_RUNTIME_TEST_BRIDGE_AVAILABLE)
+                if(runtimeTestEnabled)
+                    runtimeTestBridge.PollAndApplyInput(EngineGUI_IsPlaying()
+                        && !EngineGUI_IsSceneAssetPreloadActive() && !SceneLoader_GetCurrentScenePath().empty());
+#endif
 				Update(current_time, elapsed_time);
+#if defined(IVY_RUNTIME_TEST_BRIDGE_AVAILABLE)
+                if(runtimeTestEnabled) runtimeTestBridge.FinishInputUpdate();
+#endif
 #if defined(_DEBUG) && !defined(GAME_RUNTIME)
                 PlaySceneSwitchCheck_Tick();
 #endif
@@ -354,7 +370,23 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstanc
                     // Update workers and render work have joined. Copy only on WinMain.
                     const std::string scene = SceneLoader_GetCurrentScenePath();
                     const bool ready = !scene.empty() && !EngineGUI_IsSceneAssetPreloadActive();
-                    if (runtimeTestBridge.PublishAndTakeQuit(ready, EngineGUI_IsPlaying(), scene))
+                    std::vector<ivy::testing::ObservedTarget> targets;
+                    if (ready && EngineGUI_IsPlaying()) {
+                        std::function<void(const GameObject&)> collect = [&](const GameObject& obj) {
+                            if (!obj.GetName().empty()) {
+                                const auto pos = obj.GetPosition();
+                                const auto vel = obj.GetRigidbody().GetVelocity();
+                                targets.push_back({obj.GetName(), pos.x, pos.y, pos.z, vel.x, vel.y, vel.z});
+                            }
+                            for (const auto& child : obj.GetChildren()) {
+                                if (child) collect(*child);
+                            }
+                        };
+                        for (const auto& node : SceneLoader_GetSceneNodes()) {
+                            if (node) collect(*node);
+                        }
+                    }
+                    if (runtimeTestBridge.PublishAndTakeQuit(ready, EngineGUI_IsPlaying(), scene, std::move(targets)))
                         EngineGUI_RequestExitGame();
                 }
 #endif
@@ -364,6 +396,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstanc
 	} // while
 
 #if defined(IVY_RUNTIME_TEST_BRIDGE_AVAILABLE)
+    g_pRuntimeTestBridge = nullptr;
     runtimeTestBridge.Stop();
 #endif
 	Finalize();
@@ -519,6 +552,11 @@ void Update(double current_time, double elapsed_time) {
    Draw - called each frame after Update
 ===========================================================================**/
 static void PresentFrame(void) {
+#if defined(IVY_RUNTIME_TEST_BRIDGE_AVAILABLE)
+	if (g_pRuntimeTestBridge) {
+		g_pRuntimeTestBridge->MaybeExecuteCapture();
+	}
+#endif
 	Present();
 #ifndef GAME_RUNTIME
     EngineGUI_NotifyFramePresented();
