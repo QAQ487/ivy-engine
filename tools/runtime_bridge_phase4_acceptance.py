@@ -47,6 +47,12 @@ ENV_CLEAR = ("IVY_FRAME_CAPTURE", "IVY_DISABLE_RENDER_THREAD", "IVY_PLAY_SCENE_S
              "IVY_RUNTIME_TEST_OUTPUT_DIR", "IVY_RUNTIME_TEST_FIXED_CAMERA")
 
 
+MIN_PEAK_RISE = 0.25
+LANDING_Y_TOLERANCE = 0.05
+LANDING_VY_TOLERANCE = 0.1
+LANDING_SAMPLE_COUNT = 3
+
+
 def session_of(pid):
     value = W.DWORD()
     if not K.ProcessIdToSessionId(pid, C.byref(value)):
@@ -56,6 +62,83 @@ def session_of(pid):
 
 def vec(d):
     return (d["x"], d["y"], d["z"])
+
+
+def _is_finite_number(value):
+    return isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value)
+
+
+def validate_jump_samples(samples, baseline_y):
+    """Validate a jump trajectory of observe samples against baseline_y.
+
+    Each sample must match {position:{x,y,z}, velocity:{x,y,z}} with finite fields.
+    Requires nonempty samples, finite baseline, peakRise >= 0.25, an observed
+    positive vy before a negative vy, and the final three consecutive samples
+    landed (abs(y-baseline)<=0.05 and abs(vy)<=0.1).
+    """
+    sample_count = len(samples) if isinstance(samples, (list, tuple)) else 0
+
+    def result(ok, peak_rise, reason):
+        return {
+            "pass": ok,
+            "peakRise": peak_rise,
+            "sampleCount": sample_count,
+            "reason": reason,
+        }
+
+    if not _is_finite_number(baseline_y):
+        return result(False, 0.0, "baseline_y non-finite")
+    if not samples or not isinstance(samples, (list, tuple)):
+        return result(False, 0.0, "samples empty or missing")
+
+    ys = []
+    vys = []
+    for idx, sample in enumerate(samples):
+        if not isinstance(sample, dict):
+            return result(False, 0.0, "sample %d not a dict" % idx)
+        position = sample.get("position")
+        velocity = sample.get("velocity")
+        if not isinstance(position, dict):
+            return result(False, 0.0, "sample %d missing position" % idx)
+        if not isinstance(velocity, dict):
+            return result(False, 0.0, "sample %d missing velocity" % idx)
+        for label, vector in (("position", position), ("velocity", velocity)):
+            for axis in ("x", "y", "z"):
+                value = vector.get(axis)
+                if not _is_finite_number(value):
+                    return result(
+                        False, 0.0,
+                        "sample %d non-finite %s.%s: %s" % (idx, label, axis, value),
+                    )
+        ys.append(float(position["y"]))
+        vys.append(float(velocity["y"]))
+
+    peak_rise = max(ys) - float(baseline_y)
+    if peak_rise < MIN_PEAK_RISE:
+        return result(False, peak_rise, "peakRise below %.2f" % MIN_PEAK_RISE)
+
+    first_positive = None
+    first_negative_after = None
+    for index, vy in enumerate(vys):
+        if first_positive is None and vy > 0.0:
+            first_positive = index
+        elif first_positive is not None and first_negative_after is None and vy < 0.0:
+            first_negative_after = index
+            break
+    if first_positive is None:
+        return result(False, peak_rise, "missing positive vy")
+    if first_negative_after is None:
+        return result(False, peak_rise, "missing negative vy after positive")
+
+    if sample_count < LANDING_SAMPLE_COUNT:
+        return result(False, peak_rise, "fewer than %d samples for landing" % LANDING_SAMPLE_COUNT)
+    for index in range(sample_count - LANDING_SAMPLE_COUNT, sample_count):
+        if abs(ys[index] - baseline_y) > LANDING_Y_TOLERANCE:
+            return result(False, peak_rise, "landing y outside tolerance")
+        if abs(vys[index]) > LANDING_VY_TOLERANCE:
+            return result(False, peak_rise, "landing vy outside tolerance")
+
+    return result(True, peak_rise, None)
 
 
 class Link:
@@ -180,7 +263,7 @@ def run(args):
         worst = 0.0
         speeds = []
         for sample in samples:
-            if sample["status"] != "active" or sample["position"] is None:
+            if sample["status"] != "active" or sample["remaining"] == 0 or sample["position"] is None:
                 continue
             pos = vec(sample["position"])
             if span_len > 1e-6:
@@ -226,6 +309,71 @@ def run(args):
             report["checks"]["capture"] = {"pass": all(i["pass"] for i in images.values()), "images": images}
             if not report["checks"]["capture"]["pass"]:
                 raise AssertionError("capture check failed: %s" % json.dumps(images))
+
+        jumpBaseline = link.observe("Player")["position"]["y"]
+        link.req("keyboard", {"keys": ["SPACE"], "updates": 3})
+        jumpSamples, jump_start = [], time.monotonic()
+        while time.monotonic() - jump_start < 6.0:
+            current = link.req("status")
+            observed = link.observe("Player")
+            jumpSamples.append({"t": round(time.monotonic() - jump_start, 3),
+                                "status": current["keyboard"]["status"],
+                                "position": observed.get("position"),
+                                "velocity": observed.get("velocity")})
+            pos = observed.get("position") or {}
+            if (not args.no_capture
+                    and "airborne" not in (report.get("checks", {}).get("capture", {}) or {}).get("images", {})
+                    and _is_finite_number(pos.get("y"))
+                    and float(pos["y"]) - float(jumpBaseline) > MIN_PEAK_RISE):
+                reply = link.capture()
+                capture = reply.get("capture") or {}
+                name = pathlib.PurePath(str(capture.get("basename") or "")).name
+                info = {"basename": name, "reportedWidth": capture.get("width"),
+                        "reportedHeight": capture.get("height"), "error": capture.get("error")}
+                if name and (out_dir / name).is_file():
+                    data = (out_dir / name).read_bytes()
+                    info["bytes"] = len(data)
+                    info["pngHeader"] = data[:8] == b"\x89PNG\r\n\x1a\n"
+                    if info["pngHeader"] and len(data) >= 24:
+                        info["width"], info["height"] = struct.unpack(">II", data[16:24])
+                    info["sha256"] = hashlib.sha256(data).hexdigest()
+                info["pass"] = bool(info.get("pngHeader")) and info.get("bytes", 0) > 4096 \
+                    and (info.get("width"), info.get("height")) == (capture.get("width"), capture.get("height")) \
+                    and info.get("width", 0) > 100
+                images = report.setdefault("checks", {}).setdefault(
+                    "capture", {"pass": True, "images": {}}).setdefault("images", {})
+                images["airborne"] = info
+                report["checks"]["capture"]["pass"] = all(i["pass"] for i in images.values())
+            if (validate_jump_samples(jumpSamples, jumpBaseline)["pass"]
+                    and jumpSamples[-1]["status"] == "completed"):
+                break
+            time.sleep(0.03)
+        if not args.no_capture:
+            reply = link.capture()
+            capture = reply.get("capture") or {}
+            name = pathlib.PurePath(str(capture.get("basename") or "")).name
+            info = {"basename": name, "reportedWidth": capture.get("width"),
+                    "reportedHeight": capture.get("height"), "error": capture.get("error")}
+            if name and (out_dir / name).is_file():
+                data = (out_dir / name).read_bytes()
+                info["bytes"] = len(data)
+                info["pngHeader"] = data[:8] == b"\x89PNG\r\n\x1a\n"
+                if info["pngHeader"] and len(data) >= 24:
+                    info["width"], info["height"] = struct.unpack(">II", data[16:24])
+                info["sha256"] = hashlib.sha256(data).hexdigest()
+            info["pass"] = bool(info.get("pngHeader")) and info.get("bytes", 0) > 4096 \
+                and (info.get("width"), info.get("height")) == (capture.get("width"), capture.get("height")) \
+                and info.get("width", 0) > 100
+            images = report.setdefault("checks", {}).setdefault(
+                "capture", {"pass": True, "images": {}}).setdefault("images", {})
+            images["landed"] = info
+            report["checks"]["capture"]["pass"] = all(i["pass"] for i in images.values())
+            if not report["checks"]["capture"]["pass"]:
+                raise AssertionError("capture check failed: %s" % json.dumps(images))
+        report["jumpSamples"] = jumpSamples
+        report["checks"]["jump"] = validate_jump_samples(jumpSamples, jumpBaseline)
+        if not report["checks"]["jump"]["pass"]:
+            raise AssertionError("jump check failed: %s" % json.dumps(report["checks"]["jump"]))
 
         quit_reply = link.req("quit")
         report["quitReceipt"] = {"ok": quit_reply.get("ok"), "requiresReceipt": quit_reply.get("requiresReceipt")}

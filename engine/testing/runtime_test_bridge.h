@@ -39,6 +39,11 @@ public:
     bool MouseIsolating() const;
     void GetMouseInput(int& dx, int& dy, unsigned int& buttonsMask, int& wheel) const;
 
+    void CancelController();
+    void ExpireController(std::uint64_t now);
+    bool ControllerIsolating() const;
+    void GetControllerInput(float& lx, float& ly) const;
+
     bool HasPendingCapture(std::int64_t& outId) const;
     void CompleteCapture(std::int64_t id, bool ok, uint32_t w, uint32_t h, const std::string& basename, const std::string& err);
     const std::string& RunId() const { return runId_; }
@@ -69,6 +74,15 @@ private:
     int mouseWheel_ = 0;
     int mouseUpdatesRemaining_ = 0;
     const char* MouseStatus() const;
+
+    InputState controllerState_ = InputState::Idle;
+    bool cancelController_ = false;
+    std::uint64_t controllerDeadline_ = 0;
+    std::int64_t controllerReqId_ = 0;
+    float controllerLx_ = 0.0f;
+    float controllerLy_ = 0.0f;
+    int controllerUpdatesRemaining_ = 0;
+    const char* ControllerStatus() const;
 
     struct CaptureState {
         enum class Status { Idle, Queued, Completed, Failed };

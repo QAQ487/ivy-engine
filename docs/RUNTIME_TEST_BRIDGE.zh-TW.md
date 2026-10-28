@@ -138,7 +138,7 @@ Harness `--serve` 最多 15 秒，自行正常退出；Python subprocess tests �
 - [x] **Phase 1 — 最小 Runtime Test Bridge**：opt-in、本機 named pipe、current-user DACL、hello／status／quit、有限指令與 timeout、可取消 I/O、Python stdlib client、正常 shutdown。
 - [x] **Phase 2 — Keyboard 測試輸入**：內部注入、standalone checks、full Debug build 同 Session 2 fresh runtime 整合通過；唔代表角色操作或玩法驗收。
 - [ ] **Phase 3 — Object 狀態觀察與 PNG 截圖**：部分實作；固定診斷鏡頭下移動、觀察同 PNG 已實測一致通過，角色仍係方塊組合，詳見最新 checkpoint。
-- [x] **Phase 4 — 固定移動驗收 runner（範圍縮減）**：已完成（縮減範圍）；acceptance runner 實測移動／觀察／PNG 截圖斷言 PASS 同 clean shutdown（exit 0 正常退出）；明確指出跳躍／落地（jumping／landing）尚未實作亦未進行測試。
+- [x] **Phase 4 — 固定移動驗收 runner**：已完成；acceptance runner 實測移動／觀察／PNG 截圖、跳躍／落地斷言 PASS 同 clean shutdown（exit 0 正常退出）。
 - [ ] **Phase 5 — Mouse／controller／遊戲事件**：部分實作；Slice A（mouse 內部注入、bridge `mouse` verb、測試模式視角觀察同標準 runtime acceptance 驗收）已完成，Slice B controller 及其他剩餘項目未開始。
 - [ ] **Phase 6 — Agent 互動探索**：未開始。
 
@@ -249,6 +249,14 @@ Harness `--serve` 最多 15 秒，自行正常退出；Python subprocess tests �
   - teardown trace 修復後完整行到 `main.cpp: static destruction reached`。
 - 因此本文件早前各段寫嘅「quit 之後 `0xC0000005`／KNOWN_FAILURE／Terry 暫時延後」已被今次修復取代；相關未修狀態唔再成立。
 - 診斷 code 保留但預設關閉，只喺設定 `IVY_RUNTIME_TEST_CRASH_TRACE=1` 時輸出。
+
+### Phase4 YBot checkpoint
+
+Phase4 YBot verified using Cursor CLI Auto；FrisbeeArena `rom/model/player` Y Bot_white+Idle+Running+Jump01 copied exact SHA；animated `Player_Model` child，parent collider unchanged。New build `d85e7c4ac15c15af95ed45da015486273032f65945d693d2f536a45140f45fe5`。Real runtime PASS Session2：movement `11.612895` deviation `0`；jump peakRise `4.507704` ascending／descending／stable，landed 3 samples；capture afterW／airborne／landed 1920×1080；clean exit 0。15 jump validator tests PASS。Evidence `x64/phase2a-agent/phase4-ybot-5edfc4a5-rerun/acceptance/result.json`。First run speed sample `active remainingUpdates:0` crossed release boundary；exclude exhausted-budget sample only，no relaxed thresholds。Visual reviewed：humanoid not T-pose，airborne pose differs；bright white material，small contact uncertain。
+
+### Controller left-stick checkpoint
+
+最小左搖桿已驗證：controller verb，pad0，lx/ly有限[-1,1]，updates1..120，5秒deadline，完成或取消後neutral。Debug GAME_RUNTIME opt-in限定。標準checks與Release/Editor compile-out assertions全過。新build SHA256 5b241566ed0874416b23509ba27a7bfca50fc79389f7d1b00b5c97d89884dfb8；Session2真runtime前進11.612895、偏差0、退出0，keyboard/mouse回歸PASS。證據 x64/phase2a-agent/leftstick-runtime-c0102bfd/。Python通用Client.request可用；專用CLI入口、rightstick/buttons/triggers及遊戲事件未做。Runtime probe仍為ignored診斷工具。
 
 ### 2026-10-28 Mouse Runtime Acceptance Runner 工具（Phase 5 Slice A 自動化驗收）
 

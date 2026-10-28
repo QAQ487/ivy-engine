@@ -23,7 +23,7 @@
                     "x": 24.0,
                     "y": 24.0
                 },
-                "text": "Phase3 Controllable Player Fixture",
+                "text": "Phase4 Visual+Jump Player Fixture",
                 "type": "text",
                 "visible": true
             }
@@ -123,7 +123,14 @@
                             "scaleZ": 0.01
                         },
                         "visual": {
-                            "model": "rom/model/character/YBot_white.fbx",
+                            "active_clip": "idle",
+                            "animate": true,
+                            "animations": {
+                                "idle": "rom/model/player/Idle.fbx",
+                                "jump": "rom/model/player/Jump01.fbx",
+                                "run": "rom/model/player/Running.fbx"
+                            },
+                            "model": "rom/model/player/Y Bot_white.fbx",
                             "shader": "standard"
                         }
                     }

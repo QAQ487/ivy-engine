@@ -1,5 +1,7 @@
 #include "runtime_test_bridge.h"
+#include <cmath>
 #include <set>
+#include "engine/input/controller.h"
 #include "engine/input/keyboard.h"
 #include "engine/input/mouse.h"
 #if defined(IVY_RUNTIME_TEST_BRIDGE_AVAILABLE)
@@ -53,11 +55,25 @@ const char* Protocol::MouseStatus() const {
     default: return "idle";
     }
 }
+const char* Protocol::ControllerStatus() const {
+    switch(controllerState_) {
+    case InputState::Queued:
+    case InputState::Preparing: return "queued";
+    case InputState::Active: return "active";
+    case InputState::Releasing: return "releasing";
+    case InputState::Completed: return "completed";
+    case InputState::Cancelled: return "cancelled";
+    default: return "idle";
+    }
+}
 bool Protocol::KeyboardIsolating() const {
     return inputState_ == InputState::Preparing || inputState_ == InputState::Active || inputState_ == InputState::Releasing;
 }
 bool Protocol::MouseIsolating() const {
     return mouseState_ == InputState::Preparing || mouseState_ == InputState::Active || mouseState_ == InputState::Releasing;
+}
+bool Protocol::ControllerIsolating() const {
+    return controllerState_ == InputState::Preparing || controllerState_ == InputState::Active || controllerState_ == InputState::Releasing;
 }
 std::vector<std::string> Protocol::InputKeys() const {
     return inputState_ == InputState::Active ? keyboardKeys_ : std::vector<std::string>{};
@@ -73,6 +89,15 @@ void Protocol::GetMouseInput(int& dx, int& dy, unsigned int& buttonsMask, int& w
         dy = 0;
         buttonsMask = 0;
         wheel = 0;
+    }
+}
+void Protocol::GetControllerInput(float& lx, float& ly) const {
+    if (controllerState_ == InputState::Active) {
+        lx = controllerLx_;
+        ly = controllerLy_;
+    } else {
+        lx = 0.0f;
+        ly = 0.0f;
     }
 }
 void Protocol::CancelKeyboard() {
@@ -93,16 +118,30 @@ void Protocol::CancelMouse() {
         cancelMouse_ = true;
     }
 }
+void Protocol::CancelController() {
+    if(controllerState_ == InputState::Queued) {
+        controllerState_ = InputState::Cancelled;
+        controllerUpdatesRemaining_ = 0;
+        controllerLx_ = 0.0f;
+        controllerLy_ = 0.0f;
+    } else if(ControllerIsolating()) {
+        cancelController_ = true;
+    }
+}
 void Protocol::ExpireKeyboard(std::uint64_t now) {
     if(now >= inputDeadline_) CancelKeyboard();
 }
 void Protocol::ExpireMouse(std::uint64_t now) {
     if(now >= mouseDeadline_) CancelMouse();
 }
+void Protocol::ExpireController(std::uint64_t now) {
+    if(now >= controllerDeadline_) CancelController();
+}
 void Protocol::BeginInput(bool playing, std::uint64_t now) {
     ExpireKeyboard(now);
     ExpireMouse(now);
-    if(!playing) { CancelKeyboard(); CancelMouse(); }
+    ExpireController(now);
+    if(!playing) { CancelKeyboard(); CancelMouse(); CancelController(); }
     if(inputState_ == InputState::Queued) inputState_ = InputState::Preparing;
     if(inputState_ == InputState::Active && (cancelInput_ || keyboardUpdatesRemaining_ == 0)) {
         inputState_ = InputState::Releasing;
@@ -115,6 +154,13 @@ void Protocol::BeginInput(bool playing, std::uint64_t now) {
         mouseUpdatesRemaining_ = 0;
         mouseDx_ = 0; mouseDy_ = 0; mouseButtons_ = 0; mouseWheel_ = 0;
     }
+    if(controllerState_ == InputState::Queued) controllerState_ = InputState::Preparing;
+    if(controllerState_ == InputState::Active && (cancelController_ || controllerUpdatesRemaining_ == 0)) {
+        controllerState_ = InputState::Releasing;
+        controllerUpdatesRemaining_ = 0;
+        controllerLx_ = 0.0f;
+        controllerLy_ = 0.0f;
+    }
 }
 void Protocol::EndInput() {
     if(inputState_ == InputState::Preparing) inputState_ = InputState::Active;
@@ -126,6 +172,11 @@ void Protocol::EndInput() {
     else if(mouseState_ == InputState::Active && mouseUpdatesRemaining_ > 0) --mouseUpdatesRemaining_;
     else if(mouseState_ == InputState::Releasing) {
         mouseState_ = cancelMouse_ ? InputState::Cancelled : InputState::Completed;
+    }
+    if(controllerState_ == InputState::Preparing) controllerState_ = InputState::Active;
+    else if(controllerState_ == InputState::Active && controllerUpdatesRemaining_ > 0) --controllerUpdatesRemaining_;
+    else if(controllerState_ == InputState::Releasing) {
+        controllerState_ = cancelController_ ? InputState::Cancelled : InputState::Completed;
     }
 }
 
@@ -150,6 +201,7 @@ void Protocol::CompleteCapture(std::int64_t id, bool ok, uint32_t w, uint32_t h,
 Json Protocol::Request(const std::string& frame) {
     ExpireKeyboard(GetTickCount64());
     ExpireMouse(GetTickCount64());
+    ExpireController(GetTickCount64());
     auto error = [this](const char* name, Json id=nullptr) -> Json {
         return {{"protocolVersion",1},{"requestId",id},{"runId",runId_},{"ok",false},{"error",name}};
     };
@@ -162,12 +214,15 @@ Json Protocol::Request(const std::string& frame) {
         return error("invalid_request");
     const bool input=q["verb"]=="keyboard";
     const bool mouse=q["verb"]=="mouse";
+    const bool controller=q["verb"]=="controller";
     const bool observe=q["verb"]=="observe";
     const bool capture=q["verb"]=="capture";
     std::vector<std::string> keys;
     int updates=0;
     int mouseDx=0, mouseDy=0, mouseWheel=0, mouseUpdates=0;
     unsigned int mouseButtonsMask=0;
+    float controllerLx=0.0f, controllerLy=0.0f;
+    int controllerUpdates=0;
     std::string observeTarget;
     if(input) {
         if(q.size()!=6 || !q.contains("keys") || !q["keys"].is_array() || q["keys"].empty() || q["keys"].size()>9
@@ -213,6 +268,19 @@ Json Protocol::Request(const std::string& frame) {
         mouseDx = q["dx"].get<int>();
         mouseDy = q["dy"].get<int>();
         mouseUpdates = q["updates"].get<int>();
+    } else if(controller) {
+        if(q.size() != 7) return error("invalid_request");
+        if(!q.contains("lx") || !q["lx"].is_number()) return error("invalid_request");
+        if(!q.contains("ly") || !q["ly"].is_number()) return error("invalid_request");
+        const double lxVal = q["lx"].get<double>();
+        const double lyVal = q["ly"].get<double>();
+        if(!std::isfinite(lxVal) || lxVal < -1.0 || lxVal > 1.0) return error("invalid_request");
+        if(!std::isfinite(lyVal) || lyVal < -1.0 || lyVal > 1.0) return error("invalid_request");
+        if(!q.contains("updates") || !q["updates"].is_number_integer() || q["updates"] < 1 || q["updates"] > 120)
+            return error("invalid_request");
+        controllerLx = static_cast<float>(lxVal);
+        controllerLy = static_cast<float>(lyVal);
+        controllerUpdates = q["updates"].get<int>();
     } else if(observe) {
         if(q.size()!=5 || !q.contains("target") || !q["target"].is_string())
             return error("invalid_request");
@@ -257,6 +325,18 @@ Json Protocol::Request(const std::string& frame) {
         mouseDeadline_=GetTickCount64()+5000;
         return {{"protocolVersion",1},{"requestId",id},{"runId",runId_},{"ok",true},{"status","queued"}};
     }
+    if(controller) {
+        if(!ready_ || !playing_) return error("not_ready",id);
+        if(controllerState_==InputState::Queued || ControllerIsolating()) return error("queue_full",id);
+        controllerState_=InputState::Queued;
+        cancelController_=false;
+        controllerReqId_=id;
+        controllerLx_=controllerLx;
+        controllerLy_=controllerLy;
+        controllerUpdatesRemaining_=controllerUpdates;
+        controllerDeadline_=GetTickCount64()+5000;
+        return {{"protocolVersion",1},{"requestId",id},{"runId",runId_},{"ok",true},{"status","queued"}};
+    }
     if(observe) {
         if(!ready_ || !playing_) return error("not_ready",id);
         for(const auto& t : targets_) {
@@ -299,11 +379,13 @@ Json Protocol::Request(const std::string& frame) {
     return {{"protocolVersion",1},{"requestId",id},{"runId",runId_},{"ok",true},
         {"pid",pid_},{"sessionId",session_},{"ready",ready_},{"playing",playing_},
         {"state",ready_ ? (playing_ ? "playing" : "ready") : "loading"},{"scene",scene_},
-        {"capabilities",Json::array({"hello","status","quit","keyboard","observe","capture","mouse"})},
+        {"capabilities",Json::array({"hello","status","quit","keyboard","observe","capture","mouse","controller"})},
         {"keyboard",{{"status",InputStatus()},{"requestId",keyboardReqId_},
             {"remainingUpdates",keyboardUpdatesRemaining_},{"cancelRequested",cancelInput_},{"preparing",inputState_==InputState::Preparing}}},
         {"mouse",{{"status",MouseStatus()},{"requestId",mouseReqId_},
             {"remainingUpdates",mouseUpdatesRemaining_},{"cancelRequested",cancelMouse_}}},
+        {"controller",{{"status",ControllerStatus()},{"requestId",controllerReqId_},
+            {"remainingUpdates",controllerUpdatesRemaining_},{"cancelRequested",cancelController_}}},
         {"capture",{{"status",capStatus},{"requestId",captureState_.requestId},
             {"width",captureState_.width},{"height",captureState_.height},{"basename",captureState_.basename},{"error",captureState_.error}}}};
 }
@@ -396,7 +478,7 @@ struct Bridge::Impl {
                 }
                 if(frame.size()>4096) break;
             }
-            { std::lock_guard lock(mutex); protocol.AbandonQuit(); protocol.CancelKeyboard(); protocol.CancelMouse(); }
+            { std::lock_guard lock(mutex); protocol.AbandonQuit(); protocol.CancelKeyboard(); protocol.CancelMouse(); protocol.CancelController(); }
             if(receipt) {
                 WaitForSingleObject(stop,INFINITE); break;
             }
@@ -439,7 +521,7 @@ bool Bridge::StartFromEnvironment() {
         try { ptr->Run(); }
         catch (const std::exception&) {
             OutputDebugStringA("RuntimeTestBridge: worker failed; disconnecting endpoint.\n");
-            { std::lock_guard lock(ptr->mutex); ptr->protocol.CancelKeyboard(); ptr->protocol.CancelMouse(); }
+            { std::lock_guard lock(ptr->mutex); ptr->protocol.CancelKeyboard(); ptr->protocol.CancelMouse(); ptr->protocol.CancelController(); }
             DisconnectNamedPipe(ptr->pipe);
             SetEvent(ptr->stop);
         }
@@ -451,6 +533,7 @@ void Bridge::Stop() {
     if (impl_) {
         if (Keyboard_IsInjectionActive()) Keyboard_ClearInjection();
         if (Mouse_IsInjectionActive()) Mouse_ClearInjection();
+        if (Controller_IsInjectionActive()) Controller_ClearInjection();
     }
     impl_.reset();
 }
@@ -492,12 +575,20 @@ void Bridge::PollAndApplyInput(bool inGamePlaying) {
     } else {
         Mouse_ClearInjection();
     }
+    if(impl_->protocol.ControllerIsolating()) {
+        float clx = 0.0f, cly = 0.0f;
+        impl_->protocol.GetControllerInput(clx, cly);
+        Controller_TestInjectLeftStick(clx, cly);
+    } else {
+        Controller_ClearInjection();
+    }
 }
 void Bridge::FinishInputUpdate() {
     if(!impl_) return;
     std::lock_guard lock(impl_->mutex);
     impl_->protocol.ExpireKeyboard(GetTickCount64());
     impl_->protocol.ExpireMouse(GetTickCount64());
+    impl_->protocol.ExpireController(GetTickCount64());
     impl_->protocol.EndInput();
 }
 bool Bridge::PublishAndTakeQuit(bool ready, bool playing, const std::string& scene, std::vector<ObservedTarget> targets) {

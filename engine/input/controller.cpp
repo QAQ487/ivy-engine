@@ -35,6 +35,11 @@ namespace {
     static short g_deadzoneRightStick = XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE;  // 8689
     static BYTE  g_deadzoneTrigger = XINPUT_GAMEPAD_TRIGGER_THRESHOLD;     // 30
 
+#if defined(_DEBUG) && defined(GAME_RUNTIME)
+    static bool     g_injectActive = false;
+    static XMFLOAT2 g_injectLeftStick{ 0.0f, 0.0f };
+#endif
+
     inline bool TestButton(WORD buttons, ControllerButton btn) {
         return (buttons & static_cast<WORD>(btn)) != 0;
     }
@@ -63,7 +68,26 @@ namespace {
     }
 } // anonymous
 
+#if defined(_DEBUG) && defined(GAME_RUNTIME)
+void Controller_TestInjectLeftStick(float lx, float ly) {
+    g_injectLeftStick = { lx, ly };
+    g_injectActive = true;
+}
+
+void Controller_ClearInjection() {
+    g_injectLeftStick = { 0.0f, 0.0f };
+    g_injectActive = false;
+}
+
+bool Controller_IsInjectionActive() {
+    return g_injectActive;
+}
+#endif
+
 void Controller_Initialize() {
+#if defined(_DEBUG) && defined(GAME_RUNTIME)
+    Controller_ClearInjection();
+#endif
     ZeroMemory(g_curr, sizeof(g_curr));
     ZeroMemory(g_prev, sizeof(g_prev));
     ZeroMemory(g_connected, sizeof(g_connected));
@@ -76,6 +100,9 @@ void Controller_Initialize() {
 }
 
 void Controller_Finalize() {
+#if defined(_DEBUG) && defined(GAME_RUNTIME)
+    Controller_ClearInjection();
+#endif
     // ����AXInput �͖����I�ȉ���s�v
 }
 
@@ -114,15 +141,24 @@ void Controller_Update() {
 
 bool Controller_IsConnected(int padIndex) {
     if (padIndex < 0 || padIndex >= CONTROLLER_MAX) return false;
+#if defined(_DEBUG) && defined(GAME_RUNTIME)
+    if (padIndex == 0 && g_injectActive) return true;
+#endif
     return g_connected[padIndex];
 }
 
 bool Controller_IsPressed(ControllerButton button, int padIndex) {
+#if defined(_DEBUG) && defined(GAME_RUNTIME)
+    if (padIndex == 0 && g_injectActive) return false;
+#endif
     if (!Controller_IsConnected(padIndex)) return false;
     return TestButton(g_curr[padIndex].Gamepad.wButtons, button);
 }
 
 bool Controller_IsTrigger(ControllerButton button, int padIndex) {
+#if defined(_DEBUG) && defined(GAME_RUNTIME)
+    if (padIndex == 0 && g_injectActive) return false;
+#endif
     if (!Controller_IsConnected(padIndex)) return false;
     const WORD now = g_curr[padIndex].Gamepad.wButtons;
     const WORD prev = g_prev[padIndex].Gamepad.wButtons;
@@ -131,6 +167,9 @@ bool Controller_IsTrigger(ControllerButton button, int padIndex) {
 }
 
 bool Controller_IsRelease(ControllerButton button, int padIndex) {
+#if defined(_DEBUG) && defined(GAME_RUNTIME)
+    if (padIndex == 0 && g_injectActive) return false;
+#endif
     if (!Controller_IsConnected(padIndex)) return false;
     const WORD now = g_curr[padIndex].Gamepad.wButtons;
     const WORD prev = g_prev[padIndex].Gamepad.wButtons;
@@ -139,21 +178,33 @@ bool Controller_IsRelease(ControllerButton button, int padIndex) {
 }
 
 XMFLOAT2 Controller_GetLeftStick(int padIndex) {
+#if defined(_DEBUG) && defined(GAME_RUNTIME)
+    if (padIndex == 0 && g_injectActive) return g_injectLeftStick;
+#endif
     if (!Controller_IsConnected(padIndex)) return XMFLOAT2(0, 0);
     return g_leftStick[padIndex];
 }
 
 XMFLOAT2 Controller_GetRightStick(int padIndex) {
+#if defined(_DEBUG) && defined(GAME_RUNTIME)
+    if (padIndex == 0 && g_injectActive) return XMFLOAT2(0, 0);
+#endif
     if (!Controller_IsConnected(padIndex)) return XMFLOAT2(0, 0);
     return g_rightStick[padIndex];
 }
 
 float Controller_GetLeftTrigger(int padIndex) {
+#if defined(_DEBUG) && defined(GAME_RUNTIME)
+    if (padIndex == 0 && g_injectActive) return 0.0f;
+#endif
     if (!Controller_IsConnected(padIndex)) return 0.0f;
     return g_leftTrigger[padIndex];
 }
 
 float Controller_GetRightTrigger(int padIndex) {
+#if defined(_DEBUG) && defined(GAME_RUNTIME)
+    if (padIndex == 0 && g_injectActive) return 0.0f;
+#endif
     if (!Controller_IsConnected(padIndex)) return 0.0f;
     return g_rightTrigger[padIndex];
 }

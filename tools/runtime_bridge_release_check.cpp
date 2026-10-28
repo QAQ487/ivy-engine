@@ -1,11 +1,14 @@
 #include "engine/testing/runtime_test_bridge.h"
 #include "engine/input/keyboard.h"
+#include "engine/input/controller.h"
 #ifdef IVY_RUNTIME_TEST_BRIDGE_AVAILABLE
 #error Non-runtime-Debug builds must not contain a Runtime Test Bridge
 #endif
 #include <iostream>
 template<class T> concept HasTestInjection = requires(T keys) { Keyboard_TestInject(keys, 1); };
 static_assert(!HasTestInjection<Keyboard_Keys*>, "test injection must be absent");
+template<class T> concept HasControllerInjection = requires(T axis) { Controller_TestInjectLeftStick(axis, axis); };
+static_assert(!HasControllerInjection<float>, "controller injection must be absent");
 int main() {
     Keyboard_Initialize();
     Keyboard_ProcessMessage(WM_KEYDOWN, 'W', 0);

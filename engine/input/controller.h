@@ -71,4 +71,10 @@ void Controller_SetTriggerDeadzone(BYTE trigger);
 // �o�C�u���[�V�����i0.0f?1.0f�j
 void Controller_SetVibration(float leftMotor, float rightMotor, int padIndex = 0);
 
+#if defined(_DEBUG) && defined(GAME_RUNTIME)
+void Controller_TestInjectLeftStick(float lx, float ly);
+void Controller_ClearInjection();
+bool Controller_IsInjectionActive();
+#endif
+
 #endif // CONTROLLER_H
