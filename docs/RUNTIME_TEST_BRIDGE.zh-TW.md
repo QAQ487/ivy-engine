@@ -132,15 +132,16 @@ Harness `--serve` 最多 15 秒，自行正常退出；Python subprocess tests �
 
 ## 實作進度與驗證記錄
 
-更新：2026-10-28（JST）。以下係實際完成狀態，唔係待實作承諾。
+更新：2026-10-28（JST）。以下係**目前**完成狀態。
+**歷史註記**：下文各節仍保留當日 raw 事實（例如早期「無跳躍／無動畫／無 runner／方塊角色」）。該等條目係歷史紀錄，**唔係**現行 TODO；現行進度以本清單為準。預設 scenes／settings 未改；build 有既有 warnings，**唔**宣稱 warning-free；**唔**宣稱 stock 遊戲事件系統或避障。Publication：baseline checkpoint `90f30cf` 已 push／remote 核實；**本輪 event／checkpoint 功能碼目前仍係 local uncommitted**。
 
 - [x] **Phase 0 — Runtime 環境驗證**：fresh Debug x64 build、隔離 script-free 3D sample package；已登入 Windows Session 1 成功執行 update／draw、取得 GPU samples，exit 0。
 - [x] **Phase 1 — 最小 Runtime Test Bridge**：opt-in、本機 named pipe、current-user DACL、hello／status／quit、有限指令與 timeout、可取消 I/O、Python stdlib client、正常 shutdown。
 - [x] **Phase 2 — Keyboard 測試輸入**：內部注入、standalone checks、full Debug build 同 Session 2 fresh runtime 整合通過；唔代表角色操作或玩法驗收。
-- [ ] **Phase 3 — Object 狀態觀察與 PNG 截圖**：部分實作；固定診斷鏡頭下移動、觀察同 PNG 已實測一致通過，角色仍係方塊組合，詳見最新 checkpoint。
-- [x] **Phase 4 — 固定移動驗收 runner**：已完成；acceptance runner 實測移動／觀察／PNG 截圖、跳躍／落地斷言 PASS 同 clean shutdown（exit 0 正常退出）。
-- [ ] **Phase 5 — Mouse／controller／遊戲事件**：部分完成；Slice A（mouse）同 Slice B（left-stick `Client.controller`＋acceptance runner）已由父層於 desktop 標準 checks 與 Session36 真 runtime 核實 PASS。right-stick／buttons／triggers／遊戲事件未做。
-- [ ] **Phase 6 — Agent 互動探索**：**MINIMUM closed-loop 已核實**（見下節）；唔等於全玩法完成。right-stick／buttons／triggers／遊戲事件仍屬 Phase 5 未完成項。
+- [ ] **Phase 3 — Object 狀態觀察與 PNG 截圖**：observe／固定鏡頭移動／PNG capture／YBot＋動畫已於後續 checkpoint 核實；capture 路徑／lifecycle hardening 之**獨立覆核仍 outstanding**（唔再寫「仍係方塊組合」為現況）。
+- [x] **Phase 4 — 固定移動驗收 runner**：已完成；acceptance runner 實測移動／觀察／PNG、跳躍／落地 PASS 同 clean exit 0。
+- [ ] **Phase 5 — Mouse／controller／遊戲事件**：Slice A mouse、Slice B left-stick、**checkpoint trigger→`events` 玩法事件切片**已核實 PASS；right-stick／buttons／其他 controls 仍未完成。
+- [ ] **Phase 6 — Agent 互動探索**：**MINIMUM closed-loop＋goal event 已核實**（observe→decide→act→events）；**唔**等於完整 AI／全玩法 agent。
 
 ### Phase 1 已執行驗證
 
@@ -274,7 +275,20 @@ Phase4 YBot verified using Cursor CLI Auto；FrisbeeArena `rom/model/player` Y B
 - **先前 FAIL（保留原因／清理）**：
   - `explore-434ff8c7`：無 keepalive → idle pipe 斷 → capture WinError 233；已修 ≤0.5s status keepalive。
   - `explore-917fd844`：閉環導航成功（相機相對對角曾空轉，父層 live 用單步 forward／basis／turn 校正），但 quit 先關 pipe 再 wait → timeout／kill exit1。第三次 run **實際測試**顯示「等 child exit 後先關 Link」可得到 exit0；呢個係 **觀察到嘅 host 修復**，**唔**概括成引擎／協議已證明。
-- **未宣稱**：全玩法、right-stick／buttons／triggers／遊戲事件、完整 Release／Editor executable、引擎層 quit 通則證明。單元測試字串修正後由父層重跑（`checks-phase6` 等先前 log 另存）。
+- **未宣稱**：全玩法、right-stick／buttons／triggers、完整 Release／Editor executable、引擎層 quit 通則證明。
+
+### Checkpoint trigger → events（最終核實範圍）
+
+- **範圍**：真實物理 `OnTriggerEnter` → 一次性 score1 → 唯讀 bridge `events`；**禁止**座標推斷／client 注入／setter／teleport。預設 scenes 未改。唔宣稱 stock 遊戲事件、避障、或完整 Release／Editor executable。
+- **核實證據**：
+  - `x64/checkpoint-agent/checkpoint-verification.json`：initial0／outside0／entry1／exit1／reentry1，score1，genuine OnTriggerEnter。
+  - 首次 live：`x64/checkpoint-agent/live-9ea7205c`（binary SHA256 `57327265aef1c1fe99c564a63c1dcb8065a33534b852a181a8a61014b7fdd088`）。
+  - Final fresh instance：`x64/checkpoint-agent/live-final-a221c572` — reset0 後 real entry1；5 responses OK；normal exit0；`forcedKill` false。
+  - Final Debug exe SHA256 `5cfb3fd00ed2d7cc74307fef128b111d51d388700743489179db0dffdb94c14e`（`build-result.json` exit0）；同 hash 下 controller／mouse／phase4 真回歸全 PASS、native0、`childCleanedUp` true。
+  - Final standard checks：`x64/checkpoint-agent/checks-verified.log` exit0 — Python 17+9+22+11+15＝74；C++ events／latch／protocol／input PASS；Release／Editor **translation-unit** compile-out（含 events API absent）PASS（**唔**等於完整 Release／Editor exe）。
+  - 負例 schema RED→validator 修正後 GREEN（父層觀測）。
+- **影像**：父層 zoom 檢視見 humanoid 與不透明綠 trigger cube 重疊、部分遮擋；**唔**足夠證明 mesh 損壞，亦**唔**標 visual-polish PASS。
+- **Publication**：checkpoint baseline `90f30cf` 已 push＋remote 核實；**event／checkpoint 功能碼仍 local uncommitted**。
 
 ### Controller left-stick Runtime Acceptance Runner 工具（Phase 5 Slice B；已核實）
 

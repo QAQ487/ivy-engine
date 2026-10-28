@@ -1,5 +1,7 @@
 #include "runtime_test_bridge.h"
 #include <cmath>
+#include <cstring>
+#include <mutex>
 #include <set>
 #include "engine/input/controller.h"
 #include "engine/input/keyboard.h"
@@ -10,6 +12,76 @@
 #endif
 #include <windows.h>
 namespace ivy::testing {
+namespace {
+struct EventsRecorder {
+    bool enabled = false;
+    std::mutex mutex;
+    std::vector<RuntimeTestEvent> events;
+    std::int64_t nextSequence = 1;
+    std::uint32_t dropped = 0;
+};
+EventsRecorder g_events;
+
+bool ValidEventName(const char* name) {
+    if (!name || !*name) return false;
+    const std::size_t n = std::strlen(name);
+    if (n == 0 || n > 64) return false;
+    for (std::size_t i = 0; i < n; ++i) {
+        const char ch = name[i];
+        if (!((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9') || ch == '_' || ch == '-'))
+            return false;
+    }
+    return true;
+}
+}
+
+void RuntimeTestEvents_SetEnabled(bool enabled) {
+    std::lock_guard lock(g_events.mutex);
+    g_events.enabled = enabled;
+    if (!enabled) {
+        g_events.events.clear();
+        g_events.nextSequence = 1;
+        g_events.dropped = 0;
+    }
+}
+void RuntimeTestEvents_Reset() {
+    std::lock_guard lock(g_events.mutex);
+    g_events.events.clear();
+    g_events.nextSequence = 1;
+    g_events.dropped = 0;
+}
+bool RuntimeTestEvents_IsEnabled() {
+    std::lock_guard lock(g_events.mutex);
+    return g_events.enabled;
+}
+bool RuntimeTestEvents_RecordCheckpoint(const char* checkpoint, const char* actor, int score) {
+    if (!ValidEventName(checkpoint) || !ValidEventName(actor)) return false;
+    if (score != 1) return false;
+    std::lock_guard lock(g_events.mutex);
+    if (!g_events.enabled) return false;
+    if (g_events.events.size() >= kRuntimeTestEventCapacity) {
+        ++g_events.dropped;
+        return false;
+    }
+    RuntimeTestEvent ev;
+    ev.sequence = g_events.nextSequence++;
+    ev.type = "checkpoint_reached";
+    ev.checkpoint = checkpoint;
+    ev.actor = actor;
+    ev.score = score;
+    g_events.events.push_back(std::move(ev));
+    return true;
+}
+RuntimeTestEventsSnapshot RuntimeTestEvents_CopySnapshot() {
+    std::lock_guard lock(g_events.mutex);
+    RuntimeTestEventsSnapshot snap;
+    snap.events = g_events.events;
+    snap.latestSequence = g_events.nextSequence - 1;
+    if (snap.latestSequence < 0) snap.latestSequence = 0;
+    snap.dropped = g_events.dropped;
+    return snap;
+}
+
 std::uint32_t RemainingFrameTimeout(std::uint64_t deadline, std::uint64_t now) noexcept {
     if (now >= deadline) return 0;
     const auto remaining = deadline - now;
@@ -25,6 +97,10 @@ void Protocol::Publish(bool ready, bool playing, const std::string& scene, std::
     }
     scene_ = scene.substr(0, end);
     targets_ = std::move(targets);
+    const auto snap = RuntimeTestEvents_CopySnapshot();
+    events_ = snap.events;
+    eventsLatestSequence_ = snap.latestSequence;
+    eventsDropped_ = snap.dropped;
 }
 bool Protocol::TakeQuit() { const bool result=quitReady_; quitReady_=false; return result; }
 void Protocol::ConfirmQuitReceipt() { if(quitPending_) { quitReady_=true; quitPending_=false; } }
@@ -217,6 +293,7 @@ Json Protocol::Request(const std::string& frame) {
     const bool controller=q["verb"]=="controller";
     const bool observe=q["verb"]=="observe";
     const bool capture=q["verb"]=="capture";
+    const bool events=q["verb"]=="events";
     std::vector<std::string> keys;
     int updates=0;
     int mouseDx=0, mouseDy=0, mouseWheel=0, mouseUpdates=0;
@@ -293,6 +370,8 @@ Json Protocol::Request(const std::string& frame) {
         }
     } else if(capture) {
         if(q.size()!=4) return error("invalid_request");
+    } else if(events) {
+        if(q.size()!=4) return error("invalid_request");
     } else if(q.size()!=4) return error("invalid_request");
 
     if(q["protocolVersion"]!=1) return error("unsupported_version",q["requestId"]);
@@ -365,6 +444,25 @@ Json Protocol::Request(const std::string& frame) {
         captureState_.error.clear();
         return {{"protocolVersion",1},{"requestId",id},{"runId",runId_},{"ok",true},{"status","queued"}};
     }
+    if(events) {
+        if(!ready_ || !playing_) return error("not_ready",id);
+        Json arr = Json::array();
+        for (const auto& ev : events_) {
+            arr.push_back({
+                {"sequence", ev.sequence},
+                {"type", ev.type},
+                {"checkpoint", ev.checkpoint},
+                {"actor", ev.actor},
+                {"score", ev.score},
+            });
+        }
+        return {
+            {"protocolVersion",1},{"requestId",id},{"runId",runId_},{"ok",true},
+            {"events", std::move(arr)},
+            {"latestSequence", eventsLatestSequence_},
+            {"dropped", eventsDropped_},
+        };
+    }
     if(q["verb"]=="quit") {
         if(quitPending_ || quitReady_) return error("queue_full",id);
         quitPending_=true;
@@ -379,7 +477,7 @@ Json Protocol::Request(const std::string& frame) {
     return {{"protocolVersion",1},{"requestId",id},{"runId",runId_},{"ok",true},
         {"pid",pid_},{"sessionId",session_},{"ready",ready_},{"playing",playing_},
         {"state",ready_ ? (playing_ ? "playing" : "ready") : "loading"},{"scene",scene_},
-        {"capabilities",Json::array({"hello","status","quit","keyboard","observe","capture","mouse","controller"})},
+        {"capabilities",Json::array({"hello","status","quit","keyboard","observe","capture","mouse","controller","events"})},
         {"keyboard",{{"status",InputStatus()},{"requestId",keyboardReqId_},
             {"remainingUpdates",keyboardUpdatesRemaining_},{"cancelRequested",cancelInput_},{"preparing",inputState_==InputState::Preparing}}},
         {"mouse",{{"status",MouseStatus()},{"requestId",mouseReqId_},
@@ -527,6 +625,8 @@ bool Bridge::StartFromEnvironment() {
         }
     }); }
     catch(...) { return false; }
+    RuntimeTestEvents_Reset();
+    RuntimeTestEvents_SetEnabled(true);
     impl_=std::move(p); return true;
 }
 void Bridge::Stop() {
@@ -536,6 +636,7 @@ void Bridge::Stop() {
         if (Controller_IsInjectionActive()) Controller_ClearInjection();
     }
     impl_.reset();
+    RuntimeTestEvents_SetEnabled(false);
 }
 std::string Bridge::PipeName() const { return impl_ ? impl_->name : std::string{}; }
 

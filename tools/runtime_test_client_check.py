@@ -210,6 +210,45 @@ class ClientChecks(unittest.TestCase):
             with self.subTest(bad_updates=bad_updates):
                 with self.assertRaises(ValueError): c.mouse(0, 0, [], bad_updates, 1)
 
+    def test_events_client_validation(self):
+        from runtime_test_client import validate_events_reply
+        c=Client.__new__(Client)
+        c.pid=1
+        c.run_id="events-test"
+        c.timeout=2
+        c.handle=None
+        for bad in (0, True, 1.5, "1", -1):
+            with self.subTest(bad=bad):
+                with self.assertRaises(ValueError):
+                    c.events(bad)
+        # Shared body validator (Client.events raises RuntimeError on invalid body after identity).
+        self.assertFalse(validate_events_reply({
+            "ok": True, "protocolVersion": 1,
+            "events": [{"sequence": 999, "type": "checkpoint_reached",
+                        "checkpoint": "Checkpoint_North", "actor": "Player", "score": -1}],
+            "latestSequence": 0, "dropped": 0,
+        })[0])
+        self.assertTrue(validate_events_reply({
+            "ok": True, "protocolVersion": 1, "events": [], "latestSequence": 0, "dropped": 0,
+        })[0])
+        class FakeClient(Client):
+            def request(self, verb, request_id, payload=None, deadline=None):
+                if getattr(self, "_mode") == "identity":
+                    return {"ok": True, "protocolVersion": 1, "runId": "other", "requestId": request_id,
+                            "events": [], "latestSequence": 0, "dropped": 0}
+                return {"ok": True, "protocolVersion": 1, "runId": self.run_id, "requestId": request_id,
+                        "events": [{"sequence": 999, "type": "checkpoint_reached",
+                                    "checkpoint": "Checkpoint_North", "actor": "Player", "score": -1}],
+                        "latestSequence": 0, "dropped": 0}
+        fc=FakeClient.__new__(FakeClient)
+        fc.pid=1; fc.run_id="events-test"; fc.timeout=2; fc.handle=object()
+        fc._mode="identity"
+        with self.assertRaises(RuntimeError):
+            fc.events(1)
+        fc._mode="body"
+        with self.assertRaises(RuntimeError):
+            fc.events(1)
+
     def test_controller_client_validation(self):
         c=Client.__new__(Client)
         for bad_lx in (-1.01, 1.01, float("nan"), float("inf"), True, False, "0", None):

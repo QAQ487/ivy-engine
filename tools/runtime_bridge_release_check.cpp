@@ -9,6 +9,14 @@ template<class T> concept HasTestInjection = requires(T keys) { Keyboard_TestInj
 static_assert(!HasTestInjection<Keyboard_Keys*>, "test injection must be absent");
 template<class T> concept HasControllerInjection = requires(T axis) { Controller_TestInjectLeftStick(axis, axis); };
 static_assert(!HasControllerInjection<float>, "controller injection must be absent");
+namespace ivy::testing {
+template<class T>
+concept HasRuntimeTestEventsRecord = requires(T p) {
+    RuntimeTestEvents_RecordCheckpoint(p, p, 1);
+};
+}
+static_assert(!ivy::testing::HasRuntimeTestEventsRecord<const char*>,
+    "event recorder API must be compile-out absent");
 int main() {
     Keyboard_Initialize();
     Keyboard_ProcessMessage(WM_KEYDOWN, 'W', 0);
@@ -16,8 +24,8 @@ int main() {
     Keyboard_ProcessMessage(WM_KEYUP, 'W', 0);
     if(Keyboard_IsKeyDown(KK_W)) return 1;
 #ifdef GAME_RUNTIME
-    std::cout << "PASS Release compile-out (bridge/injection API absent), normal physical keyboard\n";
+    std::cout << "PASS Release compile-out (bridge/injection/events API absent), normal physical keyboard\n";
 #else
-    std::cout << "PASS Editor compile-out (bridge/injection API absent), normal physical keyboard\n";
+    std::cout << "PASS Editor compile-out (bridge/injection/events API absent), normal physical keyboard\n";
 #endif
 }

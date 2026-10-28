@@ -567,5 +567,8 @@ xcopy /y /d /e "$(ProjectDir)rom\*" "$(OutDir)rom\"</Command>
   <ItemGroup>
     <ClInclude Include="samples\scripts\SamplePlayerScript.h" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
     <ClCompile Include="samples\scripts\SamplePlayerScript.cpp" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
+    <ClInclude Include="samples\scripts\SampleCheckpointState.h" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
+    <ClInclude Include="samples\scripts\SampleCheckpointScript.h" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
+    <ClCompile Include="samples\scripts\SampleCheckpointScript.cpp" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
   </ItemGroup>
 </Project>

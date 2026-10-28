@@ -26,6 +26,58 @@ K.WaitForSingleObject.restype=W.DWORD
 K.CloseHandle.argtypes=[W.HANDLE]
 K.GetNamedPipeServerProcessId.argtypes=[W.HANDLE,C.POINTER(W.ULONG)]
 INVALID=C.c_void_p(-1).value
+MAX_EVENTS=64
+
+def _valid_event_name(name):
+    if not isinstance(name,str) or not 1<=len(name)<=64: return False
+    return all(ch.isalnum() or ch in "_-" for ch in name)
+
+def validate_events_reply(payload):
+    """Fail-closed semantic validator for fixed checkpoint_reached event schema."""
+    if not isinstance(payload,dict) or payload.get("ok") is not True:
+        return False,"events reply ok is not true"
+    if payload.get("protocolVersion")!=1:
+        return False,"events protocolVersion mismatch"
+    ev=payload.get("events")
+    if not isinstance(ev,list):
+        return False,"events must be array"
+    if len(ev)>MAX_EVENTS:
+        return False,"events exceed capacity 64"
+    latest=payload.get("latestSequence")
+    dropped=payload.get("dropped")
+    if type(latest) is not int or latest<0:
+        return False,"latestSequence invalid"
+    if type(dropped) is not int or dropped<0:
+        return False,"dropped invalid"
+    if not ev:
+        if latest!=0:
+            return False,"empty events require latestSequence 0"
+        return True,None
+    seen=set()
+    for idx,item in enumerate(ev):
+        if not isinstance(item,dict):
+            return False,"event entry not object"
+        for key in ("sequence","type","checkpoint","actor","score"):
+            if key not in item:
+                return False,"event missing "+key
+        seq=item["sequence"]
+        if type(seq) is not int or seq!=idx+1:
+            return False,"event sequence must be contiguous from 1"
+        if seq in seen:
+            return False,"duplicate event sequence"
+        seen.add(seq)
+        if item.get("type")!="checkpoint_reached":
+            return False,"event type must be checkpoint_reached"
+        if item.get("actor")!="Player":
+            return False,"event actor must be Player"
+        if not _valid_event_name(item.get("checkpoint")):
+            return False,"event checkpoint identifier invalid"
+        score=item.get("score")
+        if type(score) is not int or score!=1:
+            return False,"event score must be exactly 1"
+    if latest!=ev[-1]["sequence"]:
+        return False,"latestSequence must equal last event sequence"
+    return True,None
 
 class Client:
     def __init__(self,pid,run_id,timeout=2.0):
@@ -209,6 +261,18 @@ class Client:
             self.close()
             raise
 
+    def events(self,request_id):
+        if type(request_id) is not int or not 1<=request_id<=2147483647:
+            raise ValueError("request ID must be an integer in [1,2147483647]")
+        result=self.request("events",request_id)
+        if not result.get("ok"): return result
+        if result.get("protocolVersion")!=1 or result.get("runId")!=self.run_id or result.get("requestId")!=request_id:
+            raise RuntimeError("events response identity mismatch")
+        ok,err=validate_events_reply(result)
+        if not ok:
+            raise RuntimeError(err or "events body invalid")
+        return result
+
     def controller(self,lx,ly,updates,request_id,completion_timeout=7.0):
         if isinstance(lx,bool) or not isinstance(lx,(int,float)) or not math.isfinite(lx) or not -1.0<=lx<=1.0:
             raise ValueError("lx must be a finite number in [-1,1]")
@@ -247,7 +311,7 @@ def main():
     p.add_argument("--run-id",required=True)
     p.add_argument("--request-id",type=int,required=True,help="strictly increasing across the run")
     p.add_argument("--timeout",type=float,default=2)
-    p.add_argument("verb",choices=("hello","status","quit","keyboard","observe","capture","mouse","controller"))
+    p.add_argument("verb",choices=("hello","status","quit","keyboard","observe","capture","mouse","controller","events"))
     p.add_argument("--keys",nargs="+")
     p.add_argument("--updates",type=int)
     p.add_argument("--completion-timeout",type=float,default=7)
@@ -279,6 +343,8 @@ def main():
                 r=c.observe(a.target,a.request_id)
             elif a.verb=="capture":
                 r=c.capture(a.request_id,a.completion_timeout)
+            elif a.verb=="events":
+                r=c.events(a.request_id)
             else:
                 r=c.request(a.verb,a.request_id)
         print(json.dumps(r,ensure_ascii=False))

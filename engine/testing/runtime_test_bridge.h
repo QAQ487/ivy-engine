@@ -17,6 +17,28 @@ struct ObservedTarget {
     float posX = 0.0f, posY = 0.0f, posZ = 0.0f;
     float velX = 0.0f, velY = 0.0f, velZ = 0.0f;
 };
+
+// Debug-only main-thread event recorder (opt-in with bridge Start).
+constexpr std::size_t kRuntimeTestEventCapacity = 64;
+struct RuntimeTestEvent {
+    std::int64_t sequence = 0;
+    std::string type;
+    std::string checkpoint;
+    std::string actor;
+    int score = 0;
+};
+struct RuntimeTestEventsSnapshot {
+    std::vector<RuntimeTestEvent> events;
+    std::int64_t latestSequence = 0;
+    std::uint32_t dropped = 0;
+};
+void RuntimeTestEvents_SetEnabled(bool enabled);
+void RuntimeTestEvents_Reset();
+bool RuntimeTestEvents_IsEnabled();
+// Validated fixed semantic fields; returns false if disabled/invalid/rejected.
+bool RuntimeTestEvents_RecordCheckpoint(const char* checkpoint, const char* actor, int score);
+RuntimeTestEventsSnapshot RuntimeTestEvents_CopySnapshot();
+
 class Protocol {
 public:
     Protocol(std::string runId, unsigned long pid, unsigned long session);
@@ -52,6 +74,9 @@ private:
     bool ready_ = false, playing_ = false;
     std::string scene_;
     std::vector<ObservedTarget> targets_;
+    std::vector<RuntimeTestEvent> events_;
+    std::int64_t eventsLatestSequence_ = 0;
+    std::uint32_t eventsDropped_ = 0;
     std::int64_t lastId_ = 0;
     std::string runId_;
     unsigned long pid_, session_;

@@ -1,0 +1,340 @@
+{
+    "canvas": {
+        "elements": [
+            {
+                "alignment": "LEFT",
+                "anchor": "TOP_LEFT",
+                "characterSpacing": 18.0,
+                "color": {
+                    "a": 0.8999999761581421,
+                    "b": 1.0,
+                    "g": 1.0,
+                    "r": 1.0
+                },
+                "font": {
+                    "charHeight": 32.0,
+                    "charWidth": 32.0,
+                    "charsPerRow": 16,
+                    "texture": "rom/texture/consolab_ascii_512.png"
+                },
+                "fontSize": 1.0,
+                "name": "Hint",
+                "position": {
+                    "x": 24.0,
+                    "y": 24.0
+                },
+                "text": "Phase4 Visual+Jump Player Fixture",
+                "type": "text",
+                "visible": true
+            }
+        ],
+        "name": "scene"
+    },
+    "nodes": [
+        {
+            "children": [],
+            "components": {
+                "DirectionalLight": {
+                    "castShadows": true,
+                    "color": [
+                        1.0,
+                        0.9700000286102295,
+                        0.9200000166893005
+                    ],
+                    "enabled": true,
+                    "intensity": 1.100000023841858,
+                    "specColor": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ],
+                    "specPower": 32.0
+                },
+                "SceneTransform": {
+                    "posX": 0.0,
+                    "posY": 10.0,
+                    "posZ": 0.0,
+                    "rotX": 45.0,
+                    "rotY": -30.0,
+                    "rotZ": 0.0,
+                    "scaleX": 1.0,
+                    "scaleY": 1.0,
+                    "scaleZ": 1.0
+                }
+            },
+            "name": "Directional Light",
+            "tag": 0
+        },
+        {
+            "children": [],
+            "components": {
+                "Collider": {
+                    "colliderCenter": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    },
+                    "colliderType": 1,
+                    "halfExtents": {
+                        "x": 20.0,
+                        "y": 0.5,
+                        "z": 20.0
+                    },
+                    "height": 1.0,
+                    "meshSizePadding": 0.0,
+                    "radius": 0.5,
+                    "showDebugCollider": false
+                },
+                "SceneTransform": {
+                    "posX": 0.0,
+                    "posY": -0.5,
+                    "posZ": 0.0,
+                    "rotX": 0.0,
+                    "rotY": 0.0,
+                    "rotZ": 0.0,
+                    "scaleX": 40.0,
+                    "scaleY": 1.0,
+                    "scaleZ": 40.0
+                },
+                "visual": {
+                    "model": "rom/model/object/Box_Brown.fbx",
+                    "shader": "standard"
+                }
+            },
+            "name": "Ground",
+            "tag": 2
+        },
+        {
+            "children": [
+                {
+                    "name": "Player_Model",
+                    "tag": 5,
+                    "children": [],
+                    "components": {
+                        "SceneTransform": {
+                            "posX": 0.0,
+                            "posY": -0.5,
+                            "posZ": 0.0,
+                            "rotX": 0.0,
+                            "rotY": 180.0,
+                            "rotZ": 0.0,
+                            "scaleX": 0.01,
+                            "scaleY": 0.01,
+                            "scaleZ": 0.01
+                        },
+                        "visual": {
+                            "active_clip": "idle",
+                            "animate": true,
+                            "animations": {
+                                "idle": "rom/model/player/Idle.fbx",
+                                "jump": "rom/model/player/Jump01.fbx",
+                                "run": "rom/model/player/Running.fbx"
+                            },
+                            "model": "rom/model/player/Y Bot_white.fbx",
+                            "shader": "standard"
+                        }
+                    }
+                }
+            ],
+            "components": {
+                "Collider": {
+                    "colliderCenter": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    },
+                    "colliderType": 2,
+                    "halfExtents": {
+                        "x": 0.5,
+                        "y": 0.5,
+                        "z": 0.5
+                    },
+                    "height": 2.0,
+                    "meshSizePadding": 0.0,
+                    "radius": 0.5,
+                    "showDebugCollider": true
+                },
+                "SceneTransform": {
+                    "posX": 0.0,
+                    "posY": 1.0,
+                    "posZ": 0.0,
+                    "rotX": 0.0,
+                    "rotY": 0.0,
+                    "rotZ": 0.0,
+                    "scaleX": 1.0,
+                    "scaleY": 1.0,
+                    "scaleZ": 1.0
+                },
+                "Script": {
+                    "scriptClass": "SamplePlayerScript"
+                }
+            },
+            "name": "Player",
+            "tag": 5
+        },
+        {
+            "children": [],
+            "components": {
+                "Collider": {
+                    "colliderCenter": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    },
+                    "colliderType": 1,
+                    "halfExtents": {
+                        "x": 1.0,
+                        "y": 1.0,
+                        "z": 1.0
+                    },
+                    "height": 1.0,
+                    "isTrigger": true,
+                    "meshSizePadding": 0.0,
+                    "radius": 0.5,
+                    "showDebugCollider": true
+                },
+                "SceneTransform": {
+                    "posX": 0.0,
+                    "posY": 1.0,
+                    "posZ": 5.0,
+                    "rotX": 0.0,
+                    "rotY": 0.0,
+                    "rotZ": 0.0,
+                    "scaleX": 1.0,
+                    "scaleY": 1.0,
+                    "scaleZ": 1.0
+                },
+                "Script": {
+                    "scriptClass": "SampleCheckpointScript"
+                },
+                "visual": {
+                    "model": "rom/model/object/Box_Green.fbx",
+                    "shader": "standard"
+                }
+            },
+            "name": "Checkpoint_North",
+            "tag": 5
+        },
+        {
+            "children": [],
+            "components": {
+                "SceneTransform": {
+                    "posX": 0.0,
+                    "posY": 1.0,
+                    "posZ": 5.0,
+                    "rotX": 0.0,
+                    "rotY": 0.0,
+                    "rotZ": 0.0,
+                    "scaleX": 1.0,
+                    "scaleY": 1.0,
+                    "scaleZ": 1.0
+                },
+                "visual": {
+                    "model": "rom/model/object/Box_Blue.fbx",
+                    "shader": "standard"
+                }
+            },
+            "name": "Landmark_North",
+            "tag": 5
+        },
+        {
+            "children": [],
+            "components": {
+                "SceneTransform": {
+                    "posX": 0.0,
+                    "posY": 1.0,
+                    "posZ": -5.0,
+                    "rotX": 0.0,
+                    "rotY": 0.0,
+                    "rotZ": 0.0,
+                    "scaleX": 1.0,
+                    "scaleY": 1.0,
+                    "scaleZ": 1.0
+                },
+                "visual": {
+                    "model": "rom/model/object/Box_Blue.fbx",
+                    "shader": "standard"
+                }
+            },
+            "name": "Landmark_South",
+            "tag": 5
+        },
+        {
+            "children": [],
+            "components": {
+                "SceneTransform": {
+                    "posX": 5.0,
+                    "posY": 1.0,
+                    "posZ": 0.0,
+                    "rotX": 0.0,
+                    "rotY": 0.0,
+                    "rotZ": 0.0,
+                    "scaleX": 1.0,
+                    "scaleY": 1.0,
+                    "scaleZ": 1.0
+                },
+                "visual": {
+                    "model": "rom/model/object/Box_Blue.fbx",
+                    "shader": "standard"
+                }
+            },
+            "name": "Landmark_East",
+            "tag": 5
+        },
+        {
+            "children": [],
+            "components": {
+                "SceneTransform": {
+                    "posX": -5.0,
+                    "posY": 1.0,
+                    "posZ": 0.0,
+                    "rotX": 0.0,
+                    "rotY": 0.0,
+                    "rotZ": 0.0,
+                    "scaleX": 1.0,
+                    "scaleY": 1.0,
+                    "scaleZ": 1.0
+                },
+                "visual": {
+                    "model": "rom/model/object/Box_Blue.fbx",
+                    "shader": "standard"
+                }
+            },
+            "name": "Landmark_West",
+            "tag": 5
+        }
+    ],
+    "settings": {
+        "render": {
+            "clearColor": [
+                0.6899999976158142,
+                0.7699999809265137,
+                0.8700000047683716,
+                1.0
+            ],
+            "defaultShader": "standard",
+            "fogColor": [
+                0.6899999976158142,
+                0.7699999809265137,
+                0.8700000047683716
+            ],
+            "fogDensity": 0.019999999552965164,
+            "fogEnabled": false,
+            "fogHeight": 5.0,
+            "fogHeightFalloff": 0.15000000596046448,
+            "fogStart": 10.0,
+            "shadowQuality": "medium",
+            "skyboxCubemap": "rom/skybox/MySkybox.dds",
+            "skyboxEnabled": true,
+            "skyboxExposure": 1.0,
+            "skyboxRotationYDeg": 0.0,
+            "skyboxTint": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+            ]
+        }
+    },
+    "version": 4
+}

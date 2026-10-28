@@ -21,10 +21,11 @@ if str(HERE) not in sys.path:
     sys.path.insert(0, str(HERE))
 
 from runtime_bridge_mouse_acceptance import ENV_CLEAR, Link, session_of, validate_png_bytes
+from runtime_test_client import validate_events_reply
 
 LANDMARKS = ("Landmark_North", "Landmark_South", "Landmark_East", "Landmark_West")
 TARGETS = ("Player",) + LANDMARKS
-ALLOWED_ACTIONS = frozenset({"controller", "capture", "quit"})
+ALLOWED_ACTIONS = frozenset({"controller", "capture", "quit", "events"})
 ALLOWED_CONTROLLER_STATUS = frozenset({
     "queued", "preparing", "active", "releasing", "completed", "cancelled",
 })
@@ -81,7 +82,7 @@ def validate_command(obj, expected_sequence):
             return False, "sequence must equal %d" % expected_sequence, None
         action = obj.get("action")
         if not isinstance(action, str) or action not in ALLOWED_ACTIONS:
-            return False, "action must be controller|capture|quit", None
+            return False, "action must be controller|capture|quit|events", None
         keys = set(obj.keys())
         if action == "controller":
             if keys != {"sequence", "action", "lx", "ly", "updates"}:
@@ -471,6 +472,18 @@ def run(args):
                         "height": png["height"],
                         "bytes": png["bytes"],
                         "sha256": png["sha256"],
+                    }
+                elif cmd["action"] == "events":
+                    ev_reply = link.req("events")
+                    ok_ev, ev_err = validate_events_reply(ev_reply)
+                    if not ok_ev:
+                        raise RuntimeError(ev_err)
+                    reply["events"] = {
+                        "events": ev_reply.get("events"),
+                        "latestSequence": ev_reply.get("latestSequence"),
+                        "dropped": ev_reply.get("dropped"),
+                        "requestId": ev_reply.get("requestId"),
+                        "runId": ev_reply.get("runId"),
                     }
                 elif cmd["action"] == "quit":
                     quit_requested = True

@@ -94,6 +94,71 @@ class ExploreHostValidationTests(unittest.TestCase):
         ok, err, cmd = host.validate_command({"sequence": 3, "action": "quit"}, 3)
         self.assertTrue(ok, err)
 
+    def test_events_action_schema_and_reply_validation(self):
+        ok, err, cmd = host.validate_command({"sequence": 1, "action": "events"}, 1)
+        self.assertTrue(ok, err)
+        self.assertEqual(cmd["action"], "events")
+        self.assertFalse(host.validate_command(
+            {"sequence": 1, "action": "events", "events": [{"sequence": 1}]}, 1)[0])
+        empty = {"ok": True, "protocolVersion": 1, "events": [], "latestSequence": 0, "dropped": 0}
+        self.assertTrue(host.validate_events_reply(empty)[0])
+        good = {
+            "ok": True, "protocolVersion": 1, "runId": "x", "requestId": 3,
+            "events": [{"sequence": 1, "type": "checkpoint_reached",
+                        "checkpoint": "Checkpoint_North", "actor": "Player", "score": 1}],
+            "latestSequence": 1, "dropped": 0,
+        }
+        self.assertTrue(host.validate_events_reply(good)[0])
+        # Parent-observed RED payload must stay rejected.
+        parent_red = {
+            "ok": True, "protocolVersion": 1,
+            "events": [{"sequence": 999, "type": "checkpoint_reached",
+                        "checkpoint": "Checkpoint_North", "actor": "Player", "score": -1}],
+            "latestSequence": 0, "dropped": 0,
+        }
+        self.assertFalse(host.validate_events_reply(parent_red)[0])
+        bad_cases = [
+            {"ok": True, "protocolVersion": 1, "events": "x", "latestSequence": 0, "dropped": 0},
+            {"ok": True, "protocolVersion": 1, "events": [], "latestSequence": True, "dropped": 0},
+            {"ok": True, "protocolVersion": 1, "events": [], "latestSequence": 1, "dropped": 0},
+            {"ok": True, "protocolVersion": 1, "events": [{"sequence": 0, "type": "checkpoint_reached",
+                "checkpoint": "Checkpoint_North", "actor": "Player", "score": 1}],
+             "latestSequence": 0, "dropped": 0},
+            {"ok": True, "protocolVersion": 1, "events": [
+                {"sequence": 1, "type": "checkpoint_reached", "checkpoint": "Checkpoint_North",
+                 "actor": "Player", "score": 1},
+                {"sequence": 1, "type": "checkpoint_reached", "checkpoint": "Checkpoint_North",
+                 "actor": "Player", "score": 1}], "latestSequence": 1, "dropped": 0},
+            {"ok": True, "protocolVersion": 1, "events": [
+                {"sequence": 1, "type": "checkpoint_reached", "checkpoint": "Checkpoint_North",
+                 "actor": "Player", "score": 1},
+                {"sequence": 3, "type": "checkpoint_reached", "checkpoint": "Checkpoint_North",
+                 "actor": "Player", "score": 1}], "latestSequence": 3, "dropped": 0},
+            {"ok": True, "protocolVersion": 1, "events": [{"sequence": 1, "type": "other",
+                "checkpoint": "Checkpoint_North", "actor": "Player", "score": 1}],
+             "latestSequence": 1, "dropped": 0},
+            {"ok": True, "protocolVersion": 1, "events": [{"sequence": 1, "type": "checkpoint_reached",
+                "checkpoint": "Checkpoint_North", "actor": "Enemy", "score": 1}],
+             "latestSequence": 1, "dropped": 0},
+            {"ok": True, "protocolVersion": 1, "events": [{"sequence": 1, "type": "checkpoint_reached",
+                "checkpoint": "bad name!", "actor": "Player", "score": 1}],
+             "latestSequence": 1, "dropped": 0},
+            {"ok": True, "protocolVersion": 1, "events": [{"sequence": 1, "type": "checkpoint_reached",
+                "checkpoint": "Checkpoint_North", "actor": "Player", "score": True}],
+             "latestSequence": 1, "dropped": 0},
+            {"ok": True, "protocolVersion": 1, "events": [{"sequence": 1, "type": "checkpoint_reached",
+                "checkpoint": "Checkpoint_North", "actor": "Player", "score": 1}],
+             "latestSequence": 2, "dropped": 0},
+            {"ok": True, "protocolVersion": 1,
+             "events": [{"sequence": i + 1, "type": "checkpoint_reached",
+                         "checkpoint": "Checkpoint_North", "actor": "Player", "score": 1}
+                        for i in range(65)],
+             "latestSequence": 65, "dropped": 0},
+            {"ok": False, "events": [], "latestSequence": 0, "dropped": 0},
+        ]
+        for bad in bad_cases:
+            self.assertFalse(host.validate_events_reply(bad)[0], bad)
+
     def test_invalid_payloads_rejected_no_raise(self):
         cases = [
             ({"sequence": 2, "action": "controller", "lx": 0, "ly": 1, "updates": 1}, 1),

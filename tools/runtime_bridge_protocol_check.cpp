@@ -99,7 +99,7 @@ int main(int argc, char** argv) {
     policy.BeginInput(false,GetTickCount64());
     auto cancelled=policy.Request(R"({"protocolVersion":1,"requestId":6,"runId":"policy","verb":"status"})");
     check(cancelled["keyboard"]["status"]=="cancelled","not-playing cancels queued input");
-    check(r["capabilities"] == Json::array({"hello","status","quit","keyboard","observe","capture","mouse","controller"}), "capabilities include observe, capture, mouse, and controller");
+    check(r["capabilities"] == Json::array({"hello","status","quit","keyboard","observe","capture","mouse","controller","events"}), "capabilities include observe, capture, mouse, controller, and events");
     r = p.Request(R"({"protocolVersion":1,"requestId":6,"runId":"test-run","verb":"quit"})");
     check(r.value("requiresReceipt", false), "quit requires receipt before main-thread exit");
     check(!p.TakeQuit(), "no quit before receipt");

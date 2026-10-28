@@ -662,5 +662,8 @@
   <ItemGroup>
     <ClInclude Include="samples\scripts\SamplePlayerScript.h" />
     <ClCompile Include="samples\scripts\SamplePlayerScript.cpp" />
+    <ClInclude Include="samples\scripts\SampleCheckpointState.h" />
+    <ClInclude Include="samples\scripts\SampleCheckpointScript.h" />
+    <ClCompile Include="samples\scripts\SampleCheckpointScript.cpp" />
   </ItemGroup>
 </Project>
