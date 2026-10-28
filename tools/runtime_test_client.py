@@ -209,13 +209,45 @@ class Client:
             self.close()
             raise
 
+    def controller(self,lx,ly,updates,request_id,completion_timeout=7.0):
+        if isinstance(lx,bool) or not isinstance(lx,(int,float)) or not math.isfinite(lx) or not -1.0<=lx<=1.0:
+            raise ValueError("lx must be a finite number in [-1,1]")
+        if isinstance(ly,bool) or not isinstance(ly,(int,float)) or not math.isfinite(ly) or not -1.0<=ly<=1.0:
+            raise ValueError("ly must be a finite number in [-1,1]")
+        if type(updates) is not int or not 1<=updates<=120:
+            raise ValueError("updates must be an integer in [1,120]")
+        if type(request_id) is not int or not 1<=request_id<2147483647:
+            raise ValueError("request ID must leave room for completion polls")
+        if isinstance(completion_timeout,bool) or not isinstance(completion_timeout,(int,float)) or not math.isfinite(completion_timeout) or not 0<completion_timeout<=10:
+            raise ValueError("completion timeout must be a finite number in (0,10]")
+        try:
+            deadline=time.monotonic()+completion_timeout
+            payload={"lx":float(lx),"ly":float(ly),"updates":updates}
+            result=self.request("controller",request_id,payload,deadline=deadline)
+            if not result.get("ok"): return result
+            operation_id=request_id
+            while time.monotonic()<deadline:
+                request_id+=1
+                if request_id>2147483647: raise ValueError("request ID exhausted")
+                result=self.request("status",request_id,deadline=deadline)
+                if not result.get("ok"): raise RuntimeError("controller status rejected: "+str(result))
+                operation=result.get("controller",{})
+                if operation.get("requestId")!=operation_id: raise RuntimeError("controller operation identity mismatch")
+                if operation.get("status")=="completed": return result
+                if operation.get("status")=="cancelled": raise RuntimeError("controller operation cancelled")
+                time.sleep(min(.01,max(0,deadline-time.monotonic())))
+            raise TimeoutError("controller completion deadline")
+        except (OSError,ValueError,RuntimeError,TimeoutError):
+            self.close()
+            raise
+
 def main():
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument("--pid",type=int,required=True)
     p.add_argument("--run-id",required=True)
     p.add_argument("--request-id",type=int,required=True,help="strictly increasing across the run")
     p.add_argument("--timeout",type=float,default=2)
-    p.add_argument("verb",choices=("hello","status","quit","keyboard","observe","capture","mouse"))
+    p.add_argument("verb",choices=("hello","status","quit","keyboard","observe","capture","mouse","controller"))
     p.add_argument("--keys",nargs="+")
     p.add_argument("--updates",type=int)
     p.add_argument("--completion-timeout",type=float,default=7)
@@ -224,10 +256,16 @@ def main():
     p.add_argument("--dy",type=int,default=0)
     p.add_argument("--buttons",nargs="*",default=[])
     p.add_argument("--wheel",type=int,default=0)
+    p.add_argument("--lx",type=float,default=None)
+    p.add_argument("--ly",type=float,default=None)
     a=p.parse_args()
     if a.verb=="keyboard" and (a.keys is None or a.updates is None): p.error("keyboard requires --keys and --updates")
     if a.verb!="keyboard" and (a.keys is not None): p.error("keys payload requires keyboard verb")
     if a.verb=="mouse" and a.updates is None: p.error("mouse requires --updates")
+    if a.verb=="controller" and (a.lx is None or a.ly is None or a.updates is None):
+        p.error("controller requires --lx, --ly and --updates")
+    if a.verb!="controller" and (a.lx is not None or a.ly is not None):
+        p.error("lx/ly payload requires controller verb")
     if a.verb=="observe" and not a.target: p.error("observe requires --target")
     try:
         with Client(a.pid,a.run_id,a.timeout) as c:
@@ -235,6 +273,8 @@ def main():
                 r=c.keyboard(a.keys,a.updates,a.request_id,a.completion_timeout)
             elif a.verb=="mouse":
                 r=c.mouse(a.dx,a.dy,a.buttons,a.updates,a.request_id,a.wheel,a.completion_timeout)
+            elif a.verb=="controller":
+                r=c.controller(a.lx,a.ly,a.updates,a.request_id,a.completion_timeout)
             elif a.verb=="observe":
                 r=c.observe(a.target,a.request_id)
             elif a.verb=="capture":

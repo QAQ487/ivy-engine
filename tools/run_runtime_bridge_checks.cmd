@@ -30,6 +30,10 @@ py -3 tools\runtime_test_client_check.py -v
 if errorlevel 1 exit /b 1
 py -3 tools\runtime_bridge_mouse_acceptance_check.py -v
 if errorlevel 1 exit /b 1
+py -3 tools\runtime_bridge_controller_acceptance_check.py -v
+if errorlevel 1 exit /b 1
+py -3 tools\runtime_bridge_explore_check.py -v
+if errorlevel 1 exit /b 1
 py -3 tools\runtime_bridge_phase4_check.py -v
 if errorlevel 1 exit /b 1
 cl /nologo /EHsc /W4 /std:c++20 /utf-8 /MT /DGAME_RUNTIME /I. tools\runtime_bridge_release_check.cpp engine\testing\runtime_test_bridge.cpp engine\input\keyboard.cpp engine\input\controller.cpp /Fo:"%~1\\" /Fe:"%~1\runtime_bridge_release_check.exe" /link user32.lib
@@ -42,6 +46,8 @@ if errorlevel 1 exit /b 1
 if errorlevel 1 exit /b 1
 if not "%~2"=="" (
     py -3 tools\runtime_bridge_mouse_acceptance.py --exe "%~2" --out-dir "%~1\mouse-runtime"
+    if errorlevel 1 exit /b 1
+    py -3 tools\runtime_bridge_controller_acceptance.py --exe "%~2" --out-dir "%~1\controller-runtime"
     if errorlevel 1 exit /b 1
 )
 exit /b 0

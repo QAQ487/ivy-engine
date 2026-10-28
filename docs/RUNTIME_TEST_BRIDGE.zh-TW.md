@@ -139,8 +139,8 @@ Harness `--serve` 最多 15 秒，自行正常退出；Python subprocess tests �
 - [x] **Phase 2 — Keyboard 測試輸入**：內部注入、standalone checks、full Debug build 同 Session 2 fresh runtime 整合通過；唔代表角色操作或玩法驗收。
 - [ ] **Phase 3 — Object 狀態觀察與 PNG 截圖**：部分實作；固定診斷鏡頭下移動、觀察同 PNG 已實測一致通過，角色仍係方塊組合，詳見最新 checkpoint。
 - [x] **Phase 4 — 固定移動驗收 runner**：已完成；acceptance runner 實測移動／觀察／PNG 截圖、跳躍／落地斷言 PASS 同 clean shutdown（exit 0 正常退出）。
-- [ ] **Phase 5 — Mouse／controller／遊戲事件**：部分實作；Slice A（mouse 內部注入、bridge `mouse` verb、測試模式視角觀察同標準 runtime acceptance 驗收）已完成，Slice B controller 及其他剩餘項目未開始。
-- [ ] **Phase 6 — Agent 互動探索**：未開始。
+- [ ] **Phase 5 — Mouse／controller／遊戲事件**：部分完成；Slice A（mouse）同 Slice B（left-stick `Client.controller`＋acceptance runner）已由父層於 desktop 標準 checks 與 Session36 真 runtime 核實 PASS。right-stick／buttons／triggers／遊戲事件未做。
+- [ ] **Phase 6 — Agent 互動探索**：**MINIMUM closed-loop 已核實**（見下節）；唔等於全玩法完成。right-stick／buttons／triggers／遊戲事件仍屬 Phase 5 未完成項。
 
 ### Phase 1 已執行驗證
 
@@ -254,9 +254,32 @@ Harness `--serve` 最多 15 秒，自行正常退出；Python subprocess tests �
 
 Phase4 YBot verified using Cursor CLI Auto；FrisbeeArena `rom/model/player` Y Bot_white+Idle+Running+Jump01 copied exact SHA；animated `Player_Model` child，parent collider unchanged。New build `d85e7c4ac15c15af95ed45da015486273032f65945d693d2f536a45140f45fe5`。Real runtime PASS Session2：movement `11.612895` deviation `0`；jump peakRise `4.507704` ascending／descending／stable，landed 3 samples；capture afterW／airborne／landed 1920×1080；clean exit 0。15 jump validator tests PASS。Evidence `x64/phase2a-agent/phase4-ybot-5edfc4a5-rerun/acceptance/result.json`。First run speed sample `active remainingUpdates:0` crossed release boundary；exclude exhausted-budget sample only，no relaxed thresholds。Visual reviewed：humanoid not T-pose，airborne pose differs；bright white material，small contact uncertain。
 
-### Controller left-stick checkpoint
+### Controller left-stick checkpoint（父層已核實）
 
-最小左搖桿已驗證：controller verb，pad0，lx/ly有限[-1,1]，updates1..120，5秒deadline，完成或取消後neutral。Debug GAME_RUNTIME opt-in限定。標準checks與Release/Editor compile-out assertions全過。新build SHA256 5b241566ed0874416b23509ba27a7bfca50fc79389f7d1b00b5c97d89884dfb8；Session2真runtime前進11.612895、偏差0、退出0，keyboard/mouse回歸PASS。證據 x64/phase2a-agent/leftstick-runtime-c0102bfd/。Python通用Client.request可用；專用CLI入口、rightstick/buttons/triggers及遊戲事件未做。Runtime probe仍為ignored診斷工具。
+- **標準 checks**：`tools/run_runtime_bridge_checks.cmd x64/hermes-leftstick-8296b0bf/checks-final` → exit 0；C++ protocol／keyboard／capture／mouse／controller PASS；Release／Editor compile-out PASS；Python client16＋mouse9＋controller22＋jump15 PASS。日誌 `checks-final.log`。
+- **Fresh Debug x64**：native build exit 0；exe SHA256 `50546559bf104c0942d093a88b208ec1064373e606e4d355ab20184696af9332`（`build-confirm.log`）。**未**宣稱完整 Release／Editor executable 驗收。
+- **Session36 真 runtime**（隔離 fixture；三 runner 皆 native exit 0、`childCleanedUp: true`）：
+  - **controller PASS**：forward 120；水平 `11.612895011901855`，delta `(0,0,11.612895011901855)`，`maxLineDeviation` 0；active 35，speed `5.9999995`–`6`；release 3 樣本 `maxShift` 0／`maxXzSpeed` 0；六項明確 `invalid_request`；before／after 真 PNG `1784×1003`。
+  - **mouse PASS**：`maxDrift` 0，40 samples。
+  - **phase4**：keyboard 移動＋jump／landing PASS，`peakRise` `4.512651860713959`。
+- **視覺（父層圖片檢視）**：人形非 T-pose、幾何一致；before 可見藍地板地標，after 近景地標離開構圖；亮白材質。PNG 只作畫面證據，**唔**作像素位移斷言，亦**唔**宣稱精確相機角度。
+- **未涵蓋**：right-stick／buttons／triggers／遊戲事件。唔沿用其他主機 probe。
+- **證據**：`x64/hermes-leftstick-8296b0bf/runtime1/{controller,mouse,phase4}/result.json`。
+
+### Phase 6 MINIMUM closed-loop checkpoint（已核實；非全玩法完成）
+
+- **工具**：`tools/runtime_bridge_explore.py`＋`tools/runtime_bridge_explore_check.py`（checks 已註冊）。Host **無**導航策略；父層 LLM 依每步 live observations 決策 `controller`／`capture`／`quit`。
+- **第三次真 runtime PASS**：`x64/hermes-leftstick-8296b0bf/explore-4d9ce0c3/` — 8 個 response 全 OK；父層 `navigation-verification.json` 獨立計算 North dist `0.451614856719971`、East `0.46895472995911325`（皆 ≤0.6）；最終 Player `(4.653108596801758, 0.49926239252090454, 0.31557074189186096)`；3 張真 PNG `1784×1003`；`receiptOk` true、native exit 0、`forcedKill` false、`timedOut` false、`childCleanedUp` true。證據含 `ready.json`、`response-*.json`、`decision-*.txt`、`summary.json`、`navigation-verification.json`。
+- **引導語意**：靠 **semantic world-position**（Player／Landmark observe），**唔係**純視覺伺服。既有 Phase4 fixture landmark cube **無 Collider**；終幀藍 cube 遮住軀幹屬構圖／遮擋，**唔**宣稱避障。HUD 標籤沿用既有 Phase4 fixture（刻意重用）。
+- **先前 FAIL（保留原因／清理）**：
+  - `explore-434ff8c7`：無 keepalive → idle pipe 斷 → capture WinError 233；已修 ≤0.5s status keepalive。
+  - `explore-917fd844`：閉環導航成功（相機相對對角曾空轉，父層 live 用單步 forward／basis／turn 校正），但 quit 先關 pipe 再 wait → timeout／kill exit1。第三次 run **實際測試**顯示「等 child exit 後先關 Link」可得到 exit0；呢個係 **觀察到嘅 host 修復**，**唔**概括成引擎／協議已證明。
+- **未宣稱**：全玩法、right-stick／buttons／triggers／遊戲事件、完整 Release／Editor executable、引擎層 quit 通則證明。單元測試字串修正後由父層重跑（`checks-phase6` 等先前 log 另存）。
+
+### Controller left-stick Runtime Acceptance Runner 工具（Phase 5 Slice B；已核實）
+
+- **固定 profile**：`lx=0, ly=1, updates=120` only；queued `requestId` 綁定；malformed status／remaining／`found` 拒絕；exhausted boundary 只豁免速度 envelope；位移上限沿 6±0.5 m/s×120/60；release ≥3 近穩定；CLI 先驗證再 spawn。
+- **用法**：`py -3 tools/runtime_bridge_controller_acceptance.py --exe <isolated_fixture>\IvyEngineRuntime.exe --out-dir <new_dir>`；或 checks.cmd 第二參數 exe。
 
 ### 2026-10-28 Mouse Runtime Acceptance Runner 工具（Phase 5 Slice A 自動化驗收）
 

@@ -210,6 +210,24 @@ class ClientChecks(unittest.TestCase):
             with self.subTest(bad_updates=bad_updates):
                 with self.assertRaises(ValueError): c.mouse(0, 0, [], bad_updates, 1)
 
+    def test_controller_client_validation(self):
+        c=Client.__new__(Client)
+        for bad_lx in (-1.01, 1.01, float("nan"), float("inf"), True, False, "0", None):
+            with self.subTest(bad_lx=bad_lx):
+                with self.assertRaises(ValueError): c.controller(bad_lx, 0.0, 5, 1)
+        for bad_ly in (-1.01, 1.01, float("nan"), float("-inf"), True, "1", None):
+            with self.subTest(bad_ly=bad_ly):
+                with self.assertRaises(ValueError): c.controller(0.0, bad_ly, 5, 1)
+        for bad_updates in (0, 121, True, 1.5, "5"):
+            with self.subTest(bad_updates=bad_updates):
+                with self.assertRaises(ValueError): c.controller(0.0, 1.0, bad_updates, 1)
+        for bad_rid in (0, True, 1.5, 2147483647):
+            with self.subTest(bad_rid=bad_rid):
+                with self.assertRaises(ValueError): c.controller(0.0, 1.0, 5, bad_rid)
+        for bad_timeout in (0, 10.1, float("nan"), float("inf"), -1, True, False, "7", None):
+            with self.subTest(bad_timeout=bad_timeout):
+                with self.assertRaises(ValueError): c.controller(0.0, 1.0, 5, 1, completion_timeout=bad_timeout)
+
     def test_real_mouse_completion(self):
         run=uuid.uuid4().hex
         env=dict(os.environ, IVY_RUNTIME_TEST_BRIDGE="1", IVY_RUNTIME_TEST_RUN_ID=run)
@@ -222,6 +240,40 @@ class ClientChecks(unittest.TestCase):
                 self.assertEqual(r["mouse"]["requestId"],1)
                 self.assertEqual(r["mouse"]["remainingUpdates"],0)
                 self.assertTrue(c.request("quit",r["requestId"]+1)["ok"])
+            self.assertEqual(p.wait(timeout=3),0)
+        finally:
+            if p.poll() is None: p.kill();p.wait(timeout=3)
+            p.stdout.close()
+
+    def test_real_controller_completion(self):
+        run=uuid.uuid4().hex
+        env=dict(os.environ, IVY_RUNTIME_TEST_BRIDGE="1", IVY_RUNTIME_TEST_RUN_ID=run)
+        p=subprocess.Popen([os.environ["IVY_BRIDGE_HARNESS"],"--serve"],env=env,stdout=subprocess.PIPE,text=True)
+        try:
+            with Client(p.pid,run,timeout=2) as c:
+                r=c.controller(0.0,1.0,5,1)
+                self.assertTrue(r["ok"])
+                self.assertEqual(r["controller"]["status"],"completed")
+                self.assertEqual(r["controller"]["requestId"],1)
+                self.assertEqual(r["controller"]["remainingUpdates"],0)
+                self.assertTrue(c.request("quit",r["requestId"]+1)["ok"])
+            self.assertEqual(p.wait(timeout=3),0)
+        finally:
+            if p.poll() is None: p.kill();p.wait(timeout=3)
+            p.stdout.close()
+
+    def test_real_controller_cli_completion(self):
+        run=uuid.uuid4().hex
+        env=dict(os.environ, IVY_RUNTIME_TEST_BRIDGE="1", IVY_RUNTIME_TEST_RUN_ID=run)
+        p=subprocess.Popen([os.environ["IVY_BRIDGE_HARNESS"],"--serve"],env=env,stdout=subprocess.PIPE,text=True)
+        try:
+            cli=subprocess.run([sys.executable,os.path.join(os.path.dirname(__file__),"runtime_test_client.py"),
+                "--pid",str(p.pid),"--run-id",run,"--request-id","1","controller","--lx","0","--ly","1","--updates","1"],
+                capture_output=True,text=True,timeout=10)
+            self.assertEqual(cli.returncode,0,cli.stderr)
+            r=json.loads(cli.stdout)
+            self.assertEqual(r["controller"]["status"],"completed")
+            with Client(p.pid,run) as c: self.assertTrue(c.request("quit",r["requestId"]+1)["ok"])
             self.assertEqual(p.wait(timeout=3),0)
         finally:
             if p.poll() is None: p.kill();p.wait(timeout=3)
