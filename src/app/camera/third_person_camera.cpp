@@ -14,6 +14,7 @@
 #include "engine/ecs/transform.h"
 #include "engine/core/easing.h"
 #include <cmath>
+#include <cstdio>
 #include <memory>
 
 using namespace DirectX;
@@ -86,7 +87,37 @@ float s_speedFovCurrent = kBaseFov;
 std::unique_ptr<GameObject> s_followCamNode;
 
 #if defined(_DEBUG) && defined(GAME_RUNTIME)
+static bool CrashTraceEnabled() {
+	char val[4]{};
+	return GetEnvironmentVariableA("IVY_RUNTIME_TEST_CRASH_TRACE", val, 4) > 0 && val[0] == '1';
+}
+
+struct CameraStaticDestructionMarker {
+	~CameraStaticDestructionMarker() {
+		if (CrashTraceEnabled()) {
+			fprintf(stderr, "[IVY_CRASH_TRACE] third_person_camera.cpp: static destruction reached\n");
+			fflush(stderr);
+		}
+	}
+};
+static CameraStaticDestructionMarker s_cameraStaticMarker;
+
 bool FixedCameraRequested() {
+	static const bool requested = [] {
+		char value[8]{};
+		const DWORD len = GetEnvironmentVariableA("IVY_RUNTIME_TEST_FIXED_CAMERA", value, 8);
+		const bool req = len == 1 && value[0] == '1';
+		if (CrashTraceEnabled()) {
+			fprintf(stderr, "[IVY_CRASH_TRACE] third_person_camera: FixedCameraRequested=%d\n", req ? 1 : 0);
+			fflush(stderr);
+		}
+		return req;
+	}();
+	return requested;
+}
+#endif
+#if 0
+bool FixedCameraRequested_Original() {
 	static const bool requested = [] {
 		char value[8]{};
 		const DWORD len = GetEnvironmentVariableA("IVY_RUNTIME_TEST_FIXED_CAMERA", value, 8);
@@ -161,6 +192,12 @@ void DesiredFaceAnglesToTarget(const XMFLOAT3& player, const XMFLOAT3& target,
 
 void EnsureFollowCamNode() {
 	if (!s_followCamNode) {
+#if defined(_DEBUG) && defined(GAME_RUNTIME)
+		if (CrashTraceEnabled()) {
+			fprintf(stderr, "[IVY_CRASH_TRACE] third_person_camera: creating PlayerFollowCam node\n");
+			fflush(stderr);
+		}
+#endif
 		s_followCamNode = std::make_unique<GameObject>("PlayerFollowCam");
 		s_followCamNode->AddComponent<engine::Transform>();
 		s_followCamNode->AddComponent<CameraComponent>();
@@ -260,6 +297,38 @@ void ThirdPersonCamera_Initialize() {
 	s_traumaShakeTime = 0.0f;
 	s_speedFactor01 = 0.0f;
 	s_speedFovCurrent = kBaseFov;
+}
+
+void ThirdPersonCamera_Shutdown() {
+#if defined(_DEBUG) && defined(GAME_RUNTIME)
+	if (CrashTraceEnabled()) {
+		fprintf(stderr, "[IVY_CRASH_TRACE] third_person_camera: ThirdPersonCamera_Shutdown called (s_followCamNode=%s)\n",
+			s_followCamNode ? "active" : "null");
+		fflush(stderr);
+	}
+#endif
+	s_targetPos = nullptr;
+	s_targetYaw = nullptr;
+	s_followCamNode.reset();
+	s_hasFollowPose = false;
+	s_hasSmoothedEye = false;
+	s_smoothedEye = { 0.0f, 0.0f, 0.0f };
+	s_orbitLocked = false;
+	s_orbitLockYaw = 0.0f;
+	s_orbitLockPitch = 15.0f;
+	s_preOrbitPitch = 15.0f;
+	s_trauma = 0.0f;
+	s_traumaShakeTime = 0.0f;
+	s_speedFactor01 = 0.0f;
+	s_speedFovCurrent = kBaseFov;
+	s_pitch = 15.0f;
+	s_currentDistance = kBaseDistance;
+	s_currentFov = kBaseFov;
+	s_pushBurstT = 1.0f;
+	s_hasMagnetTarget = false;
+	s_magnetTarget = { 0.0f, 0.0f, 0.0f };
+	s_magnetMode = ThirdPersonMagnetMode::Normal;
+	s_prevMagnetMode = ThirdPersonMagnetMode::Normal;
 }
 
 void ThirdPersonCamera_Update(double elapsed_time) {

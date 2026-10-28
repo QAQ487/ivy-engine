@@ -18,6 +18,7 @@ enum class ThirdPersonMagnetMode {
 };
 
 void ThirdPersonCamera_Initialize();
+void ThirdPersonCamera_Shutdown();
 void ThirdPersonCamera_Update(double elapsed_time);
 
 // Set the camera target via live pointers to the player's position and yaw

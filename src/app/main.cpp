@@ -4,6 +4,114 @@
 #if defined(IVY_RUNTIME_TEST_BRIDGE_AVAILABLE)
 static ivy::testing::Bridge* g_pRuntimeTestBridge = nullptr;
 #endif
+
+#if defined(_DEBUG) && defined(GAME_RUNTIME)
+#include <windows.h>
+#include <dbghelp.h>
+#include <stdio.h>
+#pragma comment(lib, "dbghelp.lib")
+
+namespace {
+static bool CrashTraceEnabled() {
+    char val[4]{};
+    return GetEnvironmentVariableA("IVY_RUNTIME_TEST_CRASH_TRACE", val, 4) > 0 && val[0] == '1';
+}
+
+static LONG WINAPI CrashTraceUnhandledExceptionFilter(EXCEPTION_POINTERS* pEx) {
+    static volatile LONG s_inHandler = 0;
+    if (InterlockedCompareExchange(&s_inHandler, 1, 0) != 0) {
+        return EXCEPTION_CONTINUE_SEARCH;
+    }
+    if (!CrashTraceEnabled()) {
+        return EXCEPTION_CONTINUE_SEARCH;
+    }
+
+    HANDLE hProcess = GetCurrentProcess();
+    HMODULE hModule = GetModuleHandleA(nullptr);
+    uintptr_t base = reinterpret_cast<uintptr_t>(hModule);
+
+    DWORD code = pEx && pEx->ExceptionRecord ? pEx->ExceptionRecord->ExceptionCode : 0;
+    void* addr = pEx && pEx->ExceptionRecord ? pEx->ExceptionRecord->ExceptionAddress : nullptr;
+    uintptr_t addrVal = reinterpret_cast<uintptr_t>(addr);
+    uintptr_t rva = (addrVal >= base) ? (addrVal - base) : 0;
+
+    fprintf(stderr, "\n=== [IVY_CRASH_TRACE] UNHANDLED EXCEPTION ===\n");
+    fprintf(stderr, "ExceptionCode: 0x%08X\n", code);
+    fprintf(stderr, "ExceptionAddress: 0x%p (ModuleBase: 0x%p, RVA: 0x%llX)\n", addr, reinterpret_cast<void*>(base), static_cast<unsigned long long>(rva));
+
+    char searchPath[MAX_PATH * 2] = { 0 };
+    char exePath[MAX_PATH] = { 0 };
+    if (GetModuleFileNameA(nullptr, exePath, MAX_PATH)) {
+        char* lastSlash = strrchr(exePath, '\\');
+        if (lastSlash) *lastSlash = '\0';
+        strcpy_s(searchPath, exePath);
+    }
+    char symPath[MAX_PATH] = { 0 };
+    if (GetEnvironmentVariableA("IVY_RUNTIME_TEST_SYMBOL_PATH", symPath, MAX_PATH) > 0) {
+        if (searchPath[0]) strcat_s(searchPath, ";");
+        strcat_s(searchPath, symPath);
+    }
+    SymInitialize(hProcess, searchPath[0] ? searchPath : nullptr, TRUE);
+
+    void* frames[32] = { nullptr };
+    USHORT captured = RtlCaptureStackBackTrace(0, 32, frames, nullptr);
+    fprintf(stderr, "Call stack (%u frames):\n", captured);
+
+    char buffer[sizeof(SYMBOL_INFO) + MAX_SYM_NAME * sizeof(TCHAR)] = { 0 };
+    PSYMBOL_INFO pSymbol = reinterpret_cast<PSYMBOL_INFO>(buffer);
+    pSymbol->SizeOfStruct = sizeof(SYMBOL_INFO);
+    pSymbol->MaxNameLen = MAX_SYM_NAME;
+
+    for (USHORT i = 0; i < captured; ++i) {
+        uintptr_t frameAddr = reinterpret_cast<uintptr_t>(frames[i]);
+        uintptr_t frameRva = (frameAddr >= base) ? (frameAddr - base) : 0;
+
+        DWORD64 displacement = 0;
+        BOOL hasSym = SymFromAddr(hProcess, frameAddr, &displacement, pSymbol);
+
+        IMAGEHLP_LINE64 line = { 0 };
+        line.SizeOfStruct = sizeof(IMAGEHLP_LINE64);
+        DWORD lineDisplacement = 0;
+        BOOL hasLine = SymGetLineFromAddr64(hProcess, frameAddr, &lineDisplacement, &line);
+
+        if (hasSym && hasLine) {
+            fprintf(stderr, "  [%02u] 0x%p (RVA: 0x%llX) %s+0x%llX [%s:%u]\n",
+                i, reinterpret_cast<void*>(frameAddr), static_cast<unsigned long long>(frameRva),
+                pSymbol->Name, static_cast<unsigned long long>(displacement),
+                line.FileName, line.LineNumber);
+        } else if (hasSym) {
+            fprintf(stderr, "  [%02u] 0x%p (RVA: 0x%llX) %s+0x%llX\n",
+                i, reinterpret_cast<void*>(frameAddr), static_cast<unsigned long long>(frameRva),
+                pSymbol->Name, static_cast<unsigned long long>(displacement));
+        } else {
+            fprintf(stderr, "  [%02u] 0x%p (RVA: 0x%llX) <unknown>\n",
+                i, reinterpret_cast<void*>(frameAddr), static_cast<unsigned long long>(frameRva));
+        }
+    }
+    fprintf(stderr, "=== [IVY_CRASH_TRACE] END TRACE ===\n\n");
+    fflush(stderr);
+
+    SymCleanup(hProcess);
+    return EXCEPTION_CONTINUE_SEARCH;
+}
+
+struct MainStaticDestructionMarker {
+    MainStaticDestructionMarker() {
+        if (CrashTraceEnabled()) {
+            fprintf(stderr, "[IVY_CRASH_TRACE] main.cpp: static constructor reached\n");
+            fflush(stderr);
+        }
+    }
+    ~MainStaticDestructionMarker() {
+        if (CrashTraceEnabled()) {
+            fprintf(stderr, "[IVY_CRASH_TRACE] main.cpp: static destruction reached\n");
+            fflush(stderr);
+        }
+    }
+};
+static MainStaticDestructionMarker s_mainStaticMarker;
+} // namespace
+#endif
 #if defined(_DEBUG) && !defined(GAME_RUNTIME)
 #include "tools/play_scene_switch_check.h"
 #endif
@@ -47,6 +155,7 @@ static ivy::testing::Bridge* g_pRuntimeTestBridge = nullptr;
 #include "engine/input/mouse.h"
 #include "engine/input/controller.h"
 #include "debug_camera.h"
+#include "camera/third_person_camera.h"
 #include "engine/debug_draw/debug_text.h"
 #include "engine/debug_draw/debug_ofstream.h"
 #include "engine/core/engine_gui.h"
@@ -260,6 +369,13 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstanc
 #if defined(IVY_RUNTIME_TEST_BRIDGE_AVAILABLE)
     ivy::testing::Bridge runtimeTestBridge;
     bool Renderer_CaptureBackBufferPNG(const wchar_t* filePath, uint32_t* outW, uint32_t* outH);
+#if defined(_DEBUG) && defined(GAME_RUNTIME)
+    if (CrashTraceEnabled()) {
+        SetUnhandledExceptionFilter(CrashTraceUnhandledExceptionFilter);
+        fprintf(stderr, "[IVY_CRASH_TRACE] SetUnhandledExceptionFilter installed\n");
+        fflush(stderr);
+    }
+#endif
     const bool runtimeTestEnabled = runtimeTestBridge.StartFromEnvironment();
     if (runtimeTestEnabled) {
         runtimeTestBridge.SetCaptureHandler(&Renderer_CaptureBackBufferPNG);
@@ -395,11 +511,32 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstanc
 		}
 	} // while
 
+	ThirdPersonCamera_Shutdown();
+
 #if defined(IVY_RUNTIME_TEST_BRIDGE_AVAILABLE)
+#if defined(_DEBUG) && defined(GAME_RUNTIME)
+    if (CrashTraceEnabled()) {
+        fprintf(stderr, "[IVY_CRASH_TRACE] before runtimeTestBridge.Stop()\n");
+        fflush(stderr);
+    }
+#endif
     g_pRuntimeTestBridge = nullptr;
     runtimeTestBridge.Stop();
+#if defined(_DEBUG) && defined(GAME_RUNTIME)
+    if (CrashTraceEnabled()) {
+        fprintf(stderr, "[IVY_CRASH_TRACE] after runtimeTestBridge.Stop()\n");
+        fprintf(stderr, "[IVY_CRASH_TRACE] before Finalize()\n");
+        fflush(stderr);
+    }
+#endif
 #endif
 	Finalize();
+#if defined(_DEBUG) && defined(GAME_RUNTIME)
+    if (CrashTraceEnabled()) {
+        fprintf(stderr, "[IVY_CRASH_TRACE] after Finalize()\n");
+        fflush(stderr);
+    }
+#endif
 
 	return (int)msg.wParam;
 }

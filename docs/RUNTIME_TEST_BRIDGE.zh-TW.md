@@ -232,3 +232,20 @@ Harness `--serve` 最多 15 秒，自行正常退出；Python subprocess tests �
   - 未解釋觀察：轉身後嘅影格，地平線望落有輕微傾斜。鏡頭路徑只有 yaw／pitch，冇 roll 項，所以未能解釋；只作記錄，未宣稱係 bug 或已驗證。
 - `quit` 後 exit code 依然 `3221225477`（0xC0000005）→ 維持 `KNOWN_FAILURE`，Terry 明確延後，未改 shutdown。
 - 未涵蓋：controller stick 注入、遊戲事件、mouse 點擊 UI、固定 Updates 以外嘅 mouse 組合、完整 Release／Editor 執行檔、鎖屏／登出情境。
+
+
+### 2026-10-28 退出 crash（0xC0000005）根因與修復（取代上面各段嘅 KNOWN_FAILURE 講法）
+
+- **差分證據**（同一個 exe、同一個 bridge）：player fixture（載入 `SamplePlayerScript` → 第三人稱鏡頭）用 bridge `quit` → `3221225477`；**同一個 exe** 但 script-free fixture → `0`；player fixture 但**唔用 bridge**、直接 WM_CLOSE 關窗 → `3221225477`。即係同 bridge／quit flag 無關，係任何退出路徑都會發生、同 sample script＋第三人稱鏡頭有關嘅 teardown 問題。
+- **取證限制**：WER 對「退出階段」嘅 AV 唔寫 dump（曾短暫開 per-app LocalDumps 亦無 dump，已移除並核實 `still_present=False`）；磁碟上唯一 `IvyEngineRuntime` dump 屬舊 phase0 D3D 測試建置，唔可作證。
+- 加咗 opt-in 診斷 `IVY_RUNTIME_TEST_CRASH_TRACE=1`（`_DEBUG && GAME_RUNTIME`）：unhandled-exception filter（印 exception code／address／RVA＋dbghelp 符號化 stack，之後照樣 re-raise，唔改變 exit code）＋ teardown markers。
+- **第一次帶 trace 嘅 run**：`runtimeTestBridge.Stop()` 前後、`Finalize()` 前後都完成，`third_person_camera.cpp: static destruction reached` 之後就 `0xC0000005`，而 `main.cpp: static destruction reached` **從未出現**，exception filter 亦冇輸出 → 死喺晚期靜態解構。
+- **根因**：`src/app/camera/third_person_camera.cpp` 嘅 file-scope static `std::unique_ptr<GameObject> s_followCamNode`（Transform＋CameraComponent＋AudioListenerComponent）只靠 CRT 靜態解構釋放，即係喺 `AudioManager::Instance().Finalize()` 之後 —— 典型靜態解構次序 bug。只有用到第三人稱鏡頭嘅場景先會建立呢個 node，所以 script-free fixture 唔會爆。
+- **修復**：新增 `ThirdPersonCamera_Shutdown()`（清 target 指標、`s_followCamNode.reset()`、重設相機靜態狀態），並喺 `src/app/main.cpp` 訊息迴圈結束後、`Finalize()` **之前**呼叫，令 node 喺音效／場景／渲染子系統仍然生存時被銷毀。原有 camera 運行邏輯、bridge 退出次序同 `Finalize()` 內容冇改。
+- **修復後驗證**（fresh Debug x64 exe SHA256 `0708f5de43ab760f07e522a8875193e7677b6493bc451a5560a407bc6f1098b1`，全部 exit 0）：
+  - player fixture + bridge `quit` → **0**；player fixture + WM_CLOSE → **0**；script-free + `quit` → **0**。
+  - Phase 4 acceptance runner → **`PASS`**（唔再係 `PASS_WITH_KNOWN_SHUTDOWN_FAILURE`）：水平 `11.612895011901855`、`maxLineDeviation` 0.0、PNG SHA256 `0d7cfc03779c7d8364cc14dd39263270ff68e4b16b928cdfd3f35b7f03cae24e`（同修復前一致，畫面無回歸）。
+  - Mouse runtime check → **PASS**（8 項全 true），exit 0。
+  - teardown trace 修復後完整行到 `main.cpp: static destruction reached`。
+- 因此本文件早前各段寫嘅「quit 之後 `0xC0000005`／KNOWN_FAILURE／Terry 暫時延後」已被今次修復取代；相關未修狀態唔再成立。
+- 診斷 code 保留但預設關閉，只喺設定 `IVY_RUNTIME_TEST_CRASH_TRACE=1` 時輸出。
