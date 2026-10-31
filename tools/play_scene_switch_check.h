@@ -54,7 +54,7 @@ inline void PlaySceneSwitchCheck_Tick() {
     }
     if(phase==3&&scene=="scene_topdown_2d.json") {
         if(!PlaySceneSwitchCheck_HeldDraws) {fail("no pending-load draw observed");return;}
-        std::printf("PLAY_SCENE_SWITCH_CHECK PASS: %s Canvas request + cached default API return; mode/gui/viewport preserved\n",option);
+        std::printf("PLAY_SCENE_SWITCH_CHECK PASS: %s Canvas request + cached default API return; mode/gui/viewport preserved\n",option->c_str());
         std::fflush(stdout);phase=-1;EngineGUI_StopPlay();PostQuitMessage(0);
     }
 }
