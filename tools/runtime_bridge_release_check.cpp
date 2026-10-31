@@ -24,17 +24,16 @@ template<class T>
 concept HasRuntimeTestEventsRecord = requires(T p) {
     RuntimeTestEvents_RecordCheckpoint(p, p, 1);
 };
+// Dependent on T so missing ControllerProbeApiDetect yields false under MSVC
+// (C3861) instead of a hard error from a non-dependent unqualified call.
+template<class T>
+concept HasControllerProbeApi = requires(T tag) {
+    ControllerProbeApiDetect(tag);
+};
 }
 static_assert(!ivy::testing::HasRuntimeTestEventsRecord<const char*>,
     "event recorder API must be compile-out absent");
-namespace ivy::testing {
-template<class T>
-concept HasControllerProbeSample = requires {
-    RuntimeTestControllerProbe_SampleFromGetters();
-    RuntimeTestControllerProbe_CopySnapshot();
-};
-}
-static_assert(!ivy::testing::HasControllerProbeSample<int>,
+static_assert(!ivy::testing::HasControllerProbeApi<ivy::testing::ControllerProbeApiTag>,
     "controller consumer probe API must be compile-out absent");
 int main() {
     Keyboard_Initialize();

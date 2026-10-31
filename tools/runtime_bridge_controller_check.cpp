@@ -7,6 +7,15 @@
 
 using namespace ivy::testing;
 
+namespace ivy::testing {
+template<class T>
+concept HasControllerProbeApi = requires(T tag) {
+    ControllerProbeApiDetect(tag);
+};
+}
+static_assert(HasControllerProbeApi<ControllerProbeApiTag>,
+    "positive control: probe API detector must be true in Debug GAME_RUNTIME");
+
 static void check(bool b, const char* label) {
     if (!b) {
         std::cerr << "FAIL " << label << std::endl;
@@ -14,7 +23,15 @@ static void check(bool b, const char* label) {
     }
 }
 
-static void checkOk(const ProbeValidation& v, const char* label) {
+static int g_consumerAssertions = 0;
+
+static void consumerCheck(bool b, const char* label) {
+    ++g_consumerAssertions;
+    check(b, label);
+}
+
+static void consumerCheckOk(const ProbeValidation& v, const char* label) {
+    ++g_consumerAssertions;
     if (!v.pass) {
         std::cerr << "FAIL " << label << ": " << v.error << std::endl;
         std::exit(1);
@@ -56,8 +73,8 @@ static const char* ButtonName(std::uint16_t bit) {
 
 struct Peer {
     HANDLE h = INVALID_HANDLE_VALUE;
-    int id = 0;
-    explicit Peer(const Bridge& b) {
+    int& requestSequence;
+    explicit Peer(const Bridge& b, int& sequence) : requestSequence(sequence) {
         const auto deadline = GetTickCount64() + 2000;
         do {
             h = CreateFileA(b.PipeName().c_str(), GENERIC_READ | GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, 0, nullptr);
@@ -75,7 +92,7 @@ struct Peer {
     }
     Json request(const char* verb, Json payload = Json::object()) {
         payload["protocolVersion"] = 1;
-        payload["requestId"] = ++id;
+        payload["requestId"] = ++requestSequence;
         payload["runId"] = "controller-check";
         payload["verb"] = verb;
         const auto frame = payload.dump() + "\n";
@@ -100,7 +117,8 @@ int main() {
     check(b.StartFromEnvironment(), "controller bridge starts");
     b.PublishAndTakeQuit(true, true, "fixture");
 
-    Peer p(b);
+    int requestSequence = 0;
+    Peer p(b, requestSequence);
 
     // Verify hello capabilities includes controller
     const auto hello = p.request("hello");
@@ -348,30 +366,34 @@ int main() {
     }
 
     // --- Consumer probe: getters after Controller_Update ---
+    // Request IDs stay monotonic across peer reconnects for this whole Bridge run.
     {
-        Peer probePeer(b);
-        check(RuntimeTestControllerProbe_IsEnabled(), "controller probe enabled with bridge");
+        const int sequenceBeforeConsumer = requestSequence;
+        Peer probePeer(b, requestSequence);
+        consumerCheck(RuntimeTestControllerProbe_IsEnabled(), "controller probe enabled with bridge");
 
         const auto helloProbe = probePeer.request("hello");
+        consumerCheck(helloProbe.value("requestId", 0) == sequenceBeforeConsumer + 1,
+            "consumer peer continues run-wide request sequence");
         bool hasProbe = false;
         if (helloProbe.contains("capabilities") && helloProbe["capabilities"].is_array()) {
             for (const auto& cap : helloProbe["capabilities"]) {
                 if (cap == "controller_probe") hasProbe = true;
             }
         }
-        check(hasProbe, "hello capabilities includes controller_probe");
+        consumerCheck(hasProbe, "hello capabilities includes controller_probe");
 
         RuntimeTestControllerProbe_Reset();
         for (float value : {0.0f, 0.25f, 0.5f, 1.0f}) {
             const auto lt = probePeer.request("controller", {{"lx", 0.0}, {"ly", 0.0}, {"lt", value}, {"updates", 2}});
-            check(lt.value("ok", false), "queue LT consumer op");
+            consumerCheck(lt.value("ok", false), "queue LT consumer op");
             for (int i = 0; i < 4; ++i) StepConsumer(b);
-            checkOk(ValidateTriggerHoldTrace(TakeRecent(4), true, value, 2), "LT consumer trace");
+            consumerCheckOk(ValidateTriggerHoldTrace(TakeRecent(4), true, value, 2), "LT consumer trace");
 
             const auto rt = probePeer.request("controller", {{"lx", 0.0}, {"ly", 0.0}, {"rt", value}, {"updates", 2}});
-            check(rt.value("ok", false), "queue RT consumer op");
+            consumerCheck(rt.value("ok", false), "queue RT consumer op");
             for (int i = 0; i < 4; ++i) StepConsumer(b);
-            checkOk(ValidateTriggerHoldTrace(TakeRecent(4), false, value, 2), "RT consumer trace");
+            consumerCheckOk(ValidateTriggerHoldTrace(TakeRecent(4), false, value, 2), "RT consumer trace");
         }
 
         std::size_t buttonCount = 0;
@@ -381,9 +403,9 @@ int main() {
             const auto resp = probePeer.request("controller", {
                 {"lx", 0.0}, {"ly", 0.0}, {"updates", 2}, {"buttons", Json::array({name})}
             });
-            check(resp.value("ok", false), "queue button consumer op");
+            consumerCheck(resp.value("ok", false), "queue button consumer op");
             for (int step = 0; step < 4; ++step) StepConsumer(b);
-            checkOk(ValidateButtonHoldTrace(TakeRecent(4), bits[i], 2), "button consumer trace");
+            consumerCheckOk(ValidateButtonHoldTrace(TakeRecent(4), bits[i], 2), "button consumer trace");
         }
 
         {
@@ -391,19 +413,19 @@ int main() {
                 {"lx", 0.0}, {"ly", 0.0}, {"lt", 0.25}, {"rt", 1.0},
                 {"buttons", Json::array({"A", "LB", "DPAD_UP"})}, {"updates", 2}
             });
-            check(combined.value("ok", false), "queue combined consumer op");
+            consumerCheck(combined.value("ok", false), "queue combined consumer op");
             for (int i = 0; i < 4; ++i) StepConsumer(b);
             const std::uint16_t mask = kInjectButtonA | kInjectButtonLB | kInjectButtonDpadUp;
-            checkOk(ValidateCombinedTrace(TakeRecent(4), 0.25f, 1.0f, mask, 2), "combined consumer trace");
+            consumerCheckOk(ValidateCombinedTrace(TakeRecent(4), 0.25f, 1.0f, mask, 2), "combined consumer trace");
         }
 
         {
             const auto right = probePeer.request("controller", {
                 {"lx", 0.0}, {"ly", 0.0}, {"rx", 0.5}, {"ry", -1.0}, {"updates", 2}
             });
-            check(right.value("ok", false), "queue right-stick consumer op");
+            consumerCheck(right.value("ok", false), "queue right-stick consumer op");
             for (int i = 0; i < 4; ++i) StepConsumer(b);
-            checkOk(ValidateRightStickKeepsLeftNeutral(TakeRecent(4), 0.5f, -1.0f, 2),
+            consumerCheckOk(ValidateRightStickKeepsLeftNeutral(TakeRecent(4), 0.5f, -1.0f, 2),
                 "right-stick consumer keeps left stick neutral");
         }
 
@@ -413,7 +435,7 @@ int main() {
                 {"lx", 0.0}, {"ly", 0.0}, {"lt", 1.0}, {"rt", 1.0},
                 {"buttons", Json::array({"B", "START"})}, {"updates", 60}
             });
-            check(longOp.value("ok", false), "queue long op for disconnect cancel");
+            consumerCheck(longOp.value("ok", false), "queue long op for disconnect cancel");
             StepConsumer(b); // prep
             StepConsumer(b); // first hold with press edge
             probePeer.close();
@@ -427,32 +449,41 @@ int main() {
                 }
                 Sleep(1);
             }
-            check(settled, "disconnect cancel settled via consumer steps");
+            consumerCheck(settled, "disconnect cancel settled via consumer steps");
             // Extra neutral frames after release Update.
             for (int i = 0; i < 3; ++i) StepConsumer(b);
             const auto snap = RuntimeTestControllerProbe_CopySnapshot();
-            check(!snap.overflow, "cancel probe did not overflow");
-            checkOk(ValidateEventualNeutralSuffix(snap.frames, 3),
+            consumerCheck(!snap.overflow, "cancel probe did not overflow");
+            consumerCheckOk(ValidateEventualNeutralSuffix(snap.frames, 3),
                 "cancel/disconnect consumer ends neutral with no stuck buttons/triggers");
         }
 
         // Read-only controller_probe verb returns the live getter snapshot.
-        Peer probeReader(b);
+        const int sequenceBeforeReader = requestSequence;
+        Peer probeReader(b, requestSequence);
         RuntimeTestControllerProbe_Reset();
         const auto verbOp = probeReader.request("controller", {
             {"lx", 0.0}, {"ly", 0.0}, {"lt", 0.5}, {"updates", 1}
         });
-        check(verbOp.value("ok", false), "queue op before controller_probe verb");
+        consumerCheck(verbOp.value("ok", false), "queue op before controller_probe verb");
+        consumerCheck(verbOp.value("requestId", 0) == sequenceBeforeReader + 1,
+            "reconnect peer continues run-wide request sequence");
         for (int i = 0; i < 3; ++i) StepConsumer(b);
         const auto probeReply = probeReader.request("controller_probe");
-        check(probeReply.value("ok", false), "controller_probe verb ok");
-        check(probeReply.contains("frames") && probeReply["frames"].is_array(), "controller_probe frames array");
-        check(probeReply.value("overflow", true) == false, "controller_probe overflow false");
-        check(probeReply["frames"].size() >= 3, "controller_probe has sampled frames");
-        check(probeReply["frames"].back().value("lt", -1.0) == 0.0, "controller_probe final frame lt neutral");
+        consumerCheck(probeReply.value("ok", false), "controller_probe verb ok");
+        consumerCheck(probeReply.contains("frames") && probeReply["frames"].is_array(), "controller_probe frames array");
+        consumerCheck(probeReply.value("overflow", true) == false, "controller_probe overflow false");
+        consumerCheck(probeReply["frames"].size() >= 3, "controller_probe has sampled frames");
+        consumerCheck(probeReply["frames"].back().value("lt", -1.0) == 0.0, "controller_probe final frame lt neutral");
         const auto badProbe = probeReader.request("controller_probe", {{"extra", 1}});
-        check(badProbe.value("ok", true) == false, "controller_probe rejects extra fields");
+        consumerCheck(badProbe.value("ok", true) == false, "controller_probe rejects extra fields");
     }
+
+    // 3 setup + 16 trigger + 28 button + 2 combined + 2 right-stick + 4 cancel + 8 verb = 63
+    constexpr int kExpectedConsumerAssertions = 63;
+    check(g_consumerAssertions == kExpectedConsumerAssertions,
+        "consumer assertions executed exactly once each");
+    std::cout << "consumer assertions executed: " << g_consumerAssertions << "\n";
 
     b.Stop();
     check(!RuntimeTestControllerProbe_IsEnabled(), "controller probe disabled on bridge stop");

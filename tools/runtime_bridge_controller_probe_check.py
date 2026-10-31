@@ -1,9 +1,16 @@
 #!/usr/bin/env python3
 """Unit tests for controller consumer-probe validators (no Windows runtime)."""
+import json
 import unittest
 
 from runtime_bridge_controller_probe import (
     BUTTONS,
+    PROBE_CAPACITY,
+    RESPONSE_BYTE_LIMIT,
+    accumulate_pipe_response,
+    find_trigger_window,
+    frames_after_sequence,
+    max_controller_probe_response_bytes,
     validate_button_hold_frames,
     validate_combined_frames,
     validate_eventual_neutral_suffix,
@@ -134,6 +141,66 @@ class ControllerProbeCheck(unittest.TestCase):
         reply["dropped"] = 1
         ok, err = validate_probe_reply(reply)
         self.assertTrue(ok, err)
+
+    def test_response_limit_covers_full_capacity_trace(self):
+        worst = max_controller_probe_response_bytes()
+        self.assertGreater(worst, 8192)
+        self.assertGreaterEqual(RESPONSE_BYTE_LIMIT, worst)
+        self.assertEqual(PROBE_CAPACITY, 256)
+        # Exact worst-case envelope length must be accepted by the accumulator.
+        buttons = list(BUTTONS)
+        frame = {
+            "sequence": 9223372036854775807,
+            "lx": -0.10000000149011612, "ly": -0.10000000149011612,
+            "rx": -0.10000000149011612, "ry": -0.10000000149011612,
+            "lt": 0.10000000149011612, "rt": 0.10000000149011612,
+            "pressed": buttons, "pressedEdge": buttons, "releasedEdge": buttons,
+            "connected": True,
+        }
+        envelope = {
+            "protocolVersion": 1,
+            "requestId": 2147483647,
+            "runId": "a" * 64,
+            "ok": True,
+            "frames": [frame] * PROBE_CAPACITY,
+            "latestSequence": 9223372036854775807,
+            "dropped": 4294967295,
+            "overflow": True,
+        }
+        raw = json.dumps(envelope, separators=(",", ":")).encode("utf-8")
+        self.assertEqual(len(raw), worst)
+        mid = len(raw) // 3
+        parsed = accumulate_pipe_response(
+            [raw[:mid], raw[mid: mid * 2], raw[mid * 2 :], b"\n"],
+            max_bytes=RESPONSE_BYTE_LIMIT,
+        )
+        self.assertEqual(len(parsed["frames"]), PROBE_CAPACITY)
+        self.assertTrue(parsed["overflow"])
+
+    def test_response_limit_rejects_truly_oversize(self):
+        over = b"z" * (RESPONSE_BYTE_LIMIT + 1)
+        with self.assertRaises(ValueError) as ctx:
+            accumulate_pipe_response([over, b"\n"])
+        self.assertIn("oversize", str(ctx.exception))
+        # Oversize before newline is also rejected.
+        with self.assertRaises(ValueError):
+            accumulate_pipe_response([b"z" * (RESPONSE_BYTE_LIMIT + 1)])
+
+    def test_sequence_window_finds_op_not_trailing_idle(self):
+        # Idle prefix/suffix must not break assertions the way frames[-4:] did.
+        frames = [
+            _frame(sequence=10),
+            _frame(sequence=11),
+            _frame(lt=1.0, sequence=12),
+            _frame(lt=1.0, sequence=13),
+            _frame(sequence=14),
+            _frame(sequence=15),
+        ]
+        window = frames_after_sequence(frames, 10)
+        self.assertEqual([f["sequence"] for f in window], [11, 12, 13, 14, 15])
+        found, err = find_trigger_window(window, True, 1.0, 2)
+        self.assertIsNone(err)
+        self.assertEqual([f["sequence"] for f in found], [11, 12, 13, 14])
 
 
 if __name__ == "__main__":

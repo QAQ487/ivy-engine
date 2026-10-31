@@ -1,4 +1,11 @@
 #pragma once
+
+namespace ivy::testing {
+// Always-visible tag for Debug-runtime API detection (ADL). Declared even when
+// the bridge is compiled out so Release/Editor checks can prove absence.
+struct ControllerProbeApiTag {};
+}
+
 #if defined(_DEBUG) && defined(GAME_RUNTIME)
 #define IVY_RUNTIME_TEST_BRIDGE_AVAILABLE 1
 #include "libraries/nlohmann/json.hpp"
@@ -27,6 +34,8 @@ void RuntimeTestControllerProbe_Reset();
 bool RuntimeTestControllerProbe_IsEnabled();
 void RuntimeTestControllerProbe_SampleFromGetters();
 ControllerProbeSnapshot RuntimeTestControllerProbe_CopySnapshot();
+// ADL detection hook: present only when the probe API is compiled in.
+void ControllerProbeApiDetect(ControllerProbeApiTag) noexcept;
 
 // Debug-only main-thread event recorder (opt-in with bridge Start).
 constexpr std::size_t kRuntimeTestEventCapacity = 64;

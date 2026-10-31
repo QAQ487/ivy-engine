@@ -52,6 +52,8 @@ py -3 tools\runtime_bridge_controller_axes_check.py -v
 if errorlevel 1 exit /b 1
 py -3 tools\runtime_bridge_controller_probe_check.py -v
 if errorlevel 1 exit /b 1
+py -3 tools\runtime_bridge_controller_probe_acceptance_check.py -v
+if errorlevel 1 exit /b 1
 py -3 tools\runtime_bridge_explore_check.py -v
 if errorlevel 1 exit /b 1
 py -3 tools\runtime_bridge_phase4_check.py -v
@@ -68,6 +70,8 @@ if not "%~2"=="" (
     py -3 tools\runtime_bridge_mouse_acceptance.py --exe "%~2" --out-dir "%~1\mouse-runtime"
     if errorlevel 1 exit /b 1
     py -3 tools\runtime_bridge_controller_acceptance.py --exe "%~2" --out-dir "%~1\controller-runtime"
+    if errorlevel 1 exit /b 1
+    py -3 tools\runtime_bridge_controller_probe_acceptance.py --exe "%~2" --out-dir "%~1\controller-probe-runtime"
     if errorlevel 1 exit /b 1
 )
 exit /b 0

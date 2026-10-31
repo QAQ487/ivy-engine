@@ -134,6 +134,12 @@ RuntimeTestEventsSnapshot RuntimeTestEvents_CopySnapshot() {
     return snap;
 }
 
+void ControllerProbeApiDetect(ControllerProbeApiTag) noexcept {
+    // Presence-only hook for compile-time detection; touch the API so the
+    // positive control cannot pass against a stub that omits the real probes.
+    (void)RuntimeTestControllerProbe_IsEnabled();
+}
+
 void RuntimeTestControllerProbe_SetEnabled(bool enabled) {
     std::lock_guard lock(g_controllerProbe.mutex);
     g_controllerProbe.enabled = enabled;

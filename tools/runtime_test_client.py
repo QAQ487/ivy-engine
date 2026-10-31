@@ -142,13 +142,15 @@ class Client:
     def send_raw(self,data,deadline=None):
         return self._io(data=data,deadline=deadline)
     def read_response(self,deadline=None):
+        # Bound must accept a full 256-frame controller_probe reply and still
+        # reject anything larger. Size is derived in runtime_bridge_controller_probe.
+        from runtime_bridge_controller_probe import RESPONSE_BYTE_LIMIT, accumulate_pipe_response
         deadline=deadline if deadline is not None else time.monotonic()+self.timeout
-        data=bytearray()
-        while len(data)<=8192:
-            b=self._io(deadline=deadline)
-            if b==b"\n": return json.loads(data)
-            data+=b
-        raise ValueError("oversize response")
+        def chunks():
+            while True:
+                # Chunked reads keep large probe replies inside the bridge WriteFile timeout.
+                yield self._io(size=4096,deadline=deadline)
+        return accumulate_pipe_response(chunks(), max_bytes=RESPONSE_BYTE_LIMIT)
     def request(self,verb,request_id,payload=None,*,deadline=None):
         deadline=min(deadline if deadline is not None else math.inf,time.monotonic()+self.timeout)
         q=dict(payload or {})
