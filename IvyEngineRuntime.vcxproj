@@ -353,6 +353,7 @@ xcopy /y /d /e "$(ProjectDir)rom\*" "$(OutDir)rom\"</Command>
     <ClInclude Include="engine\core\frame_transform_snapshot.h" />
     <ClInclude Include="engine\core\system_timer.h" />
     <ClInclude Include="engine\input\controller.h" />
+    <ClInclude Include="engine\input\controller_test_inject.h" />
     <ClInclude Include="engine\input\keyboard.h" />
     <ClInclude Include="engine\input\key_logger.h" />
     <ClInclude Include="engine\input\mouse.h" />
@@ -562,6 +563,8 @@ xcopy /y /d /e "$(ProjectDir)rom\*" "$(OutDir)rom\"</Command>
   <ItemGroup><ClCompile Include="engine\core\frame_capture.cpp" /></ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\testing\runtime_test_bridge.h" />
+    <ClInclude Include="engine\testing\controller_inject_protocol.h" />
+    <ClInclude Include="engine\testing\controller_probe_trace.h" />
     <ClCompile Include="engine\testing\runtime_test_bridge.cpp" />
   </ItemGroup>
   <ItemGroup>

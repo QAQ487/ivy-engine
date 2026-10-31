@@ -12,6 +12,24 @@
 ============================================================================**/
 #include "controller.h"
 
+#if defined(_DEBUG) && defined(GAME_RUNTIME)
+#include "controller_test_inject.h"
+static_assert(static_cast<unsigned short>(ControllerButton::DPadUp) == ivy::testing::kInjectButtonDpadUp, "dpad up");
+static_assert(static_cast<unsigned short>(ControllerButton::DPadDown) == ivy::testing::kInjectButtonDpadDown, "dpad down");
+static_assert(static_cast<unsigned short>(ControllerButton::DPadLeft) == ivy::testing::kInjectButtonDpadLeft, "dpad left");
+static_assert(static_cast<unsigned short>(ControllerButton::DPadRight) == ivy::testing::kInjectButtonDpadRight, "dpad right");
+static_assert(static_cast<unsigned short>(ControllerButton::Start) == ivy::testing::kInjectButtonStart, "start");
+static_assert(static_cast<unsigned short>(ControllerButton::Back) == ivy::testing::kInjectButtonBack, "back");
+static_assert(static_cast<unsigned short>(ControllerButton::LeftThumb) == ivy::testing::kInjectButtonLeftThumb, "left thumb");
+static_assert(static_cast<unsigned short>(ControllerButton::RightThumb) == ivy::testing::kInjectButtonRightThumb, "right thumb");
+static_assert(static_cast<unsigned short>(ControllerButton::LB) == ivy::testing::kInjectButtonLB, "lb");
+static_assert(static_cast<unsigned short>(ControllerButton::RB) == ivy::testing::kInjectButtonRB, "rb");
+static_assert(static_cast<unsigned short>(ControllerButton::A) == ivy::testing::kInjectButtonA, "a");
+static_assert(static_cast<unsigned short>(ControllerButton::B) == ivy::testing::kInjectButtonB, "b");
+static_assert(static_cast<unsigned short>(ControllerButton::X) == ivy::testing::kInjectButtonX, "x");
+static_assert(static_cast<unsigned short>(ControllerButton::Y) == ivy::testing::kInjectButtonY, "y");
+#endif
+
 #include <Xinput.h>
 #pragma comment(lib, "xinput9_1_0.lib") // ���ɂ���Ă� XInput.lib ���K�v
 // #pragma comment(lib, "XInput.lib")
@@ -36,8 +54,7 @@ namespace {
     static BYTE  g_deadzoneTrigger = XINPUT_GAMEPAD_TRIGGER_THRESHOLD;     // 30
 
 #if defined(_DEBUG) && defined(GAME_RUNTIME)
-    static bool     g_injectActive = false;
-    static XMFLOAT2 g_injectLeftStick{ 0.0f, 0.0f };
+    static ivy::testing::ControllerInjectOverlay g_inject;
 #endif
 
     inline bool TestButton(WORD buttons, ControllerButton btn) {
@@ -70,17 +87,44 @@ namespace {
 
 #if defined(_DEBUG) && defined(GAME_RUNTIME)
 void Controller_TestInjectLeftStick(float lx, float ly) {
-    g_injectLeftStick = { lx, ly };
-    g_injectActive = true;
+    g_inject.SetLeftStick(lx, ly);
+}
+
+void Controller_TestInjectRightStick(float rx, float ry) {
+    g_inject.SetRightStick(rx, ry);
+}
+
+void Controller_TestInjectTriggers(float left, float right) {
+    g_inject.SetTriggers(left, right);
+}
+
+void Controller_TestInjectButtons(const ControllerButton* buttons, int count) {
+    unsigned short mask = 0;
+    if (buttons && count > 0) {
+        for (int i = 0; i < count; ++i)
+            mask = static_cast<unsigned short>(mask | static_cast<unsigned short>(buttons[i]));
+    }
+    g_inject.SetButtons(mask);
+}
+
+void Controller_TestInjectSample(float lx, float ly, float rx, float ry, float lt, float rt, unsigned short buttons) {
+    ivy::testing::ControllerInjectSample sample;
+    sample.lx = lx;
+    sample.ly = ly;
+    sample.rx = rx;
+    sample.ry = ry;
+    sample.lt = lt;
+    sample.rt = rt;
+    sample.buttons = buttons;
+    g_inject.Apply(sample);
 }
 
 void Controller_ClearInjection() {
-    g_injectLeftStick = { 0.0f, 0.0f };
-    g_injectActive = false;
+    g_inject.Clear();
 }
 
 bool Controller_IsInjectionActive() {
-    return g_injectActive;
+    return g_inject.Active();
 }
 #endif
 
@@ -142,14 +186,15 @@ void Controller_Update() {
 bool Controller_IsConnected(int padIndex) {
     if (padIndex < 0 || padIndex >= CONTROLLER_MAX) return false;
 #if defined(_DEBUG) && defined(GAME_RUNTIME)
-    if (padIndex == 0 && g_injectActive) return true;
+    if (padIndex == 0 && g_inject.Active()) return true;
 #endif
     return g_connected[padIndex];
 }
 
 bool Controller_IsPressed(ControllerButton button, int padIndex) {
 #if defined(_DEBUG) && defined(GAME_RUNTIME)
-    if (padIndex == 0 && g_injectActive) return false;
+    if (padIndex == 0 && g_inject.Active())
+        return g_inject.Pressed(static_cast<unsigned short>(button));
 #endif
     if (!Controller_IsConnected(padIndex)) return false;
     return TestButton(g_curr[padIndex].Gamepad.wButtons, button);
@@ -157,7 +202,8 @@ bool Controller_IsPressed(ControllerButton button, int padIndex) {
 
 bool Controller_IsTrigger(ControllerButton button, int padIndex) {
 #if defined(_DEBUG) && defined(GAME_RUNTIME)
-    if (padIndex == 0 && g_injectActive) return false;
+    if (padIndex == 0 && g_inject.Active())
+        return g_inject.PressedEdge(static_cast<unsigned short>(button));
 #endif
     if (!Controller_IsConnected(padIndex)) return false;
     const WORD now = g_curr[padIndex].Gamepad.wButtons;
@@ -168,7 +214,8 @@ bool Controller_IsTrigger(ControllerButton button, int padIndex) {
 
 bool Controller_IsRelease(ControllerButton button, int padIndex) {
 #if defined(_DEBUG) && defined(GAME_RUNTIME)
-    if (padIndex == 0 && g_injectActive) return false;
+    if (padIndex == 0 && g_inject.Active())
+        return g_inject.ReleasedEdge(static_cast<unsigned short>(button));
 #endif
     if (!Controller_IsConnected(padIndex)) return false;
     const WORD now = g_curr[padIndex].Gamepad.wButtons;
@@ -179,7 +226,7 @@ bool Controller_IsRelease(ControllerButton button, int padIndex) {
 
 XMFLOAT2 Controller_GetLeftStick(int padIndex) {
 #if defined(_DEBUG) && defined(GAME_RUNTIME)
-    if (padIndex == 0 && g_injectActive) return g_injectLeftStick;
+    if (padIndex == 0 && g_inject.Active()) return XMFLOAT2(g_inject.LeftX(), g_inject.LeftY());
 #endif
     if (!Controller_IsConnected(padIndex)) return XMFLOAT2(0, 0);
     return g_leftStick[padIndex];
@@ -187,7 +234,7 @@ XMFLOAT2 Controller_GetLeftStick(int padIndex) {
 
 XMFLOAT2 Controller_GetRightStick(int padIndex) {
 #if defined(_DEBUG) && defined(GAME_RUNTIME)
-    if (padIndex == 0 && g_injectActive) return XMFLOAT2(0, 0);
+    if (padIndex == 0 && g_inject.Active()) return XMFLOAT2(g_inject.RightX(), g_inject.RightY());
 #endif
     if (!Controller_IsConnected(padIndex)) return XMFLOAT2(0, 0);
     return g_rightStick[padIndex];
@@ -195,7 +242,7 @@ XMFLOAT2 Controller_GetRightStick(int padIndex) {
 
 float Controller_GetLeftTrigger(int padIndex) {
 #if defined(_DEBUG) && defined(GAME_RUNTIME)
-    if (padIndex == 0 && g_injectActive) return 0.0f;
+    if (padIndex == 0 && g_inject.Active()) return g_inject.LeftTrigger();
 #endif
     if (!Controller_IsConnected(padIndex)) return 0.0f;
     return g_leftTrigger[padIndex];
@@ -203,7 +250,7 @@ float Controller_GetLeftTrigger(int padIndex) {
 
 float Controller_GetRightTrigger(int padIndex) {
 #if defined(_DEBUG) && defined(GAME_RUNTIME)
-    if (padIndex == 0 && g_injectActive) return 0.0f;
+    if (padIndex == 0 && g_inject.Active()) return g_inject.RightTrigger();
 #endif
     if (!Controller_IsConnected(padIndex)) return 0.0f;
     return g_rightTrigger[padIndex];

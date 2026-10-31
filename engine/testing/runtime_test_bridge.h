@@ -1,7 +1,16 @@
 #pragma once
+
+namespace ivy::testing {
+// Always-visible tag for Debug-runtime API detection (ADL). Declared even when
+// the bridge is compiled out so Release/Editor checks can prove absence.
+struct ControllerProbeApiTag {};
+}
+
 #if defined(_DEBUG) && defined(GAME_RUNTIME)
 #define IVY_RUNTIME_TEST_BRIDGE_AVAILABLE 1
 #include "libraries/nlohmann/json.hpp"
+#include "engine/testing/controller_inject_protocol.h"
+#include "engine/testing/controller_probe_trace.h"
 #include <cstdint>
 #include <memory>
 #include <string>
@@ -17,6 +26,16 @@ struct ObservedTarget {
     float posX = 0.0f, posY = 0.0f, posZ = 0.0f;
     float velX = 0.0f, velY = 0.0f, velZ = 0.0f;
 };
+
+// Consumer probe: samples public Controller_* getters once per Update after
+// Controller_Update. Enabled with the bridge; does not read inject internals.
+void RuntimeTestControllerProbe_SetEnabled(bool enabled);
+void RuntimeTestControllerProbe_Reset();
+bool RuntimeTestControllerProbe_IsEnabled();
+void RuntimeTestControllerProbe_SampleFromGetters();
+ControllerProbeSnapshot RuntimeTestControllerProbe_CopySnapshot();
+// ADL detection hook: present only when the probe API is compiled in.
+void ControllerProbeApiDetect(ControllerProbeApiTag) noexcept;
 
 // Debug-only main-thread event recorder (opt-in with bridge Start).
 constexpr std::size_t kRuntimeTestEventCapacity = 64;
@@ -64,7 +83,7 @@ public:
     void CancelController();
     void ExpireController(std::uint64_t now);
     bool ControllerIsolating() const;
-    void GetControllerInput(float& lx, float& ly) const;
+    void GetControllerInput(float& lx, float& ly, float& rx, float& ry, float& lt, float& rt, std::uint16_t& buttons) const;
 
     bool HasPendingCapture(std::int64_t& outId) const;
     void CompleteCapture(std::int64_t id, bool ok, uint32_t w, uint32_t h, const std::string& basename, const std::string& err);
@@ -100,13 +119,8 @@ private:
     int mouseUpdatesRemaining_ = 0;
     const char* MouseStatus() const;
 
-    InputState controllerState_ = InputState::Idle;
-    bool cancelController_ = false;
+    ControllerOperation controllerOp_;
     std::uint64_t controllerDeadline_ = 0;
-    std::int64_t controllerReqId_ = 0;
-    float controllerLx_ = 0.0f;
-    float controllerLy_ = 0.0f;
-    int controllerUpdatesRemaining_ = 0;
     const char* ControllerStatus() const;
 
     struct CaptureState {
