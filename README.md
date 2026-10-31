@@ -47,6 +47,7 @@ The engine and game content are fully decoupled:
 - [Runtime test bridge](docs/RUNTIME_TEST_BRIDGE.md) — Debug-runtime-only named-pipe harness (controller inject + consumer probe) · [zh summary](docs/RUNTIME_TEST_BRIDGE.zh-TW.md)
 - [Architecture overview](docs/diagrams/ivy-engine-architecture.html) · [架構圖（粵）](docs/diagrams/ivy-engine-architecture.zh-HK.html)
 - [Architecture decisions](docs/adr/)
+- [Engine to-do](docs/TODO.md) — recorded engine backlog
 
 ---
 
