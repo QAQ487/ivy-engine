@@ -2,13 +2,14 @@
 // Validates content file monitor hot-reload behavior.
 
 #include "engine/editor/content_file_monitor.h"
+#include "engine/core/utf8_path.h"
 #include <cassert>
 #include <iostream>
 #include <thread>
 int main(int argc, char** argv) {
     if (argc > 1) {
         const auto start = std::chrono::steady_clock::now();
-        const auto snapshot = ContentFileMonitor::Scan(std::filesystem::u8path(argv[1]));
+        const auto snapshot = ContentFileMonitor::Scan(PathFromUtf8(argv[1]));
         std::cout << "Scan " << snapshot.size() << " entries in " << std::chrono::duration<double>(std::chrono::steady_clock::now()-start).count() << "s\n";
         return 0;
     }
