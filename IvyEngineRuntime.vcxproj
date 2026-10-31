@@ -25,6 +25,8 @@
     <RootNamespace>GameRuntime</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
     <ProjectName>IvyEngineRuntime</ProjectName>
+    <!-- Content-project project.json is not NuGet; deps are vendored under libraries/. -->
+    <ResolveNuGetPackages>false</ResolveNuGetPackages>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
