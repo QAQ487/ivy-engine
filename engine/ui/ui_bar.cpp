@@ -117,7 +117,7 @@ void UIBar::Draw() {
 	if (fillWidth > 0.0f) {
 		Sprite_Draw(fillTexture, barX, barY, fillWidth,
 			drawBarHeight,
-			0, 0, progress * TextureGetWidth(fillTexture), TextureGetHeight(fillTexture), m_barColor);
+			0, 0, static_cast<int>(progress * TextureGetWidth(fillTexture)), TextureGetHeight(fillTexture), m_barColor);
 	}
 }
 
