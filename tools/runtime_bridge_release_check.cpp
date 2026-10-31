@@ -27,6 +27,15 @@ concept HasRuntimeTestEventsRecord = requires(T p) {
 }
 static_assert(!ivy::testing::HasRuntimeTestEventsRecord<const char*>,
     "event recorder API must be compile-out absent");
+namespace ivy::testing {
+template<class T>
+concept HasControllerProbeSample = requires {
+    RuntimeTestControllerProbe_SampleFromGetters();
+    RuntimeTestControllerProbe_CopySnapshot();
+};
+}
+static_assert(!ivy::testing::HasControllerProbeSample<int>,
+    "controller consumer probe API must be compile-out absent");
 int main() {
     Keyboard_Initialize();
     Keyboard_ProcessMessage(WM_KEYDOWN, 'W', 0);

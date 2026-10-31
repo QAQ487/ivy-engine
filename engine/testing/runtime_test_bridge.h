@@ -3,6 +3,7 @@
 #define IVY_RUNTIME_TEST_BRIDGE_AVAILABLE 1
 #include "libraries/nlohmann/json.hpp"
 #include "engine/testing/controller_inject_protocol.h"
+#include "engine/testing/controller_probe_trace.h"
 #include <cstdint>
 #include <memory>
 #include <string>
@@ -18,6 +19,14 @@ struct ObservedTarget {
     float posX = 0.0f, posY = 0.0f, posZ = 0.0f;
     float velX = 0.0f, velY = 0.0f, velZ = 0.0f;
 };
+
+// Consumer probe: samples public Controller_* getters once per Update after
+// Controller_Update. Enabled with the bridge; does not read inject internals.
+void RuntimeTestControllerProbe_SetEnabled(bool enabled);
+void RuntimeTestControllerProbe_Reset();
+bool RuntimeTestControllerProbe_IsEnabled();
+void RuntimeTestControllerProbe_SampleFromGetters();
+ControllerProbeSnapshot RuntimeTestControllerProbe_CopySnapshot();
 
 // Debug-only main-thread event recorder (opt-in with bridge Start).
 constexpr std::size_t kRuntimeTestEventCapacity = 64;

@@ -624,6 +624,11 @@ void Update(double current_time, double elapsed_time) {
 
 	// Update controllers
 	Controller_Update();
+#if defined(IVY_RUNTIME_TEST_BRIDGE_AVAILABLE)
+	// Consumer probe reads public getters after Controller_Update, once per
+	// engine Update, while injection from PollAndApplyInput is still live.
+	ivy::testing::RuntimeTestControllerProbe_SampleFromGetters();
+#endif
 
 #ifndef GAME_RUNTIME
 	// Editor-only debug hotkeys (never in IvyEngineRuntime / shipped build)

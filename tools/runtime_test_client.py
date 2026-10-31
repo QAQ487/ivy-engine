@@ -273,6 +273,19 @@ class Client:
             raise RuntimeError(err or "events body invalid")
         return result
 
+    def controller_probe(self,request_id):
+        if type(request_id) is not int or not 1<=request_id<=2147483647:
+            raise ValueError("request ID must be an integer in [1,2147483647]")
+        result=self.request("controller_probe",request_id)
+        if not result.get("ok"): return result
+        if result.get("protocolVersion")!=1 or result.get("runId")!=self.run_id or result.get("requestId")!=request_id:
+            raise RuntimeError("controller_probe response identity mismatch")
+        from runtime_bridge_controller_probe import validate_probe_reply
+        ok,err=validate_probe_reply(result)
+        if not ok:
+            raise RuntimeError(err or "controller_probe body invalid")
+        return result
+
     def controller(self,lx,ly,updates,request_id,completion_timeout=7.0,rx=None,ry=None,lt=None,rt=None,buttons=None):
         from runtime_bridge_controller_axes import build_controller_payload
         payload=build_controller_payload(lx,ly,updates,rx=rx,ry=ry,lt=lt,rt=rt,buttons=buttons)
@@ -306,7 +319,7 @@ def main():
     p.add_argument("--run-id",required=True)
     p.add_argument("--request-id",type=int,required=True,help="strictly increasing across the run")
     p.add_argument("--timeout",type=float,default=2)
-    p.add_argument("verb",choices=("hello","status","quit","keyboard","observe","capture","mouse","controller","events"))
+    p.add_argument("verb",choices=("hello","status","quit","keyboard","observe","capture","mouse","controller","events","controller_probe"))
     p.add_argument("--keys",nargs="+")
     p.add_argument("--updates",type=int)
     p.add_argument("--completion-timeout",type=float,default=7)
@@ -344,6 +357,8 @@ def main():
                 r=c.capture(a.request_id,a.completion_timeout)
             elif a.verb=="events":
                 r=c.events(a.request_id)
+            elif a.verb=="controller_probe":
+                r=c.controller_probe(a.request_id)
             else:
                 r=c.request(a.verb,a.request_id)
         print(json.dumps(r,ensure_ascii=False))

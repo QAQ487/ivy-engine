@@ -1,6 +1,8 @@
 #include "engine/testing/runtime_test_bridge.h"
 #include "engine/input/controller.h"
 #include <iostream>
+#include <string>
+#include <vector>
 #include <windows.h>
 
 using namespace ivy::testing;
@@ -10,6 +12,46 @@ static void check(bool b, const char* label) {
         std::cerr << "FAIL " << label << std::endl;
         std::exit(1);
     }
+}
+
+static void checkOk(const ProbeValidation& v, const char* label) {
+    if (!v.pass) {
+        std::cerr << "FAIL " << label << ": " << v.error << std::endl;
+        std::exit(1);
+    }
+}
+
+// Real consumer path: inject -> Controller_Update -> public getters -> probe.
+static void StepConsumer(Bridge& b, bool playing = true) {
+    b.PollAndApplyInput(playing);
+    Controller_Update();
+    RuntimeTestControllerProbe_SampleFromGetters();
+    b.FinishInputUpdate();
+}
+
+static std::vector<ControllerProbeFrame> TakeRecent(std::size_t count) {
+    const auto snap = RuntimeTestControllerProbe_CopySnapshot();
+    check(!snap.overflow, "probe ring must not overflow during controller_check");
+    check(snap.frames.size() >= count, "probe has enough recent frames");
+    return std::vector<ControllerProbeFrame>(snap.frames.end() - static_cast<std::ptrdiff_t>(count), snap.frames.end());
+}
+
+static const char* ButtonName(std::uint16_t bit) {
+    if (bit == kInjectButtonA) return "A";
+    if (bit == kInjectButtonB) return "B";
+    if (bit == kInjectButtonX) return "X";
+    if (bit == kInjectButtonY) return "Y";
+    if (bit == kInjectButtonLB) return "LB";
+    if (bit == kInjectButtonRB) return "RB";
+    if (bit == kInjectButtonStart) return "START";
+    if (bit == kInjectButtonBack) return "BACK";
+    if (bit == kInjectButtonLeftThumb) return "LEFT_THUMB";
+    if (bit == kInjectButtonRightThumb) return "RIGHT_THUMB";
+    if (bit == kInjectButtonDpadUp) return "DPAD_UP";
+    if (bit == kInjectButtonDpadDown) return "DPAD_DOWN";
+    if (bit == kInjectButtonDpadLeft) return "DPAD_LEFT";
+    if (bit == kInjectButtonDpadRight) return "DPAD_RIGHT";
+    return "UNKNOWN";
 }
 
 struct Peer {
@@ -305,7 +347,115 @@ int main() {
         check(stNotPlaying["controller"]["status"] == "cancelled", "direct protocol status cancelled when not playing");
     }
 
+    // --- Consumer probe: getters after Controller_Update ---
+    {
+        Peer probePeer(b);
+        check(RuntimeTestControllerProbe_IsEnabled(), "controller probe enabled with bridge");
+
+        const auto helloProbe = probePeer.request("hello");
+        bool hasProbe = false;
+        if (helloProbe.contains("capabilities") && helloProbe["capabilities"].is_array()) {
+            for (const auto& cap : helloProbe["capabilities"]) {
+                if (cap == "controller_probe") hasProbe = true;
+            }
+        }
+        check(hasProbe, "hello capabilities includes controller_probe");
+
+        RuntimeTestControllerProbe_Reset();
+        for (float value : {0.0f, 0.25f, 0.5f, 1.0f}) {
+            const auto lt = probePeer.request("controller", {{"lx", 0.0}, {"ly", 0.0}, {"lt", value}, {"updates", 2}});
+            check(lt.value("ok", false), "queue LT consumer op");
+            for (int i = 0; i < 4; ++i) StepConsumer(b);
+            checkOk(ValidateTriggerHoldTrace(TakeRecent(4), true, value, 2), "LT consumer trace");
+
+            const auto rt = probePeer.request("controller", {{"lx", 0.0}, {"ly", 0.0}, {"rt", value}, {"updates", 2}});
+            check(rt.value("ok", false), "queue RT consumer op");
+            for (int i = 0; i < 4; ++i) StepConsumer(b);
+            checkOk(ValidateTriggerHoldTrace(TakeRecent(4), false, value, 2), "RT consumer trace");
+        }
+
+        std::size_t buttonCount = 0;
+        const std::uint16_t* bits = ProbeAllButtonBits(buttonCount);
+        for (std::size_t i = 0; i < buttonCount; ++i) {
+            const char* name = ButtonName(bits[i]);
+            const auto resp = probePeer.request("controller", {
+                {"lx", 0.0}, {"ly", 0.0}, {"updates", 2}, {"buttons", Json::array({name})}
+            });
+            check(resp.value("ok", false), "queue button consumer op");
+            for (int step = 0; step < 4; ++step) StepConsumer(b);
+            checkOk(ValidateButtonHoldTrace(TakeRecent(4), bits[i], 2), "button consumer trace");
+        }
+
+        {
+            const auto combined = probePeer.request("controller", {
+                {"lx", 0.0}, {"ly", 0.0}, {"lt", 0.25}, {"rt", 1.0},
+                {"buttons", Json::array({"A", "LB", "DPAD_UP"})}, {"updates", 2}
+            });
+            check(combined.value("ok", false), "queue combined consumer op");
+            for (int i = 0; i < 4; ++i) StepConsumer(b);
+            const std::uint16_t mask = kInjectButtonA | kInjectButtonLB | kInjectButtonDpadUp;
+            checkOk(ValidateCombinedTrace(TakeRecent(4), 0.25f, 1.0f, mask, 2), "combined consumer trace");
+        }
+
+        {
+            const auto right = probePeer.request("controller", {
+                {"lx", 0.0}, {"ly", 0.0}, {"rx", 0.5}, {"ry", -1.0}, {"updates", 2}
+            });
+            check(right.value("ok", false), "queue right-stick consumer op");
+            for (int i = 0; i < 4; ++i) StepConsumer(b);
+            checkOk(ValidateRightStickKeepsLeftNeutral(TakeRecent(4), 0.5f, -1.0f, 2),
+                "right-stick consumer keeps left stick neutral");
+        }
+
+        {
+            RuntimeTestControllerProbe_Reset();
+            const auto longOp = probePeer.request("controller", {
+                {"lx", 0.0}, {"ly", 0.0}, {"lt", 1.0}, {"rt", 1.0},
+                {"buttons", Json::array({"B", "START"})}, {"updates", 60}
+            });
+            check(longOp.value("ok", false), "queue long op for disconnect cancel");
+            StepConsumer(b); // prep
+            StepConsumer(b); // first hold with press edge
+            probePeer.close();
+            const auto deadline = GetTickCount64() + 2000;
+            bool settled = false;
+            while (GetTickCount64() <= deadline) {
+                StepConsumer(b);
+                if (!Controller_IsInjectionActive()) {
+                    settled = true;
+                    break;
+                }
+                Sleep(1);
+            }
+            check(settled, "disconnect cancel settled via consumer steps");
+            // Extra neutral frames after release Update.
+            for (int i = 0; i < 3; ++i) StepConsumer(b);
+            const auto snap = RuntimeTestControllerProbe_CopySnapshot();
+            check(!snap.overflow, "cancel probe did not overflow");
+            checkOk(ValidateEventualNeutralSuffix(snap.frames, 3),
+                "cancel/disconnect consumer ends neutral with no stuck buttons/triggers");
+        }
+
+        // Read-only controller_probe verb returns the live getter snapshot.
+        Peer probeReader(b);
+        RuntimeTestControllerProbe_Reset();
+        const auto verbOp = probeReader.request("controller", {
+            {"lx", 0.0}, {"ly", 0.0}, {"lt", 0.5}, {"updates", 1}
+        });
+        check(verbOp.value("ok", false), "queue op before controller_probe verb");
+        for (int i = 0; i < 3; ++i) StepConsumer(b);
+        const auto probeReply = probeReader.request("controller_probe");
+        check(probeReply.value("ok", false), "controller_probe verb ok");
+        check(probeReply.contains("frames") && probeReply["frames"].is_array(), "controller_probe frames array");
+        check(probeReply.value("overflow", true) == false, "controller_probe overflow false");
+        check(probeReply["frames"].size() >= 3, "controller_probe has sampled frames");
+        check(probeReply["frames"].back().value("lt", -1.0) == 0.0, "controller_probe final frame lt neutral");
+        const auto badProbe = probeReader.request("controller_probe", {{"extra", 1}});
+        check(badProbe.value("ok", true) == false, "controller_probe rejects extra fields");
+    }
+
     b.Stop();
+    check(!RuntimeTestControllerProbe_IsEnabled(), "controller probe disabled on bridge stop");
     std::cout << "All controller bridge checks PASSED\n";
     return 0;
 }

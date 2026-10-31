@@ -22,6 +22,20 @@ struct EventsRecorder {
 };
 EventsRecorder g_events;
 
+struct ControllerProbeRecorder {
+    bool enabled = false;
+    std::mutex mutex;
+    ControllerProbeRing ring;
+};
+ControllerProbeRecorder g_controllerProbe;
+
+constexpr ControllerButton kProbeButtons[] = {
+    ControllerButton::A, ControllerButton::B, ControllerButton::X, ControllerButton::Y,
+    ControllerButton::LB, ControllerButton::RB, ControllerButton::Start, ControllerButton::Back,
+    ControllerButton::LeftThumb, ControllerButton::RightThumb,
+    ControllerButton::DPadUp, ControllerButton::DPadDown, ControllerButton::DPadLeft, ControllerButton::DPadRight,
+};
+
 bool ValidEventName(const char* name) {
     if (!name || !*name) return false;
     const std::size_t n = std::strlen(name);
@@ -32,6 +46,44 @@ bool ValidEventName(const char* name) {
             return false;
     }
     return true;
+}
+
+Json ControllerProbeFrameToJson(const ControllerProbeFrame& frame) {
+    Json pressed = Json::array();
+    Json pressedEdge = Json::array();
+    Json releasedEdge = Json::array();
+    for (ControllerButton button : kProbeButtons) {
+        const auto bit = static_cast<std::uint16_t>(button);
+        std::string name;
+        if (bit == kInjectButtonA) name = "A";
+        else if (bit == kInjectButtonB) name = "B";
+        else if (bit == kInjectButtonX) name = "X";
+        else if (bit == kInjectButtonY) name = "Y";
+        else if (bit == kInjectButtonLB) name = "LB";
+        else if (bit == kInjectButtonRB) name = "RB";
+        else if (bit == kInjectButtonStart) name = "START";
+        else if (bit == kInjectButtonBack) name = "BACK";
+        else if (bit == kInjectButtonLeftThumb) name = "LEFT_THUMB";
+        else if (bit == kInjectButtonRightThumb) name = "RIGHT_THUMB";
+        else if (bit == kInjectButtonDpadUp) name = "DPAD_UP";
+        else if (bit == kInjectButtonDpadDown) name = "DPAD_DOWN";
+        else if (bit == kInjectButtonDpadLeft) name = "DPAD_LEFT";
+        else if (bit == kInjectButtonDpadRight) name = "DPAD_RIGHT";
+        else continue;
+        if ((frame.pressed & bit) != 0) pressed.push_back(name);
+        if ((frame.pressedEdge & bit) != 0) pressedEdge.push_back(name);
+        if ((frame.releasedEdge & bit) != 0) releasedEdge.push_back(name);
+    }
+    return {
+        {"sequence", frame.sequence},
+        {"lx", frame.lx}, {"ly", frame.ly},
+        {"rx", frame.rx}, {"ry", frame.ry},
+        {"lt", frame.lt}, {"rt", frame.rt},
+        {"pressed", std::move(pressed)},
+        {"pressedEdge", std::move(pressedEdge)},
+        {"releasedEdge", std::move(releasedEdge)},
+        {"connected", frame.connected},
+    };
 }
 }
 
@@ -80,6 +132,46 @@ RuntimeTestEventsSnapshot RuntimeTestEvents_CopySnapshot() {
     if (snap.latestSequence < 0) snap.latestSequence = 0;
     snap.dropped = g_events.dropped;
     return snap;
+}
+
+void RuntimeTestControllerProbe_SetEnabled(bool enabled) {
+    std::lock_guard lock(g_controllerProbe.mutex);
+    g_controllerProbe.enabled = enabled;
+    if (!enabled)
+        g_controllerProbe.ring.Reset();
+}
+void RuntimeTestControllerProbe_Reset() {
+    std::lock_guard lock(g_controllerProbe.mutex);
+    g_controllerProbe.ring.Reset();
+}
+bool RuntimeTestControllerProbe_IsEnabled() {
+    std::lock_guard lock(g_controllerProbe.mutex);
+    return g_controllerProbe.enabled;
+}
+void RuntimeTestControllerProbe_SampleFromGetters() {
+    std::lock_guard lock(g_controllerProbe.mutex);
+    if (!g_controllerProbe.enabled) return;
+    ControllerProbeFrame frame;
+    const auto left = Controller_GetLeftStick(0);
+    const auto right = Controller_GetRightStick(0);
+    frame.lx = left.x;
+    frame.ly = left.y;
+    frame.rx = right.x;
+    frame.ry = right.y;
+    frame.lt = Controller_GetLeftTrigger(0);
+    frame.rt = Controller_GetRightTrigger(0);
+    frame.connected = Controller_IsConnected(0);
+    for (ControllerButton button : kProbeButtons) {
+        const auto bit = static_cast<std::uint16_t>(button);
+        if (Controller_IsPressed(button, 0)) frame.pressed = static_cast<std::uint16_t>(frame.pressed | bit);
+        if (Controller_IsTrigger(button, 0)) frame.pressedEdge = static_cast<std::uint16_t>(frame.pressedEdge | bit);
+        if (Controller_IsRelease(button, 0)) frame.releasedEdge = static_cast<std::uint16_t>(frame.releasedEdge | bit);
+    }
+    g_controllerProbe.ring.Push(frame);
+}
+ControllerProbeSnapshot RuntimeTestControllerProbe_CopySnapshot() {
+    std::lock_guard lock(g_controllerProbe.mutex);
+    return g_controllerProbe.ring.Snapshot();
 }
 
 std::uint32_t RemainingFrameTimeout(std::uint64_t deadline, std::uint64_t now) noexcept {
@@ -270,6 +362,7 @@ Json Protocol::Request(const std::string& frame) {
     const bool observe=q["verb"]=="observe";
     const bool capture=q["verb"]=="capture";
     const bool events=q["verb"]=="events";
+    const bool controllerProbe=q["verb"]=="controller_probe";
     std::vector<std::string> keys;
     int updates=0;
     int mouseDx=0, mouseDy=0, mouseWheel=0, mouseUpdates=0;
@@ -335,6 +428,8 @@ Json Protocol::Request(const std::string& frame) {
     } else if(capture) {
         if(q.size()!=4) return error("invalid_request");
     } else if(events) {
+        if(q.size()!=4) return error("invalid_request");
+    } else if(controllerProbe) {
         if(q.size()!=4) return error("invalid_request");
     } else if(q.size()!=4) return error("invalid_request");
 
@@ -421,6 +516,20 @@ Json Protocol::Request(const std::string& frame) {
             {"dropped", eventsDropped_},
         };
     }
+    if(controllerProbe) {
+        if(!ready_ || !playing_) return error("not_ready",id);
+        const auto snap = RuntimeTestControllerProbe_CopySnapshot();
+        Json arr = Json::array();
+        for (const auto& frame : snap.frames)
+            arr.push_back(ControllerProbeFrameToJson(frame));
+        return {
+            {"protocolVersion",1},{"requestId",id},{"runId",runId_},{"ok",true},
+            {"frames", std::move(arr)},
+            {"latestSequence", snap.latestSequence},
+            {"dropped", snap.dropped},
+            {"overflow", snap.overflow},
+        };
+    }
     if(q["verb"]=="quit") {
         if(quitPending_ || quitReady_) return error("queue_full",id);
         quitPending_=true;
@@ -435,7 +544,7 @@ Json Protocol::Request(const std::string& frame) {
     return {{"protocolVersion",1},{"requestId",id},{"runId",runId_},{"ok",true},
         {"pid",pid_},{"sessionId",session_},{"ready",ready_},{"playing",playing_},
         {"state",ready_ ? (playing_ ? "playing" : "ready") : "loading"},{"scene",scene_},
-        {"capabilities",Json::array({"hello","status","quit","keyboard","observe","capture","mouse","controller","events"})},
+        {"capabilities",Json::array({"hello","status","quit","keyboard","observe","capture","mouse","controller","events","controller_probe"})},
         {"keyboard",{{"status",InputStatus()},{"requestId",keyboardReqId_},
             {"remainingUpdates",keyboardUpdatesRemaining_},{"cancelRequested",cancelInput_},{"preparing",inputState_==InputState::Preparing}}},
         {"mouse",{{"status",MouseStatus()},{"requestId",mouseReqId_},
@@ -585,6 +694,8 @@ bool Bridge::StartFromEnvironment() {
     catch(...) { return false; }
     RuntimeTestEvents_Reset();
     RuntimeTestEvents_SetEnabled(true);
+    RuntimeTestControllerProbe_Reset();
+    RuntimeTestControllerProbe_SetEnabled(true);
     impl_=std::move(p); return true;
 }
 void Bridge::Stop() {
@@ -595,6 +706,7 @@ void Bridge::Stop() {
     }
     impl_.reset();
     RuntimeTestEvents_SetEnabled(false);
+    RuntimeTestControllerProbe_SetEnabled(false);
 }
 std::string Bridge::PipeName() const { return impl_ ? impl_->name : std::string{}; }
 

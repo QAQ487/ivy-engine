@@ -3,6 +3,7 @@
 #include <windows.h>
 #include <aclapi.h>
 #include <iostream>
+#include "engine/input/controller.h"
 #include "engine/input/key_logger.h"
 #include <stdexcept>
 #include <vector>
@@ -11,6 +12,7 @@ void check(bool b, const char* message) { if (!b) { std::cerr << "FAIL " << mess
 int main(int argc, char** argv) {
     if(argc>1) {
         KeyLogger_Initialize();
+        Controller_Initialize();
         Bridge server;
         check(server.StartFromEnvironment(), "harness bridge starts");
         std::cout << server.PipeName() << std::endl;
@@ -20,6 +22,8 @@ int main(int argc, char** argv) {
             if(server.PublishAndTakeQuit(true,true,"fixture.json")) { server.Stop(); return 0; }
             if(std::string(argv[1])!="--stall") {
                 server.PollAndApplyInput(true);
+                Controller_Update();
+                RuntimeTestControllerProbe_SampleFromGetters();
                 KeyLogger_Update(static_cast<double>(GetTickCount64())/1000.0);
                 server.FinishInputUpdate();
             }
@@ -99,7 +103,7 @@ int main(int argc, char** argv) {
     policy.BeginInput(false,GetTickCount64());
     auto cancelled=policy.Request(R"({"protocolVersion":1,"requestId":6,"runId":"policy","verb":"status"})");
     check(cancelled["keyboard"]["status"]=="cancelled","not-playing cancels queued input");
-    check(r["capabilities"] == Json::array({"hello","status","quit","keyboard","observe","capture","mouse","controller","events"}), "capabilities include observe, capture, mouse, controller, and events");
+    check(r["capabilities"] == Json::array({"hello","status","quit","keyboard","observe","capture","mouse","controller","events","controller_probe"}), "capabilities include observe, capture, mouse, controller, events, and controller_probe");
     r = p.Request(R"({"protocolVersion":1,"requestId":6,"runId":"test-run","verb":"quit"})");
     check(r.value("requiresReceipt", false), "quit requires receipt before main-thread exit");
     check(!p.TakeQuit(), "no quit before receipt");
