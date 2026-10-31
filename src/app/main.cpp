@@ -128,13 +128,14 @@ static MainStaticDestructionMarker s_mainStaticMarker;
 
  ===========================================================================**/
 #define _CRTDBG_MAP_ALLOC // enable CRT memory leak checking
-#include <stdlib.h>       // for _CrtDumpMemoryLeaks, getenv
+#include <stdlib.h>       // for _CrtDumpMemoryLeaks
 #include <crtdbg.h>       // for _CrtDumpMemoryLeaks
 #include <sstream>
 #include <thread>
 
 #include "main.h"
 
+#include "engine/core/env_var.h"
 #include "engine/audio/audio_manager.h"
 #include "engine/rendering/d3d11/renderer.h"
 #include "engine/rendering/d3d11/shader.h"
@@ -214,8 +215,8 @@ void Update(double current_time, double elapsed_time);
 void Draw(void);
 
 static bool EnvDisableRenderThread() {
-	const char* v = getenv("IVY_DISABLE_RENDER_THREAD");
-	return v && v[0] == '1' && v[1] == '\0';
+	const auto v = GetEnv("IVY_DISABLE_RENDER_THREAD");
+	return v && *v == "1";
 }
 
 static void JoinRenderBeforeDeviceTouch() {
@@ -327,7 +328,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstanc
 	const DWORD windowStyle = WS_OVERLAPPEDWINDOW;
 	int clientW = SCREEN_WIDTH;
 	int clientH = SCREEN_HEIGHT;
-    if(getenv("IVY_FRAME_CAPTURE")) {clientW=1280;clientH=720;}
+    if(GetEnv("IVY_FRAME_CAPTURE")) {clientW=1280;clientH=720;}
 
 	HMONITOR primaryMon = MonitorFromPoint(POINT{ 0, 0 }, MONITOR_DEFAULTTOPRIMARY);
 	MONITORINFO mi = {};
@@ -892,7 +893,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 	case WM_CLOSE: // window close requested
 		JoinRenderBeforeDeviceTouch();
 #ifdef _DEBUG
-		if (getenv("IVY_SKIP_CLOSE_CONFIRM")) {
+		if (GetEnv("IVY_SKIP_CLOSE_CONFIRM")) {
 			DestroyWindow(hWnd);
 			return 0;
 		}

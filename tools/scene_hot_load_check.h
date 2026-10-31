@@ -5,6 +5,7 @@
 // Opt-in Debug host check. Uses only its own temporary scene files.
 #include "engine/ecs/component_factory.h"
 #include "engine/scene/prepared_scene.h"
+#include "engine/core/env_var.h"
 #include <chrono>
 #include <cstdlib>
 #include "DirectXTex.h"
@@ -18,7 +19,7 @@ public:
 }
 
 static void SceneHotLoadCheck_Tick(double elapsed) {
-    if (!std::getenv("IVY_SCENE_HOT_LOAD_CHECK")) return;
+    if (!GetEnv("IVY_SCENE_HOT_LOAD_CHECK")) return;
     namespace fs = std::filesystem;
     using json = nlohmann::json;
     static int phase = 0;
