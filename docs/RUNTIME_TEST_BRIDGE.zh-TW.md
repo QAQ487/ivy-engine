@@ -140,7 +140,7 @@ Harness `--serve` 最多 15 秒，自行正常退出；Python subprocess tests �
 - [x] **Phase 2 — Keyboard 測試輸入**：內部注入、standalone checks、full Debug build 同 Session 2 fresh runtime 整合通過；唔代表角色操作或玩法驗收。
 - [ ] **Phase 3 — Object 狀態觀察與 PNG 截圖**：observe／固定鏡頭移動／PNG capture／YBot＋動畫已於後續 checkpoint 核實；capture 路徑／lifecycle hardening 之**獨立覆核仍 outstanding**（唔再寫「仍係方塊組合」為現況）。
 - [x] **Phase 4 — 固定移動驗收 runner**：已完成；acceptance runner 實測移動／觀察／PNG、跳躍／落地 PASS 同 clean exit 0。
-- [ ] **Phase 5 — Mouse／controller／遊戲事件**：Slice A mouse、Slice B left-stick、**checkpoint trigger→`events` 玩法事件切片**已核實 PASS。Right-stick、face／shoulder／start／back／d-pad buttons、左右 triggers 已實作（Debug runtime `controller` 動詞可選欄位 `rx` `ry` `lt` `rt` `buttons`；只送 `lx` `ly` `updates` 的左搖桿 runner 維持相容）。**Linux 純邏輯同協議檢查已過**；**Windows harness 同互動 runtime 仍待擁有者驗證**，未標 PASS。
+- [x] **Phase 5 — Mouse／controller／遊戲事件**：Slice A mouse、Slice B left-stick、**checkpoint trigger→`events` 玩法事件切片**已核實 PASS。Right-stick、face／shoulder／start／back／d-pad buttons、左右 triggers、同 `controller_probe` consumer trace 已實作並由擁有者於 Windows runtime 核實 PASS（PR #3 → `master` merge `40faf2e`）。英文操作說明見 [`RUNTIME_TEST_BRIDGE.md`](RUNTIME_TEST_BRIDGE.md)。
 - [ ] **Phase 6 — Agent 互動探索**：**MINIMUM closed-loop＋goal event 已核實**（observe→decide→act→events）；**唔**等於完整 AI／全玩法 agent。
 
 ### Phase 1 已執行驗證
@@ -331,8 +331,9 @@ Phase4 YBot verified using Cursor CLI Auto；FrisbeeArena `rom/model/player` Y B
     - 收到 `quit` receipt 且原生 exit 0 退出，child 程序已正常清理（`childCleanedUp: true`）。
   - 驗證證據：`x64/phase2a-agent/mouse-standard-61cc999a/result.json`。
 
-### Phase 5 right-stick／buttons／triggers（已實作，Windows 未驗證）
+### Phase 5 right-stick／buttons／triggers／consumer probe（已實作，Windows 已核實 PASS）
 
 - **範圍**：`_DEBUG && GAME_RUNTIME` 先至。`Controller_TestInjectRightStick`、`Controller_TestInjectTriggers`、`Controller_TestInjectButtons`、`Controller_TestInjectSample` 同原有 `Controller_TestInjectLeftStick` 一齊存在；Release／Editor compile-out 繼續要求呢啲符號唔存在。冇改 default scene、shipping 輸入路徑、或 ScriptRuntimeApi。
 - **協議**：仍然係一個 `controller` 動詞、一條 queue。`lx`、`ly`、`updates` 必填。可選 `rx`／`ry`（有限數，−1..1，缺省 0）、`lt`／`rt`（有限數，0..1，缺省 0）、`buttons`（0–14 個不重複名稱：`A B X Y LB RB START BACK LEFT_THUMB RIGHT_THUMB DPAD_UP DPAD_DOWN DPAD_LEFT DPAD_RIGHT`）。bool、NaN、超出範圍、未知名稱、重複、額外欄位一律 `invalid_request`。準備幀同釋放幀注入中立；按住期間先至係 payload；按鈕只喺第一個 hold Update 出 press edge，釋放幀出 release edge。
-- **Linux 已跑**（唔代替 Windows）：`g++` 同 `clang++` 編譯並執行 `tools/runtime_bridge_controller_axes_check.cpp`；`python3 tools/runtime_bridge_controller_axes_check.py`。Windows 必須再跑 `tools\run_runtime_bridge_checks.cmd`，再喺已登入嘅互動 session 用 fresh Debug x64 runtime 確認右搖桿、按鈕、triggers 只喺注入期間生效、左搖桿唔被右搖桿帶動、quit exit 0。
+- **Consumer probe**：`controller_probe` 喺每次 `Controller_Update` 之後讀 public getters，寫入最多 256 幀嘅 ring（overflow／dropped）；stock client 回應上限由完整 256 幀最壞大小推導（見英文頁 `RESPONSE_BYTE_LIMIT`）。隔離 fixture：`samples/scenes/scene_runtime_bridge_controller_probe.json`。
+- **驗證**：Linux 純邏輯／協議檢查 + 擁有者 Windows harness／runtime PASS。常用指令：`tools\run_runtime_bridge_checks.cmd`；standalone：`tools\runtime_bridge_controller_probe_acceptance.py`。已知限制：注入 trigger／stick 係 exact float（唔經 XInput BYTE／deadzone）；斷言 cancel／idle 時應拔除實體手掣。詳情見 [`RUNTIME_TEST_BRIDGE.md`](RUNTIME_TEST_BRIDGE.md)。

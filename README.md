@@ -44,6 +44,7 @@ The engine and game content are fully decoupled:
 
 - [Content Project guide](docs/CONTENT_PROJECT.md) — building games on Ivy
 - [Engine manual](docs/ENGINE_MANUAL.md) · [API reference](docs/ENGINE_API_REFERENCE.md) · [User guide](docs/ENGINE_USER_GUIDE.md)
+- [Runtime test bridge](docs/RUNTIME_TEST_BRIDGE.md) — Debug-runtime-only named-pipe harness (controller inject + consumer probe)
 - [Architecture decisions](docs/adr/)
 
 ---
@@ -81,6 +82,7 @@ The engine and game content are fully decoupled:
 
 - [コンテンツプロジェクトガイド](docs/CONTENT_PROJECT.md)
 - [エンジンマニュアル](docs/ENGINE_MANUAL.md) · [API リファレンス](docs/ENGINE_API_REFERENCE.md) · [ユーザーガイド](docs/ENGINE_USER_GUIDE.md)
+- [Runtime test bridge](docs/RUNTIME_TEST_BRIDGE.md) — Debug runtime 専用の named-pipe ハーネス（コントローラ注入＋consumer probe）
 
 ---
 
