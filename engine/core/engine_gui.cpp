@@ -27,6 +27,7 @@
 #include "engine/rendering/d3d11/post_process.h"
 #include "engine/core/job_system.h"
 #include "engine/core/debug_system.h"
+#include "engine/core/utf8_path.h"
 #include "imgui/imgui.h"
 #include "imgui/imgui_internal.h"
 #include "imgui/imgui_impl_win32.h"
@@ -423,7 +424,7 @@ static void QueueSceneHotLoad(SceneFileMonitor::Version version) {
             if (key != "texture" && key != "texturePath" && key != "normalMap" && key != "rampTexture" && key != "surfaceFxTexture" && key != "font") return;
             const auto path = value.get<std::string>();
             if (path.empty()) return;
-            const auto file = std::filesystem::u8path(path);
+            const auto file = PathFromUtf8(path);
             auto ext = file.extension().string();
             std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) { return char(std::tolower(c)); });
             if (ext == ".png" || ext == ".jpg" || ext == ".jpeg" || ext == ".dds" || ext == ".tga")
@@ -3213,7 +3214,7 @@ void EngineGUI_Update(double elapsed_time) {
             g_contentProjectRoot = projectRoot;
             g_contentReloadLight = {}; g_contentReloadStatus = "Watching project content";
         }
-        const auto root = std::filesystem::u8path(projectRoot) / "rom";
+        const auto root = PathFromUtf8(projectRoot) / "rom";
         auto changes = g_contentMonitor.Poll(root);
         g_contentChanges.insert(g_contentChanges.end(), changes.begin(), changes.end());
         if (!IsSceneLoadBusy() && !g_contentChanges.empty()) {
@@ -3224,8 +3225,8 @@ void EngineGUI_Update(double elapsed_time) {
                 SceneLoader_RefreshSceneAssets();
             }
             for (const auto& change : g_contentChanges) {
-                const std::string path = ContentFileMonitor::Utf8Path(std::filesystem::path("rom") / std::filesystem::u8path(change.path));
-                auto ext = std::filesystem::u8path(path).extension().string();
+                const std::string path = ContentFileMonitor::Utf8Path(std::filesystem::path("rom") / PathFromUtf8(change.path));
+                auto ext = PathFromUtf8(path).extension().string();
                 std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) { return char(std::tolower(c)); });
                 if (!SceneLoader_GetCurrentScenePath().empty() && std::filesystem::absolute(path).lexically_normal() == std::filesystem::absolute(SceneLoader_GetCurrentScenePath()).lexically_normal()) {
                     std::string content;
@@ -3244,7 +3245,7 @@ void EngineGUI_Update(double elapsed_time) {
                     continue;
                 }
                 if (ext == ".png" || ext == ".jpg" || ext == ".jpeg" || ext == ".dds" || ext == ".tga") {
-                    const auto widePath = std::filesystem::u8path(path).wstring();
+                    const auto widePath = PathFromUtf8(path).wstring();
                     const auto cube = CubemapReload(widePath.c_str());
                     if (cube == TextureReloadResult::Reloaded) RenderSettings_ReloadSkybox();
                     const auto result = cube != TextureReloadResult::NotLoaded ? cube : TextureReload(widePath.c_str());
@@ -3262,7 +3263,7 @@ void EngineGUI_Update(double elapsed_time) {
                     }
                     continue;
                 }
-                if ((ext == ".ttf" || ext == ".otf") && !UIFont_Reload(std::filesystem::u8path(path).c_str())) {
+                if ((ext == ".ttf" || ext == ".otf") && !UIFont_Reload(PathFromUtf8(path).c_str())) {
                     g_contentReloadLight.Failure(); g_contentReloadStatus = "Invalid font; previous version retained: " + path;
                     LogContentReload(g_contentReloadStatus); continue;
                 }

@@ -11,6 +11,7 @@
 #include "engine/ecs/sprite_renderer_component.h"
 #include "engine/rendering/sprite/texture.h"
 #include "engine/rendering/model/model.h"
+#include "engine/core/utf8_path.h"
 #include "libraries/nlohmann/json.hpp"
 
 #include <Windows.h>
@@ -409,7 +410,7 @@ bool SceneAssetPreloader::RunOneStep() {
 	RebuildLabel();
 
     if (step.kind == Step::Kind::Texture) {
-        const auto path = std::filesystem::u8path(step.texturePath).wstring();
+        const auto path = PathFromUtf8(step.texturePath).wstring();
         if (TextureLoadQuiet(path.c_str(), true) < 0)
             OutputDebugStringA(("[SceneAssetPreload] texture load failed: "
                 + step.texturePath + "\n").c_str());

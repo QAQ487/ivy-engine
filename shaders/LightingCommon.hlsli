@@ -101,15 +101,17 @@ float3x3 CotangentFrame(float3 N, float3 p, float2 uv)
 float3 ApplyNormalMap(float3 N, float3 posOS, float2 uv)
 {
     N = normalize(N);
-    if (NormalStrength <= 0.0f)
-        return N;
+    float3 result = N;
+    if (NormalStrength > 0.0f)
+    {
+        float3 nTex = g_NormalMap.Sample(g_SamplerState, uv).xyz * 2.0f - 1.0f;
+        nTex.xy *= NormalStrength;
+        nTex = normalize(nTex);
 
-    float3 nTex = g_NormalMap.Sample(g_SamplerState, uv).xyz * 2.0f - 1.0f;
-    nTex.xy *= NormalStrength;
-    nTex = normalize(nTex);
-
-    float3x3 TBN = CotangentFrame(N, posOS, uv);
-    return normalize(mul(nTex, TBN));
+        float3x3 TBN = CotangentFrame(N, posOS, uv);
+        result = normalize(mul(nTex, TBN));
+    }
+    return result;
 }
 
 float PCF3x3(Texture2D<float> sm, SamplerComparisonState cmpSamp, float2 uv, float cmp, float2 texel)
@@ -134,12 +136,16 @@ float SampleCascadeShadow0(float3 posForShadowOS)
     float3 proj = sp.xyz / max(sp.w, 1e-6f);
     float slope = max(abs(ddx(proj.z)), abs(ddy(proj.z)));
     float2 uv = float2(proj.x * 0.5f + 0.5f, -proj.y * 0.5f + 0.5f);
-    if (any(uv < 0.0f) || any(uv > 1.0f)) return 1.0f;
-    float bias = ShadowParams[0].x + slope * ShadowParams[0].y;
-    uint smw = 0, smh = 0;
-    g_ShadowMap[0].GetDimensions(smw, smh);
-    float2 texel = 1.0f / float2(max(1.0f, (float)smw), max(1.0f, (float)smh));
-    return lerp(0.3f, 1.0f, PCF3x3(g_ShadowMap[0], g_ShadowSampler, uv, proj.z - bias, texel));
+    float result = 1.0f;
+    if (!(any(uv < 0.0f) || any(uv > 1.0f)))
+    {
+        float bias = ShadowParams[0].x + slope * ShadowParams[0].y;
+        uint smw = 0, smh = 0;
+        g_ShadowMap[0].GetDimensions(smw, smh);
+        float2 texel = 1.0f / float2(max(1.0f, (float)smw), max(1.0f, (float)smh));
+        result = lerp(0.3f, 1.0f, PCF3x3(g_ShadowMap[0], g_ShadowSampler, uv, proj.z - bias, texel));
+    }
+    return result;
 }
 float SampleCascadeShadow1(float3 posForShadowOS)
 {
@@ -147,12 +153,16 @@ float SampleCascadeShadow1(float3 posForShadowOS)
     float3 proj = sp.xyz / max(sp.w, 1e-6f);
     float slope = max(abs(ddx(proj.z)), abs(ddy(proj.z)));
     float2 uv = float2(proj.x * 0.5f + 0.5f, -proj.y * 0.5f + 0.5f);
-    if (any(uv < 0.0f) || any(uv > 1.0f)) return 1.0f;
-    float bias = ShadowParams[1].x + slope * ShadowParams[1].y;
-    uint smw = 0, smh = 0;
-    g_ShadowMap[1].GetDimensions(smw, smh);
-    float2 texel = 1.0f / float2(max(1.0f, (float)smw), max(1.0f, (float)smh));
-    return lerp(0.3f, 1.0f, PCF3x3(g_ShadowMap[1], g_ShadowSampler, uv, proj.z - bias, texel));
+    float result = 1.0f;
+    if (!(any(uv < 0.0f) || any(uv > 1.0f)))
+    {
+        float bias = ShadowParams[1].x + slope * ShadowParams[1].y;
+        uint smw = 0, smh = 0;
+        g_ShadowMap[1].GetDimensions(smw, smh);
+        float2 texel = 1.0f / float2(max(1.0f, (float)smw), max(1.0f, (float)smh));
+        result = lerp(0.3f, 1.0f, PCF3x3(g_ShadowMap[1], g_ShadowSampler, uv, proj.z - bias, texel));
+    }
+    return result;
 }
 float SampleCascadeShadow2(float3 posForShadowOS)
 {
@@ -160,12 +170,16 @@ float SampleCascadeShadow2(float3 posForShadowOS)
     float3 proj = sp.xyz / max(sp.w, 1e-6f);
     float slope = max(abs(ddx(proj.z)), abs(ddy(proj.z)));
     float2 uv = float2(proj.x * 0.5f + 0.5f, -proj.y * 0.5f + 0.5f);
-    if (any(uv < 0.0f) || any(uv > 1.0f)) return 1.0f;
-    float bias = ShadowParams[2].x + slope * ShadowParams[2].y;
-    uint smw = 0, smh = 0;
-    g_ShadowMap[2].GetDimensions(smw, smh);
-    float2 texel = 1.0f / float2(max(1.0f, (float)smw), max(1.0f, (float)smh));
-    return lerp(0.3f, 1.0f, PCF3x3(g_ShadowMap[2], g_ShadowSampler, uv, proj.z - bias, texel));
+    float result = 1.0f;
+    if (!(any(uv < 0.0f) || any(uv > 1.0f)))
+    {
+        float bias = ShadowParams[2].x + slope * ShadowParams[2].y;
+        uint smw = 0, smh = 0;
+        g_ShadowMap[2].GetDimensions(smw, smh);
+        float2 texel = 1.0f / float2(max(1.0f, (float)smw), max(1.0f, (float)smh));
+        result = lerp(0.3f, 1.0f, PCF3x3(g_ShadowMap[2], g_ShadowSampler, uv, proj.z - bias, texel));
+    }
+    return result;
 }
 float SampleCascadeShadow3(float3 posForShadowOS)
 {
@@ -173,12 +187,16 @@ float SampleCascadeShadow3(float3 posForShadowOS)
     float3 proj = sp.xyz / max(sp.w, 1e-6f);
     float slope = max(abs(ddx(proj.z)), abs(ddy(proj.z)));
     float2 uv = float2(proj.x * 0.5f + 0.5f, -proj.y * 0.5f + 0.5f);
-    if (any(uv < 0.0f) || any(uv > 1.0f)) return 1.0f;
-    float bias = ShadowParams[3].x + slope * ShadowParams[3].y;
-    uint smw = 0, smh = 0;
-    g_ShadowMap[3].GetDimensions(smw, smh);
-    float2 texel = 1.0f / float2(max(1.0f, (float)smw), max(1.0f, (float)smh));
-    return lerp(0.3f, 1.0f, PCF3x3(g_ShadowMap[3], g_ShadowSampler, uv, proj.z - bias, texel));
+    float result = 1.0f;
+    if (!(any(uv < 0.0f) || any(uv > 1.0f)))
+    {
+        float bias = ShadowParams[3].x + slope * ShadowParams[3].y;
+        uint smw = 0, smh = 0;
+        g_ShadowMap[3].GetDimensions(smw, smh);
+        float2 texel = 1.0f / float2(max(1.0f, (float)smw), max(1.0f, (float)smh));
+        result = lerp(0.3f, 1.0f, PCF3x3(g_ShadowMap[3], g_ShadowSampler, uv, proj.z - bias, texel));
+    }
+    return result;
 }
 
 float SampleCascadeShadowByIndex(uint cascadeIndex, float3 posForShadowOS)
@@ -193,60 +211,62 @@ float SampleCascadeShadowByIndex(uint cascadeIndex, float3 posForShadowOS)
 
 float CascadeSplitFar(uint cascadeIndex)
 {
-    if (cascadeIndex == 0) return CascadeSplits.x;
-    if (cascadeIndex == 1) return CascadeSplits.y;
-    if (cascadeIndex == 2) return CascadeSplits.z;
-    return CascadeSplits.w;
+    float result = CascadeSplits.w;
+    if (cascadeIndex == 0) result = CascadeSplits.x;
+    else if (cascadeIndex == 1) result = CascadeSplits.y;
+    else if (cascadeIndex == 2) result = CascadeSplits.z;
+    return result;
 }
 
 // Cascaded directional shadow. Only directional lights (Type < 0.5) sample CSM.
 float EvalShadow(uint lightIndex, float3 inPosOS, float3 N)
 {
-    if (CascadeCount == 0)
-        return 1.0f;
-    uint lightLoop = (uint)LightCountF;
-    if (lightLoop > MAX_LIGHTS) lightLoop = MAX_LIGHTS;
-    if (lightIndex >= lightLoop)
-        return 1.0f;
-    if (Lights[lightIndex].Type >= 0.5f)
-        return 1.0f;
-
-    float receiverNormalOffset = ShadowParams[0].z;
-    float3 posForShadowOS = inPosOS + N * receiverNormalOffset;
-
-    float viewZ = abs(mul(float4(inPosOS, 1.0f), WorldView).z);
-
-    uint cascade = 0;
-    if (viewZ >= CascadeSplits.x) cascade = 1;
-    if (viewZ >= CascadeSplits.y) cascade = 2;
-    if (viewZ >= CascadeSplits.z) cascade = 3;
-    if (cascade >= CascadeCount)
-        cascade = CascadeCount - 1;
-
-    float shadow0 = 1.0f;
-    if (cascade == 0) shadow0 = SampleCascadeShadow0(posForShadowOS);
-    else if (cascade == 1) shadow0 = SampleCascadeShadow1(posForShadowOS);
-    else if (cascade == 2) shadow0 = SampleCascadeShadow2(posForShadowOS);
-    else shadow0 = SampleCascadeShadow3(posForShadowOS);
-
-    if (cascade + 1 < CascadeCount)
+    float result = 1.0f;
+    if (CascadeCount != 0)
     {
-        float splitFar = CascadeSplitFar(cascade);
-        float blendWidth = max(CascadeBlend, 1e-3f);
-        float t = saturate((splitFar - viewZ) / blendWidth);
-        if (t < 1.0f)
+        uint lightLoop = (uint)LightCountF;
+        if (lightLoop > MAX_LIGHTS) lightLoop = MAX_LIGHTS;
+        if (lightIndex < lightLoop && Lights[lightIndex].Type < 0.5f)
         {
-            float shadow1 = 1.0f;
-            uint nextC = cascade + 1;
-            if (nextC == 0) shadow1 = SampleCascadeShadow0(posForShadowOS);
-            else if (nextC == 1) shadow1 = SampleCascadeShadow1(posForShadowOS);
-            else if (nextC == 2) shadow1 = SampleCascadeShadow2(posForShadowOS);
-            else shadow1 = SampleCascadeShadow3(posForShadowOS);
-            shadow0 = lerp(shadow1, shadow0, t);
+            float receiverNormalOffset = ShadowParams[0].z;
+            float3 posForShadowOS = inPosOS + N * receiverNormalOffset;
+
+            float viewZ = abs(mul(float4(inPosOS, 1.0f), WorldView).z);
+
+            uint cascade = 0;
+            if (viewZ >= CascadeSplits.x) cascade = 1;
+            if (viewZ >= CascadeSplits.y) cascade = 2;
+            if (viewZ >= CascadeSplits.z) cascade = 3;
+            if (cascade >= CascadeCount)
+                cascade = CascadeCount - 1;
+
+            float shadow0 = 1.0f;
+            if (cascade == 0) shadow0 = SampleCascadeShadow0(posForShadowOS);
+            else if (cascade == 1) shadow0 = SampleCascadeShadow1(posForShadowOS);
+            else if (cascade == 2) shadow0 = SampleCascadeShadow2(posForShadowOS);
+            else shadow0 = SampleCascadeShadow3(posForShadowOS);
+
+            if (cascade + 1 < CascadeCount)
+            {
+                float splitFar = CascadeSplitFar(cascade);
+                float blendWidth = max(CascadeBlend, 1e-3f);
+                float t = saturate((splitFar - viewZ) / blendWidth);
+                if (t < 1.0f)
+                {
+                    float shadow1 = 1.0f;
+                    uint nextC = cascade + 1;
+                    if (nextC == 0) shadow1 = SampleCascadeShadow0(posForShadowOS);
+                    else if (nextC == 1) shadow1 = SampleCascadeShadow1(posForShadowOS);
+                    else if (nextC == 2) shadow1 = SampleCascadeShadow2(posForShadowOS);
+                    else shadow1 = SampleCascadeShadow3(posForShadowOS);
+                    shadow0 = lerp(shadow1, shadow0, t);
+                }
+            }
+
+            result = shadow0;
         }
     }
-
-    return shadow0;
+    return result;
 }
 
 float3 EvalHemisphereAmbient(float3 N, float3 baseRGB)
@@ -452,15 +472,17 @@ float3 EvalCelSpecular(LightParam light, float3 N, float3 V, float type, float3 
 
 float3 ApplyHeightFog(float3 color, float3 posOS)
 {
-    if (FogEnabled <= 0.0f)
-        return color;
-
-    float3 posWS = mul(float4(posOS, 1.0f), World).xyz;
-    float dist = max(0.0f, length(posWS - CameraPosWS) - FogStart);
-    float distTerm = 1.0f - exp(-FogDensity * dist);
-    float heightTerm = saturate((FogHeight - posWS.y) * FogHeightFalloff);
-    float fog = saturate(distTerm * heightTerm);
-    return lerp(color, FogColor, fog);
+    float3 result = color;
+    if (FogEnabled > 0.0f)
+    {
+        float3 posWS = mul(float4(posOS, 1.0f), World).xyz;
+        float dist = max(0.0f, length(posWS - CameraPosWS) - FogStart);
+        float distTerm = 1.0f - exp(-FogDensity * dist);
+        float heightTerm = saturate((FogHeight - posWS.y) * FogHeightFalloff);
+        float fog = saturate(distTerm * heightTerm);
+        result = lerp(color, FogColor, fog);
+    }
+    return result;
 }
 
 // Fresnel rim weighted toward the side opposite the key light (anime backlit rim).

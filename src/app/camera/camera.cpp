@@ -62,7 +62,7 @@ XMFLOAT3 Camera::GetForward() const {
 	forward.x = at.x - position.x;
 	forward.y = at.y - position.y;
 	forward.z = at.z - position.z;
-	float len = sqrt(forward.x * forward.x + forward.y * forward.y + forward.z * forward.z);
+	float len = static_cast<float>(sqrt(forward.x * forward.x + forward.y * forward.y + forward.z * forward.z));
 	if (len > 0.0001f) {
 		forward.x /= len;
 		forward.y /= len;

@@ -9,6 +9,7 @@
 #include "engine/rendering/sprite/sprite.h"
 #include "engine/rendering/sprite/texture.h"
 #include "engine/rendering/d3d11/renderer.h"
+#include "engine/core/utf8_path.h"
 #include "camera.h"
 #include <algorithm>
 #include <filesystem>
@@ -43,7 +44,7 @@ void SpriteRendererComponent::Draw() const {
     if (!owner || texturePath.empty() || !(pixelsPerUnit > 0.001f)) return;
     if (loadedPath != texturePath) {
         loadedPath = texturePath;
-        const auto path = std::filesystem::u8path(texturePath).wstring();
+        const auto path = PathFromUtf8(texturePath).wstring();
         loadedTexture = TextureLoadQuiet(path.c_str(), true);
     }
     const int texture = loadedTexture;
@@ -91,7 +92,7 @@ DirectX::XMFLOAT2 SpriteRendererComponent::GetWorldSize() const {
     if(texturePath.empty() || !(pixelsPerUnit>0.001f)) return {};
     if(loadedPath!=texturePath) {
         loadedPath=texturePath;
-        loadedTexture=TextureLoadQuiet(std::filesystem::u8path(texturePath).wstring().c_str());
+        loadedTexture=TextureLoadQuiet(PathFromUtf8(texturePath).wstring().c_str());
     }
     if(loadedTexture<0) return {};
     const auto size=TextureGetSize(loadedTexture);

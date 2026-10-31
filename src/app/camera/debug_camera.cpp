@@ -473,7 +473,7 @@ void DebugCamera_Update(double dt) {
 	}
 
 	// Mouse wheel: Dolly/Zoom (works without Alt)
-	float wheelDelta = Mouse_GetWheelDelta();
+	float wheelDelta = static_cast<float>(Mouse_GetWheelDelta());
 #ifndef GAME_RUNTIME
 	if (wheelDelta != 0 && !ImGui::GetIO().WantCaptureMouse) {
 #else

@@ -4,6 +4,7 @@
 #include "sprite_animator_component.h"
 #include "libraries/nlohmann/json.hpp"
 #include "engine/core/engine_gui.h"
+#include "engine/core/utf8_path.h"
 #include <filesystem>
 #include <fstream>
 
@@ -58,11 +59,11 @@ void SpriteAnimatorComponent::Update(double dt) {
 bool SpriteAnimatorComponent::ImportSheet(const std::string& metadataPath,const std::string& name) {
     if(name.empty()) return false;
     try {
-        const auto path=std::filesystem::u8path(metadataPath);
+        const auto path=PathFromUtf8(metadataPath);
         std::ifstream file(path); if(!file) return false;
         json j;file>>j;
         SpriteAnimationClip clip;
-        const auto utf8=(path.parent_path()/std::filesystem::u8path(j.at("image").get<std::string>())).generic_u8string();
+        const auto utf8=(path.parent_path()/PathFromUtf8(j.at("image").get<std::string>())).generic_u8string();
         clip.texture.assign(reinterpret_cast<const char*>(utf8.data()),utf8.size());
         for(const auto& f:j.at("frames")) {
             SpriteAnimationFrame frame{f.at("x").get<float>(),f.at("y").get<float>(),f.at("w").get<float>(),f.at("h").get<float>()};

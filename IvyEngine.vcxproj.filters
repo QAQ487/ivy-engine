@@ -114,6 +114,12 @@
     <ClInclude Include="engine\core\easing.h">
       <Filter>engine\core</Filter>
     </ClInclude>
+    <ClInclude Include="engine\core\env_var.h">
+      <Filter>engine\core</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\core\utf8_path.h">
+      <Filter>engine\core</Filter>
+    </ClInclude>
     <ClInclude Include="engine\core\job_system.h">
       <Filter>engine\core</Filter>
     </ClInclude>

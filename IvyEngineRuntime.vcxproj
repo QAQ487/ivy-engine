@@ -25,6 +25,8 @@
     <RootNamespace>GameRuntime</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
     <ProjectName>IvyEngineRuntime</ProjectName>
+    <!-- Content-project project.json is not NuGet; deps are vendored under libraries/. -->
+    <ResolveNuGetPackages>false</ResolveNuGetPackages>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -350,6 +352,8 @@ xcopy /y /d /e "$(ProjectDir)rom\*" "$(OutDir)rom\"</Command>
     <ClInclude Include="engine\physics\collider\collider.h" />
     <ClInclude Include="engine\physics\physics_material.h" />
     <ClInclude Include="engine\core\easing.h" />
+    <ClInclude Include="engine\core\env_var.h" />
+    <ClInclude Include="engine\core\utf8_path.h" />
     <ClInclude Include="engine\core\job_system.h" />
     <ClInclude Include="engine\core\frame_timer.h" />
     <ClInclude Include="engine\core\render_thread.h" />
