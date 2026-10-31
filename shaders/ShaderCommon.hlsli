@@ -1,5 +1,5 @@
 //*****************************************************************************
-// 定数バッファ（VS・PS 共有）
+// Constant buffers (shared by VS / PS)
 //*****************************************************************************
 #ifndef SHADER_COMMON_HLSLI
 #define SHADER_COMMON_HLSLI
@@ -47,7 +47,7 @@ float3 SkinPositionOS(float3 p, uint4 indices, float4 weights)
 cbuffer MaterialBuffer : register(b1)
 {
     float4 Ambient;
-    float4 Diffuse; // Diffuse.a はテクスチャ切り替えフラグ（1=使う, 0=使わない）として使用
+    float4 Diffuse; // Diffuse.a = texture flag (1=use, 0=ignore)
     float4 Specular;
     float4 Emission;
     float Shininess;

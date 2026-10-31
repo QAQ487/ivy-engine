@@ -1,4 +1,7 @@
-﻿#include "ui_text_renderer.h"
+// ui_text_renderer.cpp
+// Renders UI text glyphs via batched sprites.
+
+#include "ui_text_renderer.h"
 #include "ui_font.h"
 #include "../rendering/sprite/sprite.h"
 #include "../rendering/sprite/texture.h"

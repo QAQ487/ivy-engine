@@ -1,3 +1,6 @@
+// tag_registry.h
+// Declares Tag.
+
 #ifndef TAG_REGISTRY_H
 #define TAG_REGISTRY_H
 

@@ -5,7 +5,7 @@
  * Created: 2026-03-12
  * -----------------------------------------------------------------------------
  * REFACTOR (2026-03-13)
- *   engine::GameObject ↁE::GameObject (alias, no API change).
+ *   engine::GameObject  -> ::GameObject (alias, no API change).
  *****************************************************/
 #pragma once
 

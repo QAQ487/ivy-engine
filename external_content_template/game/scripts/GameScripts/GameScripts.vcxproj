@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -108,7 +108,7 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>$(RepoRoot);$(EngineRoot);$(EngineRoot)src\app;$(EngineRoot)src\app\scene;$(EngineRoot)src\app\camera;$(EngineRoot)src\app\rendering;$(EngineRoot)libraries;$(EngineRoot)libraries\fbxsdk\include;$(EngineRoot)libraries\effekseer\include\Effekseer;$(EngineRoot)libraries\effekseer\include\EffekseerRendererDX11;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalOptions>/FS %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/utf-8 /FS %(AdditionalOptions)</AdditionalOptions>
       <DebugInformationFormat>OldStyle</DebugInformationFormat>
       <MultiProcessorCompilation>false</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -144,7 +144,7 @@ if exist "$(OutDir)$(TargetName).pdb" xcopy /Y /D "$(OutDir)$(TargetName).pdb" "
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>$(RepoRoot);$(EngineRoot);$(EngineRoot)src\app;$(EngineRoot)src\app\scene;$(EngineRoot)src\app\camera;$(EngineRoot)src\app\rendering;$(EngineRoot)libraries;$(EngineRoot)libraries\fbxsdk\include;$(EngineRoot)libraries\effekseer\include\Effekseer;$(EngineRoot)libraries\effekseer\include\EffekseerRendererDX11;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalOptions>/FS %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/utf-8 /FS %(AdditionalOptions)</AdditionalOptions>
       <DebugInformationFormat>OldStyle</DebugInformationFormat>
       <MultiProcessorCompilation>false</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
@@ -178,7 +178,7 @@ if exist "$(OutDir)$(TargetName).pdb" xcopy /Y /D "$(OutDir)$(TargetName).pdb" "
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>$(RepoRoot);$(EngineRoot);$(EngineRoot)src\app;$(EngineRoot)src\app\scene;$(EngineRoot)src\app\camera;$(EngineRoot)src\app\rendering;$(EngineRoot)libraries;$(EngineRoot)libraries\fbxsdk\include;$(EngineRoot)libraries\effekseer\include\Effekseer;$(EngineRoot)libraries\effekseer\include\EffekseerRendererDX11;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalOptions>/FS %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/utf-8 /FS %(AdditionalOptions)</AdditionalOptions>
       <DebugInformationFormat>OldStyle</DebugInformationFormat>
       <MultiProcessorCompilation>false</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -214,7 +214,7 @@ if exist "$(OutDir)$(TargetName).pdb" xcopy /Y /D "$(OutDir)$(TargetName).pdb" "
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>$(RepoRoot);$(EngineRoot);$(EngineRoot)src\app;$(EngineRoot)src\app\scene;$(EngineRoot)src\app\camera;$(EngineRoot)src\app\rendering;$(EngineRoot)libraries;$(EngineRoot)libraries\fbxsdk\include;$(EngineRoot)libraries\effekseer\include\Effekseer;$(EngineRoot)libraries\effekseer\include\EffekseerRendererDX11;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalOptions>/FS %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/utf-8 /FS %(AdditionalOptions)</AdditionalOptions>
       <DebugInformationFormat>OldStyle</DebugInformationFormat>
       <MultiProcessorCompilation>false</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>

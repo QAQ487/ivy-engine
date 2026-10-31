@@ -1,6 +1,6 @@
-﻿/**===========================================================================
+/**===========================================================================
  File   : key_logger.h
- Title  : 入力の記録
+ Title  : Input logging
  Author : Terry Yeung
  Date   : 2025/6/27
  Brief  :
@@ -13,12 +13,12 @@ void KeyLogger_Initialize();
 void KeyLogger_Update(double now_time);
 
 static void Keyboard_SetKeyDown(Keyboard_State* state, Keyboard_Keys key, bool down);
-bool KeyLogger_IsPressed(Keyboard_Keys key);     // キーが現在押されているかどうか（押し続けている間 true）
-bool KeyLogger_IsTrigger(Keyboard_Keys key);     // キーが今フレームで押された瞬間か（1フレームだけ true）
-bool KeyLogger_IsRelease(Keyboard_Keys key);     // キーが今フレームで離された瞬間か（1フレームだけ true）
-bool KeyLogger_IsDoubleTap(Keyboard_Keys key);   // キーが素早く2回押されたか（ダブルタップ、例：0.3秒以内）
-bool KeyLogger_IsRepeat(Keyboard_Keys key);      // キーが押し続けられていて一定時間ごとに true を返す（例：0.25秒ごと）
-bool KeyLogger_IsLongPress(Keyboard_Keys key);   // キーが一定時間以上（例：1秒以上）押されているかどうか
-double KeyLogger_GetHoldTime(Keyboard_Keys key); // キーが現在どれくらいの時間押され続けているか（秒数）
+bool KeyLogger_IsPressed(Keyboard_Keys key);     // True while the key is held down
+bool KeyLogger_IsTrigger(Keyboard_Keys key);     // True only on the frame the key is pressed
+bool KeyLogger_IsRelease(Keyboard_Keys key);     // True only on the frame the key is released
+bool KeyLogger_IsDoubleTap(Keyboard_Keys key);   // True on a quick double-tap (e.g. within 0.3s)
+bool KeyLogger_IsRepeat(Keyboard_Keys key);      // True periodically while held (e.g. every 0.25s)
+bool KeyLogger_IsLongPress(Keyboard_Keys key);   // True if held for a threshold (e.g. 1s+)
+double KeyLogger_GetHoldTime(Keyboard_Keys key); // How long the key has been held (seconds)
 
 #endif // !KEY_LOGGER_H

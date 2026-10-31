@@ -1,3 +1,6 @@
+// ui_canvas_script_register.h
+// Declares TYPE.
+
 #pragma once
 
 #include "ui_canvas_script.h"

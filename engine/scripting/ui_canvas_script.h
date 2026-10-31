@@ -1,3 +1,6 @@
+// ui_canvas_script.h
+// Declares UIElement.
+
 #pragma once
 
 #include "libraries/nlohmann/json.hpp"

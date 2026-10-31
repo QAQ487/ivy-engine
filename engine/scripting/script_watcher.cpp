@@ -1,4 +1,7 @@
-﻿#include "script_watcher.h"
+// script_watcher.cpp
+// Hot-reloads gameplay script DLLs when they change.
+
+#include "script_watcher.h"
 #include <filesystem>
 
 void ScriptWatcher::Start(const std::string& watchDir, Callback onChange) {

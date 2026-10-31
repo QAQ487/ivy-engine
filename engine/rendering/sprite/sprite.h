@@ -17,8 +17,8 @@ void Sprite_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext);
 void Sprite_Finalize(void);
 
 /**---------------------------------------------------------------------------
- ���X�v���C�g�`�揈����
- * �����@�FID�A�`��ʒu X�EY�A���A�����A�e�N�X�`��������W X�EY�A�؂�o�����E�����A��]�p�x�i���W�A���j�A�F
+  Sprite draw
+ * Args: texture ID, position X/Y, width, height, texture top-left X/Y, crop width/height, rotation angle (radians), color
  ---------------------------------------------------------------------------**/
 void Sprite_Draw(int texid, float X, float Y, DirectX::XMFLOAT4 color = {1.0f, 1.0f, 1.0f, 1.0f});
 void Sprite_Draw(int texid, float X, float Y, float width, float height, int tx, int ty, int tw, int th, DirectX::XMFLOAT4 color = {1.0f, 1.0f, 1.0f, 1.0f});

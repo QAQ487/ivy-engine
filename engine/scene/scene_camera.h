@@ -1,3 +1,6 @@
+// scene_camera.h
+// Scene camera selection and view helpers.
+
 #pragma once
 #include <memory>
 #include <vector>

@@ -561,7 +561,7 @@ bool CapsuleCollider::RayIntersect(const DirectX::XMFLOAT3& origin,
 		center.z + axisF.z * halfHeight
 	};
 
-	// Inigo Quilez-style ray?capsule (body cylinder + end caps).
+	// Inigo Quilez-style ray-capsule (body cylinder + end caps).
 	XMVECTOR ba = XMVectorSubtract(XMLoadFloat3(&pb), XMLoadFloat3(&pa));
 	XMVECTOR oa = XMVectorSubtract(XMLoadFloat3(&origin), XMLoadFloat3(&pa));
 	XMVECTOR rd = XMLoadFloat3(&dir);
@@ -819,7 +819,7 @@ static void ResolveContact(GameObject* self, GameObject* other,
     if (!doVelocity)
         return;
 
-    // Relative velocity at the contact (includes ? � r when a point is supplied).
+    // Relative velocity at the contact (includes omega x r when a point is supplied).
     XMFLOAT3 vA = rbA.GetVelocity();
     XMFLOAT3 vB = rbB.GetVelocity();
     XMFLOAT3 wA = rbA.GetAngularVelocity();
@@ -919,7 +919,7 @@ static void ResolveContact(GameObject* self, GameObject* other,
         return c && c->GetType() == ColliderType::BOX;
     };
     // Boxes: friction is linear only so a crate slides instead of rolling from
-    // r×f at an edge. Spheres keep angular friction so balls still roll.
+    // r x f at an edge. Spheres keep angular friction so balls still roll.
     const bool skipFricAngA = isBoxOwner(self);
     const bool skipFricAngB = isBoxOwner(other);
     auto applyFrictionImpulse = [&](float jFriction, const XMFLOAT3& tDir) {
@@ -1499,7 +1499,7 @@ void BoxCollider::ResolveCollision(Collider* other) {
             XMFLOAT3 manifold[4];
             const int nPts = CollectBoxContactManifold(
                 centerA, sizeA, rotA, centerB, ob->GetSize(), rotB, n, manifold);
-            // One pose correction at the manifold centroid so �Z corners cannot
+            // One pose correction at the manifold centroid so +/-Z corners cannot
             // twist around the thin principal axis (Ixx >> Izz inverse).
             XMFLOAT3 centroid{ 0, 0, 0 };
             for (int i = 0; i < nPts; ++i) {
@@ -1513,7 +1513,7 @@ void BoxCollider::ResolveCollision(Collider* other) {
             centroid.z *= invN;
             ResolveContact(m_owner, other->GetOwner(), n, resolveOverlap, 0.0005f, &centroid, ContactSolve::Position);
             // Normal + friction at the centroid only: a single lever r.z?0 so
-            // torque is the gravity-tip axis, not sequential �Z corner twist.
+            // torque is the gravity-tip axis, not sequential +/-Z corner twist.
             for (int iter = 0; iter < 2; ++iter)
                 ResolveContact(m_owner, other->GetOwner(), n, resolveOverlap, 0.0005f, &centroid, ContactSolve::Velocity);
         }
@@ -1879,7 +1879,7 @@ void CapsuleCollider::ResolveCollision(Collider* other) {
 
         // Match CheckCollision: closest point on capsule segment ? sphere center.
         // Center-only spheres miss head/feet hits (centerPen<=0 while segPen>0),
-        // and swept narrow-phase returns after that failed resolve �� tunneling.
+        // and swept narrow-phase returns after that failed resolve -> tunneling.
         float halfH = GetHeight() * 0.5f;
         XMFLOAT3 rotA = m_owner->GetRotation();
         XMMATRIX rm = XMMatrixRotationRollPitchYaw(
@@ -2536,7 +2536,7 @@ void MeshCollider::DebugDraw(const XMFLOAT4& color) {
     }
 
     // Build flat edge-vertex list for a single batched draw call:
-    // 3 edges �~ 2 endpoints per triangle.
+    // 3 edges x 2 endpoints per triangle.
     std::vector<XMFLOAT3> lineVerts;
     lineVerts.reserve(m_indices.size() * 2);
     for (size_t i = 0; i < m_indices.size(); i += 3) {
@@ -2646,7 +2646,7 @@ bool MeshCollider::Raycast(const DirectX::XMFLOAT3& rayOrigin,
     return false;
 }
 
-// M?ller-Trumbore ray-triangle intersection algorithm
+// Moller-Trumbore ray-triangle intersection algorithm
 bool MeshCollider::RayIntersectsTriangle(const XMFLOAT3& rayOrigin,
     const XMFLOAT3& rayDir,
     const XMFLOAT3& v0,

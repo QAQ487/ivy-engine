@@ -1,3 +1,6 @@
+// scene_loader.cpp
+// Implements SceneAssetEntry.
+
 #include "engine/physics/2d/physics2d.h"
 #include "engine/ecs/physics2d_components.h"
 #include "engine/ecs/sprite_animator_component.h"

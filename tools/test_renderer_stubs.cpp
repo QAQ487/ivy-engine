@@ -1,3 +1,6 @@
+// test_renderer_stubs.cpp
+// Stub renderer symbols for tool/check binaries.
+
 float GetClientWidth() { return 1280.0f; }
 float GetClientHeight() { return 720.0f; }
 float GetBackBufferWidth() { return 1280.0f; }

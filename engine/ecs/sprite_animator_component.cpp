@@ -1,3 +1,6 @@
+// sprite_animator_component.cpp
+// ECS component that drives sprite animations.
+
 #include "sprite_animator_component.h"
 #include "libraries/nlohmann/json.hpp"
 #include "engine/core/engine_gui.h"

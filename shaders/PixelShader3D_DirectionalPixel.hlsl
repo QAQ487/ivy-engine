@@ -1,3 +1,6 @@
+// PixelShader3D_DirectionalPixel.hlsl
+// Per-pixel directional light pixel shader.
+
 #include "LightingCommon.hlsli"
 
 void main(

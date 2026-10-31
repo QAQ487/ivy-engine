@@ -1,3 +1,6 @@
+// scene_lighting.cpp
+// Implements SceneLightEntry.
+
 #include "scene_lighting.h"
 #include "engine/ecs/directional_light_component.h"
 #include "engine/ecs/point_light_component.h"

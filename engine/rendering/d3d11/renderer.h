@@ -12,10 +12,10 @@
 
 #include "main.h"
 
- // ・ｽZ・ｽ[・ｽt・ｽ・ｽ・ｽ・ｽ・ｽ[・ｽX
+ // Safe release
 #define SAFE_RELEASE(o) if (o) { (o)->Release(); o = NULL; }
 
-// ・ｽ・ｽ・ｽ_・ｽ・ｽ・ｽC・ｽA・ｽE・ｽg
+// 3D vertex layout
 struct VERTEX_3D {
 	XMFLOAT3 Position;
 	XMFLOAT3 Normal;
@@ -23,7 +23,7 @@ struct VERTEX_3D {
 	XMFLOAT2 TexCoord;
 };
 
-// ・ｽ}・ｽe・ｽ・ｽ・ｽA・ｽ・ｽ
+// Material
 struct MATERIAL {
     XMFLOAT4    Ambient;
     XMFLOAT4    Diffuse;
@@ -46,26 +46,26 @@ struct MATERIAL {
     float       _padToon1;
 };
 
-// ・ｽ關費ｿｽo・ｽb・ｽt・ｽ@・ｽT・ｽC・ｽY・ｽ・ｽ 16 ・ｽo・ｽC・ｽg・ｽ・ｽ・ｽE・ｽ・ｽ・ｽ・ｽ
+// Constant buffer size must be a multiple of 16 bytes
 static_assert(sizeof(MATERIAL) % 16 == 0, "MATERIAL must be 16-byte aligned.");
 
-// ・ｽ・ｽ・ｽ・ｽ・ｽ・ｽ/・ｽI・ｽ・ｽ
+// Init / shutdown
 HRESULT InitRenderer(HINSTANCE hInstance, HWND hWnd, BOOL bWindow);
 void    UninitRenderer(void);
 
-// ・ｽ・ｽ・ｽt・ｽ・ｽ・ｽ[・ｽ・ｽ
+// Per-frame
 void    Clear(void);
 void    Present(void);
 
-// ・ｽf・ｽo・ｽC・ｽX・ｽ謫ｾ
+// Device accessors
 ID3D11Device* GetDevice(void);
 ID3D11DeviceContext* GetDeviceContext(void);
 
-// ・ｽ[・ｽx・ｽe・ｽX・ｽg・ｽﾘゑｿｽﾖゑｿｽ
+// Depth test / cull
 void    SetDepthEnable(bool Enable);
 void    SetCullFront(bool enable);
 
-// ・ｽ・ｽﾊサ・ｽC・ｽY
+// Buffer sizes
 float   GetBackBufferWidth();
 float   GetBackBufferHeight();
 float   GetClientWidth();
@@ -92,7 +92,7 @@ ID3D11ShaderResourceView* PostRT_GetSRV();
 void    Renderer_BindPostTarget();
 void    Renderer_BindBackBuffer();
 
-// ・ｽE・ｽB・ｽ・ｽ・ｽh・ｽE・ｽn・ｽ・ｽ・ｽh・ｽ・ｽ・ｽ謫ｾ
+// Window handle accessor
 HWND    GetWindowHandle();
 
 #endif // !RENDERER_H

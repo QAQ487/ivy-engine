@@ -1,3 +1,6 @@
+// directional_light_component.h
+// ECS directional light component.
+
 #pragma once
 #include "component.h"
 #include <DirectXMath.h>

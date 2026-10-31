@@ -1,3 +1,6 @@
+// tag_registry.cpp
+// Implements Tag.
+
 #include "tag_registry.h"
 #include "game_object.h"
 

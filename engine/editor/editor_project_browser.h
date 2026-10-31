@@ -1,3 +1,6 @@
+// editor_project_browser.h
+// Editor project/asset browser panel.
+
 #pragma once
 
 #include <memory>

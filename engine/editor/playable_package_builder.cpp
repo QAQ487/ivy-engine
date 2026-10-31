@@ -1,3 +1,6 @@
+// playable_package_builder.cpp
+// Builds playable runtime packages from a project.
+
 #include "playable_package_builder.h"
 
 #include "project_manager.h"

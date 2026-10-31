@@ -38,7 +38,7 @@ struct PNTKeyHasher {
 	}
 };
 
-// ������/�p�X���[�e�B���e�B
+// String / path utilities
 void Trim(std::string& s);
 std::vector<std::string> Split(const std::string& s, char sep);
 std::string WideToUTF8(const std::wstring& ws);
@@ -47,7 +47,7 @@ std::wstring DirnameW(const std::wstring& path);
 std::wstring JoinPathW(const std::wstring& dir, const std::wstring& file);
 bool IsAbsolutePathW(const std::wstring& p);
 
-// �e�N�X�`���֘A
+// Texture helpers
 bool LoadTextureWIC_SRV(const wchar_t* texPath, ID3D11ShaderResourceView** outSRV);
 ID3D11ShaderResourceView* CreateSolidWhiteSRV();
 
@@ -56,11 +56,11 @@ ID3D11ShaderResourceView* CreateSolidWhiteSRV();
 void ModelUtil_ReleaseTextureCache();
 bool ModelUtil_IsTextureCached(const wchar_t* path);
 
-// �C�ӐF/�s���N/�� 1x1 �e�N�X�`���쐬
+// Create solid / pink / blue 1x1 textures
 ID3D11ShaderResourceView* CreateSolidColorSRV(uint8_t r, uint8_t g, uint8_t b, uint8_t a = 255);
 ID3D11ShaderResourceView* CreateSolidPinkSRV();
 
-// MTL: map_Kd �̗L���� outHadMapKd �ŕԂ�
+// MTL: return whether map_Kd exists via outHadMapKd
 bool TryLoadMTLTexture_SRV(
 	const std::wstring& mtlPath,
 	const std::wstring& baseDir,
@@ -70,7 +70,7 @@ bool TryLoadMTLTexture_SRV(
 	bool* outClamp,
 	bool* outHadMapKd = nullptr);
 
-// FBX: Diffuse �e�N�X�`���T��
+// FBX: find Diffuse texture
 struct DiffuseTexInfo {
 	std::wstring path;
 	std::string uvSetName;
@@ -79,11 +79,11 @@ struct DiffuseTexInfo {
 };
 bool FindFirstDiffuseFileTexture(fbxsdk::FbxNode* node, DiffuseTexInfo& out);
 
-// �⏕
+// Helpers
 DirectX::XMFLOAT3 TransformNormal_IT(const fbxsdk::FbxAMatrix& invTrans, const DirectX::XMFLOAT3& nIn);
 bool HasNegativeDeterminant(const fbxsdk::FbxAMatrix& m);
 
-// FBX SDK ���L
+// Shared FBX SDK helpers
 struct FbxShared {
 	fbxsdk::FbxManager* mgr;
 	fbxsdk::FbxIOSettings* ios;
@@ -92,7 +92,7 @@ struct FbxShared {
 };
 FbxShared& GetFbxShared();
 
-// �X�L�j���O
+// Skinning
 void EnumerateSkinnedMeshes(fbxsdk::FbxNode* root, std::vector<std::pair<fbxsdk::FbxMesh*, fbxsdk::FbxNode*>>& out);
 void ComputeSkinnedCP_ForMesh(fbxsdk::FbxMesh* mesh, fbxsdk::FbxNode* meshNode, double timeSec,
 	std::vector<DirectX::XMFLOAT3>& outPos, std::vector<DirectX::XMFLOAT3>& outNrm,

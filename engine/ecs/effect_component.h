@@ -1,3 +1,6 @@
+// effect_component.h
+// ECS effect component.
+
 #pragma once
 
 #include "component.h"

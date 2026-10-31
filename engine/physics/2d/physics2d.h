@@ -1,3 +1,6 @@
+// physics2d.h
+// Box2D integration entry points.
+
 #pragma once
 #include <DirectXMath.h>
 #include <cstdint>

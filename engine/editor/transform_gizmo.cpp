@@ -1,4 +1,7 @@
-﻿#include "transform_gizmo.h"
+// transform_gizmo.cpp
+// ImGuizmo-based transform editing gizmo.
+
+#include "transform_gizmo.h"
 
 #include "engine/core/engine_gui.h"
 #include "engine/ecs/game_object.h"

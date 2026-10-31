@@ -1,3 +1,6 @@
+// sprite_animator_component.h
+// ECS component that drives sprite animations.
+
 #pragma once
 #include "component.h"
 #include "sprite_animation.h"

@@ -1,3 +1,6 @@
+// sprite_pick_check.cpp
+// Validates sprite picking/hit-testing.
+
 #include "engine/rendering/sprite/sprite_pick_math.h"
 #include <cassert>
 int main() {

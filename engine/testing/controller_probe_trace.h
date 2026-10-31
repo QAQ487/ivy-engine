@@ -1,3 +1,6 @@
+// controller_probe_trace.h
+// Declares ControllerProbeFrame.
+
 #pragma once
 
 // Portable controller consumer-trace types and validators.

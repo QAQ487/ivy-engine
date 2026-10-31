@@ -1,3 +1,6 @@
+// play_scene_switch_check.h
+// Tool: play scene switch check declarations.
+
 #pragma once
 // Debug-only host integration check. No keyboard injection or production UI.
 #include "engine/core/engine_gui.h"

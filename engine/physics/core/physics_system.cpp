@@ -80,13 +80,13 @@ namespace {
 		g_contactPairsCurrent.clear();
 	}
 
-	// ���I���̂��ǂ����𔻒�i�L�l�}�e�B�b�N�łȂ��A���ʂ�����j
+	// True if dynamic rigid body (not kinematic, has mass)
 	inline bool IsDynamic(const GameObject* obj) {
 		const Rigidbody& rb = obj->GetRigidbody();
 		return !rb.IsKinematic() && rb.GetMass() > 0.0f;
 	}
 
-	// �e�R���C�_�[�̊T�Z�o�E���f�B���O�X�t�B�A���a�i�u���[�h�t�F�[�Y�p�̋ߎ��l�j
+	// Approx bounding-sphere radius per collider (broadphase)
 	inline float GetApproxRadius(const Collider* c) {
 		if (!c) return 0.0f;
 		switch (c->GetType()) {
@@ -99,13 +99,13 @@ namespace {
 			{
 				auto* b = static_cast<const BoxCollider*>(c);
 				const auto sz = b->GetSize();
-				// �Ίp���̔����𔼌a�Ƃ��ċߎ�
+				// Approx radius as half the diagonal
 				return 0.5f * std::sqrt(sz.x * sz.x + sz.y * sz.y + sz.z * sz.z);
 			}
 			case ColliderType::CAPSULE:
 			{
 				auto* cp = static_cast<const CapsuleCollider*>(c);
-				// �J�v�Z���́u���a + ����/2�v��ڈ��̔��a�Ɂi�����傫�߁j
+				// Capsule: use radius + height/2 (slightly large)
 				return cp->GetRadius() + 0.5f * cp->GetHeight();
 			}
 			case ColliderType::MESH:
@@ -124,7 +124,7 @@ namespace {
 		}
 	}
 
-	// �u���[�h�t�F�[�Y�i�T�Z��������j
+	// Broadphase (approximate distance test)
 	inline bool BroadPhasePass(const Collider* ca, const Collider* cb) {
 		if (!ca || !cb) return false;
 
@@ -137,13 +137,13 @@ namespace {
 
 		const float ra = GetApproxRadius(ca);
 		const float rb = GetApproxRadius(cb);
-		const float r = ra + rb + 0.05f; // �]�T�}�[�W��������ǉ�
+		const float r = ra + rb + 0.05f; // Add a small safety margin
 		return dist2 <= (r * r);
 	}
 
-	// �X�E�F�v�g�u���[�h�t�F�[�Y: �R���C�_�[ A �� prevCenterA ���猻�݈ʒu�܂ňړ�����
-	// �ۂɃR���C�_�[ B �ƌ������\�������邩��J�v�Z�� vs �X�t�B�A�Ŕ��肷��B
-	// ����ɂ�荂���ړ��i�O����]�Ȃǁj�ɂ��g���l�����O�𑁊����o�ł���B
+	// Swept broadphase: collider A moved from prevCenterA to current
+	// position; test capsule vs sphere for possible hit with collider B.
+	// Early-detects tunneling from fast motion (e.g. orbital rotation).
 	inline bool BroadPhasePassSwept(const Collider* ca, const XMFLOAT3& prevCenterA,
 	                                 const Collider* cb) {
 		if (!ca || !cb) return false;
@@ -192,10 +192,10 @@ namespace {
 		}
 	}
 
-	// �X�E�F�v�g�i���[�t�F�[�Y: A �� prevPos ���猻�݈ʒu�܂ňړ������o�H��
-	// �T�u�X�e�b�v�ɕ������ďՓ˔��肷��B�Փ˂����o���ꂽ�ŏ��̃T�u�X�e�b�v�ʒu
-	// (testPos) �� ResolveCollision ��Ăяo���A�ʒu�␳�Ƒ��x�̃L�����Z����s���B
-	// �����O����]�ł̃g���l�����O�h�~�Ɏg�p����B
+	// Swept narrowphase: split A's path from prevPos to current
+	// into substeps for collision. At the first hitting substep position
+	// (testPos), call ResolveCollision for pose fix and velocity cancel.
+	// Used to prevent tunneling during fast orbital rotation.
 	void DoSweptNarrowPhase(GameObject* a, Collider* ca,
 	                        GameObject* b, Collider* cb,
 	                        bool bDynamic) {
@@ -204,8 +204,8 @@ namespace {
 		const bool isTriggerPair = ca->IsTrigger() || cb->IsTrigger();
 
 		// Thin mesh walls: discrete CheckCollision at sub-steps often misses when
-		// a fast sphere jumps past zero-thickness triangles. Sphere?Mesh
-		// ResolveCollision already runs continuous raycast CCD along prev��cur.
+		// a fast sphere jumps past zero-thickness triangles. Sphere-Mesh
+		// ResolveCollision already runs continuous raycast CCD along prev->cur.
 		const bool sphereVsMesh =
 			ca->GetType() == ColliderType::SPHERE && cb->GetType() == ColliderType::MESH;
 		const bool meshVsSphere =
@@ -346,9 +346,9 @@ void PhysicsSystem_NotifyObjectDestroyed(GameObject* obj) {
 	eraseContact(g_contactPairsCurrent);
 }
 
-// �|�W�V�����X�i�b�v�V���b�g: ���I�I�u�W�F�N�g�̌��݈ʒu�� m_previousPosition �ɕۑ�����B
-// �X�N���v�g�i�O����]�Ȃǁj����s���钼�O�ɌĂяo�����ƂŁA�X�N���v�g���
-// �X�E�F�v�g�Փ˃p�X�����m�ȕψʂ�c���ł���悤�ɂ���B
+// Position snapshot: store dynamic objects' positions in m_previousPosition.
+// Call just before scripts (e.g. orbital rotation) so the post-script
+// swept collision path sees the true displacement.
 void PhysicsSystem_SavePositions() {
 	SceneBase* scene = SceneManager::Instance().GetCurrentScene();
 	if (!scene) return;
@@ -375,9 +375,9 @@ namespace {
 	};
 }
 
-// �Փ˔���E����p�X�i���x�ϕ��Ȃ��j�B
-// m_previousPosition ���猻�݈ʒu�܂ł̃X�E�F�v�g�u���[�h�t�F�[�Y��g�p���A
-// �傫�ȕψʂɑ΂��Ă̓T�u�X�e�b�v�i���[�t�F�[�Y�ŉ������B
+// Collision detect/resolve path (no velocity integration).
+// Uses swept broadphase from m_previousPosition to current,
+// and substep narrowphase for large displacements.
 void PhysicsSystem_ResolveCollisions() {
 	SceneBase* scene = SceneManager::Instance().GetCurrentScene();
 	if (!scene) return;
@@ -480,7 +480,7 @@ void PhysicsSystem_ResolveCollisions() {
 			const bool eitherTrigger =
 				e1.collider->IsTrigger() || e2.collider->IsTrigger();
 
-			// Static?static: only process when a trigger is involved (cheap overlap).
+			// Static-static: only process when a trigger is involved (cheap overlap).
 			if (!e1.isDynamic && !e2.isDynamic) {
 				if (!eitherTrigger) continue;
 				if (!e1.obj->IsActive() || !e2.obj->IsActive()) continue;
@@ -517,15 +517,15 @@ void PhysicsSystem_ResolveCollisions() {
 
 			if (!a->IsActive() || !b->IsActive()) continue;
 
-			// �y�A�̏Փˉہi�`�[��/�^�O/���C���[�̃��[���j��m�F
+			// Check if the pair may collide (team/tag/layer rules)
 			if (!a->CanCollideWith(b) || !b->CanCollideWith(a)) continue;
 
-			// �X�E�F�v�g�u���[�h�t�F�[�Y: ���݈ʒu�ł̃X�t�B�A�`�F�b�N�ɉ����A
-			// �O�t���[�����猻�t���[���ւ̌o�H�S�̂�J�v�Z���ŕ��Ŕ��肷��B
+			// Swept broadphase: besides sphere check at current pose,
+			// wrap the previous->current path in a capsule.
 			const bool bpOk = BroadPhasePassSwept(ca, prevCenterA, cb);
 			if (!bpOk) continue;
 
-			// �i���[�t�F�[�Y�i�X�E�F�v�g�j: �ψʂ��傫���ꍇ�̓T�u�X�e�b�v�Ŕ��肷��B
+			// Narrowphase (swept): substep when displacement is large.
 			DoSweptNarrowPhase(a, ca, b, cb, bDynamic);
 		}
 	}
@@ -604,7 +604,7 @@ bool PhysicsSystem_Raycast(const DirectX::XMFLOAT3& origin,
 	return hit;
 }
 
-// �����V�X�e���X�V
+// Physics system update
 void PhysicsSystem_Update(double elapsed_time) {
 	SceneBase* scene = SceneManager::Instance().GetCurrentScene();
 	if (!scene) return;
@@ -612,7 +612,7 @@ void PhysicsSystem_Update(double elapsed_time) {
 	const auto& objs = scene->GetObjects();
 	if (objs.empty()) return;
 
-	// 1. �O�t���[���ʒu�̕ۑ��i�X�E�F�v�g�Փˌ��o�p�j
+	// 1. Save previous-frame positions (for swept collision)
 	for (auto* obj : objs) {
 		if (!obj || !obj->IsActive() || !obj->GetCollider()) continue;
 		if (IsDynamic(obj)) {
@@ -620,7 +620,7 @@ void PhysicsSystem_Update(double elapsed_time) {
 		}
 	}
 
-	// 2. ���x�ϕ��i���I�{�f�B�̂݁j
+	// 2. Integrate velocity (dynamic bodies only)
 	for (auto* obj : objs) {
 		if (!obj || !obj->IsActive() || !obj->GetCollider()) continue;
 		auto& rb = obj->GetRigidbody();
@@ -635,7 +635,7 @@ void PhysicsSystem_Update(double elapsed_time) {
 		}
 	}
 
-	// 3. �Փ˔���Ɖ���i�X�E�F�v�gAABB��g�p�j
+	// 3. Detect and resolve collisions (swept AABB)
 	PhysicsSystem_ResolveCollisions();
 }
 

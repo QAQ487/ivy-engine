@@ -1,3 +1,6 @@
+// editor_ui_panel.h
+// Editor panel for inspecting/editing UI canvases.
+
 #pragma once
 
 class GameObject;

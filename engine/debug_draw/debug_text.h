@@ -45,11 +45,11 @@ namespace hal {
 		void Draw();
 		void Clear();
 
-		// �v���p API
+		// Measurement API
 		float GetLineSpacing() const { return m_LineSpacing; }
 		float GetCharacterSpacing() const { return m_CharacterSpacing; }
 
-		// �^����ꂽ������̕��E�����i�s���~�s�� / �ő�񐔁~�����ԁj��T�Z�擾
+		// Approx width/height of a string (rows*lineSpacing / maxCols*charSpacing)
 		void MeasureText(const char* text, float& outWidth, float& outHeight) const;
 
 	private:
@@ -79,7 +79,7 @@ namespace hal {
 		ULONG  m_CharacterCount = 0;
 		ULONG  m_BufferSourceCharacterCount = 0;
 
-		// �ÓI���L���\�[�X
+		// Static shared resources
 		static std::unordered_map<std::wstring, std::tuple<ID3D11Resource*, ID3D11ShaderResourceView*>> m_TextureMap;
 		static Microsoft::WRL::ComPtr<ID3D11BlendState>       m_pBlendState;
 		static Microsoft::WRL::ComPtr<ID3D11DepthStencilState> m_pDepthStencilState;

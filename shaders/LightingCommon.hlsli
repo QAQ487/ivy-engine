@@ -1,3 +1,6 @@
+// LightingCommon.hlsli
+// Shared lighting evaluation helpers for pixel shaders.
+
 #ifndef LIGHTING_COMMON_HLSLI
 #define LIGHTING_COMMON_HLSLI
 

@@ -1,3 +1,6 @@
+// game_scene_script_hooks.h
+// App: game scene script hooks declarations.
+
 #pragma once
 
 bool GameSceneScript_InvokeBool(const char* exportName);

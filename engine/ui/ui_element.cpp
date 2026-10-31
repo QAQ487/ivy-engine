@@ -1,4 +1,4 @@
-﻿#include "ui_pivot_math.h"
+#include "ui_pivot_math.h"
 #include "ui_sprite.h"
 #include "ui_button.h"
 #include "ui_bar.h"

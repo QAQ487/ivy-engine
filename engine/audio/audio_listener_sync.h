@@ -1,3 +1,6 @@
+// audio_listener_sync.h
+// Syncs the audio listener to a game object / camera.
+
 #pragma once
 
 #include <memory>

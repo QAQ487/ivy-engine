@@ -1,3 +1,6 @@
+// scene_execution_policy_check.cpp
+// Validates scene execution policy helpers.
+
 #include "engine/scene/scene_execution_policy.h"
 #include <cassert>
 

@@ -1,3 +1,6 @@
+// render_settings.h
+// Declares ShadowQuality.
+
 #pragma once
 
 #include "libraries/nlohmann/json.hpp"

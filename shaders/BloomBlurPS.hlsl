@@ -1,3 +1,6 @@
+// BloomBlurPS.hlsl
+// Bloom blur pixel shader.
+
 cbuffer BloomBuffer : register(b10)
 {
 	float Bloom_Threshold;

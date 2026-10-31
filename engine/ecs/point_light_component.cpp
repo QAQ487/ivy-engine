@@ -1,3 +1,6 @@
+// point_light_component.cpp
+// ECS: point light component implementation.
+
 #include "point_light_component.h"
 #include "libraries/nlohmann/json.hpp"
 #include <Windows.h>

@@ -1,3 +1,6 @@
+// spot_light_component.h
+// ECS spot light component.
+
 #pragma once
 #include "component.h"
 #include <DirectXMath.h>

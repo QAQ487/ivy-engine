@@ -37,7 +37,7 @@ public:
 	float farClip;
 };
 
-// �O���[�o���ȃJ�����C���X�^���X�ւ̃A�N�Z�X�֐�
+// Accessor for the global camera instance
 Camera& GetCamera();
 void SetCamera(const Camera& cam);
 

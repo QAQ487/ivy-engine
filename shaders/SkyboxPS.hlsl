@@ -1,3 +1,6 @@
+// SkyboxPS.hlsl
+// Skybox pixel shader.
+
 TextureCube g_skybox : register(t0);
 SamplerState g_sampler : register(s0);
 

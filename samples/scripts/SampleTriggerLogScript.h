@@ -1,3 +1,6 @@
+// SampleTriggerLogScript.h
+// Declares SampleTriggerLogScript.
+
 #pragma once
 #include "engine/scripting/Script.h"
 #include "engine/scripting/script_fields.h"

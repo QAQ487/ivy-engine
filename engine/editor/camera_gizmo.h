@@ -1,3 +1,6 @@
+// camera_gizmo.h
+// Editor gizmo for camera visualization and editing.
+
 #pragma once
 #include <DirectXMath.h>
 #include <memory>

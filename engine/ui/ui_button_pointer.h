@@ -1,3 +1,6 @@
+// ui_button_pointer.h
+// Pointer/hover hit-testing helpers for UI buttons.
+
 #pragma once
 
 // Pointer-click helper for UIButton. Hidden buttons skip Update, so leftover

@@ -12,37 +12,37 @@
 #include <DirectXMath.h>
 
 namespace EffectSystem {
-    // ������/�I��
+    // Init / shutdown
     bool Initialize();
     void Finalize();
 
-    // 1�t���[���X�V�i�o�ߕb�j
+    // Per-frame update (elapsed seconds)
     void Update(double deltaSeconds);
 
-    // 3D�G�t�F�N�g�`��i���݂̃J������g�p�j
+    // Draw 3D effects (uses current camera)
     void Draw3D();
 
-    // �G�t�F�N�g�ǂݍ��݁i�߂�l�͊Ǘ�ID�B-1�͎��s�j
+    // Load effect (returns managed ID; -1 on failure)
     int  Load(const char16_t* path);
     int  LoadW(const wchar_t* path);
     int  LoadCached(const wchar_t* path);
 
-    // �Đ��i�߂�l��Effekseer�̃n���h���B-1�͎��s�j
+    // Play (returns Effekseer handle; -1 on failure)
     int  Play(int effectId, const DirectX::XMFLOAT3& pos);
 
-    // ��~/�S��~/���݊m�F
+    // Stop / stop all / reload / exists
     void Stop(int handle);
     void StopAll();
     bool ReloadContent();
     bool Exists(int handle);
 
-    // Transform ����
+    // Transform
     void SetLocation(int handle, const DirectX::XMFLOAT3& pos);
     void SetRotationEulerDeg(int handle, const DirectX::XMFLOAT3& rotDeg);
-    void SetScale(int handle, float uniform); // ��l�X�P�[��
-    void SetScale(int handle, const DirectX::XMFLOAT3& scale); // XYZ ��
+    void SetScale(int handle, float uniform); // Uniform scale
+    void SetScale(int handle, const DirectX::XMFLOAT3& scale); // Per-axis XYZ
 
-    // �Đ�����
+    // Playback control
     void SetSpeed(int handle, float speed);
     void SetPaused(int handle, bool paused);
     void SetShown(int handle, bool shown);

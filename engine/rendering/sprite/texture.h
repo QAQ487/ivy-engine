@@ -1,6 +1,6 @@
 /**===========================================================================
  File   : texture.h
- Title  : テクスチャの管理
+ Title  : Texture management
  Author : Terry Yeung
  Date   : 2025/6/6
  Brief  :
@@ -14,11 +14,11 @@
 void Texture_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext);
 void Texture_Finalize();
 
-// テクスチャのロード
-// 引数
-// ptr_file_name : テクスチャファイル名
-// b_mipmap : ミップマップを生成するかどうか
-// 戻り値 : テクスチャの管理番号（読み込めなかった場合は-1）
+// Load a texture
+// Args
+// ptr_file_name : texture file name
+// b_mipmap : whether to generate mipmaps
+// Returns : texture ID (-1 on failure)
 int  TextureLoad(const wchar_t* ptr_file_name, bool mipmap = true);
 enum class TextureReloadResult { NotLoaded, Reloaded, Failed };
 TextureReloadResult TextureReload(const wchar_t* path);

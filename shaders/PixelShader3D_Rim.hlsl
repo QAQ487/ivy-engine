@@ -1,3 +1,6 @@
+// PixelShader3D_Rim.hlsl
+// Rim-light pixel shader.
+
 #include "LightingCommon.hlsli"
 
 void main(

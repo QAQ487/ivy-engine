@@ -1,3 +1,6 @@
+// editor_project_browser.cpp
+// Editor project/asset browser panel.
+
 #include "editor_project_browser.h"
 
 #include "project_asset_index.h"

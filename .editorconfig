@@ -1,0 +1,27 @@
+# EditorConfig: keep sources UTF-8 for MSVC (/utf-8) and CP932 locales.
+# https://editorconfig.org
+
+root = true
+
+[*]
+charset = utf-8
+# Match repo working-tree endings (git * text=auto); do not mass-renormalize.
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.{h,hpp,c,cpp,inl,hlsl,fx,hlsli}]
+charset = utf-8
+indent_style = tab
+
+[*.{py,json,md,yml,yaml,xml,targets,props}]
+charset = utf-8
+indent_style = space
+indent_size = 2
+
+[*.{vcxproj,vcxproj.filters,sln}]
+charset = utf-8
+indent_style = space
+
+[*.{cmd,bat,ps1}]
+charset = utf-8

@@ -1,3 +1,6 @@
+// controller_inject_protocol.h
+// Declares ControllerCommand.
+
 #pragma once
 
 // Controller verb parsing and the one-at-a-time prepare / hold / release

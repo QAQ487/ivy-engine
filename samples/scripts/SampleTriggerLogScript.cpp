@@ -1,3 +1,6 @@
+// SampleTriggerLogScript.cpp
+// Sample script: SampleTriggerLogScript implementation.
+
 #include "SampleTriggerLogScript.h"
 
 #include "engine/ecs/material_component.h"

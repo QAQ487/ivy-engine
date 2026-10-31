@@ -1,3 +1,6 @@
+// SamplePlayerScript.h
+// Declares SamplePlayerScript.
+
 #pragma once
 #include "engine/scripting/Script.h"
 #include "engine/scripting/script_fields.h"

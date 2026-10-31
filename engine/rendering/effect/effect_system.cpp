@@ -73,10 +73,10 @@ namespace EffectSystem {
         g_manager->SetMaterialLoader(g_renderer->CreateMaterialLoader());
         g_manager->SetCurveLoader(Effekseer::MakeRefPtr<Effekseer::CurveLoader>());
 
-        // ç∂éËç¿ïW
+        // Left-handed coordinates
         g_manager->SetCoordinateSystem(::Effekseer::CoordinateSystem::LH);
 
-        // D3DÇÃèÛë‘ïúå≥ÇóLå¯âª
+        // Enable D3D state restoration
         g_renderer->SetRestorationOfStatesFlag(true);
 
         g_effects.clear();
@@ -214,7 +214,7 @@ namespace EffectSystem {
         return g_manager->Exists(handle);
     }
 
-    // Transform / çƒê∂êßå‰
+    // Transform / playback control
     void SetLocation(int handle, const DirectX::XMFLOAT3& pos) {
         if (g_manager == nullptr || handle < 0) return;
         g_manager->SetLocation(handle, pos.x, pos.y, pos.z);

@@ -70,9 +70,9 @@ void Model3D::Release() {
 		return;
 	}
 
-	// �T�u�Z�b�g��� SRV ���ɉ���i���C�� SRV �Ƃ̏d���`�F�b�N�j
+	// Release subset SRVs first (check for overlap with main SRV)
 	for (auto& s : m_subsets) {
-		// ���C��SRV�Ɠ����|�C���^�̏ꍇ�͉�����Ȃ��i��d����h�~�j
+		// Do not release if it is the same pointer as the main SRV (avoid double-free)
 		if (s.pSRV && s.pSRV != m_pSRV) {
 			s.pSRV->Release();
 		}
@@ -80,13 +80,13 @@ void Model3D::Release() {
 	}
 	m_subsets.clear();
 
-	// D3D11���\�[�X����
+	// Release D3D11 resources
 	if (m_pVB) { m_pVB->Release(); m_pVB = nullptr; }
 	if (m_pIB) { m_pIB->Release(); m_pIB = nullptr; }
 	if (m_pSRV) { m_pSRV->Release(); m_pSRV = nullptr; }
 	m_indexCount = 0;
 
-	// FBX�֘A�̃|�C���^��N���A
+	// Clear FBX-related pointers
 	m_mesh = nullptr;
 	m_meshNode = nullptr;
 
@@ -132,12 +132,12 @@ void Model3D::Release() {
 }
 
 /**===========================================================================
-   ��OBJ ���[�_�[��
+   <OBJ loader>
  ===========================================================================**/
 bool Model3D::LoadOBJ(const wchar_t* objPath, const wchar_t* fallbackTex) {
 	Release();
 
-	// OBJ �t�@�C���ǂݍ���
+	// Load OBJ file
 	std::ifstream ifs(WideToUTF8(objPath));
 	if (!ifs) {
 		MessageBoxA(nullptr, "Failed to load OBJ file.", "Error", MB_OK | MB_ICONERROR);
@@ -159,7 +159,7 @@ bool Model3D::LoadOBJ(const wchar_t* objPath, const wchar_t* fallbackTex) {
 	std::string line;
 	std::wstring mtlFileW;
 
-	// MTL �R���� UV �ϊ��i��i�ňꊇ�K�p�j
+	// UV transform from MTL (applied in batch later)
 	XMFLOAT2 uvScale {1.0f, 1.0f};
 	XMFLOAT2 uvOffset {0.0f, 0.0f};
 	bool uvClamp = false;
@@ -183,7 +183,7 @@ bool Model3D::LoadOBJ(const wchar_t* objPath, const wchar_t* fallbackTex) {
 		}
 		else v.Normal = faceN;
 
-		// �����͔��i��� MTL Kd ��S���_�Ɉꊇ���f�j
+		// Start white (apply MTL Kd to all vertices later)
 		v.Diffuse = XMFLOAT4(1, 1, 1, 1);
 
 		uint32_t newIdx = static_cast<uint32_t>(vertices.size());
@@ -204,7 +204,7 @@ bool Model3D::LoadOBJ(const wchar_t* objPath, const wchar_t* fallbackTex) {
 		else if (line.rfind("vt ", 0) == 0) {
 			std::istringstream ss(line.substr(3));
 			float u, v; ss >> u >> v;
-			// DirectX �n�ɍ��킹�� v �𔽓]
+			// Flip v for DirectX convention
 			texcoords.emplace_back(u, 1.0f - v);
 		}
 		else if (line.rfind("vn ", 0) == 0) {
@@ -228,7 +228,7 @@ bool Model3D::LoadOBJ(const wchar_t* objPath, const wchar_t* fallbackTex) {
 				return k;
 			};
 
-			// 1 �񂾂��p�[�X���čė��p
+			// Parse once and reuse
 			std::vector<PNTKey> keys;
 			keys.reserve(vtokens.size());
 			bool anyNoNormal = false;
@@ -238,7 +238,7 @@ bool Model3D::LoadOBJ(const wchar_t* objPath, const wchar_t* fallbackTex) {
 				keys.emplace_back(k);
 			}
 
-			// �K�v���ɖʖ@����Z�o
+			// Compute face normals when needed
 			XMFLOAT3 faceN {0, 0, 1};
 			if (anyNoNormal) {
 				std::function<XMFLOAT3(int)> get_pos = [&] (int p) -> XMFLOAT3 {
@@ -256,7 +256,7 @@ bool Model3D::LoadOBJ(const wchar_t* objPath, const wchar_t* fallbackTex) {
 				XMStoreFloat3(&faceN, n);
 			}
 
-			// ��`�����i���p�`�ɂ�Ή��j
+			// Fan triangulation (supports polygons)
 			for (size_t i = 1; i + 1 < keys.size(); ++i) {
 				const PNTKey& a = keys[0];
 				const PNTKey& b = keys[i];
@@ -286,28 +286,28 @@ bool Model3D::LoadOBJ(const wchar_t* objPath, const wchar_t* fallbackTex) {
 		return false;
 	}
 
-	// MTL ����e�N�X�`��/UV �ϊ��擾 �� Kd�i�g�U�F�j�̓ǂݎ��
+	// Read texture/UV transform and Kd (diffuse) from MTL
 	bool texOK = false;
 	if (!mtlFileW.empty()) {
-		// Kd �ǂݎ��i���j
-		// �e�N�X�`���ǂݍ���
+		// Read Kd (omitted detail)
+		// Load texture
 		texOK = TryLoadMTLTexture_SRV(mtlFileW, baseDirW, &m_pSRV, &uvScale, &uvOffset, &uvClamp);
 	}
 
-	// �t�H�[���o�b�N�e�N�X�`���i�K�v�Ȃ�j
+	// Fallback texture (if needed)
 	if (!texOK && fallbackTex && fallbackTex[0]) {
 		texOK = LoadTextureWIC_SRV(fallbackTex, &m_pSRV);
 	}
 
-	// OBJ �́u�e�N�X�`���L���v�t���O��m��i��1x1�͖��������j
+	// Set OBJ has-texture flag (white 1x1 counts as none)
 	m_hasTexture = texOK;
 
-	// �ǂ̌o�H�ł�e�N�X�`���������Ȃ���� 1x1 ������蓖�āi�`��p�̃_�~�[�j
+	// If no texture from any path, assign 1x1 white (draw dummy)
 	if (!texOK || !m_pSRV) {
 		m_pSRV = CreateSolidWhiteSRV();
 	}
 
-	// UV �X�P�[��/�I�t�Z�b�g/�N�����v��S���_�ֈꊇ�K�p
+	// Apply UV scale/offset/clamp to all vertices
 	if (uvScale.x != 1.0f || uvScale.y != 1.0f || uvOffset.x != 0.0f || uvOffset.y != 0.0f || uvClamp) {
 		for (size_t i = 0; i < vertices.size(); ++i) {
 			vertices[i].TexCoord.x = vertices[i].TexCoord.x * uvScale.x + uvOffset.x;
@@ -319,12 +319,12 @@ bool Model3D::LoadOBJ(const wchar_t* objPath, const wchar_t* fallbackTex) {
 		}
 	}
 
-	// MTL �� Kd�i�g�U�F�j�𒸓_�J���[�ɂ���f
+	// Also apply MTL Kd (diffuse) to vertex color
 	for (auto& v : vertices) {
 		v.Diffuse = m_diffuse;
 	}
 
-	// VB �쐬
+	// Create VB
 	{
 		D3D11_BUFFER_DESC bd {};
 		bd.Usage = D3D11_USAGE_DEFAULT;
@@ -339,7 +339,7 @@ bool Model3D::LoadOBJ(const wchar_t* objPath, const wchar_t* fallbackTex) {
 			return false;
 		}
 	}
-	// IB �쐬
+	// Create IB
 	{
 		D3D11_BUFFER_DESC bd {};
 		bd.Usage = D3D11_USAGE_DEFAULT;
@@ -360,7 +360,7 @@ bool Model3D::LoadOBJ(const wchar_t* objPath, const wchar_t* fallbackTex) {
 }
 
 /**===========================================================================
-   ��FBX ���[�_�[��
+   <FBX loader>
  ===========================================================================**/
 bool Model3D::LoadFBX(const wchar_t* fbxPath, const wchar_t*) { return LoadFBXInternal(fbxPath, true); }
 bool Model3D::LoadFBXQuiet(const wchar_t* fbxPath) { return LoadFBXInternal(fbxPath, false); }
@@ -393,7 +393,7 @@ bool Model3D::LoadFBXInternal(const wchar_t* fbxPath, bool reportErrors) {
 
 	m_currentAnimScene = m_baseScene;
 
-	// ��/�P��
+	// Axis / units
 	{
 		FbxAxisSystem axis = m_baseScene->GetGlobalSettings().GetAxisSystem();
 		if (!(axis == FbxAxisSystem::DirectX)) {
@@ -405,7 +405,7 @@ bool Model3D::LoadFBXInternal(const wchar_t* fbxPath, bool reportErrors) {
 		}
 	}
 
-	// �X�L�����b�V����
+	// Enumerate skinned meshes
 	std::vector<std::pair<FbxMesh*, FbxNode*>> skinnedList;
 	EnumerateSkinnedMeshes(m_baseScene->GetRootNode(), skinnedList);
 	std::unordered_map<FbxMesh*, int> cpBase;
@@ -419,7 +419,7 @@ bool Model3D::LoadFBXInternal(const wchar_t* fbxPath, bool reportErrors) {
 	m_skinnedMeshCache = skinnedList;
 	m_meshCpOffset = cpBase;
 
-	// �`��Ώۃ��b�V���I��
+	// Select mesh to draw
 	m_mesh = nullptr; m_meshNode = nullptr;
 	if (!skinnedList.empty()) { m_mesh = skinnedList[0].first; m_meshNode = skinnedList[0].second; }
 	else {
@@ -435,10 +435,10 @@ bool Model3D::LoadFBXInternal(const wchar_t* fbxPath, bool reportErrors) {
 		return false;
 	}
 
-	// �x�[�X�f�B���N�g��
+	// Base directory
 	std::wstring baseDir = DirnameW(fbxPath);
 
-	// �}�e���A�����̃e�N�X�`��SRV/�g�U�F�L���b�V��
+	// Per-material texture SRV / diffuse color cache
 	std::unordered_map<FbxSurfaceMaterial*, ID3D11ShaderResourceView*> matSRV;
 	std::unordered_map<FbxSurfaceMaterial*, XMFLOAT4>                 matColor;
 
@@ -451,22 +451,22 @@ bool Model3D::LoadFBXInternal(const wchar_t* fbxPath, bool reportErrors) {
 		return sBlue;
 	};
 
-	// �w��}�e���A������Diffuce/BaseColor��FbxFileTexture��T����SRV�����i�������nullptr�j
+	// Find Diffuse/BaseColor FbxFileTexture on material and create SRV (nullptr if none)
 	auto LoadSRVFromMaterial = [&](FbxSurfaceMaterial* mat) -> ID3D11ShaderResourceView* {
 		if (!mat) return nullptr;
 
-		// ���ɍ���Ă���΍ė��p�iAddRef���ĕԂ��j
+		// Reuse if already created (AddRef and return)
 		if (auto it = matSRV.find(mat); it != matSRV.end()) {
 			if (it->second) it->second->AddRef();
 			return it->second;
 		}
 
-		// �v���p�e�B�𑖍��iFileTexture��T���FDiffuse/BaseColor�n�j
+		// Scan properties for FileTexture (Diffuse/BaseColor)
 		auto tryPropForFile = [&] (const char* propName) -> FbxFileTexture* {
 			FbxProperty prop = mat->FindProperty(propName);
 			if (!prop.IsValid()) return nullptr;
 
-			// LayeredTexture �o�R
+			// Via LayeredTexture
 			const int layeredCount = prop.GetSrcObjectCount<FbxLayeredTexture>();
 			for (int li = 0; li < layeredCount; ++li) {
 				if (auto* layered = prop.GetSrcObject<FbxLayeredTexture>(li)) {
@@ -479,7 +479,7 @@ bool Model3D::LoadFBXInternal(const wchar_t* fbxPath, bool reportErrors) {
 					}
 				}
 			}
-			// LayeredTexture �o�R
+			// Via LayeredTexture
 			const int tcount = prop.GetSrcObjectCount<FbxTexture>();
 			for (int ti = 0; ti < tcount; ++ti) {
 				if (auto* tex = prop.GetSrcObject<FbxTexture>(ti)) {
@@ -508,7 +508,7 @@ bool Model3D::LoadFBXInternal(const wchar_t* fbxPath, bool reportErrors) {
 			const char* rel = fileTex->GetRelativeFileName();
 			const char* abs = fileTex->GetFileName();
 			std::wstring path = rel && *rel ? Utf8ToWide(rel) : Utf8ToWide(abs);
-			// ������ibaseDir/filename �Ȃǁj
+			// Resolve candidates (baseDir/filename, etc.)
 			size_t pos = path.find_last_of(L"/\\");
 			std::wstring justName = (pos == std::wstring::npos) ? path : path.substr(pos + 1);
 
@@ -529,13 +529,13 @@ bool Model3D::LoadFBXInternal(const wchar_t* fbxPath, bool reportErrors) {
 			}
 		}
 
-		// �L���b�V���inull�ł�����j
+		// Cache (store even if null)
 		matSRV.emplace(mat, srv);
 		if (srv) srv->AddRef();
 		return srv;
 	};
 
-	// �}�e���A���g�U�F�̎擾�i�Ȃ���Δ��j
+	// Get material diffuse color (white if missing)
 	auto LoadDiffuseColorFromMaterial = [&] (FbxSurfaceMaterial* mat) -> XMFLOAT4 {
 		if (!mat) return XMFLOAT4(1, 1, 1, 1);
 		if (auto it = matColor.find(mat); it != matColor.end()) return it->second;
@@ -562,7 +562,7 @@ bool Model3D::LoadFBXInternal(const wchar_t* fbxPath, bool reportErrors) {
 		return out;
 	};
 
-	// ���_�����i�T�u�Z�b�g�����j
+	// Generate vertices (split into subsets)
 	m_verticesCPU.clear();
 	m_cpIndexOfVertex.clear();
 	m_subsets.clear();
@@ -609,7 +609,7 @@ bool Model3D::LoadFBXInternal(const wchar_t* fbxPath, bool reportErrors) {
 					m_skinMeshGeo.emplace_back(geoInfo);
 				}
 
-				// �@���EUV�Z�b�g
+				// Normals and UV set
 				const char* uvNameC = nullptr;
 				FbxStringList uvSets;
 				mesh->GetUVSetNames(uvSets);
@@ -619,7 +619,7 @@ bool Model3D::LoadFBXInternal(const wchar_t* fbxPath, bool reportErrors) {
 				FbxLayerElement::EMappingMode nMap = nElem ? nElem->GetMappingMode() : FbxLayerElement::eNone;
 				FbxLayerElement::EReferenceMode nRef = nElem ? nElem->GetReferenceMode() : FbxLayerElement::eDirect;
 
-				// �}�e���A�����蓖�āi�|���S���P�ʁj
+				// Assign materials (per polygon)
 				FbxLayerElementMaterial* mElem = mesh->GetElementMaterialCount() > 0 ? mesh->GetElementMaterial(0) : nullptr;
 				auto getPolygonMaterial = [&] (int p) -> FbxSurfaceMaterial* {
 					if (!mElem) return (n->GetMaterialCount() > 0 ? n->GetMaterial(0) : nullptr);
@@ -634,8 +634,8 @@ bool Model3D::LoadFBXInternal(const wchar_t* fbxPath, bool reportErrors) {
 					return (n->GetMaterialCount() > 0 ? n->GetMaterial(0) : nullptr);
 				};
 
-				// �T�u�Z�b�g�쐬�p
-				UINT runningIndex = (UINT)m_verticesCPU.size(); // ���ꂩ�炷��ŏ��̃C���f�b�N�X
+				// For subset creation
+				UINT runningIndex = (UINT)m_verticesCPU.size(); // First index for the upcoming range
 				bool subsetOpen = false;
 				Subset curSubset {};
 
@@ -645,7 +645,7 @@ bool Model3D::LoadFBXInternal(const wchar_t* fbxPath, bool reportErrors) {
 					curSubset.indexCount = 0;
 					curSubset.pSRV = srv;
 					if (!curSubset.pSRV) {
-						curSubset.pSRV = getOrCreateBlue(); // �e�N�X�`�������͐�1x1
+						curSubset.pSRV = getOrCreateBlue(); // No texture -> blue 1x1
 					}
 					curSubset.diffuse = col;
 					subsetOpen = true;
@@ -665,12 +665,12 @@ bool Model3D::LoadFBXInternal(const wchar_t* fbxPath, bool reportErrors) {
 					int sz = mesh->GetPolygonSize(p);
 					if (sz < 3) continue;
 
-					// ���̃|���S���̃}�e���A�� -> SRV / Diffuse
+					// This polygon's material -> SRV / Diffuse
 					FbxSurfaceMaterial* fbxMat = getPolygonMaterial(p);
-					ID3D11ShaderResourceView* srv = LoadSRVFromMaterial(fbxMat); // AddRef ��
+					ID3D11ShaderResourceView* srv = LoadSRVFromMaterial(fbxMat); // Already AddRef'd
 					XMFLOAT4 mcol = LoadDiffuseColorFromMaterial(fbxMat);
 
-					// �T�u�Z�b�g�ؑցi�قȂ�SRV�Ȃ�V�T�u�Z�b�g�J�n�j
+					// Switch subset (start new if SRV differs)
 					if (!subsetOpen) {
 						openSubset(srv, mcol);
 					}
@@ -686,8 +686,8 @@ bool Model3D::LoadFBXInternal(const wchar_t* fbxPath, bool reportErrors) {
 							openSubset(srv, mcol);
 						}
 						else {
-							// �����SRV�Ȃ獡�̃T�u�Z�b�g�p��
-							if (srv) srv->Release(); // openSubset ���Ȃ��ꍇ�͗]���ȎQ�Ƃ�߂�
+							// Same SRV -> keep current subset
+							if (srv) srv->Release(); // If not opening a subset, release the extra ref
 						}
 					}
 
@@ -703,7 +703,7 @@ bool Model3D::LoadFBXInternal(const wchar_t* fbxPath, bool reportErrors) {
 						};
 
 						VertexPNTC tri[3] {};
-						// �ʒu�i�W�I���g���I�␳�j
+						// Position (geometric correction)
 						for (int c = 0; c < 3; ++c) {
 							FbxVector4 p0 = mesh->GetControlPoints()[cpIdxTri[c]];
 							FbxVector4 pl = finalM.MultT(p0);
@@ -756,7 +756,7 @@ bool Model3D::LoadFBXInternal(const wchar_t* fbxPath, bool reportErrors) {
 							tri[c].TexCoord = XMFLOAT2(u, v);
 						}
 
-						// �ύX�_: �}�e���A���̊g�U�F�𒸓_�J���[�ւ���f
+						// Change: also apply material diffuse to vertex color
 						tri[0].Diffuse = mcol;
 						tri[1].Diffuse = mcol;
 						tri[2].Diffuse = mcol;
@@ -764,7 +764,7 @@ bool Model3D::LoadFBXInternal(const wchar_t* fbxPath, bool reportErrors) {
 						int order[3] = {0, 1, 2};
 						if (invertWinding) { order[1] = 2; order[2] = 1; }
 
-						// ���_ push
+						// Push vertex
 						m_verticesCPU.emplace_back(tri[order[0]]);
 						m_verticesCPU.emplace_back(tri[order[1]]);
 						m_verticesCPU.emplace_back(tri[order[2]]);
@@ -781,12 +781,12 @@ bool Model3D::LoadFBXInternal(const wchar_t* fbxPath, bool reportErrors) {
 							m_cpIndexOfVertex.emplace_back(-1);
 						}
 
-						// ���݂̃T�u�Z�b�g�̃C���f�b�N�X������Z�i3���_ = 3 index�j
+						// Add to current subset index count (3 verts = 3 indices)
 						curSubset.indexCount += 3;
 					}
 				}
 
-				// �ŏI�T�u�Z�b�g��m��
+				// Finalize the last subset
 				closeSubset();
 
 				if (m_hasSkin && !meshIsSkinned) {
@@ -817,7 +817,7 @@ bool Model3D::LoadFBXInternal(const wchar_t* fbxPath, bool reportErrors) {
 		return false;
 	}
 
-	// VB / IB �쐬
+	// Create VB / IB
 	{
 		m_vbDynamic = m_hasSkin;
 		D3D11_BUFFER_DESC bd {};
@@ -905,9 +905,9 @@ bool Model3D::LoadFBXInternal(const wchar_t* fbxPath, bool reportErrors) {
 		}
 	}
 
-	// : matSRV�L���b�V���̃N���[���A�b�v
-	// �T�u�Z�b�g�Ɉڏ��ς݂�SRV�͊���AddRef����Ă��邽�߁A
-	// �L���b�V�����̎Q�Ƃ�������
+	// Cleanup matSRV cache
+	// SRVs handed to subsets are already AddRef'd, so
+	// release the cache-side references
 	for (auto& pair : matSRV) {
 		if (pair.second) {
 			pair.second->Release();
@@ -932,7 +932,7 @@ fbxsdk::FbxNode* Model3D::FindBone(const char* name) const {
 }
 
 fbxsdk::FbxNode* Model3D::FindBone(const wchar_t* name) const {
-	// UTF-8�Ŕ�r�������ꍇ��WideToUTF8��g��
+	// Use WideToUTF8 if comparing as UTF-8
 	std::string nameUtf8 = WideToUTF8(name);
 	if (!m_baseScene || !name || !*name) return nullptr;
 	std::function<fbxsdk::FbxNode* (fbxsdk::FbxNode*)> search = [&] (fbxsdk::FbxNode* node) -> fbxsdk::FbxNode* {
@@ -988,11 +988,11 @@ bool Model3D::TryGetBoneLocalMatrix(const char* boneName, DirectX::XMMATRIX& out
 
 void Model3D::ScaleBoneAndChildren(fbxsdk::FbxNode* bone, const fbxsdk::FbxDouble3& scale) {
 	if (!bone) return;
-	// ���݂̃X�P�[����擾���A�|�����킹�����ꍇ�͈ȉ�
+	// To get current scale and multiply, use below
 	//FbxDouble3 current = bone->LclScaling.Get();
 	//bone->LclScaling.Set(FbxDouble3(current[0]*scale[0], current[1]*scale[1], current[2]*scale[2]));
 
-	// �㏑���̏ꍇ�͂�����i���: 2�{�Ɋg��j
+	// To overwrite instead (e.g. scale 2x)
 	bone->LclScaling.Set(scale);
 
 
@@ -1645,7 +1645,7 @@ void Model3D::BakeRigidMeshData() {
 	}
 }
 
-// �Đ����̎擾 (�����[�V�����X�R�A�� AnimStack ��I��)
+// Get playback length (pick AnimStack by bone-motion score)
 void Model3D::InitAnimationInfo() {
 	m_animTimeSec = 0.0;
 	m_animStartSec = 0.0;
@@ -1890,7 +1890,7 @@ void Model3D::SkinFromScratch() {
 	updateDynamicVBFromCP(m_skinPosBuf);
 }
 
-// �A�j����i�߂� (�X�L������̂Ƃ��� CPU �X�L�j���O���� VB �X�V)
+// Advance animation (CPU skin + update VB when skinned)
 void Model3D::UpdateAnimation(double dtSec) {
 	if (!m_baseScene && m_bakedClips.empty()) return;
 
@@ -2089,7 +2089,7 @@ void Model3D::PlayAnimation(const std::string& animName) {
 	BakeRigidMeshData();
 }
 
-// CP �z�񂩂�W�J�ςݒ��_�֔��f -> ���I VB �� Map ���ď����߂�
+// Apply CP array to expanded verts -> Map dynamic VB and write back
 void Model3D::updateDynamicVBFromCP(const std::vector<XMFLOAT3>& cpPos) {
 	if (!m_pVB || !m_vbDynamic) return;
 	if (cpPos.empty() || m_cpIndexOfVertex.size() != m_verticesCPU.size()) return;

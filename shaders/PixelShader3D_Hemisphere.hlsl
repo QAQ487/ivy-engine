@@ -1,3 +1,6 @@
+// PixelShader3D_Hemisphere.hlsl
+// Hemisphere ambient lighting pixel shader.
+
 #include "LightingCommon.hlsli"
 
 void main(

@@ -1,3 +1,6 @@
+// ParticlePS.hlsl
+// Particle system pixel shader.
+
 Texture2D g_tex : register(t0);
 SamplerState g_smp : register(s0);
 

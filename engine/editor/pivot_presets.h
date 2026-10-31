@@ -1,3 +1,6 @@
+// pivot_presets.h
+// Named pivot preset helpers for editor UI.
+
 #pragma once
 #include "imgui/imgui.h"
 #include <DirectXMath.h>

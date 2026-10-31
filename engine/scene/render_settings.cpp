@@ -1,3 +1,6 @@
+// render_settings.cpp
+// Scene: render settings implementation.
+
 #include "engine/scene/scene_loader.h"
 #include "render_settings.h"
 #include <stdexcept>

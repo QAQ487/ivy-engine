@@ -1,4 +1,4 @@
-﻿#include "engine/ecs/sprite_animator_component.h"
+#include "engine/ecs/sprite_animator_component.h"
 /**===========================================================================
  File   : scene_asset_preload.cpp
  Brief  : BuildTaskList (+ JSON scene scan) + time-budgeted SceneAssetPreloader.

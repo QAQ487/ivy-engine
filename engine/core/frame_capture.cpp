@@ -1,3 +1,6 @@
+// frame_capture.cpp
+// Captures backbuffer frames to image files.
+
 #include "frame_capture.h"
 #include "frame_timer.h"
 #include "engine/rendering/d3d11/renderer.h"

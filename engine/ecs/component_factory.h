@@ -3,7 +3,7 @@
  * Project: d3d11_engine
  * Author: Terry Yeung
  * Created: 2026-03-12
- * Description: component_factory.h  ESingleton registry that maps component
+ * Description: component_factory.h  - Singleton registry that maps component
  *              type-name strings to creator functions, enabling JSON-driven
  *              component instantiation without hard-coded switch/case logic.
  *****************************************************/
@@ -44,7 +44,7 @@ private:
     std::unordered_map<std::string, CreatorFunc> m_creators;
 };
 
-// Convenience macro  Ecall once per type (e.g. in a registration function).
+// Convenience macro  - call once per type (e.g. in a registration function).
 // Requires the type's default constructor and that the header is included.
 #define REGISTER_COMPONENT(TypeName)                                      \
     ComponentFactory::Instance().Register(                                \

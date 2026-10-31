@@ -1,3 +1,6 @@
+// scene_file_monitor_check.cpp
+// Validates scene file monitor hot-load behavior.
+
 #include "engine/scene/scene_file_monitor.h"
 #include "engine/scene/scene_json_validation.h"
 #include <cassert>

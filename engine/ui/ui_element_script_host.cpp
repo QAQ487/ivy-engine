@@ -1,3 +1,6 @@
+// ui_element_script_host.cpp
+// Hosts script bindings on UI elements.
+
 #include "ui_element_script_host.h"
 #include "ui_element.h"
 #include "engine/core/engine_gui.h"

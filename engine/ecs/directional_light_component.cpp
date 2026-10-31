@@ -1,3 +1,6 @@
+// directional_light_component.cpp
+// ECS: directional light component implementation.
+
 #include "directional_light_component.h"
 #include "engine/editor/light_gizmo.h"
 #include "libraries/nlohmann/json.hpp"

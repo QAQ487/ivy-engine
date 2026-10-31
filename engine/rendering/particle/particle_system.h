@@ -1,3 +1,6 @@
+// particle_system.h
+// Declares ID3D11ShaderResourceView.
+
 #pragma once
 
 #include <DirectXMath.h>

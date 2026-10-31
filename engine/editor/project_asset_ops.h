@@ -1,3 +1,6 @@
+// project_asset_ops.h
+// Project asset create/rename/delete operations.
+
 #pragma once
 
 #include <string>

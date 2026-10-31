@@ -1,4 +1,7 @@
-﻿#include "ui_gizmo.h"
+// ui_gizmo.cpp
+// Editor gizmo for UI element transforms.
+
+#include "ui_gizmo.h"
 
 #include "engine/core/engine_gui.h"
 #include "engine/editor/editor_undo.h"

@@ -1,3 +1,6 @@
+// physics2d_components.h
+// ECS components for 2D physics bodies/colliders.
+
 #pragma once
 #include "component.h"
 #include <DirectXMath.h>

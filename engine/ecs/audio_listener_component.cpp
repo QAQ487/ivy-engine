@@ -1,3 +1,6 @@
+// audio_listener_component.cpp
+// ECS: audio listener component implementation.
+
 #include "audio_listener_component.h"
 
 #include "libraries/nlohmann/json.hpp"

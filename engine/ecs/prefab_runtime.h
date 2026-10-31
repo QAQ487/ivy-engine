@@ -1,4 +1,7 @@
-﻿#pragma once
+// prefab_runtime.h
+// Instantiates and manages prefab instances at runtime.
+
+#pragma once
 
 #include "engine/ecs/game_object.h"
 

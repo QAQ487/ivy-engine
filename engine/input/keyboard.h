@@ -15,7 +15,7 @@
 #include <windows.h>
 #include <memory>
 
- // �L�[��
+ // Key enumeration
 typedef enum Keyboard_Keys_tag
 {
 	KK_NONE = 0x0,
@@ -196,7 +196,7 @@ typedef enum Keyboard_Keys_tag
 	KK_OEMCLEAR = 0xfe,
 } Keyboard_Keys;
 
-// �L�[�{�[�h��ԍ\����
+// Keyboard state struct
 typedef struct Keyboard_State_tag
 {
 	bool Reserved0 : 8;
@@ -385,22 +385,22 @@ typedef struct Keyboard_State_tag
 	bool Reserved26 : 1;
 } Keyboard_State;
 
-// �L�[�{�[�h���W���[���̏�����
+// Initialize the keyboard module
 void Keyboard_Initialize(void);
 
-// �L�[�{�[�h�̌��݂̃L�[���̏�Ԃ�擾����
+// Query current per-key state
 bool Keyboard_IsKeyDown(Keyboard_Keys key);
 bool Keyboard_IsKeyUp(Keyboard_Keys key);
 
-// �L�[�{�[�h�̌��݂̏�Ԃ�擾����
+// Get the current keyboard state
 const Keyboard_State* Keyboard_GetState(void);
 const Keyboard_State* Keyboard_GetStateOld(void);
 
-// �L�[�{�[�h�̏�Ԃ���L�[���̏�Ԃ�擾����
+// Query per-key state from a Keyboard_State
 bool Keyboard_IsKeyDown(Keyboard_Keys key, const Keyboard_State* pState);
 bool Keyboard_IsKeyUp(Keyboard_Keys key, const Keyboard_State* pState);
 
-// �L�[�{�[�h�̏�Ԃ���Z�b�g����
+// Reset keyboard state
 void Keyboard_Reset(void);
 
 #if defined(_DEBUG) && defined(GAME_RUNTIME)
@@ -410,10 +410,10 @@ void Keyboard_ClearInjection();
 bool Keyboard_IsInjectionActive();
 #endif
 
-// �L�[�{�[�h����̂��߂̃E�H���ǂ����b�Z�[�W�v���V�[�W���t�b�N�֐�
+// Window-message procedure hook for keyboard input
 void Keyboard_ProcessMessage(UINT message, WPARAM wParam, LPARAM lParam);
 
-//�g���K�[�p
+//For edge triggers
 bool Keyboard_IsKeyDownTrigger(Keyboard_Keys key);
 void    keycopy();
 

@@ -1,3 +1,6 @@
+// audio_listener_sync.cpp
+// Audio: audio listener sync implementation.
+
 #include "audio_listener_sync.h"
 
 #include "audio_manager.h"

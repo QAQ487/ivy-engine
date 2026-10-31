@@ -1,3 +1,6 @@
+// SampleCheckpointState.h
+// Declares SampleCheckpointLatch.
+
 #pragma once
 #include <cstring>
 

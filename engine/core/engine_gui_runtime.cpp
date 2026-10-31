@@ -1,3 +1,6 @@
+// engine_gui_runtime.cpp
+// Runtime-facing EngineGUI entry points.
+
 #include "engine/scene/scene_camera.h"
 #include "engine_gui.h"
 #include "play_fps_overlay.h"

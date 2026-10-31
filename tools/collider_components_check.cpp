@@ -1,3 +1,6 @@
+// collider_components_check.cpp
+// Validates ECS collider component wiring.
+
 #include "engine/ecs/collider_component.h"
 #include "engine/ecs/component_factory.h"
 #include "libraries/nlohmann/json.hpp"

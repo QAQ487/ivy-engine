@@ -1,3 +1,6 @@
+// scene_file_monitor.h
+// Declares SceneFileMonitor.
+
 #pragma once
 #include <filesystem>
 #include <fstream>

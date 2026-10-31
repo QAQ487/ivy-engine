@@ -1,3 +1,6 @@
+// runtime_bridge_release_check.cpp
+// Validates runtime bridge release-build acceptance hooks.
+
 #include "engine/testing/runtime_test_bridge.h"
 #include "engine/input/keyboard.h"
 #include "engine/input/controller.h"

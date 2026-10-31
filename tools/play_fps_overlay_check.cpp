@@ -1,3 +1,6 @@
+// play_fps_overlay_check.cpp
+// Validates play-mode FPS overlay helpers.
+
 #include "engine/core/play_fps_overlay.h"
 #include <cassert>
 #include <cstdio>

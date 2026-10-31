@@ -1,4 +1,7 @@
-﻿#pragma once
+// script_dll_register.h
+// Registration helpers for script DLL types.
+
+#pragma once
 
 #include "engine/scripting/Script.h"
 #include <string>

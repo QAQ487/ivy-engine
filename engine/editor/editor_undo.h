@@ -1,3 +1,6 @@
+// editor_undo.h
+// Editor undo/redo command stack.
+
 #pragma once
 
 #include <memory>

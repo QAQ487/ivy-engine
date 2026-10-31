@@ -1,3 +1,6 @@
+// BloomExtractPS.hlsl
+// Bloom bright-pass extract pixel shader.
+
 cbuffer BloomBuffer : register(b10)
 {
 	float Bloom_Threshold;

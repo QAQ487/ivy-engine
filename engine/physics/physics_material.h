@@ -1,3 +1,6 @@
+// physics_material.h
+// Declares ContactSurface.
+
 #pragma once
 
 #include <string>

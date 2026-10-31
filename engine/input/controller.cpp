@@ -3,12 +3,12 @@
  Author : Terry Yeung
  Date   : 2025/11/5
 -----------------------------------------------------------------------------
- Xbox/PC �R���g���[���[���́iXInput�j����
+ Xbox/PC controller input (XInput) implementation
 
- �g����:
-  - �N������ Controller_Initialize()
-  - ���t���[���擪�� Controller_Update()
-  - �K�v�ɉ����� IsPressed/IsTrigger/IsRelease / GetLeftStick �Ȃǂ�Q��
+ Usage:
+  - Call Controller_Initialize() at startup
+  - Call Controller_Update() at the start of each frame
+  - Then query IsPressed/IsTrigger/IsRelease / GetLeftStick / etc. as needed
 ============================================================================**/
 #include "controller.h"
 
@@ -31,24 +31,24 @@ static_assert(static_cast<unsigned short>(ControllerButton::Y) == ivy::testing::
 #endif
 
 #include <Xinput.h>
-#pragma comment(lib, "xinput9_1_0.lib") // ���ɂ���Ă� XInput.lib ���K�v
+#pragma comment(lib, "xinput9_1_0.lib") // Some environments need XInput.lib instead
 // #pragma comment(lib, "XInput.lib")
 
 using namespace DirectX;
 
 namespace {
-    // ����/�O�t���[���� XINPUT_STATE
+    // Current / previous-frame XINPUT_STATE
     static XINPUT_STATE g_curr[CONTROLLER_MAX] {};
     static XINPUT_STATE g_prev[CONTROLLER_MAX] {};
     static bool         g_connected[CONTROLLER_MAX] {};
 
-    // ���K���ς݃A�i���O�l
+    // Normalized analog values
     static XMFLOAT2 g_leftStick[CONTROLLER_MAX] {};
     static XMFLOAT2 g_rightStick[CONTROLLER_MAX] {};
     static float    g_leftTrigger[CONTROLLER_MAX] {};
     static float    g_rightTrigger[CONTROLLER_MAX] {};
 
-    // �f�b�h�]�[��
+    // Dead zone
     static short g_deadzoneLeftStick = XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE;   // 7849
     static short g_deadzoneRightStick = XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE;  // 8689
     static BYTE  g_deadzoneTrigger = XINPUT_GAMEPAD_TRIGGER_THRESHOLD;     // 30
@@ -61,23 +61,23 @@ namespace {
         return (buttons & static_cast<WORD>(btn)) != 0;
     }
 
-    // [-1,1] ���K�� with �f�b�h�]�[���i�ă}�b�v�j
+    // Normalize to [-1,1] with dead zone (remap)
     inline float NormalizeThumb(short v, short dz) {
         const int iv = static_cast<int>(v);
         const int ad = (iv >= 0) ? iv : -iv;
         if (ad <= dz) return 0.0f;
 
-        const int MAX_VAL = 32767; // SHORT �̍ő�
+        const int MAX_VAL = 32767; // SHORT max
         const float sign = (iv >= 0) ? 1.0f : -1.0f;
-        const float norm = float(ad - dz) / float(MAX_VAL - dz); // �f�b�h�]�[���O�� 0..1 �ɍă}�b�v
+        const float norm = float(ad - dz) / float(MAX_VAL - dz); // Remap outside dead zone to 0..1
         float out = norm * sign;
-        // �N�����v
+        // Clamp
         if (out > 1.0f) out = 1.0f;
         if (out < -1.0f) out = -1.0f;
         return out;
     }
 
-    // [0,1] ���K�� with �f�b�h�]�[��
+    // Normalize to [0,1] with dead zone
     inline float NormalizeTrigger(BYTE v, BYTE dz) {
         if (v <= dz) return 0.0f;
         const float norm = float(v - dz) / float(255 - dz);
@@ -147,12 +147,12 @@ void Controller_Finalize() {
 #if defined(_DEBUG) && defined(GAME_RUNTIME)
     Controller_ClearInjection();
 #endif
-    // ����AXInput �͖����I�ȉ���s�v
+    // XInput needs no explicit teardown currently
 }
 
 void Controller_Update() {
     for (DWORD i = 0; i < CONTROLLER_MAX; ++i) {
-        // �O�t���[����ۑ�
+        // Save previous frame
         g_prev[i] = g_curr[i];
 
         XINPUT_STATE st {};
@@ -161,7 +161,7 @@ void Controller_Update() {
             g_connected[i] = true;
             g_curr[i] = st;
 
-            // �A�i���O���K��
+            // Normalize analog axes
             const XINPUT_GAMEPAD& gp = st.Gamepad;
             g_leftStick[i].x = NormalizeThumb(gp.sThumbLX, g_deadzoneLeftStick);
             g_leftStick[i].y = NormalizeThumb(gp.sThumbLY, g_deadzoneLeftStick);
@@ -172,7 +172,7 @@ void Controller_Update() {
             g_rightTrigger[i] = NormalizeTrigger(gp.bRightTrigger, g_deadzoneTrigger);
         }
         else {
-            // ���ڑ�/�G���[: �ؒf��ԂƂ��ă[����
+            // Disconnected/error: treat as disconnected and zero out
             g_connected[i] = false;
             ZeroMemory(&g_curr[i], sizeof(XINPUT_STATE));
             g_leftStick[i] = XMFLOAT2(0, 0);
@@ -257,7 +257,7 @@ float Controller_GetRightTrigger(int padIndex) {
 }
 
 void Controller_SetStickDeadzone(short left, short right) {
-    // �͈̓N�����v
+    // Clamp to valid range
     if (left < 0) left = 0;  if (left > 32767) left = 32767;
     if (right < 0) right = 0;  if (right > 32767) right = 32767;
     g_deadzoneLeftStick = left;

@@ -1,3 +1,6 @@
+// physics2d.cpp
+// Box2D integration entry points.
+
 #include "physics2d.h"
 #include "physics2d_world.h"
 #include "engine/ecs/physics2d_components.h"

@@ -1,3 +1,6 @@
+// scene_json_validation.h
+// Scene: scene json validation declarations.
+
 #pragma once
 #include "libraries/nlohmann/json.hpp"
 #include <algorithm>

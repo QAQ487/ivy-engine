@@ -1,3 +1,6 @@
+// ui_canvas_script_dll_exports.cpp
+// Scripting: ui canvas script dll exports implementation.
+
 #include "ui_canvas_script.h"
 #include <functional>
 #include <string>

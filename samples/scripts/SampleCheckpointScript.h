@@ -1,3 +1,6 @@
+// SampleCheckpointScript.h
+// Declares SampleCheckpointScript.
+
 #pragma once
 #include "SampleCheckpointState.h"
 #include "engine/scripting/Script.h"

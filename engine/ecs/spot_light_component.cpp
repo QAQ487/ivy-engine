@@ -1,3 +1,6 @@
+// spot_light_component.cpp
+// ECS: spot light component implementation.
+
 #include "spot_light_component.h"
 #include "libraries/nlohmann/json.hpp"
 #include <cmath>

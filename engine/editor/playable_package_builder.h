@@ -1,3 +1,6 @@
+// playable_package_builder.h
+// Builds playable runtime packages from a project.
+
 #pragma once
 
 #include <string>

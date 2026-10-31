@@ -1,3 +1,6 @@
+// physics2d_world_check.cpp
+// Validates Box2D physics world wrapper.
+
 #include "engine/physics/2d/physics2d_world.h"
 #include <cmath>
 #include <cstdio>

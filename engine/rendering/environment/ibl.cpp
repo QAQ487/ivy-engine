@@ -1,3 +1,6 @@
+// ibl.cpp
+// Rendering: ibl implementation.
+
 #include "ibl.h"
 
 #include "engine/rendering/d3d11/renderer.h"

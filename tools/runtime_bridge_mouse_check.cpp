@@ -1,3 +1,6 @@
+// runtime_bridge_mouse_check.cpp
+// Validates runtime bridge mouse injection.
+
 #include "engine/testing/runtime_test_bridge.h"
 #include "engine/input/mouse.h"
 #include <iostream>

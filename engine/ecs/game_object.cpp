@@ -1,3 +1,6 @@
+// game_object.cpp
+// ECS game object: hierarchy, components, lifecycle.
+
 #include "engine/physics/2d/physics2d.h"
 #include "sprite_animator_component.h"
 #include "engine/scene/scene_loader.h"

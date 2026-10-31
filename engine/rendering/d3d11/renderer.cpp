@@ -14,7 +14,7 @@
 #include <wrl/client.h> // For ComPtr
 #include <cstdio>
 
- // グローバル
+ // Globals
 static D3D_FEATURE_LEVEL g_FeatureLevel = D3D_FEATURE_LEVEL_11_0;
 
 static ID3D11Device* g_D3DDevice = nullptr;
@@ -342,7 +342,7 @@ HRESULT Renderer_ResizeToClient() {
 #if defined(DEBUG) || defined(_DEBUG)
 	if (width != (UINT)g_BackBufferWidth || height != (UINT)g_BackBufferHeight) {
 		std::fprintf(stderr,
-			"Renderer: client/backbuffer mismatch %ux%u vs %ux%u  Esyncing\n",
+			"Renderer: client/backbuffer mismatch %ux%u vs %ux%u -- syncing\n",
 			width, height,
 			(UINT)g_BackBufferWidth, (UINT)g_BackBufferHeight);
 	}

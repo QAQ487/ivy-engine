@@ -1,4 +1,7 @@
-﻿#include "prefab_runtime.h"
+// prefab_runtime.cpp
+// Instantiates and manages prefab instances at runtime.
+
+#include "prefab_runtime.h"
 
 #include "prefab_serializer.h"
 #include "engine/scene/scene_runtime.h"

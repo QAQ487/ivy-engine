@@ -1,8 +1,8 @@
 /*****************************************************************//**
  * \file   debug_ofstream.cpp
- * \brief  debug ofstream‚ğì‚Á‚Äg‚¨‚¤
+ * \brief  Helper for a debug ofstream
  *
- * \author ‘åŒ ·–L
+ * \author Otsuki
  * \date   2025/4/25
  *********************************************************************/
 #include "debug_ofstream.h"

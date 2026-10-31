@@ -1,3 +1,6 @@
+// PixelShader2D.hlsl
+// 2D sprite pixel shader.
+
 cbuffer CB_Color : register(b0) {
     float4 g_Color;
 };

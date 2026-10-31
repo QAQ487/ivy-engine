@@ -1,6 +1,6 @@
 /**===========================================================================
  File   : texture.cpp
- Title  : ?e?N?X?`?????
+ Title  : Texture management
  Author : Terry Yeung
  Date   : 2025/6/6
  Brief  :
@@ -12,30 +12,30 @@
 #include <cstdio>
 #include <Windows.h>
  // #include "direct3d.h" // SAFE_RELEASE
-#include "engine/rendering/d3d11/renderer.h" // ?f?o?C?X??R???e?L?X?g??èÔ
-#include "DirectXTex.h" // DirectXTex???C?u??????g?p
+#include "engine/rendering/d3d11/renderer.h" // Device / context accessors
+#include "DirectXTex.h" // DirectXTex library
 #include "engine/debug_draw/debug_ofstream.h" // hal::dout
 using namespace DirectX;
 
-static constexpr int MAX_TEXTURES = 1024; // ???e?N?X?`????
+static constexpr int MAX_TEXTURES = 1024; // Max texture slots
 
 struct Texture {
 	std::wstring  m_filename;
 	bool mipmap = true;
 	unsigned int m_width = 0;
 	unsigned int m_height = 0;
-	ID3D11ShaderResourceView* m_ptr_Texture = nullptr; // ?e?N?X?`???i?Q?C?R?????????????????j// ?P??????P??
+	ID3D11ShaderResourceView* m_ptr_Texture = nullptr; // Texture SRV (one per slot)
 };
 
-static Texture g_textures[MAX_TEXTURES]; // ?e?N?X?`??????p?z??
+static Texture g_textures[MAX_TEXTURES]; // Texture slot array
 static int g_whiteTextureId = -1;
 
-// ????I????????O?????????????BRelease?s?v?B
+// Provided by caller; do not Release.
 static ID3D11Device* g_pDevice = nullptr;
 static ID3D11DeviceContext* g_pContext = nullptr;
 
 void Texture_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext) {
-	// ?f?o?C?X??f?o?C?X?R???e?L?X?g????
+	// Store device and device context
 	g_pDevice = pDevice;
 	g_pContext = pContext;
 }
@@ -68,20 +68,20 @@ static HRESULT ReadTextureImage(const wchar_t* path, TexMetadata& metadata, Scra
 
 static int TextureLoadInternal(const wchar_t* ptr_file_name, bool mipmap, bool reportErrors) {
     if (!ptr_file_name || !ptr_file_name[0] || !g_pDevice) return -1;
-	// ???????????????t?@?C????????????
+	// Return existing ID if this file is already loaded
 	for (int i = 0; i < MAX_TEXTURES; i++) {
-		if (!g_textures[i].m_ptr_Texture) continue; // ?????e?N?X?`??????????????????X?L?b?v
-		if (_wcsicmp(TexturePathKey(g_textures[i].m_filename).c_str(), TexturePathKey(ptr_file_name).c_str()) == 0) { // ?????????t?@?C??????e?N?X?`??????????????????A????e?N?X?`????ID????
+		if (!g_textures[i].m_ptr_Texture) continue; // Skip empty slots
+		if (_wcsicmp(TexturePathKey(g_textures[i].m_filename).c_str(), TexturePathKey(ptr_file_name).c_str()) == 0) { // Same file already loaded; return its ID
 			return i;
 		}
 	}
 
-	/* ??????? */
+	/* Create new */
 	for (int i = 0; i < MAX_TEXTURES; i++) {
-		// ??????????T??
-		if (g_textures[i].m_ptr_Texture) continue; // ?????e?N?X?`??????????????????X?L?b?v
+		// Find a free slot
+		if (g_textures[i].m_ptr_Texture) continue; // Skip occupied slots
 
-		/* ?e?N?X?`???????? */
+		/* Load texture */
 		TexMetadata metadata;
 		ScratchImage image;
 		HRESULT loadHr = ReadTextureImage(ptr_file_name, metadata, image);
@@ -94,20 +94,20 @@ static int TextureLoadInternal(const wchar_t* ptr_file_name, bool mipmap, bool r
 			if (reportErrors) MessageBoxA(nullptr, msg, "Texture Error", MB_OK | MB_ICONERROR);
 			return -1;
 		}
-		// ???t?@?C????T?C?Y??èÔ
+		// Source file size
 		g_textures[i].m_width = (unsigned int)metadata.width; // sizet = longlong
 		g_textures[i].m_height = (unsigned int)metadata.height;
 
-		// ?~?b?v?}?b?v???????
+		// Generate mipmaps
 		if (mipmap) {
 			ScratchImage mipChain;
 			GenerateMipMaps(image.GetImages(), image.GetImageCount(), image.GetMetadata(), TEX_FILTER_DEFAULT, 0, mipChain);
 			// TEX_FILTER_BOX | TEX_FILTER_FORCE_NOW_WIC
-			image = std::move(mipChain); // mipChain??image????
-			metadata = image.GetMetadata(); // ???^?f?[?^??X?V
+			image = std::move(mipChain); // Move mipChain into image
+			metadata = image.GetMetadata(); // Refresh metadata
 		}
 
-		// ?V?F?[?_?[???\?[?X?p?b?N?r???[?????
+		// Create shader resource view
 		HRESULT hr = CreateShaderResourceView(g_pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_textures[i].m_ptr_Texture);
 		if (FAILED(hr)) {
 			if (reportErrors) MessageBoxA(nullptr, "Failed to create texture shader resource view.", "Texture Error", MB_OK | MB_ICONERROR);
@@ -115,7 +115,7 @@ static int TextureLoadInternal(const wchar_t* ptr_file_name, bool mipmap, bool r
 		}
 
 		g_textures[i].mipmap = mipmap;
-		g_textures[i].m_filename = ptr_file_name; // ?t?@?C????????
+		g_textures[i].m_filename = ptr_file_name; // Store filename
 
 		return i;
 	}
@@ -215,17 +215,17 @@ int TextureGetWhiteTexture() {
 void TextureAllRelease() {
 	UIFont_ClearCache();
 	for (Texture& t : g_textures) {
-		SAFE_RELEASE(t.m_ptr_Texture); // ?e?N?X?`??????
+		SAFE_RELEASE(t.m_ptr_Texture); // Release texture
 	}
 	g_whiteTextureId = -1;
 }
 
 void TextureSetTexture(int texture_id) {
 	if (texture_id < 0 || texture_id >= MAX_TEXTURES) {
-		hal::dout << "textureSetTexture() : ??????e?N?X?`??ID???" << std::endl;
-		return; // ??????ID????????????
+		hal::dout << "textureSetTexture() : invalid texture ID" << std::endl;
+		return; // Ignore invalid ID
 	}
-	// ?e?N?X?`?????
+	// Bind texture
 	g_pContext->PSSetShaderResources(0, 1, &g_textures[texture_id].m_ptr_Texture);
 }
 
@@ -246,7 +246,7 @@ const unsigned int& TextureGetHeight(int texture_id) {
 	return g_textures[texture_id].m_height;
 }
 
-// ???????
+// Accessor
 ID3D11ShaderResourceView* TextureGetSRV(int texture_id) {
     if (texture_id < 0 || texture_id >= MAX_TEXTURES) {
         return nullptr;

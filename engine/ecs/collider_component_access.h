@@ -1,3 +1,6 @@
+// collider_component_access.h
+// ECS: collider component access declarations.
+
 #pragma once
 #include "collider_component.h"
 #include "game_object.h"

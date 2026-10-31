@@ -1,3 +1,6 @@
+// SamplePhysics2DPlayerScript.h
+// Declares SamplePhysics2DPlayerScript.
+
 #pragma once
 #include "engine/scripting/Script.h"
 #include "engine/scripting/script_fields.h"

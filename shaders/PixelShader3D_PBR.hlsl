@@ -1,3 +1,6 @@
+// PixelShader3D_PBR.hlsl
+// PBR (Cook-Torrance) pixel shader.
+
 #include "LightingCommon.hlsli"
 
 // Cook-Torrance PBR (GGX + Schlick-Smith G + Schlick F).

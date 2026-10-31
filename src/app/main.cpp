@@ -1,3 +1,6 @@
+// main.cpp
+// Application WinMain entry and main loop.
+
 #include "engine/scene/scene_loader.h"
 #include "engine/core/frame_capture.h"
 #include "engine/testing/runtime_test_bridge.h"

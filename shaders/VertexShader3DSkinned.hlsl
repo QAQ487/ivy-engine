@@ -1,3 +1,6 @@
+// VertexShader3DSkinned.hlsl
+// Skinned mesh vertex shader.
+
 #include "ShaderCommon.hlsli"
 
 void main(in float3 inPosition : POSITION0,

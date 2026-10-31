@@ -1,3 +1,6 @@
+// sprite_renderer_check.cpp
+// Validates sprite renderer component.
+
 #include "engine/ecs/sprite_renderer_component.h"
 #include "engine/ecs/sprite_animator_component.h"
 #include "engine/scene/scene_loader.h"

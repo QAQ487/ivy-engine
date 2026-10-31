@@ -62,7 +62,7 @@ namespace Lighting {
         bd.Usage = D3D11_USAGE_DEFAULT;
         if (FAILED(s_dev->CreateBuffer(&bd, nullptr, &s_cb))) return false;
 
-        // デフォルト（1本のディレクショナル）
+        // Default (one directional light)
         s_params.ambientColor = XMFLOAT3(0.15f, 0.15f, 0.15f);
         s_params.lightCount = 1;
         s_params.lights[0].type = DIRECTIONAL;
@@ -71,7 +71,7 @@ namespace Lighting {
         s_params.lights[0].specColor = XMFLOAT3(1, 1, 1);
         s_params.lights[0].specPower = 32.0f;
 
-        // 一旦クリア
+        // Clear once
         ZeroMemory(&s_cbData, sizeof(s_cbData));
         s_cbData.Ambient = s_params.ambientColor;
         s_cbData.ViewDirOS = XMFLOAT3(0, 0, -1);
@@ -126,7 +126,7 @@ namespace Lighting {
         XMVECTOR det;
         XMMATRIX invW = XMMatrixInverse(&det, world);
 
-        // View（WS）
+        // View (WS)
         const auto& cam = GetCamera();
         XMVECTOR camPos = XMLoadFloat3(&cam.position);
         XMVECTOR objOriginWS = world.r[3];
@@ -138,14 +138,14 @@ namespace Lighting {
         for (int i = 0; i < n; ++i) {
             const Light& src = s_params.lights[i];
 
-            // Direction（光が進む向き）。Directionalは -dir を使ってきた互換維持。
+            // Direction (propagation). Directional keeps -dir for compatibility.
             XMVECTOR Lw = XMLoadFloat3(&src.directionWS);
-            XMVECTOR Lp = XMVectorNegate(Lw); // 光が進む向き
+            XMVECTOR Lp = XMVectorNegate(Lw); // Propagation direction
             XMVECTOR Los = XMVector3Normalize(XMVector3TransformNormal(Lp, invW));
 
-            // Position（Spot のみ使用）
+            // Position (used by Spot)
             XMVECTOR Pw = XMLoadFloat3(&src.positionWS);
-            // OS 座標は原点（オブジェクト座標）基準で変換
+            // Transform into object space (origin-relative)
             XMVECTOR PosOS = XMVector3TransformCoord(Pw, invW);
 
             XMStoreFloat3(&s_cbData.Lights[i].DirOS, Los);
@@ -159,7 +159,7 @@ namespace Lighting {
             s_cbData.Lights[i].InnerCos = src.innerCos;
             s_cbData.Lights[i].OuterCos = src.outerCos;
         }
-        // 残りはゼロクリア
+        // Zero the remaining slots
         for (int i = n; i < MAX_LIGHTS; ++i) {
             s_cbData.Lights[i] = {};
         }

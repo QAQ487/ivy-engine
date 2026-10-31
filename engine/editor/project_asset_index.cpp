@@ -1,3 +1,6 @@
+// project_asset_index.cpp
+// Indexes project assets for the editor browser.
+
 #include "project_asset_index.h"
 
 #include "engine/ecs/model_asset_cache.h"

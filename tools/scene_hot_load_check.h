@@ -1,3 +1,6 @@
+// scene_hot_load_check.h
+// Declares SceneHotLoadThrowComponent.
+
 #pragma once
 // Opt-in Debug host check. Uses only its own temporary scene files.
 #include "engine/ecs/component_factory.h"
