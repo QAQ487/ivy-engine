@@ -72,50 +72,64 @@ float Hash11(float n)
 
 float3 ApplyContrast(float3 c, float k)
 {
-	if (k <= 0.0)
-		return c;
-	return (c - 0.5) * k + 0.5;
+	float3 result = c;
+	if (k > 0.0)
+		result = (c - 0.5) * k + 0.5;
+	return result;
 }
 
 float3 Posterize(float3 c, float steps)
 {
-	if (steps <= 0.0)
-		return c;
-	return floor(saturate(c) * steps) / steps;
+	float3 result = c;
+	if (steps > 0.0)
+		result = floor(saturate(c) * steps) / steps;
+	return result;
 }
 
 float3 ApplyGrayscale(float3 c, float amount)
 {
-	if (amount <= 0.0)
-		return c;
-	float lum = dot(c, float3(0.299, 0.587, 0.114));
-	return lerp(c, lum.xxx, amount);
+	float3 result = c;
+	if (amount > 0.0)
+	{
+		float lum = dot(c, float3(0.299, 0.587, 0.114));
+		result = lerp(c, lum.xxx, amount);
+	}
+	return result;
 }
 
 float3 ApplyNoise(float3 c, float2 pixelPos, float amount, float time)
 {
-	if (amount <= 0.0)
-		return c;
-	float n = Hash12(pixelPos + time * 60.0);
-	return c + (n - 0.5) * amount;
+	float3 result = c;
+	if (amount > 0.0)
+	{
+		float n = Hash12(pixelPos + time * 60.0);
+		result = c + (n - 0.5) * amount;
+	}
+	return result;
 }
 
 float3 ApplyVignette(float3 c, float2 uv, float strength)
 {
-	if (strength <= 0.0)
-		return c;
-	float2 d = uv - 0.5;
-	float r = length(d) * 1.41421356; // normalize so corners ~1
-	float darken = saturate(r * r * strength);
-	return c * (1.0 - darken);
+	float3 result = c;
+	if (strength > 0.0)
+	{
+		float2 d = uv - 0.5;
+		float r = length(d) * 1.41421356; // normalize so corners ~1
+		float darken = saturate(r * r * strength);
+		result = c * (1.0 - darken);
+	}
+	return result;
 }
 
 float3 ApplyScanline(float3 c, float2 pixelPos, float strength)
 {
-	if (strength <= 0.0)
-		return c;
-	float rowMod = (frac(pixelPos.y * 0.5) < 0.5) ? 1.0 : (1.0 - strength * 0.35);
-	return c * rowMod;
+	float3 result = c;
+	if (strength > 0.0)
+	{
+		float rowMod = (frac(pixelPos.y * 0.5) < 0.5) ? 1.0 : (1.0 - strength * 0.35);
+		result = c * rowMod;
+	}
+	return result;
 }
 
 float4 main(PS_IN input) : SV_TARGET

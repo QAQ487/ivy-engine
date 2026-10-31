@@ -22,26 +22,28 @@ cbuffer SkinBuffer : register(b5)
 
 float3 SkinPositionOS(float3 p, uint4 indices, float4 weights)
 {
-    if (SkinEnabled == 0)
-        return p;
-
-    const float4 hp = float4(p, 1.0f);
-    float4 acc = 0.0f;
-    float wsum = 0.0f;
-    [unroll]
-    for (int i = 0; i < 4; ++i)
+    float3 result = p;
+    if (SkinEnabled != 0)
     {
-        const float w = weights[i];
-        if (w <= 0.0f)
-            continue;
-        const uint idx = indices[i];
-        if (idx >= (uint)SkinBoneCount)
-            continue;
-        acc += w * mul(hp, SkinBones[idx]);
-        wsum += w;
+        const float4 hp = float4(p, 1.0f);
+        float4 acc = 0.0f;
+        float wsum = 0.0f;
+        [unroll]
+        for (int i = 0; i < 4; ++i)
+        {
+            const float w = weights[i];
+            if (w <= 0.0f)
+                continue;
+            const uint idx = indices[i];
+            if (idx >= (uint)SkinBoneCount)
+                continue;
+            acc += w * mul(hp, SkinBones[idx]);
+            wsum += w;
+        }
+        acc += (1.0f - wsum) * hp;
+        result = acc.xyz;
     }
-    acc += (1.0f - wsum) * hp;
-    return acc.xyz;
+    return result;
 }
 
 cbuffer MaterialBuffer : register(b1)
