@@ -25,6 +25,8 @@
     <RootNamespace>My20240425DX21ウィンドウ作成版</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
     <ProjectName>IvyEngine</ProjectName>
+    <!-- Content-project project.json is not NuGet; deps are vendored under libraries/. -->
+    <ResolveNuGetPackages>false</ResolveNuGetPackages>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
