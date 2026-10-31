@@ -1,3 +1,6 @@
+// runtime_bridge_phase3_check.cpp
+// Validates runtime bridge phase-3 observe/capture features.
+
 #include "engine/testing/runtime_test_bridge.h"
 #include <iostream>
 #include <windows.h>

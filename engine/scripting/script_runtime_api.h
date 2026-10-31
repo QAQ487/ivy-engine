@@ -1,3 +1,6 @@
+// script_runtime_api.h
+// C API surface exposed to gameplay script DLLs.
+
 #pragma once
 
 #include <d3d11.h>

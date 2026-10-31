@@ -1,3 +1,6 @@
+// VertexShader3D_Outline.hlsl
+// Toon outline extrusion vertex shader.
+
 #include "ShaderCommon.hlsli"
 
 void main(

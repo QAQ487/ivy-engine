@@ -1,3 +1,6 @@
+// SkyboxVS.hlsl
+// Skybox vertex shader.
+
 cbuffer CB_Skybox : register(b0) {
     float4x4 g_viewRot;
     float4x4 g_proj;

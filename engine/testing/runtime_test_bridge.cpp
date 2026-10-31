@@ -1,3 +1,6 @@
+// runtime_test_bridge.cpp
+// Implements EventsRecorder.
+
 #include "runtime_test_bridge.h"
 #include <cmath>
 #include <cstring>

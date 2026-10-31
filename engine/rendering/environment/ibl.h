@@ -1,3 +1,6 @@
+// ibl.h
+// Rendering: ibl declarations.
+
 #pragma once
 
 #include "engine/rendering/d3d11/shader.h"

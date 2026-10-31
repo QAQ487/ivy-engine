@@ -1,3 +1,6 @@
+// ui_gizmo.h
+// Editor gizmo for UI element transforms.
+
 #pragma once
 
 class UIElement;

@@ -1,3 +1,6 @@
+// engine_gui_internal.h
+// Internal shared state for EngineGUI.
+
 #pragma once
 
 #include "engine_gui.h"

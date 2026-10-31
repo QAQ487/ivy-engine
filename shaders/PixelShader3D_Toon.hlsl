@@ -1,3 +1,6 @@
+// PixelShader3D_Toon.hlsl
+// Toon shading pixel shader.
+
 #include "LightingCommon.hlsli"
 
 void main(

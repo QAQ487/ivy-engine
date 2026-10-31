@@ -1,3 +1,6 @@
+// scene_runtime.cpp
+// Scene: scene runtime implementation.
+
 #include "scene_runtime.h"
 #include "engine/ecs/collider_component_access.h"
 #include "scene_manager.h"

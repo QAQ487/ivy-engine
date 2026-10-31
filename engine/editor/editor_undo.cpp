@@ -1,3 +1,6 @@
+// editor_undo.cpp
+// Editor undo/redo command stack.
+
 #include "editor_undo.h"
 
 #include "engine/core/engine_gui.h"

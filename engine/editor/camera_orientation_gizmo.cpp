@@ -1,3 +1,6 @@
+// camera_orientation_gizmo.cpp
+// Editor camera orientation gizmo widget.
+
 #include "camera_orientation_gizmo.h"
 
 #ifndef GAME_RUNTIME

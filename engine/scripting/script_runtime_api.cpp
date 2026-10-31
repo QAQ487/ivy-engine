@@ -1,3 +1,6 @@
+// script_runtime_api.cpp
+// C API surface exposed to gameplay script DLLs.
+
 #include "script_runtime_api.h"
 #include "engine/ecs/collider_component_access.h"
 

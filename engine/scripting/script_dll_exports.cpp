@@ -1,4 +1,6 @@
-// ScriptDllExports.cpp
+// script_dll_exports.cpp
+// Exports script factory entry points from script DLLs.
+
 #include "Script.h"
 #include <cstring>
 #include <functional>

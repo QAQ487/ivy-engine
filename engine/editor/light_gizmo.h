@@ -1,3 +1,6 @@
+// light_gizmo.h
+// Editor gizmo for light visualization.
+
 #pragma once
 #include <DirectXMath.h>
 #include <memory>

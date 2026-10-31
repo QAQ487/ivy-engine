@@ -1,3 +1,6 @@
+// effect_component.cpp
+// ECS: effect component implementation.
+
 #include "engine/scene/scene_loader.h"
 #include "effect_component.h"
 #include "effect_system_flush.h"

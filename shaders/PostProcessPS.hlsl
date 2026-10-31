@@ -1,3 +1,6 @@
+// PostProcessPS.hlsl
+// Post-process composite pixel shader.
+
 cbuffer PostProcessBuffer : register(b10)
 {
 	float PP_RGBShift;     // shift amount in local (viewport) uv units

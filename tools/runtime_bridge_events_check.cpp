@@ -1,3 +1,6 @@
+// runtime_bridge_events_check.cpp
+// Validates runtime bridge event protocol.
+
 // Events verb + recorder protocol checks (deterministic recorder APIs; runtime positive is callback).
 #include "engine/testing/runtime_test_bridge.h"
 #include <iostream>

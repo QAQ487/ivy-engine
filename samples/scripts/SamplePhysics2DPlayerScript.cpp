@@ -1,3 +1,6 @@
+// SamplePhysics2DPlayerScript.cpp
+// Sample script: SamplePhysics2DPlayerScript implementation.
+
 #include "SamplePhysics2DPlayerScript.h"
 #include "engine/input/key_logger.h"
 #include "engine/scripting/script_dll_register.h"

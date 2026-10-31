@@ -1,3 +1,6 @@
+// ui_canvas_script_factory.h
+// Factory for UI-canvas-bound scripts.
+
 #pragma once
 
 #include "ui_canvas_script.h"

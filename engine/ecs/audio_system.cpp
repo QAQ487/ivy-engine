@@ -1,3 +1,6 @@
+// audio_system.cpp
+// ECS: audio system implementation.
+
 #include "audio_system.h"
 #include "audio_component.h"
 

@@ -1,3 +1,6 @@
+// scene_camera.cpp
+// Scene: scene camera implementation.
+
 #include "camera_director.h"
 #include "camera.h"
 #include "engine/scene/scene_loader.h"

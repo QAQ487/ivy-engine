@@ -1,3 +1,6 @@
+// PixelShader3D_PointPixel.hlsl
+// Per-pixel point light pixel shader.
+
 #include "LightingCommon.hlsli"
 
 void main(

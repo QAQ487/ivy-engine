@@ -1,3 +1,6 @@
+// play_fps_overlay.h
+// In-play FPS overlay helpers.
+
 #pragma once
 #include "libraries/nlohmann/json.hpp"
 #include <atomic>

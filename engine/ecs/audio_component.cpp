@@ -1,3 +1,6 @@
+// audio_component.cpp
+// ECS audio source component.
+
 #include "audio_component.h"
 #include "audio_system.h"
 

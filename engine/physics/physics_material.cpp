@@ -1,3 +1,6 @@
+// physics_material.cpp
+// Physics: physics material implementation.
+
 #include "engine/physics/physics_material.h"
 
 #include "libraries/nlohmann/json.hpp"

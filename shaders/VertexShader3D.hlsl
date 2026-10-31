@@ -1,3 +1,6 @@
+// VertexShader3D.hlsl
+// Lit 3D mesh vertex shader.
+
 #include "ShaderCommon.hlsli"
 
 //=============================================================================

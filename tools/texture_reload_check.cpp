@@ -1,3 +1,6 @@
+// texture_reload_check.cpp
+// Validates texture hot-reload paths.
+
 #include "engine/rendering/sprite/texture.h"
 #include "engine/debug_draw/debug_ofstream.h"
 #include "DirectXTex.h"

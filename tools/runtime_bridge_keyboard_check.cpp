@@ -1,3 +1,6 @@
+// runtime_bridge_keyboard_check.cpp
+// Validates runtime bridge keyboard injection.
+
 #include "engine/testing/runtime_test_bridge.h"
 #include "engine/input/key_logger.h"
 #include <iostream>

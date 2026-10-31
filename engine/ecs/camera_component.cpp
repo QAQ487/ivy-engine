@@ -1,3 +1,6 @@
+// camera_component.cpp
+// ECS camera component (view/projection).
+
 #include "camera_component.h"
 #include "engine/ecs/transform.h"
 #include "camera.h"

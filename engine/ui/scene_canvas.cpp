@@ -1,3 +1,6 @@
+// scene_canvas.cpp
+// Scene-space UI canvas bridge.
+
 #include "scene_canvas.h"
 
 #include "../input/key_logger.h"

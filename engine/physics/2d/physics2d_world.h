@@ -1,3 +1,6 @@
+// physics2d_world.h
+// 2D physics world wrapper around Box2D.
+
 #pragma once
 #include "box2d/box2d.h"
 #include <cstdint>

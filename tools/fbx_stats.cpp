@@ -1,3 +1,6 @@
+// fbx_stats.cpp
+// CLI tool that prints FBX mesh/material statistics.
+
 #include <fbxsdk.h>
 #include <cstdio>
 #include <functional>

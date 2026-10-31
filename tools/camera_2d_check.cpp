@@ -1,3 +1,6 @@
+// camera_2d_check.cpp
+// Validates 2D camera behavior (unit-style check binary).
+
 #include "camera.h"
 #include <cassert>
 #include <cmath>

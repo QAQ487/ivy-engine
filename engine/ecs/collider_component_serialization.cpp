@@ -1,3 +1,6 @@
+// collider_component_serialization.cpp
+// ECS: collider component serialization implementation.
+
 #include "collider_component.h"
 #include "libraries/nlohmann/json.hpp"
 #include <Windows.h>

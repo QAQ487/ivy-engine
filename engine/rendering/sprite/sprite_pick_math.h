@@ -1,3 +1,6 @@
+// sprite_pick_math.h
+// Rendering: sprite pick math declarations.
+
 #pragma once
 #include <DirectXMath.h>
 #include <cmath>

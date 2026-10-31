@@ -1,3 +1,6 @@
+// ui_element_script_host.h
+// Hosts script bindings on UI elements.
+
 #pragma once
 
 #include "libraries/nlohmann/json.hpp"

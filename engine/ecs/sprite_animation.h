@@ -1,3 +1,6 @@
+// sprite_animation.h
+// Sprite animation clip/frame data structures.
+
 #pragma once
 #include <cmath>
 #include <cstddef>

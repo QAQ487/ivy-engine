@@ -1,3 +1,6 @@
+// light_gizmo.cpp
+// Editor gizmo for light visualization.
+
 #include "light_gizmo.h"
 #include "engine/debug_draw/debug_drawer.h"
 #include "engine/ecs/directional_light_component.h"

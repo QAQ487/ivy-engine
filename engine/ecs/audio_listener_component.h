@@ -1,3 +1,6 @@
+// audio_listener_component.h
+// ECS audio listener component.
+
 #pragma once
 
 #include "component.h"

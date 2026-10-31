@@ -1,3 +1,6 @@
+// prepared_scene.h
+// Declares PreparedScene.
+
 #pragma once
 #include "scene_loader.h"
 #include "engine/core/engine_gui.h"

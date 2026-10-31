@@ -1,3 +1,6 @@
+// scene_lighting.h
+// Scene lighting setup and sync helpers.
+
 #pragma once
 #include <memory>
 #include <vector>

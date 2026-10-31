@@ -1,3 +1,6 @@
+// FullscreenVS.hlsl
+// Fullscreen triangle/quad vertex shader for post-process passes.
+
 struct VS_OUT
 {
 	float4 pos : SV_POSITION;

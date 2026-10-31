@@ -1,3 +1,6 @@
+// collider_component.cpp
+// ECS: collider component implementation.
+
 #include "collider_component.h"
 #include "engine/ecs/game_object.h"
 #include "engine/physics/physics_material.h"

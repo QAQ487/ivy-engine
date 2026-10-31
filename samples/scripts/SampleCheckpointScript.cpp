@@ -1,3 +1,6 @@
+// SampleCheckpointScript.cpp
+// Sample script: SampleCheckpointScript implementation.
+
 #include "SampleCheckpointScript.h"
 
 #include "engine/scripting/script_dll_register.h"

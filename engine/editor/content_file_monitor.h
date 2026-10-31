@@ -1,3 +1,6 @@
+// content_file_monitor.h
+// Watches content files for editor hot-reload.
+
 #pragma once
 #include <filesystem>
 #include <fstream>

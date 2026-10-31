@@ -1,3 +1,6 @@
+// project_manager.h
+// Loads/saves projects and recent-project list.
+
 #pragma once
 
 #include <string>

@@ -1,3 +1,6 @@
+// project_asset_index.h
+// Indexes project assets for the editor browser.
+
 #pragma once
 
 #include <string>

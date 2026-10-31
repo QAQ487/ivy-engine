@@ -1,3 +1,6 @@
+// camera_component.h
+// ECS camera component (view/projection).
+
 #pragma once
 #include "component.h"
 #include <DirectXMath.h>

@@ -1,3 +1,6 @@
+// VertexShader2D.hlsl
+// 2D sprite vertex shader.
+
 cbuffer VS_CONSTANT_BUFFER0 : register(b0) {
     float4x4 projection; // Combined View * Projection matrix; world transform applied separately via VS_CONSTANT_BUFFER1
 };

@@ -1,3 +1,6 @@
+// frame_capture.h
+// Captures backbuffer frames to image files.
+
 #pragma once
 
 // Optional capture, enabled only by IVY_FRAME_CAPTURE (JSON output path).

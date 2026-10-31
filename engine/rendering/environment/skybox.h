@@ -1,3 +1,6 @@
+// skybox.h
+// Rendering: skybox declarations.
+
 #pragma once
 
 #include <DirectXMath.h>

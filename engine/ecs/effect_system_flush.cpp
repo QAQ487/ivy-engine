@@ -1,3 +1,6 @@
+// effect_system_flush.cpp
+// ECS: effect system flush implementation.
+
 #include "effect_system_flush.h"
 #include "effect_component.h"
 

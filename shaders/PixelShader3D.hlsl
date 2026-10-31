@@ -1,3 +1,6 @@
+// PixelShader3D.hlsl
+// Base lit 3D pixel shader.
+
 #include "LightingCommon.hlsli"
 
 void main(

@@ -1,3 +1,6 @@
+// camera_director.cpp
+// App: camera director implementation.
+
 #include "engine/scene/scene_camera.h"
 #include "camera_director.h"
 #include "camera.h"

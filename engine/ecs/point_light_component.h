@@ -1,3 +1,6 @@
+// point_light_component.h
+// ECS point light component.
+
 #pragma once
 #include "component.h"
 #include <DirectXMath.h>

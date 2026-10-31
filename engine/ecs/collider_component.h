@@ -1,3 +1,6 @@
+// collider_component.h
+// ECS collider component.
+
 #pragma once
 #include "component.h"
 #include "engine/physics/collider/collider.h"

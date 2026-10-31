@@ -1,3 +1,6 @@
+// sprite_renderer_component.h
+// ECS sprite renderer component.
+
 #pragma once
 #include "component.h"
 #include <DirectXMath.h>

@@ -1,3 +1,6 @@
+// sprite_animator_check.cpp
+// Validates sprite animator component behavior.
+
 #include "engine/ecs/sprite_animator_component.h"
 #include <cassert>
 

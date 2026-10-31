@@ -1,3 +1,6 @@
+// sprite_animation_check.cpp
+// Validates sprite animation clip data.
+
 #include "engine/ecs/sprite_animation.h"
 #include <cassert>
 #include <limits>

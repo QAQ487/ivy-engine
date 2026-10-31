@@ -1,3 +1,6 @@
+// physics2d_world.cpp
+// 2D physics world wrapper around Box2D.
+
 #include "physics2d_world.h"
 #include <algorithm>
 #include <cmath>

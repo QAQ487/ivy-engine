@@ -1,3 +1,6 @@
+// game_scene_script_hooks.cpp
+// App: game scene script hooks implementation.
+
 #include "game_scene_script_hooks.h"
 
 #include "engine/scripting/script_factory.h"

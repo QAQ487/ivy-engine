@@ -1,3 +1,6 @@
+// physics2d_components.cpp
+// ECS components for 2D physics bodies/colliders.
+
 #include "physics2d_components.h"
 #include "engine/physics/2d/physics2d.h"
 #include "libraries/nlohmann/json.hpp"

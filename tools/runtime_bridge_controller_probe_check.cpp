@@ -1,3 +1,6 @@
+// runtime_bridge_controller_probe_check.cpp
+// Validates runtime bridge controller consumer probe.
+
 // Platform-independent controller consumer-trace validators (no Win32).
 #include "engine/testing/controller_probe_trace.h"
 

@@ -1,3 +1,6 @@
+// content_monitor_check.cpp
+// Validates content file monitor hot-reload behavior.
+
 #include "engine/editor/content_file_monitor.h"
 #include <cassert>
 #include <iostream>

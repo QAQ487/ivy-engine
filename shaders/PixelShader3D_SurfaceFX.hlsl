@@ -1,3 +1,6 @@
+// PixelShader3D_SurfaceFX.hlsl
+// Surface FX pixel shader.
+
 #include "LightingCommon.hlsli"
 
 // Parametric dual-scroll surface (water / void / lava / energy).

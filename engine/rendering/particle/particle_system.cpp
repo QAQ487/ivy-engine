@@ -1,3 +1,6 @@
+// particle_system.cpp
+// Implements ParticleVertex.
+
 #include "particle_system.h"
 
 #include "engine/ecs/string_utils.h"

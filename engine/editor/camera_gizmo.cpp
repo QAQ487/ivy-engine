@@ -1,3 +1,6 @@
+// camera_gizmo.cpp
+// Editor gizmo for camera visualization and editing.
+
 #include "camera_gizmo.h"
 #include "engine/debug_draw/debug_drawer.h"
 #include "engine/ecs/camera_component.h"

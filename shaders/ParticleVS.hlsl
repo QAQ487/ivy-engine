@@ -1,3 +1,6 @@
+// ParticleVS.hlsl
+// Particle system vertex shader.
+
 cbuffer CB_ViewProj : register(b0) {
 	float4x4 g_view;
 	float4x4 g_proj;

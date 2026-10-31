@@ -1,3 +1,6 @@
+// controller_test_inject.h
+// Declares ControllerInjectSample.
+
 #pragma once
 
 // Debug-runtime controller injection state. No Win32 or XInput types.

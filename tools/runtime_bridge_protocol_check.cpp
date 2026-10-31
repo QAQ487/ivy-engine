@@ -1,3 +1,6 @@
+// runtime_bridge_protocol_check.cpp
+// Validates runtime bridge framing/protocol parsing.
+
 #include "engine/testing/runtime_test_bridge.h"
 #define NOMINMAX
 #include <windows.h>

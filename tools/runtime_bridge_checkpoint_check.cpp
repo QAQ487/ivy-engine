@@ -1,3 +1,6 @@
+// runtime_bridge_checkpoint_check.cpp
+// Validates SampleCheckpointLatch one-shot / wrong-actor checks.
+
 // Pure SampleCheckpointLatch one-shot / wrong-actor checks (no physics).
 #include "samples/scripts/SampleCheckpointState.h"
 #include <iostream>

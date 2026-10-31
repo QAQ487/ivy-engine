@@ -1,3 +1,6 @@
+// runtime_bridge_controller_axes_check.cpp
+// Validates runtime bridge controller axis injection.
+
 // Platform-independent controller injection protocol checks.
 // No Win32, XInput, or Direct3D headers.
 #include "engine/testing/controller_inject_protocol.h"

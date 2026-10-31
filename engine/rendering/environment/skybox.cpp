@@ -1,3 +1,6 @@
+// skybox.cpp
+// Implements CB_Skybox.
+
 #include "skybox.h"
 
 #include "engine/rendering/d3d11/renderer.h"

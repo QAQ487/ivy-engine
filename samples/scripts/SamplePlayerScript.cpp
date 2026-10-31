@@ -1,3 +1,6 @@
+// SamplePlayerScript.cpp
+// Sample script: SamplePlayerScript implementation.
+
 #include "SamplePlayerScript.h"
 
 #include "engine/ecs/transform.h"

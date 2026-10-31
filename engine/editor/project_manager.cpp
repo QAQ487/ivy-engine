@@ -1,3 +1,6 @@
+// project_manager.cpp
+// Loads/saves projects and recent-project list.
+
 #include "project_manager.h"
 
 #include "engine/audio/audio_manager.h"

@@ -1,3 +1,6 @@
+// audio_component.h
+// ECS audio source component.
+
 #pragma once
 
 #include "component.h"

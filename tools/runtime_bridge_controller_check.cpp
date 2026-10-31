@@ -1,3 +1,6 @@
+// runtime_bridge_controller_check.cpp
+// Validates runtime bridge controller injection basics.
+
 #include "engine/testing/runtime_test_bridge.h"
 #include "engine/input/controller.h"
 #include <iostream>

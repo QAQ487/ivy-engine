@@ -1,3 +1,6 @@
+// ui_canvas_script_factory.cpp
+// Factory for UI-canvas-bound scripts.
+
 #include "ui_canvas_script_factory.h"
 
 #include <algorithm>

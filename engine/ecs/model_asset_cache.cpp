@@ -1,3 +1,6 @@
+// model_asset_cache.cpp
+// ECS: model asset cache implementation.
+
 #include "model_asset_cache.h"
 #include "string_utils.h"
 

@@ -1,3 +1,6 @@
+// transform_gizmo.h
+// ImGuizmo-based transform editing gizmo.
+
 #pragma once
 
 class GameObject;

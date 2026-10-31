@@ -1,3 +1,6 @@
+// script_watcher.cpp
+// Hot-reloads gameplay script DLLs when they change.
+
 #include "script_watcher.h"
 #include <filesystem>
 

@@ -1,3 +1,6 @@
+// scene_loader.h
+// Declares PreparedScene.
+
 #pragma once
 
 #include "libraries/nlohmann/json.hpp"

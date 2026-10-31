@@ -1,3 +1,6 @@
+// scene_runtime.h
+// Declares SceneBase.
+
 #pragma once
 #include "engine/ecs/game_object.h"
 #include <memory>

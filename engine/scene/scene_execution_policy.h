@@ -1,3 +1,6 @@
+// scene_execution_policy.h
+// Declares SceneExecutionPolicy.
+
 #pragma once
 #include "libraries/nlohmann/json.hpp"
 

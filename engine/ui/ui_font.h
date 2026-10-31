@@ -1,3 +1,6 @@
+// ui_font.h
+// TrueType font atlas loader (stb_truetype) for UI text.
+
 #pragma once
 
 #include <string>

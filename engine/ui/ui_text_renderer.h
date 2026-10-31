@@ -1,3 +1,6 @@
+// ui_text_renderer.h
+// Renders UI text glyphs via batched sprites.
+
 #ifndef UI_TEXT_RENDERER_H
 #define UI_TEXT_RENDERER_H
 

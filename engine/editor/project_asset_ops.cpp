@@ -1,3 +1,6 @@
+// project_asset_ops.cpp
+// Project asset create/rename/delete operations.
+
 #include "project_asset_ops.h"
 
 #include "project_asset_index.h"

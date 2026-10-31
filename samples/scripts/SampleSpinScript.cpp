@@ -1,3 +1,6 @@
+// SampleSpinScript.cpp
+// Sample script: SampleSpinScript implementation.
+
 #include "SampleSpinScript.h"
 
 #include "engine/ecs/transform.h"

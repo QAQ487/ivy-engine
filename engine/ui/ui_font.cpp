@@ -1,3 +1,6 @@
+// ui_font.cpp
+// TrueType font atlas loader (stb_truetype) for UI text.
+
 #define STBTT_STATIC
 #define STB_TRUETYPE_IMPLEMENTATION
 #include "libraries/imgui/imstb_truetype.h"

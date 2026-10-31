@@ -1,3 +1,6 @@
+// camera_pose.cpp
+// App: camera pose implementation.
+
 #include "camera_pose.h"
 #include "camera.h"
 #include "engine/ecs/camera_component.h"

@@ -1,3 +1,6 @@
+// ui_pivot_check.cpp
+// Validates UI pivot math helpers.
+
 #include "engine/ui/ui_pivot_math.h"
 #include <cassert>
 #include <initializer_list>

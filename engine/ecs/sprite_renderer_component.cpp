@@ -1,3 +1,6 @@
+// sprite_renderer_component.cpp
+// ECS: sprite renderer component implementation.
+
 #include "sprite_animator_component.h"
 #include "engine/rendering/sprite/sprite_pick_math.h"
 #include <cmath>

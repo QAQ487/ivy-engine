@@ -1,3 +1,6 @@
+// ui_pivot_math.h
+// Pivot and rect math helpers for UI layout.
+
 #pragma once
 #include <DirectXMath.h>
 
