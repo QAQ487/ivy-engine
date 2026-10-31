@@ -246,6 +246,9 @@
     <ClInclude Include="engine\input\controller.h">
       <Filter>engine\input</Filter>
     </ClInclude>
+    <ClInclude Include="engine\input\controller_test_inject.h">
+      <Filter>engine\input</Filter>
+    </ClInclude>
     <ClInclude Include="engine\input\key_logger.h">
       <Filter>engine\input</Filter>
     </ClInclude>

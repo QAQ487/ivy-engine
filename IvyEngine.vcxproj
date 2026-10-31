@@ -246,6 +246,7 @@ exit /b 0</Command>
     <ClInclude Include="engine\core\frame_transform_snapshot.h" />
     <ClInclude Include="engine\core\system_timer.h" />
     <ClInclude Include="engine\input\controller.h" />
+    <ClInclude Include="engine\input\controller_test_inject.h" />
     <ClInclude Include="engine\input\keyboard.h" />
     <ClInclude Include="engine\input\key_logger.h" />
     <ClInclude Include="engine\input\mouse.h" />

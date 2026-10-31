@@ -132,15 +132,7 @@ const char* Protocol::MouseStatus() const {
     }
 }
 const char* Protocol::ControllerStatus() const {
-    switch(controllerState_) {
-    case InputState::Queued:
-    case InputState::Preparing: return "queued";
-    case InputState::Active: return "active";
-    case InputState::Releasing: return "releasing";
-    case InputState::Completed: return "completed";
-    case InputState::Cancelled: return "cancelled";
-    default: return "idle";
-    }
+    return controllerOp_.Status();
 }
 bool Protocol::KeyboardIsolating() const {
     return inputState_ == InputState::Preparing || inputState_ == InputState::Active || inputState_ == InputState::Releasing;
@@ -149,7 +141,7 @@ bool Protocol::MouseIsolating() const {
     return mouseState_ == InputState::Preparing || mouseState_ == InputState::Active || mouseState_ == InputState::Releasing;
 }
 bool Protocol::ControllerIsolating() const {
-    return controllerState_ == InputState::Preparing || controllerState_ == InputState::Active || controllerState_ == InputState::Releasing;
+    return controllerOp_.Isolating();
 }
 std::vector<std::string> Protocol::InputKeys() const {
     return inputState_ == InputState::Active ? keyboardKeys_ : std::vector<std::string>{};
@@ -167,14 +159,15 @@ void Protocol::GetMouseInput(int& dx, int& dy, unsigned int& buttonsMask, int& w
         wheel = 0;
     }
 }
-void Protocol::GetControllerInput(float& lx, float& ly) const {
-    if (controllerState_ == InputState::Active) {
-        lx = controllerLx_;
-        ly = controllerLy_;
-    } else {
-        lx = 0.0f;
-        ly = 0.0f;
-    }
+void Protocol::GetControllerInput(float& lx, float& ly, float& rx, float& ry, float& lt, float& rt, std::uint16_t& buttons) const {
+    const ControllerInjectSample sample = controllerOp_.Sample();
+    lx = sample.lx;
+    ly = sample.ly;
+    rx = sample.rx;
+    ry = sample.ry;
+    lt = sample.lt;
+    rt = sample.rt;
+    buttons = sample.buttons;
 }
 void Protocol::CancelKeyboard() {
     if(inputState_ == InputState::Queued) {
@@ -195,14 +188,7 @@ void Protocol::CancelMouse() {
     }
 }
 void Protocol::CancelController() {
-    if(controllerState_ == InputState::Queued) {
-        controllerState_ = InputState::Cancelled;
-        controllerUpdatesRemaining_ = 0;
-        controllerLx_ = 0.0f;
-        controllerLy_ = 0.0f;
-    } else if(ControllerIsolating()) {
-        cancelController_ = true;
-    }
+    controllerOp_.Cancel();
 }
 void Protocol::ExpireKeyboard(std::uint64_t now) {
     if(now >= inputDeadline_) CancelKeyboard();
@@ -217,7 +203,7 @@ void Protocol::BeginInput(bool playing, std::uint64_t now) {
     ExpireKeyboard(now);
     ExpireMouse(now);
     ExpireController(now);
-    if(!playing) { CancelKeyboard(); CancelMouse(); CancelController(); }
+    if(!playing) { CancelKeyboard(); CancelMouse(); }
     if(inputState_ == InputState::Queued) inputState_ = InputState::Preparing;
     if(inputState_ == InputState::Active && (cancelInput_ || keyboardUpdatesRemaining_ == 0)) {
         inputState_ = InputState::Releasing;
@@ -230,13 +216,7 @@ void Protocol::BeginInput(bool playing, std::uint64_t now) {
         mouseUpdatesRemaining_ = 0;
         mouseDx_ = 0; mouseDy_ = 0; mouseButtons_ = 0; mouseWheel_ = 0;
     }
-    if(controllerState_ == InputState::Queued) controllerState_ = InputState::Preparing;
-    if(controllerState_ == InputState::Active && (cancelController_ || controllerUpdatesRemaining_ == 0)) {
-        controllerState_ = InputState::Releasing;
-        controllerUpdatesRemaining_ = 0;
-        controllerLx_ = 0.0f;
-        controllerLy_ = 0.0f;
-    }
+    controllerOp_.Begin(playing);
 }
 void Protocol::EndInput() {
     if(inputState_ == InputState::Preparing) inputState_ = InputState::Active;
@@ -249,11 +229,7 @@ void Protocol::EndInput() {
     else if(mouseState_ == InputState::Releasing) {
         mouseState_ = cancelMouse_ ? InputState::Cancelled : InputState::Completed;
     }
-    if(controllerState_ == InputState::Preparing) controllerState_ = InputState::Active;
-    else if(controllerState_ == InputState::Active && controllerUpdatesRemaining_ > 0) --controllerUpdatesRemaining_;
-    else if(controllerState_ == InputState::Releasing) {
-        controllerState_ = cancelController_ ? InputState::Cancelled : InputState::Completed;
-    }
+    controllerOp_.End();
 }
 
 bool Protocol::HasPendingCapture(std::int64_t& outId) const {
@@ -298,8 +274,7 @@ Json Protocol::Request(const std::string& frame) {
     int updates=0;
     int mouseDx=0, mouseDy=0, mouseWheel=0, mouseUpdates=0;
     unsigned int mouseButtonsMask=0;
-    float controllerLx=0.0f, controllerLy=0.0f;
-    int controllerUpdates=0;
+    ControllerCommand controllerCmd;
     std::string observeTarget;
     if(input) {
         if(q.size()!=6 || !q.contains("keys") || !q["keys"].is_array() || q["keys"].empty() || q["keys"].size()>9
@@ -346,18 +321,7 @@ Json Protocol::Request(const std::string& frame) {
         mouseDy = q["dy"].get<int>();
         mouseUpdates = q["updates"].get<int>();
     } else if(controller) {
-        if(q.size() != 7) return error("invalid_request");
-        if(!q.contains("lx") || !q["lx"].is_number()) return error("invalid_request");
-        if(!q.contains("ly") || !q["ly"].is_number()) return error("invalid_request");
-        const double lxVal = q["lx"].get<double>();
-        const double lyVal = q["ly"].get<double>();
-        if(!std::isfinite(lxVal) || lxVal < -1.0 || lxVal > 1.0) return error("invalid_request");
-        if(!std::isfinite(lyVal) || lyVal < -1.0 || lyVal > 1.0) return error("invalid_request");
-        if(!q.contains("updates") || !q["updates"].is_number_integer() || q["updates"] < 1 || q["updates"] > 120)
-            return error("invalid_request");
-        controllerLx = static_cast<float>(lxVal);
-        controllerLy = static_cast<float>(lyVal);
-        controllerUpdates = q["updates"].get<int>();
+        if(ParseControllerCommand(q, controllerCmd) != ControllerParseStatus::Ok) return error("invalid_request");
     } else if(observe) {
         if(q.size()!=5 || !q.contains("target") || !q["target"].is_string())
             return error("invalid_request");
@@ -406,13 +370,7 @@ Json Protocol::Request(const std::string& frame) {
     }
     if(controller) {
         if(!ready_ || !playing_) return error("not_ready",id);
-        if(controllerState_==InputState::Queued || ControllerIsolating()) return error("queue_full",id);
-        controllerState_=InputState::Queued;
-        cancelController_=false;
-        controllerReqId_=id;
-        controllerLx_=controllerLx;
-        controllerLy_=controllerLy;
-        controllerUpdatesRemaining_=controllerUpdates;
+        if(!controllerOp_.TryQueue(id, controllerCmd)) return error("queue_full",id);
         controllerDeadline_=GetTickCount64()+5000;
         return {{"protocolVersion",1},{"requestId",id},{"runId",runId_},{"ok",true},{"status","queued"}};
     }
@@ -482,8 +440,8 @@ Json Protocol::Request(const std::string& frame) {
             {"remainingUpdates",keyboardUpdatesRemaining_},{"cancelRequested",cancelInput_},{"preparing",inputState_==InputState::Preparing}}},
         {"mouse",{{"status",MouseStatus()},{"requestId",mouseReqId_},
             {"remainingUpdates",mouseUpdatesRemaining_},{"cancelRequested",cancelMouse_}}},
-        {"controller",{{"status",ControllerStatus()},{"requestId",controllerReqId_},
-            {"remainingUpdates",controllerUpdatesRemaining_},{"cancelRequested",cancelController_}}},
+        {"controller",{{"status",ControllerStatus()},{"requestId",controllerOp_.RequestId()},
+            {"remainingUpdates",controllerOp_.Remaining()},{"cancelRequested",controllerOp_.CancelRequested()}}},
         {"capture",{{"status",capStatus},{"requestId",captureState_.requestId},
             {"width",captureState_.width},{"height",captureState_.height},{"basename",captureState_.basename},{"error",captureState_.error}}}};
 }
@@ -677,9 +635,10 @@ void Bridge::PollAndApplyInput(bool inGamePlaying) {
         Mouse_ClearInjection();
     }
     if(impl_->protocol.ControllerIsolating()) {
-        float clx = 0.0f, cly = 0.0f;
-        impl_->protocol.GetControllerInput(clx, cly);
-        Controller_TestInjectLeftStick(clx, cly);
+        float clx = 0.0f, cly = 0.0f, crx = 0.0f, cry = 0.0f, clt = 0.0f, crt = 0.0f;
+        std::uint16_t cbuttons = 0;
+        impl_->protocol.GetControllerInput(clx, cly, crx, cry, clt, crt, cbuttons);
+        Controller_TestInjectSample(clx, cly, crx, cry, clt, crt, cbuttons);
     } else {
         Controller_ClearInjection();
     }

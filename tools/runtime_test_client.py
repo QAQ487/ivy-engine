@@ -273,20 +273,15 @@ class Client:
             raise RuntimeError(err or "events body invalid")
         return result
 
-    def controller(self,lx,ly,updates,request_id,completion_timeout=7.0):
-        if isinstance(lx,bool) or not isinstance(lx,(int,float)) or not math.isfinite(lx) or not -1.0<=lx<=1.0:
-            raise ValueError("lx must be a finite number in [-1,1]")
-        if isinstance(ly,bool) or not isinstance(ly,(int,float)) or not math.isfinite(ly) or not -1.0<=ly<=1.0:
-            raise ValueError("ly must be a finite number in [-1,1]")
-        if type(updates) is not int or not 1<=updates<=120:
-            raise ValueError("updates must be an integer in [1,120]")
+    def controller(self,lx,ly,updates,request_id,completion_timeout=7.0,rx=None,ry=None,lt=None,rt=None,buttons=None):
+        from runtime_bridge_controller_axes import build_controller_payload
+        payload=build_controller_payload(lx,ly,updates,rx=rx,ry=ry,lt=lt,rt=rt,buttons=buttons)
         if type(request_id) is not int or not 1<=request_id<2147483647:
             raise ValueError("request ID must leave room for completion polls")
         if isinstance(completion_timeout,bool) or not isinstance(completion_timeout,(int,float)) or not math.isfinite(completion_timeout) or not 0<completion_timeout<=10:
             raise ValueError("completion timeout must be a finite number in (0,10]")
         try:
             deadline=time.monotonic()+completion_timeout
-            payload={"lx":float(lx),"ly":float(ly),"updates":updates}
             result=self.request("controller",request_id,payload,deadline=deadline)
             if not result.get("ok"): return result
             operation_id=request_id
@@ -322,14 +317,18 @@ def main():
     p.add_argument("--wheel",type=int,default=0)
     p.add_argument("--lx",type=float,default=None)
     p.add_argument("--ly",type=float,default=None)
+    p.add_argument("--rx",type=float,default=None)
+    p.add_argument("--ry",type=float,default=None)
+    p.add_argument("--lt",type=float,default=None)
+    p.add_argument("--rt",type=float,default=None)
     a=p.parse_args()
     if a.verb=="keyboard" and (a.keys is None or a.updates is None): p.error("keyboard requires --keys and --updates")
     if a.verb!="keyboard" and (a.keys is not None): p.error("keys payload requires keyboard verb")
     if a.verb=="mouse" and a.updates is None: p.error("mouse requires --updates")
     if a.verb=="controller" and (a.lx is None or a.ly is None or a.updates is None):
         p.error("controller requires --lx, --ly and --updates")
-    if a.verb!="controller" and (a.lx is not None or a.ly is not None):
-        p.error("lx/ly payload requires controller verb")
+    if a.verb!="controller" and (a.lx is not None or a.ly is not None or a.rx is not None or a.ry is not None or a.lt is not None or a.rt is not None):
+        p.error("lx/ly/rx/ry/lt/rt payload requires controller verb")
     if a.verb=="observe" and not a.target: p.error("observe requires --target")
     try:
         with Client(a.pid,a.run_id,a.timeout) as c:
@@ -338,7 +337,7 @@ def main():
             elif a.verb=="mouse":
                 r=c.mouse(a.dx,a.dy,a.buttons,a.updates,a.request_id,a.wheel,a.completion_timeout)
             elif a.verb=="controller":
-                r=c.controller(a.lx,a.ly,a.updates,a.request_id,a.completion_timeout)
+                r=c.controller(a.lx,a.ly,a.updates,a.request_id,a.completion_timeout,rx=a.rx,ry=a.ry,lt=a.lt,rt=a.rt,buttons=a.buttons or None)
             elif a.verb=="observe":
                 r=c.observe(a.target,a.request_id)
             elif a.verb=="capture":

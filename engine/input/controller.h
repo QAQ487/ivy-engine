@@ -73,6 +73,10 @@ void Controller_SetVibration(float leftMotor, float rightMotor, int padIndex = 0
 
 #if defined(_DEBUG) && defined(GAME_RUNTIME)
 void Controller_TestInjectLeftStick(float lx, float ly);
+void Controller_TestInjectRightStick(float rx, float ry);
+void Controller_TestInjectTriggers(float left, float right);
+void Controller_TestInjectButtons(const ControllerButton* buttons, int count);
+void Controller_TestInjectSample(float lx, float ly, float rx, float ry, float lt, float rt, unsigned short buttons);
 void Controller_ClearInjection();
 bool Controller_IsInjectionActive();
 #endif

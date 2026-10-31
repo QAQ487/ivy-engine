@@ -165,6 +165,9 @@
     <ClInclude Include="engine\input\controller.h">
       <Filter>engine\input</Filter>
     </ClInclude>
+    <ClInclude Include="engine\input\controller_test_inject.h">
+      <Filter>engine\input</Filter>
+    </ClInclude>
     <ClInclude Include="engine\input\key_logger.h">
       <Filter>engine\input</Filter>
     </ClInclude>
@@ -657,6 +660,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\testing\runtime_test_bridge.h" />
+    <ClInclude Include="engine\testing\controller_inject_protocol.h" />
     <ClCompile Include="engine\testing\runtime_test_bridge.cpp" />
   </ItemGroup>
   <ItemGroup>

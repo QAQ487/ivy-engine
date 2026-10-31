@@ -9,6 +9,16 @@ template<class T> concept HasTestInjection = requires(T keys) { Keyboard_TestInj
 static_assert(!HasTestInjection<Keyboard_Keys*>, "test injection must be absent");
 template<class T> concept HasControllerInjection = requires(T axis) { Controller_TestInjectLeftStick(axis, axis); };
 static_assert(!HasControllerInjection<float>, "controller injection must be absent");
+template<class T> concept HasRightStickInjection = requires(T axis) { Controller_TestInjectRightStick(axis, axis); };
+static_assert(!HasRightStickInjection<float>, "right-stick injection must be absent");
+template<class T> concept HasTriggerInjection = requires(T axis) { Controller_TestInjectTriggers(axis, axis); };
+static_assert(!HasTriggerInjection<float>, "trigger injection must be absent");
+template<class T> concept HasButtonInjection = requires(const T* buttons, int count) { Controller_TestInjectButtons(buttons, count); };
+static_assert(!HasButtonInjection<ControllerButton>, "button injection must be absent");
+template<class T> concept HasSampleInjection = requires(T axis, unsigned short buttons) {
+    Controller_TestInjectSample(axis, axis, axis, axis, axis, axis, buttons);
+};
+static_assert(!HasSampleInjection<float>, "controller sample injection must be absent");
 namespace ivy::testing {
 template<class T>
 concept HasRuntimeTestEventsRecord = requires(T p) {

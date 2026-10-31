@@ -2,6 +2,7 @@
 #if defined(_DEBUG) && defined(GAME_RUNTIME)
 #define IVY_RUNTIME_TEST_BRIDGE_AVAILABLE 1
 #include "libraries/nlohmann/json.hpp"
+#include "engine/testing/controller_inject_protocol.h"
 #include <cstdint>
 #include <memory>
 #include <string>
@@ -64,7 +65,7 @@ public:
     void CancelController();
     void ExpireController(std::uint64_t now);
     bool ControllerIsolating() const;
-    void GetControllerInput(float& lx, float& ly) const;
+    void GetControllerInput(float& lx, float& ly, float& rx, float& ry, float& lt, float& rt, std::uint16_t& buttons) const;
 
     bool HasPendingCapture(std::int64_t& outId) const;
     void CompleteCapture(std::int64_t id, bool ok, uint32_t w, uint32_t h, const std::string& basename, const std::string& err);
@@ -100,13 +101,8 @@ private:
     int mouseUpdatesRemaining_ = 0;
     const char* MouseStatus() const;
 
-    InputState controllerState_ = InputState::Idle;
-    bool cancelController_ = false;
+    ControllerOperation controllerOp_;
     std::uint64_t controllerDeadline_ = 0;
-    std::int64_t controllerReqId_ = 0;
-    float controllerLx_ = 0.0f;
-    float controllerLy_ = 0.0f;
-    int controllerUpdatesRemaining_ = 0;
     const char* ControllerStatus() const;
 
     struct CaptureState {

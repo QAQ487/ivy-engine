@@ -123,6 +123,69 @@ int main() {
     check(!Controller_IsInjectionActive(), "subsequent Poll clears active");
     b.FinishInputUpdate();
 
+    // Right stick, triggers, and buttons share the controller queue. Left stick stays at the payload.
+    const auto combined = p.request("controller", {
+        {"lx", 0.0},
+        {"ly", 0.0},
+        {"rx", 0.5},
+        {"ry", -1.0},
+        {"lt", 0.25},
+        {"rt", 1.0},
+        {"buttons", Json::array({"A", "START", "LB", "DPAD_DOWN"})},
+        {"updates", 2}
+    });
+    check(combined.value("ok", false) == true, "combined controller request ok");
+    check(combined.value("status", "") == "queued", "combined controller request queued");
+
+    b.PollAndApplyInput(true);
+    check(Controller_IsInjectionActive(), "combined preparation isolates");
+    check(Controller_GetLeftStick(0).x == 0.0f && Controller_GetLeftStick(0).y == 0.0f, "combined prep left neutral");
+    check(Controller_GetRightStick(0).x == 0.0f && Controller_GetRightStick(0).y == 0.0f, "combined prep right neutral");
+    check(Controller_GetLeftTrigger(0) == 0.0f && Controller_GetRightTrigger(0) == 0.0f, "combined prep triggers neutral");
+    check(!Controller_IsPressed(ControllerButton::A, 0), "combined prep A up");
+    check(!Controller_IsTrigger(ControllerButton::A, 0), "combined prep A has no press edge");
+    b.FinishInputUpdate();
+
+    b.PollAndApplyInput(true);
+    check(Controller_GetLeftStick(0).x == 0.0f && Controller_GetLeftStick(0).y == 0.0f, "combined hold leaves left stick unchanged");
+    check(Controller_GetRightStick(0).x == 0.5f && Controller_GetRightStick(0).y == -1.0f, "combined hold right stick");
+    check(Controller_GetLeftTrigger(0) == 0.25f, "combined hold left trigger");
+    check(Controller_GetRightTrigger(0) == 1.0f, "combined hold right trigger");
+    check(Controller_IsPressed(ControllerButton::A, 0) && Controller_IsTrigger(ControllerButton::A, 0), "combined first hold A press edge");
+    check(Controller_IsPressed(ControllerButton::Start, 0) && Controller_IsTrigger(ControllerButton::Start, 0), "combined first hold Start press edge");
+    check(Controller_IsPressed(ControllerButton::LB, 0) && Controller_IsTrigger(ControllerButton::LB, 0), "combined first hold LB press edge");
+    check(Controller_IsPressed(ControllerButton::DPadDown, 0) && Controller_IsTrigger(ControllerButton::DPadDown, 0), "combined first hold d-pad press edge");
+    check(!Controller_IsPressed(ControllerButton::B, 0), "combined hold B stays up");
+    check(!Controller_IsPressed(ControllerButton::RB, 0), "combined hold RB stays up");
+    check(!Controller_IsPressed(ControllerButton::DPadUp, 0), "combined hold d-pad up stays up");
+    b.FinishInputUpdate();
+
+    b.PollAndApplyInput(true);
+    check(Controller_IsPressed(ControllerButton::A, 0), "combined second hold A stays down");
+    check(!Controller_IsTrigger(ControllerButton::A, 0), "combined second hold A is not a new edge");
+    check(!Controller_IsRelease(ControllerButton::A, 0), "combined second hold A is not a release");
+    check(Controller_GetLeftStick(0).x == 0.0f && Controller_GetLeftStick(0).y == 0.0f, "combined second hold left unchanged");
+    check(Controller_GetRightStick(0).y == -1.0f, "combined second hold right stick");
+    b.FinishInputUpdate();
+
+    b.PollAndApplyInput(true);
+    check(Controller_IsInjectionActive(), "combined release still isolates");
+    check(!Controller_IsPressed(ControllerButton::A, 0) && Controller_IsRelease(ControllerButton::A, 0), "combined release A edge");
+    check(Controller_IsRelease(ControllerButton::Start, 0), "combined release Start edge");
+    check(Controller_IsRelease(ControllerButton::LB, 0), "combined release LB edge");
+    check(Controller_IsRelease(ControllerButton::DPadDown, 0), "combined release d-pad edge");
+    check(Controller_GetRightStick(0).x == 0.0f && Controller_GetRightStick(0).y == 0.0f, "combined release right neutral");
+    check(Controller_GetLeftTrigger(0) == 0.0f && Controller_GetRightTrigger(0) == 0.0f, "combined release triggers neutral");
+    check(Controller_GetLeftStick(0).x == 0.0f && Controller_GetLeftStick(0).y == 0.0f, "combined release left neutral");
+    b.FinishInputUpdate();
+
+    const auto combinedStatus = p.request("status");
+    check(combinedStatus["controller"]["status"] == "completed", "combined status completed");
+    check(combinedStatus["controller"]["remainingUpdates"] == 0, "combined remaining 0");
+    b.PollAndApplyInput(true);
+    check(!Controller_IsInjectionActive(), "combined injection cleared after completion");
+    b.FinishInputUpdate();
+
     // Send invalid raw payload lx2, lx bool, ly string, updates0, updates121, extra field; require ok false
     const auto errLx2 = p.request("controller", {{"lx", 2.0}, {"ly", 0.0}, {"updates", 1}});
     check(errLx2.value("ok", true) == false, "reject lx2");
@@ -141,6 +204,21 @@ int main() {
 
     const auto errExtraField = p.request("controller", {{"lx", 0.0}, {"ly", 0.0}, {"updates", 1}, {"extra", 123}});
     check(errExtraField.value("ok", true) == false, "reject extra field");
+
+    const auto errRx = p.request("controller", {{"lx", 0.0}, {"ly", 0.0}, {"rx", 1.1}, {"ry", 0.0}, {"updates", 1}});
+    check(errRx.value("ok", true) == false, "reject rx above 1");
+
+    const auto errRt = p.request("controller", {{"lx", 0.0}, {"ly", 0.0}, {"rt", true}, {"updates", 1}});
+    check(errRt.value("ok", true) == false, "reject bool right trigger");
+
+    const auto errLtLow = p.request("controller", {{"lx", 0.0}, {"ly", 0.0}, {"lt", -0.01}, {"updates", 1}});
+    check(errLtLow.value("ok", true) == false, "reject left trigger below 0");
+
+    const auto errButton = p.request("controller", {{"lx", 0.0}, {"ly", 0.0}, {"updates", 1}, {"buttons", Json::array({"LT"})}});
+    check(errButton.value("ok", true) == false, "reject trigger name as a button");
+
+    const auto errDup = p.request("controller", {{"lx", 0.0}, {"ly", 0.0}, {"updates", 1}, {"buttons", Json::array({"B", "B"})}});
+    check(errDup.value("ok", true) == false, "reject duplicate button");
 
     // Test queue_full by two valid commands back-to-back, then close peer and bounded loop Poll/Finish until cleared/cancelled <=2sec; verify neutral and inactive after settling.
     const auto cmd1 = p.request("controller", {{"lx", 0.5}, {"ly", -0.5}, {"updates", 60}});
