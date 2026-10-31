@@ -401,3 +401,10 @@ FodyWeavers.xsd
 /tools/phase6-test-build/
 
 /tools/physics2d-test-build/
+
+# Understand-Anything / knowledge-graph scratch (do not commit)
+.ua/
+
+# Never commit tool binaries under runtime asset trees
+rom/**/*.exe
+

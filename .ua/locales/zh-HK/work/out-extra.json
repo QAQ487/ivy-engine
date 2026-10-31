@@ -1,6 +1,0 @@
-{
- "file:docs/diagrams/ivy-engine-architecture.zh-HK.html": {
-  "summary": "獨立 SVG 架構圖的香港繁體中文（zh-HK）版本，展示 IvyEngine.exe 與運行主程式共用 GameScene 循環；該循環載入內容專案的場景圖、逐幀更新引擎系統，並執行 GameScripts.dll 中的腳本。",
-  "languageNotes": "自足的 HTML，內含行內 CSS 及行內 SVG（viewBox 1280x720）；加入 Noto Sans/Serif TC 字型後備及 lang=\"zh-HK\"，以正確顯示中文字。"
- }
-}

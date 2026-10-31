@@ -2,7 +2,7 @@
 
 Debug-only named-pipe harness for Ivy Engine’s playable **GAME_RUNTIME** build. It lets a local client drive keyboard, mouse, and controller test input and read bounded observations (including a controller consumer probe). It is **not** shipping gameplay input and is compiled out of Release and Editor builds.
 
-Canonical historical notes (Cantonese): [`RUNTIME_TEST_BRIDGE.zh-TW.md`](RUNTIME_TEST_BRIDGE.zh-TW.md). This page documents the controller injection and `controller_probe` consumer path as implemented on `master` after PR #3.
+Cantonese summary: [`RUNTIME_TEST_BRIDGE.zh-TW.md`](RUNTIME_TEST_BRIDGE.zh-TW.md). This page is the canonical operations guide (including controller injection and `controller_probe` after PR #3).
 
 ## Build gate
 

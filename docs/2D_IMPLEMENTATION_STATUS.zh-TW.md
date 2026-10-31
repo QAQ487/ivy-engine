@@ -1,6 +1,24 @@
 # 2D 支援實作進度
 
-第 1–6 階段已由使用者確認完成（2026-10-20），首版 2D 支援計畫完成。以下各階段的待驗收描述保留為當時交付紀錄；最終狀態以本段及第六階段驗證文件為準。
+第 1–6 階段已由使用者確認完成（2026-10-20），首版 2D 支援計畫完成。以下各階段的待驗收描述保留為當時交付紀錄；最終狀態以本段及第六階段驗證文件為準。詳細驗證見 `docs/2D_PHASE6_VALIDATION.zh-TW.md`。
+
+## 計畫摘要（已結案；原 `2D_SUPPORT_PLAN.zh-TW.md`）
+
+目標：在同一套 Ivy Engine 中製作、編輯並打包純 2D 遊戲，共用 content project、GameObject、Transform、場景、腳本、輸入、音效、UI 與部署；2D 使用獨立世界 Sprite 與可選物理，不複製引擎、不重寫 3D 渲染器。首版交付俯視小場景（移動、相機跟隨、Sprite 動畫、障礙、Trigger、UI）；平台跳躍、Tilemap、混合 2D/3D 不列首版驗收。
+
+架構規則（控臃腫）：
+1. 共用核心不依賴 2D 物理；2D renderer 不依賴 Visual、PBR、陰影或天空盒。
+2. 沿用 D3D11 裝置與貼圖，不建第二套 graphics backend。
+3. 只在場景初始化／更新／繪製少數入口選路徑，不把 `is2D` 散落到每個物件。
+4. 2D 編輯視角、相機投影、場景渲染路徑與物理選擇是不同設定。
+5. 先排除不需要的每幀工作；執行檔瘦身是後續建置工作。
+6. 少量明確函式與資料結構；不做泛用 render graph／插件／第二套 ECS。
+
+契約要點：世界 XY、+Y 上、繞 Z 旋轉；`pixelsPerUnit`；場景存 `renderPath`／`physicsMode`；缺欄位維持 3D。執行順序原為 0→1→…→6。
+
+後續（依遊戲需求）：Sprite batching、Atlas／Tilemap／Pixel Perfect、混合 2D/3D 契約、可選建置排除 3D 模組。
+
+## 已實作
 
 已實作：
 - Camera、CameraComponent、CameraPose 的正交投影與垂直可視範圍；跨投影切換直接切換。
