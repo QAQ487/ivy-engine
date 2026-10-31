@@ -25,21 +25,21 @@ namespace Lighting {
     };
 
     struct Light {
-        // ????
-        DirectX::XMFLOAT3 directionWS {0, 0, 1}; // ???C?g??????i?????i??????j
+        // Directional
+        DirectX::XMFLOAT3 directionWS {0, 0, 1}; // Light travel direction (incoming negated for directional)
         DirectX::XMFLOAT3 color {1, 1, 1};
         DirectX::XMFLOAT3 specColor {1, 1, 1};
         float             specPower = 32.0f;
 
-        // ???
+        // Type
         int               type = DIRECTIONAL;
 
-        // Spot ?p
+        // Spot / point
         DirectX::XMFLOAT3 positionWS {0, 0, 0};
-        float             range = 100.0f;     // ??????J?????O???p?i?????g?p?j
+        float             range = 100.0f;     // Falloff range (spot/point)
         DirectX::XMFLOAT3 attenuation {1.0f, 0.0f, 1.0f}; // (kc, kl, kq)
-        float             innerCos = 0.95f;      // ?????p?? cos
-        float             outerCos = 0.85f;      // ?O???p?? cos
+        float             innerCos = 0.95f;      // Inner cone angle cosine
+        float             outerCos = 0.85f;      // Outer cone angle cosine
     };
 
     struct Params {
@@ -51,21 +51,21 @@ namespace Lighting {
     bool Initialize(ID3D11Device* dev, ID3D11DeviceContext* ctx);
     void Finalize();
 
-    // ???
+    // Lights
     void ClearLights();
     void AddDirectionalLight(const Light& l);
     void AddPointLight(const Light& l);
     void AddSpotLight(const Light& l);
     void SetAmbientColor(const DirectX::XMFLOAT3& col);
 
-    // ??
+    // Accessors
     Params GetParams();
-    DirectX::XMFLOAT3 GetDirection(); // ?????C?g?????
+    DirectX::XMFLOAT3 GetDirection(); // Primary light direction
 
-    // ?I?u?W?F?N?g???? OS ???
+    // Per-object lighting (object-space)
     void UpdatePerObject(const DirectX::XMMATRIX& world);
 
-    // b3 ?o?C???h
+    // Bind constant buffer b3
     void Bind();
 
 } // namespace Lighting

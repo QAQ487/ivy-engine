@@ -1,6 +1,6 @@
 /*==============================================================================
 
-   システムタイマー [system_timer.h]
+   System timer [system_timer.cpp]
 														 Author : Terry Yeung
 														 Date   : 2018/06/17
 --------------------------------------------------------------------------------
@@ -9,25 +9,25 @@
 #include <Windows.h>
 
 /*------------------------------------------------------------------------------
-   グローバル変数宣言
+   Global variables
 ------------------------------------------------------------------------------*/
-static bool g_bTimerStopped = true; // ストップフラグ
-static LONGLONG g_TicksPerSec = 0;  // １秒間の計測時間
-static LONGLONG g_StopTime;         // ストップした時間
-static LONGLONG g_LastElapsedTime;  // 最後に記録した更新時間
-static LONGLONG g_BaseTime;         // 基本時間
+static bool g_bTimerStopped = true; // Stopped flag
+static LONGLONG g_TicksPerSec = 0;  // Ticks per second
+static LONGLONG g_StopTime;         // Time when stopped
+static LONGLONG g_LastElapsedTime;  // Last recorded update time
+static LONGLONG g_BaseTime;         // Base time
 
 /*------------------------------------------------------------------------------
-   プロトタイプ宣言
+   Prototypes
 ------------------------------------------------------------------------------*/
-// 停止していれば停止時間、そうでなければ現在の時間の取得
+// Return stop time if stopped, otherwise current time
 static LARGE_INTEGER GetAdjustedCurrentTime(void);
 
 /*------------------------------------------------------------------------------
-   関数定義
+   Function definitions
 ------------------------------------------------------------------------------*/
 
-// システムタイマーの初期化
+// Initialize the system timer
 void SystemTimer_Initialize(void)
 {
 	g_bTimerStopped = true;
@@ -36,13 +36,13 @@ void SystemTimer_Initialize(void)
 	g_LastElapsedTime = 0;
 	g_BaseTime = 0;
 
-	// 高分解能パフォーマンスカウンタ周波数の取得
+	// Query high-resolution performance-counter frequency
 	LARGE_INTEGER ticksPerSec = { 0 };
 	QueryPerformanceFrequency(&ticksPerSec);
 	g_TicksPerSec = ticksPerSec.QuadPart;
 }
 
-// システムタイマーのリセット
+// Reset the system timer
 void SystemTimer_Reset(void)
 {
 	LARGE_INTEGER time = GetAdjustedCurrentTime();
@@ -52,16 +52,16 @@ void SystemTimer_Reset(void)
 	g_bTimerStopped = false;
 }
 
-// システムタイマーのスタート
+// Start the system timer
 void SystemTimer_Start(void)
 {
-	// 現在の時間を取得
+	// Get the current (absolute) time
 	LARGE_INTEGER time = { 0 };
 	QueryPerformanceCounter(&time);
 
-	// 今まで計測がストップしていたら
+	// If the timer was stopped,
 	if (g_bTimerStopped) {
-		// 止まっていた時間を差し引いて基本時間を更新
+		// subtract stopped duration from base time
 		g_BaseTime += time.QuadPart - g_StopTime;
 	}
 
@@ -70,7 +70,7 @@ void SystemTimer_Start(void)
 	g_bTimerStopped = false;
 }
 
-// システムタイマーのストップ
+// Stop the system timer
 void SystemTimer_Stop(void)
 {
 	if (g_bTimerStopped) return;
@@ -78,17 +78,17 @@ void SystemTimer_Stop(void)
 	LARGE_INTEGER time = { 0 };
 	QueryPerformanceCounter(&time);
 
-	g_LastElapsedTime = g_StopTime = time.QuadPart; // 停止時間を記録
+	g_LastElapsedTime = g_StopTime = time.QuadPart; // Record stop time
 	g_bTimerStopped = true;
 }
 
-// システムタイマーを0.1秒進める
+// Advance the system timer by 0.1 seconds
 void SystemTimer_Advance(void)
 {
 	g_StopTime += g_TicksPerSec / 10;
 }
 
-// 計測時間を取得
+// Get measured time
 double SystemTimer_GetTime(void)
 {
 	if (g_TicksPerSec == 0) return 0.0;
@@ -98,7 +98,7 @@ double SystemTimer_GetTime(void)
 	return (double)(time.QuadPart - g_BaseTime) / (double)g_TicksPerSec;
 }
 
-// 現在の時間を取得
+// Get the current (absolute) time
 double SystemTimer_GetAbsoluteTime(void)
 {
 	if (g_TicksPerSec == 0) return 0.0;
@@ -109,7 +109,7 @@ double SystemTimer_GetAbsoluteTime(void)
 	return time.QuadPart / (double)g_TicksPerSec;
 }
 
-// 経過時間の取得
+// Get elapsed time
 float SystemTimer_GetElapsedTime(void)
 {
 	if (g_TicksPerSec == 0) return 0.0f;
@@ -119,10 +119,10 @@ float SystemTimer_GetElapsedTime(void)
 	double elapsed_time = (float)((double)(time.QuadPart - g_LastElapsedTime) / (double)g_TicksPerSec);
 	g_LastElapsedTime = time.QuadPart;
 
-	// タイマーが正確であることを保証するために、更新時間を０にクランプする。
-	// elapsed_timeは、プロセッサが節電モードに入るか、何らかの形で別のプロセッサにシャッフルされると、この範囲外になる可能性がある。
-	// よって、メインスレッドはSetThreadAffinityMaskを呼び出して、別のプロセッサにシャッフルされないようにする必要がある。
-	// 他のワーカースレッドはSetThreadAffinityMaskを呼び出すべきではなく、メインスレッドから収集されたタイマーデータの共有コピーを使用すること。
+	// Clamp elapsed time to 0 so the timer stays accurate.
+	// elapsed_time can go out of range if the CPU enters power-saving mode or the thread is migrated to another processor.
+	// Therefore the main thread should call SetThreadAffinityMask so it is not shuffled to another processor.
+	// Other worker threads should not call SetThreadAffinityMask; they should use a shared copy of timer data collected on the main thread.
 	if (elapsed_time < 0.0f) {
 		elapsed_time = 0.0f;
 	}
@@ -130,13 +130,13 @@ float SystemTimer_GetElapsedTime(void)
 	return (float)elapsed_time;
 }
 
-// システムタイマーが止まっているか？
+// Is the system timer stopped?
 bool SystemTimer_IsStoped(void)
 {
 	return g_bTimerStopped;
 }
 
-// 現在のスレッドを1つのプロセッサ（現在のスレッド）に制限
+// Pin the current thread to a single processor
 void LimitThreadAffinityToCurrentProc(void)
 {
 	HANDLE hCurrentProcess = GetCurrentProcess();
@@ -161,7 +161,7 @@ void LimitThreadAffinityToCurrentProc(void)
 	CloseHandle(hCurrentProcess);
 }
 
-// 停止していれば停止時間、そうでなければ現在の時間の取得
+// Return stop time if stopped, otherwise current time
 LARGE_INTEGER GetAdjustedCurrentTime(void)
 {
 	LARGE_INTEGER time;

@@ -23,25 +23,25 @@
 #include <vector>
 using namespace DirectX;
 
-static constexpr int NUM_VERTEX = 4;  // ???_??
+static constexpr int NUM_VERTEX = 4;  // Vertex count
 
 static ID3D11RasterizerState* g_worldRasterizer = nullptr;
-static ID3D11Buffer* g_pVertexBuffer = nullptr; // ???_?o?b?t?@
+static ID3D11Buffer* g_pVertexBuffer = nullptr; // Vertex buffer
 static ID3D11Buffer* g_pRadialVertexBuffer = nullptr; // Radial fill vertex buffer
 static ID3D11Buffer* g_pRadialIndexBuffer = nullptr; // Radial fill index buffer
 
-// ?f?o?C?X??R???e?L?X?g?i??????????????j
+// Device / context (set at Initialize)
 static ID3D11Device* g_pDevice = nullptr;
 static ID3D11DeviceContext* g_pContext = nullptr;
 
-// ???_?f?[?^
+// Vertex data
 struct Vertex {
 	XMFLOAT3 position;
 	XMFLOAT4 color;
 	XMFLOAT2 texcoord;
 };
 
-// ??`1??????C???f?b?N?X
+// Quad index list (2 triangles)
 static const UINT SpriteIndices[6] = {0, 1, 2, 0, 2, 3};
 static ID3D11Buffer* g_pIndexBuffer = nullptr;
 
@@ -49,7 +49,7 @@ void Sprite_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext) {
 	g_pDevice = pDevice;
 	g_pContext = pContext;
 
-	// ???_?o?b?t?@???i???1?????A???????????j
+	// Vertex buffer (dynamic; one quad)
 	if (!g_pVertexBuffer) {
 		D3D11_BUFFER_DESC bd = {};
 		bd.Usage = D3D11_USAGE_DYNAMIC;
@@ -61,7 +61,7 @@ void Sprite_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext) {
 		g_pDevice->CreateBuffer(&bd, nullptr, &g_pVertexBuffer);
 	}
 
-	// ?C???f?b?N?X?o?b?t?@?i??`2?O?p?`?j
+	// Index buffer (quad = 2 triangles)
 	if (!g_pIndexBuffer) {
 		D3D11_BUFFER_DESC ibd = {};
 		ibd.Usage = D3D11_USAGE_IMMUTABLE;
@@ -82,7 +82,7 @@ void Sprite_Finalize(void) {
 }
 
 void Sprite_Draw(int texid, float X, float Y, XMFLOAT4 color) {
-	// ?e?N?X?`???T?C?Y?擾
+	// Texture size
 	auto size = TextureGetSize(texid);
 
 	Sprite_Draw(texid, X, Y, (float) size.x, (float) size.y, 0, 0, (int) size.x, (int) size.y, color);
@@ -95,33 +95,33 @@ void Sprite_Draw(int texid, float X, float Y, float width, float height, int tx,
 void Sprite_Draw(int texid, float X, float Y, float width, float height, int tx, int ty, int tw, int th, float angle, XMFLOAT4 color) {
 	if (texid < 0) return;
 
-	// ?e?N?X?`???T?C?Y
+	// Texture size
 	auto texWidth = (float) TextureGetWidth(texid);
 	auto texHeight = (float) TextureGetHeight(texid);
 	if (texWidth <= 0.0f || texHeight <= 0.0f) return;
 
-	// UV???W?v?Z
+	// Compute UVs
 	float u0 = (float) tx / texWidth;
 	float v0 = (float) ty / texHeight;
 	float u1 = (float) (tx + tw) / texWidth;
 	float v1 = (float) (ty + th) / texHeight;
 
-	// ???S??]?????A???S???W????_?????
+	// Pivot at center; build verts relative to center
 	float cx = X + width * 0.5f;
 	float cy = Y + height * 0.5f;
 
-	// ???_???W?i????->?E??->?E??->????????j
+	// Local verts (TL -> TR -> BR -> BL)
 	XMFLOAT3 pos[4] = {
-		{-width * 0.5f, -height * 0.5f, 0.0f}, // ????
-		{width * 0.5f, -height * 0.5f, 0.0f}, // ?E??
-		{width * 0.5f, height * 0.5f, 0.0f}, // ?E??
-		{-width * 0.5f, height * 0.5f, 0.0f}, // ????
+		{-width * 0.5f, -height * 0.5f, 0.0f}, // Top-left
+		{width * 0.5f, -height * 0.5f, 0.0f}, // Top-right
+		{width * 0.5f, height * 0.5f, 0.0f}, // Bottom-right
+		{-width * 0.5f, height * 0.5f, 0.0f}, // Bottom-left
 	};
 	XMFLOAT2 uv[4] = {
 		{u0, v0}, {u1, v0}, {u1, v1}, {u0, v1}
 	};
 
-	// ??]
+	// Rotate
 	float rad = XMConvertToRadians(angle);
 	float s = sinf(rad);
 	float c = cosf(rad);
@@ -130,44 +130,44 @@ void Sprite_Draw(int texid, float X, float Y, float width, float height, int tx,
 	for (int i = 0; i < NUM_VERTEX; ++i) {
 		float px = pos[i].x;
 		float py = pos[i].y;
-		// ??]
+		// Rotate
 		float rx = px * c - py * s;
 		float ry = px * s + py * c;
-		// ?X?N???[?????W????s???
+		// Translate into screen space
 		vtx[i].position = XMFLOAT3(cx + rx, cy + ry, 0.0f);
 		vtx[i].color = color;
 		vtx[i].texcoord = uv[i];
 	}
 
-	// ???_?o?b?t?@?X?V
+	// Update vertex buffer
 	D3D11_MAPPED_SUBRESOURCE msr;
 	if (SUCCEEDED(g_pContext->Map(g_pVertexBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &msr))) {
 		memcpy(msr.pData, vtx, sizeof(vtx));
 		g_pContext->Unmap(g_pVertexBuffer, 0);
 	}
 
-	// ?V?F?[?_?[?E???o?b?t?@?E?e?N?X?`???Z?b?g
+	// Bind shaders / buffers / texture
 	Shader2D_Begin();
 	SetDepthEnable(false);
 	Shader_SetColor(color);
 
-	// ?e?N?X?`???Z?b?g
+	// Bind texture
 	TextureSetTexture(texid);
 
-	// ???[???h?E?r???[?v???W?F?N?V?????s??Z?b?g?i2D?p?j
+	// Set world / view / projection (2D)
 	Shader_SetViewMatrix(DirectX::XMMatrixIdentity());
 	Shader_SetProjectionMatrix(DirectX::XMMatrixOrthographicOffCenterLH(
 		0.0f, GetRenderViewportWidth(), GetRenderViewportHeight(), 0.0f, 0.0f, 1.0f));
 	Shader_SetWorldMatrix(DirectX::XMMatrixIdentity());
 
-	// ???_?E?C???f?b?N?X?o?b?t?@?Z?b?g
+	// Bind vertex / index buffers
 	UINT stride = sizeof(Vertex);
 	UINT offset = 0;
 	g_pContext->IASetVertexBuffers(0, 1, &g_pVertexBuffer, &stride, &offset);
 	g_pContext->IASetIndexBuffer(g_pIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
 	g_pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-	// ?`??
+	// Draw
 	FrameCapture_RecordSpriteDraw();
     g_pContext->DrawIndexed(6, 0, 0);
 }

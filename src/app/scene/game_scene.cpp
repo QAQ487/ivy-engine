@@ -407,7 +407,7 @@ void GameScene::Update(double elapsed_time) {
 	if(!SceneLoader_Is2D()) Billboard::ClearDrawList();
 
 	// Non-player scene roots. TAG_PLAYER roots are updated in the player batch
-	// below (EngineGUI skips them so snapshot ¨ jobs ¨ flushes can own them).
+	// below (EngineGUI skips them so snapshot  ->  jobs  ->  flushes can own them).
 	EngineGUI_Update(elapsed_time);
     if(SceneLoader_Is2D()) ReleaseScene3D();
     else if(!SceneLoader_GetCurrentScenePath().empty()) EnsureScene3D();

@@ -33,7 +33,7 @@ void KeyLogger_Initialize() {
 
 void KeyLogger_Update(double now_time) {
 	const Keyboard_State* state = Keyboard_GetState();
-	g_current_time = now_time;  // 渡された時間を使う！
+	g_current_time = now_time;  // Use the time passed in
 
 	// Real frame delta instead of an assumed 60FPS, so hold-time accumulates
 	// correctly at any frame rate (falls back to 1/60s on the very first call).
@@ -51,7 +51,7 @@ void KeyLogger_Update(double now_time) {
 	LPBYTE prp = (LPBYTE)&g_repeat_state;
 	LPBYTE plp = (LPBYTE)&g_longpress_state;
 
-	// トリガーなどのフラグ配列初期化
+	// Initialize trigger/release/etc. flag arrays
 	for (int i = 0; i < sizeof(Keyboard_State); i++) {
 		pt[i] = (po[i] ^ pn[i]) & pn[i];
 		pr[i] = po[i] & ~pn[i];
@@ -60,7 +60,7 @@ void KeyLogger_Update(double now_time) {
 		plp[i] = 0;
 	}
 
-	// 各キーに対する時間判定
+	// Per-key timing checks
 	for (int k = 0; k < 256; ++k) {
 		bool is_down = Keyboard_IsKeyDown((Keyboard_Keys)k, state);
 		bool is_trigger = Keyboard_IsKeyDown((Keyboard_Keys)k, &g_trigger_state);
@@ -76,22 +76,22 @@ void KeyLogger_Update(double now_time) {
 			double delta = g_current_time - g_last_press_time[k];
 
 			if (delta > 0.0 && delta < 0.3) {
-				// 0.3秒以内ならダブルタップ
+				// Double-tap if within 0.3s
 				Keyboard_SetKeyDown(&g_double_tap_state, (Keyboard_Keys)k, true);
-				// 成功したらタイムスタンプをリセット
+				// Reset timestamp after a successful double-tap
 				g_last_press_time[k] = 0.0;
 			}
 			else {
-				// 0.3秒以上経っていたら、
-				// 1回目のタイムスタンプを今回に更新（2回目としては認めない）
+				// If more than 0.3s elapsed,
+				// update first-press timestamp (not counted as second tap)
 				g_last_press_time[k] = g_current_time;
 			}
 		}
 		else {
-			// 押されてないときに、タイムアウトで1回目を無効にする
+			// While not pressed, invalidate first press on timeout
 			double delta = g_current_time - g_last_press_time[k];
 			if (delta >= 0.3) {
-				g_last_press_time[k] = 0.0; // 有効期限切れ
+				g_last_press_time[k] = 0.0; // Expired
 			}
 		}
 

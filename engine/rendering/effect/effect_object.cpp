@@ -18,7 +18,7 @@ bool EffectObject::LoadFromFileW(const wchar_t* path) {
 EffectObject& EffectObject::WithScale(float uniform) {
     GameObject::SetScale({uniform, uniform, uniform});
     if (m_handle >= 0) {
-        // 一様スケールサポート（EffectSystem に一様版がある場合そちらを優先）
+        // Uniform scale (prefer EffectSystem uniform overload when available)
         EffectSystem::SetScale(m_handle, XMFLOAT3 {uniform, uniform, uniform});
     }
     return *this;
@@ -40,7 +40,7 @@ void EffectObject::Initialize() {
     if (m_autoPlay && m_effectId >= 0 && m_handle < 0) {
         m_handle = EffectSystem::Play(m_effectId, m_position);
         if (m_handle >= 0) {
-            // 初期Transformを反映
+            // Apply initial transform
             EffectSystem::SetLocation(m_handle, m_position);
             EffectSystem::SetRotationEulerDeg(m_handle, m_rotation);
             EffectSystem::SetScale(m_handle, m_scale);
@@ -57,19 +57,19 @@ void EffectObject::Finalize() {
 
 void EffectObject::LogicUpdate(double /*elapsed_time*/) {
     if (m_handle >= 0) {
-        // GameObject の Transform をエフェクトへ同期
+        // Sync GameObject transform to the effect
         EffectSystem::SetLocation(m_handle, m_position);
         EffectSystem::SetRotationEulerDeg(m_handle, m_rotation);
         EffectSystem::SetScale(m_handle, m_scale);
 
-        // 1ショット終了時に自動非アクティブ化
+        // Auto-deactivate when one-shot ends
         if (m_autoDestroyOnEnd && !EffectSystem::Exists(m_handle)) {
             m_handle = -1;
             m_isActive = false;
         }
     }
     else {
-        // 自動再生ONで未再生かつ有効なら再生を試みる
+        // If auto-play is on, inactive handle, and active: try play
         if (m_autoPlay && m_effectId >= 0 && m_isActive) {
             m_handle = EffectSystem::Play(m_effectId, m_position);
             if (m_handle >= 0) {
@@ -82,7 +82,7 @@ void EffectObject::LogicUpdate(double /*elapsed_time*/) {
 }
 
 void EffectObject::Draw() {
-    // Effekseer の描画は EffectSystem::Draw3D() 側でまとめて実施
+    // Effekseer drawing is batched in EffectSystem::Draw3D()
 }
 
 void EffectObject::Play() {

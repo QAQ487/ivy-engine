@@ -9,7 +9,7 @@
  ===========================================================================**/
 #include "camera.h"
 
- // �O���[�o���ȃJ�����C���X�^���X�͐ÓI�ϐ��Ƃ��Ă��̃t�@�C����ŊǗ�
+ // Global camera instance is a static in this file
 static Camera s_Camera;
 
 Camera& GetCamera() {

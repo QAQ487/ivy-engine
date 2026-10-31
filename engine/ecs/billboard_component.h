@@ -3,7 +3,7 @@
  * Project: d3d11_engine
  * Author: Terry Yeung
  * Created: 2026-06-07
- * Description: BillboardComponent  Edeclarative textured quad visuals
+ * Description: BillboardComponent  - declarative textured quad visuals
  *              separate from FBX-driven VisualComponent.
  *
  * Registered with ComponentFactory as "Billboard".

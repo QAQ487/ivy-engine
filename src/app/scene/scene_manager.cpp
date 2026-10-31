@@ -11,9 +11,9 @@
 #include "engine/physics/core/physics_system.h"
 
  /**===========================================================================
-	???V???O???g???C???X?^???X??????
-	?????@?F
-	?????l?F
+	Singleton instance accessor.
+	Args: none
+	Returns: SceneManager reference
   ===========================================================================**/
 SceneManager& SceneManager::Instance() {
 	static SceneManager instance;
@@ -21,9 +21,9 @@ SceneManager& SceneManager::Instance() {
 }
 
 /**===========================================================================
-   ???R???X?g???N?^?E?f?X?g???N?^??
-   ?????@?F
-   ?????l?F
+   Constructor / destructor.
+   Args: none
+   Returns: none
  ===========================================================================**/
 SceneManager::SceneManager() {}
 SceneManager::~SceneManager() {
@@ -31,9 +31,9 @@ SceneManager::~SceneManager() {
 }
 
 /**===========================================================================
-   ???V?[????X??
-   ?????@?F
-   ?????l?F
+   Destroy the current scene.
+   Args: none
+   Returns: none
  ===========================================================================**/
 void SceneManager::DestroyCurrentScene() {
 	if (!m_CurrentScene) return;
@@ -51,27 +51,27 @@ void SceneManager::ChangeScene(SceneBase* pNextScene) {
 }
 
 /**===========================================================================
-   ???X?V??????
-   ?????@?F
-   ?????l?F
+   Update the current scene.
+   Args: elapsed_time - seconds since last frame
+   Returns: none
  ===========================================================================**/
 void SceneManager::Update(double elapsed_time) {
 	if (m_CurrentScene) m_CurrentScene->Update(elapsed_time);
 }
 
 /**===========================================================================
-   ???`???????
-   ?????@?F
-   ?????l?F
+   Draw the current scene.
+   Args: none
+   Returns: none
  ===========================================================================**/
 void SceneManager::Draw() {
 	if (m_CurrentScene) m_CurrentScene->Draw();
 }
 
 /**===========================================================================
-   ?????????V?[????????
-   ?????@?F
-   ?????l?F
+   Get the current scene.
+   Args: none
+   Returns: SceneBase pointer (may be null)
  ===========================================================================**/
 SceneBase* SceneManager::GetCurrentScene() {
 	return m_CurrentScene;

@@ -22,18 +22,18 @@ using namespace DirectX;
 #include "engine/rendering/environment/ibl.h"
 #include "engine/core/system_timer.h"
 
-// MATERIAL ?T?C?Y????
+// MATERIAL size check
 static_assert(sizeof(MATERIAL) % 16 == 0, "MATERIAL constant buffer must be 16-byte aligned.");
 
 static constexpr int MAX_LIGHTS = SHADER_MAX_LIGHTS;
 
 /**---------------------------------------------------------------------------
-// ?f?o?C?X?^?R???e?L?X?g
+// Device / context
 ---------------------------------------------------------------------------**/
 static ID3D11Device* g_pDevice = nullptr;
 static ID3D11DeviceContext* g_pContext = nullptr;
 
-// ????T???v???[
+// Shared sampler
 static ID3D11SamplerState* g_pSamplerState = nullptr;
 
 /**---------------------------------------------------------------------------
@@ -133,7 +133,7 @@ static XMMATRIX s_Proj3D = XMMatrixIdentity();
 static XMMATRIX s_World3D = XMMatrixIdentity();
 
 /**---------------------------------------------------------------------------
-// ?V???h?E?z??
+// Shadow
 ---------------------------------------------------------------------------**/
 static ID3D11Buffer* g_pCB3D_Shadow = nullptr;
 static ID3D11SamplerState* g_pShadowSampler = nullptr;
@@ -183,7 +183,7 @@ static void UpdateShadowCB() {
 static bool s_useExternalVP = false;
 
 /**===========================================================================
-// ????X?V?w???p
+// Matrix update helpers
 ===========================================================================**/
 static void Update2D_VP() {
 	if (!g_pContext || !g_pCB2D_VP) return;
@@ -219,7 +219,7 @@ static bool CreateBuffer(ID3D11Buffer** ppBuf, UINT byteWidth, D3D11_BIND_FLAG b
 }
 
 /**===========================================================================
-// ??????
+// Initialize
 ===========================================================================**/
 bool Shader_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext) {
 	HRESULT hr;
@@ -228,7 +228,7 @@ bool Shader_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext) {
 	g_pDevice = pDevice;
 	g_pContext = pContext;
 
-	// 2D VS/PS ??R???p?C????? .cso ?????????
+	// Load precompiled 2D VS/PS .cso
 	{
 		// Vertex Shader
 		std::ifstream vsFile2D("rom/shader/VertexShader2D.cso", std::ios::binary);
@@ -267,7 +267,7 @@ bool Shader_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext) {
 		if (FAILED(hr)) return false;
 	}
 
-	// 3D VS/PS ??R???p?C????? .cso ?????????
+	// Load precompiled 3D VS/PS .cso
 	{
 		// Vertex Shader
 		std::ifstream vsFile("rom/shader/VertexShader3D.cso", std::ios::binary);
@@ -362,7 +362,7 @@ bool Shader_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext) {
 		}
 	}
 
-	// ???o?b?t?@??
+	// Constant buffers
 	if (!CreateBuffer(&g_pCB2D_VP, sizeof(XMFLOAT4X4))) return false;
 	if (!CreateBuffer(&g_pCB2D_World, sizeof(XMFLOAT4X4))) return false;
 	if (!CreateBuffer(&g_pCB3D_WVP, sizeof(XMFLOAT4X4))) return false;
@@ -385,13 +385,13 @@ bool Shader_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext) {
 		if (FAILED(g_pDevice->CreateBuffer(&sfx, nullptr, &g_pCB3D_SurfaceFX))) return false;
 	}
 
-	// 2D PS ???o?b?t?@?i?F?j
+	// 2D PS constant buffer (color)
 	{
 		D3D11_BUFFER_DESC psd {}; psd.ByteWidth = sizeof(XMFLOAT4); psd.Usage = D3D11_USAGE_DEFAULT; psd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 		if (FAILED(g_pDevice->CreateBuffer(&psd, nullptr, &g_pCB2D_Color))) return false;
 	}
 
-	// ?T???v???[
+	// Sampler
 	{
 		D3D11_SAMPLER_DESC sd {};
 		sd.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
@@ -406,7 +406,7 @@ bool Shader_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext) {
 		if (FAILED(g_pDevice->CreateSamplerState(&sd, &g_pSamplerState))) return false;
 	}
 
-	// ?V???h?E: CB ???r?T???v???[
+	// Shadow: CB and comparison sampler
 	{
 		if (!CreateBuffer(&g_pCB3D_Shadow, sizeof(SHADOW_CB))) return false;
 
@@ -433,7 +433,7 @@ bool Shader_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext) {
 	Update2D_World();
 	Update3D_WVP();
 
-	// ???C?e?B???O??????
+	// Lighting initialize
 	Lighting::Initialize(g_pDevice, g_pContext);
 
 	return true;
@@ -514,7 +514,7 @@ void Shader_SetViewMatrix(const DirectX::XMMATRIX& matrix) {
 void Shader_SetWorldMatrix(const DirectX::XMMATRIX& matrix) {
 	s_World2D = matrix; Update2D_World();
 	s_World3D = matrix; Update3D_WVP();
-	UpdateShadowCB();            // World*LightVP ???v?Z
+	UpdateShadowCB();            // Recompute World*LightVP
 	Lighting::UpdatePerObject(s_World3D);
 }
 void Shader_SetColor(const DirectX::XMFLOAT4& color) {
@@ -633,21 +633,21 @@ void Shader_BindShadowMap(ID3D11ShaderResourceView* shadowSRV) {
 void Shader_BindShadowMaps(ID3D11ShaderResourceView* const* shadowSRVs, int lightCount) {
 	constexpr UINT kMax = MAX_LIGHTS;
 
-	// ????S?X???b?g??N???A
+	// Clear all slots first
 	ID3D11ShaderResourceView* nullSRV[kMax] = {};
 	g_pContext->PSSetShaderResources(1, kMax, nullSRV);
 
-	// ?????N?????v
+	// Requested light count
 	UINT reqCount = (lightCount <= 0) ? 0u : (lightCount > (int) kMax ? kMax : (UINT) lightCount);
 
-	// ?O?l???L???? SRV ??????R?s?[?iAddRef/Release ????S???????j
+	// Copy only live SRVs (validate with AddRef/Release)
 	UINT bindCount = 0;
 	for (UINT i = 0; i < reqCount; ++i) {
 		ID3D11ShaderResourceView* srv = (shadowSRVs ? shadowSRVs[i] : nullptr);
 		if (!srv) break;
-		HRESULT hrAdd = srv->AddRef();  // ???s??疳??
+		HRESULT hrAdd = srv->AddRef();  // Liveness check
 		srv->Release();
-		if (FAILED(hrAdd)) break;       // ???????????????????
+		if (FAILED(hrAdd)) break;       // Abort if invalid
 		s_pShadowSRVs[bindCount++] = srv;
 	}
 	for (UINT i = bindCount; i < kMax; ++i) s_pShadowSRVs[i] = nullptr;
@@ -741,11 +741,11 @@ void Shader3D_Begin(Shader3DVariant variant) {
 	if (!ps) ps = g_pPS3DVariants[static_cast<int>(Shader3DVariant::Standard)];
 	g_pContext->PSSetShader(ps, nullptr, 0);
 
-	// ?O???????N???A
+	// Clear previous bindings
 	ID3D11ShaderResourceView* nullSRV[MAX_LIGHTS] = {};
 	g_pContext->PSSetShaderResources(1, MAX_LIGHTS, nullSRV);
 
-	// ?O?l???? SRV ????????A???????o?C???h?????
+	// Rebind only valid SRVs
 	UINT bindCount = (s_ShadowSRVCount > MAX_LIGHTS) ? MAX_LIGHTS : (UINT) s_ShadowSRVCount;
 	for (UINT i = 0; i < bindCount; ++i) {
 		ID3D11ShaderResourceView* srv = s_pShadowSRVs[i];

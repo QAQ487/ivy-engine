@@ -13,7 +13,7 @@
 #include <assert.h>
  //#include "debugPrintf.h"
 
-static_assert(sizeof(Keyboard_State) == 256 / 8, "�L�[�{�[�h��ԍ\���̂̃T�C�Y�s��v");
+static_assert(sizeof(Keyboard_State) == 256 / 8, "Keyboard_State size mismatch");
 
 static Keyboard_State gState = {};
 static Keyboard_State gStateOld = {};
@@ -40,7 +40,7 @@ bool Keyboard_IsInjectionActive() { return gInjectionActive; }
 
 
 void keycopy() {
-	gStateOld = gState; //�O��̃L�[����ۑ�
+	gStateOld = gState; //Save previous key state
 }
 
 static void keyDown(int key) {
@@ -90,7 +90,7 @@ bool Keyboard_IsKeyDown(Keyboard_Keys key, const Keyboard_State* pState) {
 	return false;
 }
 
-//�g���K�[����
+//Edge-trigger check
 bool Keyboard_IsKeyDownTrigger(Keyboard_Keys key) {
 	if (key <= 0xfe) {
 		unsigned int* p = (unsigned int*)&gState;
@@ -120,7 +120,7 @@ bool Keyboard_IsKeyUp(Keyboard_Keys key) {
 	return Keyboard_IsKeyUp(key, &gState);
 }
 
-// �L�[�{�[�h�̌��݂̏�Ԃ�擾����
+// Get the current keyboard state
 const Keyboard_State* Keyboard_GetState(void) {
 	return &gState;
 }
@@ -137,7 +137,7 @@ void Keyboard_Reset(void) {
 	ZeroMemory(&gStateOld, sizeof(Keyboard_State));
 }
 
-// �L�[�{�[�h����̂��߂̃E�H���ǂ����b�Z�[�W�v���V�[�W���t�b�N�֐�
+// Window-message procedure hook for keyboard input
 void Keyboard_ProcessMessage(UINT message, WPARAM wParam, LPARAM lParam) {
 	bool down = false;
 
@@ -164,7 +164,7 @@ void Keyboard_ProcessMessage(UINT message, WPARAM wParam, LPARAM lParam) {
 	case VK_SHIFT:
 		vk = (int)MapVirtualKey(((unsigned int)lParam & 0x00ff0000) >> 16u, MAPVK_VSC_TO_VK_EX);
 		if (!down) {
-			// ���V�t�g�ƉE�V�t�g�̗����������ɉ����ꂽ�ꍇ�ɃN���A�����悤�ɂ��邽�߂̉���
+			// Workaround so left and right Shift both clear when released together
 			keyUp(VK_LSHIFT);
 			keyUp(VK_RSHIFT);
 		}

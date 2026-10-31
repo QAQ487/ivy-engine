@@ -3,12 +3,12 @@
  Author : Terry Yeung
  Date   : 2025/11/5
 -----------------------------------------------------------------------------
- Xbox/PC �R���g���[���[���́iXInput�j�w�b�_�[
- - ������/�X�V
- - �ڑ����
- - �{�^���̉���/�g���K/�����[�X
- - �A�i���O���́i�X�e�B�b�N/�g���K�j���K�����f�b�h�]�[��
- - �o�C�u���[�V����
+ Xbox/PC controller input (XInput) header
+ - Initialize / update
+ - Connection status
+ - Button press / trigger / release
+ - Analog input (sticks/triggers): normalize and apply dead zone
+ - Vibration
 ============================================================================**/
 #ifndef CONTROLLER_H
 #define CONTROLLER_H
@@ -16,10 +16,10 @@
 #include <windows.h>
 #include <DirectXMath.h>
 
-// �Ď�����ő�R���g���[���[���iXInput �͍ő�4�j
+// Max controllers to poll (XInput supports up to 4)
 constexpr int CONTROLLER_MAX = 4;
 
-// �{�^���񋓁iXINPUT_GAMEPAD_* �ɑΉ��j
+// Button enum (maps to XINPUT_GAMEPAD_*)
 enum class ControllerButton : WORD {
     DPadUp = 0x0001, // XINPUT_GAMEPAD_DPAD_UP
     DPadDown = 0x0002, // XINPUT_GAMEPAD_DPAD_DOWN
@@ -39,36 +39,36 @@ enum class ControllerButton : WORD {
     Y = 0x8000  // XINPUT_GAMEPAD_Y
 };
 
-// ������/�I��
+// Initialize / shut down
 void Controller_Initialize();
 void Controller_Finalize();
 
-// 1�t���[���X�V�i���t���[���Ăԁj
+// Per-frame update (call once each frame)
 void Controller_Update();
 
-// �ڑ����
+// Connection status
 bool Controller_IsConnected(int padIndex = 0);
 
-// �{�^�����
+// Button state
 bool Controller_IsPressed(ControllerButton button, int padIndex = 0);
-bool Controller_IsTrigger(ControllerButton button, int padIndex = 0);  // ���t���[���ŉ����ꂽ
-bool Controller_IsRelease(ControllerButton button, int padIndex = 0);  // ���t���[���ŗ����ꂽ
+bool Controller_IsTrigger(ControllerButton button, int padIndex = 0);  // Pressed this frame (edge)
+bool Controller_IsRelease(ControllerButton button, int padIndex = 0);  // Released this frame (edge)
 
-// �X�e�B�b�N�i�f�b�h�]�[���K�p�E���K���ς݁j
-// �߂�l: [-1,1] �͈́BX: �E���AY: �㐳�iDirectXMath �ɍ��킹�ď㐳�j
+// Sticks (dead zone applied, normalized)
+// Returns [-1,1]; X right-positive, Y up-positive (matches DirectXMath)
 DirectX::XMFLOAT2 Controller_GetLeftStick(int padIndex = 0);
 DirectX::XMFLOAT2 Controller_GetRightStick(int padIndex = 0);
 
-// �g���K�i�f�b�h�]�[���K�p�E���K���ς݁j
-// �߂�l: [0,1] �͈�
+// Triggers (dead zone applied, normalized)
+// Returns [0,1]
 float Controller_GetLeftTrigger(int padIndex = 0);
 float Controller_GetRightTrigger(int padIndex = 0);
 
-// �f�b�h�]�[���̐ݒ�
+// Dead-zone settings
 void Controller_SetStickDeadzone(short left, short right);
 void Controller_SetTriggerDeadzone(BYTE trigger);
 
-// �o�C�u���[�V�����i0.0f?1.0f�j
+// Vibration (0.0f-1.0f)
 void Controller_SetVibration(float leftMotor, float rightMotor, int padIndex = 0);
 
 #if defined(_DEBUG) && defined(GAME_RUNTIME)

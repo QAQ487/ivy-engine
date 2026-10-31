@@ -158,7 +158,7 @@ private:
 
     Shader3DVariant m_shaderVariant = Shader3DVariant::Standard;
 
-    // OBJ �p: ���e�N�X�`����ǂݍ��߂����i��1x1�t�H�[���o�b�N�́u�Ȃ��v�����j
+    // For OBJ: whether a real texture loaded (white 1x1 fallback counts as none)
     bool m_hasTexture = false;
 
     // --------- FBX ------------

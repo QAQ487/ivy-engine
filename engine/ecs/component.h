@@ -27,11 +27,11 @@ public:
     virtual const char* GetTypeName() const = 0;
 
     // ── Lifecycle ──────────────────────────────────────────────────────────
-    // OnAttach   Eallocate resources, reset flags (runs once on attach).
-    // OnDetach   Erelease all resources owned by this component.
-    // OnReset    Erestore runtime state to pre-play defaults WITHOUT releasing
+    // OnAttach   - allocate resources, reset flags (runs once on attach).
+    // OnDetach   - release all resources owned by this component.
+    // OnReset    - restore runtime state to pre-play defaults WITHOUT releasing
     //             resources.  Called by GameObject::Reset() on Return-to-Start.
-    // Update     Eper-frame logic.
+    // Update     - per-frame logic.
     virtual void OnAttach() {}
     virtual void OnDetach() {}
     virtual void Update(double /*elapsed_time*/) {}

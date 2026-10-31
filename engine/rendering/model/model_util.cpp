@@ -29,7 +29,7 @@
 using namespace DirectX;
 using namespace fbxsdk;
 
-// テクスチャSRVキャッシュ（パス -> SRV）
+// Texture SRV cache (path -> SRV)
 static std::unordered_map<std::wstring, ID3D11ShaderResourceView*> g_srvCache;
 
 // Releases the cache's AddRef'd reference on every cached SRV. Must be called
@@ -52,7 +52,7 @@ void ModelUtil_ReleaseTextureCache() {
 	g_srvCache.clear();
 }
 
-// 文字列ユーティリティ
+// String utilities
 void Trim(std::string& s) {
 	auto notspace = [] (int ch) { return !std::isspace(ch); };
 	s.erase(s.begin(), std::find_if(s.begin(), s.end(), notspace));
@@ -98,12 +98,12 @@ bool IsAbsolutePathW(const std::wstring& p) {
 	return false;
 }
 
-// WIC ファクトリのシングルトン
+// WIC factory singleton
 static IWICImagingFactory* GetWICFactory() {
 	static IWICImagingFactory* s_factory = nullptr;
 	if (s_factory) return s_factory;
 
-	// CoInitialize（失敗しても続行）
+	// CoInitialize (continue even on failure)
 	HRESULT hrCI = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
 	(void) hrCI;
 
@@ -116,11 +116,11 @@ static IWICImagingFactory* GetWICFactory() {
 	return s_factory;
 }
 
-// 画像をWICで読み込み、RGBA8でD3D11テクスチャ＋SRVを作る（可能ならGPUでミップ生成）
+// Load image via WIC; build RGBA8 D3D11 texture + SRV (GPU mips if possible)
 static bool LoadTextureWIC_Internal(const wchar_t* path, ID3D11ShaderResourceView** outSRV) {
 	if (!path || !*path || !outSRV) return false;
 
-	// キャッシュ
+	// Cache
 	{
 		std::wstring key(path);
 		auto it = g_srvCache.find(key);
@@ -147,7 +147,7 @@ static bool LoadTextureWIC_Internal(const wchar_t* path, ID3D11ShaderResourceVie
 	frame->GetSize(&width, &height);
 	if (width == 0 || height == 0) { frame->Release(); decoder->Release(); return false; }
 
-	// RGBA8へ変換
+	// Convert to RGBA8
 	IWICFormatConverter* converter = nullptr;
 	hr = factory->CreateFormatConverter(&converter);
 	if (FAILED(hr) || !converter) { frame->Release(); decoder->Release(); return false; }
@@ -176,13 +176,13 @@ static bool LoadTextureWIC_Internal(const wchar_t* path, ID3D11ShaderResourceVie
 	ID3D11DeviceContext* ctx = GetDeviceContext();
 	if (!dev || !ctx) return false;
 
-	// まずはミップ生成可能なテクスチャで試す
+	// Try a mip-capable texture first
 	ID3D11Texture2D* tex = nullptr;
 	{
 		D3D11_TEXTURE2D_DESC td {};
 		td.Width = width;
 		td.Height = height;
-		td.MipLevels = 0; // ?S????
+		td.MipLevels = 0; // Full mip chain
 		td.ArraySize = 1;
 		td.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 		td.SampleDesc.Count = 1;
@@ -191,16 +191,16 @@ static bool LoadTextureWIC_Internal(const wchar_t* path, ID3D11ShaderResourceVie
 		td.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS;
 
 		if (SUCCEEDED(dev->CreateTexture2D(&td, nullptr, &tex)) && tex) {
-			// レベル0に書き込み
+			// Write level 0
 			ctx->UpdateSubresource(tex, 0, nullptr, pixels.data(), stride, stride * height);
 
-			// SRV作成（デフォルトで全ミップ）
+			// Create SRV (all mips by default)
 			ID3D11ShaderResourceView* srv = nullptr;
 			if (SUCCEEDED(dev->CreateShaderResourceView(tex, nullptr, &srv)) && srv) {
-				// ミップ生成
+				// Generate mips
 				ctx->GenerateMips(srv);
 
-				// キャッシュへ（AddRefして保管）
+				// Store in cache (AddRef)
 				srv->AddRef();
 				g_srvCache.emplace(std::wstring(path), srv);
 
@@ -214,7 +214,7 @@ static bool LoadTextureWIC_Internal(const wchar_t* path, ID3D11ShaderResourceVie
 		}
 	}
 
-	// フォールバック：ミップ無し・初期データ付き
+	// Fallback: no mips, with init data
 	{
 		D3D11_TEXTURE2D_DESC td {};
 		td.Width = width;
@@ -240,7 +240,7 @@ static bool LoadTextureWIC_Internal(const wchar_t* path, ID3D11ShaderResourceVie
 			return false;
 		}
 
-		// キャッシュへ（AddRefして保管）
+		// Store in cache (AddRef)
 		srv->AddRef();
 		g_srvCache.emplace(std::wstring(path), srv);
 
@@ -251,11 +251,11 @@ static bool LoadTextureWIC_Internal(const wchar_t* path, ID3D11ShaderResourceVie
 }
 
 bool LoadTextureWIC_SRV(const wchar_t* texPath, ID3D11ShaderResourceView** outSRV) {
-	// WIC のみで読み込む（DirectXTex 不使用）
+	// Load with WIC only (no DirectXTex)
 	return LoadTextureWIC_Internal(texPath, outSRV);
 }
 
-// テクスチャ: 単色の 1x1 SRV を作成
+// Texture: create solid-color 1x1 SRV
 ID3D11ShaderResourceView* CreateSolidColorSRV(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
 	ID3D11Device* dev = GetDevice();
 	if (!dev) return nullptr;
@@ -288,11 +288,11 @@ ID3D11ShaderResourceView* CreateSolidColorSRV(uint8_t r, uint8_t g, uint8_t b, u
 }
 
 ID3D11ShaderResourceView* CreateSolidPinkSRV() {
-	// ピンク (255, 0, 255, 255)
+	// Pink (255, 0, 255, 255)
 	return CreateSolidColorSRV(255, 0, 255, 255);
 }
 
-// 白
+// White
 ID3D11ShaderResourceView* CreateSolidWhiteSRV() {
 	ID3D11Device* dev = GetDevice();
 	if (!dev) return nullptr;
@@ -324,7 +324,7 @@ ID3D11ShaderResourceView* CreateSolidWhiteSRV() {
 	return SUCCEEDED(hr) ? srv : nullptr;
 }
 
-// MTL: map_Kd の有無と UV 指定を取得。テクスチャのロードも試す。
+// MTL: report map_Kd presence and UV options; also try loading texture
 bool TryLoadMTLTexture_SRV(
 	const std::wstring& mtlPath,
 	const std::wstring& baseDir,
@@ -365,7 +365,7 @@ bool TryLoadMTLTexture_SRV(
 				if (outClamp) *outClamp = (onoff == "on" || onoff == "1" || onoff == "true");
 			}
 			else if (!tk.empty() && tk[0] == '-') {
-				// その他のフラグは無視
+				// Ignore other flags
 			}
 			else {
 				filename = tk;
@@ -379,16 +379,16 @@ bool TryLoadMTLTexture_SRV(
 				ID3D11ShaderResourceView* srv = nullptr;
 				if (LoadTextureWIC_SRV(full.c_str(), &srv)) {
 					*outSRV = srv;
-					return true; // 読み込み成功
+					return true; // Load succeeded
 				}
 			}
-			return false; // map_Kd はあったが読み込み失敗
+			return false; // map_Kd present but load failed
 		}
 	}
-	return false; // map_Kd なし
+	return false; // No map_Kd
 }
 
-// FBX: 最初に見つかった Diffuse/BaseColor の FileTexture を探索
+// FBX: find first Diffuse/BaseColor FileTexture
 bool FindFirstDiffuseFileTexture(FbxNode* node, DiffuseTexInfo& out) {
 	if (!node) return false;
 
@@ -400,7 +400,7 @@ bool FindFirstDiffuseFileTexture(FbxNode* node, DiffuseTexInfo& out) {
 
 		out.path = (rel && *rel) ? Utf8ToWide(rel) : Utf8ToWide(abs);
 
-		// UV Scale / Offset / UVSet も
+		// Also UV Scale / Offset / UVSet
 		FbxDouble2 sc = f->GetUVScaling();
 		FbxDouble2 tr = f->GetUVTranslation();
 		out.uvScale = DirectX::XMFLOAT2((float) sc[0], (float) sc[1]);
@@ -439,7 +439,7 @@ bool FindFirstDiffuseFileTexture(FbxNode* node, DiffuseTexInfo& out) {
 			}
 		}
 
-		// 2) 直接の FbxFileTexture
+		// 2) Direct FbxFileTexture
 		const int tcount = prop.GetSrcObjectCount<FbxTexture>();
 		for (int ti = 0; ti < tcount; ++ti) {
 			if (auto* tex = prop.GetSrcObject<FbxTexture>(ti)) {
@@ -451,13 +451,13 @@ bool FindFirstDiffuseFileTexture(FbxNode* node, DiffuseTexInfo& out) {
 		return false;
 	};
 
-	// ノードのマテリアルを探索
+	// Search node materials
 	const int mcount = node->GetMaterialCount();
 	for (int mi = 0; mi < mcount; ++mi) {
 		FbxSurfaceMaterial* mat = node->GetMaterial(mi);
 		if (!mat) continue;
 
-		// 探索（テクスチャプロパティ名のバリエーションに対応）
+		// Search (handle texture property name variants)
 		const char* kTexProps[] = {
 			FbxSurfaceMaterial::sDiffuse, "Diffuse",
 			"BaseColor", "Base Color", "baseColor", "base_color",
@@ -468,7 +468,7 @@ bool FindFirstDiffuseFileTexture(FbxNode* node, DiffuseTexInfo& out) {
 			if (tryProp(mat, name)) return true;
 		}
 
-		// フォールバックA: マテリアル直下の FileTexture
+		// Fallback A: FileTexture under material
 		{
 			const int texCount = mat->GetSrcObjectCount<FbxFileTexture>();
 			for (int i = 0; i < texCount; ++i) {
@@ -477,7 +477,7 @@ bool FindFirstDiffuseFileTexture(FbxNode* node, DiffuseTexInfo& out) {
 				}
 			}
 		}
-		// フォールバックB: LayeredTexture 経由
+		// Fallback B: via LayeredTexture
 		{
 			const int lcount = mat->GetSrcObjectCount<FbxLayeredTexture>();
 			for (int i = 0; i < lcount; ++i) {
@@ -495,14 +495,14 @@ bool FindFirstDiffuseFileTexture(FbxNode* node, DiffuseTexInfo& out) {
 		}
 	}
 
-	// 子ノードへ再帰
+	// Recurse into child nodes
 	for (int ci = 0; ci < node->GetChildCount(); ++ci) {
 		if (FindFirstDiffuseFileTexture(node->GetChild(ci), out)) return true;
 	}
 	return false;
 }
 
-// 変換
+// Transforms
 DirectX::XMFLOAT3 TransformNormal_IT(const FbxAMatrix& invTrans, const DirectX::XMFLOAT3& nIn) {
 	FbxVector4 nn((double) nIn.x, (double) nIn.y, (double) nIn.z, 0.0);
 	FbxVector4 out = invTrans.MultT(nn);
@@ -513,7 +513,7 @@ DirectX::XMFLOAT3 TransformNormal_IT(const FbxAMatrix& invTrans, const DirectX::
 }
 bool HasNegativeDeterminant(const FbxAMatrix& m) { return m.Determinant() < 0.0; }
 
-// FBX 共有
+// Shared FBX helpers
 FbxShared::FbxShared() : mgr(nullptr), ios(nullptr) {
 	mgr = FbxManager::Create();
 	ios = FbxIOSettings::Create(mgr, IOSROOT);
@@ -525,7 +525,7 @@ FbxShared::~FbxShared() {
 }
 FbxShared& GetFbxShared() { static FbxShared s; return s; }
 
-// スキニング列挙
+// Skinning enumeration
 void EnumerateSkinnedMeshes(FbxNode* root, std::vector<std::pair<FbxMesh*, FbxNode*>>& out) {
 	if (!root) return;
 	if (auto* m = root->GetMesh()) {
@@ -537,11 +537,11 @@ void EnumerateSkinnedMeshes(FbxNode* root, std::vector<std::pair<FbxMesh*, FbxNo
 	for (int i = 0; i < c; ++i) EnumerateSkinnedMeshes(root->GetChild(i), out);
 }
 
-// CPU スキニング（必要に応じて簡略）
+// CPU skinning (simplified as needed)
 void ComputeSkinnedCP_ForMesh(FbxMesh* mesh, FbxNode* meshNode, double timeSec,
 	std::vector<DirectX::XMFLOAT3>& outPos, std::vector<DirectX::XMFLOAT3>& outNrm,
 	FbxScene* baseScene, FbxScene* animScene) {
-	// 既存実装そのまま
+	// Keep existing implementation as-is
 	outPos.clear(); outNrm.clear();
 	if (!mesh || !meshNode) return;
 

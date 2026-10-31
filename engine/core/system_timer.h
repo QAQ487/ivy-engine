@@ -1,6 +1,6 @@
 /*==============================================================================
 
-   システムタイマー [system_timer.h]
+   System timer [system_timer.h]
 														 Author : Terry Yeung
 														 Date   : 2018/06/17
 --------------------------------------------------------------------------------
@@ -10,37 +10,37 @@
 #define SYSTEM_TIMER_H_
 
 /*------------------------------------------------------------------------------
-   関数のプロトタイプ宣言
+   Function prototypes
 ------------------------------------------------------------------------------*/
 
-// システムタイマーの初期化
+// Initialize the system timer
 void SystemTimer_Initialize(void);
 
-// システムタイマーのリセット
+// Reset the system timer
 void SystemTimer_Reset(void);
 
-// システムタイマーのスタート
+// Start the system timer
 void SystemTimer_Start(void);
 
-// システムタイマーのストップ
+// Stop the system timer
 void SystemTimer_Stop(void);
 
-// システムタイマーを0.1秒進める
+// Advance the system timer by 0.1 seconds
 void SystemTimer_Advance(void);
 
-// 計測時間の取得
+// Get measured time
 double SystemTimer_GetTime(void);
 
-// 現在の時間を取得
+// Get the current (absolute) time
 double SystemTimer_GetAbsoluteTime(void);
 
-// 経過時間の取得
+// Get elapsed time
 float SystemTimer_GetElapsedTime(void);
 
-// システムタイマーが止まっているか？
+// Is the system timer stopped?
 bool SystemTimer_IsStoped(void);
 
-// 現在のスレッドを1つのプロセッサ（現在のスレッド）に制限
+// Pin the current thread to a single processor
 void LimitThreadAffinityToCurrentProc(void);
 
 #endif // SYSTEM_TIMER_H_

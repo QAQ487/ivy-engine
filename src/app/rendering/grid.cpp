@@ -14,7 +14,7 @@
 #include "engine/rendering/d3d11/renderer.h" // VERTEX_3D, MATERIAL, GetDevice*, SCREEN_*
 #include "engine/rendering/d3d11/shader.h"
 #include "camera.h"
-#include "engine/rendering/model/model_util.h" // CreateSolidWhiteSRV を利用
+#include "engine/rendering/model/model_util.h" // Uses CreateSolidWhiteSRV
 #include "engine/physics/collider/collider.h"
 #include "scene_manager.h"
 
@@ -25,14 +25,14 @@ static std::unique_ptr<Grid> g_grid;
 static bool g_gridVisible = true;
 
 static ID3D11Buffer* g_pVB = nullptr;
-static ID3D11Buffer* g_pFillVB = nullptr;           // 背景塗りつぶし用のVB
+static ID3D11Buffer* g_pFillVB = nullptr;           // VB for background fill
 static ID3D11Device* g_pDevice = nullptr;
 static ID3D11DeviceContext* g_pContext = nullptr;
 static UINT g_vertexCount = 0;
-static ID3D11ShaderResourceView* g_pWhiteSRV = nullptr; // 1x1 白テクスチャ
+static ID3D11ShaderResourceView* g_pWhiteSRV = nullptr; // 1x1 white texture
 
 static constexpr int GRID_COUNT = 5000;
-static const XMFLOAT4 GRID_FILL_COLOR = XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f); // 画像のようなグレー
+static const XMFLOAT4 GRID_FILL_COLOR = XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f); // Gray matching the reference image
 
 void Grid::Initialize() {
 	g_pDevice = GetDevice();
@@ -47,7 +47,7 @@ void Grid::Initialize() {
 	const float maxC = static_cast<float>(half);
 
 	std::vector<VERTEX_3D> vtx;
-	vtx.reserve(lineCount * 2 * 2); // 11本×各2頂点×2方向
+	vtx.reserve(lineCount * 2 * 2); // 11 lines x 2 verts x 2 axes
 
 	const XMFLOAT4 WHITE = XMFLOAT4(1, 1, 1, 1);
 	const XMFLOAT4 RED = XMFLOAT4(1, 0, 0, 1);
@@ -56,7 +56,7 @@ void Grid::Initialize() {
 	const XMFLOAT3 upNormal = XMFLOAT3(0, 1, 0);
 	const XMFLOAT2 uv0 = XMFLOAT2(0, 0);
 
-	// Z一定でXを引く（X方向の線）-> 世界座標Z=0のラインを赤に
+	// Lines along X at fixed Z; world Z=0 line in red
 	for (int i = 0; i < lineCount; ++i) {
 		float zLocal = static_cast<float>(i - half);
 		const bool isWorldZ0Line = (i == half);
@@ -77,7 +77,7 @@ void Grid::Initialize() {
 		vtx.push_back(b);
 	}
 
-	// X一定でZを引く（Z方向の線）-> 世界座標X=0のラインを青に
+	// Lines along Z at fixed X; world X=0 line in blue
 	for (int i = 0; i < lineCount; ++i) {
 		float xLocal = static_cast<float>(i - half);
 		const bool isWorldX0Line = (i == half);
@@ -100,7 +100,7 @@ void Grid::Initialize() {
 
 	g_vertexCount = static_cast<UINT>(vtx.size());
 
-	// 頂点バッファ作成（ライン）
+	// Create vertex buffer (lines)
 	{
 		D3D11_BUFFER_DESC bd {};
 		bd.Usage = D3D11_USAGE_DEFAULT;
@@ -115,12 +115,12 @@ void Grid::Initialize() {
 		}
 	}
 
-	// 背景塗りつぶし用の四角形VB（minC..maxC を覆う2三角形）
+	// Background quad VB (two triangles covering minC..maxC)
 	{
 		VERTEX_3D fill[6];
 		const XMFLOAT3 n = upNormal;
 		const XMFLOAT2 uv = {0, 0};
-		// 反時計回りで2枚
+		// Two CCW triangles
 		fill[0] = {{minC, 0.0f, minC}, n, GRID_FILL_COLOR, uv};
 		fill[1] = {{minC, 0.0f, maxC}, n, GRID_FILL_COLOR, uv};
 		fill[2] = {{maxC, 0.0f, maxC}, n, GRID_FILL_COLOR, uv};
@@ -145,11 +145,11 @@ void Grid::Initialize() {
 		g_pWhiteSRV = CreateSolidWhiteSRV();
 	}
 
-	// ここからコライダー設定とシーン登録
+	// Collider setup and scene registration
 	{
 		// const float width = maxC - minC; // = GRID_COUNT
 		// const float depth = maxC - minC; // = GRID_COUNT
-		// const float thickness = 0.2f;    // 薄めの床
+		// const float thickness = 0.2f;    // Thin floor
 		//
 		// if (!m_collider) {
 		// 	m_collider = new BoxCollider(this);
@@ -182,7 +182,7 @@ void Grid::Finalize() {
 }
 
 void Grid::LogicUpdate(double /*elapsed_time*/) {
-	// グリッドは静的なので特に更新なし
+	// Grid is static; nothing to update
 }
 
 void Grid::Draw() {
@@ -218,7 +218,7 @@ void Grid::Draw() {
 		g_pContext->Draw(g_vertexCount, 0);
 	}
 
-	// 3) デバッグ表示（任意）
+	// 3) Debug draw (optional)
 	if (m_debugCollider && m_collider) {
 		m_collider->DebugDraw();
 	}

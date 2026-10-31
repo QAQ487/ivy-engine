@@ -1,6 +1,6 @@
 /**===========================================================================
 
- File   : �r���{�[�h�s�N�Z���V�F�[�_ [PixelShaderUnlit.hlsl]
+ File   : Billboard pixel shader [PixelShaderUnlit.hlsl]
 
  Author : Hayato Otsuki
  Date   : 2025/12/4
@@ -20,7 +20,7 @@ struct PS_IN {
 float4 main(PS_IN pin) : SV_TARGET {
     float4 tex = g_tex.Sample(g_smp, pin.uv);
     
-    // �A���t�@��0�ɋ߂��ꍇ�͔j���i���������̏����j
+    // Discard when alpha is near 0 (alpha test)
     clip(tex.a - 0.01f);
     
     return tex * pin.color;
