@@ -1,56 +1,90 @@
 # Ivy Engine — To-do
 
 > 引擎待辦集中入口。來源：[[Engine Changelog]]「留咗做」及 ivy-engine skill 歷史 backlog。
-> 整理基準：remote `3f5afe9`。下面係已記錄嘅計劃，唔代表已逐項對當前源碼重新 audit；實作前要核實現有 hooks，避免重做已有系統。
-> 已完成遊戲（MagneticField／FrisbeeArena／GravitySwing）嘅舊遊戲任務唔列入引擎待辦。未編優先次序，清單順序唔等於排期。
+> 整理基準：source audit 對 `3f5afe9`（PR #7 合併）嘅引擎源碼。實作前仍要核實 hooks，避免重做已有系統。
+> 已完成遊戲（MagneticField／FrisbeeArena／GravitySwing）嘅舊遊戲任務唔列入引擎待辦。建議次序見文末；其餘清單順序唔等於排期。
 
 ## 已列入目前 backlog（尚未驗收完成）
 
 - [ ] **重做 Properties Panel／Inspector**
   - 先盤點 component/property 編輯、序列化、Undo/Redo、選取流程，提出 UI 草案同明確 scope，再實作。
   - 目標：分區／欄位清晰、編輯穩定，保留現有功能。
+  - 現況：`engine/core/engine_gui.cpp` 的 `"Properties"` 已有 Transform、Tag、Visual、Light、Camera、Collider、Rigidbody、Material、Effect、Audio 同 script properties；Undo 已接 `editor_undo.cpp`。呢項係 UI 重做，唔係由零寫 inspector。
   - 驗收：常用欄位編輯／保存／重載正常；Undo/Redo 有效；新增／移除 component、資產選擇無回歸。
 - [ ] **World-space UI 編輯器支援**
   - 可以建立、擺位同編輯 world-space UI；與 screen-space canvas 分開。
+  - 現況：`UIElement` 係 screen overlay（anchor + `XMFLOAT2`）；場景只有一個 `UICanvas`。Billboard／sprite 唔算 UI canvas。
   - 交互同具體驗收範圍待設計。
+- [ ] **Cylinder pair collision**
+  - `Box`／`Mesh`／`Cylinder` 對 `Cylinder` 經 `collider.cpp` 的 `LogUnsupportedCylinderPair` 靜默當無碰撞（每個無序 pair 只 log 一次）。`915dce7` 用呢個路徑停咗互相呼叫導致嘅 stack overflow；sphere–cylinder 同 capsule–cylinder（三點取樣）已有接觸。
+  - 驗收：上述三對會產生接觸同 resolution，唔再只係 log 之後當穿過；sphere／capsule 對 cylinder 無回歸；唔再出現 pair 遞迴。
+- [ ] **Content reload 紅燈：刪除未被引用嘅資產**
+  - `engine/core/engine_gui.cpp` 約 3241 行：`rom/` 底下任何 `change.removed` 都會 `g_contentReloadLight.Failure()`（紅燈），文案係 `Content removed; existing resources retained`。新增而且目前 scene JSON 搵唔到嘅檔會跳過；刪除唔會先查場景有冇引用。
+  - 驗收：刪除未被目前場景（同已載入資源）引用嘅檔，Content 燈維持 Watching，唔好轉成 Failed。刪除確實被引用嘅檔仍要報失敗並保留現有資源。改完要分開 source review 同 editor 實測。
+- [ ] **Box friction torque（可選，只有想箱子傾側先做）**
+  - `collider.cpp` 的 `ResolveContact` 對 box 把摩擦衝量嘅力臂設成 0，箱子只留線性摩擦，避免喺邊緣滾動；球體仍有角向摩擦。呢個係現有設計，唔係空 stub。
+  - 驗收（若開做）：box 可以因摩擦傾側，同時唔好無故原地打轉；球體滾動無回歸。
+- [ ] **重做 Skybox：直接接受 panorama（equirectangular）PNG，自動轉換成 DDS cubemap**
+  - 現況：`game/art/skybox/` 放六面 PNG（`px nx py ny pz nz`）。`game/art/skybox/run.bat` 要求 PATH 上有 DirectXTex `texassemble`，烤出 `rom/skybox/MySkybox.dds`。Runtime `CubemapLoad`（`engine/rendering/sprite/texture.cpp`）只 `LoadFromDDSFile`，而且要 `IsCubemap()`。`Skybox_ReloadFromSettings` 讀 `settings.skyboxCubemap`，預設 `rom/skybox/MySkybox.dds`。IBL 係另一套預製檔：`rom/skybox/ibl/irradiance.dds`、`prefilter.dds`、`brdf_lut.png`；`Ibl_ReloadFromSettings` 只載入，唔會由天空即場生成。`CubemapReload` 只會換已載入嘅 DDS slot。
+  - Scope：import／cook 時把一張 equirectangular PNG 轉成 `CubemapLoad` 讀得嘅 DDS cubemap（唔好每幀先轉）。PNG 變更（mtime 或內容）要 invalidate 已烤 DDS，editor 重烤之後走現有 `CubemapReload`。部署包帶已烤 DDS；editor 同 runtime 都唔依賴 PATH 上的 `texassemble`。六面 PNG + `run.bat` 可留作後備。IBL：換天空要重烤 `irradiance`／`prefilter`，格式要同現有 prefilter mip 兼容；`brdf_lut.png` 係材質函數，唔使跟每張天空重做。若某一版先未重烤 IBL，要有明確「反射未跟天空」狀態，唔好靜默用舊環境光當已更新。
+  - 驗收：專案放入一張 equirectangular PNG，editor 同 packaged runtime 都顯示新天空；改 PNG 後唔使手動跑 `run.bat` 就更新；PBR 物件嘅 IBL 同新天空一致，或者清楚標明未更新；乾淨機器冇 `texassemble` 都開得；現有指住 `MySkybox.dds` 嘅場景無回歸。
 
-## AI 系統套件（規劃，逐項實作狀態待 audit）
+## AI 系統套件（source audit：引擎內全部 missing）
 
-- [ ] **Blackboard**：key-value 短期記憶；先 audit 現有 script/component/data APIs，定最小 scope。
-- [ ] **BehaviorTree runner**：Selector／Sequence／Task／Decorator＋Blackboard condition；abort 機制後補。
-- [ ] **Perception**：sight cone＋LOS raycast；LoseSightRadius > SightRadius 防 flicker，結果寫入 Blackboard。
-- [ ] **EQS 式 utility scoring**：候選位置按距離／方向／路徑成本加權。
-- [ ] **AI debug visualization**：BT current node、perception cone、path，接現有 DebugSystem。
-- [ ] **Waypoint component＋PatrolRoute**：editor 邏輯 marker（位置＋可選 tag）、路線陣列／current index、到達後 next。
+`engine/`、`src/`、`game/` 冇 Blackboard、BehaviorTree、Perception、EQS、Waypoint、NavMesh、pathfinding。Village & Goblin 嘅源碼唔喺呢個 repo，遊戲自己有冇 A* 無法喺度核實。
+
+可重用 hooks：`PhysicsSystem_Raycast`／script `physicsRaycast`、2D `physics2DRaycast`；`DebugSystem`（collision viz、time scale、overlay）；`DebugDrawer`（box／sphere／capsule／cylinder／line）；script `debugDrawLine`、`debugDrawSphereWire`、`lineSpriteDraw`；collider ignore 同 `OnTriggerEnter`／`Exit`；`ComponentFactory`。
+
+建議實作次序：Waypoint → Perception → BT／Blackboard → EQS。Debug visualization 跟住對應系統一齊做，唔好先做一個空視圖。
+
+- [ ] **Waypoint component＋PatrolRoute**：editor 邏輯 marker（位置＋可選 tag）、路線陣列／current index、到達後 next。引擎內 missing。
+- [ ] **Perception**：sight cone＋LOS raycast（可接現有 raycast）；LoseSightRadius > SightRadius 防 flicker，結果寫入 Blackboard。引擎內 missing。
+- [ ] **Blackboard**：key-value 短期記憶。引擎內 missing；同 BT 一齊定最小 scope。
+- [ ] **BehaviorTree runner**：Selector／Sequence／Task／Decorator＋Blackboard condition；abort 機制後補。引擎內 missing。
+- [ ] **EQS 式 utility scoring**：候選位置按距離／方向／路徑成本加權。引擎內 missing；排喺有路徑或 steering 之後。
+- [ ] **AI debug visualization**：BT current node、perception cone、path，接現有 `DebugSystem`／`DebugDrawer`。引擎內 missing；跟對應系統。
 
 ### 暫緩
 
-- [ ] **NavMesh／AI pathfinding**：暫緩，之後按遊戲需要排期。
+- [ ] **NavMesh／AI pathfinding**：暫緩，之後按遊戲需要排期。audit 確認引擎內冇 grid pathfinding、path smoothing、steering 或 NavMesh。
   - 既有規劃包含 grid-based pathfinding＋path smoothing；與本項合併管理，唔當兩份獨立必做任務。
   - 無障礙 arena 可先用 steering，唔預設一定要 NavMesh。
 
-## 歷史 backlog：待重新核實，唔當已確認缺失
+## 歷史 backlog（source audit 結果）
 
-以下只係 skill 留低嘅舊記錄；可能已完成、部分完成或已唔適用。先 audit，再決定保留／勾選／移除。
+以下已對 `3f5afe9` 源碼同 git 核實。勾選代表 source review 完成，唔等於另一次 runtime acceptance。
 
-- [ ] Trigger 系統還債：舊項目未寫清欠邊部分，要先還原原本 scope。
-- [ ] PBR 球場：舊展示／內容任務，先確認仲需唔需要。
-- [ ] Asset cache LRU／refcount：先檢查現有生命週期同快取策略。
-- [ ] Prefab drag-drop Undo：核實目前覆蓋範圍。
-- [ ] deploy.bat executable 命名統一：已有部署命名歷史改動，唔預設仍未修。
-- [ ] Mesh collider 修復：舊故障紀錄，須先重現及核實最新 collision dispatch。
+- [x] **Trigger 系統**：Enter／Exit 已有。`1499a44`；`Collider::m_isTrigger`、`physics_system.cpp` 的 `DiffAndDispatchTriggerEvents`、script `OnTriggerEnter`／`OnTriggerExit`、Properties checkbox。`OnTriggerStay` 未實作；只有需要 Stay 先另開一項，唔好再掛「還債」。
+- [x] **Prefab drag-drop Undo**：hierarchy 同 root drop zone 接受 `ASSET_PREFAB` 後呼叫 `EditorUndo_PushCreate`（`engine/core/engine_gui.cpp`）；`CreateObjectCommand::Undo` 會刪走個節點（`engine/editor/editor_undo.cpp`）。
+- [x] **deploy.bat executable 命名**：bat 仍複製 `IvyEngineRuntime.exe`（`external_content_template/deploy/deploy.bat`）。Editor package 用 `SanitizeGameExeStem` 寫成 `<GameName>.exe`（`engine/editor/playable_package_builder.cpp`）。兩邊嘅分別已寫喺 `docs/CONTENT_PROJECT.md`。若要 bat 都輸出遊戲名，先另開窄項。
+- [x] **Asset cache LRU／refcount**：`ModelAssetCache` 係 process-lifetime `std::map`（`engine/ecs/model_asset_cache.h`），同 README 寫法一致。冇 LRU、冇 refcount，亦冇「曾經做完再拆走」嘅 commit。有記憶體數字先重開。
+- [x] **Mesh collider recursion crash**：`915dce7` 停止 Box／mesh／cylinder 互相呼叫直到 stack overflow。修復方式係改為無碰撞並 log。未實作嘅接觸見上面「Cylinder pair collision」，唔好再當未還原嘅舊故障。
 
-## 最近同步留下嘅驗證事項（唔係已確認 bug）
+PBR 球場已由引擎待辦移除：倉庫只有 PBR shader 同 `samples/scenes/scene_pbr_showcase.json` 材質展示，冇球場內容；`FrisbeeArena` 屬已完成遊戲。
 
-- [ ] ImGuizmo／ImGui AddPolyline flags-thickness 版本相容：PR #7 只 suppress 單檔 C4244，唔等於已修行為；先查目前 API 同實際 gizmo。
-- [ ] PR #5 資產清理後 clean checkout／package regression：確認 sample／runtime 真正需要嘅 assets 都有齊。
-- [ ] PR #7 build／shader 視覺 regression：本次同步無重新 build/check/runtime，唔當 warning-free 或視覺等價已驗收。
+## 最近同步留下嘅驗證事項
 
-> 呢幾項係本次 review 嘅驗證跟進，唔代表 Terry 從未測過，亦唔自動升格成新功能排期。
+- [ ] **ImGuizmo／ImGui AddPolyline：已確認參數順序唔夾。** `libraries/imguizmo/ImGuizmo.cpp` 1354、1384、1647 三個 `AddPolyline` 用 ImGui 1.92.8 之後嘅 `(thickness, flags)`；供應嘅 ImGui 係 1.92.5，簽名係 `(flags, thickness)`（`libraries/imgui/imgui.h`）。PR #7 只對 `ImGuizmo.cpp` suppress C4244，冇改呼叫。按 1.92.5 讀參數：旋轉環厚度會變成 1 而唔係 `RotationLineThickness`（預設 2）；拖旋轉嘅扇形邊唔會閉合；平移平面四邊因為兩個數都係 1，碰巧仍然正確。
+  - 驗收：旋轉環厚度等於 `RotationLineThickness`（預設 2）；拖旋轉時扇形邊閉合；平移平面外觀維持不變。要喺 Windows editor 做視覺確認；Linux 核唔到畫面。
+- [x] **PR #5 資產清理**：被刪嘅 `.ua/`、`rom/effects/`、`rom/skybox/001/`、`rom/model/character/YBot_white.fbx`、`rom/model/object/{tree,Wall,Cone_Yellow}.fbx`、`external_template/`、已刪 sample script，scene／prefab JSON 冇殘留引用。玩家模型係 `rom/model/player/Y Bot_white.fbx`（另一條路徑，檔仍在）。`rom/effects/` 只剩 hot-reload 路徑前綴。`samples/scenes` 的 2D 場景引用 `rom/texture/sprite_demo/`，呢批 PNG 唔喺 repo、亦唔係 PR #5 刪走；`docs/2D_PHASE6_VALIDATION.zh-TW.md` 寫明依賴 TestProject。
+- [ ] **PR #7 視覺 regression**：Terry 確認合併前 Windows build 已成功。仍然開住嘅只係畫面：lighting、CSM、post-process、gizmo。Linux 不能代替呢次目視；ImGuizmo 線條見上一項。
+
+> 勾選係 source review 或 Terry 對 build 嘅確認。畫面同玩法驗收仍然分開。
 
 ## 已完成項目
 
-已完成嘅 Physics Material、primitive meshes、render thread、Inspector Undo 修補、IBL／資產補齊、angular dynamics v1、Cylinder recursion fix、Collider Auto-Fit/scaling，保留喺 [[Engine Changelog]] 嘅完成紀錄，唔再混入未完成清單。
+已完成嘅 Physics Material、primitive meshes、render thread、Inspector Undo 修補、IBL／資產補齊、angular dynamics v1、Cylinder recursion fix、Collider Auto-Fit/scaling，保留喺 [[Engine Changelog]] 嘅完成紀錄，唔再混入未完成清單。歷史 backlog 嘅勾選同證據留喺上面一節。
+
+## 建議優先次序
+
+1. Cylinder pair collision（玩法會穿模；範圍已由 `915dce7` 寫明）。
+2. ImGuizmo 參數順序同 PR #7 視覺檢查（lighting、CSM、post-process、gizmo）一齊喺 Windows 做。
+3. Content reload 紅燈（刪未引用資產）。
+4. 重做 Skybox（equirectangular PNG → DDS cubemap，含 IBL 重烤同唔再依賴 `texassemble`）。
+5. 重做 Properties Panel／Inspector（先有 UI 草案；現有編輯同 Undo 要保住）。
+6. AI 套件：Waypoint → Perception → BT／Blackboard → EQS。NavMesh 繼續暫緩。
+
+Box friction torque 同 World-space UI 未排入上面次序：前者只有想箱子傾側先做；後者驗收仍待設計。
 
 ## 維護規則
 
