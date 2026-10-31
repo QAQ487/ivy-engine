@@ -17,39 +17,39 @@ public:
     explicit EffectObject(const wchar_t* path, bool autoPlay = true) { LoadFromFileW(path); m_autoPlay = autoPlay; }
     ~EffectObject() override { Finalize(); }
 
-    // 1ƒVƒ‡ƒbƒgI—¹‚Å©“®“I‚É”ñƒAƒNƒeƒBƒu‰»‚·‚é‚©
+    // 1ã‚·ãƒ§ãƒƒãƒˆçµ‚äº†ã§è‡ªå‹•çš„ã«éã‚¢ã‚¯ãƒ†ã‚£ãƒ–åŒ–ã™ã‚‹ã‹
     void SetAutoDestroyOnEnd(bool enable) { m_autoDestroyOnEnd = enable; }
     bool GetAutoDestroyOnEnd() const { return m_autoDestroyOnEnd; }
 
-    // ©“®Ä¶‚·‚é‚©iInitialize j
+    // è‡ªå‹•å†ç”Ÿã™ã‚‹ã‹ï¼ˆInitialize æ™‚ï¼‰
     void SetAutoPlay(bool enable) { m_autoPlay = enable; }
     bool GetAutoPlay() const { return m_autoPlay; }
 
-    // ‘¬“xEˆê’â~E•\¦§Œä
+    // é€Ÿåº¦ãƒ»ä¸€æ™‚åœæ­¢ãƒ»è¡¨ç¤ºåˆ¶å¾¡
     void SetSpeed(float speed);
     void SetPaused(bool paused);
     void SetShown(bool shown);
 
-    // –¾¦“I‚ÉÄ¶E’â~
+    // æ˜ç¤ºçš„ã«å†ç”Ÿãƒ»åœæ­¢
     void Play();
     void Stop();
 
-    // “Ç‚İ‚İi.efk / .efkefcj
-    // ¬Œ÷‚Å trueB‚·‚Å‚É“Ç‚İ‚İÏ‚İ‚È‚çã‘‚«B
+    // èª­ã¿è¾¼ã¿ï¼ˆ.efk / .efkefcï¼‰
+    // æˆåŠŸã§ trueã€‚ã™ã§ã«èª­ã¿è¾¼ã¿æ¸ˆã¿ãªã‚‰ä¸Šæ›¸ãã€‚
     bool LoadFromFileW(const wchar_t* path);
-    // Šù‚É Load Ï‚İ‚Ì effectId ‚ğ’¼Úw’è‚·‚éê‡
+    // æ—¢ã« Load æ¸ˆã¿ã® effectId ã‚’ç›´æ¥æŒ‡å®šã™ã‚‹å ´åˆ
     void SetEffectId(int effectId) { m_effectId = effectId; }
 
-    // g‚¢‚â‚·‚³Œüã: ƒ`ƒF[ƒ“‰Â”\‚Èƒrƒ‹ƒ_[•—API
+    // ä½¿ã„ã‚„ã™ã•å‘ä¸Š: ãƒã‚§ãƒ¼ãƒ³å¯èƒ½ãªãƒ“ãƒ«ãƒ€ãƒ¼é¢¨API
     EffectObject& WithEffectId(int effectId) { m_effectId = effectId; return *this; }
     EffectObject& WithPosition(const DirectX::XMFLOAT3& pos) { GameObject::SetPosition(pos); if (m_handle >= 0) EffectSystem::SetLocation(m_handle, pos); return *this; }
     EffectObject& WithRotation(const DirectX::XMFLOAT3& rotDeg) { GameObject::SetRotation(rotDeg); if (m_handle >= 0) EffectSystem::SetRotationEulerDeg(m_handle, rotDeg); return *this; }
     EffectObject& WithScale(const DirectX::XMFLOAT3& s) { GameObject::SetScale(s); if (m_handle >= 0) EffectSystem::SetScale(m_handle, s); return *this; }
-    EffectObject& WithScale(float uniform); // ˆê—lƒXƒP[ƒ‹”ÅiÀ‘•‚Ícppj
+    EffectObject& WithScale(float uniform); // ä¸€æ§˜ã‚¹ã‚±ãƒ¼ãƒ«ç‰ˆï¼ˆå®Ÿè£…ã¯cppï¼‰
     EffectObject& WithAutoPlay(bool e) { m_autoPlay = e; return *this; }
     EffectObject& WithAutoDestroyOnEnd(bool e) { m_autoDestroyOnEnd = e; return *this; }
 
-    // ƒV[ƒ““o˜^•‰Šú‰»•§Œä‚Ìƒ`ƒF[ƒ“API
+    // ã‚·ãƒ¼ãƒ³ç™»éŒ²ï¼†åˆæœŸåŒ–ï¼†åˆ¶å¾¡ã®ãƒã‚§ãƒ¼ãƒ³API
     EffectObject& AttachToCurrentScene();
     EffectObject& InitNow();
     EffectObject& PlayNow() { Play(); return *this; }
@@ -58,7 +58,7 @@ public:
     EffectObject& Paused(bool p) { SetPaused(p); return *this; }
     EffectObject& Shown(bool s) { SetShown(s); return *this; }
 
-    // •Ö—˜: ‚»‚Ìê‚Å¶¬‚µ‚ÄƒV[ƒ“‚É“o˜^‚µ‚Ä•Ô‚·i]—ˆj
+    // ä¾¿åˆ©: ãã®å ´ã§ç”Ÿæˆã—ã¦ã‚·ãƒ¼ãƒ³ã«ç™»éŒ²ã—ã¦è¿”ã™ï¼ˆå¾“æ¥ï¼‰
     static EffectObject* SpawnW(const wchar_t* path,
         const DirectX::XMFLOAT3& pos,
         bool autoDestroyOnEnd = true,
@@ -69,7 +69,7 @@ public: // GameObject
     void Initialize() override;
     void Finalize() override;
     void LogicUpdate(double elapsed_time) override;
-    void Draw() override; // •`‰æ‚Í EffectSystem::Draw3D ‘¤‚Ås‚¤‚½‚ß‰½‚à•`‰æ‚µ‚È‚¢
+    void Draw() override; // æç”»ã¯ EffectSystem::Draw3D å´ã§è¡Œã†ãŸã‚ä½•ã‚‚æç”»ã—ãªã„
 
 private:
     int   m_effectId = -1;

@@ -1,4 +1,4 @@
-﻿#include "camera_gizmo.h"
+#include "camera_gizmo.h"
 #include "engine/debug_draw/debug_drawer.h"
 #include "engine/ecs/camera_component.h"
 #include "engine/ecs/game_object.h"

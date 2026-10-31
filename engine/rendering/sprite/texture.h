@@ -1,6 +1,6 @@
 /**===========================================================================
  File   : texture.h
- Title  : ƒeƒNƒXƒ`ƒƒ‚ÌŠÇ—
+ Title  : ãƒ†ã‚¯ã‚¹ãƒãƒ£ã®ç®¡ç†
  Author : Terry Yeung
  Date   : 2025/6/6
  Brief  :
@@ -14,11 +14,11 @@
 void Texture_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext);
 void Texture_Finalize();
 
-// ƒeƒNƒXƒ`ƒƒ‚Ìƒ[ƒh
-// ˆø”
-// ptr_file_name : ƒeƒNƒXƒ`ƒƒƒtƒ@ƒCƒ‹–¼
-// b_mipmap : ƒ~ƒbƒvƒ}ƒbƒv‚ğ¶¬‚·‚é‚©‚Ç‚¤‚©
-// –ß‚è’l : ƒeƒNƒXƒ`ƒƒ‚ÌŠÇ—”Ô†i“Ç‚İ‚ß‚È‚©‚Á‚½ê‡‚Í-1j
+// ãƒ†ã‚¯ã‚¹ãƒãƒ£ã®ãƒ­ãƒ¼ãƒ‰
+// å¼•æ•°
+// ptr_file_name : ãƒ†ã‚¯ã‚¹ãƒãƒ£ãƒ•ã‚¡ã‚¤ãƒ«å
+// b_mipmap : ãƒŸãƒƒãƒ—ãƒãƒƒãƒ—ã‚’ç”Ÿæˆã™ã‚‹ã‹ã©ã†ã‹
+// æˆ»ã‚Šå€¤ : ãƒ†ã‚¯ã‚¹ãƒãƒ£ã®ç®¡ç†ç•ªå·ï¼ˆèª­ã¿è¾¼ã‚ãªã‹ã£ãŸå ´åˆã¯-1ï¼‰
 int  TextureLoad(const wchar_t* ptr_file_name, bool mipmap = true);
 enum class TextureReloadResult { NotLoaded, Reloaded, Failed };
 TextureReloadResult TextureReload(const wchar_t* path);

@@ -1,4 +1,4 @@
-﻿#include "script_watcher.h"
+#include "script_watcher.h"
 #include <filesystem>
 
 void ScriptWatcher::Start(const std::string& watchDir, Callback onChange) {

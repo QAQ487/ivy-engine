@@ -1,4 +1,4 @@
-﻿#include "transform_gizmo.h"
+#include "transform_gizmo.h"
 
 #include "engine/core/engine_gui.h"
 #include "engine/ecs/game_object.h"

@@ -5,7 +5,7 @@
  * Created: 2026-03-12
  * -----------------------------------------------------------------------------
  * REFACTOR (2026-03-13)
- *   engine::GameObject Å® ::GameObject (alias, no logic change).
+ *   engine::GameObject ‚Üí ::GameObject (alias, no logic change).
  *****************************************************/
 #include "editor_prefab_panel.h"
 

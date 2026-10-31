@@ -645,7 +645,7 @@ void Shader_BindShadowMaps(ID3D11ShaderResourceView* const* shadowSRVs, int ligh
 	for (UINT i = 0; i < reqCount; ++i) {
 		ID3D11ShaderResourceView* srv = (shadowSRVs ? shadowSRVs[i] : nullptr);
 		if (!srv) break;
-		HRESULT hrAdd = srv->AddRef();  // ???s??áp??
+		HRESULT hrAdd = srv->AddRef();  // ???s??ç–³??
 		srv->Release();
 		if (FAILED(hrAdd)) break;       // ???????????????????
 		s_pShadowSRVs[bindCount++] = srv;

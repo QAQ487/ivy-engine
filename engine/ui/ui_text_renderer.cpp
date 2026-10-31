@@ -1,4 +1,4 @@
-﻿#include "ui_text_renderer.h"
+#include "ui_text_renderer.h"
 #include "ui_font.h"
 #include "../rendering/sprite/sprite.h"
 #include "../rendering/sprite/texture.h"

@@ -1,4 +1,4 @@
-﻿#include "engine_gui.h"
+#include "engine_gui.h"
 #include "engine_gui_internal.h"
 #include "engine/scene/scene_loader.h"
 

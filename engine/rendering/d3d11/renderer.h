@@ -12,10 +12,10 @@
 
 #include "main.h"
 
- // ÅEΩZÅEΩ[ÅEΩtÅEΩÅEΩÅEΩÅEΩÅEΩ[ÅEΩX
+ // „ÉªÔΩΩZ„ÉªÔΩΩ[„ÉªÔΩΩt„ÉªÔΩΩ„ÉªÔΩΩ„ÉªÔΩΩ„ÉªÔΩΩ„ÉªÔΩΩ[„ÉªÔΩΩX
 #define SAFE_RELEASE(o) if (o) { (o)->Release(); o = NULL; }
 
-// ÅEΩÅEΩÅEΩ_ÅEΩÅEΩÅEΩCÅEΩAÅEΩEÅEΩg
+// „ÉªÔΩΩ„ÉªÔΩΩ„ÉªÔΩΩ_„ÉªÔΩΩ„ÉªÔΩΩ„ÉªÔΩΩC„ÉªÔΩΩA„ÉªÔΩΩE„ÉªÔΩΩg
 struct VERTEX_3D {
 	XMFLOAT3 Position;
 	XMFLOAT3 Normal;
@@ -23,7 +23,7 @@ struct VERTEX_3D {
 	XMFLOAT2 TexCoord;
 };
 
-// ÅEΩ}ÅEΩeÅEΩÅEΩÅEΩAÅEΩÅEΩ
+// „ÉªÔΩΩ}„ÉªÔΩΩe„ÉªÔΩΩ„ÉªÔΩΩ„ÉªÔΩΩA„ÉªÔΩΩ„ÉªÔΩΩ
 struct MATERIAL {
     XMFLOAT4    Ambient;
     XMFLOAT4    Diffuse;
@@ -46,26 +46,26 @@ struct MATERIAL {
     float       _padToon1;
 };
 
-// ÅEΩËêîÔøΩoÅEΩbÅEΩtÅEΩ@ÅEΩTÅEΩCÅEΩYÅEΩÅEΩ 16 ÅEΩoÅEΩCÅEΩgÅEΩÅEΩÅEΩEÅEΩÅEΩÅEΩÅEΩ
+// „ÉªÔΩΩÈóúË≤ªÔΩøÔΩΩo„ÉªÔΩΩb„ÉªÔΩΩt„ÉªÔΩΩ@„ÉªÔΩΩT„ÉªÔΩΩC„ÉªÔΩΩY„ÉªÔΩΩ„ÉªÔΩΩ 16 „ÉªÔΩΩo„ÉªÔΩΩC„ÉªÔΩΩg„ÉªÔΩΩ„ÉªÔΩΩ„ÉªÔΩΩE„ÉªÔΩΩ„ÉªÔΩΩ„ÉªÔΩΩ„ÉªÔΩΩ
 static_assert(sizeof(MATERIAL) % 16 == 0, "MATERIAL must be 16-byte aligned.");
 
-// ÅEΩÅEΩÅEΩÅEΩÅEΩÅEΩ/ÅEΩIÅEΩÅEΩ
+// „ÉªÔΩΩ„ÉªÔΩΩ„ÉªÔΩΩ„ÉªÔΩΩ„ÉªÔΩΩ„ÉªÔΩΩ/„ÉªÔΩΩI„ÉªÔΩΩ„ÉªÔΩΩ
 HRESULT InitRenderer(HINSTANCE hInstance, HWND hWnd, BOOL bWindow);
 void    UninitRenderer(void);
 
-// ÅEΩÅEΩÅEΩtÅEΩÅEΩÅEΩ[ÅEΩÅEΩ
+// „ÉªÔΩΩ„ÉªÔΩΩ„ÉªÔΩΩt„ÉªÔΩΩ„ÉªÔΩΩ„ÉªÔΩΩ[„ÉªÔΩΩ„ÉªÔΩΩ
 void    Clear(void);
 void    Present(void);
 
-// ÅEΩfÅEΩoÅEΩCÅEΩXÅEΩÊìæ
+// „ÉªÔΩΩf„ÉªÔΩΩo„ÉªÔΩΩC„ÉªÔΩΩX„ÉªÔΩΩË¨´ÔΩæ
 ID3D11Device* GetDevice(void);
 ID3D11DeviceContext* GetDeviceContext(void);
 
-// ÅEΩ[ÅEΩxÅEΩeÅEΩXÅEΩgÅEΩÿÇÔøΩ÷ÇÔøΩ
+// „ÉªÔΩΩ[„ÉªÔΩΩx„ÉªÔΩΩe„ÉªÔΩΩX„ÉªÔΩΩg„ÉªÔΩΩÔæò„ÇëÔΩøÔΩΩÔæñ„ÇëÔΩøÔΩΩ
 void    SetDepthEnable(bool Enable);
 void    SetCullFront(bool enable);
 
-// ÅEΩÅEΩ ÉTÅEΩCÅEΩY
+// „ÉªÔΩΩ„ÉªÔΩΩÔæä„Çµ„ÉªÔΩΩC„ÉªÔΩΩY
 float   GetBackBufferWidth();
 float   GetBackBufferHeight();
 float   GetClientWidth();
@@ -92,7 +92,7 @@ ID3D11ShaderResourceView* PostRT_GetSRV();
 void    Renderer_BindPostTarget();
 void    Renderer_BindBackBuffer();
 
-// ÅEΩEÅEΩBÅEΩÅEΩÅEΩhÅEΩEÅEΩnÅEΩÅEΩÅEΩhÅEΩÅEΩÅEΩÊìæ
+// „ÉªÔΩΩE„ÉªÔΩΩB„ÉªÔΩΩ„ÉªÔΩΩ„ÉªÔΩΩh„ÉªÔΩΩE„ÉªÔΩΩn„ÉªÔΩΩ„ÉªÔΩΩ„ÉªÔΩΩh„ÉªÔΩΩ„ÉªÔΩΩ„ÉªÔΩΩË¨´ÔΩæ
 HWND    GetWindowHandle();
 
 #endif // !RENDERER_H

@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "libraries/nlohmann/json.hpp"
 #include "engine/ecs/game_object.h"

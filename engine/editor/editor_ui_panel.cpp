@@ -1,4 +1,4 @@
-﻿#include "editor_ui_panel.h"
+#include "editor_ui_panel.h"
 #include "engine/core/engine_gui.h"
 #include "engine/editor/editor_undo.h"
 #include "engine/editor/pivot_presets.h"

@@ -14,7 +14,7 @@
 #include "engine/rendering/d3d11/renderer.h" // VERTEX_3D, MATERIAL, GetDevice*, SCREEN_*
 #include "engine/rendering/d3d11/shader.h"
 #include "camera.h"
-#include "engine/rendering/model/model_util.h" // CreateSolidWhiteSRV ‚ğ—˜—p
+#include "engine/rendering/model/model_util.h" // CreateSolidWhiteSRV ã‚’åˆ©ç”¨
 #include "engine/physics/collider/collider.h"
 #include "scene_manager.h"
 
@@ -25,14 +25,14 @@ static std::unique_ptr<Grid> g_grid;
 static bool g_gridVisible = true;
 
 static ID3D11Buffer* g_pVB = nullptr;
-static ID3D11Buffer* g_pFillVB = nullptr;           // ”wŒi“h‚è‚Â‚Ô‚µ—p‚ÌVB
+static ID3D11Buffer* g_pFillVB = nullptr;           // èƒŒæ™¯å¡—ã‚Šã¤ã¶ã—ç”¨ã®VB
 static ID3D11Device* g_pDevice = nullptr;
 static ID3D11DeviceContext* g_pContext = nullptr;
 static UINT g_vertexCount = 0;
-static ID3D11ShaderResourceView* g_pWhiteSRV = nullptr; // 1x1 ”’ƒeƒNƒXƒ`ƒƒ
+static ID3D11ShaderResourceView* g_pWhiteSRV = nullptr; // 1x1 ç™½ãƒ†ã‚¯ã‚¹ãƒãƒ£
 
 static constexpr int GRID_COUNT = 5000;
-static const XMFLOAT4 GRID_FILL_COLOR = XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f); // ‰æ‘œ‚Ì‚æ‚¤‚ÈƒOƒŒ[
+static const XMFLOAT4 GRID_FILL_COLOR = XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f); // ç”»åƒã®ã‚ˆã†ãªã‚°ãƒ¬ãƒ¼
 
 void Grid::Initialize() {
 	g_pDevice = GetDevice();
@@ -47,7 +47,7 @@ void Grid::Initialize() {
 	const float maxC = static_cast<float>(half);
 
 	std::vector<VERTEX_3D> vtx;
-	vtx.reserve(lineCount * 2 * 2); // 11–{~Še2’¸“_~2•ûŒü
+	vtx.reserve(lineCount * 2 * 2); // 11æœ¬Ã—å„2é ‚ç‚¹Ã—2æ–¹å‘
 
 	const XMFLOAT4 WHITE = XMFLOAT4(1, 1, 1, 1);
 	const XMFLOAT4 RED = XMFLOAT4(1, 0, 0, 1);
@@ -56,7 +56,7 @@ void Grid::Initialize() {
 	const XMFLOAT3 upNormal = XMFLOAT3(0, 1, 0);
 	const XMFLOAT2 uv0 = XMFLOAT2(0, 0);
 
-	// Zˆê’è‚ÅX‚ğˆø‚­iX•ûŒü‚Ìüj-> ¢ŠEÀ•WZ=0‚Ìƒ‰ƒCƒ“‚ğÔ‚É
+	// Zä¸€å®šã§Xã‚’å¼•ãï¼ˆXæ–¹å‘ã®ç·šï¼‰-> ä¸–ç•Œåº§æ¨™Z=0ã®ãƒ©ã‚¤ãƒ³ã‚’èµ¤ã«
 	for (int i = 0; i < lineCount; ++i) {
 		float zLocal = static_cast<float>(i - half);
 		const bool isWorldZ0Line = (i == half);
@@ -77,7 +77,7 @@ void Grid::Initialize() {
 		vtx.push_back(b);
 	}
 
-	// Xˆê’è‚ÅZ‚ğˆø‚­iZ•ûŒü‚Ìüj-> ¢ŠEÀ•WX=0‚Ìƒ‰ƒCƒ“‚ğÂ‚É
+	// Xä¸€å®šã§Zã‚’å¼•ãï¼ˆZæ–¹å‘ã®ç·šï¼‰-> ä¸–ç•Œåº§æ¨™X=0ã®ãƒ©ã‚¤ãƒ³ã‚’é’ã«
 	for (int i = 0; i < lineCount; ++i) {
 		float xLocal = static_cast<float>(i - half);
 		const bool isWorldX0Line = (i == half);
@@ -100,7 +100,7 @@ void Grid::Initialize() {
 
 	g_vertexCount = static_cast<UINT>(vtx.size());
 
-	// ’¸“_ƒoƒbƒtƒ@ì¬iƒ‰ƒCƒ“j
+	// é ‚ç‚¹ãƒãƒƒãƒ•ã‚¡ä½œæˆï¼ˆãƒ©ã‚¤ãƒ³ï¼‰
 	{
 		D3D11_BUFFER_DESC bd {};
 		bd.Usage = D3D11_USAGE_DEFAULT;
@@ -115,12 +115,12 @@ void Grid::Initialize() {
 		}
 	}
 
-	// ”wŒi“h‚è‚Â‚Ô‚µ—p‚ÌlŠpŒ`VBiminC..maxC ‚ğ•¢‚¤2OŠpŒ`j
+	// èƒŒæ™¯å¡—ã‚Šã¤ã¶ã—ç”¨ã®å››è§’å½¢VBï¼ˆminC..maxC ã‚’è¦†ã†2ä¸‰è§’å½¢ï¼‰
 	{
 		VERTEX_3D fill[6];
 		const XMFLOAT3 n = upNormal;
 		const XMFLOAT2 uv = {0, 0};
-		// ”½Œv‰ñ‚è‚Å2–‡
+		// åæ™‚è¨ˆå›ã‚Šã§2æš
 		fill[0] = {{minC, 0.0f, minC}, n, GRID_FILL_COLOR, uv};
 		fill[1] = {{minC, 0.0f, maxC}, n, GRID_FILL_COLOR, uv};
 		fill[2] = {{maxC, 0.0f, maxC}, n, GRID_FILL_COLOR, uv};
@@ -145,11 +145,11 @@ void Grid::Initialize() {
 		g_pWhiteSRV = CreateSolidWhiteSRV();
 	}
 
-	// ‚±‚±‚©‚çƒRƒ‰ƒCƒ_[İ’è‚ÆƒV[ƒ““o˜^
+	// ã“ã“ã‹ã‚‰ã‚³ãƒ©ã‚¤ãƒ€ãƒ¼è¨­å®šã¨ã‚·ãƒ¼ãƒ³ç™»éŒ²
 	{
 		// const float width = maxC - minC; // = GRID_COUNT
 		// const float depth = maxC - minC; // = GRID_COUNT
-		// const float thickness = 0.2f;    // ”–‚ß‚Ì°
+		// const float thickness = 0.2f;    // è–„ã‚ã®åºŠ
 		//
 		// if (!m_collider) {
 		// 	m_collider = new BoxCollider(this);
@@ -182,7 +182,7 @@ void Grid::Finalize() {
 }
 
 void Grid::LogicUpdate(double /*elapsed_time*/) {
-	// ƒOƒŠƒbƒh‚ÍÃ“I‚È‚Ì‚Å“Á‚ÉXV‚È‚µ
+	// ã‚°ãƒªãƒƒãƒ‰ã¯é™çš„ãªã®ã§ç‰¹ã«æ›´æ–°ãªã—
 }
 
 void Grid::Draw() {
@@ -218,7 +218,7 @@ void Grid::Draw() {
 		g_pContext->Draw(g_vertexCount, 0);
 	}
 
-	// 3) ƒfƒoƒbƒO•\¦i”CˆÓj
+	// 3) ãƒ‡ãƒãƒƒã‚°è¡¨ç¤ºï¼ˆä»»æ„ï¼‰
 	if (m_debugCollider && m_collider) {
 		m_collider->DebugDraw();
 	}

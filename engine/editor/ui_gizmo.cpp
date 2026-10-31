@@ -1,4 +1,4 @@
-﻿#include "ui_gizmo.h"
+#include "ui_gizmo.h"
 
 #include "engine/core/engine_gui.h"
 #include "engine/editor/editor_undo.h"

@@ -1,4 +1,4 @@
-﻿#include "scene_runtime.h"
+#include "scene_runtime.h"
 #include "engine/ecs/collider_component_access.h"
 #include "scene_manager.h"
 

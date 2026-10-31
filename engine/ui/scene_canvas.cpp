@@ -1,4 +1,4 @@
-﻿#include "scene_canvas.h"
+#include "scene_canvas.h"
 
 #include "../input/key_logger.h"
 #include "../rendering/sprite/texture.h"

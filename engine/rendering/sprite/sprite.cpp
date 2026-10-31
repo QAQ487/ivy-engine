@@ -82,7 +82,7 @@ void Sprite_Finalize(void) {
 }
 
 void Sprite_Draw(int texid, float X, float Y, XMFLOAT4 color) {
-	// ?e?N?X?`???T?C?Y?èÔ
+	// ?e?N?X?`???T?C?Y?Êìæ
 	auto size = TextureGetSize(texid);
 
 	Sprite_Draw(texid, X, Y, (float) size.x, (float) size.y, 0, 0, (int) size.x, (int) size.y, color);

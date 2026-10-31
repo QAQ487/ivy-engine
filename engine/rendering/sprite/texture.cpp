@@ -12,7 +12,7 @@
 #include <cstdio>
 #include <Windows.h>
  // #include "direct3d.h" // SAFE_RELEASE
-#include "engine/rendering/d3d11/renderer.h" // ?f?o?C?X??R???e?L?X?g??ï
+#include "engine/rendering/d3d11/renderer.h" // ?f?o?C?X??R???e?L?X?g??æ“¾
 #include "DirectXTex.h" // DirectXTex???C?u??????g?p
 #include "engine/debug_draw/debug_ofstream.h" // hal::dout
 using namespace DirectX;
@@ -94,7 +94,7 @@ static int TextureLoadInternal(const wchar_t* ptr_file_name, bool mipmap, bool r
 			if (reportErrors) MessageBoxA(nullptr, msg, "Texture Error", MB_OK | MB_ICONERROR);
 			return -1;
 		}
-		// ???t?@?C????T?C?Y??ï
+		// ???t?@?C????T?C?Y??æ“¾
 		g_textures[i].m_width = (unsigned int)metadata.width; // sizet = longlong
 		g_textures[i].m_height = (unsigned int)metadata.height;
 

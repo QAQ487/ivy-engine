@@ -62,7 +62,7 @@ namespace Lighting {
         bd.Usage = D3D11_USAGE_DEFAULT;
         if (FAILED(s_dev->CreateBuffer(&bd, nullptr, &s_cb))) return false;
 
-        // ƒfƒtƒHƒ‹ƒgi1–{‚ÌƒfƒBƒŒƒNƒVƒ‡ƒiƒ‹j
+        // ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆï¼ˆ1æœ¬ã®ãƒ‡ã‚£ãƒ¬ã‚¯ã‚·ãƒ§ãƒŠãƒ«ï¼‰
         s_params.ambientColor = XMFLOAT3(0.15f, 0.15f, 0.15f);
         s_params.lightCount = 1;
         s_params.lights[0].type = DIRECTIONAL;
@@ -71,7 +71,7 @@ namespace Lighting {
         s_params.lights[0].specColor = XMFLOAT3(1, 1, 1);
         s_params.lights[0].specPower = 32.0f;
 
-        // ˆê’UƒNƒŠƒA
+        // ä¸€æ—¦ã‚¯ãƒªã‚¢
         ZeroMemory(&s_cbData, sizeof(s_cbData));
         s_cbData.Ambient = s_params.ambientColor;
         s_cbData.ViewDirOS = XMFLOAT3(0, 0, -1);
@@ -126,7 +126,7 @@ namespace Lighting {
         XMVECTOR det;
         XMMATRIX invW = XMMatrixInverse(&det, world);
 
-        // ViewiWSj
+        // Viewï¼ˆWSï¼‰
         const auto& cam = GetCamera();
         XMVECTOR camPos = XMLoadFloat3(&cam.position);
         XMVECTOR objOriginWS = world.r[3];
@@ -138,14 +138,14 @@ namespace Lighting {
         for (int i = 0; i < n; ++i) {
             const Light& src = s_params.lights[i];
 
-            // DirectioniŒõ‚ªi‚ŞŒü‚«jBDirectional‚Í -dir ‚ğg‚Á‚Ä‚«‚½ŒİŠ·ˆÛB
+            // Directionï¼ˆå…‰ãŒé€²ã‚€å‘ãï¼‰ã€‚Directionalã¯ -dir ã‚’ä½¿ã£ã¦ããŸäº’æ›ç¶­æŒã€‚
             XMVECTOR Lw = XMLoadFloat3(&src.directionWS);
-            XMVECTOR Lp = XMVectorNegate(Lw); // Œõ‚ªi‚ŞŒü‚«
+            XMVECTOR Lp = XMVectorNegate(Lw); // å…‰ãŒé€²ã‚€å‘ã
             XMVECTOR Los = XMVector3Normalize(XMVector3TransformNormal(Lp, invW));
 
-            // PositioniSpot ‚Ì‚İg—pj
+            // Positionï¼ˆSpot ã®ã¿ä½¿ç”¨ï¼‰
             XMVECTOR Pw = XMLoadFloat3(&src.positionWS);
-            // OS À•W‚ÍŒ´“_iƒIƒuƒWƒFƒNƒgÀ•WjŠî€‚Å•ÏŠ·
+            // OS åº§æ¨™ã¯åŸç‚¹ï¼ˆã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆåº§æ¨™ï¼‰åŸºæº–ã§å¤‰æ›
             XMVECTOR PosOS = XMVector3TransformCoord(Pw, invW);
 
             XMStoreFloat3(&s_cbData.Lights[i].DirOS, Los);
@@ -159,7 +159,7 @@ namespace Lighting {
             s_cbData.Lights[i].InnerCos = src.innerCos;
             s_cbData.Lights[i].OuterCos = src.outerCos;
         }
-        // c‚è‚Íƒ[ƒƒNƒŠƒA
+        // æ®‹ã‚Šã¯ã‚¼ãƒ­ã‚¯ãƒªã‚¢
         for (int i = n; i < MAX_LIGHTS; ++i) {
             s_cbData.Lights[i] = {};
         }

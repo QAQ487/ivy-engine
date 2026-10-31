@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "engine_gui.h"
 #include "engine/scene/scene_loader.h"

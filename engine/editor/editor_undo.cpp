@@ -1,4 +1,4 @@
-﻿#include "editor_undo.h"
+#include "editor_undo.h"
 
 #include "engine/core/engine_gui.h"
 #include "engine/core/engine_gui_internal.h"

@@ -1,4 +1,4 @@
-﻿#include "engine/editor/pivot_presets.h"
+#include "engine/editor/pivot_presets.h"
 #include <tuple>
 #include <atomic>
 #include "engine/scene/scene_camera.h"

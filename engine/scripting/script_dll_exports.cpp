@@ -1,4 +1,4 @@
-﻿// ScriptDllExports.cpp
+// ScriptDllExports.cpp
 #include "Script.h"
 #include <cstring>
 #include <functional>

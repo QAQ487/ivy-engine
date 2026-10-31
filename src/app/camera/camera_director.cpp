@@ -1,4 +1,4 @@
-﻿#include "engine/scene/scene_camera.h"
+#include "engine/scene/scene_camera.h"
 #include "camera_director.h"
 #include "camera.h"
 #include "debug_camera.h"

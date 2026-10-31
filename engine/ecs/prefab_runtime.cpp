@@ -1,4 +1,4 @@
-﻿#include "prefab_runtime.h"
+#include "prefab_runtime.h"
 
 #include "prefab_serializer.h"
 #include "engine/scene/scene_runtime.h"
