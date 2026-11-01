@@ -111,4 +111,68 @@ inline bool IsInsideDirectory(const std::filesystem::path& root,
     return true;
 }
 
+// Walk up from a cwd or an exe directory. The engine repo is the folder that
+// contains both external_content_template/ and IvyEngine.sln (or Game_Project.sln).
+inline std::filesystem::path FindEngineRepoRootFromSeed(const std::filesystem::path& seed) {
+    if (seed.empty())
+        return {};
+    std::error_code ec;
+    std::filesystem::path cur = seed;
+    for (int i = 0; i < 8; ++i) {
+        const bool marker = std::filesystem::is_directory(cur / "external_content_template", ec);
+        ec.clear();
+        const bool solution =
+            std::filesystem::is_regular_file(cur / "IvyEngine.sln", ec) ||
+            std::filesystem::is_regular_file(cur / "Game_Project.sln", ec);
+        ec.clear();
+        if (marker && solution)
+            return cur;
+        if (!cur.has_parent_path() || cur == cur.parent_path())
+            break;
+        cur = cur.parent_path();
+    }
+    return {};
+}
+
+// Canonical testbed path under the engine repo, or empty when it is missing
+// or would leave that repo. The folder name is the fixed constant, not user input.
+inline std::filesystem::path ResolveInRepoTestbedPath(const std::filesystem::path& cwd,
+                                                      const std::filesystem::path& exeDir) {
+    if (!IsSafeRelativePath(kInRepoTestbedDir, nullptr))
+        return {};
+    std::filesystem::path repo = FindEngineRepoRootFromSeed(cwd);
+    if (repo.empty())
+        repo = FindEngineRepoRootFromSeed(exeDir);
+    if (repo.empty())
+        return {};
+
+    std::error_code ec;
+    const std::filesystem::path repoCanon = std::filesystem::weakly_canonical(repo, ec);
+    if (ec)
+        return {};
+    const std::filesystem::path testbed = repoCanon / kInRepoTestbedDir;
+    if (!IsInsideDirectory(repoCanon, testbed))
+        return {};
+    ec.clear();
+    if (!std::filesystem::is_directory(testbed / "rom", ec))
+        return {};
+    ec.clear();
+    if (!std::filesystem::is_regular_file(testbed / "project.json", ec))
+        return {};
+    ec.clear();
+    const std::filesystem::path canon = std::filesystem::weakly_canonical(testbed, ec);
+    if (ec || !IsInsideDirectory(repoCanon, canon))
+        return {};
+    return canon;
+}
+
+// Open Project accepts any existing directory that contains rom/.
+// That includes the in-repo testbed. The engine root and the exe output
+// folder are not rejected by this rule.
+inline bool ContentProjectHasRom(const std::filesystem::path& root) {
+    std::error_code ec;
+    return std::filesystem::is_directory(root, ec) &&
+           std::filesystem::is_directory(root / "rom", ec);
+}
+
 }  // namespace content_path

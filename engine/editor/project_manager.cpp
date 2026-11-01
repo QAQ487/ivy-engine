@@ -215,10 +215,10 @@ const char* kBlankSceneJson = R"({
         "render": {
             "skyboxEnabled": false,
             "skyboxCubemap": "",
-            "skyboxTint": { "r": 1.0, "g": 1.0, "b": 1.0, "a": 1.0 },
+            "skyboxTint": [1.0, 1.0, 1.0, 1.0],
             "skyboxExposure": 1.0,
             "skyboxRotationYDeg": 0.0,
-            "clearColor": { "r": 0.12, "g": 0.14, "b": 0.18, "a": 1.0 },
+            "clearColor": [0.12, 0.14, 0.18, 1.0],
             "defaultShader": "standard",
             "shadowQuality": "medium"
         }
@@ -481,23 +481,20 @@ std::string ProjectManager::GetExecutableDirectory() {
 
 std::string ProjectManager::FindEngineRepoRoot() {
     // Walk up from cwd and exe dir looking for the external content template.
-    std::vector<fs::path> seeds;
-    seeds.push_back(fs::current_path());
-    seeds.push_back(fs::path(GetExecutableDirectory()));
+    std::error_code ec;
+    const fs::path cwd = fs::current_path(ec);
+    const fs::path found = content_path::FindEngineRepoRootFromSeed(ec ? fs::path() : cwd);
+    if (!found.empty())
+        return found.string();
+    return content_path::FindEngineRepoRootFromSeed(fs::path(GetExecutableDirectory())).string();
+}
 
-    for (const fs::path& seed : seeds) {
-        fs::path cur = seed;
-        for (int i = 0; i < 8; ++i) {
-            if (fs::exists(cur / "external_content_template") &&
-                (fs::exists(cur / "IvyEngine.sln") || fs::exists(cur / "Game_Project.sln"))) {
-                return cur.string();
-            }
-            if (!cur.has_parent_path() || cur == cur.parent_path())
-                break;
-            cur = cur.parent_path();
-        }
-    }
-    return {};
+std::string ProjectManager::ResolveInRepoTestbedPath() const {
+    std::error_code ec;
+    const fs::path cwd = fs::current_path(ec);
+    const fs::path found = content_path::ResolveInRepoTestbedPath(
+        ec ? fs::path() : cwd, fs::path(GetExecutableDirectory()));
+    return found.empty() ? std::string() : found.string();
 }
 
 std::string ProjectManager::RecentListPath() {
@@ -765,7 +762,9 @@ bool ProjectManager::ActivateRoot(const std::string& rootPath, std::string* erro
         return false;
     }
 
-    if (!fs::exists(root / "rom", ec)) {
+    // Any directory with rom/ is a project. The in-repo testbed qualifies.
+    // Do not reject a folder because it sits inside the engine repo or next to the exe.
+    if (!content_path::ContentProjectHasRom(root)) {
         if (errorOut)
             *errorOut = "Not a valid project (missing rom/): " + root.string();
         return false;
@@ -1041,24 +1040,13 @@ bool ProjectManager::BootstrapAtStartup() {
 #if defined(_DEBUG)
     // No loadable recent project: open the in-repo testbed. A valid external
     // project still wins above, and Release does not take this fallback.
-    const std::string engine = FindEngineRepoRoot();
-    if (!engine.empty()) {
-        std::error_code ec;
-        const fs::path engineRoot = fs::weakly_canonical(fs::path(engine), ec);
-        const fs::path testbed = engineRoot / content_path::kInRepoTestbedDir;
-        std::error_code dirEc;
-        std::error_code romEc;
-        std::error_code fileEc;
-        if (!ec &&
-            fs::is_directory(testbed, dirEc) &&
-            content_path::IsInsideDirectory(engineRoot, testbed) &&
-            fs::is_directory(testbed / "rom", romEc) &&
-            fs::is_regular_file(testbed / kProjectFileName, fileEc)) {
-            std::string error;
-            if (ActivateRoot(testbed.string(), &error))
-                return true;
-            hal::dout << "Debug editor testbed fallback failed: " << error << std::endl;
-        }
+    // File → Open Testbed is available in both configurations.
+    const std::string testbed = ResolveInRepoTestbedPath();
+    if (!testbed.empty()) {
+        std::string error;
+        if (ActivateRoot(testbed, &error))
+            return true;
+        hal::dout << "Debug editor testbed fallback failed: " << error << std::endl;
     }
 #endif
 

@@ -90,7 +90,7 @@ You should get a window (design size **1920×1080**). The editor opens a **conte
 
 ### Try the sample pack
 
-1. Run **IvyEngine** (Debug). With no recent project, it opens `testbed/`.
+1. Run **IvyEngine**. If a recent external project opens instead, use **File → Open Testbed**. With no recent project, a Debug build opens `testbed/` on its own.
 2. The startup scene is the sample menu inside `testbed/rom/scene/`.
 3. Click **Play** to load `scene_sample_playground.json` from that same folder.
 4. Move with **WASD** / left stick. A blue box spins via `SampleSpinScript` when that script DLL is loaded.
@@ -941,7 +941,8 @@ The editor calls `SetCurrentDirectory` on that folder so relative paths like `ro
 | Command | What it does |
 |---------|----------------|
 | **New Project…** | Pick a parent folder, enter a name → scaffolds `rom/`, blank `scene_main.json`, copies engine shaders/fonts/textures, optional scripts template, plus `<Name>.sln` + `build_scripts.bat` for building GameScripts outside the engine |
-| **Open Project…** | Pick any folder that contains `rom/` (creates `project.json` if missing) |
+| **Open Project…** | Pick any folder that contains `rom/` (creates `project.json` if missing), including the in-repo `testbed/` |
+| **Open Testbed** | Open `<engine repo>/testbed` when that folder exists. Shown in Debug and Release. Use this when a recent external project is already open |
 | **Save Project** (Ctrl+Shift+S) | Saves the current scene + writes `project.json` (and syncs `default_scene.txt`) |
 | **Recent Projects** | Reopen up to 12 recent roots (`%AppData%/GameEngine/recent_projects.json`) |
 

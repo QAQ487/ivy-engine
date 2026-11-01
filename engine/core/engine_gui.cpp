@@ -1255,6 +1255,17 @@ static bool SwitchToOpenedProject() {
     return true;
 }
 
+static void RequestOpenTestbed() {
+    const std::string path = ProjectManager::Instance().ResolveInRepoTestbedPath();
+    if (path.empty()) {
+        MessageBoxA(GetWindowHandle(),
+                    "The in-repo testbed folder was not found next to the engine.",
+                    "Open Testbed", MB_OK | MB_ICONWARNING);
+        return;
+    }
+    RequestOpenProject(path);
+}
+
 static void RequestOpenProject(const std::string& rootPath) {
     if (rootPath.empty())
         return;
@@ -1487,6 +1498,11 @@ static void DrawEngineStartScreen() {
     if (ImGui::Button("Open Project...", ImVec2(btnW, btnH)))
         g_pendingFolderPick = PendingFolderPickAction::OpenProject;
     ImGui::PopStyleColor(3);
+    if (!ProjectManager::Instance().ResolveInRepoTestbedPath().empty()) {
+        ImGui::Dummy(ImVec2(0.0f, 8.0f));
+        if (ImGui::Button("Open Testbed", ImVec2(btnW, btnH)))
+            RequestOpenTestbed();
+    }
 
     ImGui::Dummy(ImVec2(0.0f, 8.0f));
     if (ImGui::Button("New Project...", ImVec2(btnW, btnH)))
@@ -1532,6 +1548,9 @@ static void DrawEditorMenuBar() {
             g_pendingFolderPick = PendingFolderPickAction::NewProject;
         if (ImGui::MenuItem("Open Project...", nullptr, false, canMutate))
             g_pendingFolderPick = PendingFolderPickAction::OpenProject;
+        if (ImGui::MenuItem("Open Testbed", nullptr, false,
+                            canMutate && !ProjectManager::Instance().ResolveInRepoTestbedPath().empty()))
+            RequestOpenTestbed();
         if (ImGui::MenuItem("Close Project", nullptr, false,
                             canMutate && ProjectManager::Instance().IsOpen()))
             RequestCloseProject();
@@ -5585,9 +5604,16 @@ void EngineGUI_Draw() {
         ImGui::CloseCurrentPopup(); ImGui::EndPopup();
     }
     if (!g_sceneLoadError.empty()) ImGui::OpenPopup("Scene load failed");
+    // AlwaysAutoResize plus TextWrapped collapses to one character if the wrap
+    // width is the window itself. Pin a minimum width before the text wraps.
+    ImGui::SetNextWindowSizeConstraints(ImVec2(420.0f, 0.0f), ImVec2(720.0f, 4096.0f));
     if (ImGui::BeginPopupModal("Scene load failed", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
         if (g_sceneLoadError.empty()) ImGui::CloseCurrentPopup();
-        else ImGui::TextWrapped("%s", g_sceneLoadError.c_str());
+        else {
+            ImGui::PushTextWrapPos(ImGui::GetCursorPos().x + 420.0f);
+            ImGui::TextWrapped("%s", g_sceneLoadError.c_str());
+            ImGui::PopTextWrapPos();
+        }
         if (ImGui::Button("OK")) { g_sceneLoadError.clear(); ImGui::CloseCurrentPopup(); }
         ImGui::EndPopup();
     }

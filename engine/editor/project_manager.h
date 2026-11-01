@@ -53,6 +53,9 @@ public:
     bool BootstrapAtStartup();
 
     bool OpenProject(const std::string& rootPath, std::string* errorOut = nullptr);
+    // Absolute path of <engine repo>/testbed when that folder is a content project.
+    // Empty when the repo cannot be seen from the cwd or the exe directory.
+    std::string ResolveInRepoTestbedPath() const;
     void CloseProject();
     bool CreateProject(const std::string& parentDir, const std::string& projectName,
                        std::string* errorOut = nullptr, bool template2D = false);

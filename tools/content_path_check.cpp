@@ -3,6 +3,7 @@
 #include "engine/core/content_path.h"
 
 #include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <string>
 
@@ -73,6 +74,36 @@ int main() {
            "outside path rejected");
     Expect(!content_path::IsInsideDirectory(root, root / "missing-child"),
            "missing path rejected");
+    fs::remove_all(scratch);
+
+    const fs::path repo = scratch / "ivy-engine";
+    fs::create_directories(repo / "external_content_template");
+    fs::create_directories(repo / "x64" / "Debug");
+    fs::create_directories(repo / "testbed" / "rom" / "scene");
+    fs::create_directories(repo / "rom");
+    { std::ofstream(repo / "IvyEngine.sln") << "sln"; }
+    { std::ofstream(repo / "testbed" / "project.json") << "{}\n"; }
+    const fs::path outside = scratch / "ExternalGame";
+    fs::create_directories(outside / "rom");
+    const fs::path exeDir = repo / "x64" / "Debug";
+    const fs::path testbed = content_path::ResolveInRepoTestbedPath(outside, exeDir);
+    Expect(testbed == fs::weakly_canonical(repo / "testbed"),
+           "exe dir finds in-repo testbed while cwd is an external project");
+    Expect(content_path::ContentProjectHasRom(repo / "testbed"),
+           "Open Project accepts testbed because it has rom/");
+    Expect(content_path::ContentProjectHasRom(repo),
+           "engine root with rom/ is not rejected");
+    Expect(content_path::ResolveInRepoTestbedPath(outside, scratch / "missing-exe").empty(),
+           "no engine repo means no testbed");
+    fs::remove(repo / "testbed" / "project.json");
+    Expect(content_path::ResolveInRepoTestbedPath(exeDir, exeDir).empty(),
+           "testbed without project.json is not offered");
+    { std::ofstream(repo / "testbed" / "project.json") << "{}\n"; }
+    fs::create_directories(scratch / "decoy" / "testbed" / "rom");
+    { std::ofstream(scratch / "decoy" / "testbed" / "project.json") << "{}\n"; }
+    Expect(content_path::ResolveInRepoTestbedPath(scratch / "decoy" / "testbed", exeDir)
+               == fs::weakly_canonical(repo / "testbed"),
+           "a testbed outside the repo is not chosen over the engine one");
     fs::remove_all(scratch);
 
     if (g_fails != 0) {

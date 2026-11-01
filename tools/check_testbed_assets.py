@@ -115,6 +115,54 @@ def walk(value, scene_name, inherited_key=None):
         resolve_rom(normalized)
 
 
+def is_json_number(value):
+    return isinstance(value, (int, float)) and not isinstance(value, bool)
+
+
+def require_color_array(scene_name, key, value, count):
+    if (not isinstance(value, list) or len(value) != count
+            or any(not is_json_number(item) for item in value)):
+        fail("%s: settings.render.%s must be an array of %d numbers (serializer format)"
+             % (scene_name, key, count))
+
+
+def check_render_settings(scene_name, data):
+    """Match RenderSettings_ToJson / SceneJson_ValidateTypes for fields that are present.
+
+    clearColor and skyboxTint are 4-float arrays. An {r,g,b,a} object is the
+    format the loader rejects with 'Invalid type: settings.render.clearColor'.
+    """
+    settings = data.get("settings")
+    if settings is None:
+        return
+    if not isinstance(settings, dict):
+        fail("%s: settings must be an object" % scene_name)
+    render = settings.get("render")
+    if render is None:
+        return
+    if not isinstance(render, dict):
+        fail("%s: settings.render must be an object" % scene_name)
+    for key in ("clearColor", "skyboxTint"):
+        if key in render:
+            require_color_array(scene_name, key, render[key], 4)
+    if "fogColor" in render:
+        require_color_array(scene_name, "fogColor", render["fogColor"], 3)
+    for key in ("skyboxEnabled", "iblEnabled", "fogEnabled"):
+        if key in render and not isinstance(render[key], bool):
+            fail("%s: settings.render.%s must be a bool" % (scene_name, key))
+    for key in ("skyboxExposure", "skyboxRotationYDeg", "iblIntensity",
+                "fogDensity", "fogStart", "fogHeight", "fogHeightFalloff"):
+        if key in render and not is_json_number(render[key]):
+            fail("%s: settings.render.%s must be a number" % (scene_name, key))
+    for key in ("skyboxCubemap", "iblIrradiance", "iblPrefilter", "iblBrdfLut", "defaultShader"):
+        if key in render and not isinstance(render[key], str):
+            fail("%s: settings.render.%s must be a string" % (scene_name, key))
+    if "shadowQuality" in render:
+        quality = render["shadowQuality"]
+        if not isinstance(quality, str) and not (isinstance(quality, int) and not isinstance(quality, bool)):
+            fail("%s: settings.render.shadowQuality must be a string or integer" % scene_name)
+
+
 def main():
     if not (TESTBED / "project.json").is_file():
         fail("testbed/project.json is missing")
@@ -135,6 +183,7 @@ def main():
         fail("testbed has no scenes")
     for scene_path in scenes:
         data = json.loads(scene_path.read_text(encoding="utf-8-sig"))
+        check_render_settings(scene_path.name, data)
         walk(data, scene_path.name)
 
     for ref, (width, height) in PLACEHOLDERS.items():
