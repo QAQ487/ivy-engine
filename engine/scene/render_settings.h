@@ -23,6 +23,8 @@ struct ShadowQualityPreset {
 struct RenderSettingsData {
     bool skyboxEnabled = true;
     std::string skyboxCubemapPath = "rom/skybox/MySkybox.dds";
+    // 0 = auto from image aspect (360 * height / width). Otherwise clamped to (0, 180].
+    float skyboxVerticalFov = 0.0f;
     DirectX::XMFLOAT4 skyboxTint = { 1.0f, 1.0f, 1.0f, 1.0f };
     float skyboxExposure = 1.0f;
     float skyboxRotationYDeg = 0.0f;

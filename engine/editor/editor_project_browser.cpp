@@ -14,6 +14,7 @@
 #include "engine/ecs/prefab_serializer.h"
 #include "engine/scene/scene_loader.h"
 #include "engine/core/engine_gui.h"
+#include "engine/rendering/environment/skybox_asset_path.h"
 
 #include <filesystem>
 #include <memory>
@@ -295,6 +296,15 @@ static void DrawAssetContextMenu(
         ImGui::MenuItem("Open / Use", nullptr, false, false);
         if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
             ImGui::SetTooltip("%s", entry.assetPath.c_str());
+    }
+
+    // Same .png/.dds filter and rom-path resolution as Rendering Settings drag-drop.
+    if (skybox_asset::IsEligibleCubemapPath(entry.assetPath)) {
+        if (ImGui::BeginMenu("Set as")) {
+            if (ImGui::MenuItem("Skybox"))
+                EngineGUI_ApplySkyboxCubemapPath(entry.assetPath);
+            ImGui::EndMenu();
+        }
     }
 
     if (ImGui::MenuItem("Show in Explorer")) {

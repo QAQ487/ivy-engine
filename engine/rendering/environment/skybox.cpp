@@ -8,6 +8,8 @@
 #include "engine/scene/render_settings.h"
 #include "engine/ecs/string_utils.h"
 #include "engine/core/content_path.h"
+#include "engine/rendering/environment/panorama_sky.h"
+#include "engine/debug_draw/debug_ofstream.h"
 
 #include <fstream>
 #include <vector>
@@ -182,7 +184,18 @@ void Skybox_Finalize() {
 
 void Skybox_ReloadFromSettings() {
     const RenderSettingsData& settings = RenderSettings_GetConst();
-    const std::wstring path = ToWString(settings.skyboxCubemapPath);
+    const panorama::Prep prep = panorama::PrepareSky(settings.skyboxCubemapPath);
+    std::string loadPath = settings.skyboxCubemapPath;
+    if (prep.isPanorama) {
+        if (!prep.ok) {
+            // CookOne already wrote a clear message to content_hot_reload.log / dout.
+            s_cubemapSrv = nullptr;
+            s_loadedCubemapPath.clear();
+            return;
+        }
+        loadPath = prep.cubemapRom;
+    }
+    const std::wstring path = ToWString(loadPath);
 
     if (!settings.skyboxEnabled || path.empty()) {
         s_cubemapSrv = nullptr;
@@ -190,13 +203,18 @@ void Skybox_ReloadFromSettings() {
         return;
     }
 
-
-
     s_loadedCubemapPath.clear();
 
     s_cubemapSrv = CubemapLoad(path.c_str());
-    if (s_cubemapSrv)
+    if (s_cubemapSrv) {
         s_loadedCubemapPath = path;
+        return;
+    }
+
+    if (prep.isPanorama)
+        panorama::LogDiagnostic("Skybox panorama failed: cooked cubemap did not load: " + loadPath);
+    else
+        panorama::LogDiagnostic("Skybox cubemap failed to load: " + loadPath);
 }
 
 void Skybox_Draw(const XMMATRIX& view, const XMMATRIX& proj) {

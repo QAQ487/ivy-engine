@@ -306,6 +306,15 @@
     <ClInclude Include="engine\rendering\environment\ibl.h">
       <Filter>engine\rendering\environment</Filter>
     </ClInclude>
+    <ClInclude Include="engine\rendering\environment\equirect_cubemap.h">
+      <Filter>engine\rendering\environment</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\rendering\environment\panorama_sky.h">
+      <Filter>engine\rendering\environment</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\rendering\environment\skybox_asset_path.h">
+      <Filter>engine\rendering\environment</Filter>
+    </ClInclude>
     <ClInclude Include="engine\rendering\lighting\lighting.h">
       <Filter>engine\rendering\lighting</Filter>
     </ClInclude>
@@ -687,6 +696,12 @@
       <Filter>engine\rendering\environment</Filter>
     </ClCompile>
     <ClCompile Include="engine\rendering\environment\ibl.cpp">
+      <Filter>engine\rendering\environment</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\rendering\environment\equirect_cubemap.cpp">
+      <Filter>engine\rendering\environment</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\rendering\environment\panorama_sky.cpp">
       <Filter>engine\rendering\environment</Filter>
     </ClCompile>
     <ClCompile Include="engine\rendering\lighting\lighting.cpp">

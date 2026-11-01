@@ -9,6 +9,7 @@
 #include "engine/ecs/string_utils.h"
 #include "engine/debug_draw/debug_ofstream.h"
 #include "engine/core/content_path.h"
+#include "engine/rendering/environment/panorama_sky.h"
 
 #include <fstream>
 
@@ -72,32 +73,53 @@ void Ibl_ReloadFromSettings() {
     if (!settings.iblEnabled)
         return;
 
-    const std::wstring irradiancePath = ToWString(settings.iblIrradiancePath);
-    const std::wstring prefilterPath = ToWString(settings.iblPrefilterPath);
+    const panorama::Prep prep = panorama::PrepareSky(settings.skyboxCubemapPath);
+    std::string irradianceUtf = settings.iblIrradiancePath;
+    std::string prefilterUtf = settings.iblPrefilterPath;
+    if (prep.isPanorama) {
+        if (!prep.ok || !prep.iblReady) {
+            const std::string why = prep.error.empty() ? "panorama IBL was not baked" : prep.error;
+            hal::dout << "IBL not matching sky: " << why << std::endl;
+            return;
+        }
+        irradianceUtf = prep.irradianceRom;
+        prefilterUtf = prep.prefilterRom;
+    }
+
+    const std::wstring irradiancePath = ToWString(irradianceUtf);
+    const std::wstring prefilterPath = ToWString(prefilterUtf);
     const std::wstring lutPath = ToWString(settings.iblBrdfLutPath);
     if (irradiancePath.empty() || prefilterPath.empty() || lutPath.empty()) {
         hal::dout << "Ibl_ReloadFromSettings failed: empty irradiance/prefilter/LUT path." << std::endl;
+        if (prep.isPanorama)
+            hal::dout << "IBL not matching sky: empty irradiance/prefilter/LUT path." << std::endl;
         return;
     }
     if (!FileExistsW(irradiancePath.c_str())) {
-        hal::dout << "Ibl_ReloadFromSettings failed: missing " << settings.iblIrradiancePath << std::endl;
+        hal::dout << "Ibl_ReloadFromSettings failed: missing " << irradianceUtf << std::endl;
+        if (prep.isPanorama)
+            hal::dout << "IBL not matching sky: missing " << irradianceUtf << std::endl;
         return;
     }
     if (!FileExistsW(prefilterPath.c_str())) {
-        hal::dout << "Ibl_ReloadFromSettings failed: missing " << settings.iblPrefilterPath << std::endl;
+        hal::dout << "Ibl_ReloadFromSettings failed: missing " << prefilterUtf << std::endl;
+        if (prep.isPanorama)
+            hal::dout << "IBL not matching sky: missing " << prefilterUtf << std::endl;
         return;
     }
     if (!FileExistsW(lutPath.c_str())) {
         hal::dout << "Ibl_ReloadFromSettings failed: missing " << settings.iblBrdfLutPath << std::endl;
+        if (prep.isPanorama)
+            hal::dout << "IBL not matching sky: missing " << settings.iblBrdfLutPath << std::endl;
         return;
     }
 
     s_irradiance = CubemapLoad(irradiancePath.c_str());
     if (!s_irradiance)
-        hal::dout << "Ibl_ReloadFromSettings failed: irradiance " << settings.iblIrradiancePath << std::endl;
+        hal::dout << "Ibl_ReloadFromSettings failed: irradiance " << irradianceUtf << std::endl;
     s_prefilter = CubemapLoad(prefilterPath.c_str());
     if (!s_prefilter)
-        hal::dout << "Ibl_ReloadFromSettings failed: prefilter " << settings.iblPrefilterPath << std::endl;
+        hal::dout << "Ibl_ReloadFromSettings failed: prefilter " << prefilterUtf << std::endl;
     s_brdfLutTexId = TextureLoad(lutPath.c_str(), false);
     s_brdfLut = TextureGetSRV(s_brdfLutTexId);
     if (!s_brdfLut)
@@ -108,6 +130,8 @@ void Ibl_ReloadFromSettings() {
         s_prefilter = nullptr;
         s_brdfLut = nullptr;
         s_brdfLutTexId = -1;
+        if (prep.isPanorama)
+            hal::dout << "IBL not matching sky: baked maps or BRDF LUT failed to load." << std::endl;
     }
 }
 

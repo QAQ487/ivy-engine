@@ -70,7 +70,7 @@ After deploy, this layout is produced:
 
 - `deploy/IvyEngineRuntime.exe` (from `deploy.bat`; GUI packaging uses `<GameName>.exe`)
 - `deploy/libfbxsdk.dll`
-- `deploy/rom/**` (project files, overlaid `.cso` and branding, plus engine defaults the content names and does not already have; `MySkybox.dds` only when named)
+- `deploy/rom/**` (project files, overlaid `.cso` and branding, plus engine defaults the content names and does not already have; `MySkybox.dds` only when named). The editor package cooks any `skyboxCubemap` PNG into `rom/skybox/cache/` before the copy. `deploy.bat` copies `rom/` as it is and does not cook; a missing cache is baked by the runtime on load.
 - `deploy/game/scripts/bin/GameScripts.dll`
 
 ## Notes

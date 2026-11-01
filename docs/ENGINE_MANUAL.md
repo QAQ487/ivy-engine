@@ -549,7 +549,8 @@ Scene render settings live under `settings.render` in a scene JSON file.
 Known fields:
 
 - `skyboxEnabled`
-- `skyboxCubemap`
+- `skyboxCubemap` — DDS cubemap, or an equirectangular PNG cooked to `rom/skybox/cache/` on load (width = 360°; height ≤ width/2). DDS paths such as `rom/skybox/MySkybox.dds` are not converted.
+- `skyboxVerticalFov` — optional degrees in (0,180]; `0`/omitted uses `360*height/width` centered on the horizon
 - `skyboxTint`
 - `skyboxExposure`
 - `skyboxRotationYDeg`
