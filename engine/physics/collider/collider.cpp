@@ -11,6 +11,7 @@
 ===========================================================================**/
 
 #include "collider.h"
+#include "cylinder_pair.h"
 #include "engine/ecs/game_object.h"
 #include "engine/ecs/transform.h"
 #include "../core/rigidbody.h"
@@ -22,7 +23,6 @@
 #include "engine/physics/core/physics_system.h"
 #include <cmath>
 #include <cfloat>
-#include <cstdio>
 
 using namespace DirectX;
 
@@ -59,37 +59,6 @@ XMFLOAT3 FiniteOwnerScale(const GameObject* owner) {
 bool CollisionPairIgnored(const GameObject* a, const GameObject* b) {
     if (!a || !b) return true;
     return a->IgnoresCollisionWith(b) || b->IgnoresCollisionWith(a);
-}
-
-const char* ColliderTypeName(ColliderType type) {
-    switch (type) {
-    case ColliderType::BOX: return "Box";
-    case ColliderType::SPHERE: return "Sphere";
-    case ColliderType::CAPSULE: return "Capsule";
-    case ColliderType::MESH: return "Mesh";
-    case ColliderType::CYLINDER: return "Cylinder";
-    default: return "None";
-    }
-}
-
-// Once per unordered pair. Physics queries these every frame; a hit must not spam the log.
-void LogUnsupportedCylinderPair(ColliderType a, ColliderType b) {
-    constexpr int kTypeCount = static_cast<int>(ColliderType::CYLINDER) + 1;
-    static bool logged[kTypeCount][kTypeCount] = {};
-    const int ia = static_cast<int>(a);
-    const int ib = static_cast<int>(b);
-    if (ia < 0 || ia >= kTypeCount || ib < 0 || ib >= kTypeCount)
-        return;
-    if (logged[ia][ib] || logged[ib][ia])
-        return;
-    logged[ia][ib] = true;
-    logged[ib][ia] = true;
-
-    char msg[160];
-    std::snprintf(msg, sizeof(msg),
-        "[Collider] Unsupported cylinder pair: %s vs %s (no collision)\n",
-        ColliderTypeName(a), ColliderTypeName(b));
-    OutputDebugStringA(msg);
 }
 
 // A world-space sphere becomes an ellipsoid in mesh-local space under non-uniform scale.
@@ -239,6 +208,57 @@ static bool SphereCylinder_Contact(const XMFLOAT3& sphereCenter,
             outNormal = frame.axis;
     }
 
+    return true;
+}
+
+static CylinderPairShape ShapeFromBox(const XMFLOAT3& center, const XMFLOAT3& size, const XMFLOAT3& rotDeg) {
+    CylinderPairShape shape;
+    shape.kind = CylinderPairShapeKind::Box;
+    shape.center = { center.x, center.y, center.z };
+    const XMMATRIX rot = XMMatrixRotationRollPitchYaw(
+        XMConvertToRadians(rotDeg.x),
+        XMConvertToRadians(rotDeg.y),
+        XMConvertToRadians(rotDeg.z));
+    XMFLOAT3 axisX, axisY, axisZ;
+    XMStoreFloat3(&axisX, XMVector3Normalize(XMVector3TransformNormal(XMVectorSet(1, 0, 0, 0), rot)));
+    XMStoreFloat3(&axisY, XMVector3Normalize(XMVector3TransformNormal(XMVectorSet(0, 1, 0, 0), rot)));
+    XMStoreFloat3(&axisZ, XMVector3Normalize(XMVector3TransformNormal(XMVectorSet(0, 0, 1, 0), rot)));
+    shape.axisX = { axisX.x, axisX.y, axisX.z };
+    shape.axisY = { axisY.x, axisY.y, axisY.z };
+    shape.axisZ = { axisZ.x, axisZ.y, axisZ.z };
+    shape.extents = { size.x * 0.5f, size.y * 0.5f, size.z * 0.5f };
+    return shape;
+}
+
+static CylinderPairShape ShapeFromCylinder(const CylinderWorldFrame& frame) {
+    CylinderPairShape shape;
+    shape.kind = CylinderPairShapeKind::Cylinder;
+    shape.center = { frame.center.x, frame.center.y, frame.center.z };
+    shape.axisY = { frame.axis.x, frame.axis.y, frame.axis.z };
+    shape.extents = { frame.radius, frame.halfHeight, 0.0f };
+    return shape;
+}
+
+static CylinderPairShape ShapeFromTriangle(const XMFLOAT3& a, const XMFLOAT3& b, const XMFLOAT3& c) {
+    CylinderPairShape shape;
+    shape.kind = CylinderPairShapeKind::Triangle;
+    shape.center = { a.x, a.y, a.z };
+    shape.tri1 = { b.x, b.y, b.z };
+    shape.tri2 = { c.x, c.y, c.z };
+    return shape;
+}
+
+// Normal points from b toward a, which is the ResolveContact(aOwner, bOwner, normal) direction.
+static bool QueryCylinderPair(const CylinderPairShape& a, const CylinderPairShape& b,
+    XMFLOAT3& outNormal, float& outPenetration, XMFLOAT3& outPoint) {
+    CylinderPairVec3 normal{};
+    CylinderPairVec3 point{};
+    float penetration = 0.0f;
+    if (!CylinderPair_Contact(a, b, normal, penetration, &point))
+        return false;
+    outNormal = { normal.x, normal.y, normal.z };
+    outPenetration = penetration;
+    outPoint = { point.x, point.y, point.z };
     return true;
 }
 } // namespace
@@ -1208,8 +1228,14 @@ bool BoxCollider::CheckCollision(const Collider* other) const {
     case ColliderType::MESH:
         return other->CheckCollision(this);
     case ColliderType::CYLINDER:
-        LogUnsupportedCylinderPair(ColliderType::BOX, ColliderType::CYLINDER);
-        return false;
+    {
+        const CylinderCollider* cyl = static_cast<const CylinderCollider*>(other);
+        XMFLOAT3 n; float pen = 0.0f; XMFLOAT3 pt;
+        return QueryCylinderPair(
+            ShapeFromBox(centerA, sizeA, rotA),
+            ShapeFromCylinder(BuildCylinderWorldFrame(cyl)),
+            n, pen, pt);
+    }
     default: return false;
     }
 }
@@ -1523,8 +1549,20 @@ void BoxCollider::ResolveCollision(Collider* other) {
         other->ResolveCollision(this);
         return;
     case ColliderType::CYLINDER:
-        LogUnsupportedCylinderPair(ColliderType::BOX, ColliderType::CYLINDER);
-        return;
+    {
+        const CylinderCollider* cyl = static_cast<const CylinderCollider*>(other);
+        XMFLOAT3 centerBox = GetWorldCenter();
+        XMFLOAT3 rotBox = m_owner->GetRotation();
+        XMFLOAT3 n; float pen = 0.0f; XMFLOAT3 pt{};
+        if (QueryCylinderPair(
+            ShapeFromBox(centerBox, sizeA, rotBox),
+            ShapeFromCylinder(BuildCylinderWorldFrame(cyl)),
+            n, pen, pt)) {
+            // Normal is cylinder -> box, so the box is pushed out of the cylinder.
+            ResolveContact(m_owner, other->GetOwner(), n, pen, 0.0005f, &pt);
+        }
+        break;
+    }
     default: break;
     }
 
@@ -1986,10 +2024,25 @@ bool CylinderCollider::CheckCollision(const Collider* other) const {
         return false;
     }
     case ColliderType::BOX:
-    case ColliderType::MESH:
+    {
+        const BoxCollider* box = static_cast<const BoxCollider*>(other);
+        XMFLOAT3 n; float pen = 0.0f; XMFLOAT3 pt;
+        return QueryCylinderPair(
+            ShapeFromCylinder(frame),
+            ShapeFromBox(box->GetWorldCenter(), box->GetSize(), box->GetOwner()->GetRotation()),
+            n, pen, pt);
+    }
     case ColliderType::CYLINDER:
-        LogUnsupportedCylinderPair(ColliderType::CYLINDER, other->GetType());
-        return false;
+    {
+        const CylinderCollider* otherCyl = static_cast<const CylinderCollider*>(other);
+        XMFLOAT3 n; float pen = 0.0f; XMFLOAT3 pt;
+        return QueryCylinderPair(
+            ShapeFromCylinder(frame),
+            ShapeFromCylinder(BuildCylinderWorldFrame(otherCyl)),
+            n, pen, pt);
+    }
+    case ColliderType::MESH:
+        return other->CheckCollision(this);
     default:
         return false;
     }
@@ -2046,9 +2099,31 @@ void CylinderCollider::ResolveCollision(Collider* other) {
         break;
     }
     case ColliderType::BOX:
-    case ColliderType::MESH:
+    {
+        const BoxCollider* box = static_cast<const BoxCollider*>(other);
+        XMFLOAT3 n; float pen = 0.0f; XMFLOAT3 pt{};
+        if (QueryCylinderPair(
+            ShapeFromCylinder(frame),
+            ShapeFromBox(box->GetWorldCenter(), box->GetSize(), box->GetOwner()->GetRotation()),
+            n, pen, pt)) {
+            ResolveContact(m_owner, other->GetOwner(), n, pen, 0.0005f, &pt);
+        }
+        break;
+    }
     case ColliderType::CYLINDER:
-        LogUnsupportedCylinderPair(ColliderType::CYLINDER, other->GetType());
+    {
+        const CylinderCollider* otherCyl = static_cast<const CylinderCollider*>(other);
+        XMFLOAT3 n; float pen = 0.0f; XMFLOAT3 pt{};
+        if (QueryCylinderPair(
+            ShapeFromCylinder(frame),
+            ShapeFromCylinder(BuildCylinderWorldFrame(otherCyl)),
+            n, pen, pt)) {
+            ResolveContact(m_owner, other->GetOwner(), n, pen, 0.0005f, &pt);
+        }
+        break;
+    }
+    case ColliderType::MESH:
+        other->ResolveCollision(this);
         return;
     default:
         break;
@@ -2333,8 +2408,25 @@ bool MeshCollider::CheckCollision(const Collider* other) const {
         }
     }
     else if (other->GetType() == ColliderType::CYLINDER) {
-        LogUnsupportedCylinderPair(ColliderType::MESH, ColliderType::CYLINDER);
-        return false;
+        // Real finite cylinder against each triangle. Flat caps are not inflated
+        // into the circumscribed sphere used for boxes, or the 3 sample spheres
+        // used for capsules. A triangle has no thickness.
+        const auto* cy = static_cast<const CylinderCollider*>(other);
+        const CylinderPairShape cyl = ShapeFromCylinder(BuildCylinderWorldFrame(cy));
+        for (size_t i = 0; i + 2 < m_indices.size(); i += 3) {
+            const unsigned int i0 = m_indices[i];
+            const unsigned int i1 = m_indices[i + 1];
+            const unsigned int i2 = m_indices[i + 2];
+            if (i0 >= m_vertices.size() || i1 >= m_vertices.size() || i2 >= m_vertices.size())
+                continue;
+            XMFLOAT3 w0, w1, w2;
+            XMStoreFloat3(&w0, XMVector3TransformCoord(XMLoadFloat3(&m_vertices[i0]), worldM));
+            XMStoreFloat3(&w1, XMVector3TransformCoord(XMLoadFloat3(&m_vertices[i1]), worldM));
+            XMStoreFloat3(&w2, XMVector3TransformCoord(XMLoadFloat3(&m_vertices[i2]), worldM));
+            XMFLOAT3 n; float pen = 0.0f; XMFLOAT3 pt;
+            if (QueryCylinderPair(cyl, ShapeFromTriangle(w0, w1, w2), n, pen, pt))
+                return true;
+        }
     }
     return false;
 }
@@ -2349,9 +2441,11 @@ void MeshCollider::ResolveCollision(Collider* other) {
 
     if (CollisionPairIgnored(m_owner, otherObj)) return;
 
-    // Mesh is typically static object, only resolve with dynamic objects
+    // Mesh is typically static, so kinematic others are skipped. A cylinder is
+    // the exception: the dynamic mesh is the body that must move, and
+    // ResolveContact leaves the kinematic cylinder where it is.
     Rigidbody& otherRB = otherObj->GetRigidbody();
-    if (otherRB.IsKinematic()) return;
+    if (other->GetType() != ColliderType::CYLINDER && otherRB.IsKinematic()) return;
 
     // Build inverse transform once to run triangle tests in mesh-local space,
     // avoiding O(N) per-triangle world transforms per collision pair.
@@ -2477,9 +2571,77 @@ void MeshCollider::ResolveCollision(Collider* other) {
         testTrianglesLocal(worldToLocal(cC), r);
         break;
     }
-    case ColliderType::CYLINDER:
-        LogUnsupportedCylinderPair(ColliderType::MESH, ColliderType::CYLINDER);
-        return;
+    case ColliderType::CYLINDER: {
+        // Same finite-cylinder test as CheckCollision. World normal pushes the
+        // cylinder out of the triangle. Clusters match the sphere/box/capsule path.
+        const auto* cy = static_cast<const CylinderCollider*>(other);
+        const CylinderPairShape cyl = ShapeFromCylinder(BuildCylinderWorldFrame(cy));
+        const XMMATRIX worldM =
+            XMMatrixScaling(effScale.x, effScale.y, effScale.z) *
+            rotM *
+            XMMatrixTranslation(ownerPos.x, ownerPos.y, ownerPos.z);
+
+        struct WorldCluster {
+            XMFLOAT3 normal;
+            float pen;
+            XMFLOAT3 point;
+        };
+        WorldCluster found[4];
+        int foundCount = 0;
+        auto consider = [&](const XMFLOAT3& n, float pen, const XMFLOAT3& pt) {
+            if (pen <= 0.0f) return;
+            for (int s = 0; s < foundCount; ++s) {
+                const float d =
+                    found[s].normal.x * n.x +
+                    found[s].normal.y * n.y +
+                    found[s].normal.z * n.z;
+                if (d > 0.7f) {
+                    if (pen > found[s].pen) {
+                        found[s].normal = n;
+                        found[s].pen = pen;
+                        found[s].point = pt;
+                    }
+                    return;
+                }
+            }
+            if (foundCount < 4)
+                found[foundCount++] = { n, pen, pt };
+        };
+
+        for (size_t i = 0; i + 2 < m_indices.size(); i += 3) {
+            const unsigned int i0 = m_indices[i];
+            const unsigned int i1 = m_indices[i + 1];
+            const unsigned int i2 = m_indices[i + 2];
+            if (i0 >= m_vertices.size() || i1 >= m_vertices.size() || i2 >= m_vertices.size())
+                continue;
+            XMFLOAT3 w0, w1, w2;
+            XMStoreFloat3(&w0, XMVector3TransformCoord(XMLoadFloat3(&m_vertices[i0]), worldM));
+            XMStoreFloat3(&w1, XMVector3TransformCoord(XMLoadFloat3(&m_vertices[i1]), worldM));
+            XMStoreFloat3(&w2, XMVector3TransformCoord(XMLoadFloat3(&m_vertices[i2]), worldM));
+            XMFLOAT3 n; float pen = 0.0f; XMFLOAT3 pt{};
+            if (QueryCylinderPair(cyl, ShapeFromTriangle(w0, w1, w2), n, pen, pt))
+                consider(n, pen, pt);
+        }
+
+        int order[4] = { 0, 1, 2, 3 };
+        for (int a = 0; a < foundCount; ++a) {
+            for (int b = a + 1; b < foundCount; ++b) {
+                if (found[order[b]].pen > found[order[a]].pen) {
+                    const int tmp = order[a];
+                    order[a] = order[b];
+                    order[b] = tmp;
+                }
+            }
+        }
+        for (int oi = 0; oi < foundCount; ++oi) {
+            const WorldCluster& c = found[order[oi]];
+            if (c.pen <= 0.0005f) continue;
+            const XMFLOAT3 worldNormal = StabilizeFloorContactNormal(c.normal);
+            XMFLOAT3 point = c.point;
+            ResolveContact(otherObj, m_owner, worldNormal, c.pen, 0.001f, &point);
+        }
+        break;
+    }
     default:
         break;
     }

@@ -15,10 +15,11 @@
   - 可以建立、擺位同編輯 world-space UI；與 screen-space canvas 分開。
   - 現況：`UIElement` 係 screen overlay（anchor + `XMFLOAT2`）；場景只有一個 `UICanvas`。Billboard／sprite 唔算 UI canvas。
   - 交互同具體驗收範圍待設計。
-- [ ] **Cylinder pair collision**
-  - `Box`／`Mesh`／`Cylinder` 對 `Cylinder` 經 `collider.cpp` 的 `LogUnsupportedCylinderPair` 靜默當無碰撞（每個無序 pair 只 log 一次）。`915dce7` 用呢個路徑停咗互相呼叫導致嘅 stack overflow；sphere–cylinder 同 capsule–cylinder（三點取樣）已有接觸。
-  - 驗收：上述三對會產生接觸同 resolution，唔再只係 log 之後當穿過；sphere／capsule 對 cylinder 無回歸；唔再出現 pair 遞迴。
-  - 驗收場景之後放 `testbed/rom/scene/`。而家嘅 testbed 未有 cylinder pair 場景，collider 代碼唔喺 testbed 呢次改動。
+- [ ] **Cylinder pair collision**（source 已實作，Windows runtime 未驗收）
+  - `Box`／`Mesh`／`Cylinder` 對 `Cylinder` 已有接觸。`engine/physics/collider/cylinder_pair.cpp` 用 GJK/EPA：Minkowski 差係 A−B，法線由 B 指向 A（`ResolveContact(A, B, normal)` 推 A 離開 B），穿透係最小平移深度，接觸點係兩個 witness 嘅中點。`collider.cpp` 唔再對呢三對靜默當穿過；`LogUnsupportedCylinderPair` 已移除。`915dce7` 停咗互相呼叫導致嘅 stack overflow；sphere–cylinder（closest point）同 capsule–cylinder（三點取樣）冇改。
+  - Mesh 唔再用 box 嘅外接球，亦唔用 capsule 嘅三粒取樣球去近似圓柱。每隻三角形係零厚度凸形，對實心有限圓柱（平頂蓋）做 GJK/EPA，所以頂蓋唔會鼓出。非均勻 mesh scale 用現有 world matrix 把三角形變去世界空間，圓柱維持圓形。Broadphase 仍係圓柱外接球。Resolve 沿用 mesh 最多 4 個法線簇、`StabilizeFloorContactNormal`，slope `0.001`，而且會把接觸點交俾 `ResolveContact`。動態 mesh 對 kinematic 圓柱都會解（其他 mesh 配對仍然跳過 kinematic）。
+  - 限制：只保證凸形。凹 mesh 係逐三角形，唔係實心體積。零或負 radius／half-height 當無碰撞。接觸斑係線或圓盤時，witness 可以係斑入面任意一點。GJK/EPA 有數值誤差。
+  - 驗收場景：`testbed/rom/scene/scene_regression_3d.json`（紅色落體要停低）同 `testbed/rom/scene/scene_cylinder_pairs.json`（盒／mesh／圓柱、X／Z 90°、地面盒、疊柱）。Editor：File → Open Testbed，再打開場景。Linux `tests/cylinder_pair_test.cpp`（`g++ -std=c++20`）已覆蓋分離、軸對齊重疊、旋轉、頂蓋、側面、非法尺寸同法線對稱。**Windows runtime 未跑，唔好剔做已驗收。**
 - [ ] **Content reload 紅燈：刪除未被引用嘅資產**
   - `engine/core/engine_gui.cpp` 約 3241 行：`rom/` 底下任何 `change.removed` 都會 `g_contentReloadLight.Failure()`（紅燈），文案係 `Content removed; existing resources retained`。新增而且目前 scene JSON 搵唔到嘅檔會跳過；刪除唔會先查場景有冇引用。
   - 驗收：刪除未被目前場景（同已載入資源）引用嘅檔，Content 燈維持 Watching，唔好轉成 Failed。刪除確實被引用嘅檔仍要報失敗並保留現有資源。改完要分開 source review 同 editor 實測。
@@ -59,7 +60,7 @@
 - [x] **Prefab drag-drop Undo**：hierarchy 同 root drop zone 接受 `ASSET_PREFAB` 後呼叫 `EditorUndo_PushCreate`（`engine/core/engine_gui.cpp`）；`CreateObjectCommand::Undo` 會刪走個節點（`engine/editor/editor_undo.cpp`）。
 - [x] **deploy.bat executable 命名**：bat 仍複製 `IvyEngineRuntime.exe`（`external_content_template/deploy/deploy.bat`）。Editor package 用 `SanitizeGameExeStem` 寫成 `<GameName>.exe`（`engine/editor/playable_package_builder.cpp`）。兩邊嘅分別已寫喺 `docs/CONTENT_PROJECT.md`。若要 bat 都輸出遊戲名，先另開窄項。
 - [x] **Asset cache LRU／refcount**：`ModelAssetCache` 係 process-lifetime `std::map`（`engine/ecs/model_asset_cache.h`），同 README 寫法一致。冇 LRU、冇 refcount，亦冇「曾經做完再拆走」嘅 commit。有記憶體數字先重開。
-- [x] **Mesh collider recursion crash**：`915dce7` 停止 Box／mesh／cylinder 互相呼叫直到 stack overflow。修復方式係改為無碰撞並 log。未實作嘅接觸見上面「Cylinder pair collision」，唔好再當未還原嘅舊故障。
+- [x] **Mesh collider recursion crash**：`915dce7` 停止 Box／mesh／cylinder 互相呼叫直到 stack overflow。當時改為無碰撞並 log。接觸已喺 source 實作，Windows runtime 未驗收，見上面「Cylinder pair collision」。唔好再當未還原嘅舊故障。
 
 PBR 球場已由引擎待辦移除：倉庫只有 PBR shader 同 `testbed/rom/scene/scene_pbr_showcase.json` 材質展示，冇球場內容；`FrisbeeArena` 屬已完成遊戲。
 
@@ -79,7 +80,7 @@ PBR 球場已由引擎待辦移除：倉庫只有 PBR shader 同 `testbed/rom/sc
 
 ## 建議優先次序
 
-1. Cylinder pair collision（玩法會穿模；範圍已由 `915dce7` 寫明）。
+1. Cylinder pair collision 嘅 Windows runtime 驗收（File → Open Testbed，場景 `scene_regression_3d.json` 同 `scene_cylinder_pairs.json`）。
 2. ImGuizmo 參數順序同 PR #7 視覺檢查（lighting、CSM、post-process、gizmo）一齊喺 Windows 做。
 3. Content reload 紅燈（刪未引用資產）。
 4. 重做 Skybox（equirectangular PNG → DDS cubemap，含 IBL 重烤同唔再依賴 `texassemble`）。
