@@ -1,0 +1,176 @@
+#!/usr/bin/env python3
+"""Resolve every asset path referenced by testbed scenes.
+
+Shared directories (models, fonts, textures, shaders, skybox, branding,
+physics materials) stay in the engine ``rom/``. The testbed does not copy
+them. A path is valid only when it is a safe ``rom/`` relative path and the
+file exists under the testbed or under the engine ``rom/`` without leaving
+that root.
+
+Scene-to-scene names (``scene``, ``sceneFile``, ``nextScene``) must be plain
+filenames in ``testbed/rom/scene``.
+
+Keep the shared-directory list aligned with ``content_path::kSharedRomDirNames``.
+"""
+
+import json
+import struct
+import sys
+from pathlib import Path
+
+REPO = Path(__file__).resolve().parents[1]
+TESTBED = REPO / "testbed"
+ENGINE_ROM = REPO / "rom"
+SCENE_DIR = TESTBED / "rom" / "scene"
+SHARED_ROM_DIRS = (
+    "branding",
+    "font",
+    "model",
+    "physmat",
+    "shader",
+    "skybox",
+    "texture",
+)
+SCENE_KEYS = {"scene", "sceneFile", "nextScene"}
+PLACEHOLDERS = {
+    "rom/texture/sprite_demo/adventurer_walk.png": (256, 128),
+    "rom/texture/sprite_demo/test_sheet.png": (256, 128),
+    "rom/texture/sprite_demo/hp_fill.png": (128, 32),
+    "rom/texture/sprite_demo/hp_frame.png": (128, 32),
+}
+MAX_PLACEHOLDER_BYTES = 4096
+
+
+def fail(message):
+    print("FAIL:", message, file=sys.stderr)
+    raise SystemExit(1)
+
+
+def is_safe_relative(path):
+    if not path or len(path) > 1024:
+        return False
+    if any(ord(ch) < 0x20 for ch in path):
+        return False
+    normalized = path.replace("\\", "/")
+    if normalized.startswith("/") or (len(normalized) >= 2 and normalized[1] == ":"):
+        return False
+    parts = normalized.split("/")
+    if any(part == "" or part in (".", "..") or part[0] == "." or part[-1] in ". " for part in parts):
+        return False
+    if any(any(ch in part for ch in '<>:"|?*') for part in parts):
+        return False
+    return True
+
+
+def is_inside(root, candidate):
+    try:
+        candidate.resolve().relative_to(root.resolve())
+    except ValueError:
+        return False
+    return candidate.resolve() != root.resolve()
+
+
+def resolve_rom(ref):
+    if not is_safe_relative(ref) or not ref.replace("\\", "/").startswith("rom/"):
+        fail("unsafe rom path: %s" % ref)
+    normalized = ref.replace("\\", "/")
+    local = TESTBED / normalized
+    shared = REPO / normalized
+    if local.is_file() and (is_inside(TESTBED, local) or is_inside(ENGINE_ROM, local.resolve())):
+        return local.resolve()
+    if shared.is_file() and is_inside(ENGINE_ROM, shared):
+        return shared.resolve()
+    fail("missing asset: %s" % normalized)
+
+
+def walk(value, scene_name, inherited_key=None):
+    if isinstance(value, dict):
+        for key, item in value.items():
+            walk(item, scene_name, key)
+        return
+    if isinstance(value, list):
+        for item in value:
+            walk(item, scene_name, inherited_key)
+        return
+    if not isinstance(value, str) or not value:
+        return
+
+    if inherited_key in SCENE_KEYS:
+        if "/" in value or "\\" in value or not is_safe_relative(value):
+            fail("%s: scene name escapes the project: %s" % (scene_name, value))
+        if not value.endswith(".json"):
+            fail("%s: scene name is not a json file: %s" % (scene_name, value))
+        scene_path = SCENE_DIR / value
+        if not scene_path.is_file() or not is_inside(SCENE_DIR, scene_path):
+            fail("%s: missing scene %s" % (scene_name, value))
+        return
+
+    normalized = value.replace("\\", "/")
+    parts = normalized.split("/")
+    asset_suffix = normalized.lower().endswith((
+        ".fbx", ".png", ".dds", ".ttf", ".tga", ".wav", ".efk", ".physmat", ".cso"))
+    if ".." in parts or normalized.startswith("/") or (len(normalized) > 1 and normalized[1] == ":"):
+        fail("%s: path escapes the project: %s" % (scene_name, value))
+    if normalized.startswith("rom/") or asset_suffix:
+        resolve_rom(normalized)
+
+
+def main():
+    if not (TESTBED / "project.json").is_file():
+        fail("testbed/project.json is missing")
+    project = json.loads((TESTBED / "project.json").read_text(encoding="utf-8-sig"))
+    default_scene = (SCENE_DIR / "default_scene.txt").read_text(encoding="utf-8-sig").strip()
+    for name in (project.get("defaultScene"), project.get("lastOpenedScene"), default_scene):
+        scene_path = SCENE_DIR / name
+        if not name or "/" in name or "\\" in name or not scene_path.is_file():
+            fail("startup scene is not inside testbed/rom/scene: %s" % name)
+        if not is_inside(SCENE_DIR, scene_path):
+            fail("startup scene escapes testbed/rom/scene: %s" % name)
+
+    if (REPO / "samples" / "scenes").exists():
+        fail("samples/scenes still exists; scenes belong in testbed/rom/scene")
+
+    scenes = sorted(SCENE_DIR.glob("*.json"))
+    if len(scenes) < 2:
+        fail("testbed has no scenes")
+    for scene_path in scenes:
+        data = json.loads(scene_path.read_text(encoding="utf-8-sig"))
+        walk(data, scene_path.name)
+
+    for ref, (width, height) in PLACEHOLDERS.items():
+        path = resolve_rom(ref)
+        blob = path.read_bytes()
+        if blob[:8] != b"\x89PNG\r\n\x1a\n" or blob[12:16] != b"IHDR":
+            fail("%s is not a PNG" % ref)
+        got = struct.unpack(">II", blob[16:24])
+        if got != (width, height):
+            fail("%s is %sx%s, expected %sx%s" % (ref, got[0], got[1], width, height))
+        if path.stat().st_size > MAX_PLACEHOLDER_BYTES:
+            fail("%s is %s bytes; placeholders must stay tiny" % (ref, path.stat().st_size))
+        if not is_inside(ENGINE_ROM, path):
+            fail("%s should live in engine rom/, not a testbed copy" % ref)
+
+    for name in SHARED_ROM_DIRS:
+        link = TESTBED / "rom" / name
+        if not link.exists():
+            continue
+        if link.is_symlink():
+            continue
+        # A real directory would duplicate engine assets. Junctions are links.
+        if link.is_dir() and not link.is_symlink():
+            # Linux checkouts have no junctions. A real directory is a copy.
+            fail("testbed/rom/%s is a real directory; reference engine rom/ instead" % name)
+
+    copied = []
+    for pattern in ("*.fbx", "*.dds", "*.ttf", "*.cso"):
+        copied.extend((TESTBED / "rom").rglob(pattern))
+    # rglob does not follow symlinks, but it does list a real copied tree.
+    real_copies = [p for p in copied if p.is_file() and not p.is_symlink()]
+    if real_copies:
+        fail("testbed copied engine assets: %s" % real_copies[0].relative_to(REPO))
+
+    print("PASS: %d testbed scenes resolve inside the project or engine rom/" % len(scenes))
+
+
+if __name__ == "__main__":
+    main()

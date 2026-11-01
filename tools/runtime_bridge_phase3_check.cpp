@@ -43,7 +43,7 @@ int main() {
         {"Player", 1.5f, 2.5f, 3.5f, 0.0f, 0.0f, 6.0f},
         {"Landmark_North", 0.0f, 1.0f, 5.0f, 0.0f, 0.0f, 0.0f}
     };
-    b.PublishAndTakeQuit(true, true, "samples/scenes/scene_runtime_bridge_player.json", targets);
+    b.PublishAndTakeQuit(true, true, "testbed/rom/scene/scene_runtime_bridge_player.json", targets);
 
     Peer p(b);
     auto status = p.request("status");

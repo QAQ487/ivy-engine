@@ -48,8 +48,8 @@ public:
     const std::string& GetName() const { return m_data.name; }
     const ProjectData& GetData() const { return m_data; }
 
-    // Resolve startup project from the recent list only (no cwd/exe fallback —
-    // the editor build output has rom/ and must not auto-open as a project).
+    // Recent projects first. The editor output directory is never auto-opened.
+    // A Debug build with no loadable recent project opens the in-repo testbed/.
     bool BootstrapAtStartup();
 
     bool OpenProject(const std::string& rootPath, std::string* errorOut = nullptr);

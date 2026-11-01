@@ -18,6 +18,7 @@
 - [ ] **Cylinder pair collision**
   - `Box`／`Mesh`／`Cylinder` 對 `Cylinder` 經 `collider.cpp` 的 `LogUnsupportedCylinderPair` 靜默當無碰撞（每個無序 pair 只 log 一次）。`915dce7` 用呢個路徑停咗互相呼叫導致嘅 stack overflow；sphere–cylinder 同 capsule–cylinder（三點取樣）已有接觸。
   - 驗收：上述三對會產生接觸同 resolution，唔再只係 log 之後當穿過；sphere／capsule 對 cylinder 無回歸；唔再出現 pair 遞迴。
+  - 驗收場景之後放 `testbed/rom/scene/`。而家嘅 testbed 未有 cylinder pair 場景，collider 代碼唔喺 testbed 呢次改動。
 - [ ] **Content reload 紅燈：刪除未被引用嘅資產**
   - `engine/core/engine_gui.cpp` 約 3241 行：`rom/` 底下任何 `change.removed` 都會 `g_contentReloadLight.Failure()`（紅燈），文案係 `Content removed; existing resources retained`。新增而且目前 scene JSON 搵唔到嘅檔會跳過；刪除唔會先查場景有冇引用。
   - 驗收：刪除未被目前場景（同已載入資源）引用嘅檔，Content 燈維持 Watching，唔好轉成 Failed。刪除確實被引用嘅檔仍要報失敗並保留現有資源。改完要分開 source review 同 editor 實測。
@@ -60,13 +61,14 @@
 - [x] **Asset cache LRU／refcount**：`ModelAssetCache` 係 process-lifetime `std::map`（`engine/ecs/model_asset_cache.h`），同 README 寫法一致。冇 LRU、冇 refcount，亦冇「曾經做完再拆走」嘅 commit。有記憶體數字先重開。
 - [x] **Mesh collider recursion crash**：`915dce7` 停止 Box／mesh／cylinder 互相呼叫直到 stack overflow。修復方式係改為無碰撞並 log。未實作嘅接觸見上面「Cylinder pair collision」，唔好再當未還原嘅舊故障。
 
-PBR 球場已由引擎待辦移除：倉庫只有 PBR shader 同 `samples/scenes/scene_pbr_showcase.json` 材質展示，冇球場內容；`FrisbeeArena` 屬已完成遊戲。
+PBR 球場已由引擎待辦移除：倉庫只有 PBR shader 同 `testbed/rom/scene/scene_pbr_showcase.json` 材質展示，冇球場內容；`FrisbeeArena` 屬已完成遊戲。
 
 ## 最近同步留下嘅驗證事項
 
 - [ ] **ImGuizmo／ImGui AddPolyline：已確認參數順序唔夾。** `libraries/imguizmo/ImGuizmo.cpp` 1354、1384、1647 三個 `AddPolyline` 用 ImGui 1.92.8 之後嘅 `(thickness, flags)`；供應嘅 ImGui 係 1.92.5，簽名係 `(flags, thickness)`（`libraries/imgui/imgui.h`）。PR #7 只對 `ImGuizmo.cpp` suppress C4244，冇改呼叫。按 1.92.5 讀參數：旋轉環厚度會變成 1 而唔係 `RotationLineThickness`（預設 2）；拖旋轉嘅扇形邊唔會閉合；平移平面四邊因為兩個數都係 1，碰巧仍然正確。
   - 驗收：旋轉環厚度等於 `RotationLineThickness`（預設 2）；拖旋轉時扇形邊閉合；平移平面外觀維持不變。要喺 Windows editor 做視覺確認；Linux 核唔到畫面。
-- [x] **PR #5 資產清理**：被刪嘅 `.ua/`、`rom/effects/`、`rom/skybox/001/`、`rom/model/character/YBot_white.fbx`、`rom/model/object/{tree,Wall,Cone_Yellow}.fbx`、`external_template/`、已刪 sample script，scene／prefab JSON 冇殘留引用。玩家模型係 `rom/model/player/Y Bot_white.fbx`（另一條路徑，檔仍在）。`rom/effects/` 只剩 hot-reload 路徑前綴。`samples/scenes` 的 2D 場景引用 `rom/texture/sprite_demo/`，呢批 PNG 唔喺 repo、亦唔係 PR #5 刪走；`docs/2D_PHASE6_VALIDATION.zh-TW.md` 寫明依賴 TestProject。
+- [x] **PR #5 資產清理**：被刪嘅 `.ua/`、`rom/effects/`、`rom/skybox/001/`、`rom/model/character/YBot_white.fbx`、`rom/model/object/{tree,Wall,Cone_Yellow}.fbx`、`external_template/`、已刪 sample script，scene／prefab JSON 冇殘留引用。玩家模型係 `rom/model/player/Y Bot_white.fbx`（另一條路徑，檔仍在）。`rom/effects/` 只剩 hot-reload 路徑前綴。當時 `samples/scenes` 的 2D 場景引用 `rom/texture/sprite_demo/`，呢批 PNG 唔喺 repo、亦唔係 PR #5 刪走。之後 testbed 用細 placeholder PNG 補咗四張圖（`adventurer_walk`、`test_sheet`、`hp_fill`、`hp_frame`），場景已移去 `testbed/rom/scene/`。
+- [x] **In-repo testbed**：`testbed/` 係 Debug editor 喺冇最近專案可開時會打開嘅 content project。`samples/scenes` 已移入 `testbed/rom/scene/`。模型／字型／貼圖／shader／skybox 用目錄 junction 指向引擎 `rom/`，唔再複製。Linux：`tools/content_path_check.cpp` 同 `python3 tools/check_testbed_assets.py`。Windows editor 實測未在呢次做。
 - [ ] **PR #7 視覺 regression**：Terry 確認合併前 Windows build 已成功。仍然開住嘅只係畫面：lighting、CSM、post-process、gizmo。Linux 不能代替呢次目視；ImGuizmo 線條見上一項。
 
 > 勾選係 source review 或 Terry 對 build 嘅確認。畫面同玩法驗收仍然分開。

@@ -18,7 +18,7 @@ try {
         $process.Refresh()
         if ($process.ExitCode -ne 0 -or !(Select-String -LiteralPath $stdout -Pattern '^PLAY_SCENE_SWITCH_CHECK PASS:' -Quiet)) {
             Get-Content -LiteralPath $stderr -Tail 10
-            throw "Failed: $mode, exit $($process.ExitCode). Open TestProject's scene_topdown_2d.json in Editor before running this check."
+            throw "Failed: $mode, exit $($process.ExitCode). Open testbed/rom/scene/scene_topdown_2d.json in the Editor before running this check."
         }
         Get-Content -LiteralPath $stdout | Select-String '^PLAY_SCENE_SWITCH_CHECK PASS:' | ForEach-Object { $_.Line }
     }

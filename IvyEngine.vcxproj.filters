@@ -120,6 +120,9 @@
     <ClInclude Include="engine\core\utf8_path.h">
       <Filter>engine\core</Filter>
     </ClInclude>
+    <ClInclude Include="engine\core\content_path.h">
+      <Filter>engine\core</Filter>
+    </ClInclude>
     <ClInclude Include="engine\core\job_system.h">
       <Filter>engine\core</Filter>
     </ClInclude>

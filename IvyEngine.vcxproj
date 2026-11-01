@@ -247,6 +247,7 @@ exit /b 0</Command>
     <ClInclude Include="engine\core\easing.h" />
     <ClInclude Include="engine\core\env_var.h" />
     <ClInclude Include="engine\core\utf8_path.h" />
+    <ClInclude Include="engine\core\content_path.h" />
     <ClInclude Include="engine\core\job_system.h" />
     <ClInclude Include="engine\core\frame_timer.h" />
     <ClInclude Include="engine\core\render_thread.h" />

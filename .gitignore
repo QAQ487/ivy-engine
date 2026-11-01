@@ -408,3 +408,14 @@ FodyWeavers.xsd
 # Never commit tool binaries under runtime asset trees
 rom/**/*.exe
 
+# testbed/ shares engine rom/ through NTFS junctions created when the editor
+# opens the project. Do not commit those links, or editor UI prefs written there.
+/testbed/rom/branding
+/testbed/rom/font
+/testbed/rom/model
+/testbed/rom/physmat
+/testbed/rom/shader
+/testbed/rom/skybox
+/testbed/rom/texture
+/testbed/rom/editor
+
