@@ -49,7 +49,7 @@
                     "x": 24.0,
                     "y": 56.0
                 },
-                "text": "Red fallers are unsupported and should pass through with no crash.",
+                "text": "Red fallers are cylinder pairs. They should STOP, not pass through.",
                 "type": "text",
                 "visible": true
             },
@@ -75,7 +75,7 @@
                     "x": 24.0,
                     "y": 88.0
                 },
-                "text": "Box and mesh then stop on the ground. Cylinders fall through the ground too.",
+                "text": "Boxes, meshes, and cylinders should all stop on the ground.",
                 "type": "text",
                 "visible": true
             }
