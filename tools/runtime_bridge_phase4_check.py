@@ -1,4 +1,4 @@
-"""RED tests for phase-4 jump-sample acceptance (no implementation yet)."""
+"""Unit tests for phase-4 jump-sample validation."""
 
 from __future__ import annotations
 

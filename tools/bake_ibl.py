@@ -415,7 +415,7 @@ def pack_rgb_face(face: list[float], size: int) -> bytes:
         r = int(saturate(face[i * 3]) * 255.0 + 0.5)
         g = int(saturate(face[i * 3 + 1]) * 255.0 + 0.5)
         b = int(saturate(face[i * 3 + 2]) * 255.0 + 0.5)
-        # BGRA8 matching generate_default_sky_cubemap.py masks.
+        # BGRA8 masks.
         out[i * 4] = b
         out[i * 4 + 1] = g
         out[i * 4 + 2] = r
