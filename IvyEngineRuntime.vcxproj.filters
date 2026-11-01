@@ -476,6 +476,9 @@
     <ClCompile Include="engine\rendering\d3d11\renderer.cpp">
       <Filter>engine\rendering\d3d11</Filter>
     </ClCompile>
+    <ClCompile Include="engine\core\content_path.cpp">
+      <Filter>engine\core</Filter>
+    </ClCompile>
     <ClCompile Include="engine\rendering\d3d11\shader.cpp">
       <Filter>engine\rendering\d3d11</Filter>
     </ClCompile>

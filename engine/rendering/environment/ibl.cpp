@@ -8,6 +8,7 @@
 #include "engine/scene/render_settings.h"
 #include "engine/ecs/string_utils.h"
 #include "engine/debug_draw/debug_ofstream.h"
+#include "engine/core/content_path.h"
 
 #include <fstream>
 
@@ -23,7 +24,7 @@ static bool s_ready = false;
 static bool FileExistsW(const wchar_t* path) {
     if (!path || !path[0])
         return false;
-    std::ifstream file(path, std::ios::binary);
+    std::ifstream file(content_path::ReadableWideCurrent(path), std::ios::binary);
     return static_cast<bool>(file);
 }
 

@@ -3,6 +3,7 @@
 
 #include "tag_registry.h"
 #include "game_object.h"
+#include "engine/core/content_path.h"
 
 #include <algorithm>
 #include <cctype>
@@ -116,7 +117,7 @@ bool TagRegistry::RemoveTag(int id) {
 bool TagRegistry::LoadFromFile(const std::string& path) {
     EnsureDefaults();
 
-    std::ifstream in(path);
+    std::ifstream in(content_path::ReadableFileCurrent(path));
     if (!in.is_open())
         return false;
 
@@ -153,7 +154,12 @@ bool TagRegistry::SaveToFile(const std::string& path) const {
     json root;
     root["tags"] = m_names;
 
-    std::ofstream out(path);
+    const std::filesystem::path dest = content_path::WritableFileCurrent(path);
+    if (dest.empty())
+        return false;
+    std::error_code ec;
+    std::filesystem::create_directories(dest.parent_path(), ec);
+    std::ofstream out(dest);
     if (!out.is_open())
         return false;
     out << root.dump(2);

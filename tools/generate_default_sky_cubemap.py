@@ -66,6 +66,6 @@ def write_dds(path: str) -> None:
 
 
 if __name__ == "__main__":
-    out = os.path.join("rom", "texture", "sky", "default_sky.dds")
+    out = os.path.join("resources", "texture", "sky", "default_sky.dds")
     write_dds(out)
     print(f"Wrote {out}")

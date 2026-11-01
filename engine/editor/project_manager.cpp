@@ -69,20 +69,6 @@ bool CopyDirectoryRecursive(const fs::path& src, const fs::path& dst, std::strin
     return true;
 }
 
-void CopyFileIfMissing(const fs::path& src, const fs::path& dst) {
-    std::error_code ec;
-    if (fs::exists(dst, ec))
-        return;
-    if (!fs::exists(src, ec) || !fs::is_regular_file(src, ec)) {
-        hal::dout << "EnsureEngineAssets: missing source asset " << src.string() << std::endl;
-        return;
-    }
-    fs::create_directories(dst.parent_path(), ec);
-    fs::copy_file(src, dst, fs::copy_options::skip_existing, ec);
-    if (ec)
-        hal::dout << "EnsureEngineAssets: failed to copy " << src.string() << ": " << ec.message() << std::endl;
-}
-
 std::string ReadDefaultSceneFileName(const fs::path& root) {
     const fs::path cfg = root / "rom" / "scene" / "default_scene.txt";
     std::ifstream file(cfg);
@@ -251,193 +237,6 @@ const char* kBlankSceneJson = R"({
     }
 }
 )";
-
-#ifndef IO_REPARSE_TAG_MOUNT_POINT
-#define IO_REPARSE_TAG_MOUNT_POINT (0xA0000003L)
-#endif
-
-struct MountReparseBuffer {
-    DWORD ReparseTag;
-    WORD ReparseDataLength;
-    WORD Reserved;
-    WORD SubstituteNameOffset;
-    WORD SubstituteNameLength;
-    WORD PrintNameOffset;
-    WORD PrintNameLength;
-    WCHAR PathBuffer[1];
-};
-static_assert(offsetof(MountReparseBuffer, PathBuffer) == 16, "mount reparse layout");
-
-bool IsReparsePoint(const fs::path& path) {
-    const DWORD attr = GetFileAttributesW(path.wstring().c_str());
-    if (attr == INVALID_FILE_ATTRIBUTES)
-        return false;
-    return (attr & FILE_ATTRIBUTE_REPARSE_POINT) != 0;
-}
-
-// NTFS directory junction. Same-volume links do not need an elevated process.
-bool CreateDirectoryJunction(const fs::path& link, const fs::path& target) {
-    std::wstring targetW = target.wstring();
-    if (targetW.rfind(L"\\\\?\\", 0) == 0)
-        targetW.erase(0, 4);
-    while (!targetW.empty() && (targetW.back() == L'\\' || targetW.back() == L'/'))
-        targetW.pop_back();
-    for (wchar_t& ch : targetW) {
-        if (ch == L'/')
-            ch = L'\\';
-    }
-    if (targetW.size() < 3 || targetW[1] != L':')
-        return false;
-
-    const std::wstring substitute = L"\\??\\" + targetW;
-    const size_t substBytes = substitute.size() * sizeof(wchar_t);
-    const size_t printBytes = targetW.size() * sizeof(wchar_t);
-    const size_t pathBytes = substBytes + sizeof(wchar_t) + printBytes + sizeof(wchar_t);
-    if (substBytes > 60000 || printBytes > 60000 || pathBytes > 60000)
-        return false;
-
-    const std::wstring linkW = link.wstring();
-    if (!CreateDirectoryW(linkW.c_str(), nullptr))
-        return false;
-
-    const HANDLE handle = CreateFileW(
-        linkW.c_str(),
-        GENERIC_WRITE,
-        FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
-        nullptr,
-        OPEN_EXISTING,
-        FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT,
-        nullptr);
-    if (handle == INVALID_HANDLE_VALUE) {
-        const DWORD err = GetLastError();
-        RemoveDirectoryW(linkW.c_str());
-        SetLastError(err);
-        return false;
-    }
-
-    const WORD dataLength = static_cast<WORD>(8 + pathBytes);
-    const DWORD total = static_cast<DWORD>(8 + dataLength);
-    std::vector<unsigned char> buffer(total, 0);
-    auto* reparse = reinterpret_cast<MountReparseBuffer*>(buffer.data());
-    reparse->ReparseTag = IO_REPARSE_TAG_MOUNT_POINT;
-    reparse->ReparseDataLength = dataLength;
-    reparse->Reserved = 0;
-    reparse->SubstituteNameOffset = 0;
-    reparse->SubstituteNameLength = static_cast<WORD>(substBytes);
-    reparse->PrintNameOffset = static_cast<WORD>(substBytes + sizeof(wchar_t));
-    reparse->PrintNameLength = static_cast<WORD>(printBytes);
-    std::memcpy(reparse->PathBuffer, substitute.c_str(), substBytes + sizeof(wchar_t));
-    std::memcpy(
-        reinterpret_cast<unsigned char*>(reparse->PathBuffer) + substBytes + sizeof(wchar_t),
-        targetW.c_str(),
-        printBytes + sizeof(wchar_t));
-
-    DWORD returned = 0;
-    const BOOL ok = DeviceIoControl(
-        handle,
-        FSCTL_SET_REPARSE_POINT,
-        reparse,
-        total,
-        nullptr,
-        0,
-        &returned,
-        nullptr);
-    CloseHandle(handle);
-    if (!ok) {
-        const DWORD err = GetLastError();
-        RemoveDirectoryW(linkW.c_str());
-        SetLastError(err);
-        return false;
-    }
-    return true;
-}
-
-bool IsInRepoTestbedRoot(const fs::path& canonicalRoot) {
-    const std::string engine = ProjectManager::FindEngineRepoRoot();
-    if (engine.empty())
-        return false;
-    std::error_code ec;
-    const fs::path engineRoot = fs::weakly_canonical(fs::path(engine), ec);
-    if (ec)
-        return false;
-    const fs::path expected = engineRoot / content_path::kInRepoTestbedDir;
-    const fs::path expectedCanon = fs::weakly_canonical(expected, ec);
-    if (ec || canonicalRoot != expectedCanon)
-        return false;
-    return content_path::IsInsideDirectory(engineRoot, expectedCanon);
-}
-
-void EnsureTestbedSharedRomLinks(const fs::path& testbedRoot) {
-    const std::string engine = ProjectManager::FindEngineRepoRoot();
-    if (engine.empty()) {
-        hal::dout << "Testbed: engine repo not found; shared rom links skipped" << std::endl;
-        return;
-    }
-
-    std::error_code ec;
-    const fs::path engineRoot = fs::weakly_canonical(fs::path(engine), ec);
-    if (ec || !content_path::IsInsideDirectory(engineRoot, testbedRoot)) {
-        hal::dout << "Testbed: project root is outside the engine repo; shared rom links skipped"
-                  << std::endl;
-        return;
-    }
-
-    const fs::path engineRom = fs::weakly_canonical(engineRoot / "rom", ec);
-    if (ec || !fs::is_directory(engineRom, ec) ||
-        !content_path::IsInsideDirectory(engineRoot, engineRom)) {
-        hal::dout << "Testbed: engine rom directory is not inside the repo" << std::endl;
-        return;
-    }
-
-    const fs::path linkParent = fs::weakly_canonical(testbedRoot / "rom", ec);
-    if (ec || !content_path::IsInsideDirectory(testbedRoot, linkParent)) {
-        hal::dout << "Testbed: rom directory is outside the project" << std::endl;
-        return;
-    }
-
-    for (const char* name : content_path::kSharedRomDirNames) {
-        if (!content_path::IsSafeRelativePath(name, nullptr)) {
-            hal::dout << "Testbed: refused shared rom directory name" << std::endl;
-            continue;
-        }
-
-        const fs::path link = linkParent / name;
-        std::error_code existsEc;
-        if (fs::exists(link, existsEc)) {
-            if (!IsReparsePoint(link)) {
-                hal::dout << "Testbed: " << link.string()
-                          << " is a real directory; not replacing it with a shared rom link"
-                          << std::endl;
-            }
-            continue;
-        }
-
-        fs::path target = engineRom / name;
-        if (!fs::exists(target, existsEc)) {
-            if (std::string(name) == "shader") {
-                fs::create_directories(target, existsEc);
-            }
-            if (!fs::is_directory(target, existsEc)) {
-                hal::dout << "Testbed: missing engine rom directory " << target.string()
-                          << std::endl;
-                continue;
-            }
-        }
-
-        std::error_code canonEc;
-        target = fs::weakly_canonical(target, canonEc);
-        if (canonEc || !fs::is_directory(target, canonEc) ||
-            !content_path::IsInsideDirectory(engineRom, target)) {
-            hal::dout << "Testbed: refused shared rom target for " << name << std::endl;
-            continue;
-        }
-
-        if (!CreateDirectoryJunction(link, target)) {
-            hal::dout << "Testbed: failed to link " << name << " (error " << GetLastError()
-                      << ")" << std::endl;
-        }
-    }
-}
 
 } // namespace
 
@@ -699,60 +498,6 @@ bool ProjectManager::WriteProjectFile(const std::string& rootPath, const Project
     }
 }
 
-void ProjectManager::EnsureEngineAssets(const std::string& rootPath) const {
-    const fs::path exeRom = fs::path(GetExecutableDirectory()) / "rom";
-    const fs::path projectRom = fs::path(rootPath) / "rom";
-    std::error_code ec;
-
-    // Engine builtins required after SetCurrentDirectory(projectRoot).
-    // Shaders always overlay: a non-empty rom/shader is often a stale .cso
-    // snapshot, and the host binds those at boot.
-    const char* fillIfEmpty[] = { "font", "texture" };
-    for (const char* folder : fillIfEmpty) {
-        const fs::path src = exeRom / folder;
-        const fs::path dst = projectRom / folder;
-        if (!fs::exists(src, ec))
-            continue;
-        if (fs::exists(dst, ec) && !fs::is_empty(dst, ec))
-            continue;
-        CopyDirectoryRecursive(src, dst, nullptr);
-    }
-
-    // Default primitive meshes: copy only when the project has none. Do not
-    // overlay existing rom/model/object assets (colored boxes, tree, etc.).
-    const fs::path primSrc = exeRom / "model" / "primitives";
-    const fs::path primDst = projectRom / "model" / "primitives";
-    if (fs::exists(primSrc, ec) &&
-        !(fs::exists(primDst, ec) && !fs::is_empty(primDst, ec))) {
-        CopyDirectoryRecursive(primSrc, primDst, nullptr);
-    }
-
-    const fs::path shaderSrc = exeRom / "shader";
-    const fs::path shaderDst = projectRom / "shader";
-    if (fs::exists(shaderSrc, ec))
-        CopyDirectoryRecursive(shaderSrc, shaderDst, nullptr);
-
-    // Engine branding (logo) — always overlay so playable packages / projects
-    // opened before branding existed still pick it up from the host exe rom.
-    const fs::path brandingSrc = exeRom / "branding";
-    const fs::path brandingDst = projectRom / "branding";
-    if (fs::exists(brandingSrc, ec))
-        CopyDirectoryRecursive(brandingSrc, brandingDst, nullptr);
-
-    // Default IBL: copy each missing file only. Never overwrite custom project IBL.
-    const fs::path iblSrcDir = exeRom / "skybox" / "ibl";
-    const fs::path iblDstDir = projectRom / "skybox" / "ibl";
-    if (!fs::exists(iblSrcDir, ec) || !fs::is_directory(iblSrcDir, ec))
-        hal::dout << "EnsureEngineAssets: missing source directory " << iblSrcDir.string() << std::endl;
-    static const char* kDefaultIblFiles[] = {
-        "irradiance.dds",
-        "prefilter.dds",
-        "brdf_lut.png",
-    };
-    for (const char* name : kDefaultIblFiles)
-        CopyFileIfMissing(iblSrcDir / name, iblDstDir / name);
-}
-
 bool ProjectManager::ActivateRoot(const std::string& rootPath, std::string* errorOut) {
     std::error_code ec;
     const fs::path root = fs::weakly_canonical(rootPath, ec);
@@ -776,13 +521,6 @@ bool ProjectManager::ActivateRoot(const std::string& rootPath, std::string* erro
             *errorOut = "Failed to set working directory to " + root.string();
         return false;
     }
-
-    // The in-repo testbed references engine rom/ instead of copying it.
-    // EnsureEngineAssets would write those defaults into the git tree.
-    if (IsInRepoTestbedRoot(root))
-        EnsureTestbedSharedRomLinks(root);
-    else
-        EnsureEngineAssets(root.string());
 
     ProjectData data;
     const fs::path projectFile = root / kProjectFileName;
@@ -825,8 +563,6 @@ bool ProjectManager::ScaffoldNewProjectTree(const std::string& rootPath,
     fs::create_directories(root / "rom" / "prefabs", ec);
     fs::create_directories(root / "game" / "scripts" / "bin", ec);
 
-    EnsureEngineAssets(rootPath);
-
     {
         std::ofstream scene(root / "rom" / "scene" / "scene_main.json", std::ios::trunc);
         if (!scene.is_open()) {
@@ -854,7 +590,8 @@ bool ProjectManager::ScaffoldNewProjectTree(const std::string& rootPath,
                 }}}}
             });
             std::string texture = "rom/branding/ivy_logo.png";
-            if (!fs::exists(root / texture, ec)) {
+            const fs::path engineLogo = fs::path(GetExecutableDirectory()) / "resources" / "branding" / "ivy_logo.png";
+            if (!fs::exists(root / texture, ec) && !fs::exists(engineLogo, ec)) {
                 texture = "rom/texture/white.png";
                 static const unsigned char pixel[] = {
                     137,80,78,71,13,10,26,10,0,0,0,13,73,72,68,82,

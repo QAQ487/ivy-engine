@@ -18,10 +18,24 @@ copy /Y "%ENGINE_OUT%\libfbxsdk.dll" "%OUT%\"
 copy /Y "%ROOT%\game\scripts\bin\GameScripts.dll" "%OUT%\game\scripts\bin\"
 if exist "%ROOT%\game\scripts\bin\GameScripts.pdb" copy /Y "%ROOT%\game\scripts\bin\GameScripts.pdb" "%OUT%\game\scripts\bin\"
 xcopy /Y /E /I "%ROOT%\rom\*" "%OUT%\rom\"
-if exist "%ENGINE_OUT%\rom\branding" (
-  if not exist "%OUT%\rom\branding" mkdir "%OUT%\rom\branding"
-  xcopy /Y /E /I "%ENGINE_OUT%\rom\branding\*" "%OUT%\rom\branding\"
+if exist "%ENGINE_OUT%\resources\shader" (
+  if not exist "%OUT%\rom\shader" mkdir "%OUT%\rom\shader"
+  xcopy /Y /E /I "%ENGINE_OUT%\resources\shader\*" "%OUT%\rom\shader\"
+) else if exist "%ENGINE_ROOT%\resources\shader" (
+  if not exist "%OUT%\rom\shader" mkdir "%OUT%\rom\shader"
+  xcopy /Y /E /I "%ENGINE_ROOT%\resources\shader\*" "%OUT%\rom\shader\"
 )
+if exist "%ENGINE_OUT%\resources\branding" (
+  if not exist "%OUT%\rom\branding" mkdir "%OUT%\rom\branding"
+  xcopy /Y /E /I "%ENGINE_OUT%\resources\branding\*" "%OUT%\rom\branding\"
+) else if exist "%ENGINE_ROOT%\resources\branding" (
+  if not exist "%OUT%\rom\branding" mkdir "%OUT%\rom\branding"
+  xcopy /Y /E /I "%ENGINE_ROOT%\resources\branding\*" "%OUT%\rom\branding\"
+)
+set "PY=python"
+where py >nul 2>&1 && set "PY=py -3"
+%PY% "%ENGINE_ROOT%\tools\materialize_engine_defaults.py" "%OUT%\rom" "%ENGINE_ROOT%\resources" "%OUT%\rom"
+if errorlevel 1 exit /b 1
 
 echo Deploy complete: %OUT%
 endlocal

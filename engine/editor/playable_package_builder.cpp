@@ -314,6 +314,94 @@ bool CopyDirectoryRecursive(const fs::path& src, const fs::path& dst, std::strin
     return true;
 }
 
+void CollectRomReferences(const std::string& text, std::vector<std::string>& out) {
+    for (std::size_t i = 0; i + 4 < text.size(); ++i) {
+        if (text.compare(i, 4, "rom/") != 0)
+            continue;
+        if (i > 0) {
+            const unsigned char prev = static_cast<unsigned char>(text[i - 1]);
+            if (std::isalnum(prev) || prev == '_' || prev == '/')
+                continue;
+        }
+        std::size_t end = i;
+        while (end < text.size()) {
+            const unsigned char c = static_cast<unsigned char>(text[end]);
+            if (std::isalnum(c) || c == '/' || c == '_' || c == '.' || c == '-' || c == '+' || c == ' ') {
+                ++end;
+                continue;
+            }
+            break;
+        }
+        std::string token = text.substr(i, end - i);
+        while (!token.empty() && (token.back() == ' ' || token.back() == '.'))
+            token.pop_back();
+        std::string normalized;
+        if (content_path::IsSafeRomPath(token, &normalized))
+            out.push_back(std::move(normalized));
+        i = end;
+    }
+}
+
+bool CopyResourceIfMissing(const fs::path& resources, const fs::path& destRom,
+                           const std::string& romPath, std::string* errorOut) {
+    std::string normalized;
+    if (!content_path::IsSafeRomPath(romPath, &normalized))
+        return true;
+    const std::string rest = normalized.substr(4);
+    if (rest == "skybox/source" || rest.rfind("skybox/source/", 0) == 0)
+        return true;
+    const fs::path dest = destRom / fs::path(rest);
+    std::error_code ec;
+    if (fs::is_regular_file(dest, ec))
+        return true;
+    const fs::path source = resources / fs::path(rest);
+    if (!fs::is_regular_file(source, ec))
+        return true;
+    fs::create_directories(dest.parent_path(), ec);
+    fs::copy_file(source, dest, fs::copy_options::skip_existing, ec);
+    if (ec) {
+        if (errorOut)
+            *errorOut = "Failed to copy engine default " + normalized + ": " + ec.message();
+        return false;
+    }
+    return true;
+}
+
+bool MaterializeReferencedDefaults(const fs::path& resources, const fs::path& destRom,
+                                   std::string* errorOut) {
+    static const char* kHostRomPaths[] = {
+        "rom/texture/fade.png",
+        "rom/texture/consolab_ascii_512.png",
+        "rom/font/LemonSlice.ttf",
+    };
+    std::vector<std::string> refs(std::begin(kHostRomPaths), std::end(kHostRomPaths));
+    std::error_code ec;
+    if (fs::is_directory(destRom, ec)) {
+        for (fs::recursive_directory_iterator it(destRom, ec), end; it != end; it.increment(ec)) {
+            if (ec || !it->is_regular_file(ec))
+                continue;
+            const std::string ext = it->path().extension().string();
+            if (ext != ".json" && ext != ".txt" && ext != ".prefab" && ext != ".physmat" &&
+                ext != ".mtl" && ext != ".obj")
+                continue;
+            std::ifstream file(it->path(), std::ios::binary);
+            if (!file)
+                continue;
+            std::string text((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+            for (char& ch : text) {
+                if (ch == '\\')
+                    ch = '/';
+            }
+            CollectRomReferences(text, refs);
+        }
+    }
+    for (const std::string& romPath : refs) {
+        if (!CopyResourceIfMissing(resources, destRom, romPath, errorOut))
+            return false;
+    }
+    return true;
+}
+
 bool AssemblePackage(const Request& request, const fs::path& engineRoot,
                      const std::string& configName, std::string* errorOut) {
     const fs::path content = request.contentRoot;
@@ -343,24 +431,33 @@ bool AssemblePackage(const Request& request, const fs::path& engineRoot,
     if (!CopyDirectoryRecursive(content / "rom", dest / "rom", errorOut))
         return false;
 
-    // Content rom/shader is often a stale snapshot. The host loads .cso from
-    // dest/rom/shader at boot, so overlay the shaders just compiled with this
-    // IvyEngineRuntime or the engine repo will skin with the wrong Bind.
-    const fs::path engineShaders = engineOut / "rom" / "shader";
+    // The host loads .cso from dest/rom/shader at boot. Overlay the shaders
+    // compiled with this IvyEngineRuntime. Prefer the OutDir mirror, then the
+    // repo resources tree written by the shader target.
+    fs::path engineShaders = engineOut / "resources" / "shader";
+    if (!fs::is_directory(engineShaders, ec))
+        engineShaders = engineRoot / "resources" / "shader";
     const fs::path destShaders = dest / "rom" / "shader";
-    if (fs::exists(engineShaders, ec)) {
+    if (fs::is_directory(engineShaders, ec)) {
         if (!CopyDirectoryRecursive(engineShaders, destShaders, errorOut))
             return false;
     }
 
-    // Engine branding is not part of content projects by default — overlay it
-    // so the runtime boot screen can find rom/branding/ivy_logo.png.
-    const fs::path engineBranding = engineOut / "rom" / "branding";
+    // Branding is an engine default. Overlay it so the boot screen can find
+    // rom/branding/ivy_logo.png even when the project did not copy it.
+    fs::path engineBranding = engineOut / "resources" / "branding";
+    if (!fs::is_directory(engineBranding, ec))
+        engineBranding = engineRoot / "resources" / "branding";
     const fs::path destBranding = dest / "rom" / "branding";
-    if (fs::exists(engineBranding, ec)) {
+    if (fs::is_directory(engineBranding, ec)) {
         if (!CopyDirectoryRecursive(engineBranding, destBranding, errorOut))
             return false;
     }
+
+    // Keep this list aligned with tools/materialize_engine_defaults.py.
+    // MySkybox.dds is not in it: that file is copied only when content names it.
+    if (!MaterializeReferencedDefaults(engineRoot / "resources", dest / "rom", errorOut))
+        return false;
 
     const fs::path scriptsBin = dest / "game" / "scripts" / "bin";
     if (!CopyOneFile(content / "game" / "scripts" / "bin" / "GameScripts.dll",

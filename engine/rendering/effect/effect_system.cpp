@@ -16,6 +16,7 @@
 #include <unordered_map>
 
 #include "engine/rendering/d3d11/renderer.h" // GetDevice/GetDeviceContext, GetBackBufferWidth/Height
+#include "engine/core/content_path.h"
 #include "camera.h"   // GetCamera()
 
 using namespace DirectX;
@@ -146,7 +147,9 @@ namespace EffectSystem {
 
     int LoadW(const wchar_t* path) {
         if (path == nullptr || *path == L'\0') return -1;
-        return Load(reinterpret_cast<const char16_t*>(path));
+        const std::wstring resolved = content_path::ReadableWideCurrent(path);
+        const wchar_t* openPath = resolved.empty() ? path : resolved.c_str();
+        return Load(reinterpret_cast<const char16_t*>(openPath));
     }
 
     bool ReloadContent() {
@@ -154,7 +157,9 @@ namespace EffectSystem {
         g_manager->GetSetting()->SetIsFileCacheEnabled(false);
         std::vector<std::pair<int, ::Effekseer::EffectRef>> candidates;
         for (const auto& entry : g_effectCache) {
-            auto effect = ::Effekseer::Effect::Create(g_manager, reinterpret_cast<const char16_t*>(entry.first.c_str()));
+            const std::wstring resolved = content_path::ReadableWideCurrent(entry.first.c_str());
+            const wchar_t* openPath = resolved.empty() ? entry.first.c_str() : resolved.c_str();
+            auto effect = ::Effekseer::Effect::Create(g_manager, reinterpret_cast<const char16_t*>(openPath));
             if (effect == nullptr) { g_manager->GetSetting()->SetIsFileCacheEnabled(true); return false; }
             candidates.emplace_back(entry.second, effect);
         }

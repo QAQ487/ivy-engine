@@ -11,6 +11,7 @@
 #include "component_factory.h"
 #include "tag_registry.h"
 #include "engine/scene/scene_json_validation.h"
+#include "engine/core/content_path.h"
 
 #include <fstream>
 #include <sstream>
@@ -123,7 +124,12 @@ std::string PrefabSerializer::Serialize(const GameObject& root) {
 
 bool PrefabSerializer::SaveToFile(const GameObject& root,
                                    const std::string& filePath) {
-    std::ofstream f(filePath);
+    const std::filesystem::path dest = content_path::WritableFileCurrent(filePath);
+    if (dest.empty())
+        return false;
+    std::error_code ec;
+    std::filesystem::create_directories(dest.parent_path(), ec);
+    std::ofstream f(dest);
     if (!f.is_open()) {
         OutputDebugStringA(("[PrefabSerializer] Cannot open for write: "
                             + filePath + "\n").c_str());
@@ -161,7 +167,7 @@ std::unique_ptr<GameObject> PrefabSerializer::Deserialize(
 std::unique_ptr<GameObject> PrefabSerializer::LoadFromFile(
     const std::string& filePath)
 {
-    std::ifstream f(filePath);
+    std::ifstream f(content_path::ReadableFileCurrent(filePath));
     if (!f.is_open()) {
         OutputDebugStringA(("[PrefabSerializer] Cannot open: " + filePath + "\n").c_str());
         return nullptr;

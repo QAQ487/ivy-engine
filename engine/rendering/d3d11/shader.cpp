@@ -21,6 +21,7 @@ using namespace DirectX;
 #include "../lighting/lighting.h"
 #include "engine/rendering/environment/ibl.h"
 #include "engine/core/system_timer.h"
+#include "engine/core/content_path.h"
 
 // MATERIAL size check
 static_assert(sizeof(MATERIAL) % 16 == 0, "MATERIAL constant buffer must be 16-byte aligned.");
@@ -85,7 +86,7 @@ static_assert(ARRAYSIZE(kShader3DVariants) == static_cast<int>(Shader3DVariant::
 	"kShader3DVariants must match Shader3DVariant::Count");
 
 static bool LoadPixelShaderFromFile(const char* path, ID3D11PixelShader** outPS) {
-	std::ifstream psFile(path, std::ios::binary);
+	std::ifstream psFile(content_path::ReadableFileCurrent(path), std::ios::binary);
 	if (!psFile) return false;
 	psFile.seekg(0, std::ios::end);
 	std::vector<char> psData(static_cast<size_t>(psFile.tellg()));
@@ -231,7 +232,7 @@ bool Shader_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext) {
 	// Load precompiled 2D VS/PS .cso
 	{
 		// Vertex Shader
-		std::ifstream vsFile2D("rom/shader/VertexShader2D.cso", std::ios::binary);
+		std::ifstream vsFile2D(content_path::ReadableFileCurrent("rom/shader/VertexShader2D.cso"), std::ios::binary);
 		if (!vsFile2D) {
 			MessageBox(nullptr, "Cannot open rom/shader/VertexShader2D.cso\nPlease build the project to generate .cso files.", "2D VS Load Error", MB_OK | MB_ICONERROR);
 			return false;
@@ -253,7 +254,7 @@ bool Shader_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext) {
 		if (FAILED(hr)) return false;
 
 		// Pixel Shader
-		std::ifstream psFile2D("rom/shader/PixelShader2D.cso", std::ios::binary);
+		std::ifstream psFile2D(content_path::ReadableFileCurrent("rom/shader/PixelShader2D.cso"), std::ios::binary);
 		if (!psFile2D) {
 			MessageBox(nullptr, "Cannot open rom/shader/PixelShader2D.cso\nPlease build the project to generate .cso files.", "2D PS Load Error", MB_OK | MB_ICONERROR);
 			return false;
@@ -270,7 +271,7 @@ bool Shader_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext) {
 	// Load precompiled 3D VS/PS .cso
 	{
 		// Vertex Shader
-		std::ifstream vsFile("rom/shader/VertexShader3D.cso", std::ios::binary);
+		std::ifstream vsFile(content_path::ReadableFileCurrent("rom/shader/VertexShader3D.cso"), std::ios::binary);
 		if (!vsFile) {
 			MessageBox(nullptr, "Cannot open rom/shader/VertexShader3D.cso\nPlease build the project to generate .cso files.", "3D VS Load Error", MB_OK | MB_ICONERROR);
 			return false;
@@ -293,7 +294,7 @@ bool Shader_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext) {
 		if (FAILED(hr)) return false;
 
 		{
-			std::ifstream vsSkinned("rom/shader/VertexShader3DSkinned.cso", std::ios::binary);
+			std::ifstream vsSkinned(content_path::ReadableFileCurrent("rom/shader/VertexShader3DSkinned.cso"), std::ios::binary);
 			if (!vsSkinned) {
 				MessageBox(nullptr, "Cannot open rom/shader/VertexShader3DSkinned.cso\nPlease build the project to generate .cso files.", "3D Skinned VS Load Error", MB_OK | MB_ICONERROR);
 				return false;
@@ -331,7 +332,7 @@ bool Shader_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext) {
 
 		// Outline inverted-hull shaders
 		{
-			std::ifstream vsOutline("rom/shader/VertexShader3D_Outline.cso", std::ios::binary);
+			std::ifstream vsOutline(content_path::ReadableFileCurrent("rom/shader/VertexShader3D_Outline.cso"), std::ios::binary);
 			if (!vsOutline) {
 				MessageBox(nullptr, "Cannot open rom/shader/VertexShader3D_Outline.cso\nPlease build the project to generate .cso files.", "3D Outline VS Load Error", MB_OK | MB_ICONERROR);
 				return false;

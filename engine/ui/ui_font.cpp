@@ -7,6 +7,7 @@
 
 #include "ui_font.h"
 #include "engine/rendering/sprite/texture.h"
+#include "engine/core/content_path.h"
 
 #include <cctype>
 #include <cstdio>
@@ -72,7 +73,9 @@ namespace {
 	}
 
 	bool BakeFont(const wchar_t* ttfPath, UIFont& out) {
-		const std::vector<unsigned char> ttf = LoadFile(ttfPath);
+		const std::wstring resolved = content_path::ReadableWideCurrent(ttfPath);
+		const wchar_t* openPath = resolved.empty() ? ttfPath : resolved.c_str();
+		const std::vector<unsigned char> ttf = LoadFile(openPath);
 		if (ttf.size() < 12) return false;
         const int offset = stbtt_GetFontOffsetForIndex(ttf.data(), 0);
         if (offset < 0 || static_cast<size_t>(offset) + 12 > ttf.size()) return false;
@@ -180,7 +183,9 @@ bool UIFont_Reload(const wchar_t* path) {
     for (auto& entry : g_fonts) {
         if (_wcsicmp(std::filesystem::absolute(entry.first).lexically_normal().c_str(), key.c_str()) != 0) continue;
         UIFont candidate;
-        if (!BakeFont(entry.first.c_str(), candidate)) return false;
+        const std::wstring resolved = content_path::ReadableWideCurrent(entry.first.c_str());
+        const wchar_t* openPath = resolved.empty() ? entry.first.c_str() : resolved.c_str();
+        if (!BakeFont(openPath, candidate)) return false;
         entry.second = candidate;
     }
     return true;

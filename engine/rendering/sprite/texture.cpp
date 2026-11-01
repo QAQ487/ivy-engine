@@ -7,6 +7,7 @@
  ===========================================================================**/
 #include "texture.h"
 #include "engine/ui/ui_font.h"
+#include "engine/core/content_path.h"
 #include <string>
 #include <filesystem>
 #include <cstdio>
@@ -68,6 +69,8 @@ static HRESULT ReadTextureImage(const wchar_t* path, TexMetadata& metadata, Scra
 
 static int TextureLoadInternal(const wchar_t* ptr_file_name, bool mipmap, bool reportErrors) {
     if (!ptr_file_name || !ptr_file_name[0] || !g_pDevice) return -1;
+    const std::wstring resolvedName = content_path::ReadableWideCurrent(ptr_file_name);
+    const wchar_t* openPath = resolvedName.empty() ? ptr_file_name : resolvedName.c_str();
 	// Return existing ID if this file is already loaded
 	for (int i = 0; i < MAX_TEXTURES; i++) {
 		if (!g_textures[i].m_ptr_Texture) continue; // Skip empty slots
@@ -84,7 +87,7 @@ static int TextureLoadInternal(const wchar_t* ptr_file_name, bool mipmap, bool r
 		/* Load texture */
 		TexMetadata metadata;
 		ScratchImage image;
-		HRESULT loadHr = ReadTextureImage(ptr_file_name, metadata, image);
+		HRESULT loadHr = ReadTextureImage(openPath, metadata, image);
 		if (FAILED(loadHr)) {
 			char pathUtf8[MAX_PATH * 3] = {};
 			WideCharToMultiByte(CP_UTF8, 0, ptr_file_name, -1, pathUtf8, sizeof(pathUtf8),
@@ -256,6 +259,8 @@ ID3D11ShaderResourceView* TextureGetSRV(int texture_id) {
 
 ID3D11ShaderResourceView* CubemapLoad(const wchar_t* fileName) {
 	if (!fileName || !fileName[0] || !g_pDevice) return nullptr;
+	const std::wstring resolvedName = content_path::ReadableWideCurrent(fileName);
+	const wchar_t* openPath = resolvedName.empty() ? fileName : resolvedName.c_str();
 
 	for (int i = 0; i < MAX_CUBEMAPS; ++i) {
 		if (!g_cubemaps[i].srv) continue;
@@ -268,7 +273,7 @@ ID3D11ShaderResourceView* CubemapLoad(const wchar_t* fileName) {
 
 	TexMetadata metadata;
 	ScratchImage image;
-	const HRESULT loadHr = LoadFromDDSFile(fileName, DDS_FLAGS_NONE, &metadata, image);
+	const HRESULT loadHr = LoadFromDDSFile(openPath, DDS_FLAGS_NONE, &metadata, image);
 	if (FAILED(loadHr)) {
 		char msg[512];
 		snprintf(msg, sizeof(msg), "CubemapLoad failed: %s hr=0x%08lX\n",
@@ -316,8 +321,10 @@ int TextureLoadQuiet(const wchar_t* path, bool mipmap) { return TextureLoadInter
 
 TextureReloadResult TextureReload(const wchar_t* path) {
     if (!path || !g_pDevice) return TextureReloadResult::Failed;
+    const std::wstring resolvedName = content_path::ReadableWideCurrent(path);
+    const wchar_t* openPath = resolvedName.empty() ? path : resolvedName.c_str();
     TexMetadata metadata; ScratchImage image;
-    if (FAILED(ReadTextureImage(path, metadata, image))) return TextureReloadResult::Failed;
+    if (FAILED(ReadTextureImage(openPath, metadata, image))) return TextureReloadResult::Failed;
     const auto key = TexturePathKey(path);
     for (auto& slot : g_textures) {
         if (!slot.m_ptr_Texture || _wcsicmp(TexturePathKey(slot.m_filename).c_str(), key.c_str()) != 0) continue;
@@ -339,10 +346,12 @@ TextureReloadResult TextureReload(const wchar_t* path) {
 }
 
 TextureReloadResult CubemapReload(const wchar_t* path) {
+    const std::wstring resolvedName = content_path::ReadableWideCurrent(path);
+    const wchar_t* openPath = resolvedName.empty() ? path : resolvedName.c_str();
     for (auto& slot : g_cubemaps) {
         if (!slot.srv || _wcsicmp(TexturePathKey(slot.filename).c_str(), TexturePathKey(path).c_str())) continue;
         TexMetadata metadata; ScratchImage image;
-        if (FAILED(LoadFromDDSFile(path, DDS_FLAGS_NONE, &metadata, image)) || !metadata.IsCubemap()) return TextureReloadResult::Failed;
+        if (FAILED(LoadFromDDSFile(openPath, DDS_FLAGS_NONE, &metadata, image)) || !metadata.IsCubemap()) return TextureReloadResult::Failed;
         ID3D11ShaderResourceView* replacement = nullptr;
         if (FAILED(CreateShaderResourceView(g_pDevice, image.GetImages(), image.GetImageCount(), metadata, &replacement))) return TextureReloadResult::Failed;
         auto* previous = slot.srv; slot.srv = replacement; previous->Release();

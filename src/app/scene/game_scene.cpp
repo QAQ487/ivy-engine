@@ -22,6 +22,7 @@
 #include "engine/physics/core/rigidbody.h"
 #include "engine/rendering/lighting/lighting.h"
 #include "engine/rendering/sprite/texture.h"
+#include "engine/core/content_path.h"
 #include "engine/input/key_logger.h"
 #include "engine/rendering/model/model.h"
 #include "camera.h"
@@ -127,7 +128,7 @@ void DrawBootLoadingScreen(float progress01, const std::string& label) {
 		s_logoLoadAttempted = true;
 		// TextureLoad pops a MessageBox on failure ? only call it when the
 		// branding file is present (content deploys may omit it until seeded).
-		if (std::filesystem::exists("rom/branding/ivy_logo.png"))
+		if (!content_path::ReadableFileCurrent("rom/branding/ivy_logo.png").empty())
 			s_logoTex = TextureLoad(L"rom/branding/ivy_logo.png", false);
 	}
 
@@ -201,7 +202,7 @@ bool PumpBootMessages() {
 }
 
 void RunBootAssetPreload() {
-	if (std::filesystem::exists("rom/skip_boot_preload"))
+	if (!content_path::ReadableFileCurrent("rom/skip_boot_preload").empty())
 		return;
 
 	const auto tasks = SceneAssetPreload_BuildTaskListFromSceneFiles("rom/scene");
@@ -333,6 +334,25 @@ void GameScene::Initialize() {
 	srand((unsigned int)time(nullptr));
 
 	Lighting::SetAmbientColor({ 0.6f, 0.7f, 0.8f });
+
+#ifdef GAME_RUNTIME
+	// A packaged game has rom/ beside the exe. The engine OutDir does not:
+	// it only mirrors resources/. Open the in-repo testbed so the dev host
+	// still has a boot scene. Asset reads then use testbed rom/ first and
+	// <exe-dir>/resources after that.
+	{
+		std::error_code ec;
+		if (!std::filesystem::is_regular_file("rom/scene/default_scene.txt", ec)) {
+			ec.clear();
+			const auto cwd = std::filesystem::current_path(ec);
+			const auto testbed = content_path::ResolveInRepoTestbedPath(
+				ec ? std::filesystem::path{} : cwd,
+				content_path::ExecutableDirectory());
+			if (!testbed.empty())
+				SetCurrentDirectoryW(testbed.wstring().c_str());
+		}
+	}
+#endif
 
 	// Scene + default level
 	{

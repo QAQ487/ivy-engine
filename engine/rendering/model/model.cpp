@@ -9,6 +9,7 @@
  ===========================================================================**/
 	#include "model.h"
 #include "model_util.h"
+#include "engine/core/content_path.h"
 
 #include <Windows.h>
 #include <fstream>
@@ -137,13 +138,14 @@ void Model3D::Release() {
 bool Model3D::LoadOBJ(const wchar_t* objPath, const wchar_t* fallbackTex) {
 	Release();
 
-	// Load OBJ file
-	std::ifstream ifs(WideToUTF8(objPath));
+	const std::wstring resolvedObj = content_path::ReadableWideCurrent(objPath);
+	const wchar_t* openObj = resolvedObj.empty() ? objPath : resolvedObj.c_str();
+	std::ifstream ifs(WideToUTF8(openObj));
 	if (!ifs) {
 		MessageBoxA(nullptr, "Failed to load OBJ file.", "Error", MB_OK | MB_ICONERROR);
 		return false;
 	}
-	std::wstring baseDirW = DirnameW(objPath);
+	std::wstring baseDirW = DirnameW(openObj);
 
 	std::vector<XMFLOAT3> positions;
 	std::vector<XMFLOAT3> normals;
@@ -371,11 +373,13 @@ bool Model3D::LoadFBXInternal(const wchar_t* fbxPath, bool reportErrors) {
 
 	// Import
 	FbxImporter* importer = FbxImporter::Create(shared.mgr, "");
+	const std::wstring resolvedFbx = content_path::ReadableWideCurrent(fbxPath);
+	const wchar_t* openFbx = resolvedFbx.empty() ? fbxPath : resolvedFbx.c_str();
 	std::string path_utf8;
 	{
-		int len = WideCharToMultiByte(CP_UTF8, 0, fbxPath, -1, nullptr, 0, nullptr, nullptr);
+		int len = WideCharToMultiByte(CP_UTF8, 0, openFbx, -1, nullptr, 0, nullptr, nullptr);
 		path_utf8.resize((size_t) len);
-		WideCharToMultiByte(CP_UTF8, 0, fbxPath, -1, path_utf8.data(), len, nullptr, nullptr);
+		WideCharToMultiByte(CP_UTF8, 0, openFbx, -1, path_utf8.data(), len, nullptr, nullptr);
 	}
 	if (!importer->Initialize(path_utf8.c_str(), -1, shared.mgr->GetIOSettings())) {
 		importer->Destroy();
@@ -2025,7 +2029,8 @@ void Model3D::AddAnimation(const std::string& animName, const char* fileName)
 
 	// 1. Create Importer
 	FbxImporter* importer = FbxImporter::Create(shared.mgr, "");
-	std::string path_utf8 = fileName;
+	const std::filesystem::path resolvedAnim = content_path::ReadableFileCurrent(fileName);
+	std::string path_utf8 = resolvedAnim.empty() ? std::string(fileName) : resolvedAnim.string();
 
 	if (!importer->Initialize(path_utf8.c_str(), -1, shared.mgr->GetIOSettings())) {
 		std::string msg = "[Model3D] Failed to load animation '";

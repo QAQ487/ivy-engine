@@ -23,10 +23,17 @@ Copy-Item -LiteralPath (Join-Path $engineOutput 'IvyEngineRuntime.exe') -Destina
 Copy-Item -LiteralPath (Join-Path $engineOutput 'libfbxsdk.dll') -Destination $destinationPath -Force
 Copy-Item -LiteralPath (Join-Path $contentPath 'rom') -Destination $destinationPath -Recurse -Force
 foreach ($folder in @('shader','branding')) {
+    $sourceFolder = Join-Path $engineOutput "resources/$folder"
+    if (!(Test-Path -LiteralPath $sourceFolder)) { $sourceFolder = Join-Path $engineRoot "resources/$folder" }
     $targetFolder = Join-Path $destinationPath "rom/$folder"
     New-Item -ItemType Directory -Path $targetFolder -Force | Out-Null
-    Get-ChildItem -LiteralPath (Join-Path $engineOutput "rom/$folder") -File | Copy-Item -Destination $targetFolder -Force
+    if (Test-Path -LiteralPath $sourceFolder) {
+        Get-ChildItem -LiteralPath $sourceFolder -File | Copy-Item -Destination $targetFolder -Force
+    }
 }
+$materialize = Join-Path $PSScriptRoot 'materialize_engine_defaults.py'
+python $materialize (Join-Path $destinationPath 'rom') (Join-Path $engineRoot 'resources') (Join-Path $destinationPath 'rom')
+if ($LASTEXITCODE -ne 0) { throw 'Failed to materialize referenced engine defaults.' }
 $licenseDestination = Join-Path $destinationPath 'licenses'
 New-Item -ItemType Directory -Path $licenseDestination -Force | Out-Null
 Copy-Item -LiteralPath (Join-Path $engineRoot 'libraries/box2d/LICENSE') -Destination (Join-Path $licenseDestination 'Box2D.txt') -Force

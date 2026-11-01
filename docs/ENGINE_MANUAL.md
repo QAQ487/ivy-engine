@@ -94,7 +94,7 @@ Recent projects are stored outside the content tree in `%AppData%/GameEngine/rec
 
 Startup loads the first recent project that still has `rom/`. A Debug editor with no loadable recent project opens the in-repo `testbed/` (see [`CONTENT_PROJECT.md`](CONTENT_PROJECT.md)). The build output directory is not a project. Opening `testbed/` links engine `rom/` defaults instead of copying them, and rejects path targets that do not stay inside that `rom/`.
 
-New Project scaffolds `rom/scene/scene_main.json`, copies engine builtins (`rom/shader`, `rom/font`, `rom/texture`) from the editor ship folder, and may copy `external_content_template` scripts when the engine repo is discoverable. See also [`CONTENT_PROJECT.md`](CONTENT_PROJECT.md) for deploy-oriented external repos.
+New Project scaffolds `rom/scene/scene_main.json` and may copy `external_content_template` scripts when the engine repo is discoverable. It does not copy engine defaults; those resolve from `<exe-dir>/resources/` (`rom/<rest>` → `resources/<rest>`). See also [`CONTENT_PROJECT.md`](CONTENT_PROJECT.md).
 
 ## Editor viewport aspect
 

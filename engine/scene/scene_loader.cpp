@@ -294,9 +294,12 @@ static void UpdateDefaultScenePath() {
 }
 
 static void SaveDefaultSceneSetting() {
-    if (!fs::exists(SCENE_DIR)) fs::create_directories(SCENE_DIR);
+    const fs::path dest = content_path::WritableFileCurrent(DEFAULT_SCENE_CONFIG);
+    if (dest.empty()) return;
+    std::error_code ec;
+    fs::create_directories(dest.parent_path(), ec);
 
-    std::ofstream file(DEFAULT_SCENE_CONFIG);
+    std::ofstream file(dest);
     if (!file.is_open()) return;
     file << g_defaultSceneFileName << "\n";
 }
@@ -357,7 +360,7 @@ void SceneLoader_RefreshSceneAssets() {
 }
 
 void SceneLoader_LoadDefaultSceneSetting() {
-    std::ifstream file(DEFAULT_SCENE_CONFIG);
+    std::ifstream file(content_path::ReadableFileCurrent(DEFAULT_SCENE_CONFIG));
     if (file.is_open()) {
         std::string configuredScene;
         std::getline(file, configuredScene);
@@ -721,14 +724,18 @@ bool SceneLoader_SaveToFile(const char* filename) {
     root["nodes"] = nodes;
     root["canvas"] = SceneCanvas_SaveSceneCanvas();
 
-    std::ofstream file(filename, std::ios::binary);
+    const fs::path dest = content_path::WritableFileCurrent(filename);
+    if (dest.empty()) return false;
+    std::error_code writeEc;
+    fs::create_directories(dest.parent_path(), writeEc);
+    std::ofstream file(dest, std::ios::binary);
     if (!file.is_open()) return false;
     const auto content = root.dump(4);
     file << content;
     file.close();
     if (!file) return false;
     std::error_code ec;
-    if (!g_currentScenePath.empty() && fs::equivalent(filename, g_currentScenePath, ec) && !ec) {
+    if (!g_currentScenePath.empty() && fs::equivalent(dest, g_currentScenePath, ec) && !ec) {
         g_currentSceneContent = content;
         ++g_contentRevision;
     }

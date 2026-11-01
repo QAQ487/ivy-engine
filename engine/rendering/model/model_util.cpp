@@ -8,6 +8,7 @@
 
  ===========================================================================**/
 #include "model_util.h"
+#include "engine/core/content_path.h"
 
 #include <Windows.h>
 #include <wincodec.h>   // WIC
@@ -338,7 +339,9 @@ bool TryLoadMTLTexture_SRV(
 	if (outClamp)    *outClamp = false;
 	if (outHadMapKd) *outHadMapKd = false;
 
-	std::ifstream ifs(WideToUTF8(mtlPath));
+	const std::wstring resolvedMtl = content_path::ReadableWideCurrent(mtlPath.c_str());
+	const wchar_t* openMtl = resolvedMtl.empty() ? mtlPath.c_str() : resolvedMtl.c_str();
+	std::ifstream ifs(WideToUTF8(openMtl));
 	if (!ifs) return false;
 
 	std::string line;

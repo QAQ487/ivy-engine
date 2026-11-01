@@ -1,6 +1,6 @@
 # Editor content hot reload
 
-The Editor watches the open project's `rom/` recursively in Edit, viewport Play and fullscreen Play. Game DLLs continue to use the script reload queue. AI tools must build/deploy game DLLs; the Editor does not compile source files. Runtime/shipping builds, shaders and engine/API changes are excluded.
+The Editor watches the open project's `rom/` recursively in Edit, viewport Play and fullscreen Play. It does not watch `resources/` and it does not create NTFS junctions into that tree. Changing an engine default requires an editor restart. Game DLLs continue to use the script reload queue. AI tools must build/deploy game DLLs; the Editor does not compile source files. Runtime/shipping builds, shaders and engine/API changes are excluded.
 
 File notifications trigger background reconciliation. A periodic content audit recovers missed notifications, including changes that preserve file size and timestamp. A batch must remain unchanged for 500 ms. Project switching resets observation, and a busy scene loader retains later batches for subsequent frames. Asset Browser Refresh also requests reconciliation.
 

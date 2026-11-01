@@ -6,6 +6,7 @@
 #include "engine/ecs/string_utils.h"
 #include "engine/rendering/d3d11/renderer.h"
 #include "engine/rendering/sprite/texture.h"
+#include "engine/core/content_path.h"
 
 #include <Windows.h>
 #include <algorithm>
@@ -52,7 +53,7 @@ XMFLOAT3 NormalizeOrUp(const XMFLOAT3& value) {
 }
 
 bool LoadCompiledShader(const char* path, std::vector<char>& data) {
-	std::ifstream file(path, std::ios::binary);
+	std::ifstream file(content_path::ReadableFileCurrent(path), std::ios::binary);
 	if (!file)
 		return false;
 	file.seekg(0, std::ios::end);

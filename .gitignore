@@ -368,33 +368,33 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
-/rom/shader/PixelShader2D.cso
-/rom/shader/PixelShader3D.cso
-/rom/shader/PixelShaderUnlit.cso
-/rom/shader/VertexShader2D.cso
-/rom/shader/VertexShader3D.cso
-/rom/shader/VertexShaderUnlit.cso
-/rom/shader/SkyboxVS.cso
-/rom/shader/PixelShader3D_DirectionalPixel.cso
-/rom/shader/PixelShader3D_Hemisphere.cso
-/rom/shader/PixelShader3D_PointPixel.cso
-/rom/shader/PixelShader3D_Rim.cso
-/rom/shader/PixelShader3D_SpotPixel.cso
-/rom/shader/SkyboxPS.cso
+/resources/shader/PixelShader2D.cso
+/resources/shader/PixelShader3D.cso
+/resources/shader/PixelShaderUnlit.cso
+/resources/shader/VertexShader2D.cso
+/resources/shader/VertexShader3D.cso
+/resources/shader/VertexShaderUnlit.cso
+/resources/shader/SkyboxVS.cso
+/resources/shader/PixelShader3D_DirectionalPixel.cso
+/resources/shader/PixelShader3D_Hemisphere.cso
+/resources/shader/PixelShader3D_PointPixel.cso
+/resources/shader/PixelShader3D_Rim.cso
+/resources/shader/PixelShader3D_SpotPixel.cso
+/resources/shader/SkyboxPS.cso
 /imgui.ini
 /imgui.ini
-/rom/shader/PixelShader3D_Outline.cso
-/rom/shader/PixelShader3D_SurfaceFX.cso
-/rom/shader/PixelShader3D_Toon.cso
-/rom/shader/PixelShader3D_PBR.cso
-/rom/shader/VertexShader3D_Outline.cso
-/rom/shader/ParticlePS.cso
-/rom/shader/ParticleVS.cso
-/rom/shader/VertexShader3DSkinned.cso
-/rom/shader/FullscreenVS.cso
-/rom/shader/PostProcessPS.cso
-/rom/shader/BloomExtractPS.cso
-/rom/shader/BloomBlurPS.cso
+/resources/shader/PixelShader3D_Outline.cso
+/resources/shader/PixelShader3D_SurfaceFX.cso
+/resources/shader/PixelShader3D_Toon.cso
+/resources/shader/PixelShader3D_PBR.cso
+/resources/shader/VertexShader3D_Outline.cso
+/resources/shader/ParticlePS.cso
+/resources/shader/ParticleVS.cso
+/resources/shader/VertexShader3DSkinned.cso
+/resources/shader/FullscreenVS.cso
+/resources/shader/PostProcessPS.cso
+/resources/shader/BloomExtractPS.cso
+/resources/shader/BloomBlurPS.cso
 /interactive-visual-engine.code-workspace
 /tools/collider-components-test-build/
 
@@ -405,17 +405,9 @@ FodyWeavers.xsd
 # Understand-Anything / knowledge-graph scratch (do not commit)
 .ua/
 
-# Never commit tool binaries under runtime asset trees
-rom/**/*.exe
+# Never commit tool binaries under engine resources
+resources/**/*.exe
 
-# testbed/ shares engine rom/ through NTFS junctions created when the editor
-# opens the project. Do not commit those links, or editor UI prefs written there.
-/testbed/rom/branding
-/testbed/rom/font
-/testbed/rom/model
-/testbed/rom/physmat
-/testbed/rom/shader
-/testbed/rom/skybox
-/testbed/rom/texture
+# Editor UI prefs written into the in-repo testbed. Not engine defaults.
 /testbed/rom/editor
 

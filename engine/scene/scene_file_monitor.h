@@ -2,6 +2,8 @@
 // Declares SceneFileMonitor.
 
 #pragma once
+#include "engine/core/content_path.h"
+
 #include <filesystem>
 #include <fstream>
 #include <optional>
@@ -25,7 +27,9 @@ public:
     const std::string& Path() const { return m_path; }
     bool HasPendingChange() const { return m_pending; }
     static bool Read(const std::string& path, std::string& content) {
-        std::ifstream file(path, std::ios::binary);
+        const std::filesystem::path disk = content_path::ReadableFileCurrent(path);
+        if (disk.empty()) return false;
+        std::ifstream file(disk, std::ios::binary);
         if (!file) return false;
         std::ostringstream buffer;
         buffer << file.rdbuf();
@@ -65,9 +69,11 @@ private:
     };
     bool Stat(Stamp& stamp) const {
         std::error_code ec;
-        stamp.time = std::filesystem::last_write_time(m_path, ec);
+        const std::filesystem::path disk = content_path::ReadableFileCurrent(m_path);
+        if (disk.empty()) return false;
+        stamp.time = std::filesystem::last_write_time(disk, ec);
         if (ec) return false;
-        stamp.size = std::filesystem::file_size(m_path, ec);
+        stamp.size = std::filesystem::file_size(disk, ec);
         return !ec;
     }
     std::string m_path, m_handled;

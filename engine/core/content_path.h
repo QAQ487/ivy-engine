@@ -13,20 +13,6 @@ namespace content_path {
 // In-repo content project the Debug editor opens when no recent project loads.
 inline constexpr const char* kInRepoTestbedDir = "testbed";
 
-// Engine rom/ directories the testbed links instead of copying.
-// "scene" is owned by the testbed. "editor" is writable UI prefs.
-inline constexpr const char* kSharedRomDirNames[] = {
-    "branding",
-    "font",
-    "model",
-    "physmat",
-    "shader",
-    "skybox",
-    "texture",
-};
-inline constexpr std::size_t kSharedRomDirCount =
-    sizeof(kSharedRomDirNames) / sizeof(kSharedRomDirNames[0]);
-
 // Relative path with no absolute prefix and no "." / ".." segment.
 // Backslashes are normalized to '/'. Writes the normalized form when non-null.
 inline bool IsSafeRelativePath(std::string_view path, std::string* normalized) {
@@ -84,6 +70,72 @@ inline bool IsSafeRomPath(std::string_view path, std::string* normalized) {
         *normalized = std::move(n);
     return true;
 }
+
+// projectRoot is the content project (process cwd after a project is open).
+// resourcesRoot is <exe-dir>/resources. rom/<rest> maps to resources/<rest>
+// with the same segment names. Paths stay lexical: no weakly_canonical.
+struct RomRoots {
+    std::filesystem::path projectRoot;
+    std::filesystem::path resourcesRoot;
+};
+
+inline std::filesystem::path ResolveRomForRead(std::string_view path, const RomRoots& roots) {
+    std::string normalized;
+    if (!IsSafeRomPath(path, &normalized))
+        return {};
+    const std::filesystem::path projectFile =
+        (roots.projectRoot / std::filesystem::path(normalized)).lexically_normal();
+    std::error_code ec;
+    if (std::filesystem::is_regular_file(projectFile, ec))
+        return projectFile;
+    ec.clear();
+    const std::filesystem::path resourceFile =
+        (roots.resourcesRoot / std::filesystem::path(normalized.substr(4))).lexically_normal();
+    if (std::filesystem::is_regular_file(resourceFile, ec))
+        return resourceFile;
+    return {};
+}
+
+// Always the project file. Never a path under resourcesRoot.
+inline std::filesystem::path ResolveRomForWrite(std::string_view path, const RomRoots& roots) {
+    std::string normalized;
+    if (!IsSafeRomPath(path, &normalized) || roots.projectRoot.empty())
+        return {};
+    return (roots.projectRoot / std::filesystem::path(normalized)).lexically_normal();
+}
+
+// True when the string is rom-shaped, including unsafe rom paths that must not be opened.
+inline bool IsRomShapedPath(std::string_view path) {
+    std::string probe;
+    probe.reserve(path.size());
+    for (unsigned char c : path) {
+        if (c < 0x20)
+            return false;
+        probe.push_back(c == '\\' ? '/' : static_cast<char>(c));
+    }
+    return probe == "rom" || probe.compare(0, 4, "rom/") == 0;
+}
+
+// Safe rom/ paths resolve project-then-resources. Other paths stay literal.
+// A rom-shaped path that fails IsSafeRomPath resolves empty (no traversal).
+inline std::filesystem::path ReadableFile(std::string_view path, const RomRoots& roots) {
+    if (IsRomShapedPath(path))
+        return ResolveRomForRead(path, roots);
+    return std::filesystem::path(std::string(path));
+}
+
+inline std::filesystem::path WritableFile(std::string_view path, const RomRoots& roots) {
+    if (IsRomShapedPath(path))
+        return ResolveRomForWrite(path, roots);
+    return std::filesystem::path(std::string(path));
+}
+
+// Process cwd plus <exe-dir>/resources. Defined in content_path.cpp.
+std::filesystem::path ExecutableDirectory();
+RomRoots CurrentRomRoots();
+std::filesystem::path ReadableFileCurrent(std::string_view path);
+std::filesystem::path WritableFileCurrent(std::string_view path);
+std::wstring ReadableWideCurrent(const wchar_t* path);
 
 // Child of `root` using only lexical normalization. Symlinks and NTFS junctions
 // are not resolved, so a link at rom/model stays "model" instead of "../../rom/model".

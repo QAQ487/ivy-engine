@@ -8,22 +8,23 @@ For day-to-day editing inside the engine editor, prefer **File → New Project /
 
 `testbed/` is a normal content project (`project.json`, `rom/scene/`, `rom/scene/default_scene.txt`). Sample scenes that used to live in `samples/scenes/` are now `testbed/rom/scene/`. `samples/scripts/` stays where it is. The testbed has no `GameScripts` project, so **File → Build Current Project** and `deploy/deploy.bat` still apply to an external content project, not to `testbed/`.
 
-Debug `IvyEngine` opens `testbed/` when no recent project can be loaded. A recent project that still exists wins, including an external game. Release does not take this fallback. **File → Open Testbed** opens it in Debug and Release whenever `testbed/` is next to the engine repo (found from the working directory or the exe). **File → Open Project** accepts any folder that contains `rom/`, including `testbed/`; it does not hide the engine repo. The editor output directory contains `rom/` and is not auto-opened.
+Debug `IvyEngine` opens `testbed/` when no recent project can be loaded. A recent project that still exists wins, including an external game. Release does not take this fallback. **File → Open Testbed** opens it in Debug and Release whenever `testbed/` is next to the engine repo (found from the working directory or the exe). **File → Open Project** accepts any folder that contains `rom/`, including `testbed/`. The engine repo root no longer has `rom/`, so it is not a content project. Editor and runtime output directories mirror `resources/` beside the exe; they are not content projects.
 
-Opening the testbed does not copy engine assets into the git tree. It creates NTFS directory junctions from `testbed/rom/{branding,font,model,physmat,shader,skybox,texture}` to the same folders under the engine `rom/`. Junction targets are fixed names and must canonicalize to a child of the engine `rom/`; `..` and absolute paths are rejected (`engine/core/content_path.h`). `testbed/rom/scene/` is a real directory. `testbed/rom/editor/` is created locally for UI prefs and is gitignored, as are the junctions.
+Engine defaults live in repo-root `resources/` (`font`, `texture`, `shader`, `branding`, `model/primitives`, `skybox` including `ibl`). A safe `rom/<rest>` path opens the project file when it exists, otherwise `<exe-dir>/resources/<rest>`. Writes (scenes, prefs, tags, new assets) go only to the project `rom/`. The editor does not create NTFS junctions and does not copy those defaults into a new project. `resources/skybox/source/` is the cubemap authoring input and is excluded from the OutDir mirror and from packages.
 
-`scene_sample_menu.json` in the testbed is a copy of `rom/scene/scene_sample_menu.json` so Play can load `scene_sample_playground.json` from the same `rom/scene/`. The engine-repo copy remains the scene shipped beside the exe.
+`scene_sample_menu.json` lives only in `testbed/rom/scene/`. `IvyEngineRuntime` launched from the engine OutDir has no `rom/scene` beside the exe, so it changes directory to `testbed/` and loads that boot scene. A packaged game has its own `rom/scene/default_scene.txt` and stays on the package directory.
 
-The three 2D scenes `scene_physics_2d.json`, `scene_topdown_2d.json`, and `scene_topdown_2d_next.json` reference `rom/texture/sprite_demo/{adventurer_walk,test_sheet,hp_fill,hp_frame}.png`. Those files were not in the repo. They are now tiny generated placeholder PNGs (256×128 or 128×32, solid color, under 1 KB each) in the engine `rom/`, not copies inside `testbed/`. They are not the original sprite sheets.
-
-A later cylinder-pair scene can be added under `testbed/rom/scene/` when that collider work lands. This change does not add one and does not modify collider code.
+The sprite placeholders `rom/texture/sprite_demo/{adventurer_walk,test_sheet,hp_fill,hp_frame}.png` live in `testbed/rom/texture/sprite_demo/`. They are tiny generated images, not the original sprite sheets. Colored boxes and the player clips live under `testbed/rom/model/`.
 
 Linux checks (no Windows runtime claim):
 
 ```bash
 g++ -std=c++17 -I. tools/content_path_check.cpp -o /tmp/content_path_check && /tmp/content_path_check
 python3 tools/check_testbed_assets.py
+python3 tools/check_engine_resource_paths.py
 ```
+
+The checks above are the Linux gate. Do not treat them as a Windows runtime pass.
 
 ## External content template
 
@@ -41,13 +42,14 @@ This folder (`external_content_template/`) is a starter for a **content-only** p
 ## What stays in engine repo
 - `IvyEngineRuntime.exe` / `IvyEngine.exe`
 - engine sources/libraries
-- shader compilation pipeline
+- shader compilation pipeline (`shaders/` → `resources/shader/*.cso`, gitignored)
+- read-only engine defaults in `resources/`
 
 ## Setup
 1. Copy this `external_content_template` folder to a new repo, **or** use **File → New Project** in the editor.
 2. Edit `IvyEngine.props` and set `EngineRoot` to your engine repo path.
 3. Put your script `.cpp/.h` files under `game/scripts/` (for example `sample/` or your own folders) and add them to `GameScripts.vcxproj`.
-4. Put your game assets under `rom/` (include engine builtins: `rom/shader`, `rom/font`, `rom/texture` — New Project copies these automatically).
+4. Put your game assets under `rom/`. Engine defaults (shaders, fonts, branding, primitives, IBL, the default skybox) stay in the engine `resources/` tree and are resolved when the project does not override that `rom/` path. New Project does not copy them. The template's `rom/scene/scene_main.json` is the starter scene.
 5. Open `<ProjectName>.sln` (or run `build_scripts.bat`) and build **GameScripts** | x64.
 6. Run `deploy\deploy.bat Debug` (or `Release`).
 7. Launch `deploy\IvyEngineRuntime.exe` (bat path). Prefer **File → Build Current Project** in the editor for a playable package named `<GameName>.exe`.
@@ -61,14 +63,14 @@ This folder (`external_content_template/`) is a starter for a **content-only** p
 | Editor | `project.json` → `lastOpenedScene` / `defaultScene` |
 | Runtime / deploy | `rom/scene/default_scene.txt` (kept in sync when you Save Project in the editor) |
 
-The in-repo testbed uses `scene_sample_menu.json` by default. External projects still start from `scene_main.json` when created with New Project. The engine repo's own `rom/scene/scene_sample_menu.json` remains the boot scene copied next to the exe.
+The in-repo testbed uses `scene_sample_menu.json` by default. External projects and this template start from `scene_main.json`. There is no second copy of the sample menu in the engine repo.
 
 ## Required runtime layout
 After deploy, this layout is produced:
 
 - `deploy/IvyEngineRuntime.exe` (from `deploy.bat`; GUI packaging uses `<GameName>.exe`)
 - `deploy/libfbxsdk.dll`
-- `deploy/rom/**`
+- `deploy/rom/**` (project files, overlaid `.cso` and branding, plus engine defaults the content names and does not already have; `MySkybox.dds` only when named)
 - `deploy/game/scripts/bin/GameScripts.dll`
 
 ## Notes

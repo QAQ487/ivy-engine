@@ -2,6 +2,7 @@
 // Physics: physics material implementation.
 
 #include "engine/physics/physics_material.h"
+#include "engine/core/content_path.h"
 
 #include "libraries/nlohmann/json.hpp"
 
@@ -35,7 +36,7 @@ bool PhysicsMaterial_LoadFromFile(const std::string& path, ContactSurface& out) 
     if (path.empty())
         return false;
 
-    std::ifstream in(path);
+    std::ifstream in(content_path::ReadableFileCurrent(path));
     if (!in.is_open())
         return false;
 

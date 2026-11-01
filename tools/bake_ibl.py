@@ -461,8 +461,8 @@ def write_dds_cube(path: str, size: int, mips: list[list[list[float]]]) -> None:
 
 def main() -> int:
     root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    src_path = os.path.join(root, "rom", "skybox", "MySkybox.dds")
-    out_dir = os.path.join(root, "rom", "skybox", "ibl")
+    src_path = os.path.join(root, "resources", "skybox", "MySkybox.dds")
+    out_dir = os.path.join(root, "resources", "skybox", "ibl")
     if len(sys.argv) >= 2:
         src_path = sys.argv[1]
     if len(sys.argv) >= 3:

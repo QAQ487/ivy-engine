@@ -246,12 +246,15 @@ static bool IsValidUiZoomPercent(int percent) {
 
 static void SaveUiPrefs() {
     try {
+        const fs::path dest = content_path::WritableFileCurrent(kUiPrefsPath);
+        if (dest.empty())
+            return;
         std::error_code ec;
-        fs::create_directories("rom/editor", ec);
+        fs::create_directories(dest.parent_path(), ec);
         json j;
         j["uiZoomPercent"] = g_uiZoomPercent;
         PlayFpsOverlay::WritePrefs(j);
-        std::ofstream file(kUiPrefsPath);
+        std::ofstream file(dest);
         if (file.is_open())
             file << j.dump(2);
     }
@@ -264,7 +267,7 @@ static void LoadUiPrefs() {
     g_uiZoomPercent = 100;
     g_uiZoom = 1.0f;
     try {
-        std::ifstream file(kUiPrefsPath);
+        std::ifstream file(content_path::ReadableFileCurrent(kUiPrefsPath));
         if (!file.is_open()) return;
         json j;
         file >> j;
@@ -1429,8 +1432,9 @@ static ID3D11ShaderResourceView* GetIvyLogoSrv() {
         ID3D11Device* device = GetDevice();
         if (device) {
             ID3D11Resource* tex = nullptr;
+            const std::wstring logo = content_path::ReadableWideCurrent(L"rom/branding/ivy_logo.png");
             if (FAILED(DirectX::CreateWICTextureFromFile(
-                    device, L"rom/branding/ivy_logo.png", &tex, &s_srv))) {
+                    device, logo.empty() ? L"rom/branding/ivy_logo.png" : logo.c_str(), &tex, &s_srv))) {
                 s_srv = nullptr;
             }
             if (tex)
@@ -2690,8 +2694,12 @@ void EngineGUI_Initialize(HWND hwnd, ID3D11Device* device,
         iconsConfig.MergeMode = true;
         iconsConfig.GlyphMinAdvanceX = 13.0f;
         static const ImWchar iconRanges[] = { ICON_MIN_FA, ICON_MAX_FA, 0 };
+        const fs::path iconFile = content_path::ReadableFileCurrent("rom/font/fa-solid-900.ttf");
+        const std::string iconPath = iconFile.empty()
+            ? std::string("rom/font/fa-solid-900.ttf")
+            : iconFile.string();
         if (!io.Fonts->AddFontFromFileTTF(
-                "rom/font/fa-solid-900.ttf", 13.0f, &iconsConfig, iconRanges)) {
+                iconPath.c_str(), 13.0f, &iconsConfig, iconRanges)) {
             std::fprintf(stderr,
                 "Warning: failed to load icon font rom/font/fa-solid-900.ttf\n");
         }
