@@ -398,6 +398,7 @@ exit /b 0</Command>
     <ClCompile Include="engine\rendering\d3d11\post_process.cpp" />
     <ClCompile Include="engine\rendering\effect\effect_object.cpp" />
     <ClCompile Include="engine\rendering\effect\effect_system.cpp" />
+    <ClCompile Include="engine\core\content_path.cpp" />
     <ClCompile Include="engine\core\engine_gui.cpp" />
     <ClCompile Include="engine\core\engine_gui_persistence.cpp" />
     <ClCompile Include="engine\rendering\lighting\lighting.cpp" />

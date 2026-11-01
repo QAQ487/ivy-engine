@@ -85,6 +85,44 @@ inline bool IsSafeRomPath(std::string_view path, std::string* normalized) {
     return true;
 }
 
+// projectRoot is the content project (process cwd after a project is open).
+// resourcesRoot is <exe-dir>/resources. rom/<rest> maps to resources/<rest>
+// with the same segment names. Paths stay lexical: no weakly_canonical.
+struct RomRoots {
+    std::filesystem::path projectRoot;
+    std::filesystem::path resourcesRoot;
+};
+
+inline std::filesystem::path ResolveRomForRead(std::string_view path, const RomRoots& roots) {
+    std::string normalized;
+    if (!IsSafeRomPath(path, &normalized))
+        return {};
+    const std::filesystem::path projectFile =
+        (roots.projectRoot / std::filesystem::path(normalized)).lexically_normal();
+    std::error_code ec;
+    if (std::filesystem::is_regular_file(projectFile, ec))
+        return projectFile;
+    ec.clear();
+    const std::filesystem::path resourceFile =
+        (roots.resourcesRoot / std::filesystem::path(normalized.substr(4))).lexically_normal();
+    if (std::filesystem::is_regular_file(resourceFile, ec))
+        return resourceFile;
+    return {};
+}
+
+// Always the project file. Never a path under resourcesRoot.
+inline std::filesystem::path ResolveRomForWrite(std::string_view path, const RomRoots& roots) {
+    std::string normalized;
+    if (!IsSafeRomPath(path, &normalized) || roots.projectRoot.empty())
+        return {};
+    return (roots.projectRoot / std::filesystem::path(normalized)).lexically_normal();
+}
+
+// Process cwd plus <exe-dir>/resources. Defined in content_path.cpp.
+RomRoots CurrentRomRoots();
+std::filesystem::path ResolveRomForReadCurrent(std::string_view path);
+std::filesystem::path ResolveRomForWriteCurrent(std::string_view path);
+
 // Child of `root` using only lexical normalization. Symlinks and NTFS junctions
 // are not resolved, so a link at rom/model stays "model" instead of "../../rom/model".
 // Returns empty when the path is not a strict descendant (`..`, different roots,

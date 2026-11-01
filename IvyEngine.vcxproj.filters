@@ -518,6 +518,9 @@
     <ClCompile Include="engine\core\frame_transform_snapshot.cpp">
       <Filter>engine\core</Filter>
     </ClCompile>
+    <ClCompile Include="engine\core\content_path.cpp">
+      <Filter>engine\core</Filter>
+    </ClCompile>
     <ClCompile Include="engine\core\engine_gui.cpp">
       <Filter>engine\core</Filter>
     </ClCompile>

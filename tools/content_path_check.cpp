@@ -135,6 +135,43 @@ int main() {
            "filesystem::relative follows the symlink and leaves the project");
     fs::remove_all(scratch);
 
+    const fs::path project = scratch / "Game";
+    const fs::path resources = scratch / "x64" / "Debug" / "resources";
+    fs::create_directories(project / "rom" / "texture");
+    fs::create_directories(resources / "texture");
+    fs::create_directories(resources / "shader");
+    fs::create_directories(resources / "font");
+    { std::ofstream(project / "rom" / "texture" / "fade.png") << "project"; }
+    { std::ofstream(resources / "texture" / "fade.png") << "engine"; }
+    { std::ofstream(resources / "shader" / "VertexShader3D.cso") << "cso"; }
+    { std::ofstream(resources / "font" / "LemonSlice.ttf") << "font"; }
+    const content_path::RomRoots roots{project, resources};
+
+    const fs::path fade = content_path::ResolveRomForRead("rom/texture/fade.png", roots);
+    Expect(fade == (project / "rom" / "texture" / "fade.png").lexically_normal(),
+           "project rom wins over resources");
+    const fs::path shader = content_path::ResolveRomForRead("rom/shader/VertexShader3D.cso", roots);
+    Expect(shader == (resources / "shader" / "VertexShader3D.cso").lexically_normal(),
+           "missing project file falls back to resources");
+    Expect(content_path::ResolveRomForRead("rom\\shader\\VertexShader3D.cso", roots) == shader,
+           "backslash rom path uses the same fallback");
+    Expect(content_path::ResolveRomForRead("rom/../../resources/shader/VertexShader3D.cso", roots).empty(),
+           "read traversal is rejected");
+    Expect(content_path::ResolveRomForRead("rom/texture/missing.png", roots).empty(),
+           "missing in both roots resolves empty");
+
+    const fs::path writePrefs = content_path::ResolveRomForWrite("rom/editor/ui_prefs.json", roots);
+    Expect(writePrefs == (project / "rom" / "editor" / "ui_prefs.json").lexically_normal(),
+           "writes land in the project rom");
+    const fs::path writeFont = content_path::ResolveRomForWrite("rom/font/LemonSlice.ttf", roots);
+    Expect(writeFont == (project / "rom" / "font" / "LemonSlice.ttf").lexically_normal(),
+           "a resources-only file still writes into the project");
+    Expect(content_path::LexicalChildPath(writeFont, resources).empty(),
+           "write path is not a child of resources");
+    Expect(content_path::ResolveRomForWrite("rom/../resources/font/LemonSlice.ttf", roots).empty(),
+           "write traversal is rejected");
+    fs::remove_all(scratch);
+
     if (g_fails != 0) {
         std::cerr << g_fails << " failure(s)\n";
         return 1;

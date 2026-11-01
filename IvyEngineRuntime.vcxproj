@@ -465,6 +465,7 @@ xcopy /y /d /e "$(ProjectDir)rom\*" "$(OutDir)rom\"</Command>
     <ClCompile Include="engine\core\job_system.cpp" />
     <ClCompile Include="engine\core\frame_timer.cpp" />
     <ClCompile Include="engine\core\render_thread.cpp" />
+    <ClCompile Include="engine\core\content_path.cpp" />
     <ClCompile Include="engine\core\debug_system.cpp" />
     <ClCompile Include="engine\core\frame_transform_snapshot.cpp" />
     <ClCompile Include="engine\core\system_timer.cpp" />
