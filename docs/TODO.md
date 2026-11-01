@@ -28,10 +28,10 @@
   - 驗收（若開做）：box 可以因摩擦傾側，同時唔好無故原地打轉；球體滾動無回歸。
 - [x] **重做 Skybox：直接接受 panorama（equirectangular）PNG，自動轉換成 DDS cubemap**
   - 路徑（PR #10 之後）：六面來源 PNG 喺 `resources/skybox/source/`（`px nx py ny pz nz`）。`resources/skybox/source/run.bat` 仍然要 PATH 上的 `texassemble`，寫 `resources/skybox/MySkybox.dds`。`rom/<rest>` 先讀專案 `rom/<rest>`，再讀 `<exe-dir>/resources/<rest>`；寫入只去專案 `rom/`。`CubemapLoad` 仍然只收 legacy DDS cubemap。
-  - 實作：`settings.render.skyboxCubemap` 可以係一張 2:1 equirectangular PNG。`engine/rendering/environment/equirect_cubemap.cpp` 喺載入／打包時烤成專案 `rom/skybox/cache/<slug>.dds`（slug 係 `rom/` 之後的路徑，`/` 換成 `__`）。Stamp 記 mtime、size、FNV-1a64；任一變就重烤，editor 再走 `CubemapReload`。PNG 由已經連結的 DirectXTex WIC 解，唔使 `texassemble` 或 Python。六面 PNG 同指向 `rom/skybox/MySkybox.dds` 的場景唔經呢條路。
-  - 限制：寬必須係高的兩倍；face = height/2 必須係 2 的冪；最大 8192×4096（face 2048）。經度係 Debevec lat-long：圖像中心係 +Z，頂係 +Y，u 向右去 +X。面序同 `tools/bake_ibl.py`／texassemble：+X −X +Y −Y +Z −Z。
+  - 實作：`settings.render.skyboxCubemap` 可以係 equirectangular PNG（寬=360°）。`engine/rendering/environment/equirect_cubemap.cpp` 喺載入／打包時烤成專案 `rom/skybox/cache/<slug>.dds`（slug 係 `rom/` 之後的路徑，`/` 換成 `__`）。Stamp 記 mtime、size、FNV-1a64、vertical FOV key；任一變就重烤，editor 再走 `CubemapReload`。PNG 由已經連結的 DirectXTex WIC 解，唔使 `texassemble` 或 Python。六面 PNG 同指向 `rom/skybox/MySkybox.dds` 的場景唔經呢條路。Asset Browser 可拖 `.png`／`.dds` 到 Rendering Settings 的路徑欄。
+  - 覆蓋：剛好 2:1 行為同舊版（face=`height/2` 必須係 2 的冪）。`height ≤ width/2` 用垂直覆蓋 `360*height/width`（或可選 `skyboxVerticalFov`，(0,180]，0=auto）置中地平線，帶外 clamp 到頂／底行。`height > width/2`、解唔開、路徑唔安全會寫 `content_hot_reload.log` 同顯示 **Panorama failed**，唔會淨係 clear color。非 2:1 的 face 係 ≤`width/4` 的最大 2 的冪。最大 8192×4096（face 2048）。經度係 Debevec lat-long：圖像中心係 +Z，頂向 +Y，u 向右去 +X。面序同 `tools/bake_ibl.py`／texassemble：+X −X +Y −Y +Z −Z。
   - IBL：panorama 會重烤 irradiance（32）同 prefilter（128、5 mip，每面自己的 mip chain，BGRA8，同 `bake_ibl.py`）。`brdf_lut.png` 唔重做。烤唔到或 LUT 缺失就 log，editor Rendering Settings 顯示「IBL not matching sky」，唔會靜默沿用舊 `rom/skybox/ibl/`。DDS 天空仍然用場景自己的 IBL 路徑。
-  - 部署：editor 打包前先烤場景 JSON 入面的 panorama，包內帶 cache DDS。Runtime 只喺 stamp 唔夾（缺檔、mtime 或內容變）先至自己烤，寫入包裝的 `rom/`。`deploy.bat` 唔會主動烤，只係抄已有的 `rom/`；缺 cache 就等 runtime。
+  - 部署：editor 打包前先烤場景 JSON 入面的 panorama，包內帶 cache DDS。Runtime 只喺 stamp 唔夾（缺檔、mtime、內容或 FOV 變）先至自己烤，寫入包裝的 `rom/`。`deploy.bat` 唔會主動烤，只係抄已有的 `rom/`；缺 cache 就等 runtime。
   - 驗收場景：`testbed/rom/scene/scene_panorama_sky.json` 用 `testbed/rom/skybox/panorama_test.png`（64×32，約 157 bytes）。Linux `tests/equirect_cubemap_test.cpp`（`g++ -std=c++20`）PASS。Windows editor、打包 runtime、畫面同 PBR 反射未跑。
 
 

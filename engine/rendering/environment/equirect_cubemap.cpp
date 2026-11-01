@@ -42,6 +42,23 @@ bool IsPow2(int n) {
     return n > 0 && (n & (n - 1)) == 0;
 }
 
+int FloorPow2(int n) {
+    if (n < 1)
+        return 0;
+    int p = 1;
+    while (p <= n / 2)
+        p *= 2;
+    return p;
+}
+
+double ClampVerticalFovDeg(double degrees) {
+    if (!(degrees > 0.0))
+        return 0.0;
+    if (degrees > 180.0)
+        return 180.0;
+    return degrees;
+}
+
 bool EndsWithPng(const std::string& path) {
     if (path.size() < 4)
         return false;
@@ -79,7 +96,7 @@ DVec3 FaceDirection(int face, double u, double v) {
     }
 }
 
-void LatLongUv(double x, double y, double z, double* u, double* v) {
+void LatLongUv(double x, double y, double z, double verticalFovDeg, double* u, double* v) {
     const double theta = std::atan2(x, z);
     const double phi = std::acos(std::max(-1.0, std::min(1.0, y)));
     double uu = theta / (2.0 * kPi) + 0.5;
@@ -88,7 +105,17 @@ void LatLongUv(double x, double y, double z, double* u, double* v) {
     if (uu > 1.0)
         uu = 1.0;
     *u = uu;
-    *v = phi / kPi;
+
+    const double fov = ClampVerticalFovDeg(verticalFovDeg);
+    if (!(fov > 0.0)) {
+        *v = Saturate(phi / kPi);
+        return;
+    }
+    // Full-sphere v is phi/pi (0 at +Y, 1 at -Y). Map the band of height fov/180
+    // centered on the horizon (v=0.5) onto the image, clamping outside rows.
+    const double vFull = phi / kPi;
+    double vv = (vFull - 0.5) * (180.0 / fov) + 0.5;
+    *v = Saturate(vv);
 }
 
 void SampleEquirect(const std::uint8_t* rgba, int width, int height, double u, double v,
@@ -362,6 +389,22 @@ void FloatToLevel(const FloatCube& src, CubeLevel* dst) {
 
 }  // namespace
 
+double DefaultVerticalFovDeg(int width, int height) {
+    if (width <= 0 || height <= 0)
+        return 0.0;
+    // height > width/2 means more than 180 deg of vertical coverage.
+    if (height * 2 > width)
+        return 0.0;
+    return 360.0 * static_cast<double>(height) / static_cast<double>(width);
+}
+
+double ResolveVerticalFovDeg(int width, int height, double overrideDeg) {
+    const double clamped = ClampVerticalFovDeg(overrideDeg);
+    if (clamped > 0.0)
+        return clamped;
+    return DefaultVerticalFovDeg(width, height);
+}
+
 SizeCheck ValidateEquirectSize(int width, int height, const Limits& limits) {
     SizeCheck result;
     if (width <= 0 || height <= 0) {
@@ -369,30 +412,45 @@ SizeCheck ValidateEquirectSize(int width, int height, const Limits& limits) {
         result.error = "Panorama size must be positive.";
         return result;
     }
-    if (width != height * 2) {
+    if (height * 2 > width) {
         result.code = SizeCode::BadAspect;
-        result.error = "Panorama aspect must be 2:1 (equirectangular); got " +
-            std::to_string(width) + "x" + std::to_string(height) + ".";
+        const double assumed = 360.0 * static_cast<double>(height) / static_cast<double>(width);
+        result.error = "Panorama vertical coverage exceeds 180 deg (height > width/2); got " +
+            std::to_string(width) + "x" + std::to_string(height) +
+            " (assumed " + std::to_string(assumed) + " deg).";
         return result;
     }
-    if ((height % 2) != 0) {
-        result.code = SizeCode::FaceNotPowerOfTwo;
-        result.error = "Panorama face size (height/2) must be a power of two.";
-        return result;
+
+    const bool exactTwoToOne = (width == height * 2);
+    if (exactTwoToOne) {
+        // Preserve the original 2:1 rules exactly (odd height / non-PoT face rejected).
+        if ((height % 2) != 0) {
+            result.code = SizeCode::FaceNotPowerOfTwo;
+            result.error = "Panorama face size (height/2) must be a power of two.";
+            return result;
+        }
+        result.faceSize = height / 2;
+        if (!IsPow2(result.faceSize)) {
+            result.code = SizeCode::FaceNotPowerOfTwo;
+            result.error = "Panorama face size " + std::to_string(result.faceSize) +
+                " (height/2) must be a power of two.";
+            return result;
+        }
+    } else {
+        result.faceSize = FloorPow2(width / 4);
+        if (result.faceSize < 1) {
+            result.code = SizeCode::FaceNotPowerOfTwo;
+            result.error = "Panorama face size (width/4) must be at least 1.";
+            return result;
+        }
     }
-    result.faceSize = height / 2;
+
     if (width > limits.maxWidth || height > limits.maxHeight || result.faceSize > limits.maxFace) {
         result.code = SizeCode::Oversized;
         result.faceSize = 0;
         result.error = "Panorama " + std::to_string(width) + "x" + std::to_string(height) +
             " is oversized (max " + std::to_string(limits.maxWidth) + "x" +
             std::to_string(limits.maxHeight) + ", face max " + std::to_string(limits.maxFace) + ").";
-        return result;
-    }
-    if (!IsPow2(result.faceSize)) {
-        result.code = SizeCode::FaceNotPowerOfTwo;
-        result.error = "Panorama face size " + std::to_string(result.faceSize) +
-            " (height/2) must be a power of two.";
         return result;
     }
     result.code = SizeCode::Ok;
@@ -415,14 +473,23 @@ void DirectionToFaceUv(float x, float y, float z, int* face, float* u, float* v)
 }
 
 void EquirectUvFromDirection(float x, float y, float z, float* u, float* v) {
+    EquirectUvFromDirection(x, y, z, 180.f, u, v);
+}
+
+void EquirectUvFromDirection(float x, float y, float z, float verticalFovDeg, float* u, float* v) {
     double uu = 0;
     double vv = 0;
-    LatLongUv(x, y, z, &uu, &vv);
+    LatLongUv(x, y, z, verticalFovDeg, &uu, &vv);
     if (u) *u = static_cast<float>(uu);
     if (v) *v = static_cast<float>(vv);
 }
 
-bool ConvertEquirectToCube(const RgbaImage& image, int faceSize, CubeBgra* cube, std::string* error) {
+bool ConvertEquirectToCube(
+    const RgbaImage& image,
+    int faceSize,
+    double verticalFovDeg,
+    CubeBgra* cube,
+    std::string* error) {
     if (!cube) {
         if (error) *error = "Panorama convert is missing an output cube.";
         return false;
@@ -434,6 +501,11 @@ bool ConvertEquirectToCube(const RgbaImage& image, int faceSize, CubeBgra* cube,
         if (error) *error = "Panorama image is incomplete.";
         return false;
     }
+    const double fov = ClampVerticalFovDeg(verticalFovDeg);
+    if (!(fov > 0.0)) {
+        if (error) *error = "Panorama vertical FOV must be in (0, 180] degrees.";
+        return false;
+    }
     cube->size = faceSize;
     cube->faces.assign(static_cast<std::size_t>(6 * faceSize * faceSize * 4), 0);
     for (int face = 0; face < 6; ++face) {
@@ -443,7 +515,7 @@ bool ConvertEquirectToCube(const RgbaImage& image, int faceSize, CubeBgra* cube,
                 const double u = (x + 0.5) / faceSize;
                 const DVec3 dir = FaceDirection(face, u, v);
                 double eu = 0, ev = 0;
-                LatLongUv(dir.x, dir.y, dir.z, &eu, &ev);
+                LatLongUv(dir.x, dir.y, dir.z, fov, &eu, &ev);
                 double r = 0, g = 0, b = 0, a = 0;
                 SampleEquirect(image.rgba.data(), image.width, image.height, eu, ev, &r, &g, &b, &a);
                 const std::size_t i = (static_cast<std::size_t>(face * faceSize + y) * faceSize + x) * 4u;
@@ -634,31 +706,46 @@ std::uint64_t Fnv1a64(const std::uint8_t* data, std::size_t size) {
     return hash;
 }
 
+bool SameVerticalFovKey(double a, double b) {
+    if (a <= 0.0 && b <= 0.0)
+        return true;
+    if (a <= 0.0 || b <= 0.0)
+        return false;
+    return std::fabs(a - b) <= 1e-6;
+}
+
 bool CacheIsFresh(const FileStamp& source, const FileStamp& recorded) {
     return source.size > 0 &&
         source.mtimeSec == recorded.mtimeSec &&
         source.size == recorded.size &&
-        source.contentHash == recorded.contentHash;
+        source.contentHash == recorded.contentHash &&
+        SameVerticalFovKey(source.verticalFovDeg, recorded.verticalFovDeg);
 }
 
 std::string FormatCacheStamp(const FileStamp& stamp) {
     std::ostringstream out;
-    out << "ivy-panorama-stamp 1\n"
+    out << "ivy-panorama-stamp 2\n"
         << "mtime " << stamp.mtimeSec << "\n"
         << "size " << stamp.size << "\n"
-        << "fnv1a64 " << std::hex << std::setw(16) << std::setfill('0') << stamp.contentHash << "\n";
+        << "fnv1a64 " << std::hex << std::setw(16) << std::setfill('0') << stamp.contentHash << "\n"
+        << std::dec;
+    if (stamp.verticalFovDeg <= 0.0)
+        out << "vfov auto\n";
+    else
+        out << "vfov " << std::setprecision(17) << stamp.verticalFovDeg << "\n";
     return out.str();
 }
 
 bool ParseCacheStamp(const std::string& text, FileStamp* stamp) {
     if (!stamp)
         return false;
+    stamp->verticalFovDeg = 0;
     std::istringstream in(text);
     std::string tag;
     std::string version;
     std::string key;
     in >> tag >> version;
-    if (!in || tag != "ivy-panorama-stamp" || version != "1")
+    if (!in || tag != "ivy-panorama-stamp" || (version != "1" && version != "2"))
         return false;
     in >> key;
     if (key != "mtime")
@@ -672,7 +759,25 @@ bool ParseCacheStamp(const std::string& text, FileStamp* stamp) {
     if (key != "fnv1a64")
         return false;
     in >> std::hex >> stamp->contentHash;
-    return static_cast<bool>(in);
+    if (version == "1")
+        return static_cast<bool>(in);
+    in >> std::dec >> key;
+    if (key != "vfov")
+        return false;
+    std::string fovToken;
+    in >> fovToken;
+    if (!in)
+        return false;
+    if (fovToken == "auto") {
+        stamp->verticalFovDeg = 0;
+        return true;
+    }
+    try {
+        stamp->verticalFovDeg = ClampVerticalFovDeg(std::stod(fovToken));
+    } catch (...) {
+        return false;
+    }
+    return stamp->verticalFovDeg > 0.0;
 }
 
 std::string PanoramaCacheRomPath(const std::string& pngRomPath, const char* kind) {
@@ -707,7 +812,8 @@ CookResult CookPanoramaFiles(
     const CookPaths& outputs,
     DecodeImageFn decode,
     const Limits& limits,
-    const IblConfig& ibl) {
+    const IblConfig& ibl,
+    double verticalFovOverrideDeg) {
     CookResult result;
     std::vector<std::uint8_t> bytes;
     if (!ReadAll(pngFile, &bytes)) {
@@ -715,10 +821,12 @@ CookResult CookPanoramaFiles(
         return result;
     }
 
+    const double fovKey = ClampVerticalFovDeg(verticalFovOverrideDeg);
     FileStamp now;
     now.mtimeSec = MtimeSec(pngFile);
     now.size = bytes.size();
     now.contentHash = Fnv1a64(bytes.data(), bytes.size());
+    now.verticalFovDeg = fovKey;
     std::vector<std::uint8_t> stampBytes;
     FileStamp recorded;
     if (ReadAll(outputs.stamp, &stampBytes) &&
@@ -754,13 +862,26 @@ CookResult CookPanoramaFiles(
         return result;
     }
 
+    const double resolvedFov = ResolveVerticalFovDeg(image.width, image.height, verticalFovOverrideDeg);
+    if (!(resolvedFov > 0.0)) {
+        result.error = "Panorama vertical FOV must be in (0, 180] degrees.";
+        return result;
+    }
+    if (image.width != image.height * 2) {
+        std::ostringstream warn;
+        warn << "Panorama " << image.width << "x" << image.height
+             << " is not 2:1; assuming " << resolvedFov
+             << " deg vertical coverage (width = 360 deg), centered on the horizon.";
+        result.warning = warn.str();
+    }
+
     RgbaImage rgba;
     rgba.width = image.width;
     rgba.height = image.height;
     rgba.rgba = std::move(image.rgba);
     CubeBgra cube;
     std::string convertError;
-    if (!ConvertEquirectToCube(rgba, size.faceSize, &cube, &convertError)) {
+    if (!ConvertEquirectToCube(rgba, size.faceSize, resolvedFov, &cube, &convertError)) {
         result.error = convertError.empty() ? "Panorama convert failed." : convertError;
         return result;
     }

@@ -105,6 +105,13 @@ static void TestFaceCenters() {
     Expect(std::fabs(v) < 1e-4f, "+Y is the top edge of the equirectangular image");
     panorama::EquirectUvFromDirection(0.f, -1.f, 0.f, &u, &v);
     Expect(std::fabs(v - 1.f) < 1e-4f, "-Y is the bottom edge of the equirectangular image");
+
+    // 180 deg FOV overload must match the legacy 2:1 mapping.
+    float u180 = 0.f;
+    float v180 = 0.f;
+    panorama::EquirectUvFromDirection(0.f, 0.f, 1.f, 180.f, &u180, &v180);
+    Expect(std::fabs(u180 - 0.5f) < 1e-4f && std::fabs(v180 - 0.5f) < 1e-4f,
+        "180 deg FOV keeps +Z at the image center");
 }
 
 static void TestRoundTrip() {
@@ -131,7 +138,7 @@ static void TestConvertPixels() {
     const panorama::RgbaImage image = MakePattern(8, 4);
     panorama::CubeBgra cube;
     std::string error;
-    Expect(panorama::ConvertEquirectToCube(image, 2, &cube, &error), "convert 8x4");
+    Expect(panorama::ConvertEquirectToCube(image, 2, 180.0, &cube, &error), "convert 8x4");
     Expect(error.empty(), "convert error is empty");
     Expect(cube.size == 2, "face size 2");
     Expect(cube.faces.size() == 6u * 2u * 2u * 4u, "six BGRA faces");
@@ -155,14 +162,81 @@ static void TestConvertPixels() {
     }
 }
 
+static void TestCoverageMath() {
+    Expect(std::fabs(panorama::DefaultVerticalFovDeg(8, 4) - 180.0) < 1e-9,
+        "2:1 default coverage is 180 deg");
+    Expect(std::fabs(panorama::DefaultVerticalFovDeg(1024, 354) - (360.0 * 354.0 / 1024.0)) < 1e-9,
+        "1024x354 default coverage is 360*h/w");
+    Expect(panorama::DefaultVerticalFovDeg(8, 5) == 0.0, "height > width/2 has no default FOV");
+    Expect(panorama::DefaultVerticalFovDeg(0, 4) == 0.0, "degenerate width has no default FOV");
+
+    Expect(std::fabs(panorama::ResolveVerticalFovDeg(1024, 354, 0.0) - (360.0 * 354.0 / 1024.0)) < 1e-9,
+        "override 0 uses the image default");
+    Expect(std::fabs(panorama::ResolveVerticalFovDeg(1024, 354, 90.0) - 90.0) < 1e-9,
+        "positive override is kept");
+    Expect(std::fabs(panorama::ResolveVerticalFovDeg(1024, 354, 200.0) - 180.0) < 1e-9,
+        "override above 180 clamps to 180");
+    Expect(panorama::ResolveVerticalFovDeg(1024, 354, -5.0) > 0.0,
+        "negative override falls back to the image default");
+
+    float u = 0.f;
+    float v = 0.f;
+    // 90 deg band: horizon stays at v=0.5; +/-45 deg elevation hits the image edges.
+    const float elev45 = std::sin(static_cast<float>(3.14159265358979323846 / 4.0));
+    const float horiz45 = std::cos(static_cast<float>(3.14159265358979323846 / 4.0));
+    panorama::EquirectUvFromDirection(0.f, elev45, horiz45, 90.f, &u, &v);
+    Expect(std::fabs(u - 0.5f) < 1e-4f && std::fabs(v) < 1e-3f,
+        "90 deg FOV maps +45 elev to the top row");
+    panorama::EquirectUvFromDirection(0.f, -elev45, horiz45, 90.f, &u, &v);
+    Expect(std::fabs(u - 0.5f) < 1e-4f && std::fabs(v - 1.f) < 1e-3f,
+        "90 deg FOV maps -45 elev to the bottom row");
+
+    // Outside the covered band clamps to the nearest edge (no wrap).
+    panorama::EquirectUvFromDirection(0.f, 1.f, 0.f, 90.f, &u, &v);
+    Expect(std::fabs(v) < 1e-6f, "+Y clamps to the top row under 90 deg FOV");
+    panorama::EquirectUvFromDirection(0.f, -1.f, 0.f, 90.f, &u, &v);
+    Expect(std::fabs(v - 1.f) < 1e-6f, "-Y clamps to the bottom row under 90 deg FOV");
+
+    // Outside the image band, convert clamps to the edge rows (no pole stretch).
+    panorama::RgbaImage band;
+    band.width = 8;
+    band.height = 3;
+    band.rgba.assign(static_cast<std::size_t>(8 * 3 * 4), 0);
+    for (int x = 0; x < 8; ++x) {
+        const std::size_t top = static_cast<std::size_t>(x * 4);
+        const std::size_t bot = static_cast<std::size_t>((2 * 8 + x) * 4);
+        band.rgba[top + 0] = 255;
+        band.rgba[top + 1] = 0;
+        band.rgba[top + 2] = 0;
+        band.rgba[top + 3] = 255;
+        band.rgba[bot + 0] = 0;
+        band.rgba[bot + 1] = 0;
+        band.rgba[bot + 2] = 255;
+        band.rgba[bot + 3] = 255;
+    }
+    panorama::CubeBgra cube;
+    std::string error;
+    Expect(panorama::ConvertEquirectToCube(band, 1, 90.0, &cube, &error), "convert 8x3 partial");
+    ExpectPixel(cube, 2, 0, 0, 255, 0, 0, "+Y face clamps to the top row under partial FOV");
+    ExpectPixel(cube, 3, 0, 0, 0, 0, 255, "-Y face clamps to the bottom row under partial FOV");
+}
+
 static void TestValidation() {
     const panorama::Limits limits;
     const panorama::SizeCheck ok = panorama::ValidateEquirectSize(8, 4, limits);
     Expect(ok.code == panorama::SizeCode::Ok && ok.faceSize == 2, "8x4 face is 2");
 
-    const panorama::SizeCheck aspect = panorama::ValidateEquirectSize(8, 3, limits);
-    Expect(aspect.code == panorama::SizeCode::BadAspect, "non 2:1 aspect");
-    Expect(aspect.error.find("2:1") != std::string::npos, "aspect error mentions 2:1");
+    const panorama::SizeCheck partial = panorama::ValidateEquirectSize(8, 3, limits);
+    Expect(partial.code == panorama::SizeCode::Ok && partial.faceSize == 2,
+        "8x3 partial coverage is accepted with face width/4");
+
+    const panorama::SizeCheck church = panorama::ValidateEquirectSize(1024, 354, limits);
+    Expect(church.code == panorama::SizeCode::Ok && church.faceSize == 256,
+        "1024x354 church panorama uses face 256");
+
+    const panorama::SizeCheck aspect = panorama::ValidateEquirectSize(8, 5, limits);
+    Expect(aspect.code == panorama::SizeCode::BadAspect, "height > width/2 is invalid");
+    Expect(aspect.error.find("180") != std::string::npos, "invalid aspect mentions 180 deg");
 
     const panorama::SizeCheck empty = panorama::ValidateEquirectSize(0, 0, limits);
     Expect(empty.code == panorama::SizeCode::NonPositive, "empty image");
@@ -285,9 +359,19 @@ static void TestStamp() {
     stamp.mtimeSec = 1700000000;
     stamp.size = 12;
     stamp.contentHash = 0xe71fa2190541574bull;
+    stamp.verticalFovDeg = 0;
     panorama::FileStamp copy;
     Expect(panorama::ParseCacheStamp(panorama::FormatCacheStamp(stamp), &copy), "parse stamp");
     Expect(panorama::CacheIsFresh(stamp, copy), "formatted stamp matches");
+    Expect(copy.verticalFovDeg == 0.0, "auto FOV round-trips as 0");
+
+    panorama::FileStamp withFov = stamp;
+    withFov.verticalFovDeg = 90.0;
+    panorama::FileStamp fovCopy;
+    Expect(panorama::ParseCacheStamp(panorama::FormatCacheStamp(withFov), &fovCopy), "parse FOV stamp");
+    Expect(panorama::CacheIsFresh(withFov, fovCopy), "FOV stamp matches");
+    Expect(std::fabs(fovCopy.verticalFovDeg - 90.0) < 1e-9, "explicit FOV round-trips");
+    Expect(!panorama::CacheIsFresh(stamp, withFov), "FOV change invalidates the cache");
 
     panorama::FileStamp changed = stamp;
     changed.mtimeSec += 1;
@@ -333,8 +417,14 @@ static bool TestDecode(const std::uint8_t* bytes, std::size_t n, panorama::Decod
     }
     if (bytes[0] == 'A') {
         image->width = 8;
-        image->height = 3;
+        image->height = 5;
         image->rgba.clear();
+        return true;
+    }
+    if (bytes[0] == 'N') {
+        image->width = 8;
+        image->height = 3;
+        image->rgba.assign(static_cast<std::size_t>(8 * 3 * 4), 180);
         return true;
     }
     if (bytes[0] == 'P') {
@@ -403,7 +493,7 @@ static void TestCookCache(const fs::path& dir) {
 
     WriteBytes(png, { 'A' });
     const panorama::CookResult aspect = panorama::CookPanoramaFiles(png, out, TestDecode, limits, ibl);
-    Expect(!aspect.ok && aspect.error.find("2:1") != std::string::npos, "cook rejects bad aspect");
+    Expect(!aspect.ok && aspect.error.find("180") != std::string::npos, "cook rejects coverage over 180 deg");
 
     WriteBytes(png, { 'P' });
     const panorama::CookResult face = panorama::CookPanoramaFiles(png, out, TestDecode, limits, ibl);
@@ -416,6 +506,13 @@ static void TestCookCache(const fs::path& dir) {
     WriteBytes(png, { 0xFF });
     const panorama::CookResult bad = panorama::CookPanoramaFiles(png, out, TestDecode, limits, ibl);
     Expect(!bad.ok && bad.error.find("decode failed") != std::string::npos, "decode errors surface");
+
+    WriteBytes(png, { 'N' });
+    const panorama::CookResult partial = panorama::CookPanoramaFiles(png, out, TestDecode, limits, ibl);
+    Expect(partial.ok && partial.rebaked, "non-2:1 panorama cooks");
+    Expect(partial.warning.find("360") != std::string::npos ||
+           partial.warning.find("coverage") != std::string::npos,
+        "non-2:1 cook warns about assumed coverage");
 
     WriteBytes(png, TinyPngBytes());
     panorama::IblConfig skip = ibl;
@@ -443,6 +540,20 @@ static void TestCookCache(const fs::path& dir) {
     Expect(fs::last_write_time(out.cubemap) == cubeTime, "fresh cache does not rewrite the cubemap");
     Expect(fs::last_write_time(out.irradiance) == irrTime, "fresh cache does not rewrite irradiance");
 
+    g_decodeCalls = 1;
+    const panorama::CookResult fovChange = panorama::CookPanoramaFiles(
+        png, out, TestDecode, limits, ibl, 90.0);
+    Expect(fovChange.ok && fovChange.rebaked, "vertical FOV override rebakes");
+    Expect(g_decodeCalls == 2, "FOV change decodes again");
+
+    const panorama::CookResult fovFresh = panorama::CookPanoramaFiles(
+        png, out, TestDecode, limits, ibl, 90.0);
+    Expect(fovFresh.ok && !fovFresh.rebaked, "matching FOV keeps the cache fresh");
+
+    const panorama::CookResult fovAuto = panorama::CookPanoramaFiles(
+        png, out, TestDecode, limits, ibl, 0.0);
+    Expect(fovAuto.ok && fovAuto.rebaked, "switching FOV back to auto rebakes");
+
     const std::vector<std::uint8_t> same = TinyPngBytes();
     WriteBytes(png, same);
     fs::last_write_time(png, fs::last_write_time(png) + std::chrono::seconds(10));
@@ -468,6 +579,7 @@ int main() {
     TestFaceCenters();
     TestRoundTrip();
     TestConvertPixels();
+    TestCoverageMath();
     TestValidation();
     TestDdsLayout();
     TestIbl();

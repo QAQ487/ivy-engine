@@ -27,12 +27,26 @@
 #include <cstdio>
 #include <cstring>
 #include <fstream>
-#include <set>
+#include <map>
 
 namespace panorama {
 namespace {
 
 Prep g_prep;
+
+void LogPanoramaMessage(const std::string& message) {
+    if (message.empty())
+        return;
+    hal::dout << message << std::endl;
+    // Same retrievable editor log as content hot-reload diagnostics.
+    std::error_code ec;
+    const auto size = std::filesystem::file_size("content_hot_reload.log", ec);
+    std::ofstream log(
+        "content_hot_reload.log",
+        !ec && size > 1024 * 1024 ? std::ios::trunc : std::ios::app);
+    if (log)
+        log << message << std::endl;
+}
 
 bool EndsWithPng(const std::string& path) {
     if (path.size() < 4)
@@ -99,7 +113,10 @@ bool DecodeWic(const std::uint8_t* bytes, std::size_t size, DecodedImage* image,
     return true;
 }
 
-Prep CookOne(const std::string& skyboxRomPath, const content_path::RomRoots& roots) {
+Prep CookOne(
+    const std::string& skyboxRomPath,
+    const content_path::RomRoots& roots,
+    double verticalFovOverrideDeg) {
     Prep prep;
     std::string normalized;
     if (!EndsWithPng(skyboxRomPath)) {
@@ -107,8 +124,12 @@ Prep CookOne(const std::string& skyboxRomPath, const content_path::RomRoots& roo
         return prep;
     }
     prep.isPanorama = true;
+    // Keep the requested path so Rendering Settings can surface cook errors even when
+    // IsSafeRomPath rejects the string (SameRomPath would otherwise hide the notice).
+    prep.sourceRom = skyboxRomPath;
     if (!content_path::IsSafeRomPath(skyboxRomPath, &normalized)) {
-        prep.error = "Panorama path must be a safe rom/ PNG.";
+        prep.error = "Panorama path must be a safe rom/ PNG: " + skyboxRomPath;
+        LogPanoramaMessage("Skybox panorama failed: " + prep.error);
         return prep;
     }
     prep.sourceRom = normalized;
@@ -117,13 +138,15 @@ Prep CookOne(const std::string& skyboxRomPath, const content_path::RomRoots& roo
     prep.prefilterRom = PanoramaCacheRomPath(normalized, "prefilter");
     const std::string stampRom = PanoramaCacheRomPath(normalized, "stamp");
     if (prep.cubemapRom.empty() || stampRom.empty()) {
-        prep.error = "Panorama path must be a safe rom/ PNG.";
+        prep.error = "Panorama path must be a safe rom/ PNG: " + normalized;
+        LogPanoramaMessage("Skybox panorama failed: " + prep.error);
         return prep;
     }
 
     const std::filesystem::path source = content_path::ResolveRomForRead(normalized, roots);
     if (source.empty()) {
         prep.error = "Panorama file not found: " + normalized;
+        LogPanoramaMessage("Skybox panorama failed: " + prep.error);
         return prep;
     }
     CookPaths outputs;
@@ -132,33 +155,54 @@ Prep CookOne(const std::string& skyboxRomPath, const content_path::RomRoots& roo
     outputs.prefilter = content_path::ResolveRomForWrite(prep.prefilterRom, roots);
     outputs.stamp = content_path::ResolveRomForWrite(stampRom, roots);
     if (outputs.cubemap.empty() || outputs.stamp.empty()) {
-        prep.error = "No project rom to write the cooked cubemap.";
+        prep.error = "No project rom to write the cooked cubemap for " + normalized;
+        LogPanoramaMessage("Skybox panorama failed: " + prep.error);
         return prep;
     }
 
-    const CookResult cooked = CookPanoramaFiles(source, outputs, DecodeWic, {}, ProductionIblConfig());
+    const CookResult cooked = CookPanoramaFiles(
+        source, outputs, DecodeWic, {}, ProductionIblConfig(), verticalFovOverrideDeg);
     prep.ok = cooked.ok;
     prep.iblReady = cooked.iblReady;
     prep.error = cooked.error;
+    if (!cooked.warning.empty())
+        LogPanoramaMessage("Skybox panorama warning: " + cooked.warning);
+    if (!prep.ok) {
+        LogPanoramaMessage("Skybox panorama failed: " + prep.error);
+        return prep;
+    }
     if (cooked.rebaked)
-        hal::dout << "Panorama cooked " << prep.cubemapRom << " from " << normalized << std::endl;
+        LogPanoramaMessage("Panorama cooked " + prep.cubemapRom + " from " + normalized);
     if (prep.ok && prep.iblReady) {
         const std::string lut = RenderSettings_GetConst().iblBrdfLutPath;
         if (content_path::ResolveRomForRead(lut, roots).empty()) {
             prep.iblReady = false;
             prep.error = "IBL not matching sky: missing " + lut;
+            LogPanoramaMessage(prep.error);
         }
+    } else if (prep.ok && !prep.iblReady && !prep.error.empty()) {
+        LogPanoramaMessage(prep.error);
     }
     return prep;
 }
 
-void CollectSkyPng(const nlohmann::json& json, std::set<std::string>* out) {
+void CollectSkyPng(const nlohmann::json& json, std::map<std::string, float>* out) {
     if (json.is_object()) {
         const auto it = json.find("skyboxCubemap");
         if (it != json.end() && it->is_string()) {
             const std::string value = it->get<std::string>();
-            if (IsEquirectSkyPath(value))
-                out->insert(value);
+            if (IsEquirectSkyPath(value)) {
+                float fov = 0.0f;
+                const auto fovIt = json.find("skyboxVerticalFov");
+                if (fovIt != json.end() && fovIt->is_number()) {
+                    fov = fovIt->get<float>();
+                    if (!(fov > 0.0f))
+                        fov = 0.0f;
+                    else if (fov > 180.0f)
+                        fov = 180.0f;
+                }
+                (*out)[value] = fov;
+            }
         }
         for (auto item = json.begin(); item != json.end(); ++item)
             CollectSkyPng(item.value(), out);
@@ -178,12 +222,19 @@ bool SameRomPath(const std::string& a, const std::string& b) {
     std::string left;
     std::string right;
     if (!content_path::IsSafeRomPath(a, &left) || !content_path::IsSafeRomPath(b, &right))
-        return false;
+        return LowerCopy(a) == LowerCopy(b) && !a.empty();
     return LowerCopy(left) == LowerCopy(right);
 }
 
+void LogDiagnostic(const std::string& message) {
+    LogPanoramaMessage(message);
+}
+
 Prep PrepareSky(const std::string& skyboxRomPath) {
-    g_prep = CookOne(skyboxRomPath, content_path::CurrentRomRoots());
+    g_prep = CookOne(
+        skyboxRomPath,
+        content_path::CurrentRomRoots(),
+        RenderSettings_GetConst().skyboxVerticalFov);
     return g_prep;
 }
 
@@ -195,7 +246,7 @@ bool CookProjectPanoramas(const std::filesystem::path& projectRoot,
                           const std::filesystem::path& resourcesRoot,
                           std::string* error) {
     const content_path::RomRoots roots{ projectRoot, resourcesRoot };
-    std::set<std::string> pngs;
+    std::map<std::string, float> pngs;
     const std::filesystem::path rom = projectRoot / "rom";
     std::error_code ec;
     if (std::filesystem::is_directory(rom, ec)) {
@@ -224,8 +275,8 @@ bool CookProjectPanoramas(const std::filesystem::path& projectRoot,
             }
         }
     }
-    for (const std::string& png : pngs) {
-        const Prep prep = CookOne(png, roots);
+    for (const auto& entry : pngs) {
+        const Prep prep = CookOne(entry.first, roots, entry.second);
         if (!prep.ok) {
             if (error)
                 *error = prep.sourceRom.empty() ? prep.error : prep.sourceRom + ": " + prep.error;

@@ -188,7 +188,7 @@ void Skybox_ReloadFromSettings() {
     std::string loadPath = settings.skyboxCubemapPath;
     if (prep.isPanorama) {
         if (!prep.ok) {
-            hal::dout << "Skybox panorama failed: " << prep.error << std::endl;
+            // CookOne already wrote a clear message to content_hot_reload.log / dout.
             s_cubemapSrv = nullptr;
             s_loadedCubemapPath.clear();
             return;
@@ -206,10 +206,15 @@ void Skybox_ReloadFromSettings() {
     s_loadedCubemapPath.clear();
 
     s_cubemapSrv = CubemapLoad(path.c_str());
-    if (s_cubemapSrv)
+    if (s_cubemapSrv) {
         s_loadedCubemapPath = path;
-    else if (prep.isPanorama)
-        hal::dout << "Skybox panorama failed: cooked cubemap did not load: " << loadPath << std::endl;
+        return;
+    }
+
+    if (prep.isPanorama)
+        panorama::LogDiagnostic("Skybox panorama failed: cooked cubemap did not load: " + loadPath);
+    else
+        panorama::LogDiagnostic("Skybox cubemap failed to load: " + loadPath);
 }
 
 void Skybox_Draw(const XMMATRIX& view, const XMMATRIX& proj) {

@@ -1119,10 +1119,32 @@ static void DrawRenderingSettingsWindow(bool* open) {
         rs.skyboxCubemapPath = cubemapBuf;
         syncedCubemapPath = rs.skyboxCubemapPath;
         RenderSettings_ReloadSkybox();
+        EngineGUI_MarkSceneDirty();
+    }
+    {
+        const char* skyExts[] = { ".dds", ".png" };
+        std::string droppedPath;
+        if (AcceptAssetPathDrop(skyExts, IM_ARRAYSIZE(skyExts), droppedPath)) {
+            strncpy_s(cubemapBuf, droppedPath.c_str(), sizeof(cubemapBuf) - 1);
+            rs.skyboxCubemapPath = droppedPath;
+            syncedCubemapPath = rs.skyboxCubemapPath;
+            RenderSettings_ReloadSkybox();
+            EngineGUI_MarkSceneDirty();
+        }
     }
     if (panorama::IsEquirectSkyPath(rs.skyboxCubemapPath)) {
+        ImGui::DragFloat("Vertical FOV", &rs.skyboxVerticalFov, 0.5f, 0.0f, 180.0f, "%.1f deg (0=auto)");
+        if (ImGui::IsItemDeactivatedAfterEdit()) {
+            if (!(rs.skyboxVerticalFov > 0.0f))
+                rs.skyboxVerticalFov = 0.0f;
+            else if (rs.skyboxVerticalFov > 180.0f)
+                rs.skyboxVerticalFov = 180.0f;
+            RenderSettings_ReloadSkybox();
+            EngineGUI_MarkSceneDirty();
+        }
+        ImGui::TextDisabled("0 = 360*height/width, centered on the horizon. Width is always 360 deg.");
         const panorama::Prep& prep = panorama::CurrentPrep();
-        if (!panorama::SameRomPath(prep.sourceRom, rs.skyboxCubemapPath)) {
+        if (!prep.isPanorama || !panorama::SameRomPath(prep.sourceRom, rs.skyboxCubemapPath)) {
             ImGui::TextDisabled("Equirectangular PNG cooks to a DDS cubemap on reload.");
         } else if (!prep.ok) {
             ImGui::TextColored(ImVec4(1.0f, 0.45f, 0.35f, 1.0f), "Panorama failed");
@@ -1210,7 +1232,8 @@ static void DrawRenderingSettingsWindow(bool* open) {
     ImGui::DragFloat("Height Falloff", &rs.fogHeightFalloff, 0.01f, 0.0f, 5.0f, "%.3f");
 
     ImGui::Spacing();
-    ImGui::TextDisabled("A DDS cubemap loads directly. A 2:1 PNG panorama is cooked into rom/skybox/cache/.");
+    ImGui::TextDisabled(
+        "A DDS cubemap loads directly. A PNG panorama (width = 360 deg; height <= width/2) cooks into rom/skybox/cache/. Drag a .png/.dds from the Asset Browser onto the path field.");
     ImGui::End();
 }
 

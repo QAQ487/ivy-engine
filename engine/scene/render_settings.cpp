@@ -127,6 +127,12 @@ RenderSettingsData RenderSettings_ParseJson(const nlohmann::json& renderJson, Re
     settings.skyboxEnabled = renderJson.value("skyboxEnabled", settings.skyboxEnabled);
     settings.skyboxCubemapPath = renderJson.value(
         "skyboxCubemap", settings.skyboxCubemapPath);
+    settings.skyboxVerticalFov = renderJson.value(
+        "skyboxVerticalFov", settings.skyboxVerticalFov);
+    if (!(settings.skyboxVerticalFov > 0.0f))
+        settings.skyboxVerticalFov = 0.0f;
+    else if (settings.skyboxVerticalFov > 180.0f)
+        settings.skyboxVerticalFov = 180.0f;
     settings.skyboxTint = ReadColor4(
         renderJson.value("skyboxTint", nlohmann::json{}), settings.skyboxTint);
     settings.skyboxExposure = renderJson.value(
@@ -181,6 +187,7 @@ nlohmann::json RenderSettings_ToJson() {
     nlohmann::json render;
     render["skyboxEnabled"] = g_renderSettings.skyboxEnabled;
     render["skyboxCubemap"] = g_renderSettings.skyboxCubemapPath;
+    render["skyboxVerticalFov"] = g_renderSettings.skyboxVerticalFov;
     render["skyboxTint"] = {
         g_renderSettings.skyboxTint.x,
         g_renderSettings.skyboxTint.y,

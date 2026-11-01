@@ -23,6 +23,9 @@ struct Prep {
 bool IsEquirectSkyPath(const std::string& path);
 bool SameRomPath(const std::string& a, const std::string& b);
 
+// Writes to OutputDebugString and appends content_hot_reload.log (retrievable local log).
+void LogDiagnostic(const std::string& message);
+
 // Uses the process project/resources roots. DDS paths return isPanorama false.
 Prep PrepareSky(const std::string& skyboxRomPath);
 const Prep& CurrentPrep();

@@ -31,8 +31,17 @@ struct SizeCheck {
     std::string error;
 };
 
-// Face size is height/2. Aspect must be 2:1 and the face size must be a power of two.
+// Face size is height/2 when the image is exactly 2:1; otherwise the largest power of
+// two at most width/4. Width is full 360 deg. Height may be less than width/2 (partial
+// vertical coverage). Height greater than width/2 (more than 180 deg) is rejected.
 SizeCheck ValidateEquirectSize(int width, int height, const Limits& limits = {});
+
+// Default vertical coverage in degrees: 360 * height / width, centered on the horizon.
+// Exactly 2:1 yields 180. Returns 0 when the size is not usable.
+double DefaultVerticalFovDeg(int width, int height);
+
+// overrideDeg <= 0 uses DefaultVerticalFovDeg. Otherwise clamps to (0, 180].
+double ResolveVerticalFovDeg(int width, int height, double overrideDeg);
 
 struct Vec3 {
     float x = 0.f;
@@ -45,8 +54,11 @@ struct Vec3 {
 Vec3 CubeFaceDirection(int face, float u, float v);
 void DirectionToFaceUv(float x, float y, float z, int* face, float* u, float* v);
 
-// Debevec lat-long: +Z is the image center, +Y is the top row, u increases toward +X.
+// Debevec lat-long: +Z is the image center, +Y is toward the top, u increases toward +X.
+// verticalFovDeg is the image's vertical coverage centered on the horizon; 180 matches
+// a full equirect. Directions outside the covered band clamp to the nearest edge row.
 void EquirectUvFromDirection(float x, float y, float z, float* u, float* v);
+void EquirectUvFromDirection(float x, float y, float z, float verticalFovDeg, float* u, float* v);
 
 struct RgbaImage {
     int width = 0;
@@ -60,7 +72,12 @@ struct CubeBgra {
     std::vector<std::uint8_t> faces;
 };
 
-bool ConvertEquirectToCube(const RgbaImage& image, int faceSize, CubeBgra* cube, std::string* error);
+bool ConvertEquirectToCube(
+    const RgbaImage& image,
+    int faceSize,
+    double verticalFovDeg,
+    CubeBgra* cube,
+    std::string* error);
 
 struct CubeLevel {
     int size = 0;
@@ -95,6 +112,9 @@ struct FileStamp {
     std::int64_t mtimeSec = 0;
     std::uint64_t size = 0;
     std::uint64_t contentHash = 0;
+    // 0 means "auto" (derive coverage from the image aspect). Non-zero is the override
+    // in degrees after clamping to (0, 180]. Included in the stamp so FOV changes rebake.
+    double verticalFovDeg = 0;
 };
 
 bool CacheIsFresh(const FileStamp& source, const FileStamp& recorded);
@@ -126,15 +146,18 @@ struct CookResult {
     bool rebaked = false;
     bool iblReady = false;
     std::string error;
+    std::string warning;
 };
 
-// Reads pngFile, skips work when the stamp matches mtime, size, and content hash.
-// samples <= 0 writes the display cubemap and reports IBL as not matching the sky.
+// Reads pngFile, skips work when the stamp matches mtime, size, content hash, and FOV key.
+// verticalFovOverrideDeg <= 0 uses 360*height/width. samples <= 0 writes the display
+// cubemap and reports IBL as not matching the sky.
 CookResult CookPanoramaFiles(
     const std::filesystem::path& pngFile,
     const CookPaths& outputs,
     DecodeImageFn decode,
     const Limits& limits,
-    const IblConfig& ibl);
+    const IblConfig& ibl,
+    double verticalFovOverrideDeg = 0.0);
 
 }  // namespace panorama
