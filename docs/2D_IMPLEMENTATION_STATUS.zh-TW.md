@@ -32,7 +32,7 @@
 2. 建立 Camera，啟用 Orthographic，設定 View Height，例如 10；相機放在 (0,0,-10)，旋轉為零，朝 +Z 看向 XY 平面。
 3. 使用既有相機選擇功能，將此相機設為 Play mode 的場景相機。
 4. Sprite 的尺寸為來源像素大小除以 Pixels Per Unit；pivot 由左下角起算。排序先比較 Sorting Layer，再比較 Order In Layer。
-5. `testbed/rom/scene/scene_sprite_2d.json` 提供兩個重疊 Sprite 與正交相機；貼圖係引擎 `rom/branding/ivy_logo.png`（testbed 以 junction 引用，唔另複製）。
+5. `testbed/rom/scene/scene_sprite_2d.json` 提供兩個重疊 Sprite 與正交相機；貼圖路徑係 `rom/branding/ivy_logo.png`，檔案在引擎 `resources/branding/ivy_logo.png`（專案沒有同名檔時 fallback）。
 
 驗證：Debug x64 editor/runtime 編譯與連結成功；`tools/camera_2d_check.cpp` 的透視預設、正交縮放、viewport aspect 與零尺寸防護斷言通過。第一、第二階段另有使用者完成確認；此確認不代表代理已逐項執行所有實機測試，獨立部署驗收仍留待後續階段。
 

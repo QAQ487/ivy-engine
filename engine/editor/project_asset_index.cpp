@@ -151,8 +151,8 @@ void ProjectAssetIndex::RebuildFolderTree() {
         const fs::directory_entry& entry = *it;
         if (!entry.is_directory(ec)) continue;
 
-        // Do not use filesystem::relative: it canonicalizes and follows the
-        // testbed's rom junctions back out to the engine rom.
+        // LexicalChildPath does not follow directory links, so the browser
+        // path stays under the project rom/.
         const fs::path rel = content_path::LexicalChildPath(entry.path(), kProjectRoot);
         if (rel.empty()) continue;
 

@@ -13,20 +13,6 @@ namespace content_path {
 // In-repo content project the Debug editor opens when no recent project loads.
 inline constexpr const char* kInRepoTestbedDir = "testbed";
 
-// Engine rom/ directories the testbed links instead of copying.
-// "scene" is owned by the testbed. "editor" is writable UI prefs.
-inline constexpr const char* kSharedRomDirNames[] = {
-    "branding",
-    "font",
-    "model",
-    "physmat",
-    "shader",
-    "skybox",
-    "texture",
-};
-inline constexpr std::size_t kSharedRomDirCount =
-    sizeof(kSharedRomDirNames) / sizeof(kSharedRomDirNames[0]);
-
 // Relative path with no absolute prefix and no "." / ".." segment.
 // Backslashes are normalized to '/'. Writes the normalized form when non-null.
 inline bool IsSafeRelativePath(std::string_view path, std::string* normalized) {

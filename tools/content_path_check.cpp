@@ -44,18 +44,6 @@ int main() {
     Expect(!content_path::IsSafeRomPath("ROM/texture/a.png", nullptr), "uppercase prefix");
     Expect(!content_path::IsSafeRelativePath("foo/../../bar", nullptr), "relative escape");
 
-    const char* expectedDirs[] = {
-        "branding", "font", "model", "physmat", "shader", "skybox", "texture",
-    };
-    Expect(content_path::kSharedRomDirCount == 7, "shared dir count");
-    for (std::size_t i = 0; i < content_path::kSharedRomDirCount; ++i) {
-        Expect(std::string(content_path::kSharedRomDirNames[i]) == expectedDirs[i],
-               "shared dir name");
-        Expect(content_path::IsSafeRelativePath(content_path::kSharedRomDirNames[i], nullptr),
-               "shared dir is a single safe segment");
-        Expect(std::string(content_path::kSharedRomDirNames[i]).find('/') == std::string::npos,
-               "shared dir has no slash");
-    }
     Expect(std::string(content_path::kInRepoTestbedDir) == "testbed", "testbed folder name");
     Expect(content_path::IsSafeRelativePath(content_path::kInRepoTestbedDir, nullptr),
            "testbed name is safe");

@@ -234,7 +234,7 @@ The editor can drive different camera behaviors (third-person, scene camera node
 | `rom/texture/` | Albedo, UI, fonts, sky DDS, etc. |
 | `rom/audio/` | WAV (and similar) for BGM / SFX |
 | `rom/effect/` | Effekseer effect files |
-| `rom/shader/` | Built shader binaries (from `shaders/`) |
+| `resources/shader/` | Built shader binaries (from `shaders/`). Projects still refer to them as `rom/shader/`; the loader falls back here when the project has no copy |
 | `rom/font/` | Font-related assets if used |
 | `rom/editor/` | Editor UI prefs (e.g. zoom) for this project |
 
@@ -940,7 +940,7 @@ The editor calls `SetCurrentDirectory` on that folder so relative paths like `ro
 
 | Command | What it does |
 |---------|----------------|
-| **New Project…** | Pick a parent folder, enter a name → scaffolds `rom/`, blank `scene_main.json`, copies engine shaders/fonts/textures, optional scripts template, plus `<Name>.sln` + `build_scripts.bat` for building GameScripts outside the engine |
+| **New Project…** | Pick a parent folder, enter a name → scaffolds `rom/`, blank `scene_main.json`, optional scripts template, plus `<Name>.sln` + `build_scripts.bat`. Engine shaders, fonts, branding, primitives, and IBL stay in `resources/` and are used when the project does not override that `rom/` path |
 | **Open Project…** | Pick any folder that contains `rom/` (creates `project.json` if missing), including the in-repo `testbed/` |
 | **Open Testbed** | Open `<engine repo>/testbed` when that folder exists. Shown in Debug and Release. Use this when a recent external project is already open |
 | **Save Project** (Ctrl+Shift+S) | Saves the current scene + writes `project.json` (and syncs `default_scene.txt`) |
@@ -983,7 +983,7 @@ The editor calls `SetCurrentDirectory` on that folder so relative paths like `ro
 ### Sample vs your game
 
 - **Debug IvyEngine** opens [`testbed/`](../testbed) when no recent project loads. Sample scenes are `testbed/rom/scene/`. Models, fonts, textures, shaders, and the skybox stay in the engine `rom/` and are linked when the project opens, not copied.
-- The engine repo root still has `project.json` and `rom/` so a built exe can boot `scene_sample_menu.json` from the folder next to it. That is the ship layout, not the editor's default project.
+- The engine repo root is not a content project. It has `resources/` (read-only defaults) and `testbed/` (the sample content project). `IvyEngineRuntime` from the engine output folder opens `testbed/` when there is no `rom/scene` beside the exe.
 - **File → New Project** creates a separate game folder anywhere on disk. Scripts can still target the engine via `IvyEngine.props` (same idea as [`CONTENT_PROJECT.md`](CONTENT_PROJECT.md)). An existing external project in Recent Projects is opened instead of the testbed.
 
 ---

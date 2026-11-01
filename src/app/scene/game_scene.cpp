@@ -335,6 +335,25 @@ void GameScene::Initialize() {
 
 	Lighting::SetAmbientColor({ 0.6f, 0.7f, 0.8f });
 
+#ifdef GAME_RUNTIME
+	// A packaged game has rom/ beside the exe. The engine OutDir does not:
+	// it only mirrors resources/. Open the in-repo testbed so the dev host
+	// still has a boot scene. Asset reads then use testbed rom/ first and
+	// <exe-dir>/resources after that.
+	{
+		std::error_code ec;
+		if (!std::filesystem::is_regular_file("rom/scene/default_scene.txt", ec)) {
+			ec.clear();
+			const auto cwd = std::filesystem::current_path(ec);
+			const auto testbed = content_path::ResolveInRepoTestbedPath(
+				ec ? std::filesystem::path{} : cwd,
+				content_path::ExecutableDirectory());
+			if (!testbed.empty())
+				SetCurrentDirectoryW(testbed.wstring().c_str());
+		}
+	}
+#endif
+
 	// Scene + default level
 	{
 #ifndef GAME_RUNTIME

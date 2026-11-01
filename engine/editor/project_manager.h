@@ -94,7 +94,6 @@ private:
     bool WriteProjectFile(const std::string& rootPath, const ProjectData& data,
                           std::string* errorOut) const;
     ProjectData MakeDefaultData(const std::string& rootPath, const std::string& name) const;
-    void EnsureEngineAssets(const std::string& rootPath) const;
     bool ScaffoldNewProjectTree(const std::string& rootPath, const std::string& projectName,
                                 std::string* errorOut, bool template2D);
     void LoadRecentList();

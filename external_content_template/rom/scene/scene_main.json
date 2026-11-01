@@ -1,0 +1,41 @@
+{
+    "version": 4,
+    "settings": {
+        "render": {
+            "skyboxEnabled": false,
+            "skyboxCubemap": "",
+            "skyboxTint": [1.0, 1.0, 1.0, 1.0],
+            "skyboxExposure": 1.0,
+            "skyboxRotationYDeg": 0.0,
+            "clearColor": [0.12, 0.14, 0.18, 1.0],
+            "defaultShader": "standard",
+            "shadowQuality": "medium"
+        }
+    },
+    "nodes": [
+        {
+            "name": "Directional Light",
+            "tag": 0,
+            "components": {
+                "SceneTransform": {
+                    "posX": 0.0, "posY": 8.0, "posZ": 0.0,
+                    "rotX": 50.0, "rotY": -35.0, "rotZ": 0.0,
+                    "scaleX": 1.0, "scaleY": 1.0, "scaleZ": 1.0
+                },
+                "DirectionalLight": {
+                    "enabled": true,
+                    "castShadows": true,
+                    "color": [1.0, 0.96, 0.9],
+                    "intensity": 1.0,
+                    "specColor": [1.0, 1.0, 1.0],
+                    "specPower": 32.0
+                }
+            },
+            "children": []
+        }
+    ],
+    "canvas": {
+        "name": "main",
+        "elements": []
+    }
+}
