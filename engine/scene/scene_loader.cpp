@@ -13,6 +13,7 @@
 #include "prepared_scene.h"
 #include "scene_file_monitor.h"
 #include "scene_json_validation.h"
+#include "engine/scene/json_float.h"
 #include "engine/core/content_path.h"
 
 #include "engine/scene/render_settings.h"
@@ -730,7 +731,7 @@ bool SceneLoader_SaveToFile(const char* filename) {
     fs::create_directories(dest.parent_path(), writeEc);
     std::ofstream file(dest, std::ios::binary);
     if (!file.is_open()) return false;
-    const auto content = root.dump(4);
+    const auto content = JsonFloat_Dump(root, 4);
     file << content;
     file.close();
     if (!file) return false;

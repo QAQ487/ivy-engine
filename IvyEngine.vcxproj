@@ -270,6 +270,7 @@ exit /b 0</Command>
     <ClInclude Include="engine\ecs\tag_registry.h" />
     <ClInclude Include="engine\ecs\model_asset_cache.h" />
     <ClInclude Include="engine\scene\scene_loader.h" />
+    <ClInclude Include="engine\scene\json_float.h" />
     <ClInclude Include="engine\scene\scene_asset_preload.h" />
     <ClInclude Include="engine\scene\render_settings.h" />
     <ClInclude Include="engine\rendering\environment\skybox.h" />

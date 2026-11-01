@@ -7,6 +7,7 @@
 #include "engine/ecs/game_object.h"
 #include "engine/ecs/transform.h"
 #include "engine/editor/editor_undo.h"
+#include "engine/scene/json_float.h"
 #include "camera.h"
 #include "debug_camera.h"
 #include "engine/input/mouse.h"
@@ -197,6 +198,12 @@ static XMMATRIX GetParentWorldMatrix(const GameObject* obj) {
     return XMMatrixIdentity();
 }
 
+static void PackTransformPose(const engine::Transform& t, float out9[9]) {
+    out9[0] = t.localPosition.x; out9[1] = t.localPosition.y; out9[2] = t.localPosition.z;
+    out9[3] = t.localRotation.x; out9[4] = t.localRotation.y; out9[5] = t.localRotation.z;
+    out9[6] = t.localScale.x;    out9[7] = t.localScale.y;    out9[8] = t.localScale.z;
+}
+
 static void ApplyMatrixToTransform(engine::Transform* transform, GameObject* owner,
     const float matrix[16], ImGuizmo::MODE mode, ImGuizmo::OPERATION operation)
 {
@@ -222,7 +229,9 @@ static void ApplyMatrixToTransform(engine::Transform* transform, GameObject* own
         }
     } else {
         transform->localPosition = { igT[0], igT[1], igT[2] };
-        if (!translateOnly || mode == ImGuizmo::LOCAL) {
+        // Translate-only must not rewrite rot/scale: ImGuizmo recompose/decompose
+        // injects float noise that marked the scene dirty on incidental clicks.
+        if (!translateOnly) {
             transform->localRotation = { igR[0], igR[1], igR[2] };
             transform->localScale    = { igS[0], igS[1], igS[2] };
         }
@@ -363,16 +372,27 @@ void Draw(GameObject* selected) {
         view, proj, operation, g_mode, matrix);
 
     if (changed) {
+        float before9[9];
+        PackTransformPose(*transform, before9);
         const float savedZ=transform->localPosition.z, savedRX=transform->localRotation.x,
             savedRY=transform->localRotation.y, savedSZ=transform->localScale.z;
-        ApplyMatrixToTransform(transform, selected, matrix, g_mode, g_operation);
+        ApplyMatrixToTransform(transform, selected, matrix, g_mode, operation);
         if(DebugCamera_Is2DView()) {
             transform->localPosition.z=savedZ; transform->localRotation.x=savedRX;
             transform->localRotation.y=savedRY; transform->localScale.z=savedSZ;
             selected->SyncLegacyTransformFromComponents();
         }
-        transform->SnapshotStartState();
-        EngineGUI_MarkSceneDirty();
+        float after9[9];
+        PackTransformPose(*transform, after9);
+        if (JsonFloat_TransformChanged(before9, after9)) {
+            transform->SnapshotStartState();
+            EngineGUI_MarkSceneDirty();
+        } else {
+            transform->localPosition = { before9[0], before9[1], before9[2] };
+            transform->localRotation = { before9[3], before9[4], before9[5] };
+            transform->localScale    = { before9[6], before9[7], before9[8] };
+            selected->SyncLegacyTransformFromComponents();
+        }
     }
 
     const bool usingNow = ImGuizmo::IsUsing();

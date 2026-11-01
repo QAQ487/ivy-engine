@@ -339,6 +339,9 @@
     <ClInclude Include="engine\scene\scene_loader.h">
       <Filter>engine\scene</Filter>
     </ClInclude>
+    <ClInclude Include="engine\scene\json_float.h">
+      <Filter>engine\scene</Filter>
+    </ClInclude>
     <ClInclude Include="engine\scene\scene_asset_preload.h">
       <Filter>engine\scene</Filter>
     </ClInclude>
