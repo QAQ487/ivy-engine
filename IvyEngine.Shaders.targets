@@ -80,7 +80,7 @@
   </ItemGroup>
 
   <PropertyGroup>
-    <ShaderOutputDir>$(ProjectDir)rom\shader\</ShaderOutputDir>
+    <ShaderOutputDir>$(ProjectDir)resources\shader\</ShaderOutputDir>
     <ShaderCommonDir>$(ProjectDir)shaders\</ShaderCommonDir>
     <FxcToolPath Condition="'$(FxcToolPath)' == '' and '$(WindowsSdkVerBinPath)' != ''">$(WindowsSdkVerBinPath)x64\fxc.exe</FxcToolPath>
     <FxcToolPath Condition="'$(FxcToolPath)' == '' and Exists('C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\fxc.exe')">C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\fxc.exe</FxcToolPath>

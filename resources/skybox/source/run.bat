@@ -1,11 +1,11 @@
 @echo off
 setlocal
-rem Rebuild rom/skybox/MySkybox.dds from face PNGs in this folder.
+rem Rebuild resources/skybox/MySkybox.dds from face PNGs in this folder.
 rem Requires DirectXTex "texassemble" on PATH (from DirectXTex tools / texconv package).
 rem See README.md in this directory.
 
 cd /d "%~dp0"
-set "OUT=%~dp0..\..\..\rom\skybox\MySkybox.dds"
+set "OUT=%~dp0..\MySkybox.dds"
 
 where texassemble >nul 2>&1
 if errorlevel 1 (

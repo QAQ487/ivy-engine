@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="rom/branding/ivy_logo.png" width="160" alt="Ivy Engine logo">
+  <img src="resources/branding/ivy_logo.png" width="160" alt="Ivy Engine logo">
 </p>
 
 # Ivy Engine
@@ -30,7 +30,7 @@
 
 The engine and game content are fully decoupled:
 
-- This repo = editor (`IvyEngine.exe`) + runtime host (`IvyEngineRuntime.exe`) + the in-repo [`testbed/`](testbed) content project
+- This repo = editor (`IvyEngine.exe`) + runtime host (`IvyEngineRuntime.exe`) + read-only [`resources/`](resources) defaults + the in-repo [`testbed/`](testbed) content project
 - A **content project** is just a folder: `project.json`, `rom/` assets, `game/scripts/` C++ DLL — created from the editor's New Project flow, or opened from `testbed/` when you only need the sample scenes
 - Deployed packages contain only the game: `<GameName>.exe` + assets — the engine itself never appears as a name
 
@@ -70,7 +70,7 @@ The engine and game content are fully decoupled:
 
 エンジンとゲームコンテンツは完全に分離されています：
 
-- このリポジトリ = エディタ + ランタイムホスト + リポジトリ内の [`testbed/`](testbed) コンテンツプロジェクト
+- このリポジトリ = エディタ + ランタイムホスト + 読み取り専用の [`resources/`](resources) + リポジトリ内の [`testbed/`](testbed) コンテンツプロジェクト
 - **コンテンツプロジェクト**はフォルダ一つ：`project.json`、`rom/` アセット、`game/scripts/` の C++ DLL — エディタの New Project から作成。サンプルシーンだけ試すときは `testbed/` を開く
 - デプロイ結果にはゲームだけが入る：`<ゲーム名>.exe` + アセット
 

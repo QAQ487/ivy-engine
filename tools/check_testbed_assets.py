@@ -1,16 +1,13 @@
 #!/usr/bin/env python3
 """Resolve every asset path referenced by testbed scenes.
 
-Shared directories (models, fonts, textures, shaders, skybox, branding,
-physics materials) stay in the engine ``rom/``. The testbed does not copy
-them. A path is valid only when it is a safe ``rom/`` relative path and the
-file exists under the testbed or under the engine ``rom/`` without leaving
-that root.
+A path is valid only when it is a safe ``rom/`` relative path and the file
+exists under ``testbed/`` or, failing that, under repo-root ``resources/``
+(``rom/<rest>`` maps to ``resources/<rest>``). The testbed must not keep a
+second copy of a file that already lives in ``resources/``.
 
 Scene-to-scene names (``scene``, ``sceneFile``, ``nextScene``) must be plain
 filenames in ``testbed/rom/scene``.
-
-Keep the shared-directory list aligned with ``content_path::kSharedRomDirNames``.
 """
 
 import json
@@ -20,17 +17,8 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
 TESTBED = REPO / "testbed"
-ENGINE_ROM = REPO / "rom"
+RESOURCES = REPO / "resources"
 SCENE_DIR = TESTBED / "rom" / "scene"
-SHARED_ROM_DIRS = (
-    "branding",
-    "font",
-    "model",
-    "physmat",
-    "shader",
-    "skybox",
-    "texture",
-)
 SCENE_KEYS = {"scene", "sceneFile", "nextScene"}
 PLACEHOLDERS = {
     "rom/texture/sprite_demo/adventurer_walk.png": (256, 128),
@@ -75,10 +63,10 @@ def resolve_rom(ref):
         fail("unsafe rom path: %s" % ref)
     normalized = ref.replace("\\", "/")
     local = TESTBED / normalized
-    shared = REPO / normalized
-    if local.is_file() and (is_inside(TESTBED, local) or is_inside(ENGINE_ROM, local.resolve())):
+    if local.is_file() and is_inside(TESTBED, local):
         return local.resolve()
-    if shared.is_file() and is_inside(ENGINE_ROM, shared):
+    shared = RESOURCES / normalized[4:]
+    if shared.is_file() and is_inside(RESOURCES, shared):
         return shared.resolve()
     fail("missing asset: %s" % normalized)
 
@@ -196,29 +184,20 @@ def main():
             fail("%s is %sx%s, expected %sx%s" % (ref, got[0], got[1], width, height))
         if path.stat().st_size > MAX_PLACEHOLDER_BYTES:
             fail("%s is %s bytes; placeholders must stay tiny" % (ref, path.stat().st_size))
-        if not is_inside(ENGINE_ROM, path):
-            fail("%s should live in engine rom/, not a testbed copy" % ref)
+        if not is_inside(TESTBED, path):
+            fail("%s should live in testbed/rom, not resources/" % ref)
 
-    for name in SHARED_ROM_DIRS:
-        link = TESTBED / "rom" / name
-        if not link.exists():
-            continue
-        if link.is_symlink():
-            continue
-        # A real directory would duplicate engine assets. Junctions are links.
-        if link.is_dir() and not link.is_symlink():
-            # Linux checkouts have no junctions. A real directory is a copy.
-            fail("testbed/rom/%s is a real directory; reference engine rom/ instead" % name)
+    rom_root = TESTBED / "rom"
+    if rom_root.is_dir():
+        for path in rom_root.rglob("*"):
+            if not path.is_file() or path.is_symlink():
+                continue
+            rel = path.relative_to(rom_root)
+            engine_copy = RESOURCES / rel
+            if engine_copy.is_file():
+                fail("testbed copied an engine default: %s" % path.relative_to(REPO))
 
-    copied = []
-    for pattern in ("*.fbx", "*.dds", "*.ttf", "*.cso"):
-        copied.extend((TESTBED / "rom").rglob(pattern))
-    # rglob does not follow symlinks, but it does list a real copied tree.
-    real_copies = [p for p in copied if p.is_file() and not p.is_symlink()]
-    if real_copies:
-        fail("testbed copied engine assets: %s" % real_copies[0].relative_to(REPO))
-
-    print("PASS: %d testbed scenes resolve inside the project or engine rom/" % len(scenes))
+    print("PASS: %d testbed scenes resolve inside the project or resources/" % len(scenes))
 
 
 if __name__ == "__main__":

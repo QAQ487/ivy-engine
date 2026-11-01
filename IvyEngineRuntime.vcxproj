@@ -136,16 +136,15 @@
       <AdditionalOptions>/ignore:4099 %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /D /Y "$(TargetDir)*.cso" "$(ProjectDir)rom\shader\"
+      <Command>if not exist "$(ProjectDir)resources\shader" mkdir "$(ProjectDir)resources\shader"
+xcopy /D /Y "$(TargetDir)*.cso" "$(ProjectDir)resources\shader\"
 
 xcopy /D /Y "$(ProjectDir)libraries\fbxsdk\dll\Debug\*.*" "$(ProjectDir)x64\Debug\" /E /I
 
-if not exist "$(OutDir)rom" mkdir "$(OutDir)rom"
-if exist "$(ProjectDir)game\" (
-  if not exist "$(OutDir)game" mkdir "$(OutDir)game"
-  xcopy /y /d /e "$(ProjectDir)game\*" "$(OutDir)game\"
-)
-xcopy /y /d /e "$(ProjectDir)rom\*" "$(OutDir)rom\"</Command>
+rem Engine defaults beside the exe. skybox/source is authoring input and is not mirrored.
+robocopy "$(ProjectDir)resources" "$(OutDir)resources" /MIR /XD "$(ProjectDir)resources\skybox\source" /NJH /NJS /NDL /NFL /NC /NS /NP
+if %ERRORLEVEL% GEQ 8 exit /b %ERRORLEVEL%
+exit /b 0</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -171,16 +170,15 @@ xcopy /y /d /e "$(ProjectDir)rom\*" "$(OutDir)rom\"</Command>
       <AdditionalOptions>/ignore:4099 %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /D /Y "$(TargetDir)*.cso" "$(ProjectDir)rom\shader\"
+      <Command>if not exist "$(ProjectDir)resources\shader" mkdir "$(ProjectDir)resources\shader"
+xcopy /D /Y "$(TargetDir)*.cso" "$(ProjectDir)resources\shader\"
 
 xcopy /D /Y "$(ProjectDir)libraries\fbxsdk\dll\Debug\*.*" "$(ProjectDir)x64\Debug\" /E /I
 
-if not exist "$(OutDir)rom" mkdir "$(OutDir)rom"
-if exist "$(ProjectDir)game\" (
-  if not exist "$(OutDir)game" mkdir "$(OutDir)game"
-  xcopy /y /d /e "$(ProjectDir)game\*" "$(OutDir)game\"
-)
-xcopy /y /d /e "$(ProjectDir)rom\*" "$(OutDir)rom\"</Command>
+rem Engine defaults beside the exe. skybox/source is authoring input and is not mirrored.
+robocopy "$(ProjectDir)resources" "$(OutDir)resources" /MIR /XD "$(ProjectDir)resources\skybox\source" /NJH /NJS /NDL /NFL /NC /NS /NP
+if %ERRORLEVEL% GEQ 8 exit /b %ERRORLEVEL%
+exit /b 0</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

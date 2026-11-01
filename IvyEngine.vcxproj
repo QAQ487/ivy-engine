@@ -143,15 +143,9 @@
     <PostBuildEvent>
       <Command>xcopy /D /Y "$(ProjectDir)libraries\fbxsdk\dll\Debug\*.*" "$(OutDir)" /E /I /Q
 
-if exist "$(ProjectDir)game\" (
-  robocopy "$(ProjectDir)game" "$(OutDir)game" /MIR /NJH /NJS /NDL /NFL /NC /NS /NP
-  if %ERRORLEVEL% GEQ 8 exit /b %ERRORLEVEL%
-)
-
-robocopy "$(ProjectDir)rom" "$(OutDir)rom" /MIR /NJH /NJS /NDL /NFL /NC /NS /NP
+rem Engine defaults beside the exe. skybox/source is authoring input and is not mirrored.
+robocopy "$(ProjectDir)resources" "$(OutDir)resources" /MIR /XD "$(ProjectDir)resources\skybox\source" /NJH /NJS /NDL /NFL /NC /NS /NP
 if %ERRORLEVEL% GEQ 8 exit /b %ERRORLEVEL%
-
-if not exist "$(OutDir)project.json" copy /Y "$(ProjectDir)project.json" "$(OutDir)project.json"
 
 exit /b 0</Command>
     </PostBuildEvent>
@@ -186,15 +180,9 @@ exit /b 0</Command>
     <PostBuildEvent>
       <Command>xcopy /D /Y "$(ProjectDir)libraries\fbxsdk\dll\Release\*.*" "$(OutDir)" /E /I /Q
 
-if exist "$(ProjectDir)game\" (
-  robocopy "$(ProjectDir)game" "$(OutDir)game" /MIR /NJH /NJS /NDL /NFL /NC /NS /NP
-  if %ERRORLEVEL% GEQ 8 exit /b %ERRORLEVEL%
-)
-
-robocopy "$(ProjectDir)rom" "$(OutDir)rom" /MIR /NJH /NJS /NDL /NFL /NC /NS /NP
+rem Engine defaults beside the exe. skybox/source is authoring input and is not mirrored.
+robocopy "$(ProjectDir)resources" "$(OutDir)resources" /MIR /XD "$(ProjectDir)resources\skybox\source" /NJH /NJS /NDL /NFL /NC /NS /NP
 if %ERRORLEVEL% GEQ 8 exit /b %ERRORLEVEL%
-
-if not exist "$(OutDir)project.json" copy /Y "$(ProjectDir)project.json" "$(OutDir)project.json"
 
 exit /b 0</Command>
     </PostBuildEvent>
