@@ -7,6 +7,7 @@
 #include "engine/rendering/sprite/texture.h"
 #include "engine/scene/render_settings.h"
 #include "engine/ecs/string_utils.h"
+#include "engine/core/content_path.h"
 
 #include <fstream>
 #include <vector>
@@ -46,7 +47,7 @@ static std::wstring s_loadedCubemapPath;
 static bool LoadCompiledShader(const char* path, ID3D11Device* device,
     ID3D11VertexShader** outVs, ID3D11PixelShader** outPs)
 {
-    std::ifstream file(path, std::ios::binary);
+    std::ifstream file(content_path::ReadableFileCurrent(path), std::ios::binary);
     if (!file) return false;
 
     file.seekg(0, std::ios::end);
@@ -75,7 +76,7 @@ bool Skybox_Initialize() {
     s_context = GetDeviceContext();
     if (!s_device || !s_context) return false;
 
-    std::ifstream vsFile("rom/shader/SkyboxVS.cso", std::ios::binary);
+    std::ifstream vsFile(content_path::ReadableFileCurrent("rom/shader/SkyboxVS.cso"), std::ios::binary);
     if (!vsFile) {
         MessageBoxA(nullptr,
             "Cannot open rom/shader/SkyboxVS.cso\nPlease build the project to generate .cso files.",

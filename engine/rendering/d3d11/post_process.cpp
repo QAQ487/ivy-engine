@@ -11,6 +11,7 @@
 
 #include "renderer.h"
 #include "engine/core/engine_gui.h"
+#include "engine/core/content_path.h"
 
 #include <fstream>
 #include <vector>
@@ -94,7 +95,7 @@ struct BloomCB {
 static_assert(sizeof(BloomCB) == 48, "BloomCB must be 48 bytes");
 
 bool LoadShaderFile(const char* path, std::vector<char>& outData) {
-	std::ifstream file(path, std::ios::binary);
+	std::ifstream file(content_path::ReadableFileCurrent(path), std::ios::binary);
 	if (!file)
 		return false;
 	file.seekg(0, std::ios::end);

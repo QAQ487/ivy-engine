@@ -118,10 +118,38 @@ inline std::filesystem::path ResolveRomForWrite(std::string_view path, const Rom
     return (roots.projectRoot / std::filesystem::path(normalized)).lexically_normal();
 }
 
+// True when the string is rom-shaped, including unsafe rom paths that must not be opened.
+inline bool IsRomShapedPath(std::string_view path) {
+    std::string probe;
+    probe.reserve(path.size());
+    for (unsigned char c : path) {
+        if (c < 0x20)
+            return false;
+        probe.push_back(c == '\\' ? '/' : static_cast<char>(c));
+    }
+    return probe == "rom" || probe.compare(0, 4, "rom/") == 0;
+}
+
+// Safe rom/ paths resolve project-then-resources. Other paths stay literal.
+// A rom-shaped path that fails IsSafeRomPath resolves empty (no traversal).
+inline std::filesystem::path ReadableFile(std::string_view path, const RomRoots& roots) {
+    if (IsRomShapedPath(path))
+        return ResolveRomForRead(path, roots);
+    return std::filesystem::path(std::string(path));
+}
+
+inline std::filesystem::path WritableFile(std::string_view path, const RomRoots& roots) {
+    if (IsRomShapedPath(path))
+        return ResolveRomForWrite(path, roots);
+    return std::filesystem::path(std::string(path));
+}
+
 // Process cwd plus <exe-dir>/resources. Defined in content_path.cpp.
+std::filesystem::path ExecutableDirectory();
 RomRoots CurrentRomRoots();
-std::filesystem::path ResolveRomForReadCurrent(std::string_view path);
-std::filesystem::path ResolveRomForWriteCurrent(std::string_view path);
+std::filesystem::path ReadableFileCurrent(std::string_view path);
+std::filesystem::path WritableFileCurrent(std::string_view path);
+std::wstring ReadableWideCurrent(const wchar_t* path);
 
 // Child of `root` using only lexical normalization. Symlinks and NTFS junctions
 // are not resolved, so a link at rom/model stays "model" instead of "../../rom/model".

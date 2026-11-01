@@ -12,6 +12,7 @@
 #include "engine/rendering/sprite/texture.h"
 #include "engine/rendering/model/model.h"
 #include "engine/core/utf8_path.h"
+#include "engine/core/content_path.h"
 #include "libraries/nlohmann/json.hpp"
 
 #include <Windows.h>
@@ -142,7 +143,7 @@ bool IsProjectRelativeRomPath(const std::string& path) {
 }
 
 bool TryReadJsonFile(const std::string& path, json& outRoot) {
-	std::ifstream f(path, std::ios::binary);
+	std::ifstream f(content_path::ReadableFileCurrent(path), std::ios::binary);
 	if (!f.is_open())
 		return false;
 

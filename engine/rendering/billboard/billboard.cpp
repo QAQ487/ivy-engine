@@ -10,6 +10,7 @@
 #include "billboard.h"
 #include "engine/rendering/d3d11/renderer.h"
 #include "engine/rendering/sprite/texture.h"
+#include "engine/core/content_path.h"
 #include <fstream>
 #include <vector>
 #include <algorithm>
@@ -42,7 +43,7 @@ bool Billboard::Initialize() {
 	HRESULT hr;
 
 	// Load pre-compiled vertex shader from .cso file
-	std::ifstream vs_file("rom/shader/VertexShaderUnlit.cso", std::ios::binary);
+	std::ifstream vs_file(content_path::ReadableFileCurrent("rom/shader/VertexShaderUnlit.cso"), std::ios::binary);
 	if (!vs_file) {
 		MessageBoxA(nullptr, "Cannot open rom/shader/VertexShaderUnlit.cso\nPlease build the project to generate .cso files.", "VS Load Error", MB_OK | MB_ICONERROR);
 		return false;
@@ -64,7 +65,7 @@ bool Billboard::Initialize() {
 	if (FAILED(hr)) return false;
 
 	// Load pre-compiled pixel shader from .cso file
-	std::ifstream ps_file("rom/shader/PixelShaderUnlit.cso", std::ios::binary);
+	std::ifstream ps_file(content_path::ReadableFileCurrent("rom/shader/PixelShaderUnlit.cso"), std::ios::binary);
 	if (!ps_file) {
 		MessageBoxA(nullptr, "Cannot open rom/shader/PixelShaderUnlit.cso\nPlease build the project to generate .cso files.", "PS Load Error", MB_OK | MB_ICONERROR);
 		return false;

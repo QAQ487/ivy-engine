@@ -170,6 +170,10 @@ int main() {
            "write path is not a child of resources");
     Expect(content_path::ResolveRomForWrite("rom/../resources/font/LemonSlice.ttf", roots).empty(),
            "write traversal is rejected");
+    Expect(content_path::ReadableFile("rom/../../resources/shader/VertexShader3D.cso", roots).empty(),
+           "rom-shaped traversal is not opened as a literal path");
+    Expect(content_path::WritableFile("rom/font/LemonSlice.ttf", roots) == writeFont,
+           "writable helper stays on the project file");
     fs::remove_all(scratch);
 
     if (g_fails != 0) {

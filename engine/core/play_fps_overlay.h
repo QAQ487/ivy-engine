@@ -2,6 +2,7 @@
 // In-play FPS overlay helpers.
 
 #pragma once
+#include "engine/core/content_path.h"
 #include "libraries/nlohmann/json.hpp"
 #include <atomic>
 #include <fstream>
@@ -26,7 +27,7 @@ inline void WritePrefs(nlohmann::json& prefs) {
 inline void LoadFromFile(const char* path = kPrefsPath) {
     SetEnabled(false);
     try {
-        std::ifstream file(path);
+        std::ifstream file(content_path::ReadableFileCurrent(path));
         if (!file.is_open()) return;
         nlohmann::json prefs;
         file >> prefs;
