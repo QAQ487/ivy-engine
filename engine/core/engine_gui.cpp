@@ -73,6 +73,7 @@
 #include "engine/editor/project_asset_index.h"
 #include "engine/core/content_path.h"
 #include "engine/rendering/environment/panorama_sky.h"
+#include "engine/rendering/environment/skybox_asset_path.h"
 #include "engine/rendering/sprite/texture.h"
 #include "engine/editor/project_manager.h"
 #include "engine/editor/playable_package_builder.h"
@@ -329,6 +330,21 @@ static bool g_sceneDirty = false;
 
 bool EngineGUI_IsSceneDirty() { return g_sceneDirty; }
 void EngineGUI_MarkSceneDirty() { g_sceneDirty = true; }
+
+bool EngineGUI_ApplySkyboxCubemapPath(const std::string& assetPath) {
+    const std::string romPath = skybox_asset::RomPathFromAssetPath(assetPath);
+    if (romPath.empty())
+        return false;
+    RenderSettingsData& rs = RenderSettings_Get();
+    if (rs.skyboxCubemapPath == romPath) {
+        RenderSettings_ReloadSkybox();
+        return true;
+    }
+    rs.skyboxCubemapPath = romPath;
+    RenderSettings_ReloadSkybox();
+    EngineGUI_MarkSceneDirty();
+    return true;
+}
 void EngineGUI_ClearSceneDirty() { g_sceneDirty = false; }
 
 // Unsaved-changes popup state. Used to gate scene switches and exit.
@@ -1124,12 +1140,10 @@ static void DrawRenderingSettingsWindow(bool* open) {
     {
         const char* skyExts[] = { ".dds", ".png" };
         std::string droppedPath;
-        if (AcceptAssetPathDrop(skyExts, IM_ARRAYSIZE(skyExts), droppedPath)) {
-            strncpy_s(cubemapBuf, droppedPath.c_str(), sizeof(cubemapBuf) - 1);
-            rs.skyboxCubemapPath = droppedPath;
+        if (AcceptAssetPathDrop(skyExts, IM_ARRAYSIZE(skyExts), droppedPath) &&
+            EngineGUI_ApplySkyboxCubemapPath(droppedPath)) {
             syncedCubemapPath = rs.skyboxCubemapPath;
-            RenderSettings_ReloadSkybox();
-            EngineGUI_MarkSceneDirty();
+            strncpy_s(cubemapBuf, rs.skyboxCubemapPath.c_str(), sizeof(cubemapBuf) - 1);
         }
     }
     if (panorama::IsEquirectSkyPath(rs.skyboxCubemapPath)) {
@@ -1233,7 +1247,7 @@ static void DrawRenderingSettingsWindow(bool* open) {
 
     ImGui::Spacing();
     ImGui::TextDisabled(
-        "A DDS cubemap loads directly. A PNG panorama (width = 360 deg; height <= width/2) cooks into rom/skybox/cache/. Drag a .png/.dds from the Asset Browser onto the path field.");
+        "A DDS cubemap loads directly. A PNG panorama (width = 360 deg; height <= width/2) cooks into rom/skybox/cache/. Drag a .png/.dds from the Asset Browser onto the path field, or right-click Set as > Skybox.");
     ImGui::End();
 }
 

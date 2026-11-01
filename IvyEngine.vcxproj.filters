@@ -312,6 +312,9 @@
     <ClInclude Include="engine\rendering\environment\panorama_sky.h">
       <Filter>engine\rendering\environment</Filter>
     </ClInclude>
+    <ClInclude Include="engine\rendering\environment\skybox_asset_path.h">
+      <Filter>engine\rendering\environment</Filter>
+    </ClInclude>
     <ClInclude Include="engine\rendering\lighting\lighting.h">
       <Filter>engine\rendering\lighting</Filter>
     </ClInclude>

@@ -276,6 +276,7 @@ exit /b 0</Command>
     <ClInclude Include="engine\rendering\environment\ibl.h" />
     <ClInclude Include="engine\rendering\environment\equirect_cubemap.h" />
     <ClInclude Include="engine\rendering\environment\panorama_sky.h" />
+    <ClInclude Include="engine\rendering\environment\skybox_asset_path.h" />
     <ClInclude Include="engine\ecs\string_utils.h" />
     <ClInclude Include="engine\rendering\model\model.h" />
     <ClInclude Include="engine\rendering\model\model_util.h" />

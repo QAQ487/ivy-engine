@@ -52,6 +52,11 @@ bool EngineGUI_IsSceneDirty();
 void EngineGUI_MarkSceneDirty();
 void EngineGUI_ClearSceneDirty();
 
+// Apply an Asset Browser / drag-drop rom path to settings.render.skyboxCubemap.
+// Validates .png/.dds + safe rom/ path, reloads/cooks, and marks the scene dirty.
+// Returns false when the path is rejected (no settings change).
+bool EngineGUI_ApplySkyboxCubemapPath(const std::string& assetPath);
+
 // Queues an editor action behind the unsaved-changes popup.
 void EngineGUI_QueueUnsavedLoad(const char* filename);
 void EngineGUI_QueueUnsavedExit();
