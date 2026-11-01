@@ -37,7 +37,8 @@ Script errors reflect actual DLL load results; a successful later batch clears r
   a missing-DLL failure, and recovery via the normal script reload queue. Requires
   a valid script DLL for the recovery check. Restores the original scene on success.
 - `tools\run_play_scene_switch_check.ps1`: existing viewport/fullscreen transition
-  check; requires TestProject with `scene_topdown_2d.json` as the startup scene.
+  check; requires a content project whose startup scene is `scene_topdown_2d.json`
+  (`testbed/rom/scene/scene_topdown_2d.json`).
 
 The host checks inspect application state and rendered modal presence. They do
 not replace manual visual acceptance of the toolbar and conflict dialog.

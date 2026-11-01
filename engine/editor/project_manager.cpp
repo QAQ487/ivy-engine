@@ -4,6 +4,7 @@
 #include "project_manager.h"
 
 #include "engine/audio/audio_manager.h"
+#include "engine/core/content_path.h"
 #include "engine/debug_draw/debug_ofstream.h"
 #include "engine/physics/core/rigidbody.h"
 #include "libraries/nlohmann/json.hpp"
@@ -11,12 +12,16 @@
 #include <Windows.h>
 #include <shlobj.h>
 #include <shobjidl.h>
+#include <winioctl.h>
 
 #include <algorithm>
+#include <cstddef>
+#include <cstring>
 #include <fstream>
 #include <filesystem>
 #include <system_error>
 #include <thread>
+#include <vector>
 
 namespace fs = std::filesystem;
 using json = nlohmann::json;
@@ -41,10 +46,10 @@ bool CopyDirectoryRecursive(const fs::path& src, const fs::path& dst, std::strin
             return false;
         }
         const fs::path& from = it->path();
-        const fs::path rel = fs::relative(from, src, ec);
-        if (ec) {
+        const fs::path rel = content_path::LexicalChildPath(from, src);
+        if (rel.empty()) {
             if (errorOut)
-                *errorOut = ec.message();
+                *errorOut = "Refused to copy a path that leaves the source directory: " + from.string();
             return false;
         }
         const fs::path to = dst / rel;
@@ -210,10 +215,10 @@ const char* kBlankSceneJson = R"({
         "render": {
             "skyboxEnabled": false,
             "skyboxCubemap": "",
-            "skyboxTint": { "r": 1.0, "g": 1.0, "b": 1.0, "a": 1.0 },
+            "skyboxTint": [1.0, 1.0, 1.0, 1.0],
             "skyboxExposure": 1.0,
             "skyboxRotationYDeg": 0.0,
-            "clearColor": { "r": 0.12, "g": 0.14, "b": 0.18, "a": 1.0 },
+            "clearColor": [0.12, 0.14, 0.18, 1.0],
             "defaultShader": "standard",
             "shadowQuality": "medium"
         }
@@ -246,6 +251,193 @@ const char* kBlankSceneJson = R"({
     }
 }
 )";
+
+#ifndef IO_REPARSE_TAG_MOUNT_POINT
+#define IO_REPARSE_TAG_MOUNT_POINT (0xA0000003L)
+#endif
+
+struct MountReparseBuffer {
+    DWORD ReparseTag;
+    WORD ReparseDataLength;
+    WORD Reserved;
+    WORD SubstituteNameOffset;
+    WORD SubstituteNameLength;
+    WORD PrintNameOffset;
+    WORD PrintNameLength;
+    WCHAR PathBuffer[1];
+};
+static_assert(offsetof(MountReparseBuffer, PathBuffer) == 16, "mount reparse layout");
+
+bool IsReparsePoint(const fs::path& path) {
+    const DWORD attr = GetFileAttributesW(path.wstring().c_str());
+    if (attr == INVALID_FILE_ATTRIBUTES)
+        return false;
+    return (attr & FILE_ATTRIBUTE_REPARSE_POINT) != 0;
+}
+
+// NTFS directory junction. Same-volume links do not need an elevated process.
+bool CreateDirectoryJunction(const fs::path& link, const fs::path& target) {
+    std::wstring targetW = target.wstring();
+    if (targetW.rfind(L"\\\\?\\", 0) == 0)
+        targetW.erase(0, 4);
+    while (!targetW.empty() && (targetW.back() == L'\\' || targetW.back() == L'/'))
+        targetW.pop_back();
+    for (wchar_t& ch : targetW) {
+        if (ch == L'/')
+            ch = L'\\';
+    }
+    if (targetW.size() < 3 || targetW[1] != L':')
+        return false;
+
+    const std::wstring substitute = L"\\??\\" + targetW;
+    const size_t substBytes = substitute.size() * sizeof(wchar_t);
+    const size_t printBytes = targetW.size() * sizeof(wchar_t);
+    const size_t pathBytes = substBytes + sizeof(wchar_t) + printBytes + sizeof(wchar_t);
+    if (substBytes > 60000 || printBytes > 60000 || pathBytes > 60000)
+        return false;
+
+    const std::wstring linkW = link.wstring();
+    if (!CreateDirectoryW(linkW.c_str(), nullptr))
+        return false;
+
+    const HANDLE handle = CreateFileW(
+        linkW.c_str(),
+        GENERIC_WRITE,
+        FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+        nullptr,
+        OPEN_EXISTING,
+        FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT,
+        nullptr);
+    if (handle == INVALID_HANDLE_VALUE) {
+        const DWORD err = GetLastError();
+        RemoveDirectoryW(linkW.c_str());
+        SetLastError(err);
+        return false;
+    }
+
+    const WORD dataLength = static_cast<WORD>(8 + pathBytes);
+    const DWORD total = static_cast<DWORD>(8 + dataLength);
+    std::vector<unsigned char> buffer(total, 0);
+    auto* reparse = reinterpret_cast<MountReparseBuffer*>(buffer.data());
+    reparse->ReparseTag = IO_REPARSE_TAG_MOUNT_POINT;
+    reparse->ReparseDataLength = dataLength;
+    reparse->Reserved = 0;
+    reparse->SubstituteNameOffset = 0;
+    reparse->SubstituteNameLength = static_cast<WORD>(substBytes);
+    reparse->PrintNameOffset = static_cast<WORD>(substBytes + sizeof(wchar_t));
+    reparse->PrintNameLength = static_cast<WORD>(printBytes);
+    std::memcpy(reparse->PathBuffer, substitute.c_str(), substBytes + sizeof(wchar_t));
+    std::memcpy(
+        reinterpret_cast<unsigned char*>(reparse->PathBuffer) + substBytes + sizeof(wchar_t),
+        targetW.c_str(),
+        printBytes + sizeof(wchar_t));
+
+    DWORD returned = 0;
+    const BOOL ok = DeviceIoControl(
+        handle,
+        FSCTL_SET_REPARSE_POINT,
+        reparse,
+        total,
+        nullptr,
+        0,
+        &returned,
+        nullptr);
+    CloseHandle(handle);
+    if (!ok) {
+        const DWORD err = GetLastError();
+        RemoveDirectoryW(linkW.c_str());
+        SetLastError(err);
+        return false;
+    }
+    return true;
+}
+
+bool IsInRepoTestbedRoot(const fs::path& canonicalRoot) {
+    const std::string engine = ProjectManager::FindEngineRepoRoot();
+    if (engine.empty())
+        return false;
+    std::error_code ec;
+    const fs::path engineRoot = fs::weakly_canonical(fs::path(engine), ec);
+    if (ec)
+        return false;
+    const fs::path expected = engineRoot / content_path::kInRepoTestbedDir;
+    const fs::path expectedCanon = fs::weakly_canonical(expected, ec);
+    if (ec || canonicalRoot != expectedCanon)
+        return false;
+    return content_path::IsInsideDirectory(engineRoot, expectedCanon);
+}
+
+void EnsureTestbedSharedRomLinks(const fs::path& testbedRoot) {
+    const std::string engine = ProjectManager::FindEngineRepoRoot();
+    if (engine.empty()) {
+        hal::dout << "Testbed: engine repo not found; shared rom links skipped" << std::endl;
+        return;
+    }
+
+    std::error_code ec;
+    const fs::path engineRoot = fs::weakly_canonical(fs::path(engine), ec);
+    if (ec || !content_path::IsInsideDirectory(engineRoot, testbedRoot)) {
+        hal::dout << "Testbed: project root is outside the engine repo; shared rom links skipped"
+                  << std::endl;
+        return;
+    }
+
+    const fs::path engineRom = fs::weakly_canonical(engineRoot / "rom", ec);
+    if (ec || !fs::is_directory(engineRom, ec) ||
+        !content_path::IsInsideDirectory(engineRoot, engineRom)) {
+        hal::dout << "Testbed: engine rom directory is not inside the repo" << std::endl;
+        return;
+    }
+
+    const fs::path linkParent = fs::weakly_canonical(testbedRoot / "rom", ec);
+    if (ec || !content_path::IsInsideDirectory(testbedRoot, linkParent)) {
+        hal::dout << "Testbed: rom directory is outside the project" << std::endl;
+        return;
+    }
+
+    for (const char* name : content_path::kSharedRomDirNames) {
+        if (!content_path::IsSafeRelativePath(name, nullptr)) {
+            hal::dout << "Testbed: refused shared rom directory name" << std::endl;
+            continue;
+        }
+
+        const fs::path link = linkParent / name;
+        std::error_code existsEc;
+        if (fs::exists(link, existsEc)) {
+            if (!IsReparsePoint(link)) {
+                hal::dout << "Testbed: " << link.string()
+                          << " is a real directory; not replacing it with a shared rom link"
+                          << std::endl;
+            }
+            continue;
+        }
+
+        fs::path target = engineRom / name;
+        if (!fs::exists(target, existsEc)) {
+            if (std::string(name) == "shader") {
+                fs::create_directories(target, existsEc);
+            }
+            if (!fs::is_directory(target, existsEc)) {
+                hal::dout << "Testbed: missing engine rom directory " << target.string()
+                          << std::endl;
+                continue;
+            }
+        }
+
+        std::error_code canonEc;
+        target = fs::weakly_canonical(target, canonEc);
+        if (canonEc || !fs::is_directory(target, canonEc) ||
+            !content_path::IsInsideDirectory(engineRom, target)) {
+            hal::dout << "Testbed: refused shared rom target for " << name << std::endl;
+            continue;
+        }
+
+        if (!CreateDirectoryJunction(link, target)) {
+            hal::dout << "Testbed: failed to link " << name << " (error " << GetLastError()
+                      << ")" << std::endl;
+        }
+    }
+}
 
 } // namespace
 
@@ -289,23 +481,20 @@ std::string ProjectManager::GetExecutableDirectory() {
 
 std::string ProjectManager::FindEngineRepoRoot() {
     // Walk up from cwd and exe dir looking for the external content template.
-    std::vector<fs::path> seeds;
-    seeds.push_back(fs::current_path());
-    seeds.push_back(fs::path(GetExecutableDirectory()));
+    std::error_code ec;
+    const fs::path cwd = fs::current_path(ec);
+    const fs::path found = content_path::FindEngineRepoRootFromSeed(ec ? fs::path() : cwd);
+    if (!found.empty())
+        return found.string();
+    return content_path::FindEngineRepoRootFromSeed(fs::path(GetExecutableDirectory())).string();
+}
 
-    for (const fs::path& seed : seeds) {
-        fs::path cur = seed;
-        for (int i = 0; i < 8; ++i) {
-            if (fs::exists(cur / "external_content_template") &&
-                (fs::exists(cur / "IvyEngine.sln") || fs::exists(cur / "Game_Project.sln"))) {
-                return cur.string();
-            }
-            if (!cur.has_parent_path() || cur == cur.parent_path())
-                break;
-            cur = cur.parent_path();
-        }
-    }
-    return {};
+std::string ProjectManager::ResolveInRepoTestbedPath() const {
+    std::error_code ec;
+    const fs::path cwd = fs::current_path(ec);
+    const fs::path found = content_path::ResolveInRepoTestbedPath(
+        ec ? fs::path() : cwd, fs::path(GetExecutableDirectory()));
+    return found.empty() ? std::string() : found.string();
 }
 
 std::string ProjectManager::RecentListPath() {
@@ -573,7 +762,9 @@ bool ProjectManager::ActivateRoot(const std::string& rootPath, std::string* erro
         return false;
     }
 
-    if (!fs::exists(root / "rom", ec)) {
+    // Any directory with rom/ is a project. The in-repo testbed qualifies.
+    // Do not reject a folder because it sits inside the engine repo or next to the exe.
+    if (!content_path::ContentProjectHasRom(root)) {
         if (errorOut)
             *errorOut = "Not a valid project (missing rom/): " + root.string();
         return false;
@@ -586,7 +777,12 @@ bool ProjectManager::ActivateRoot(const std::string& rootPath, std::string* erro
         return false;
     }
 
-    EnsureEngineAssets(root.string());
+    // The in-repo testbed references engine rom/ instead of copying it.
+    // EnsureEngineAssets would write those defaults into the git tree.
+    if (IsInRepoTestbedRoot(root))
+        EnsureTestbedSharedRomLinks(root);
+    else
+        EnsureEngineAssets(root.string());
 
     ProjectData data;
     const fs::path projectFile = root / kProjectFileName;
@@ -840,6 +1036,19 @@ bool ProjectManager::BootstrapAtStartup() {
         if (ActivateRoot(recent, nullptr))
             return true;
     }
+
+#if defined(_DEBUG)
+    // No loadable recent project: open the in-repo testbed. A valid external
+    // project still wins above, and Release does not take this fallback.
+    // File → Open Testbed is available in both configurations.
+    const std::string testbed = ResolveInRepoTestbedPath();
+    if (!testbed.empty()) {
+        std::string error;
+        if (ActivateRoot(testbed, &error))
+            return true;
+        hal::dout << "Debug editor testbed fallback failed: " << error << std::endl;
+    }
+#endif
 
     return false;
 }

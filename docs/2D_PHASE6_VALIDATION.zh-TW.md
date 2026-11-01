@@ -12,14 +12,14 @@ TestProject 預設及最後開啟場景已設為 `rom/scene/scene_topdown_2d.jso
 - R 重開目前關卡。停止播放時收集物的腳本恢復活動狀態，角色腳本重設分數；場景中的 authored 物件不會因收集而被刪除。
 - 冒險者、HP 填色圖及字型沿用 TestProject 的既有資產，沒有新增圖像依賴。
 
-`samples/scenes` 保留相同範例 JSON。它們依賴 TestProject 的 `rom/texture/sprite_demo` 及字型，不是單獨一個 JSON 就能部署的套件。
+同一批範例 JSON 而家喺 `testbed/rom/scene/`。2D 場景引用嘅 `rom/texture/sprite_demo/*.png` 係細 placeholder，字型仍係引擎 `rom/font/`。呢個 testbed 唔係一份已打包、資產齊全嘅部署套件。
 
 ## 已執行的驗證
 
 - Debug x64 Editor、Runtime 與 TestProject GameScripts 編譯及連結成功。
 - Editor 自動 smoke test 發現關閉時的全域析構次序問題：堆疊為 Grid::~Grid → GameObject::~GameObject → AudioManager::OnGameObjectDestroyed，音效 singleton 此時已被析構。Grid 改為明確初始化／Finalize 的 unique_ptr，於音效系統及 D3D 關閉前析構；保留網格 visibility 設定並在 Initialize 後套用。移除所有臨時關閉日誌及例外 handler 後，連續兩次 600 多幀 Editor 測試 exit code 0。此測試驗證關閉生命週期，不代表互動驗收。
 - `tools/run_2d_regression_checks.cmd`：相機透視預設／正交 aspect、Sprite ray 選取、UI pivot、動畫時鐘／狀態、scene execution policy、30／60／144 FPS 物理、Box／Circle 撞牆、Trigger 進出／刪除 Exit／Clear、Raycast 篩選，以及五種 3D Collider 的 shape-only 序列化、舊資料及 Factory。
-- `python tools/check_2d_sample.py <content-or-package-root>`：相機層級、場景出口、三個目標、Score 及貼圖／字型等參考，沒有開發機絕對路徑。
+- `python tools/check_2d_sample.py <content-or-package-root>`：相機層級、場景出口、三個目標、Score 及貼圖／字型等參考，沒有開發機絕對路徑。呢個檢查要求資產檔就喺該 root 入面。in-repo testbed 用 `python3 tools/check_testbed_assets.py`，因為模型同字型留喺引擎 `rom/`。
 - `tools/package_2d_sample.ps1` 依現有 GUI builder 的套件排列複製 runtime、libfbxsdk、project.json、rom 及 GameScripts，覆蓋同次建置的 shader／branding，並附上 Box2D MIT 授權；GUI builder 亦包含此授權檔。預設場景亦寫入套件內 default_scene.txt；不改寫來源的 default_scene.txt。完整 content rom 會一併複製，未新增資產裁剪系統。
 - 空白 2D、完整 2D 範例及 3D 回歸副本均從 TEMP 工作目錄啟動獨立套件，處理暖機及取樣幀後以 exit code 0 結束，shader 路徑不依賴啟動器 cwd。
 - WinMain 現在先設定資源工作目錄為 exe 所在目錄，然後才初始化 shader；開啟 content project 後仍由 ProjectManager 切換專案根目錄。

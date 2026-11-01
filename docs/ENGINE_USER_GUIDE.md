@@ -82,20 +82,18 @@ Open `IvyEngine.sln` in Visual Studio 2022 (x64 Debug or Release).
 
 You should get a window (design size **1920×1080**). The editor opens a **content project** (folder with `rom/` and `project.json`). Startup prefers:
 
-1. Last entry in **Recent Projects** (if still valid)
-2. Else the current working directory when it contains `rom/` (the sample next to the exe after build)
-3. The scene to load comes from `project.json` → `lastOpenedScene` (fallback: `defaultScene` / `rom/scene/default_scene.txt`)
+1. The first **Recent Projects** entry that still has a `rom/` folder
+2. Otherwise, a **Debug** build opens the in-repo [`testbed/`](../testbed) project. Release does not. The build output folder also contains `rom/` and is not auto-opened.
+3. The scene comes from that project's `project.json` → `lastOpenedScene` (fallback: `defaultScene` / `rom/scene/default_scene.txt`)
 
-The in-repo sample ships [`project.json`](../project.json) pointing at `scene_sample_menu.json`. Change **File → Save Project** or **Project Settings → Default Scene** to update defaults.
-
-See [§20 Projects](#20-projects-new--open--save) for New / Open / Save Project.
+`testbed/project.json` points at `scene_sample_menu.json`. Change **File → Save Project** or **Project Settings → Default Scene** to update defaults. See [§20 Projects](#20-projects-new--open--save) and [`CONTENT_PROJECT.md`](CONTENT_PROJECT.md).
 
 ### Try the sample pack
 
-1. Run **IvyEngine**.
-2. Press **F3** (or Play) on the sample menu.
-3. Click **Play** to load the playground scene (`samples/scenes/scene_sample_playground.json`, or copy it into `rom/scene/`).
-4. Move with **WASD** / left stick. A blue box spins via `SampleSpinScript`.
+1. Run **IvyEngine**. If a recent external project opens instead, use **File → Open Testbed**. With no recent project, a Debug build opens `testbed/` on its own.
+2. The startup scene is the sample menu inside `testbed/rom/scene/`.
+3. Click **Play** to load `scene_sample_playground.json` from that same folder.
+4. Move with **WASD** / left stick. A blue box spins via `SampleSpinScript` when that script DLL is loaded.
 5. Press **F3** again to stop Play mode in the editor.
 
 ### First keys to remember
@@ -943,7 +941,8 @@ The editor calls `SetCurrentDirectory` on that folder so relative paths like `ro
 | Command | What it does |
 |---------|----------------|
 | **New Project…** | Pick a parent folder, enter a name → scaffolds `rom/`, blank `scene_main.json`, copies engine shaders/fonts/textures, optional scripts template, plus `<Name>.sln` + `build_scripts.bat` for building GameScripts outside the engine |
-| **Open Project…** | Pick any folder that contains `rom/` (creates `project.json` if missing) |
+| **Open Project…** | Pick any folder that contains `rom/` (creates `project.json` if missing), including the in-repo `testbed/` |
+| **Open Testbed** | Open `<engine repo>/testbed` when that folder exists. Shown in Debug and Release. Use this when a recent external project is already open |
 | **Save Project** (Ctrl+Shift+S) | Saves the current scene + writes `project.json` (and syncs `default_scene.txt`) |
 | **Recent Projects** | Reopen up to 12 recent roots (`%AppData%/GameEngine/recent_projects.json`) |
 
@@ -983,8 +982,9 @@ The editor calls `SetCurrentDirectory` on that folder so relative paths like `ro
 
 ### Sample vs your game
 
-- The **engine repo** includes a sample project (`project.json` + `rom/` + `game/`). After build, that layout is copied next to `IvyEngine.exe`.
-- **File → New Project** creates a separate game folder anywhere on disk. Scripts can still target the engine via `IvyEngine.props` (same idea as [`CONTENT_PROJECT.md`](CONTENT_PROJECT.md)).
+- **Debug IvyEngine** opens [`testbed/`](../testbed) when no recent project loads. Sample scenes are `testbed/rom/scene/`. Models, fonts, textures, shaders, and the skybox stay in the engine `rom/` and are linked when the project opens, not copied.
+- The engine repo root still has `project.json` and `rom/` so a built exe can boot `scene_sample_menu.json` from the folder next to it. That is the ship layout, not the editor's default project.
+- **File → New Project** creates a separate game folder anywhere on disk. Scripts can still target the engine via `IvyEngine.props` (same idea as [`CONTENT_PROJECT.md`](CONTENT_PROJECT.md)). An existing external project in Recent Projects is opened instead of the testbed.
 
 ---
 

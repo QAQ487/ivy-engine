@@ -48,11 +48,14 @@ public:
     const std::string& GetName() const { return m_data.name; }
     const ProjectData& GetData() const { return m_data; }
 
-    // Resolve startup project from the recent list only (no cwd/exe fallback —
-    // the editor build output has rom/ and must not auto-open as a project).
+    // Recent projects first. The editor output directory is never auto-opened.
+    // A Debug build with no loadable recent project opens the in-repo testbed/.
     bool BootstrapAtStartup();
 
     bool OpenProject(const std::string& rootPath, std::string* errorOut = nullptr);
+    // Absolute path of <engine repo>/testbed when that folder is a content project.
+    // Empty when the repo cannot be seen from the cwd or the exe directory.
+    std::string ResolveInRepoTestbedPath() const;
     void CloseProject();
     bool CreateProject(const std::string& parentDir, const std::string& projectName,
                        std::string* errorOut = nullptr, bool template2D = false);

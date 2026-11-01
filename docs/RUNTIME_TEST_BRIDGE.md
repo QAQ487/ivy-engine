@@ -113,7 +113,7 @@ Assert ops against frames with `sequence > latestSequence` recorded **before** t
 
 ## Isolated fixture
 
-`samples/scenes/scene_runtime_bridge_controller_probe.json` — directional light + ground only (no player scripts). Do **not** change repo `project.json` / default scene; stage a throwaway package and set that copy’s `rom/scene/default_scene.txt`.
+`testbed/rom/scene/scene_runtime_bridge_controller_probe.json` — directional light + ground only (no player scripts). Do **not** change repo `project.json` / default scene; stage a throwaway package and set that copy’s `rom/scene/default_scene.txt`.
 
 ## How to run checks
 
