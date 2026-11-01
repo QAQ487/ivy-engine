@@ -3,6 +3,7 @@
 
 #include "project_asset_index.h"
 
+#include "engine/core/content_path.h"
 #include "engine/ecs/model_asset_cache.h"
 
 #include <algorithm>
@@ -150,8 +151,10 @@ void ProjectAssetIndex::RebuildFolderTree() {
         const fs::directory_entry& entry = *it;
         if (!entry.is_directory(ec)) continue;
 
-        fs::path rel = fs::relative(entry.path(), kProjectRoot, ec);
-        if (ec || rel.empty()) continue;
+        // Do not use filesystem::relative: it canonicalizes and follows the
+        // testbed's rom junctions back out to the engine rom.
+        const fs::path rel = content_path::LexicalChildPath(entry.path(), kProjectRoot);
+        if (rel.empty()) continue;
 
         const std::string relStr = rel.generic_string();
         if (StartsWithPath(relStr, "shader")) {
@@ -171,8 +174,8 @@ void ProjectAssetIndex::RebuildFolderTree() {
             const fs::directory_entry& entry = *it;
             if (!entry.is_directory(ec)) continue;
 
-            fs::path rel = fs::relative(entry.path(), kScriptRoot, ec);
-            if (ec || rel.empty()) continue;
+            const fs::path rel = content_path::LexicalChildPath(entry.path(), kScriptRoot);
+            if (rel.empty()) continue;
 
             const std::string relStr = std::string(kScriptsFolder) + "/" + rel.generic_string();
             AddFolderPath(m_folderTree, relStr);
@@ -191,8 +194,8 @@ void ProjectAssetIndex::Refresh() {
             if (ec) break;
             const fs::directory_entry& entry = *it;
 
-            fs::path rel = fs::relative(entry.path(), kProjectRoot, ec);
-            if (ec) continue;
+            const fs::path rel = content_path::LexicalChildPath(entry.path(), kProjectRoot);
+            if (rel.empty()) continue;
             const std::string relStr = rel.generic_string();
 
             if (entry.is_directory(ec) && StartsWithPath(relStr, "shader")) {
@@ -203,11 +206,10 @@ void ProjectAssetIndex::Refresh() {
             if (ShouldSkipIndexedPath(relStr))
                 continue;
 
-            fs::path path = entry.path();
             ProjectEntry fileEntry;
-            fileEntry.name = path.filename().string();
+            fileEntry.name = entry.path().filename().string();
             fileEntry.relativePath = relStr;
-            fileEntry.assetPath = path.generic_string();
+            fileEntry.assetPath = (kProjectRoot / rel).generic_string();
             fileEntry.kind = ClassifyFile(relStr);
 
             std::string parentFolder;
@@ -226,8 +228,8 @@ void ProjectAssetIndex::Refresh() {
             if (!entry.is_regular_file(ec)) continue;
             if (ToLowerString(entry.path().extension().string()) != ".cpp") continue;
 
-            fs::path rel = fs::relative(entry.path(), kScriptRoot, ec);
-            if (ec) continue;
+            const fs::path rel = content_path::LexicalChildPath(entry.path(), kScriptRoot);
+            if (rel.empty()) continue;
 
             const std::string relStr = std::string(kScriptsFolder) + "/" + rel.generic_string();
             ProjectEntry fileEntry;

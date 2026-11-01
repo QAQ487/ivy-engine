@@ -85,6 +85,41 @@ inline bool IsSafeRomPath(std::string_view path, std::string* normalized) {
     return true;
 }
 
+// Child of `root` using only lexical normalization. Symlinks and NTFS junctions
+// are not resolved, so a link at rom/model stays "model" instead of "../../rom/model".
+// Returns empty when the path is not a strict descendant (`..`, different roots,
+// or `root` itself).
+inline std::filesystem::path LexicalChildPath(const std::filesystem::path& path,
+                                              const std::filesystem::path& root) {
+    auto asChild = [](const std::filesystem::path& candidate,
+                      const std::filesystem::path& base) -> std::filesystem::path {
+        const std::filesystem::path rel =
+            candidate.lexically_normal().lexically_relative(base.lexically_normal());
+        if (rel.empty() || rel == "." || rel.is_absolute())
+            return {};
+        for (const std::filesystem::path& part : rel) {
+            if (part == "..")
+                return {};
+        }
+        return rel;
+    };
+
+    const std::filesystem::path direct = asChild(path, root);
+    if (!direct.empty())
+        return direct;
+
+    std::error_code ec;
+    const std::filesystem::path absPath = std::filesystem::absolute(path, ec);
+    if (ec)
+        return {};
+    ec.clear();
+    const std::filesystem::path absRoot = std::filesystem::absolute(root, ec);
+    if (ec)
+        return {};
+    // absolute() does not resolve symlinks or junctions.
+    return asChild(absPath, absRoot);
+}
+
 // True when `candidate` canonicalizes to a strict descendant of `root`.
 // `..`, a missing path, or `root` itself returns false.
 inline bool IsInsideDirectory(const std::filesystem::path& root,

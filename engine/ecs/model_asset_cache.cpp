@@ -3,6 +3,7 @@
 
 #include "model_asset_cache.h"
 #include "string_utils.h"
+#include "engine/core/content_path.h"
 
 #include <algorithm>
 #include <cctype>
@@ -149,16 +150,15 @@ void ModelAssetCache::RefreshAssetDirectory() {
         fs::path path = entry.path();
         if (ToLowerString(path.extension().string()) != ".fbx") continue;
 
-        ObjectDef def;
-        def.assetPath = path.generic_string();
-        def.modelPath = path.wstring();
-        def.lowerName = NormalizeAssetKey(def.assetPath);
+        fs::path relativePath = content_path::LexicalChildPath(path, kModelAssetRoot);
+        if (relativePath.empty())
+            continue;
+        const fs::path projectPath = kModelAssetRoot / relativePath;
 
-        fs::path relativePath = fs::relative(path, kModelAssetRoot, ec);
-        if (ec) {
-            ec.clear();
-            relativePath = path.filename();
-        }
+        ObjectDef def;
+        def.assetPath = projectPath.generic_string();
+        def.modelPath = projectPath.wstring();
+        def.lowerName = NormalizeAssetKey(def.assetPath);
         relativePath.replace_extension();
         def.displayName = relativePath.generic_string();
 
@@ -185,8 +185,8 @@ void ModelAssetCache::RebuildFolderTree() {
         if (ec) break;
         if (!entry.is_directory(ec)) continue;
 
-        fs::path rel = fs::relative(entry.path(), kModelAssetRoot, ec);
-        if (ec || rel.empty()) continue;
+        const fs::path rel = content_path::LexicalChildPath(entry.path(), kModelAssetRoot);
+        if (rel.empty()) continue;
 
         const std::string relStr = rel.generic_string();
         ModelFolderNode* current = &m_folderTree;

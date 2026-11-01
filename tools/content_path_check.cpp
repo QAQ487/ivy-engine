@@ -106,6 +106,35 @@ int main() {
            "a testbed outside the repo is not chosen over the engine one");
     fs::remove_all(scratch);
 
+    const fs::path linkRepo = scratch / "link-repo";
+    const fs::path engineRom = linkRepo / "rom";
+    const fs::path testbedRom = linkRepo / "testbed" / "rom";
+    fs::create_directories(engineRom / "branding");
+    fs::create_directories(engineRom / "model" / "object");
+    fs::create_directories(testbedRom / "scene");
+    { std::ofstream(engineRom / "branding" / "logo.txt") << "logo"; }
+    { std::ofstream(engineRom / "model" / "object" / "Box.fbx") << "fbx"; }
+    std::error_code linkEc;
+    fs::create_directory_symlink(fs::path("..") / ".." / "rom" / "branding",
+                                 testbedRom / "branding", linkEc);
+    fs::create_directory_symlink(fs::path("..") / ".." / "rom" / "model",
+                                 testbedRom / "model", linkEc);
+    Expect(!linkEc, "symlink stands in for an NTFS junction");
+    const fs::path linkedFile = testbedRom / "model" / "object" / "Box.fbx";
+    const fs::path child = content_path::LexicalChildPath(linkedFile, testbedRom);
+    Expect(child.generic_string() == "model/object/Box.fbx",
+           "junction path stays rom/model relative to the project");
+    Expect(child.generic_string().find("..") == std::string::npos, "no dotdot in browser path");
+    const fs::path resolved = fs::weakly_canonical(linkedFile);
+    Expect(content_path::LexicalChildPath(resolved, testbedRom).empty(),
+           "resolved junction target is not a project-relative path");
+    const std::string assetPath = (fs::path("rom") / child).generic_string();
+    Expect(assetPath == "rom/model/object/Box.fbx", "scene reference stays rom/model/...");
+    const fs::path canonicalRel = fs::relative(linkedFile, testbedRom, linkEc);
+    Expect(!linkEc && canonicalRel.generic_string().find("..") != std::string::npos,
+           "filesystem::relative follows the symlink and leaves the project");
+    fs::remove_all(scratch);
+
     if (g_fails != 0) {
         std::cerr << g_fails << " failure(s)\n";
         return 1;

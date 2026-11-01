@@ -15,6 +15,7 @@
 #include <array>
 #include <set>
 #include <cstddef>
+#include "engine/core/content_path.h"
 #ifdef _WIN32
 #ifndef NOMINMAX
 #define NOMINMAX
@@ -60,7 +61,8 @@ public:
         if (!std::filesystem::exists(root, ec)) return result;
         for (std::filesystem::recursive_directory_iterator it(root, std::filesystem::directory_options::skip_permission_denied, ec), end;
              it != end && !ec; it.increment(ec)) {
-            auto relative = Utf8Path(it->path().lexically_relative(root));
+            auto relative = Utf8Path(content_path::LexicalChildPath(it->path(), root));
+            if (relative.empty()) continue;
             const auto name = Utf8Path(it->path().filename());
             if (name.empty() || name[0] == '.' || relative == "shader" || relative.rfind("shader/", 0) == 0) {
                 if (it->is_directory(ec)) it.disable_recursion_pending();

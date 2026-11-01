@@ -13,6 +13,7 @@
 #include "prepared_scene.h"
 #include "scene_file_monitor.h"
 #include "scene_json_validation.h"
+#include "engine/core/content_path.h"
 
 #include "engine/scene/render_settings.h"
 #include "engine/ecs/component_factory.h"
@@ -332,11 +333,9 @@ void SceneLoader_RefreshSceneAssets() {
         SceneAssetEntry asset;
         asset.path = path.string();
 
-        fs::path relativePath = fs::relative(path, SCENE_DIR, ec);
-        if (ec) {
-            ec.clear();
+        fs::path relativePath = content_path::LexicalChildPath(path, SCENE_DIR);
+        if (relativePath.empty())
             relativePath = path.filename();
-        }
 
         asset.fileName = relativePath.generic_string();
         relativePath.replace_extension();
@@ -683,10 +682,10 @@ void SceneLoader_ApplyPrepared(std::shared_ptr<PreparedScene> prepared, bool pre
     for (auto& node : g_sceneNodes) node->AttachPreparedComponents();
     SceneCanvas_ApplyPrepared(std::move(prepared->canvas), prepared->canvasJson);
     ApplySceneSettings(*prepared, preserveEditorView);
-    std::error_code ec;
     const fs::path scenePath(prepared->path);
-    const auto relativePath = fs::relative(scenePath, SCENE_DIR, ec);
-    SceneLoader_CopySceneFileName(!ec ? relativePath.generic_string() : scenePath.filename().generic_string());
+    const auto relativePath = content_path::LexicalChildPath(scenePath, SCENE_DIR);
+    SceneLoader_CopySceneFileName(!relativePath.empty() ? relativePath.generic_string()
+                                                        : scenePath.filename().generic_string());
     g_currentScenePath = prepared->path;
     g_currentSceneContent = std::move(prepared->content);
     ++g_contentRevision;

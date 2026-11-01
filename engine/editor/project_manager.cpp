@@ -46,10 +46,10 @@ bool CopyDirectoryRecursive(const fs::path& src, const fs::path& dst, std::strin
             return false;
         }
         const fs::path& from = it->path();
-        const fs::path rel = fs::relative(from, src, ec);
-        if (ec) {
+        const fs::path rel = content_path::LexicalChildPath(from, src);
+        if (rel.empty()) {
             if (errorOut)
-                *errorOut = ec.message();
+                *errorOut = "Refused to copy a path that leaves the source directory: " + from.string();
             return false;
         }
         const fs::path to = dst / rel;

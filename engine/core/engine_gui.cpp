@@ -71,6 +71,7 @@
 #include "engine/editor/editor_project_browser.h"
 #include "engine/editor/editor_ui_panel.h"
 #include "engine/editor/project_asset_index.h"
+#include "engine/core/content_path.h"
 #include "engine/editor/project_manager.h"
 #include "engine/editor/playable_package_builder.h"
 #include "engine/audio/audio_manager.h"
@@ -3338,8 +3339,10 @@ void EngineGUI_Update(double elapsed_time) {
 
         // Project scenes share the content batch; the legacy monitor covers scenes
         // opened outside rom/ (including standalone transactional host fixtures).
-        const auto relativeScene = SceneLoader_GetCurrentScenePath().empty() ? std::filesystem::path{} : std::filesystem::absolute(SceneLoader_GetCurrentScenePath()).lexically_normal().lexically_relative(std::filesystem::absolute("rom").lexically_normal());
-        const bool contentOwnsScene = !relativeScene.empty() && *relativeScene.begin() != "..";
+        const auto relativeScene = SceneLoader_GetCurrentScenePath().empty()
+            ? std::filesystem::path{}
+            : content_path::LexicalChildPath(SceneLoader_GetCurrentScenePath(), "rom");
+        const bool contentOwnsScene = !relativeScene.empty();
         if (auto version = g_sceneFileMonitor.Poll(elapsed_time)) {
             if (!contentOwnsScene) g_sceneReloadConflict = std::move(*version);
         }
