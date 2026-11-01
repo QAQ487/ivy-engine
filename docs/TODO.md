@@ -26,10 +26,14 @@
 - [ ] **Box friction torque（可選，只有想箱子傾側先做）**
   - `collider.cpp` 的 `ResolveContact` 對 box 把摩擦衝量嘅力臂設成 0，箱子只留線性摩擦，避免喺邊緣滾動；球體仍有角向摩擦。呢個係現有設計，唔係空 stub。
   - 驗收（若開做）：box 可以因摩擦傾側，同時唔好無故原地打轉；球體滾動無回歸。
-- [ ] **重做 Skybox：直接接受 panorama（equirectangular）PNG，自動轉換成 DDS cubemap**
-  - 現況：`game/art/skybox/` 放六面 PNG（`px nx py ny pz nz`）。`game/art/skybox/run.bat` 要求 PATH 上有 DirectXTex `texassemble`，烤出 `rom/skybox/MySkybox.dds`。Runtime `CubemapLoad`（`engine/rendering/sprite/texture.cpp`）只 `LoadFromDDSFile`，而且要 `IsCubemap()`。`Skybox_ReloadFromSettings` 讀 `settings.skyboxCubemap`，預設 `rom/skybox/MySkybox.dds`。IBL 係另一套預製檔：`rom/skybox/ibl/irradiance.dds`、`prefilter.dds`、`brdf_lut.png`；`Ibl_ReloadFromSettings` 只載入，唔會由天空即場生成。`CubemapReload` 只會換已載入嘅 DDS slot。
-  - Scope：import／cook 時把一張 equirectangular PNG 轉成 `CubemapLoad` 讀得嘅 DDS cubemap（唔好每幀先轉）。PNG 變更（mtime 或內容）要 invalidate 已烤 DDS，editor 重烤之後走現有 `CubemapReload`。部署包帶已烤 DDS；editor 同 runtime 都唔依賴 PATH 上的 `texassemble`。六面 PNG + `run.bat` 可留作後備。IBL：換天空要重烤 `irradiance`／`prefilter`，格式要同現有 prefilter mip 兼容；`brdf_lut.png` 係材質函數，唔使跟每張天空重做。若某一版先未重烤 IBL，要有明確「反射未跟天空」狀態，唔好靜默用舊環境光當已更新。
-  - 驗收：專案放入一張 equirectangular PNG，editor 同 packaged runtime 都顯示新天空；改 PNG 後唔使手動跑 `run.bat` 就更新；PBR 物件嘅 IBL 同新天空一致，或者清楚標明未更新；乾淨機器冇 `texassemble` 都開得；現有指住 `MySkybox.dds` 嘅場景無回歸。
+- [x] **重做 Skybox：直接接受 panorama（equirectangular）PNG，自動轉換成 DDS cubemap**
+  - 路徑（PR #10 之後）：六面來源 PNG 喺 `resources/skybox/source/`（`px nx py ny pz nz`）。`resources/skybox/source/run.bat` 仍然要 PATH 上的 `texassemble`，寫 `resources/skybox/MySkybox.dds`。`rom/<rest>` 先讀專案 `rom/<rest>`，再讀 `<exe-dir>/resources/<rest>`；寫入只去專案 `rom/`。`CubemapLoad` 仍然只收 legacy DDS cubemap。
+  - 實作：`settings.render.skyboxCubemap` 可以係一張 2:1 equirectangular PNG。`engine/rendering/environment/equirect_cubemap.cpp` 喺載入／打包時烤成專案 `rom/skybox/cache/<slug>.dds`（slug 係 `rom/` 之後的路徑，`/` 換成 `__`）。Stamp 記 mtime、size、FNV-1a64；任一變就重烤，editor 再走 `CubemapReload`。PNG 由已經連結的 DirectXTex WIC 解，唔使 `texassemble` 或 Python。六面 PNG 同指向 `rom/skybox/MySkybox.dds` 的場景唔經呢條路。
+  - 限制：寬必須係高的兩倍；face = height/2 必須係 2 的冪；最大 8192×4096（face 2048）。經度係 Debevec lat-long：圖像中心係 +Z，頂係 +Y，u 向右去 +X。面序同 `tools/bake_ibl.py`／texassemble：+X −X +Y −Y +Z −Z。
+  - IBL：panorama 會重烤 irradiance（32）同 prefilter（128、5 mip，每面自己的 mip chain，BGRA8，同 `bake_ibl.py`）。`brdf_lut.png` 唔重做。烤唔到或 LUT 缺失就 log，editor Rendering Settings 顯示「IBL not matching sky」，唔會靜默沿用舊 `rom/skybox/ibl/`。DDS 天空仍然用場景自己的 IBL 路徑。
+  - 部署：editor 打包前先烤場景 JSON 入面的 panorama，包內帶 cache DDS。Runtime 只喺 stamp 唔夾（缺檔、mtime 或內容變）先至自己烤，寫入包裝的 `rom/`。`deploy.bat` 唔會主動烤，只係抄已有的 `rom/`；缺 cache 就等 runtime。
+  - 驗收場景：`testbed/rom/scene/scene_panorama_sky.json` 用 `testbed/rom/skybox/panorama_test.png`（64×32，約 157 bytes）。Linux `tests/equirect_cubemap_test.cpp`（`g++ -std=c++20`）PASS。Windows editor、打包 runtime、畫面同 PBR 反射未跑。
+
 
 ## AI 系統套件（source audit：引擎內全部 missing）
 
@@ -82,7 +86,7 @@ PBR 球場已由引擎待辦移除：倉庫只有 PBR shader 同 `testbed/rom/sc
 
 1. ImGuizmo 參數順序同 PR #7 視覺檢查（lighting、CSM、post-process、gizmo）一齊喺 Windows 做。
 2. Content reload 紅燈（刪未引用資產）。
-3. 重做 Skybox（equirectangular PNG → DDS cubemap，含 IBL 重烤同唔再依賴 `texassemble`）。
+3. Skybox panorama（source 已做：equirect PNG → cache DDS，含 IBL 重烤）。Windows 畫面同打包 runtime 未驗收。
 4. 重做 Properties Panel／Inspector（先有 UI 草案；現有編輯同 Undo 要保住）。
 5. AI 套件：Waypoint → Perception → BT／Blackboard → EQS。NavMesh 繼續暫緩。
 

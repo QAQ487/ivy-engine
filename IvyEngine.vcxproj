@@ -274,6 +274,8 @@ exit /b 0</Command>
     <ClInclude Include="engine\scene\render_settings.h" />
     <ClInclude Include="engine\rendering\environment\skybox.h" />
     <ClInclude Include="engine\rendering\environment\ibl.h" />
+    <ClInclude Include="engine\rendering\environment\equirect_cubemap.h" />
+    <ClInclude Include="engine\rendering\environment\panorama_sky.h" />
     <ClInclude Include="engine\ecs\string_utils.h" />
     <ClInclude Include="engine\rendering\model\model.h" />
     <ClInclude Include="engine\rendering\model\model_util.h" />
@@ -407,6 +409,8 @@ exit /b 0</Command>
     <ClCompile Include="engine\scene\render_settings.cpp" />
     <ClCompile Include="engine\rendering\environment\skybox.cpp" />
     <ClCompile Include="engine\rendering\environment\ibl.cpp" />
+    <ClCompile Include="engine\rendering\environment\equirect_cubemap.cpp" />
+    <ClCompile Include="engine\rendering\environment\panorama_sky.cpp" />
     <ClCompile Include="engine\scene\scene_runtime.cpp" />
     <ClCompile Include="engine\ecs\prefab_runtime.cpp" />
     <ClCompile Include="engine\ecs\visual_component.cpp" />

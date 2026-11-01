@@ -660,12 +660,16 @@ ScriptApi_SetActiveCameraNodeName("CutsceneCam");
 Edit `settings.render` in the scene JSON (or via editor if exposed):
 
 - Skybox on/off, cubemap path, tint, exposure, Y rotation
+- `skyboxCubemap` may be a DDS cubemap or one equirectangular PNG (width = 2 × height, face size `height/2` a power of two, max 8192×4096). A PNG is cooked once into `rom/skybox/cache/` inside the project (not every frame). Editing the PNG in the open project rebakes it. The image center is +Z, the top is +Y, and u increases toward +X.
+- IBL for a PNG sky is rebaked (irradiance + prefilter). `brdf_lut.png` stays the shared LUT. If the bake cannot run, Rendering Settings shows **IBL not matching sky** instead of keeping the previous environment quietly.
 - Clear color
 - Default shader for objects without override
 - Shadow quality (Low / Medium / High)
 - Height fog parameters
 
-Reload skybox after changing the cubemap path (`RenderSettings_ReloadSkybox` / editor path).
+Reload skybox after changing the cubemap path (`RenderSettings_ReloadSkybox` / editor path). Manual check scene: `testbed/rom/scene/scene_panorama_sky.json`.
+
+Existing `rom/skybox/MySkybox.dds` scenes stay on that DDS. Six-face PNGs under `resources/skybox/source/` and `run.bat` remain the offline `texassemble` fallback.
 
 ### Per-object shaders
 

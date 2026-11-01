@@ -2,6 +2,7 @@
 // Builds playable runtime packages from a project.
 
 #include "playable_package_builder.h"
+#include "engine/rendering/environment/panorama_sky.h"
 
 #include "engine/core/content_path.h"
 #include "project_manager.h"
@@ -428,6 +429,16 @@ bool AssemblePackage(const Request& request, const fs::path& engineRoot,
     if (!CopyOneFile(content / ProjectManager::kProjectFileName,
                      dest / ProjectManager::kProjectFileName, errorOut))
         return false;
+
+    // Cook panorama PNGs into the project rom before the copy so the package
+    // carries the DDS. The runtime re-cooks only when the stamp does not match.
+    std::string panoramaError;
+    if (!panorama::CookProjectPanoramas(content, engineRoot / "resources", &panoramaError)) {
+        if (errorOut)
+            *errorOut = panoramaError.empty() ? "Panorama skybox cook failed." : panoramaError;
+        return false;
+    }
+
     if (!CopyDirectoryRecursive(content / "rom", dest / "rom", errorOut))
         return false;
 

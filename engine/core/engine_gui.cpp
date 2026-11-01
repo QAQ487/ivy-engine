@@ -72,6 +72,8 @@
 #include "engine/editor/editor_ui_panel.h"
 #include "engine/editor/project_asset_index.h"
 #include "engine/core/content_path.h"
+#include "engine/rendering/environment/panorama_sky.h"
+#include "engine/rendering/sprite/texture.h"
 #include "engine/editor/project_manager.h"
 #include "engine/editor/playable_package_builder.h"
 #include "engine/audio/audio_manager.h"
@@ -1110,13 +1112,28 @@ static void DrawRenderingSettingsWindow(bool* open) {
     if (ImGui::Checkbox("Skybox", &rs.skyboxEnabled))
         RenderSettings_ReloadSkybox();
 
-    ImGui::Text("Cubemap");
+    ImGui::Text("Cubemap / panorama PNG");
     ImGui::SetNextItemWidth(-1);
     if (ImGui::InputText("##SkyboxCubemap", cubemapBuf, sizeof(cubemapBuf),
         ImGuiInputTextFlags_EnterReturnsTrue)) {
         rs.skyboxCubemapPath = cubemapBuf;
         syncedCubemapPath = rs.skyboxCubemapPath;
         RenderSettings_ReloadSkybox();
+    }
+    if (panorama::IsEquirectSkyPath(rs.skyboxCubemapPath)) {
+        const panorama::Prep& prep = panorama::CurrentPrep();
+        if (!panorama::SameRomPath(prep.sourceRom, rs.skyboxCubemapPath)) {
+            ImGui::TextDisabled("Equirectangular PNG cooks to a DDS cubemap on reload.");
+        } else if (!prep.ok) {
+            ImGui::TextColored(ImVec4(1.0f, 0.45f, 0.35f, 1.0f), "Panorama failed");
+            ImGui::TextWrapped("%s", prep.error.c_str());
+        } else if (!prep.iblReady) {
+            ImGui::TextColored(ImVec4(1.0f, 0.45f, 0.35f, 1.0f), "IBL not matching sky");
+            if (!prep.error.empty())
+                ImGui::TextWrapped("%s", prep.error.c_str());
+        } else {
+            ImGui::TextDisabled("IBL baked from this panorama. BRDF LUT is unchanged.");
+        }
     }
 
     ImGui::ColorEdit4("Tint", &rs.skyboxTint.x);
@@ -1193,7 +1210,7 @@ static void DrawRenderingSettingsWindow(bool* open) {
     ImGui::DragFloat("Height Falloff", &rs.fogHeightFalloff, 0.01f, 0.0f, 5.0f, "%.3f");
 
     ImGui::Spacing();
-    ImGui::TextDisabled("Cubemap DDS files live in rom/texture/sky/.");
+    ImGui::TextDisabled("A DDS cubemap loads directly. A 2:1 PNG panorama is cooked into rom/skybox/cache/.");
     ImGui::End();
 }
 
@@ -3265,6 +3282,14 @@ void EngineGUI_Update(double elapsed_time) {
                     continue;
                 }
                 if (ext == ".dll") continue; // ScriptFactory owns DLL validation and module lifetime.
+                if (path.rfind("rom/skybox/cache/", 0) == 0) {
+                    if (!change.removed && ext == ".dds") {
+                        const auto widePath = PathFromUtf8(path).wstring();
+                        if (CubemapReload(widePath.c_str()) == TextureReloadResult::Reloaded)
+                            RenderSettings_ReloadSkybox();
+                    }
+                    continue;
+                }
                 if (change.added && SceneLoader_GetCurrentSceneContent().find(path) == std::string::npos) continue;
                 if (change.removed) {
                     g_contentReloadLight.Failure();
@@ -3273,6 +3298,35 @@ void EngineGUI_Update(double elapsed_time) {
                     continue;
                 }
                 if (ext == ".png" || ext == ".jpg" || ext == ".jpeg" || ext == ".dds" || ext == ".tga") {
+                    if (ext == ".png" && panorama::IsEquirectSkyPath(path) &&
+                        panorama::SameRomPath(path, RenderSettings_GetConst().skyboxCubemapPath)) {
+                        const panorama::Prep prep = panorama::PrepareSky(RenderSettings_GetConst().skyboxCubemapPath);
+                        if (!prep.ok) {
+                            g_contentReloadLight.Failure();
+                            g_contentReloadStatus = "Panorama skybox failed: " + prep.error;
+                            LogContentReload(g_contentReloadStatus);
+                            continue;
+                        }
+                        auto reloadCube = [](const std::string& rom) {
+                            if (rom.empty())
+                                return;
+                            const std::wstring wide = PathFromUtf8(rom).wstring();
+                            CubemapReload(wide.c_str());
+                        };
+                        reloadCube(prep.cubemapRom);
+                        reloadCube(prep.irradianceRom);
+                        reloadCube(prep.prefilterRom);
+                        RenderSettings_ReloadSkybox();
+                        if (prep.iblReady) {
+                            g_contentReloadLight.Success();
+                            g_contentReloadStatus = "Panorama skybox updated: " + path;
+                        } else {
+                            g_contentReloadLight.Failure();
+                            g_contentReloadStatus = "IBL not matching sky: " + prep.error;
+                        }
+                        LogContentReload(g_contentReloadStatus);
+                        continue;
+                    }
                     const auto widePath = PathFromUtf8(path).wstring();
                     const auto cube = CubemapReload(widePath.c_str());
                     if (cube == TextureReloadResult::Reloaded) RenderSettings_ReloadSkybox();

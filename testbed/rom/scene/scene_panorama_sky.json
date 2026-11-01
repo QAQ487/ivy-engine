@@ -1,0 +1,154 @@
+{
+    "version": 4,
+    "settings": {
+        "render": {
+            "clearColor": [0.12, 0.14, 0.18, 1.0],
+            "defaultShader": "pbr",
+            "fogEnabled": false,
+            "iblEnabled": true,
+            "iblIntensity": 1.0,
+            "iblIrradiance": "rom/skybox/ibl/irradiance.dds",
+            "iblPrefilter": "rom/skybox/ibl/prefilter.dds",
+            "iblBrdfLut": "rom/skybox/ibl/brdf_lut.png",
+            "shadowQuality": "medium",
+            "skyboxEnabled": true,
+            "skyboxCubemap": "rom/skybox/panorama_test.png",
+            "skyboxExposure": 1.0,
+            "skyboxRotationYDeg": 0.0,
+            "skyboxTint": [1.0, 1.0, 1.0, 1.0]
+        },
+        "debugCamera": {
+            "mode": "orbit",
+            "enabledOnPlay": true,
+            "position": { "x": 0.0, "y": 1.6, "z": -6.0 },
+            "yawDeg": 0.0,
+            "pitchDeg": -8.0
+        }
+    },
+    "nodes": [
+        {
+            "name": "Directional Light",
+            "tag": 0,
+            "children": [],
+            "components": {
+                "SceneTransform": {
+                    "posX": 0.0, "posY": 8.0, "posZ": 0.0,
+                    "rotX": 40.0, "rotY": -30.0, "rotZ": 0.0,
+                    "scaleX": 1.0, "scaleY": 1.0, "scaleZ": 1.0
+                },
+                "DirectionalLight": {
+                    "enabled": true,
+                    "castShadows": false,
+                    "color": [1.0, 0.96, 0.9],
+                    "intensity": 0.35,
+                    "specColor": [1.0, 1.0, 1.0],
+                    "specPower": 32.0
+                }
+            }
+        },
+        {
+            "name": "Panorama Camera",
+            "tag": 0,
+            "children": [],
+            "components": {
+                "SceneTransform": {
+                    "posX": 0.0, "posY": 1.6, "posZ": -6.0,
+                    "rotX": 8.0, "rotY": 0.0, "rotZ": 0.0,
+                    "scaleX": 1.0, "scaleY": 1.0, "scaleZ": 1.0
+                },
+                "Camera": {
+                    "enabled": true,
+                    "fov": 55.0,
+                    "nearClip": 0.1,
+                    "farClip": 200.0
+                }
+            }
+        },
+        {
+            "name": "Ground",
+            "tag": 2,
+            "children": [],
+            "components": {
+                "SceneTransform": {
+                    "posX": 0.0, "posY": -0.5, "posZ": 0.0,
+                    "rotX": 0.0, "rotY": 0.0, "rotZ": 0.0,
+                    "scaleX": 16.0, "scaleY": 1.0, "scaleZ": 16.0
+                },
+                "visual": {
+                    "model": "rom/model/object/Box_Brown.fbx",
+                    "shader": "pbr"
+                },
+                "Material": {
+                    "color": [0.35, 0.32, 0.28],
+                    "roughness": 0.85,
+                    "metallic": 0.0
+                }
+            }
+        },
+        {
+            "name": "Metal Smooth",
+            "tag": 5,
+            "children": [],
+            "components": {
+                "SceneTransform": {
+                    "posX": -1.3, "posY": 1.0, "posZ": 0.0,
+                    "rotX": 0.0, "rotY": 15.0, "rotZ": 0.0,
+                    "scaleX": 1.2, "scaleY": 1.2, "scaleZ": 1.2
+                },
+                "visual": {
+                    "model": "rom/model/object/Box_Blue.fbx",
+                    "shader": "pbr"
+                },
+                "Material": {
+                    "color": [0.75, 0.76, 0.78],
+                    "roughness": 0.12,
+                    "metallic": 1.0
+                }
+            }
+        },
+        {
+            "name": "Dielectric Rough",
+            "tag": 5,
+            "children": [],
+            "components": {
+                "SceneTransform": {
+                    "posX": 1.3, "posY": 1.0, "posZ": 0.0,
+                    "rotX": 0.0, "rotY": -15.0, "rotZ": 0.0,
+                    "scaleX": 1.2, "scaleY": 1.2, "scaleZ": 1.2
+                },
+                "visual": {
+                    "model": "rom/model/object/Box_Blue.fbx",
+                    "shader": "pbr"
+                },
+                "Material": {
+                    "color": [0.2, 0.45, 0.9],
+                    "roughness": 0.75,
+                    "metallic": 0.0
+                }
+            }
+        }
+    ],
+    "canvas": {
+        "name": "panorama_sky",
+        "elements": [
+            {
+                "type": "text",
+                "name": "Hint",
+                "anchor": "TOP_LEFT",
+                "alignment": "LEFT",
+                "position": { "x": 24.0, "y": 24.0 },
+                "text": "Panorama test. Forward +Z is the pale band with the black line. Left red, right blue, up green, down yellow.",
+                "fontSize": 0.85,
+                "characterSpacing": 16.0,
+                "color": { "r": 1.0, "g": 1.0, "b": 1.0, "a": 1.0 },
+                "font": {
+                    "texture": "rom/texture/consolab_ascii_512.png",
+                    "charWidth": 32.0,
+                    "charHeight": 32.0,
+                    "charsPerRow": 16
+                },
+                "visible": true
+            }
+        ]
+    }
+}

@@ -411,3 +411,6 @@ resources/**/*.exe
 # Editor UI prefs written into the in-repo testbed. Not engine defaults.
 /testbed/rom/editor
 
+# Cooked panorama cubemaps and IBL. Regenerated from the PNG; do not commit.
+/testbed/rom/skybox/cache/
+

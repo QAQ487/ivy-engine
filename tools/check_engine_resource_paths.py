@@ -38,6 +38,9 @@ OPTIONAL_EXACT = {
     "rom/model/a.fbx",
     # Comment example in billboard_component.h. Nothing loads this file.
     "rom/texture/point_area_circle.png",
+    # Comment example in equirect_cubemap.h. The real file lives in the testbed.
+    "rom/skybox/panorama_test.png",
+    "rom/skybox/cache/skybox__panorama_test.dds",
 }
 
 
