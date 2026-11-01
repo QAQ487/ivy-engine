@@ -4,10 +4,10 @@
         "render": {
             "skyboxEnabled": true,
             "skyboxCubemap": "rom/skybox/MySkybox.dds",
-            "skyboxTint": { "r": 1.0, "g": 1.0, "b": 1.0, "a": 1.0 },
+            "skyboxTint": [1.0, 1.0, 1.0, 1.0],
             "skyboxExposure": 1.0,
             "skyboxRotationYDeg": 0.0,
-            "clearColor": { "r": 0.12, "g": 0.14, "b": 0.18, "a": 1.0 },
+            "clearColor": [0.12, 0.14, 0.18, 1.0],
             "defaultShader": "standard",
             "shadowQuality": "medium"
         }

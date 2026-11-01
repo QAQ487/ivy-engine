@@ -25,5 +25,5 @@ tools\run_runtime_bridge_checks.cmd x64\phase1-test\<new-check-directory>
 ## 狀態摘要（2026-10）
 
 - Phase 1–2（hello／status／quit／keyboard）同 Phase 4–5（mouse、controller axes／buttons／triggers、checkpoint `events`、consumer probe）已於 Windows Debug runtime 核實。
-- Fixture：`samples/scenes/scene_runtime_bridge_*.json`；玩家模型用 `rom/model/player/`。
+- Fixture：`testbed/rom/scene/scene_runtime_bridge_*.json`；玩家模型用 `rom/model/player/`。
 - 詳細逐日 checkpoint 日誌已精簡；需要歷史細節時查 git history 中本檔舊版。

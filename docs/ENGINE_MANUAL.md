@@ -92,6 +92,8 @@ A **content project** is a directory containing at least `rom/` and usually `pro
 
 Recent projects are stored outside the content tree in `%AppData%/GameEngine/recent_projects.json`.
 
+Startup loads the first recent project that still has `rom/`. A Debug editor with no loadable recent project opens the in-repo `testbed/` (see [`CONTENT_PROJECT.md`](CONTENT_PROJECT.md)). The build output directory is not a project. Opening `testbed/` links engine `rom/` defaults instead of copying them, and rejects path targets that do not stay inside that `rom/`.
+
 New Project scaffolds `rom/scene/scene_main.json`, copies engine builtins (`rom/shader`, `rom/font`, `rom/texture`) from the editor ship folder, and may copy `external_content_template` scripts when the engine repo is discoverable. See also [`CONTENT_PROJECT.md`](CONTENT_PROJECT.md) for deploy-oriented external repos.
 
 ## Editor viewport aspect

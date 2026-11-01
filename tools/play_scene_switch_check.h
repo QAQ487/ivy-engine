@@ -31,7 +31,7 @@ inline void PlaySceneSwitchCheck_Tick() {
     const auto scene=std::filesystem::path(SceneLoader_GetCurrentScenePath()).filename().string();
     if(phase==0) {
         if(EngineGUI_IsSceneAssetPreloadActive())return;
-        if(scene!="scene_topdown_2d.json") {fail("open TestProject with scene_topdown_2d.json first");return;}
+        if(scene!="scene_topdown_2d.json") {fail("open testbed/rom/scene/scene_topdown_2d.json first");return;}
         EngineGUI_StartPlay(expected);phase=1;settled=0;
     }
     if(EngineGUI_GetPlayMode()!=expected||EngineGUI_IsEnabled()==fullscreen||!EngineGUI_PreferPlayVisuals()) {
