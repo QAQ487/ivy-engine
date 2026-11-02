@@ -101,6 +101,56 @@ py -3 tools/runtime_test_client.py --pid <PID> --run-id <runId> --request-id 16 
 - Fixture: `testbed/rom/scene/scene_runtime_bridge_world_manip.json` (`DynamicBox` + `Ground`).
 - Angular acceptance fixture: `testbed/rom/scene/scene_runtime_bridge_angular.json` (`FreeSpinBox`, `RollingSphere`, `TippingBox`, kinematic frictional `Ground`). Runner: `tools/runtime_bridge_angular_acceptance.py` (plan PHASE 4). Deterministic `pause` → setup → `step` → `observe` with fixed `dt=1/60`. Known skip: box friction rolling (box friction torque disabled in `ResolveContact`).
 
+## Scenario runner (plan PHASE 5)
+
+Generic JSON scenarios replace one-off Python acceptance scripts for common bridge flows. An AI or human authors a scenario file; the runner stages the fixture, drives verbs, evaluates asserts, writes `result.json`, and exits nonzero on failure.
+
+| Piece | Path |
+| --- | --- |
+| Runner | `tools/runtime_bridge_scenario_runner.py` |
+| Validator / assert ops | `tools/runtime_bridge_scenario_schema.py` |
+| JSON Schema | `docs/schemas/runtime_bridge_scenario.v1.schema.json` |
+| Examples | `testbed/scenarios/*.json` |
+| Batch | `tools/run_runtime_bridge_scenarios.cmd` |
+| Unit tests | `tools/runtime_bridge_scenario_check.py` |
+
+```bat
+py -3 tools\runtime_bridge_scenario_runner.py --scenario testbed\scenarios\world_manip.json --validate-only
+py -3 tools\runtime_bridge_scenario_runner.py --exe x64\Debug\IvyEngineRuntime.exe --scenario testbed\scenarios\world_manip.json --out-dir x64\scenario-world-manip
+tools\run_runtime_bridge_scenarios.cmd x64\scenarios-runtime x64\Debug\IvyEngineRuntime.exe
+```
+
+`--keep-open` skips `quit` on PASS so you can inspect the live process; failures still kill/cleanup. Default path always quits and cleans up.
+
+### Authoring guide (for AI / humans)
+
+1. Set `"version": 1`, a short `"name"`, and `"scene": "rom/scene/<fixture>.json"` (must stay under `rom/`, end in `.json`, no `..`).
+2. Prefer deterministic flows: `wait_ready` → `pause` → world manip / `step` / `observe` → `assert`. Use `sample` for pause+step+observe loops.
+3. Assert targets are paths into the last observe or sample, e.g. `DynamicBox.position.x`, `sample[-1].angularVelocity.z`. Ops: `eq`, `approx`, `gt`, `lt`, `between`, `changed`, `axis_dot`.
+4. Unknown keys/types are rejected with path-based errors (`$.steps[3].frames`). Keep numbers finite; bound frames/counts/timeouts.
+5. Do **not** add a new Python acceptance script for a flow that fits these steps — write JSON under `testbed/scenarios/` and run the scenario runner.
+6. Variables are intentionally omitted in v1; use successive `observe` + `changed` / absolute tolerances instead.
+
+Minimal sketch:
+
+```json
+{
+  "version": 1,
+  "name": "teleport-smoke",
+  "scene": "rom/scene/scene_runtime_bridge_world_manip.json",
+  "timeoutSec": 90,
+  "steps": [
+    { "type": "wait_ready" },
+    { "type": "pause" },
+    { "type": "set_transform", "object": "DynamicBox", "position": [3, 2, 0] },
+    { "type": "observe", "object": "DynamicBox" },
+    { "type": "assert", "target": "DynamicBox.position.x", "op": "approx", "value": 3, "tol": 0.05 }
+  ]
+}
+```
+
+Examples already ported: `world_manip.json`, `angular_free_spin.json`, `keyboard_move.json`.
+
 ## Controller injection (`controller`)
 
 One queued operation at a time. Requires ready + playing.
@@ -162,7 +212,7 @@ Without staging/`--scene`, Debug runtime launched from OutDir falls back to in-r
 tools/run_runtime_bridge_offline_linux.sh x64/linux-bridge-offline
 ```
 
-Compiles and runs `runtime_bridge_protocol_check`, `runtime_bridge_phase6_check`, and `runtime_bridge_world_manip_check` with Win32/input stubs (`tools/linux_win32_shim/`), then Python unit tests for world-manip and angular acceptance validators. Pipe DACL / `--serve` transport checks remain Windows-only.
+Compiles and runs `runtime_bridge_protocol_check`, `runtime_bridge_phase6_check`, and `runtime_bridge_world_manip_check` with Win32/input stubs (`tools/linux_win32_shim/`), then Python unit tests for angular acceptance validators and the Phase 5 scenario runner (schema / asserts / fake-client). Pipe DACL / `--serve` transport checks remain Windows-only.
 
 ### Batch harness (MSVC x64)
 
@@ -185,7 +235,7 @@ Expected highlights:
 - `consumer assertions executed: 63`
 - `All controller bridge checks PASSED`
 - `PASS Release compile-out ...` / `PASS Editor compile-out ...`
-- With an exe: mouse/controller/probe/world-manip/angular acceptance `"status": "PASS"`
+- With an exe: mouse/controller/probe/world-manip/angular acceptance `"status": "PASS"`, then `run_runtime_bridge_scenarios.cmd` for example JSON scenarios
 
 ### Standalone angular physics acceptance
 

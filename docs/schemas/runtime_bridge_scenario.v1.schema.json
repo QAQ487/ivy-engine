@@ -1,0 +1,347 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ivy-engine.local/schemas/runtime_bridge_scenario.v1.schema.json",
+  "title": "Ivy Runtime Bridge Scenario v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "name", "scene", "steps"],
+  "properties": {
+    "version": {
+      "const": 1,
+      "description": "Scenario schema version. Must be 1."
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "scene": {
+      "type": "string",
+      "pattern": "^rom/([A-Za-z0-9_.-]+/)*[A-Za-z0-9_.-]+\\.json$",
+      "description": "rom/-relative scene path ending in .json; no '..' or absolute paths."
+    },
+    "timeoutSec": {
+      "type": "number",
+      "minimum": 1,
+      "maximum": 600,
+      "default": 120,
+      "description": "Wall-clock budget for the whole scenario."
+    },
+    "steps": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1000,
+      "items": { "$ref": "#/$defs/step" }
+    }
+  },
+  "$defs": {
+    "objectName": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+    },
+    "vec3": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": { "type": "number" }
+    },
+    "vec3or4": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 4,
+      "items": { "type": "number" }
+    },
+    "step": {
+      "type": "object",
+      "required": ["type"],
+      "oneOf": [
+        { "$ref": "#/$defs/pause" },
+        { "$ref": "#/$defs/resume" },
+        { "$ref": "#/$defs/stepFrames" },
+        { "$ref": "#/$defs/setTransform" },
+        { "$ref": "#/$defs/setVelocity" },
+        { "$ref": "#/$defs/applyImpulse" },
+        { "$ref": "#/$defs/applyTorqueImpulse" },
+        { "$ref": "#/$defs/resetScene" },
+        { "$ref": "#/$defs/keyboard" },
+        { "$ref": "#/$defs/mouse" },
+        { "$ref": "#/$defs/controller" },
+        { "$ref": "#/$defs/capture" },
+        { "$ref": "#/$defs/perf" },
+        { "$ref": "#/$defs/listObjects" },
+        { "$ref": "#/$defs/observe" },
+        { "$ref": "#/$defs/waitReady" },
+        { "$ref": "#/$defs/waitFrames" },
+        { "$ref": "#/$defs/sample" },
+        { "$ref": "#/$defs/assert" },
+        { "$ref": "#/$defs/assertEvent" },
+        { "$ref": "#/$defs/label" },
+        { "$ref": "#/$defs/comment" }
+      ]
+    },
+    "pause": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type"],
+      "properties": { "type": { "const": "pause" } }
+    },
+    "resume": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type"],
+      "properties": { "type": { "const": "resume" } }
+    },
+    "stepFrames": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "frames"],
+      "properties": {
+        "type": { "const": "step" },
+        "frames": { "type": "integer", "minimum": 1, "maximum": 600 }
+      }
+    },
+    "setTransform": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "object"],
+      "properties": {
+        "type": { "const": "set_transform" },
+        "object": { "$ref": "#/$defs/objectName" },
+        "position": { "$ref": "#/$defs/vec3" },
+        "rotation": { "$ref": "#/$defs/vec3or4" },
+        "scale": { "$ref": "#/$defs/vec3" },
+        "zeroVelocity": { "type": "boolean", "default": true }
+      }
+    },
+    "setVelocity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "object"],
+      "properties": {
+        "type": { "const": "set_velocity" },
+        "object": { "$ref": "#/$defs/objectName" },
+        "linear": { "$ref": "#/$defs/vec3" },
+        "angular": { "$ref": "#/$defs/vec3" }
+      }
+    },
+    "applyImpulse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "object", "impulse"],
+      "properties": {
+        "type": { "const": "apply_impulse" },
+        "object": { "$ref": "#/$defs/objectName" },
+        "impulse": { "$ref": "#/$defs/vec3" },
+        "point": { "$ref": "#/$defs/vec3" }
+      }
+    },
+    "applyTorqueImpulse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "object", "torqueImpulse"],
+      "properties": {
+        "type": { "const": "apply_torque_impulse" },
+        "object": { "$ref": "#/$defs/objectName" },
+        "torqueImpulse": { "$ref": "#/$defs/vec3" }
+      }
+    },
+    "resetScene": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type"],
+      "properties": {
+        "type": { "const": "reset_scene" },
+        "scene": {
+          "type": "string",
+          "pattern": "^rom/([A-Za-z0-9_.-]+/)*[A-Za-z0-9_.-]+\\.json$"
+        }
+      }
+    },
+    "keyboard": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "keys", "updates"],
+      "properties": {
+        "type": { "const": "keyboard" },
+        "keys": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 9,
+          "uniqueItems": true,
+          "items": {
+            "enum": ["W", "A", "S", "D", "SPACE", "UP", "DOWN", "LEFT", "RIGHT"]
+          }
+        },
+        "updates": { "type": "integer", "minimum": 1, "maximum": 120 }
+      }
+    },
+    "mouse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "dx", "dy", "updates"],
+      "properties": {
+        "type": { "const": "mouse" },
+        "dx": { "type": "number", "minimum": -600, "maximum": 600 },
+        "dy": { "type": "number", "minimum": -600, "maximum": 600 },
+        "buttons": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "enum": ["LEFT", "RIGHT", "MIDDLE"] }
+        },
+        "updates": { "type": "integer", "minimum": 1, "maximum": 120 },
+        "wheel": { "type": "number", "minimum": -120, "maximum": 120 }
+      }
+    },
+    "controller": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "lx", "ly", "updates"],
+      "properties": {
+        "type": { "const": "controller" },
+        "lx": { "type": "number", "minimum": -1, "maximum": 1 },
+        "ly": { "type": "number", "minimum": -1, "maximum": 1 },
+        "rx": { "type": "number", "minimum": -1, "maximum": 1 },
+        "ry": { "type": "number", "minimum": -1, "maximum": 1 },
+        "lt": { "type": "number", "minimum": 0, "maximum": 1 },
+        "rt": { "type": "number", "minimum": 0, "maximum": 1 },
+        "updates": { "type": "integer", "minimum": 1, "maximum": 120 },
+        "buttons": {
+          "type": "array",
+          "maxItems": 14,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "A", "B", "X", "Y", "LB", "RB", "START", "BACK",
+              "LEFT_THUMB", "RIGHT_THUMB", "DPAD_UP", "DPAD_DOWN",
+              "DPAD_LEFT", "DPAD_RIGHT"
+            ]
+          }
+        }
+      }
+    },
+    "capture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type"],
+      "properties": { "type": { "const": "capture" } }
+    },
+    "perf": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type"],
+      "properties": {
+        "type": { "const": "perf" },
+        "frames": { "type": "integer", "minimum": 1, "maximum": 600 }
+      }
+    },
+    "listObjects": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type"],
+      "properties": {
+        "type": { "const": "list_objects" },
+        "offset": { "type": "integer", "minimum": 0 },
+        "limit": { "type": "integer", "minimum": 1, "maximum": 64 }
+      }
+    },
+    "observe": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type"],
+      "properties": {
+        "type": { "const": "observe" },
+        "object": { "$ref": "#/$defs/objectName" },
+        "target": { "$ref": "#/$defs/objectName" }
+      }
+    },
+    "waitReady": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type"],
+      "properties": {
+        "type": { "const": "wait_ready" },
+        "timeoutSec": { "type": "number", "minimum": 1, "maximum": 120 }
+      }
+    },
+    "waitFrames": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "frames"],
+      "properties": {
+        "type": { "const": "wait_frames" },
+        "frames": { "type": "integer", "minimum": 1, "maximum": 600 }
+      }
+    },
+    "sample": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "object", "fields", "everyFrames", "count"],
+      "properties": {
+        "type": { "const": "sample" },
+        "object": { "$ref": "#/$defs/objectName" },
+        "fields": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "position", "velocity", "rotation", "rotationQuaternion",
+              "scale", "angularVelocity", "rigidbody"
+            ]
+          }
+        },
+        "everyFrames": { "type": "integer", "minimum": 1, "maximum": 600 },
+        "count": { "type": "integer", "minimum": 1, "maximum": 600 }
+      }
+    },
+    "assert": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "target", "op"],
+      "properties": {
+        "type": { "const": "assert" },
+        "target": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "description": "Path such as DynamicBox.position.x or sample[-1].angularVelocity.z"
+        },
+        "op": {
+          "enum": ["eq", "approx", "gt", "lt", "between", "changed", "axis_dot"]
+        },
+        "value": true,
+        "tol": { "type": "number", "minimum": 0 }
+      }
+    },
+    "assertEvent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type"],
+      "properties": {
+        "type": { "const": "assert_event" },
+        "checkpoint": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "actor": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "minCount": { "type": "integer", "minimum": 1, "maximum": 64 }
+      }
+    },
+    "label": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "text"],
+      "properties": {
+        "type": { "const": "label" },
+        "text": { "type": "string", "maxLength": 512 }
+      }
+    },
+    "comment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "text"],
+      "properties": {
+        "type": { "const": "comment" },
+        "text": { "type": "string", "maxLength": 512 }
+      }
+    }
+  }
+}

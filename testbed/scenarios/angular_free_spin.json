@@ -1,0 +1,71 @@
+{
+  "version": 1,
+  "name": "angular-free-spin",
+  "scene": "rom/scene/scene_runtime_bridge_angular.json",
+  "timeoutSec": 120,
+  "steps": [
+    { "type": "comment", "text": "Port of angular acceptance free-spin: torque on FreeSpinBox, sample decay." },
+    { "type": "wait_ready", "timeoutSec": 25 },
+    { "type": "list_objects", "limit": 64 },
+    { "type": "pause" },
+    {
+      "type": "set_transform",
+      "object": "FreeSpinBox",
+      "position": [0.0, 4.0, 0.0],
+      "rotation": [0.0, 0.0, 0.0],
+      "zeroVelocity": true
+    },
+    { "type": "step", "frames": 1 },
+    {
+      "type": "apply_torque_impulse",
+      "object": "FreeSpinBox",
+      "torqueImpulse": [0.0, 0.0, 2.0]
+    },
+    { "type": "observe", "object": "FreeSpinBox" },
+    {
+      "type": "assert",
+      "target": "FreeSpinBox.angularVelocity",
+      "op": "axis_dot",
+      "value": [0.0, 0.0, 1.0],
+      "tol": 0.98
+    },
+    {
+      "type": "assert",
+      "target": "FreeSpinBox.angularVelocity.z",
+      "op": "gt",
+      "value": 0.5
+    },
+    {
+      "type": "sample",
+      "object": "FreeSpinBox",
+      "fields": ["angularVelocity", "rotationQuaternion", "rigidbody"],
+      "everyFrames": 1,
+      "count": 30
+    },
+    {
+      "type": "assert",
+      "target": "sample[-1].angularVelocity",
+      "op": "axis_dot",
+      "value": [0.0, 0.0, 1.0],
+      "tol": 0.98
+    },
+    {
+      "type": "assert",
+      "target": "sample[-1].angularVelocity.z",
+      "op": "gt",
+      "value": 0.4
+    },
+    {
+      "type": "assert",
+      "target": "sample[-1].angularVelocity.z",
+      "op": "lt",
+      "value": 10.0
+    },
+    {
+      "type": "assert",
+      "target": "sample[-1].angularVelocity.z",
+      "op": "between",
+      "value": [0.4, 3.0]
+    }
+  ]
+}
