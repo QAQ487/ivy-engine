@@ -165,7 +165,7 @@ namespace {
 			float py = bC.y - prevCenterA.y;
 			float pz = bC.z - prevCenterA.z;
 			t = (px * sdx + py * sdy + pz * sdz) / len2;
-			t = max(0.0f, min(1.0f, t));
+			t = std::max(0.0f, std::min(1.0f, t));
 		}
 
 		float closestX = prevCenterA.x + t * sdx;
@@ -239,7 +239,7 @@ namespace {
 		const float stepSize = colliderR * 0.25f;
 		if (stepSize > 1e-4f && dLen > stepSize) {
 			nSteps = static_cast<int>(std::ceil(dLen / stepSize));
-			nSteps = min(nSteps, 64);
+			nSteps = std::min(nSteps, 64);
 		}
 
 		for (int step = 1; step <= nSteps; step++) {

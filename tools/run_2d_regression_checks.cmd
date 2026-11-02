@@ -4,35 +4,35 @@ cd /d "%~dp0.."
 call "C:\Program Files\Microsoft Visual Studio\18\Community\VC\Auxiliary\Build\vcvars64.bat" >nul
 if errorlevel 1 exit /b 1
 if not exist "tools\phase6-test-build" mkdir "tools\phase6-test-build"
-cl /nologo /EHsc /std:c++17 /utf-8 /I. tools\play_fps_overlay_check.cpp /Fo:tools\phase6-test-build\ /Fe:tools\phase6-test-build\play_fps_overlay_check.exe
+cl /nologo /EHsc /std:c++17 /utf-8 /DNOMINMAX /I. tools\play_fps_overlay_check.cpp /Fo:tools\phase6-test-build\ /Fe:tools\phase6-test-build\play_fps_overlay_check.exe
 if errorlevel 1 exit /b 1
 tools\phase6-test-build\play_fps_overlay_check.exe
 if errorlevel 1 exit /b 1
-cl /nologo /EHsc /std:c++17 /utf-8 /Gy /I. /Isrc\app\camera tools\sprite_animation_check.cpp  /Fo:tools\phase6-test-build\ /Fe:tools\phase6-test-build\sprite_animation_check.exe /link /OPT:REF
+cl /nologo /EHsc /std:c++17 /utf-8 /DNOMINMAX /Gy /I. /Isrc\app\camera tools\sprite_animation_check.cpp  /Fo:tools\phase6-test-build\ /Fe:tools\phase6-test-build\sprite_animation_check.exe /link /OPT:REF
 if errorlevel 1 exit /b 1
 tools\phase6-test-build\sprite_animation_check.exe
 if errorlevel 1 exit /b 1
-cl /nologo /EHsc /std:c++17 /utf-8 /Gy /I. /Isrc\app\camera tools\sprite_pick_check.cpp  /Fo:tools\phase6-test-build\ /Fe:tools\phase6-test-build\sprite_pick_check.exe /link /OPT:REF
+cl /nologo /EHsc /std:c++17 /utf-8 /DNOMINMAX /Gy /I. /Isrc\app\camera tools\sprite_pick_check.cpp  /Fo:tools\phase6-test-build\ /Fe:tools\phase6-test-build\sprite_pick_check.exe /link /OPT:REF
 if errorlevel 1 exit /b 1
 tools\phase6-test-build\sprite_pick_check.exe
 if errorlevel 1 exit /b 1
-cl /nologo /EHsc /std:c++17 /utf-8 /Gy /I. /Isrc\app\camera tools\ui_pivot_check.cpp  /Fo:tools\phase6-test-build\ /Fe:tools\phase6-test-build\ui_pivot_check.exe /link /OPT:REF
+cl /nologo /EHsc /std:c++17 /utf-8 /DNOMINMAX /Gy /I. /Isrc\app\camera tools\ui_pivot_check.cpp  /Fo:tools\phase6-test-build\ /Fe:tools\phase6-test-build\ui_pivot_check.exe /link /OPT:REF
 if errorlevel 1 exit /b 1
 tools\phase6-test-build\ui_pivot_check.exe
 if errorlevel 1 exit /b 1
-cl /nologo /EHsc /std:c++17 /utf-8 /Gy /I. /Isrc\app\camera tools\scene_execution_policy_check.cpp  /Fo:tools\phase6-test-build\ /Fe:tools\phase6-test-build\scene_execution_policy_check.exe /link /OPT:REF
+cl /nologo /EHsc /std:c++17 /utf-8 /DNOMINMAX /Gy /I. /Isrc\app\camera tools\scene_execution_policy_check.cpp  /Fo:tools\phase6-test-build\ /Fe:tools\phase6-test-build\scene_execution_policy_check.exe /link /OPT:REF
 if errorlevel 1 exit /b 1
 tools\phase6-test-build\scene_execution_policy_check.exe
 if errorlevel 1 exit /b 1
-cl /nologo /EHsc /std:c++17 /utf-8 /Gy /I. /Isrc\app\camera tools\camera_2d_check.cpp src\app\camera\camera.cpp /Fo:tools\phase6-test-build\ /Fe:tools\phase6-test-build\camera_2d_check.exe /link /OPT:REF
+cl /nologo /EHsc /std:c++17 /utf-8 /DNOMINMAX /Gy /I. /Isrc\app\camera tools\camera_2d_check.cpp src\app\camera\camera.cpp /Fo:tools\phase6-test-build\ /Fe:tools\phase6-test-build\camera_2d_check.exe /link /OPT:REF
 if errorlevel 1 exit /b 1
 tools\phase6-test-build\camera_2d_check.exe
 if errorlevel 1 exit /b 1
-cl /nologo /EHsc /std:c++17 /utf-8 /Gy /I. /Isrc\app\camera tools\sprite_animator_check.cpp engine\ecs\sprite_animator_component.cpp /Fo:tools\phase6-test-build\ /Fe:tools\phase6-test-build\sprite_animator_check.exe /link /OPT:REF
+cl /nologo /EHsc /std:c++17 /utf-8 /DNOMINMAX /Gy /I. /Isrc\app\camera tools\sprite_animator_check.cpp engine\ecs\sprite_animator_component.cpp /Fo:tools\phase6-test-build\ /Fe:tools\phase6-test-build\sprite_animator_check.exe /link /OPT:REF
 if errorlevel 1 exit /b 1
 tools\phase6-test-build\sprite_animator_check.exe
 if errorlevel 1 exit /b 1
-cl /nologo /EHsc /std:c++17 /utf-8 /wd4828 /Gy /MD /DFBXSDK_SHARED /I. /Isrc\app /Isrc\app\scene /Isrc\app\camera /Ilibraries\fbxsdk\include tools\sprite_renderer_check.cpp engine\ecs\sprite_renderer_component.cpp engine\ecs\sprite_animator_component.cpp src\app\camera\camera.cpp /Fo:tools\phase6-test-build\ /Fe:tools\phase6-test-build\sprite_renderer_check.exe /link /OPT:REF /LIBPATH:libraries\fbxsdk\lib\x64\release libfbxsdk.lib
+cl /nologo /EHsc /std:c++17 /utf-8 /DNOMINMAX /wd4828 /Gy /MD /DFBXSDK_SHARED /I. /Isrc\app /Isrc\app\scene /Isrc\app\camera /Ilibraries\fbxsdk\include tools\sprite_renderer_check.cpp engine\ecs\sprite_renderer_component.cpp engine\ecs\sprite_animator_component.cpp src\app\camera\camera.cpp /Fo:tools\phase6-test-build\ /Fe:tools\phase6-test-build\sprite_renderer_check.exe /link /OPT:REF /LIBPATH:libraries\fbxsdk\lib\x64\release libfbxsdk.lib
 if errorlevel 1 exit /b 1
 copy /Y libraries\fbxsdk\lib\x64\release\libfbxsdk.dll tools\phase6-test-build\ >nul
 if errorlevel 1 exit /b 1

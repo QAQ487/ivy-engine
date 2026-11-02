@@ -2,7 +2,9 @@
 // Validates runtime bridge framing/protocol parsing.
 
 #include "engine/testing/runtime_test_bridge.h"
+#ifndef NOMINMAX
 #define NOMINMAX
+#endif
 #include <windows.h>
 #include <aclapi.h>
 #include <iostream>
