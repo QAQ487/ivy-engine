@@ -97,6 +97,7 @@ py -3 tools/runtime_test_client.py --pid <PID> --run-id <runId> --request-id 16 
 - Object addressing uses the same GameObject **name** strings as `list_objects` / `observe` (field name: `object`). Unknown names fail the queued op with `unknown_object`.
 - Impulses / velocity writes require a **dynamic** rigidbody (`Rigidbody` component, non-kinematic, mass > 0). Kinematic/static bodies fail with `not_dynamic`.
 - Works with `pause` / `step` for deterministic tests: `pause` → `set_transform` → `apply_impulse` → `step N` → `observe`.
+- `status.worldOp.status` stays `queued` until the next observe/list snapshot publish after WinMain applies the op, then becomes `completed`/`failed`. Clients that wait for `completed` before `observe` therefore see the applied transform/velocity (avoids reading a stale snapshot from the prior frame).
 - Continuous `apply_force` / `apply_torque` held for N frames are **not** implemented (would need a multi-frame queue like keyboard inject); use impulses or `set_velocity` instead.
 - Fixture: `testbed/rom/scene/scene_runtime_bridge_world_manip.json` (`DynamicBox` + `Ground`).
 - Angular acceptance fixture: `testbed/rom/scene/scene_runtime_bridge_angular.json` (`FreeSpinBox`, `RollingSphere`, `TippingBox`, kinematic frictional `Ground`). Runner: `tools/runtime_bridge_angular_acceptance.py` (plan PHASE 4). Deterministic `pause` → setup → `step` → `observe` with fixed `dt=1/60`. Known skip: box friction rolling (box friction torque disabled in `ResolveContact`).

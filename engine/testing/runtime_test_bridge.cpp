@@ -263,6 +263,9 @@ void Protocol::Publish(bool ready, bool playing, const std::string& scene,
     scene_ = scene.substr(0, end);
     targets_ = std::move(targets);
     objects_ = std::move(objects);
+    // Seal world ops only after the observe/list snapshot is replaced so
+    // worldOp.status==completed implies a subsequent observe sees the apply.
+    SealAppliedWorldOp();
     if (readyDetail && readyDetail[0])
         readyDetail_ = readyDetail;
     else if (!ready_)
@@ -459,13 +462,31 @@ bool Protocol::HasPendingWorldOp(WorldOpRequest& out) const {
 void Protocol::CompleteWorldOp(std::int64_t id, bool ok, const std::string& err) {
     if (worldOp_.status == WorldOpState::Status::Queued && worldOp_.request.requestId == id) {
         worldOp_.status = ok ? WorldOpState::Status::Completed : WorldOpState::Status::Failed;
+        worldOp_.appliedOk = ok;
         worldOp_.error = err;
     }
 }
 
+void Protocol::MarkWorldOpApplied(std::int64_t id, bool ok, const std::string& err) {
+    if (worldOp_.status == WorldOpState::Status::Queued && worldOp_.request.requestId == id) {
+        worldOp_.status = WorldOpState::Status::Applied;
+        worldOp_.appliedOk = ok;
+        worldOp_.error = err;
+    }
+}
+
+void Protocol::SealAppliedWorldOp() {
+    if (worldOp_.status != WorldOpState::Status::Applied)
+        return;
+    worldOp_.status = worldOp_.appliedOk ? WorldOpState::Status::Completed
+                                         : WorldOpState::Status::Failed;
+}
+
 void Protocol::CancelWorldOp() {
-    if (worldOp_.status == WorldOpState::Status::Queued) {
+    if (worldOp_.status == WorldOpState::Status::Queued
+        || worldOp_.status == WorldOpState::Status::Applied) {
         worldOp_.status = WorldOpState::Status::Failed;
+        worldOp_.appliedOk = false;
         worldOp_.error = "cancelled";
     }
 }
@@ -881,11 +902,14 @@ Json Protocol::Request(const std::string& frame) {
     }
     if(worldOp) {
         if(!ready_ || !playing_) return error("not_ready",id);
-        if(worldOp_.status == WorldOpState::Status::Queued) return error("queue_full",id);
+        if(worldOp_.status == WorldOpState::Status::Queued
+            || worldOp_.status == WorldOpState::Status::Applied)
+            return error("queue_full",id);
         pendingWorld.requestId = id;
         worldOp_.status = WorldOpState::Status::Queued;
         worldOp_.request = std::move(pendingWorld);
         worldOp_.error.clear();
+        worldOp_.appliedOk = true;
         return {{"protocolVersion",1},{"requestId",id},{"runId",runId_},{"ok",true},
             {"status","queued"},{"verb",worldOp_.VerbName()}};
     }
@@ -943,7 +967,9 @@ Json Protocol::Request(const std::string& frame) {
     const char* capStatus = captureState_.status == CaptureState::Status::Queued ? "queued" :
                             captureState_.status == CaptureState::Status::Completed ? "completed" :
                             captureState_.status == CaptureState::Status::Failed ? "failed" : "idle";
-    const char* worldStatus = worldOp_.status == WorldOpState::Status::Queued ? "queued" :
+    // Applied still reports as queued: clients must wait until Publish seals it.
+    const char* worldStatus = (worldOp_.status == WorldOpState::Status::Queued
+                               || worldOp_.status == WorldOpState::Status::Applied) ? "queued" :
                               worldOp_.status == WorldOpState::Status::Completed ? "completed" :
                               worldOp_.status == WorldOpState::Status::Failed ? "failed" : "idle";
 
@@ -1268,14 +1294,14 @@ void Bridge::MaybeApplyWorldOps() {
     }
     if(!impl_->worldOpHandler) {
         std::lock_guard lock(impl_->mutex);
-        impl_->protocol.CompleteWorldOp(op.requestId, false, "world_op_unavailable");
+        impl_->protocol.MarkWorldOpApplied(op.requestId, false, "world_op_unavailable");
         return;
     }
     std::string err;
     const bool ok = impl_->worldOpHandler(op, err);
     {
         std::lock_guard lock(impl_->mutex);
-        impl_->protocol.CompleteWorldOp(op.requestId, ok, ok ? std::string{} : err);
+        impl_->protocol.MarkWorldOpApplied(op.requestId, ok, ok ? std::string{} : err);
     }
 }
 }

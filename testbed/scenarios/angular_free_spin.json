@@ -4,7 +4,10 @@
   "scene": "rom/scene/scene_runtime_bridge_angular.json",
   "timeoutSec": 120,
   "steps": [
-    { "type": "comment", "text": "Port of angular acceptance free-spin: torque on FreeSpinBox, sample decay." },
+    {
+      "type": "comment",
+      "text": "FreeSpinBox: halfExtents 0.4, scale 0.8 => fullSize 0.64; I=(m/12)*(s^2+s^2); invI=1/I; torque Z=2 => w0z=invI*2 ≈ 29.296875; after 30 steps @ angularDrag 0.05 => ≈ 28.5738."
+    },
     { "type": "wait_ready", "timeoutSec": 25 },
     { "type": "list_objects", "limit": 64 },
     { "type": "pause" },
@@ -32,8 +35,9 @@
     {
       "type": "assert",
       "target": "FreeSpinBox.angularVelocity.z",
-      "op": "gt",
-      "value": 0.5
+      "op": "approx",
+      "value": 29.296875,
+      "tol": 2.5
     },
     {
       "type": "sample",
@@ -52,20 +56,9 @@
     {
       "type": "assert",
       "target": "sample[-1].angularVelocity.z",
-      "op": "gt",
-      "value": 0.4
-    },
-    {
-      "type": "assert",
-      "target": "sample[-1].angularVelocity.z",
-      "op": "lt",
-      "value": 10.0
-    },
-    {
-      "type": "assert",
-      "target": "sample[-1].angularVelocity.z",
-      "op": "between",
-      "value": [0.4, 3.0]
+      "op": "approx",
+      "value": 28.57383,
+      "tol": 2.5
     }
   ]
 }
