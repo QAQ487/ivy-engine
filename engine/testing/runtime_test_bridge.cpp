@@ -227,7 +227,7 @@ Json PerfStatsJson(const std::vector<float>& values) {
     std::vector<float> sorted = values;
     std::sort(sorted.begin(), sorted.end());
     const std::size_t idx = (sorted.size() * 95) / 100;
-    const float p95 = sorted[std::min(idx, sorted.size() - 1)];
+    const float p95 = sorted[(std::min)(idx, sorted.size() - 1)];
     return {
         {"avg", sum / static_cast<double>(values.size())},
         {"min", mn}, {"max", mx}, {"p95", p95},
@@ -658,7 +658,7 @@ Json Protocol::Request(const std::string& frame) {
     if(perf) {
         if(!ready_ || !playing_) return error("not_ready",id);
         const int available = static_cast<int>(perfCount_);
-        const int take = std::min(perfFrames, available);
+        const int take = (std::min)(perfFrames, available);
         std::vector<float> frameMs, updateMs, drawMs, presentMs;
         frameMs.reserve(static_cast<std::size_t>(take));
         updateMs.reserve(static_cast<std::size_t>(take));
