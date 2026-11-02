@@ -606,6 +606,16 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstanc
                                     t.angVelX = ang.x; t.angVelY = ang.y; t.angVelZ = ang.z;
                                     t.hasRigidbody = true;
                                     t.kinematic = body.IsKinematic();
+                                    t.mass = body.GetMass();
+                                    t.drag = body.GetDrag();
+                                    t.angularDrag = body.GetAngularDrag();
+                                    t.friction = body.GetFriction();
+                                    t.useGravity = body.UseGravity();
+                                    const auto invI = body.GetLocalInverseInertia();
+                                    t.hasLocalInverseInertia = true;
+                                    t.invInertiaX = invI.x;
+                                    t.invInertiaY = invI.y;
+                                    t.invInertiaZ = invI.z;
                                 }
                                 targets.push_back(std::move(t));
 

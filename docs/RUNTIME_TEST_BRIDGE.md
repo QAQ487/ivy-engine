@@ -46,7 +46,7 @@ Capabilities advertised by `hello` / `status` (as implemented):
 | `quit` | Requests exit; response has `requiresReceipt: true` — client must send a lone LF receipt. Accepted while paused; the host drains exit without waiting for a sim tick. |
 | `keyboard` | Internal key inject (`keys`, `updates`) |
 | `mouse` | Internal mouse inject (`dx`, `dy`, `buttons`, `updates`, optional `wheel`) |
-| `observe` | Named GameObject snapshot: legacy `position`/`velocity`, plus `rotation` (Euler degrees), `rotationQuaternion`, `scale`, `angularVelocity`, and `rigidbody.kinematic` when present. Sleeping/contact counts are omitted (not cheaply available). |
+| `observe` | Named GameObject snapshot: legacy `position`/`velocity`, plus `rotation` (Euler degrees), `rotationQuaternion`, `scale`, `angularVelocity`, and when a `Rigidbody` is present: `rigidbody.{kinematic,mass,drag,angularDrag,friction,useGravity,localInverseInertia}`. Sleeping/contact counts are omitted (not cheaply available). |
 | `list_objects` | Bounded GameObject name + component type list (`offset`, `limit` 1…64, default 32). Response includes `total` and `truncated`. |
 | `pause` / `resume` | Freeze or resume the sim loop. Status reports `paused`, `pendingSteps`, `frame`, `physicsTick`. |
 | `step` | While paused only: queue `frames` 1…600 fixed-timestep update/physics ticks. Input inject and `controller_probe` advance on stepped ticks. Error `not_paused` if running. |
@@ -99,6 +99,7 @@ py -3 tools/runtime_test_client.py --pid <PID> --run-id <runId> --request-id 16 
 - Works with `pause` / `step` for deterministic tests: `pause` → `set_transform` → `apply_impulse` → `step N` → `observe`.
 - Continuous `apply_force` / `apply_torque` held for N frames are **not** implemented (would need a multi-frame queue like keyboard inject); use impulses or `set_velocity` instead.
 - Fixture: `testbed/rom/scene/scene_runtime_bridge_world_manip.json` (`DynamicBox` + `Ground`).
+- Angular acceptance fixture: `testbed/rom/scene/scene_runtime_bridge_angular.json` (`FreeSpinBox`, `RollingSphere`, `TippingBox`, kinematic frictional `Ground`). Runner: `tools/runtime_bridge_angular_acceptance.py` (plan PHASE 4). Deterministic `pause` → setup → `step` → `observe` with fixed `dt=1/60`. Known skip: box friction rolling (box friction torque disabled in `ResolveContact`).
 
 ## Controller injection (`controller`)
 
@@ -161,7 +162,7 @@ Without staging/`--scene`, Debug runtime launched from OutDir falls back to in-r
 tools/run_runtime_bridge_offline_linux.sh x64/linux-bridge-offline
 ```
 
-Compiles and runs `runtime_bridge_protocol_check`, `runtime_bridge_phase6_check`, and `runtime_bridge_world_manip_check` with Win32/input stubs (`tools/linux_win32_shim/`). Pipe DACL / `--serve` transport checks remain Windows-only.
+Compiles and runs `runtime_bridge_protocol_check`, `runtime_bridge_phase6_check`, and `runtime_bridge_world_manip_check` with Win32/input stubs (`tools/linux_win32_shim/`), then Python unit tests for world-manip and angular acceptance validators. Pipe DACL / `--serve` transport checks remain Windows-only.
 
 ### Batch harness (MSVC x64)
 
@@ -184,7 +185,17 @@ Expected highlights:
 - `consumer assertions executed: 63`
 - `All controller bridge checks PASSED`
 - `PASS Release compile-out ...` / `PASS Editor compile-out ...`
-- With an exe: mouse/controller/probe/world-manip acceptance `"status": "PASS"`
+- With an exe: mouse/controller/probe/world-manip/angular acceptance `"status": "PASS"`
+
+### Standalone angular physics acceptance
+
+Interactive Windows session (Debug `IvyEngineRuntime.exe`):
+
+```bat
+py -3 tools\runtime_bridge_angular_acceptance.py --exe x64\Debug\IvyEngineRuntime.exe --out-dir x64\angular-runtime
+```
+
+Stages `scene_runtime_bridge_angular.json`, pauses, and asserts free-spin torque, off-center impulse, quaternion integration, sphere rolling, tipping settle, and reset determinism. Writes `result.json` with samples and tolerances. Linux cannot claim this runtime PASS.
 
 ### Standalone consumer-trace runtime acceptance
 
@@ -202,3 +213,7 @@ Stages the isolated fixture under the out-dir, sets bridge env vars, uses stock 
 - **Unplug physical controllers** (or ignore non-isolated frames) when asserting cancel/idle suffixes: after injection clears, getters reflect hardware; a connected pad can keep `connected: true` and non-zero axes.
 - Linux can run pure protocol/validator tests; it cannot claim Windows named-pipe or D3D11 runtime PASS.
 - Single-Update press/release edges must be taken from the per-Update probe (or in-process harness), not from client completion polling alone.
+- **Box friction torque** is intentionally linear-only in `ResolveContact` (crates slide instead of rolling from edge friction). Angular acceptance marks box-friction rolling as `expected-skip`; use sphere/ground for rolling checks.
+- Cylinder-pair collision support is covered elsewhere (`scene_cylinder_pairs.json` / PR #8); angular acceptance does not depend on cylinder contacts.
+- **Rolling axis convention (engine RH Y-up):** physics uses right-handed `Cross3` (same as DirectXMath / off-center `r × J`). Contact lever `r = (0,−R,0)` ⇒ no-slip `wz = −vx/R` (so `+vx` ⇒ **negative** `wz`). Angular acceptance documents this as `RH_Yup_wz_eq_minus_vx_over_R` and checks an early developing sample (not a mid/late frame after the sphere has already stopped).
+- **Sphere rolling deceleration (finding only, Terry Windows @ e55467d):** with `drag=0` / `angularDrag=0.05` / `friction=0.9` on the sphere and kinematic ground `friction=1.0`, `vx` fell from ~1.53 to rest in ~10 acceptance samples while approaching `wz = −2·vx` (R=0.5). Angular drag alone (~4% over ~50 ticks) cannot explain that stop — residual contact friction / stick behavior after (or while approaching) no-slip is the likely dissipator; not changed in Phase 4.

@@ -210,8 +210,21 @@ Json ObserveTargetJson(const ObservedTarget& t) {
         body["scale"] = {{"x", t.scaleX}, {"y", t.scaleY}, {"z", t.scaleZ}};
     if (t.hasAngularVelocity)
         body["angularVelocity"] = {{"x", t.angVelX}, {"y", t.angVelY}, {"z", t.angVelZ}};
-    if (t.hasRigidbody)
-        body["rigidbody"] = {{"kinematic", t.kinematic}};
+    if (t.hasRigidbody) {
+        Json rb = {
+            {"kinematic", t.kinematic},
+            {"mass", t.mass},
+            {"drag", t.drag},
+            {"angularDrag", t.angularDrag},
+            {"friction", t.friction},
+            {"useGravity", t.useGravity},
+        };
+        if (t.hasLocalInverseInertia) {
+            rb["localInverseInertia"] = {
+                {"x", t.invInertiaX}, {"y", t.invInertiaY}, {"z", t.invInertiaZ}};
+        }
+        body["rigidbody"] = std::move(rb);
+    }
     return body;
 }
 Json PerfStatsJson(const std::vector<float>& values) {

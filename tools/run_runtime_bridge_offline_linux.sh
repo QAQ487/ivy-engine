@@ -34,4 +34,8 @@ echo "==> run runtime_bridge_phase6_check"
 "$OUT/runtime_bridge_phase6_check"
 echo "==> run runtime_bridge_protocol_check"
 "$OUT/runtime_bridge_protocol_check"
+
+echo "==> python angular acceptance unit tests"
+python3 "$ROOT/tools/runtime_bridge_angular_acceptance_check.py" -v
+
 echo "PASS Linux offline runtime bridge protocol checks"
