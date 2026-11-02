@@ -1,9 +1,29 @@
 #!/usr/bin/env python3
 """Pure unit tests for controller probe acceptance helpers (no Windows runtime)."""
+import json
+import pathlib
+import sys
+import tempfile
 import unittest
-from types import SimpleNamespace
+from types import ModuleType, SimpleNamespace
+
+HERE = pathlib.Path(__file__).resolve().parent
+if str(HERE) not in sys.path:
+    sys.path.insert(0, str(HERE))
+
+# Import-safe on Linux: probe acceptance pulls session_of via mouse runner, which
+# imports the WinDLL named-pipe client at module load.
+if "runtime_test_client" not in sys.modules:
+    _stub = ModuleType("runtime_test_client")
+
+    class Client:  # noqa: D401 - test stub
+        pass
+
+    _stub.Client = Client
+    sys.modules["runtime_test_client"] = _stub
 
 import runtime_bridge_controller_probe_acceptance as runner
+import runtime_bridge_mouse_acceptance as mouse
 from runtime_bridge_controller_probe import (
     RESPONSE_BYTE_LIMIT,
     find_trigger_window,
@@ -56,6 +76,43 @@ class ProbeAcceptanceCheck(unittest.TestCase):
         # Trailing idle would make [-4:] wrong if the window grew.
         wrong = window[-4:]
         self.assertNotEqual([f["sequence"] for f in wrong], [2, 3, 4, 5])
+
+    def test_default_fixture_is_testbed_not_samples(self):
+        path = runner.DEFAULT_FIXTURE
+        self.assertTrue(path.is_file(), "missing probe fixture: %s" % path)
+        parts = path.parts
+        self.assertIn("testbed", parts)
+        self.assertNotIn("samples", parts)
+        self.assertEqual(path.name, "scene_runtime_bridge_controller_probe.json")
+
+    def test_stage_fixture_copies_referenced_assets(self):
+        with tempfile.TemporaryDirectory() as td:
+            temp_dir = pathlib.Path(td)
+            out_dir = temp_dir / "out"
+            out_dir.mkdir()
+            exe_dir = temp_dir / "Debug"
+            exe_dir.mkdir()
+            exe = exe_dir / "IvyEngineRuntime.exe"
+            exe.write_bytes(b"MZ\x00\x00")
+            (exe_dir / "resources" / "skybox").mkdir(parents=True)
+            (exe_dir / "resources" / "skybox" / "MySkybox.dds").write_bytes(b"DDS")
+            (exe_dir / "resources" / "texture").mkdir(parents=True)
+            (exe_dir / "resources" / "texture" / "consolab_ascii_512.png").write_bytes(b"PNG")
+
+            staged_exe, package = runner.stage_fixture_package(
+                exe, out_dir, runner.DEFAULT_FIXTURE)
+            self.assertEqual(staged_exe, package / exe.name)
+            self.assertTrue((package / "rom" / "scene" / runner.EXPECTED_SCENE).is_file())
+            self.assertTrue((package / "rom" / "model" / "object" / "Box_Brown.fbx").is_file())
+            self.assertTrue(mouse.fixture_asset_readable(package, "rom/skybox/MySkybox.dds"))
+            self.assertTrue(
+                mouse.fixture_asset_readable(package, "rom/texture/consolab_ascii_512.png"))
+
+            scene = json.loads(runner.DEFAULT_FIXTURE.read_text(encoding="utf-8"))
+            for rom_path in mouse.collect_fixture_rom_paths(scene):
+                self.assertTrue(
+                    mouse.fixture_asset_readable(package, rom_path),
+                    "unresolved after staging: %s" % rom_path)
 
 
 if __name__ == "__main__":
