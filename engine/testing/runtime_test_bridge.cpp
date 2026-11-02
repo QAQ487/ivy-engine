@@ -424,6 +424,75 @@ void Protocol::CompleteCapture(std::int64_t id, bool ok, uint32_t w, uint32_t h,
     }
 }
 
+const char* Protocol::WorldOpState::VerbName() const {
+    switch (request.kind) {
+    case WorldOpKind::ResetScene: return "reset_scene";
+    case WorldOpKind::SetTransform: return "set_transform";
+    case WorldOpKind::SetVelocity: return "set_velocity";
+    case WorldOpKind::ApplyImpulse: return "apply_impulse";
+    case WorldOpKind::ApplyTorqueImpulse: return "apply_torque_impulse";
+    }
+    return "unknown";
+}
+
+bool Protocol::HasPendingWorldOp(WorldOpRequest& out) const {
+    if (worldOp_.status == WorldOpState::Status::Queued) {
+        out = worldOp_.request;
+        return true;
+    }
+    return false;
+}
+
+void Protocol::CompleteWorldOp(std::int64_t id, bool ok, const std::string& err) {
+    if (worldOp_.status == WorldOpState::Status::Queued && worldOp_.request.requestId == id) {
+        worldOp_.status = ok ? WorldOpState::Status::Completed : WorldOpState::Status::Failed;
+        worldOp_.error = err;
+    }
+}
+
+void Protocol::CancelWorldOp() {
+    if (worldOp_.status == WorldOpState::Status::Queued) {
+        worldOp_.status = WorldOpState::Status::Failed;
+        worldOp_.error = "cancelled";
+    }
+}
+
+namespace {
+bool FiniteNumber(const Json& v, float& out) {
+    if (!v.is_number() || v.is_boolean()) return false;
+    const double d = v.get<double>();
+    if (!std::isfinite(d)) return false;
+    out = static_cast<float>(d);
+    return true;
+}
+bool ParseVec3(const Json& v, float& x, float& y, float& z) {
+    if (!v.is_array() || v.size() != 3) return false;
+    return FiniteNumber(v[0], x) && FiniteNumber(v[1], y) && FiniteNumber(v[2], z);
+}
+bool ParseVec4(const Json& v, float& x, float& y, float& z, float& w) {
+    if (!v.is_array() || v.size() != 4) return false;
+    return FiniteNumber(v[0], x) && FiniteNumber(v[1], y) && FiniteNumber(v[2], z) && FiniteNumber(v[3], w);
+}
+bool ValidObjectName(const std::string& name) {
+    if (name.empty() || name.size() > 64) return false;
+    for (char ch : name) {
+        if (!((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9') || ch == '_' || ch == '-'))
+            return false;
+    }
+    return true;
+}
+bool OnlyKeys(const Json& q, std::initializer_list<const char*> allowed) {
+    for (auto it = q.begin(); it != q.end(); ++it) {
+        bool ok = false;
+        for (const char* key : allowed) {
+            if (it.key() == key) { ok = true; break; }
+        }
+        if (!ok) return false;
+    }
+    return true;
+}
+}
+
 Json Protocol::Request(const std::string& frame) {
     ExpireKeyboard(GetTickCount64());
     ExpireMouse(GetTickCount64());
@@ -450,6 +519,12 @@ Json Protocol::Request(const std::string& frame) {
     const bool resume=q["verb"]=="resume";
     const bool step=q["verb"]=="step";
     const bool perf=q["verb"]=="perf";
+    const bool resetScene=q["verb"]=="reset_scene";
+    const bool setTransform=q["verb"]=="set_transform";
+    const bool setVelocity=q["verb"]=="set_velocity";
+    const bool applyImpulse=q["verb"]=="apply_impulse";
+    const bool applyTorqueImpulse=q["verb"]=="apply_torque_impulse";
+    const bool worldOp=resetScene||setTransform||setVelocity||applyImpulse||applyTorqueImpulse;
     std::vector<std::string> keys;
     int updates=0;
     int mouseDx=0, mouseDy=0, mouseWheel=0, mouseUpdates=0;
@@ -459,6 +534,7 @@ Json Protocol::Request(const std::string& frame) {
     int listOffset=0, listLimit=static_cast<int>(kRuntimeTestListObjectsDefaultLimit);
     int stepFrames=0;
     int perfFrames=0;
+    WorldOpRequest pendingWorld{};
     if(input) {
         if(q.size()!=6 || !q.contains("keys") || !q["keys"].is_array() || q["keys"].empty() || q["keys"].size()>9
             || !q.contains("updates") || !q["updates"].is_number_integer() || q["updates"]<1 || q["updates"]>120)
@@ -552,6 +628,104 @@ Json Protocol::Request(const std::string& frame) {
             || q["frames"]<1 || q["frames"]>static_cast<int>(kRuntimeTestPerfCapacity))
             return error("invalid_request");
         perfFrames=q["frames"].get<int>();
+    } else if(resetScene) {
+        if(!OnlyKeys(q, {"protocolVersion","requestId","runId","verb","scene"}))
+            return error("invalid_request");
+        pendingWorld.kind = WorldOpKind::ResetScene;
+        if(q.contains("scene")) {
+            if(!q["scene"].is_string()) return error("invalid_request");
+            const auto raw = q["scene"].get<std::string>();
+            std::string normalized, err;
+            if(!ValidateRuntimeTestSceneArg(raw, &normalized, &err))
+                return error("invalid_request");
+            pendingWorld.scenePath = std::move(normalized);
+        }
+    } else if(setTransform) {
+        if(!OnlyKeys(q, {"protocolVersion","requestId","runId","verb","object","position","rotation","scale","zeroVelocity"}))
+            return error("invalid_request");
+        if(!q.contains("object") || !q["object"].is_string()) return error("invalid_request");
+        pendingWorld.object = q["object"].get<std::string>();
+        if(!ValidObjectName(pendingWorld.object)) return error("invalid_request");
+        pendingWorld.kind = WorldOpKind::SetTransform;
+        if(q.contains("position")) {
+            if(!ParseVec3(q["position"], pendingWorld.posX, pendingWorld.posY, pendingWorld.posZ))
+                return error("invalid_request");
+            pendingWorld.hasPosition = true;
+        }
+        if(q.contains("rotation")) {
+            if(q["rotation"].is_array() && q["rotation"].size()==3) {
+                if(!ParseVec3(q["rotation"], pendingWorld.rotX, pendingWorld.rotY, pendingWorld.rotZ))
+                    return error("invalid_request");
+                pendingWorld.hasRotationEuler = true;
+            } else if(q["rotation"].is_array() && q["rotation"].size()==4) {
+                if(!ParseVec4(q["rotation"], pendingWorld.quatX, pendingWorld.quatY, pendingWorld.quatZ, pendingWorld.quatW))
+                    return error("invalid_request");
+                // Reject near-zero quaternions (undefined orientation).
+                const float qlen2 = pendingWorld.quatX*pendingWorld.quatX + pendingWorld.quatY*pendingWorld.quatY
+                    + pendingWorld.quatZ*pendingWorld.quatZ + pendingWorld.quatW*pendingWorld.quatW;
+                if(!(qlen2 > 1e-12f)) return error("invalid_request");
+                pendingWorld.hasRotationQuat = true;
+            } else {
+                return error("invalid_request");
+            }
+        }
+        if(q.contains("scale")) {
+            if(!ParseVec3(q["scale"], pendingWorld.scaleX, pendingWorld.scaleY, pendingWorld.scaleZ))
+                return error("invalid_request");
+            pendingWorld.hasScale = true;
+        }
+        if(q.contains("zeroVelocity")) {
+            if(!q["zeroVelocity"].is_boolean()) return error("invalid_request");
+            pendingWorld.zeroVelocity = q["zeroVelocity"].get<bool>();
+        } else {
+            pendingWorld.zeroVelocity = true;
+        }
+        if(!pendingWorld.hasPosition && !pendingWorld.hasRotationEuler && !pendingWorld.hasRotationQuat && !pendingWorld.hasScale)
+            return error("invalid_request");
+    } else if(setVelocity) {
+        if(!OnlyKeys(q, {"protocolVersion","requestId","runId","verb","object","linear","angular"}))
+            return error("invalid_request");
+        if(!q.contains("object") || !q["object"].is_string()) return error("invalid_request");
+        pendingWorld.object = q["object"].get<std::string>();
+        if(!ValidObjectName(pendingWorld.object)) return error("invalid_request");
+        pendingWorld.kind = WorldOpKind::SetVelocity;
+        if(q.contains("linear")) {
+            if(!ParseVec3(q["linear"], pendingWorld.linX, pendingWorld.linY, pendingWorld.linZ))
+                return error("invalid_request");
+            pendingWorld.hasLinear = true;
+        }
+        if(q.contains("angular")) {
+            if(!ParseVec3(q["angular"], pendingWorld.angX, pendingWorld.angY, pendingWorld.angZ))
+                return error("invalid_request");
+            pendingWorld.hasAngular = true;
+        }
+        if(!pendingWorld.hasLinear && !pendingWorld.hasAngular) return error("invalid_request");
+    } else if(applyImpulse) {
+        if(!OnlyKeys(q, {"protocolVersion","requestId","runId","verb","object","impulse","point"}))
+            return error("invalid_request");
+        if(!q.contains("object") || !q["object"].is_string()) return error("invalid_request");
+        pendingWorld.object = q["object"].get<std::string>();
+        if(!ValidObjectName(pendingWorld.object)) return error("invalid_request");
+        if(!q.contains("impulse") || !ParseVec3(q["impulse"], pendingWorld.impX, pendingWorld.impY, pendingWorld.impZ))
+            return error("invalid_request");
+        pendingWorld.kind = WorldOpKind::ApplyImpulse;
+        pendingWorld.hasImpulse = true;
+        if(q.contains("point")) {
+            if(!ParseVec3(q["point"], pendingWorld.pointX, pendingWorld.pointY, pendingWorld.pointZ))
+                return error("invalid_request");
+            pendingWorld.hasPoint = true;
+        }
+    } else if(applyTorqueImpulse) {
+        if(!OnlyKeys(q, {"protocolVersion","requestId","runId","verb","object","torqueImpulse"}))
+            return error("invalid_request");
+        if(!q.contains("object") || !q["object"].is_string()) return error("invalid_request");
+        pendingWorld.object = q["object"].get<std::string>();
+        if(!ValidObjectName(pendingWorld.object)) return error("invalid_request");
+        if(!q.contains("torqueImpulse")
+            || !ParseVec3(q["torqueImpulse"], pendingWorld.torX, pendingWorld.torY, pendingWorld.torZ))
+            return error("invalid_request");
+        pendingWorld.kind = WorldOpKind::ApplyTorqueImpulse;
+        pendingWorld.hasTorqueImpulse = true;
     } else if(q.size()!=4) return error("invalid_request");
 
     if(q["protocolVersion"]!=1) return error("unsupported_version",q["requestId"]);
@@ -692,6 +866,16 @@ Json Protocol::Request(const std::string& frame) {
             {"fps", {{"avg", fpsAvg}}},
         };
     }
+    if(worldOp) {
+        if(!ready_ || !playing_) return error("not_ready",id);
+        if(worldOp_.status == WorldOpState::Status::Queued) return error("queue_full",id);
+        pendingWorld.requestId = id;
+        worldOp_.status = WorldOpState::Status::Queued;
+        worldOp_.request = std::move(pendingWorld);
+        worldOp_.error.clear();
+        return {{"protocolVersion",1},{"requestId",id},{"runId",runId_},{"ok",true},
+            {"status","queued"},{"verb",worldOp_.VerbName()}};
+    }
     if(capture) {
         if(!ready_ || !playing_) return error("not_ready",id);
         if(captureState_.status == CaptureState::Status::Queued) return error("queue_full",id);
@@ -746,6 +930,9 @@ Json Protocol::Request(const std::string& frame) {
     const char* capStatus = captureState_.status == CaptureState::Status::Queued ? "queued" :
                             captureState_.status == CaptureState::Status::Completed ? "completed" :
                             captureState_.status == CaptureState::Status::Failed ? "failed" : "idle";
+    const char* worldStatus = worldOp_.status == WorldOpState::Status::Queued ? "queued" :
+                              worldOp_.status == WorldOpState::Status::Completed ? "completed" :
+                              worldOp_.status == WorldOpState::Status::Failed ? "failed" : "idle";
 
     Json reply = {{"protocolVersion",1},{"requestId",id},{"runId",runId_},{"ok",true},
         {"pid",pid_},{"sessionId",session_},{"ready",ready_},{"playing",playing_},
@@ -757,7 +944,8 @@ Json Protocol::Request(const std::string& frame) {
         {"physicsTick",physicsTickCounter_},
         {"capabilities",Json::array({
             "hello","status","quit","keyboard","observe","capture","mouse","controller","events",
-            "controller_probe","list_objects","pause","resume","step","perf"})},
+            "controller_probe","list_objects","pause","resume","step","perf",
+            "reset_scene","set_transform","set_velocity","apply_impulse","apply_torque_impulse"})},
         {"keyboard",{{"status",InputStatus()},{"requestId",keyboardReqId_},
             {"remainingUpdates",keyboardUpdatesRemaining_},{"cancelRequested",cancelInput_},{"preparing",inputState_==InputState::Preparing}}},
         {"mouse",{{"status",MouseStatus()},{"requestId",mouseReqId_},
@@ -765,7 +953,10 @@ Json Protocol::Request(const std::string& frame) {
         {"controller",{{"status",ControllerStatus()},{"requestId",controllerOp_.RequestId()},
             {"remainingUpdates",controllerOp_.Remaining()},{"cancelRequested",controllerOp_.CancelRequested()}}},
         {"capture",{{"status",capStatus},{"requestId",captureState_.requestId},
-            {"width",captureState_.width},{"height",captureState_.height},{"basename",captureState_.basename},{"error",captureState_.error}}}};
+            {"width",captureState_.width},{"height",captureState_.height},{"basename",captureState_.basename},{"error",captureState_.error}}},
+        {"worldOp",{{"status",worldStatus},{"requestId",worldOp_.request.requestId},
+            {"verb",worldOp_.status==WorldOpState::Status::Idle ? Json(nullptr) : Json(worldOp_.VerbName())},
+            {"error",worldOp_.error}}}};
     if(!readyDetail_.empty())
         reply["readyDetail"] = readyDetail_;
     return reply;
@@ -786,6 +977,7 @@ struct Bridge::Impl {
     std::string name;
     Protocol protocol;
     CaptureHandler captureHandler = nullptr;
+    WorldOpHandler worldOpHandler = nullptr;
     std::mutex mutex;
     std::thread worker;
     Impl(std::string run, DWORD pid, DWORD session) : protocol(run,pid,session) {
@@ -859,7 +1051,7 @@ struct Bridge::Impl {
                 }
                 if(frame.size()>4096) break;
             }
-            { std::lock_guard lock(mutex); protocol.AbandonQuit(); protocol.CancelKeyboard(); protocol.CancelMouse(); protocol.CancelController(); }
+            { std::lock_guard lock(mutex); protocol.AbandonQuit(); protocol.CancelKeyboard(); protocol.CancelMouse(); protocol.CancelController(); protocol.CancelWorldOp(); }
             if(receipt) {
                 WaitForSingleObject(stop,INFINITE); break;
             }
@@ -928,6 +1120,9 @@ std::string Bridge::PipeName() const { return impl_ ? impl_->name : std::string{
 
 void Bridge::SetCaptureHandler(CaptureHandler handler) {
     if (impl_) impl_->captureHandler = handler;
+}
+void Bridge::SetWorldOpHandler(WorldOpHandler handler) {
+    if (impl_) impl_->worldOpHandler = handler;
 }
 
 static Keyboard_Keys ParseKeyName(const std::string& name) {
@@ -1048,6 +1243,26 @@ void Bridge::MaybeExecuteCapture() {
     {
         std::lock_guard lock(impl_->mutex);
         impl_->protocol.CompleteCapture(reqId, ok, w, h, ok ? basename : "", ok ? "" : "capture_failed");
+    }
+}
+
+void Bridge::MaybeApplyWorldOps() {
+    if(!impl_) return;
+    WorldOpRequest op;
+    {
+        std::lock_guard lock(impl_->mutex);
+        if(!impl_->protocol.HasPendingWorldOp(op)) return;
+    }
+    if(!impl_->worldOpHandler) {
+        std::lock_guard lock(impl_->mutex);
+        impl_->protocol.CompleteWorldOp(op.requestId, false, "world_op_unavailable");
+        return;
+    }
+    std::string err;
+    const bool ok = impl_->worldOpHandler(op, err);
+    {
+        std::lock_guard lock(impl_->mutex);
+        impl_->protocol.CompleteWorldOp(op.requestId, ok, ok ? std::string{} : err);
     }
 }
 }

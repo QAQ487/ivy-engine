@@ -23,10 +23,11 @@ tools\run_runtime_bridge_checks.cmd x64\phase6-bridge-check
 tools\run_runtime_bridge_checks.cmd x64\phase6-bridge-check x64\Debug\IvyEngineRuntime.exe
 ```
 
-需要 VS 同 `py -3`。新 verbs：`list_objects`、`pause`／`resume`／`step`、`perf`；`observe` 加咗 rotation／quaternion／scale／angularVelocity／rigidbody.kinematic。
+需要 VS 同 `py -3`。新 verbs：`list_objects`、`pause`／`resume`／`step`、`perf`、`reset_scene`／`set_transform`／`set_velocity`／`apply_impulse`／`apply_torque_impulse`；`observe` 加咗 rotation／quaternion／scale／angularVelocity／rigidbody.kinematic。連續 `apply_force`／`apply_torque`（N frames）未實作。
 
 ## 狀態摘要
 
 - Phase 1–2（hello／status／quit／keyboard）同 Phase 4–5（mouse、controller axes／buttons／triggers、checkpoint `events`、consumer probe）已於 Windows Debug runtime 核實。
 - Phase 6：`--scene`、observe 擴充、`list_objects`／pause／step／perf；mouse／controller acceptance 會 stage fixture 並傳 `--scene`（避免 testbed 預設 `scene_sample_menu.json`／全量 boot preload 導致 not-ready）。
+- World manip（plan Phase 3）：`reset_scene`／`set_transform`／`set_velocity`／impulse；fixture `scene_runtime_bridge_world_manip.json`；acceptance 經 `run_runtime_bridge_checks.cmd` 第二參數。
 - Fixture：`testbed/rom/scene/scene_runtime_bridge_*.json`；玩家模型用 `rom/model/player/`。

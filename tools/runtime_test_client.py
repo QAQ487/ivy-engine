@@ -171,6 +171,123 @@ class Client:
             raise ValueError("target must be a non-empty string <= 64 chars")
         return self.request("observe", request_id, {"target": target})
 
+    @staticmethod
+    def _valid_object_name(name):
+        if not isinstance(name, str) or not (1 <= len(name) <= 64):
+            return False
+        return all(ch.isalnum() or ch in "_-" for ch in name)
+
+    @staticmethod
+    def _valid_vec(values, length):
+        if not isinstance(values, (list, tuple)) or len(values) != length:
+            return False
+        for v in values:
+            if isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v):
+                return False
+        return True
+
+    def _await_world_op(self, request_id, verb, payload, completion_timeout=5.0):
+        if type(request_id) is not int or not 1 <= request_id < 2147483647:
+            raise ValueError("request ID must leave room for completion polls")
+        if not math.isfinite(completion_timeout) or not 0 < completion_timeout <= 10:
+            raise ValueError("completion timeout must be in (0,10]")
+        try:
+            deadline = time.monotonic() + completion_timeout
+            result = self.request(verb, request_id, payload, deadline=deadline)
+            if not result.get("ok"):
+                return result
+            operation_id = request_id
+            while time.monotonic() < deadline:
+                request_id += 1
+                if request_id > 2147483647:
+                    raise ValueError("request ID exhausted")
+                result = self.request("status", request_id, deadline=deadline)
+                if not result.get("ok"):
+                    raise RuntimeError("worldOp status rejected: " + str(result))
+                operation = result.get("worldOp", {})
+                if operation.get("requestId") != operation_id:
+                    raise RuntimeError("worldOp operation identity mismatch")
+                if operation.get("status") == "completed":
+                    return result
+                if operation.get("status") == "failed":
+                    raise RuntimeError("worldOp failed: " + str(operation.get("error")))
+                time.sleep(min(.01, max(0, deadline - time.monotonic())))
+            raise TimeoutError("worldOp completion deadline")
+        except (OSError, ValueError, RuntimeError, TimeoutError):
+            self.close()
+            raise
+
+    def reset_scene(self, request_id, scene=None, completion_timeout=8.0):
+        payload = {}
+        if scene is not None:
+            if not isinstance(scene, str) or not scene.startswith("rom/") or ".." in scene.split("/") or not scene.lower().endswith(".json"):
+                raise ValueError("scene must be a rom/...json path without '..'")
+            payload["scene"] = scene
+        return self._await_world_op(request_id, "reset_scene", payload or None, completion_timeout)
+
+    def set_transform(self, object_name, request_id, position=None, rotation=None, scale=None, zero_velocity=True, completion_timeout=5.0):
+        if not self._valid_object_name(object_name):
+            raise ValueError("object must be a 1..64 alnum/_/- name")
+        if not isinstance(zero_velocity, bool):
+            raise ValueError("zero_velocity must be bool")
+        payload = {"object": object_name, "zeroVelocity": zero_velocity}
+        if position is not None:
+            if not self._valid_vec(position, 3):
+                raise ValueError("position must be 3 finite numbers")
+            payload["position"] = [float(position[0]), float(position[1]), float(position[2])]
+        if rotation is not None:
+            if self._valid_vec(rotation, 3):
+                payload["rotation"] = [float(rotation[0]), float(rotation[1]), float(rotation[2])]
+            elif self._valid_vec(rotation, 4):
+                if abs(rotation[0]) + abs(rotation[1]) + abs(rotation[2]) + abs(rotation[3]) <= 1e-12:
+                    raise ValueError("rotation quaternion must be non-zero")
+                payload["rotation"] = [float(rotation[0]), float(rotation[1]), float(rotation[2]), float(rotation[3])]
+            else:
+                raise ValueError("rotation must be 3 (euler deg) or 4 (quaternion) finite numbers")
+        if scale is not None:
+            if not self._valid_vec(scale, 3):
+                raise ValueError("scale must be 3 finite numbers")
+            payload["scale"] = [float(scale[0]), float(scale[1]), float(scale[2])]
+        if "position" not in payload and "rotation" not in payload and "scale" not in payload:
+            raise ValueError("set_transform requires position, rotation, and/or scale")
+        return self._await_world_op(request_id, "set_transform", payload, completion_timeout)
+
+    def set_velocity(self, object_name, request_id, linear=None, angular=None, completion_timeout=5.0):
+        if not self._valid_object_name(object_name):
+            raise ValueError("object must be a 1..64 alnum/_/- name")
+        payload = {"object": object_name}
+        if linear is not None:
+            if not self._valid_vec(linear, 3):
+                raise ValueError("linear must be 3 finite numbers")
+            payload["linear"] = [float(linear[0]), float(linear[1]), float(linear[2])]
+        if angular is not None:
+            if not self._valid_vec(angular, 3):
+                raise ValueError("angular must be 3 finite numbers")
+            payload["angular"] = [float(angular[0]), float(angular[1]), float(angular[2])]
+        if "linear" not in payload and "angular" not in payload:
+            raise ValueError("set_velocity requires linear and/or angular")
+        return self._await_world_op(request_id, "set_velocity", payload, completion_timeout)
+
+    def apply_impulse(self, object_name, impulse, request_id, point=None, completion_timeout=5.0):
+        if not self._valid_object_name(object_name):
+            raise ValueError("object must be a 1..64 alnum/_/- name")
+        if not self._valid_vec(impulse, 3):
+            raise ValueError("impulse must be 3 finite numbers")
+        payload = {"object": object_name, "impulse": [float(impulse[0]), float(impulse[1]), float(impulse[2])]}
+        if point is not None:
+            if not self._valid_vec(point, 3):
+                raise ValueError("point must be 3 finite numbers")
+            payload["point"] = [float(point[0]), float(point[1]), float(point[2])]
+        return self._await_world_op(request_id, "apply_impulse", payload, completion_timeout)
+
+    def apply_torque_impulse(self, object_name, torque_impulse, request_id, completion_timeout=5.0):
+        if not self._valid_object_name(object_name):
+            raise ValueError("object must be a 1..64 alnum/_/- name")
+        if not self._valid_vec(torque_impulse, 3):
+            raise ValueError("torque_impulse must be 3 finite numbers")
+        payload = {"object": object_name, "torqueImpulse": [float(torque_impulse[0]), float(torque_impulse[1]), float(torque_impulse[2])]}
+        return self._await_world_op(request_id, "apply_torque_impulse", payload, completion_timeout)
+
     def capture(self, request_id, completion_timeout=5.0):
         if type(request_id) is not int or not 1 <= request_id < 2147483647:
             raise ValueError("request ID must leave room for completion polls")
@@ -321,11 +438,23 @@ def main():
     p.add_argument("--run-id",required=True)
     p.add_argument("--request-id",type=int,required=True,help="strictly increasing across the run")
     p.add_argument("--timeout",type=float,default=2)
-    p.add_argument("verb",choices=("hello","status","quit","keyboard","observe","capture","mouse","controller","events","controller_probe","list_objects","pause","resume","step","perf"))
+    p.add_argument("verb",choices=("hello","status","quit","keyboard","observe","capture","mouse","controller","events","controller_probe","list_objects","pause","resume","step","perf","reset_scene","set_transform","set_velocity","apply_impulse","apply_torque_impulse"))
     p.add_argument("--keys",nargs="+")
     p.add_argument("--updates",type=int)
     p.add_argument("--completion-timeout",type=float,default=7)
     p.add_argument("--target",type=str)
+    p.add_argument("--object",type=str,dest="object_name")
+    p.add_argument("--scene",type=str,default=None)
+    p.add_argument("--position",nargs=3,type=float,default=None)
+    p.add_argument("--rotation",nargs="+",type=float,default=None)
+    p.add_argument("--scale",nargs=3,type=float,default=None)
+    p.add_argument("--linear",nargs=3,type=float,default=None)
+    p.add_argument("--angular",nargs=3,type=float,default=None)
+    p.add_argument("--impulse",nargs=3,type=float,default=None)
+    p.add_argument("--point",nargs=3,type=float,default=None)
+    p.add_argument("--torque-impulse",nargs=3,type=float,default=None,dest="torque_impulse")
+    p.add_argument("--zero-velocity",dest="zero_velocity",action="store_true",default=None)
+    p.add_argument("--no-zero-velocity",dest="zero_velocity",action="store_false")
     p.add_argument("--dx",type=int,default=0)
     p.add_argument("--dy",type=int,default=0)
     p.add_argument("--buttons",nargs="*",default=[])
@@ -354,6 +483,12 @@ def main():
         p.error("offset/limit require list_objects")
     if a.verb not in ("step","perf") and a.frames is not None:
         p.error("frames requires step or perf")
+    if a.verb in ("set_transform","set_velocity","apply_impulse","apply_torque_impulse") and not a.object_name:
+        p.error("%s requires --object" % a.verb)
+    if a.verb=="apply_impulse" and a.impulse is None: p.error("apply_impulse requires --impulse")
+    if a.verb=="apply_torque_impulse" and a.torque_impulse is None: p.error("apply_torque_impulse requires --torque-impulse")
+    if a.verb=="set_transform" and a.rotation is not None and len(a.rotation) not in (3, 4):
+        p.error("--rotation requires 3 (euler) or 4 (quaternion) values")
     try:
         with Client(a.pid,a.run_id,a.timeout) as c:
             if a.verb=="keyboard":
@@ -377,6 +512,17 @@ def main():
                 r=c.request(a.verb,a.request_id,payload or None)
             elif a.verb in ("step","perf"):
                 r=c.request(a.verb,a.request_id,{"frames":a.frames})
+            elif a.verb=="reset_scene":
+                r=c.reset_scene(a.request_id,scene=a.scene,completion_timeout=a.completion_timeout)
+            elif a.verb=="set_transform":
+                zv=True if a.zero_velocity is None else a.zero_velocity
+                r=c.set_transform(a.object_name,a.request_id,position=a.position,rotation=a.rotation,scale=a.scale,zero_velocity=zv,completion_timeout=a.completion_timeout)
+            elif a.verb=="set_velocity":
+                r=c.set_velocity(a.object_name,a.request_id,linear=a.linear,angular=a.angular,completion_timeout=a.completion_timeout)
+            elif a.verb=="apply_impulse":
+                r=c.apply_impulse(a.object_name,a.impulse,a.request_id,point=a.point,completion_timeout=a.completion_timeout)
+            elif a.verb=="apply_torque_impulse":
+                r=c.apply_torque_impulse(a.object_name,a.torque_impulse,a.request_id,completion_timeout=a.completion_timeout)
             else:
                 r=c.request(a.verb,a.request_id)
         print(json.dumps(r,ensure_ascii=False))
