@@ -4,8 +4,12 @@
 #include "engine/scene/scene_loader.h"
 #include "engine/core/frame_capture.h"
 #include "engine/testing/runtime_test_bridge.h"
+#include "engine/ecs/game_object.h"
+#include "engine/ecs/rigidbody_component.h"
+#include "engine/core/content_path.h"
 #if defined(IVY_RUNTIME_TEST_BRIDGE_AVAILABLE)
 static ivy::testing::Bridge* g_pRuntimeTestBridge = nullptr;
+static bool g_runtimeTestSceneArgFatal = false;
 #endif
 
 #if defined(_DEBUG) && defined(GAME_RUNTIME)
@@ -131,7 +135,9 @@ static MainStaticDestructionMarker s_mainStaticMarker;
 #include <stdlib.h>       // for _CrtDumpMemoryLeaks
 #include <crtdbg.h>       // for _CrtDumpMemoryLeaks
 #include <sstream>
+#include <string>
 #include <thread>
+#include <functional>
 
 #include "main.h"
 
@@ -177,6 +183,7 @@ static MainStaticDestructionMarker s_mainStaticMarker;
 #pragma	comment (lib, "winmm.lib")
 #pragma	comment (lib, "dxguid.lib")
 #pragma	comment (lib, "dinput8.lib")
+#pragma	comment (lib, "shell32.lib")
 
   // Effekseer
 #if defined(_DEBUG) // Debug
@@ -293,6 +300,31 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg
 int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstance*/,
 	_In_ LPSTR /*lpCmdLine*/, _In_ int nCmdShow) {
 	_CrtDumpMemoryLeaks(); // dump memory leaks at process exit (if any)
+#if defined(IVY_RUNTIME_TEST_BRIDGE_AVAILABLE)
+    // Capture raw --scene text; honored only after the bridge is enabled.
+    std::string runtimeTestSceneArgRaw;
+    {
+        int argc = 0;
+        LPWSTR* argv = CommandLineToArgvW(GetCommandLineW(), &argc);
+        if (argv) {
+            for (int i = 1; i + 1 < argc; ++i) {
+                if (wcscmp(argv[i], L"--scene") != 0)
+                    continue;
+                const wchar_t* wpath = argv[i + 1];
+                const int bytes = WideCharToMultiByte(CP_UTF8, 0, wpath, -1, nullptr, 0, nullptr, nullptr);
+                if (bytes > 1) {
+                    runtimeTestSceneArgRaw.assign(static_cast<std::size_t>(bytes - 1), '\0');
+                    WideCharToMultiByte(CP_UTF8, 0, wpath, -1, runtimeTestSceneArgRaw.data(), bytes, nullptr, nullptr);
+                } else {
+                    runtimeTestSceneArgRaw = "";
+                    g_runtimeTestSceneArgFatal = true;
+                }
+                break;
+            }
+            LocalFree(argv);
+        }
+    }
+#endif
     // Boot assets belong to the executable, regardless of the launcher's cwd.
     wchar_t executablePath[32768]{};
     const DWORD pathLength=GetModuleFileNameW(nullptr,executablePath,32768);
@@ -384,6 +416,22 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstanc
     if (runtimeTestEnabled) {
         runtimeTestBridge.SetCaptureHandler(&Renderer_CaptureBackBufferPNG);
         g_pRuntimeTestBridge = &runtimeTestBridge;
+        if (g_runtimeTestSceneArgFatal || (!runtimeTestSceneArgRaw.empty())) {
+            std::string normalized, err;
+            if (g_runtimeTestSceneArgFatal ||
+                !ivy::testing::ValidateRuntimeTestSceneArg(runtimeTestSceneArgRaw, &normalized, &err)) {
+                fprintf(stderr, "[runtime_test_bridge] invalid --scene: %s\n",
+                    err.empty() ? "empty path" : err.c_str());
+                fflush(stderr);
+                return 2;
+            }
+            ivy::testing::RuntimeTestSceneOverride_Set(std::move(normalized));
+        }
+    } else if (!runtimeTestSceneArgRaw.empty() || g_runtimeTestSceneArgFatal) {
+        fprintf(stderr, "[runtime_test_bridge] ignoring --scene (bridge not enabled)\n");
+        fflush(stderr);
+        ivy::testing::RuntimeTestSceneOverride_Clear();
+        g_runtimeTestSceneArgFatal = false;
     }
 #endif
 	// Initialize application systems
@@ -464,15 +512,31 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstanc
 				FrameCapture_BeginFrame();
 				FrameTimer_BeginFrame();
 				JobSystem_BeginFrame();
+#if defined(IVY_RUNTIME_TEST_BRIDGE_AVAILABLE)
+                const bool runSim = !runtimeTestEnabled || runtimeTestBridge.ShouldRunSimTick();
+#else
+                const bool runSim = true;
+#endif
 				FrameTimer_Begin(FrameTimerStage::Update);
 #if defined(IVY_RUNTIME_TEST_BRIDGE_AVAILABLE)
-                if(runtimeTestEnabled)
-                    runtimeTestBridge.PollAndApplyInput(EngineGUI_IsPlaying()
-                        && !EngineGUI_IsSceneAssetPreloadActive() && !SceneLoader_GetCurrentScenePath().empty());
+                if(runtimeTestEnabled) {
+                    if (runSim) {
+                        runtimeTestBridge.PollAndApplyInput(EngineGUI_IsPlaying()
+                            && !EngineGUI_IsSceneAssetPreloadActive() && !SceneLoader_GetCurrentScenePath().empty());
+                    } else {
+                        runtimeTestBridge.ExpireInputDeadlines();
+                    }
+                }
 #endif
-				Update(current_time, elapsed_time);
+                if (runSim)
+				    Update(current_time, elapsed_time);
 #if defined(IVY_RUNTIME_TEST_BRIDGE_AVAILABLE)
-                if(runtimeTestEnabled) runtimeTestBridge.FinishInputUpdate();
+                if(runtimeTestEnabled && runSim) {
+                    runtimeTestBridge.FinishInputUpdate();
+                    runtimeTestBridge.NoteSimFrame();
+                    if (EngineGUI_IsPlaying())
+                        runtimeTestBridge.NotePhysicsTick();
+                }
 #endif
 #if defined(_DEBUG) && !defined(GAME_RUNTIME)
                 PlaySceneSwitchCheck_Tick();
@@ -487,16 +551,67 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstanc
                 FrameCapture_EndFrame();
 #if defined(IVY_RUNTIME_TEST_BRIDGE_AVAILABLE)
                 if (runtimeTestEnabled) {
+                    ivy::testing::PerfSample sample{};
+                    sample.frameMs = static_cast<float>(FrameTimer_LastMs(FrameTimerStage::Frame));
+                    sample.updateMs = static_cast<float>(FrameTimer_LastMs(FrameTimerStage::Update));
+                    sample.drawMs = static_cast<float>(FrameTimer_LastMs(FrameTimerStage::Draw));
+                    sample.presentMs = static_cast<float>(FrameTimer_LastMs(FrameTimerStage::Present));
+                    runtimeTestBridge.RecordPerfSample(sample);
+
                     // Update workers and render work have joined. Copy only on WinMain.
                     const std::string scene = SceneLoader_GetCurrentScenePath();
-                    const bool ready = !scene.empty() && !EngineGUI_IsSceneAssetPreloadActive();
+                    const bool preload = EngineGUI_IsSceneAssetPreloadActive();
+                    const bool ready = !scene.empty() && !preload;
+                    const char* readyDetail = nullptr;
+                    if (!ready)
+                        readyDetail = scene.empty() ? "scene_path_empty" : "preload_active";
+                    else if (!EngineGUI_IsPlaying())
+                        readyDetail = "not_playing";
                     std::vector<ivy::testing::ObservedTarget> targets;
+                    std::vector<ivy::testing::ListedObject> objects;
                     if (ready && EngineGUI_IsPlaying()) {
                         std::function<void(const GameObject&)> collect = [&](const GameObject& obj) {
                             if (!obj.GetName().empty()) {
+                                ivy::testing::ObservedTarget t;
+                                t.name = obj.GetName();
                                 const auto pos = obj.GetPosition();
-                                const auto vel = obj.GetRigidbody().GetVelocity();
-                                targets.push_back({obj.GetName(), pos.x, pos.y, pos.z, vel.x, vel.y, vel.z});
+                                t.posX = pos.x; t.posY = pos.y; t.posZ = pos.z;
+                                const auto rot = obj.GetRotation();
+                                t.hasRotation = true;
+                                t.rotX = rot.x; t.rotY = rot.y; t.rotZ = rot.z;
+                                {
+                                    using namespace DirectX;
+                                    // Match Transform::GetLocalMatrix ZYX Euler convention.
+                                    const XMMATRIX R =
+                                        XMMatrixRotationZ(XMConvertToRadians(rot.z)) *
+                                        XMMatrixRotationY(XMConvertToRadians(rot.y)) *
+                                        XMMatrixRotationX(XMConvertToRadians(rot.x));
+                                    XMFLOAT4 qf{};
+                                    XMStoreFloat4(&qf, XMQuaternionRotationMatrix(R));
+                                    t.quatX = qf.x; t.quatY = qf.y; t.quatZ = qf.z; t.quatW = qf.w;
+                                }
+                                const auto scale = obj.GetScale();
+                                t.hasScale = true;
+                                t.scaleX = scale.x; t.scaleY = scale.y; t.scaleZ = scale.z;
+                                if (const auto* rc = obj.GetComponent<RigidbodyComponent>()) {
+                                    const auto& body = rc->Body();
+                                    const auto vel = body.GetVelocity();
+                                    t.velX = vel.x; t.velY = vel.y; t.velZ = vel.z;
+                                    const auto ang = body.GetAngularVelocity();
+                                    t.hasAngularVelocity = true;
+                                    t.angVelX = ang.x; t.angVelY = ang.y; t.angVelZ = ang.z;
+                                    t.hasRigidbody = true;
+                                    t.kinematic = body.IsKinematic();
+                                }
+                                targets.push_back(std::move(t));
+
+                                ivy::testing::ListedObject listed;
+                                listed.name = obj.GetName();
+                                for (const auto& kv : obj.GetComponents()) {
+                                    if (kv.second && kv.second->GetTypeName())
+                                        listed.components.push_back(kv.second->GetTypeName());
+                                }
+                                objects.push_back(std::move(listed));
                             }
                             for (const auto& child : obj.GetChildren()) {
                                 if (child) collect(*child);
@@ -506,7 +621,8 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstanc
                             if (node) collect(*node);
                         }
                     }
-                    if (runtimeTestBridge.PublishAndTakeQuit(ready, EngineGUI_IsPlaying(), scene, std::move(targets)))
+                    if (runtimeTestBridge.PublishAndTakeQuit(ready, EngineGUI_IsPlaying(), scene,
+                            std::move(targets), std::move(objects), readyDetail))
                         EngineGUI_RequestExitGame();
                 }
 #endif

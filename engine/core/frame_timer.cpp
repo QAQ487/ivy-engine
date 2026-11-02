@@ -76,6 +76,14 @@ void FrameTimer_LastInterval(FrameTimerStage stage, long long* startQpc, long lo
 		*endQpc = static_cast<long long>(end);
 }
 
+double FrameTimer_LastMs(FrameTimerStage stage) {
+	long long start = 0, end = 0;
+	FrameTimer_LastInterval(stage, &start, &end);
+	if (start <= 0 || end < start)
+		return 0.0;
+	return TicksToMs(end - start);
+}
+
 void FrameTimer_BeginFrame() {
 	FrameTimer_Begin(FrameTimerStage::Frame);
 }

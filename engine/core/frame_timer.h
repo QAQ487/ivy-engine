@@ -25,5 +25,8 @@ void FrameTimer_EndFrame();
 // Last completed interval for this stage (QPC ticks). start==end==0 if none.
 void FrameTimer_LastInterval(FrameTimerStage stage, long long* startQpc, long long* endQpc);
 
+// Last completed interval duration in milliseconds (0 when unavailable).
+double FrameTimer_LastMs(FrameTimerStage stage);
+
 // Prints 1 Hz averages (ms) and resets accumulators. rtEnabled is informational.
 void FrameTimer_FlushPrint(double fps, bool rtEnabled);

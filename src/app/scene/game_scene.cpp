@@ -78,6 +78,7 @@
 #include "engine/debug_draw/debug_text.h"
 #include "engine/core/debug_system.h"
 #include "engine/rendering/sprite/sprite.h"
+#include "engine/testing/runtime_test_bridge.h"
 #include "libraries/nlohmann/json.hpp"
 #include <algorithm>
 #include <cmath>
@@ -376,6 +377,25 @@ void GameScene::Initialize() {
 		ApplyRuntimeWindowTitleFromNearbyProject();
 		Physics_TryLoadGravityFromNearbyProject();
 		RunBootAssetPreload();
+#if defined(IVY_RUNTIME_TEST_BRIDGE_AVAILABLE)
+		if (ivy::testing::RuntimeTestSceneOverride_Has()) {
+			const std::string& romPath = ivy::testing::RuntimeTestSceneOverride_Get();
+			const auto resolved = content_path::ReadableFileCurrent(romPath);
+			if (resolved.empty()) {
+				std::fprintf(stderr,
+					"[runtime_test_bridge] --scene could not be resolved via rom/ -> resources/: %s\n",
+					romPath.c_str());
+				std::fflush(stderr);
+				ExitProcess(2);
+			}
+			if (!EngineGUI_LoadFromFile(romPath.c_str())) {
+				std::fprintf(stderr,
+					"[runtime_test_bridge] --scene failed to load: %s\n", romPath.c_str());
+				std::fflush(stderr);
+				ExitProcess(2);
+			}
+		} else
+#endif
 		EngineGUI_LoadFromFile(EngineGUI_GetDefaultScenePath().c_str());
 #endif
 	}

@@ -14,6 +14,7 @@ struct ControllerProbeApiTag {};
 #include "libraries/nlohmann/json.hpp"
 #include "engine/testing/controller_inject_protocol.h"
 #include "engine/testing/controller_probe_trace.h"
+#include "engine/testing/runtime_test_scene_arg.h"
 #include <cstdint>
 #include <memory>
 #include <string>
@@ -24,10 +25,36 @@ using Json = nlohmann::json;
 using CaptureHandler = bool(*)(const wchar_t*, uint32_t*, uint32_t*);
 
 std::uint32_t RemainingFrameTimeout(std::uint64_t deadline, std::uint64_t now) noexcept;
+
+constexpr std::size_t kRuntimeTestPerfCapacity = 600;
+constexpr std::size_t kRuntimeTestListObjectsDefaultLimit = 32;
+constexpr std::size_t kRuntimeTestListObjectsMaxLimit = 64;
+
 struct ObservedTarget {
     std::string name;
     float posX = 0.0f, posY = 0.0f, posZ = 0.0f;
     float velX = 0.0f, velY = 0.0f, velZ = 0.0f;
+    bool hasRotation = false;
+    float rotX = 0.0f, rotY = 0.0f, rotZ = 0.0f;
+    float quatX = 0.0f, quatY = 0.0f, quatZ = 0.0f, quatW = 1.0f;
+    bool hasScale = false;
+    float scaleX = 1.0f, scaleY = 1.0f, scaleZ = 1.0f;
+    bool hasAngularVelocity = false;
+    float angVelX = 0.0f, angVelY = 0.0f, angVelZ = 0.0f;
+    bool hasRigidbody = false;
+    bool kinematic = false;
+};
+
+struct ListedObject {
+    std::string name;
+    std::vector<std::string> components;
+};
+
+struct PerfSample {
+    float frameMs = 0.0f;
+    float updateMs = 0.0f;
+    float drawMs = 0.0f;
+    float presentMs = 0.0f;
 };
 
 // Consumer probe: samples public Controller_* getters once per Update after
@@ -61,10 +88,19 @@ bool RuntimeTestEvents_IsEnabled();
 bool RuntimeTestEvents_RecordCheckpoint(const char* checkpoint, const char* actor, int score);
 RuntimeTestEventsSnapshot RuntimeTestEvents_CopySnapshot();
 
+// Optional --scene override (set from argv when bridge is enabled).
+void RuntimeTestSceneOverride_Set(std::string romPath);
+bool RuntimeTestSceneOverride_Has();
+const std::string& RuntimeTestSceneOverride_Get();
+void RuntimeTestSceneOverride_Clear();
+
 class Protocol {
 public:
     Protocol(std::string runId, unsigned long pid, unsigned long session);
-    void Publish(bool ready, bool playing, const std::string& scene, std::vector<ObservedTarget> targets = {});
+    void Publish(bool ready, bool playing, const std::string& scene,
+        std::vector<ObservedTarget> targets = {},
+        std::vector<ListedObject> objects = {},
+        const char* readyDetail = nullptr);
     bool TakeQuit();
     void ConfirmQuitReceipt();
     void AbandonQuit();
@@ -91,11 +127,20 @@ public:
     bool HasPendingCapture(std::int64_t& outId) const;
     void CompleteCapture(std::int64_t id, bool ok, uint32_t w, uint32_t h, const std::string& basename, const std::string& err);
     const std::string& RunId() const { return runId_; }
+
+    bool IsPaused() const { return paused_; }
+    // When paused, returns true and consumes one pending step; when not paused, true.
+    bool ShouldRunSimTick();
+    void NoteSimFrame();
+    void NotePhysicsTick();
+    void RecordPerfSample(const PerfSample& sample);
 private:
     bool quitPending_ = false, quitReady_ = false;
     bool ready_ = false, playing_ = false;
     std::string scene_;
+    std::string readyDetail_;
     std::vector<ObservedTarget> targets_;
+    std::vector<ListedObject> objects_;
     std::vector<RuntimeTestEvent> events_;
     std::int64_t eventsLatestSequence_ = 0;
     std::uint32_t eventsDropped_ = 0;
@@ -135,6 +180,14 @@ private:
         std::string basename;
         std::string error;
     } captureState_;
+
+    bool paused_ = false;
+    int pendingStepFrames_ = 0;
+    std::uint64_t frameCounter_ = 0;
+    std::uint64_t physicsTickCounter_ = 0;
+    PerfSample perfRing_[kRuntimeTestPerfCapacity]{};
+    std::size_t perfWrite_ = 0;
+    std::size_t perfCount_ = 0;
 };
 // Main-thread owner; destruction cancels I/O and joins. No scene/D3D references.
 class Bridge {
@@ -146,10 +199,19 @@ public:
     bool StartFromEnvironment();
     void Stop();
     void SetCaptureHandler(CaptureHandler handler);
-    bool PublishAndTakeQuit(bool ready, bool playing, const std::string& scene, std::vector<ObservedTarget> targets = {});
+    bool PublishAndTakeQuit(bool ready, bool playing, const std::string& scene,
+        std::vector<ObservedTarget> targets = {},
+        std::vector<ListedObject> objects = {},
+        const char* readyDetail = nullptr);
     void PollAndApplyInput(bool inGamePlaying);
     void FinishInputUpdate();
+    void ExpireInputDeadlines();
     void MaybeExecuteCapture();
+    bool IsPaused();
+    bool ShouldRunSimTick();
+    void NoteSimFrame();
+    void NotePhysicsTick();
+    void RecordPerfSample(const PerfSample& sample);
     std::string PipeName() const;
 private:
     struct Impl;
