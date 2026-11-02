@@ -74,6 +74,8 @@ py -3 tools\runtime_bridge_world_manip_acceptance_check.py -v
 if errorlevel 1 exit /b 1
 py -3 tools\runtime_bridge_angular_acceptance_check.py -v
 if errorlevel 1 exit /b 1
+py -3 tools\runtime_bridge_scenario_check.py -v
+if errorlevel 1 exit /b 1
 cl /nologo /EHsc /W4 /std:c++20 /utf-8 /DNOMINMAX /MT /DGAME_RUNTIME /I. tools\runtime_bridge_release_check.cpp engine\testing\runtime_test_bridge.cpp engine\input\keyboard.cpp engine\input\controller.cpp /Fo:"%~1\\" /Fe:"%~1\runtime_bridge_release_check.exe" /link user32.lib
 if errorlevel 1 exit /b 1
 "%~1\runtime_bridge_release_check.exe"
@@ -82,16 +84,20 @@ cl /nologo /EHsc /W4 /std:c++20 /utf-8 /DNOMINMAX /MTd /D_DEBUG /I. tools\runtim
 if errorlevel 1 exit /b 1
 "%~1\runtime_bridge_editor_check.exe"
 if errorlevel 1 exit /b 1
-if not "%~2"=="" (
-    py -3 tools\runtime_bridge_mouse_acceptance.py --exe "%~2" --out-dir "%~1\mouse-runtime"
-    if errorlevel 1 exit /b 1
-    py -3 tools\runtime_bridge_controller_acceptance.py --exe "%~2" --out-dir "%~1\controller-runtime"
-    if errorlevel 1 exit /b 1
-    py -3 tools\runtime_bridge_controller_probe_acceptance.py --exe "%~2" --out-dir "%~1\controller-probe-runtime"
-    if errorlevel 1 exit /b 1
-    py -3 tools\runtime_bridge_world_manip_acceptance.py --exe "%~2" --out-dir "%~1\world-manip-runtime"
-    if errorlevel 1 exit /b 1
-    py -3 tools\runtime_bridge_angular_acceptance.py --exe "%~2" --out-dir "%~1\angular-runtime"
-    if errorlevel 1 exit /b 1
-)
+rem Live acceptances: avoid parenthesized blocks so `exit /b` propagates
+rem correctly (cmd can fall through to a later exit /b 0 inside `(...)`).
+if "%~2"=="" goto :done
+py -3 tools\runtime_bridge_mouse_acceptance.py --exe "%~2" --out-dir "%~1\mouse-runtime"
+if errorlevel 1 exit /b 1
+py -3 tools\runtime_bridge_controller_acceptance.py --exe "%~2" --out-dir "%~1\controller-runtime"
+if errorlevel 1 exit /b 1
+py -3 tools\runtime_bridge_controller_probe_acceptance.py --exe "%~2" --out-dir "%~1\controller-probe-runtime"
+if errorlevel 1 exit /b 1
+py -3 tools\runtime_bridge_world_manip_acceptance.py --exe "%~2" --out-dir "%~1\world-manip-runtime"
+if errorlevel 1 exit /b 1
+py -3 tools\runtime_bridge_angular_acceptance.py --exe "%~2" --out-dir "%~1\angular-runtime"
+if errorlevel 1 exit /b 1
+call tools\run_runtime_bridge_scenarios.cmd "%~1\scenarios-runtime" "%~2"
+if errorlevel 1 exit /b 1
+:done
 exit /b 0

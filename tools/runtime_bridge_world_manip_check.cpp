@@ -166,6 +166,22 @@ int main() {
     pausedQuit.ConfirmQuitReceipt();
     check(pausedQuit.TakeQuit(), "quit receipt ready while paused");
 
+    // Applied stays "queued" on status until Publish seals observe snapshot freshness.
+    Protocol applied("applied", 11, 1);
+    applied.Publish(true, true, "rom/scene/fixture.json");
+    auto applyXf = baseFor("applied", 1, "set_transform");
+    applyXf["object"] = "DynamicBox";
+    applyXf["position"] = Json::array({3.0, 2.0, 0.0});
+    check(applied.Request(applyXf.dump())["ok"] == true, "applied-path set_transform queues");
+    check(applied.HasPendingWorldOp(pending), "applied-path pending");
+    applied.MarkWorldOpApplied(1, true, "");
+    check(!applied.HasPendingWorldOp(pending), "applied is not re-pending");
+    check(applied.Request(baseFor("applied", 2, "status").dump())["worldOp"]["status"] == "queued",
+        "applied reports queued until publish");
+    applied.Publish(true, true, "rom/scene/fixture.json");
+    check(applied.Request(baseFor("applied", 3, "status").dump())["worldOp"]["status"] == "completed",
+        "publish seals applied to completed");
+
     std::cout << "PASS world manip reset_scene/set_transform/set_velocity/impulse protocol\n";
     return 0;
 }

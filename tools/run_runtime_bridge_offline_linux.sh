@@ -38,4 +38,7 @@ echo "==> run runtime_bridge_protocol_check"
 echo "==> python angular acceptance unit tests"
 python3 "$ROOT/tools/runtime_bridge_angular_acceptance_check.py" -v
 
+echo "==> python scenario runner unit tests"
+python3 "$ROOT/tools/runtime_bridge_scenario_check.py" -v
+
 echo "PASS Linux offline runtime bridge protocol checks"

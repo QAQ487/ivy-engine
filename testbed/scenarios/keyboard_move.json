@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "name": "keyboard-move",
+  "scene": "rom/scene/scene_runtime_bridge_player.json",
+  "timeoutSec": 120,
+  "steps": [
+    {
+      "type": "comment",
+      "text": "Port of phase4 W-walk. Spawn Y settles to ~0.5; assert height vs pre-move baseline and horizontal XZ delta (not absolute Y)."
+    },
+    { "type": "wait_ready", "timeoutSec": 25 },
+    { "type": "observe", "object": "Player" },
+    {
+      "type": "assert",
+      "target": "Player.position.x",
+      "op": "approx",
+      "value": 0.0,
+      "tol": 0.25
+    },
+    {
+      "type": "keyboard",
+      "keys": ["W"],
+      "updates": 120
+    },
+    { "type": "observe", "object": "Player" },
+    {
+      "type": "assert",
+      "target": "Player.position.y",
+      "op": "approx",
+      "tol": 0.35
+    },
+    {
+      "type": "assert",
+      "target": "Player.position",
+      "op": "delta_gt",
+      "value": 5.0
+    }
+  ]
+}

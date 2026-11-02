@@ -172,7 +172,11 @@ public:
     bool HasPendingCapture(std::int64_t& outId) const;
     void CompleteCapture(std::int64_t id, bool ok, uint32_t w, uint32_t h, const std::string& basename, const std::string& err);
     bool HasPendingWorldOp(WorldOpRequest& out) const;
+    // In-process tests: Queued -> Completed/Failed immediately.
     void CompleteWorldOp(std::int64_t id, bool ok, const std::string& err);
+    // Live bridge: Queued -> Applied after WinMain apply; Publish seals to Completed/Failed
+    // so clients waiting on worldOp.completed see a fresh observe/list snapshot.
+    void MarkWorldOpApplied(std::int64_t id, bool ok, const std::string& err);
     void CancelWorldOp();
     const std::string& RunId() const { return runId_; }
 
@@ -230,12 +234,14 @@ private:
     } captureState_;
 
     struct WorldOpState {
-        enum class Status { Idle, Queued, Completed, Failed };
+        enum class Status { Idle, Queued, Applied, Completed, Failed };
         Status status = Status::Idle;
         WorldOpRequest request;
         std::string error;
+        bool appliedOk = true;
         const char* VerbName() const;
     } worldOp_;
+    void SealAppliedWorldOp();
 
     bool paused_ = false;
     int pendingStepFrames_ = 0;

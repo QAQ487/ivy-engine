@@ -1,0 +1,64 @@
+{
+  "version": 1,
+  "name": "angular-free-spin",
+  "scene": "rom/scene/scene_runtime_bridge_angular.json",
+  "timeoutSec": 120,
+  "steps": [
+    {
+      "type": "comment",
+      "text": "FreeSpinBox: halfExtents 0.4, scale 0.8 => fullSize 0.64; I=(m/12)*(s^2+s^2); invI=1/I; torque Z=2 => w0z=invI*2 ≈ 29.296875; after 30 steps @ angularDrag 0.05 => ≈ 28.5738."
+    },
+    { "type": "wait_ready", "timeoutSec": 25 },
+    { "type": "list_objects", "limit": 64 },
+    { "type": "pause" },
+    {
+      "type": "set_transform",
+      "object": "FreeSpinBox",
+      "position": [0.0, 4.0, 0.0],
+      "rotation": [0.0, 0.0, 0.0],
+      "zeroVelocity": true
+    },
+    { "type": "step", "frames": 1 },
+    {
+      "type": "apply_torque_impulse",
+      "object": "FreeSpinBox",
+      "torqueImpulse": [0.0, 0.0, 2.0]
+    },
+    { "type": "observe", "object": "FreeSpinBox" },
+    {
+      "type": "assert",
+      "target": "FreeSpinBox.angularVelocity",
+      "op": "axis_dot",
+      "value": [0.0, 0.0, 1.0],
+      "tol": 0.98
+    },
+    {
+      "type": "assert",
+      "target": "FreeSpinBox.angularVelocity.z",
+      "op": "approx",
+      "value": 29.296875,
+      "tol": 2.5
+    },
+    {
+      "type": "sample",
+      "object": "FreeSpinBox",
+      "fields": ["angularVelocity", "rotationQuaternion", "rigidbody"],
+      "everyFrames": 1,
+      "count": 30
+    },
+    {
+      "type": "assert",
+      "target": "sample[-1].angularVelocity",
+      "op": "axis_dot",
+      "value": [0.0, 0.0, 1.0],
+      "tol": 0.98
+    },
+    {
+      "type": "assert",
+      "target": "sample[-1].angularVelocity.z",
+      "op": "approx",
+      "value": 28.57383,
+      "tol": 2.5
+    }
+  ]
+}

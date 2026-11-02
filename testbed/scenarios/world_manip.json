@@ -1,0 +1,92 @@
+{
+  "version": 1,
+  "name": "world-manip",
+  "scene": "rom/scene/scene_runtime_bridge_world_manip.json",
+  "timeoutSec": 120,
+  "steps": [
+    { "type": "label", "text": "wait for bridge ready" },
+    { "type": "wait_ready", "timeoutSec": 25 },
+    { "type": "list_objects", "limit": 64 },
+    { "type": "observe", "object": "DynamicBox" },
+    {
+      "type": "assert",
+      "target": "DynamicBox.position.x",
+      "op": "approx",
+      "value": 0.0,
+      "tol": 0.05
+    },
+    {
+      "type": "assert",
+      "target": "DynamicBox.position.y",
+      "op": "approx",
+      "value": 2.0,
+      "tol": 0.05
+    },
+    { "type": "pause" },
+    {
+      "type": "set_transform",
+      "object": "DynamicBox",
+      "position": [3.0, 2.0, 0.0],
+      "zeroVelocity": true
+    },
+    { "type": "observe", "object": "DynamicBox" },
+    {
+      "type": "assert",
+      "target": "DynamicBox.position.x",
+      "op": "approx",
+      "value": 3.0,
+      "tol": 0.05
+    },
+    {
+      "type": "assert",
+      "target": "DynamicBox.position.y",
+      "op": "approx",
+      "value": 2.0,
+      "tol": 0.05
+    },
+    {
+      "type": "apply_impulse",
+      "object": "DynamicBox",
+      "impulse": [8.0, 0.0, 0.0]
+    },
+    { "type": "observe", "object": "DynamicBox" },
+    {
+      "type": "assert",
+      "target": "DynamicBox.velocity.x",
+      "op": "gt",
+      "value": 1.0
+    },
+    { "type": "step", "frames": 10 },
+    { "type": "observe", "object": "DynamicBox" },
+    {
+      "type": "assert",
+      "target": "DynamicBox.position.x",
+      "op": "gt",
+      "value": 3.05
+    },
+    { "type": "reset_scene" },
+    { "type": "wait_ready", "timeoutSec": 15 },
+    { "type": "observe", "object": "DynamicBox" },
+    {
+      "type": "assert",
+      "target": "DynamicBox.position.x",
+      "op": "approx",
+      "value": 0.0,
+      "tol": 0.1
+    },
+    {
+      "type": "assert",
+      "target": "DynamicBox.position.y",
+      "op": "approx",
+      "value": 2.0,
+      "tol": 0.1
+    },
+    {
+      "type": "assert",
+      "target": "DynamicBox.velocity.x",
+      "op": "approx",
+      "value": 0.0,
+      "tol": 0.5
+    }
+  ]
+}

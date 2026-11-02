@@ -31,4 +31,5 @@ tools\run_runtime_bridge_checks.cmd x64\phase6-bridge-check x64\Debug\IvyEngineR
 - Phase 6：`--scene`、observe 擴充、`list_objects`／pause／step／perf；mouse／controller acceptance 會 stage fixture 並傳 `--scene`（避免 testbed 預設 `scene_sample_menu.json`／全量 boot preload 導致 not-ready）。
 - World manip（plan Phase 3）：`reset_scene`／`set_transform`／`set_velocity`／impulse；fixture `scene_runtime_bridge_world_manip.json`；acceptance 經 `run_runtime_bridge_checks.cmd` 第二參數。
 - Angular acceptance（plan Phase 4）：fixture `scene_runtime_bridge_angular.json`；`tools/runtime_bridge_angular_acceptance.py`；Linux 只跑 validator unit tests（`run_runtime_bridge_offline_linux.sh`），唔聲稱 Windows runtime PASS。Box friction rolling 係 expected-skip。
+- Scenario runner（plan Phase 5）：`tools/runtime_bridge_scenario_runner.py` + `testbed/scenarios/*.json`；JSON Schema 喺 `docs/schemas/runtime_bridge_scenario.v1.schema.json`；AI／人寫 scenario 就唔使再加 Python acceptance。Linux offline 跑 schema／assert／fake-client unit tests；唔聲稱 Windows runtime PASS。
 - Fixture：`testbed/rom/scene/scene_runtime_bridge_*.json`；玩家模型用 `rom/model/player/`。
