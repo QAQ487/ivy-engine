@@ -155,6 +155,14 @@ Without staging/`--scene`, Debug runtime launched from OutDir falls back to in-r
 
 ## How to run checks
 
+### Linux offline protocol checks (no named pipes)
+
+```bash
+tools/run_runtime_bridge_offline_linux.sh x64/linux-bridge-offline
+```
+
+Compiles and runs `runtime_bridge_protocol_check`, `runtime_bridge_phase6_check`, and `runtime_bridge_world_manip_check` with Win32/input stubs (`tools/linux_win32_shim/`). Pipe DACL / `--serve` transport checks remain Windows-only.
+
 ### Batch harness (MSVC x64)
 
 ```bat
