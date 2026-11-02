@@ -106,7 +106,7 @@ int main(int argc, char** argv) {
     policy.BeginInput(false,GetTickCount64());
     auto cancelled=policy.Request(R"({"protocolVersion":1,"requestId":6,"runId":"policy","verb":"status"})");
     check(cancelled["keyboard"]["status"]=="cancelled","not-playing cancels queued input");
-    check(r["capabilities"] == Json::array({"hello","status","quit","keyboard","observe","capture","mouse","controller","events","controller_probe"}), "capabilities include observe, capture, mouse, controller, events, and controller_probe");
+    check(r["capabilities"] == Json::array({"hello","status","quit","keyboard","observe","capture","mouse","controller","events","controller_probe","list_objects","pause","resume","step","perf"}), "capabilities include observe, capture, mouse, controller, events, controller_probe, list_objects, pause, resume, step, and perf");
     r = p.Request(R"({"protocolVersion":1,"requestId":6,"runId":"test-run","verb":"quit"})");
     check(r.value("requiresReceipt", false), "quit requires receipt before main-thread exit");
     check(!p.TakeQuit(), "no quit before receipt");

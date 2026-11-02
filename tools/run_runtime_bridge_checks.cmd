@@ -37,6 +37,14 @@ cl /nologo /EHsc /W4 /std:c++20 /utf-8 /MTd /D_DEBUG /DGAME_RUNTIME /I. tools\ru
 if errorlevel 1 exit /b 1
 "%~1\runtime_bridge_events_check.exe"
 if errorlevel 1 exit /b 1
+cl /nologo /EHsc /W4 /std:c++20 /utf-8 /MTd /D_DEBUG /DGAME_RUNTIME /I. tools\runtime_bridge_phase6_check.cpp engine\testing\runtime_test_bridge.cpp engine\input\keyboard.cpp engine\input\mouse.cpp engine\input\controller.cpp tools\test_renderer_stubs.cpp /Fo:"%~1\\" /Fe:"%~1\runtime_bridge_phase6_check.exe" /link advapi32.lib user32.lib
+if errorlevel 1 exit /b 1
+"%~1\runtime_bridge_phase6_check.exe"
+if errorlevel 1 exit /b 1
+cl /nologo /EHsc /W4 /std:c++20 /utf-8 /I. tests\runtime_test_scene_arg_test.cpp /Fo:"%~1\\" /Fe:"%~1\runtime_test_scene_arg_check.exe"
+if errorlevel 1 exit /b 1
+"%~1\runtime_test_scene_arg_check.exe"
+if errorlevel 1 exit /b 1
 cl /nologo /EHsc /W4 /std:c++20 /utf-8 /MTd /D_DEBUG /I. tools\runtime_bridge_checkpoint_check.cpp /Fo:"%~1\\" /Fe:"%~1\runtime_bridge_checkpoint_check.exe"
 if errorlevel 1 exit /b 1
 "%~1\runtime_bridge_checkpoint_check.exe"

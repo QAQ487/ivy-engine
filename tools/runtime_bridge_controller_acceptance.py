@@ -22,9 +22,13 @@ if str(HERE) not in sys.path:
     sys.path.insert(0, str(HERE))
 
 from runtime_bridge_mouse_acceptance import (
+    DEFAULT_FIXTURE,
     ENV_CLEAR,
+    EXPECTED_SCENE,
+    SCENE_ARG,
     Link,
     session_of,
+    stage_fixture_package,
     validate_png_bytes,
     validate_rejection_response,
     validate_shutdown,
@@ -273,11 +277,14 @@ def run(args):
     # All CLI validation above must succeed before mkdir / spawn.
     out_dir.mkdir(parents=True)
 
+    staged_exe, package = stage_fixture_package(exe, out_dir, getattr(args, "fixture_scene", DEFAULT_FIXTURE))
     launcher_session = session_of(os.getpid())
     report = {
         "schema": "ivy.runtime_bridge.controller_acceptance/1",
         "startedAt": time.monotonic(),
         "exe": str(exe),
+        "stagedExe": str(staged_exe),
+        "sceneArg": SCENE_ARG,
         "exeSha256": hashlib.sha256(exe.read_bytes()).hexdigest(),
         "launcherSession": launcher_session,
         "profile": {"lx": FIXED_LX, "ly": FIXED_LY, "updates": FIXED_UPDATES},
@@ -300,7 +307,9 @@ def run(args):
         })
 
         with (out_dir / "runtime-out.log").open("wb") as stdout, (out_dir / "runtime-err.log").open("wb") as stderr:
-            child = subprocess.Popen([str(exe)], cwd=str(pathlib.Path.home()), env=env, stdout=stdout, stderr=stderr)
+            child = subprocess.Popen(
+                [str(staged_exe), "--scene", SCENE_ARG],
+                cwd=str(package), env=env, stdout=stdout, stderr=stderr)
         report["pid"] = child.pid
         report["childSession"] = session_of(child.pid)
         if report["childSession"] == 0 or launcher_session == 0:
@@ -315,7 +324,9 @@ def run(args):
             if status.get("ready") and status.get("playing"):
                 break
             if time.monotonic() > deadline:
-                raise AssertionError("runtime not ready within %.0fs" % args.ready_timeout)
+                raise AssertionError(
+                    "runtime not ready within %.0fs (state=%r readyDetail=%r scene=%r)"
+                    % (args.ready_timeout, status.get("state"), status.get("readyDetail"), status.get("scene")))
             if child.poll() is not None:
                 raise AssertionError("runtime exited before ready: %s" % child.returncode)
             time.sleep(0.05)
@@ -499,9 +510,10 @@ def run(args):
 
 def main():
     parser = argparse.ArgumentParser(description="Left-stick controller runtime acceptance runner for Ivy test bridge")
-    parser.add_argument("--exe", required=True, help="Debug GAME_RUNTIME executable to launch")
-    parser.add_argument("--out-dir", required=True, help="new directory for PNGs, logs and result.json")
-    parser.add_argument("--expected-scene", default="scene_runtime_bridge_player.json")
+    parser.add_argument("--exe", required=True, help="Debug GAME_RUNTIME executable to stage and launch")
+    parser.add_argument("--out-dir", required=True, help="new directory for fixture package, PNGs, logs and result.json")
+    parser.add_argument("--fixture-scene", default=str(DEFAULT_FIXTURE), help="path to scene_runtime_bridge_player.json")
+    parser.add_argument("--expected-scene", default=EXPECTED_SCENE)
     parser.add_argument("--settle", type=float, default=0.6)
     parser.add_argument("--release-settle", type=float, default=0.3)
     parser.add_argument("--ready-timeout", type=float, default=25.0)

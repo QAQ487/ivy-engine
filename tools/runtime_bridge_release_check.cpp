@@ -8,6 +8,7 @@
 #error Non-runtime-Debug builds must not contain a Runtime Test Bridge
 #endif
 #include <iostream>
+#include <string>
 template<class T> concept HasTestInjection = requires(T keys) { Keyboard_TestInject(keys, 1); };
 static_assert(!HasTestInjection<Keyboard_Keys*>, "test injection must be absent");
 template<class T> concept HasControllerInjection = requires(T axis) { Controller_TestInjectLeftStick(axis, axis); };
@@ -33,11 +34,17 @@ template<class T>
 concept HasControllerProbeApi = requires(T tag) {
     ControllerProbeApiDetect(tag);
 };
+template<class T>
+concept HasRuntimeTestSceneOverride = requires(T s) {
+    RuntimeTestSceneOverride_Set(s);
+};
 }
 static_assert(!ivy::testing::HasRuntimeTestEventsRecord<const char*>,
     "event recorder API must be compile-out absent");
 static_assert(!ivy::testing::HasControllerProbeApi<ivy::testing::ControllerProbeApiTag>,
     "controller consumer probe API must be compile-out absent");
+static_assert(!ivy::testing::HasRuntimeTestSceneOverride<std::string>,
+    "scene override API must be compile-out absent");
 int main() {
     Keyboard_Initialize();
     Keyboard_ProcessMessage(WM_KEYDOWN, 'W', 0);
@@ -45,8 +52,8 @@ int main() {
     Keyboard_ProcessMessage(WM_KEYUP, 'W', 0);
     if(Keyboard_IsKeyDown(KK_W)) return 1;
 #ifdef GAME_RUNTIME
-    std::cout << "PASS Release compile-out (bridge/injection/events API absent), normal physical keyboard\n";
+    std::cout << "PASS Release compile-out (bridge/injection/events/scene-override API absent), normal physical keyboard\n";
 #else
-    std::cout << "PASS Editor compile-out (bridge/injection/events API absent), normal physical keyboard\n";
+    std::cout << "PASS Editor compile-out (bridge/injection/events/scene-override API absent), normal physical keyboard\n";
 #endif
 }

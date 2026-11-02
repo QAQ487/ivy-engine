@@ -11,6 +11,7 @@ import json
 import math
 import os
 import pathlib
+import shutil
 import struct
 import subprocess
 import sys
@@ -33,7 +34,12 @@ ENV_CLEAR = (
     "IVY_RUNTIME_TEST_RUN_ID",
     "IVY_RUNTIME_TEST_OUTPUT_DIR",
     "IVY_RUNTIME_TEST_FIXED_CAMERA",
+    "IVY_SKIP_CLOSE_CONFIRM",
 )
+
+DEFAULT_FIXTURE = HERE.parent / "testbed" / "rom" / "scene" / "scene_runtime_bridge_player.json"
+EXPECTED_SCENE = "scene_runtime_bridge_player.json"
+SCENE_ARG = "rom/scene/scene_runtime_bridge_player.json"
 
 _K = None
 
@@ -134,6 +140,27 @@ def validate_frame_hashes(sha_before, sha_forward, sha_reverse):
     return (sha_before != sha_forward) and (sha_forward != sha_reverse)
 
 
+def stage_fixture_package(exe, out_dir, fixture_scene):
+    """Copy the Debug runtime tree and pin the player bridge fixture via default_scene + --scene."""
+    exe = pathlib.Path(exe).resolve()
+    fixture_src = pathlib.Path(fixture_scene).resolve()
+    if not fixture_src.is_file():
+        raise SystemExit("fixture scene not found: %s" % fixture_src)
+    package = out_dir / "fixture"
+    if package.exists():
+        raise SystemExit("fixture package already exists: %s" % package)
+    shutil.copytree(exe.parent, package)
+    staged_exe = package / exe.name
+    if not staged_exe.is_file():
+        raise SystemExit("staged exe missing: %s" % staged_exe)
+    rom_scene = package / "rom" / "scene"
+    rom_scene.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(fixture_src, rom_scene / EXPECTED_SCENE)
+    (rom_scene / "default_scene.txt").write_text(EXPECTED_SCENE + "\n", encoding="ascii")
+    (package / "rom" / "skip_boot_preload").write_text("", encoding="ascii")
+    return staged_exe, package
+
+
 class Link:
     """Request helper that manages reconnection and captures."""
 
@@ -207,11 +234,14 @@ def run(args):
         raise SystemExit("out dir already exists: %s" % out_dir)
     out_dir.mkdir(parents=True)
 
+    staged_exe, package = stage_fixture_package(exe, out_dir, args.fixture_scene)
     launcher_session = session_of(os.getpid())
     report = {
         "schema": "ivy.runtime_bridge.mouse_acceptance/1",
         "startedAt": time.monotonic(),
         "exe": str(exe),
+        "stagedExe": str(staged_exe),
+        "sceneArg": SCENE_ARG,
         "exeSha256": hashlib.sha256(exe.read_bytes()).hexdigest(),
         "launcherSession": launcher_session,
         "checks": {},
@@ -233,7 +263,9 @@ def run(args):
         })
 
         with (out_dir / "runtime-out.log").open("wb") as stdout, (out_dir / "runtime-err.log").open("wb") as stderr:
-            child = subprocess.Popen([str(exe)], cwd=str(pathlib.Path.home()), env=env, stdout=stdout, stderr=stderr)
+            child = subprocess.Popen(
+                [str(staged_exe), "--scene", SCENE_ARG],
+                cwd=str(package), env=env, stdout=stdout, stderr=stderr)
         report["pid"] = child.pid
         report["childSession"] = session_of(child.pid)
         if report["childSession"] == 0 or launcher_session == 0:
@@ -249,7 +281,9 @@ def run(args):
             if status.get("ready") and status.get("playing"):
                 break
             if time.monotonic() > deadline:
-                raise AssertionError("runtime not ready within %.0fs" % args.ready_timeout)
+                raise AssertionError(
+                    "runtime not ready within %.0fs (state=%r readyDetail=%r scene=%r)"
+                    % (args.ready_timeout, status.get("state"), status.get("readyDetail"), status.get("scene")))
             if child.poll() is not None:
                 raise AssertionError("runtime exited before ready: %s" % child.returncode)
             time.sleep(0.05)
@@ -454,9 +488,14 @@ def run(args):
 
 def main():
     parser = argparse.ArgumentParser(description="Mouse runtime acceptance runner for Ivy test bridge")
-    parser.add_argument("--exe", required=True, help="Debug GAME_RUNTIME executable to launch")
-    parser.add_argument("--out-dir", required=True, help="new directory for PNGs, logs and result.json")
-    parser.add_argument("--expected-scene", default="scene_runtime_bridge_player.json")
+    parser.add_argument("--exe", required=True, help="Debug GAME_RUNTIME executable to stage and launch")
+    parser.add_argument("--out-dir", required=True, help="new directory for fixture package, PNGs, logs and result.json")
+    parser.add_argument(
+        "--fixture-scene",
+        default=str(DEFAULT_FIXTURE),
+        help="path to scene_runtime_bridge_player.json",
+    )
+    parser.add_argument("--expected-scene", default=EXPECTED_SCENE)
     parser.add_argument("--updates", type=int, default=60)
     parser.add_argument("--settle", type=float, default=0.6)
     parser.add_argument("--ready-timeout", type=float, default=25.0)
