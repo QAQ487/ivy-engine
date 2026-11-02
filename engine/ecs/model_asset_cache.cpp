@@ -257,12 +257,17 @@ Model3D* ModelAssetCache::GetModel(const std::string& modelName) {
     const std::wstring wpath = ResolveModelWidePath(modelName, def);
     if (wpath.empty()) {
         OutputDebugStringA(("[ModelAssetCache] Unknown model: " + modelName + "\n").c_str());
+        // Cache the miss so callers (per-frame GetModel) do not re-resolve forever.
+        m_modelCache.emplace(cacheKey, nullptr);
         return nullptr;
     }
 
     auto model = std::make_unique<Model3D>();
     if (!model->LoadFBX(wpath.c_str())) {
         OutputDebugStringA(("[ModelAssetCache] Failed to load: " + modelName + "\n").c_str());
+        // One-shot failure: retrying LoadFBX every frame dominates frame time when
+        // assets are missing from an isolated fixture / broken path.
+        m_modelCache.emplace(cacheKey, nullptr);
         return nullptr;
     }
 

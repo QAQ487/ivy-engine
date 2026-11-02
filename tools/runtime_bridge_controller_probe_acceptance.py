@@ -49,7 +49,7 @@ ENV_CLEAR = (
     "IVY_RUNTIME_TEST_FIXED_CAMERA",
 )
 
-DEFAULT_FIXTURE = HERE.parent / "samples" / "scenes" / "scene_runtime_bridge_controller_probe.json"
+DEFAULT_FIXTURE = HERE.parent / "testbed" / "rom" / "scene" / "scene_runtime_bridge_controller_probe.json"
 EXPECTED_SCENE = "scene_runtime_bridge_controller_probe.json"
 
 CLI_BOUNDS = {
@@ -143,6 +143,8 @@ class ProbeLink:
 
 def stage_fixture_package(exe, out_dir, fixture_scene):
     """Copy the Debug runtime tree and point default_scene at the probe fixture."""
+    from runtime_bridge_mouse_acceptance import stage_fixture_scene_assets
+
     exe = pathlib.Path(exe).resolve()
     fixture_src = pathlib.Path(fixture_scene).resolve()
     if not fixture_src.is_file():
@@ -158,6 +160,7 @@ def stage_fixture_package(exe, out_dir, fixture_scene):
     rom_scene.mkdir(parents=True, exist_ok=True)
     shutil.copy2(fixture_src, rom_scene / EXPECTED_SCENE)
     (rom_scene / "default_scene.txt").write_text(EXPECTED_SCENE + "\n", encoding="ascii")
+    stage_fixture_scene_assets(package, fixture_src)
     return staged_exe, package
 
 

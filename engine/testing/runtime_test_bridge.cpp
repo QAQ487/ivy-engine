@@ -2,6 +2,7 @@
 // Implements EventsRecorder.
 
 #include "runtime_test_bridge.h"
+#include <algorithm>
 #include <cmath>
 #include <cstring>
 #include <mutex>
@@ -190,7 +191,57 @@ std::uint32_t RemainingFrameTimeout(std::uint64_t deadline, std::uint64_t now) n
 }
 Protocol::Protocol(std::string runId, unsigned long pid, unsigned long session)
     : runId_(std::move(runId)), pid_(pid), session_(session) {}
-void Protocol::Publish(bool ready, bool playing, const std::string& scene, std::vector<ObservedTarget> targets) {
+namespace {
+std::string g_sceneOverride;
+Json ObserveTargetJson(const ObservedTarget& t) {
+    Json body = {
+        {"protocolVersion", 1},
+        {"found", true},
+        {"target", t.name},
+        {"position", {{"x", t.posX}, {"y", t.posY}, {"z", t.posZ}}},
+        {"velocity", {{"x", t.velX}, {"y", t.velY}, {"z", t.velZ}}},
+    };
+    if (t.hasRotation) {
+        body["rotation"] = {{"x", t.rotX}, {"y", t.rotY}, {"z", t.rotZ}};
+        body["rotationQuaternion"] = {
+            {"x", t.quatX}, {"y", t.quatY}, {"z", t.quatZ}, {"w", t.quatW}};
+    }
+    if (t.hasScale)
+        body["scale"] = {{"x", t.scaleX}, {"y", t.scaleY}, {"z", t.scaleZ}};
+    if (t.hasAngularVelocity)
+        body["angularVelocity"] = {{"x", t.angVelX}, {"y", t.angVelY}, {"z", t.angVelZ}};
+    if (t.hasRigidbody)
+        body["rigidbody"] = {{"kinematic", t.kinematic}};
+    return body;
+}
+Json PerfStatsJson(const std::vector<float>& values) {
+    if (values.empty())
+        return {{"avg", 0.0}, {"min", 0.0}, {"max", 0.0}, {"p95", 0.0}};
+    double sum = 0.0;
+    float mn = values[0], mx = values[0];
+    for (float v : values) {
+        sum += v;
+        if (v < mn) mn = v;
+        if (v > mx) mx = v;
+    }
+    std::vector<float> sorted = values;
+    std::sort(sorted.begin(), sorted.end());
+    const std::size_t idx = (sorted.size() * 95) / 100;
+    const float p95 = sorted[(std::min)(idx, sorted.size() - 1)];
+    return {
+        {"avg", sum / static_cast<double>(values.size())},
+        {"min", mn}, {"max", mx}, {"p95", p95},
+    };
+}
+}
+void RuntimeTestSceneOverride_Set(std::string romPath) { g_sceneOverride = std::move(romPath); }
+bool RuntimeTestSceneOverride_Has() { return !g_sceneOverride.empty(); }
+const std::string& RuntimeTestSceneOverride_Get() { return g_sceneOverride; }
+void RuntimeTestSceneOverride_Clear() { g_sceneOverride.clear(); }
+
+void Protocol::Publish(bool ready, bool playing, const std::string& scene,
+    std::vector<ObservedTarget> targets, std::vector<ListedObject> objects,
+    const char* readyDetail) {
     ready_ = ready; playing_ = playing;
     std::size_t end = scene.size() < 1024 ? scene.size() : 1024;
     if (end < scene.size()) {
@@ -198,10 +249,32 @@ void Protocol::Publish(bool ready, bool playing, const std::string& scene, std::
     }
     scene_ = scene.substr(0, end);
     targets_ = std::move(targets);
+    objects_ = std::move(objects);
+    if (readyDetail && readyDetail[0])
+        readyDetail_ = readyDetail;
+    else if (!ready_)
+        readyDetail_ = scene_.empty() ? "scene_path_empty" : "not_ready";
+    else if (!playing_)
+        readyDetail_ = "not_playing";
+    else
+        readyDetail_.clear();
     const auto snap = RuntimeTestEvents_CopySnapshot();
     events_ = snap.events;
     eventsLatestSequence_ = snap.latestSequence;
     eventsDropped_ = snap.dropped;
+}
+bool Protocol::ShouldRunSimTick() {
+    if (!paused_) return true;
+    if (pendingStepFrames_ <= 0) return false;
+    --pendingStepFrames_;
+    return true;
+}
+void Protocol::NoteSimFrame() { ++frameCounter_; }
+void Protocol::NotePhysicsTick() { ++physicsTickCounter_; }
+void Protocol::RecordPerfSample(const PerfSample& sample) {
+    perfRing_[perfWrite_ % kRuntimeTestPerfCapacity] = sample;
+    ++perfWrite_;
+    if (perfCount_ < kRuntimeTestPerfCapacity) ++perfCount_;
 }
 bool Protocol::TakeQuit() { const bool result=quitReady_; quitReady_=false; return result; }
 void Protocol::ConfirmQuitReceipt() { if(quitPending_) { quitReady_=true; quitPending_=false; } }
@@ -372,12 +445,20 @@ Json Protocol::Request(const std::string& frame) {
     const bool capture=q["verb"]=="capture";
     const bool events=q["verb"]=="events";
     const bool controllerProbe=q["verb"]=="controller_probe";
+    const bool listObjects=q["verb"]=="list_objects";
+    const bool pause=q["verb"]=="pause";
+    const bool resume=q["verb"]=="resume";
+    const bool step=q["verb"]=="step";
+    const bool perf=q["verb"]=="perf";
     std::vector<std::string> keys;
     int updates=0;
     int mouseDx=0, mouseDy=0, mouseWheel=0, mouseUpdates=0;
     unsigned int mouseButtonsMask=0;
     ControllerCommand controllerCmd;
     std::string observeTarget;
+    int listOffset=0, listLimit=static_cast<int>(kRuntimeTestListObjectsDefaultLimit);
+    int stepFrames=0;
+    int perfFrames=0;
     if(input) {
         if(q.size()!=6 || !q.contains("keys") || !q["keys"].is_array() || q["keys"].empty() || q["keys"].size()>9
             || !q.contains("updates") || !q["updates"].is_number_integer() || q["updates"]<1 || q["updates"]>120)
@@ -440,6 +521,37 @@ Json Protocol::Request(const std::string& frame) {
         if(q.size()!=4) return error("invalid_request");
     } else if(controllerProbe) {
         if(q.size()!=4) return error("invalid_request");
+    } else if(listObjects) {
+        if(q.size()!=4 && q.size()!=5 && q.size()!=6) return error("invalid_request");
+        if(q.contains("offset")) {
+            if(!q["offset"].is_number_integer() || q["offset"]<0 || q["offset"]>1000000)
+                return error("invalid_request");
+            listOffset=q["offset"].get<int>();
+        }
+        if(q.contains("limit")) {
+            if(!q["limit"].is_number_integer() || q["limit"]<1
+                || q["limit"]>static_cast<int>(kRuntimeTestListObjectsMaxLimit))
+                return error("invalid_request");
+            listLimit=q["limit"].get<int>();
+        }
+        for(auto it=q.begin(); it!=q.end(); ++it) {
+            const auto& k=it.key();
+            if(k!="protocolVersion" && k!="requestId" && k!="runId" && k!="verb"
+                && k!="offset" && k!="limit")
+                return error("invalid_request");
+        }
+    } else if(pause || resume) {
+        if(q.size()!=4) return error("invalid_request");
+    } else if(step) {
+        if(q.size()!=5 || !q.contains("frames") || !q["frames"].is_number_integer()
+            || q["frames"]<1 || q["frames"]>600)
+            return error("invalid_request");
+        stepFrames=q["frames"].get<int>();
+    } else if(perf) {
+        if(q.size()!=5 || !q.contains("frames") || !q["frames"].is_number_integer()
+            || q["frames"]<1 || q["frames"]>static_cast<int>(kRuntimeTestPerfCapacity))
+            return error("invalid_request");
+        perfFrames=q["frames"].get<int>();
     } else if(q.size()!=4) return error("invalid_request");
 
     if(q["protocolVersion"]!=1) return error("unsupported_version",q["requestId"]);
@@ -482,17 +594,102 @@ Json Protocol::Request(const std::string& frame) {
         if(!ready_ || !playing_) return error("not_ready",id);
         for(const auto& t : targets_) {
             if(t.name == observeTarget) {
-                return {
-                    {"protocolVersion",1},{"requestId",id},{"runId",runId_},{"ok",true},{"found",true},
-                    {"target",t.name},
-                    {"position",{{"x",t.posX},{"y",t.posY},{"z",t.posZ}}},
-                    {"velocity",{{"x",t.velX},{"y",t.velY},{"z",t.velZ}}}
-                };
+                Json body = ObserveTargetJson(t);
+                body["requestId"] = id;
+                body["runId"] = runId_;
+                body["ok"] = true;
+                return body;
             }
         }
         return {
             {"protocolVersion",1},{"requestId",id},{"runId",runId_},{"ok",true},{"found",false},
             {"target",observeTarget}
+        };
+    }
+    if(listObjects) {
+        if(!ready_ || !playing_) return error("not_ready",id);
+        const int total = static_cast<int>(objects_.size());
+        Json arr = Json::array();
+        int emitted = 0;
+        bool truncated = false;
+        for(int i = listOffset; i < total && emitted < listLimit; ++i) {
+            const auto& obj = objects_[static_cast<std::size_t>(i)];
+            Json comps = Json::array();
+            constexpr std::size_t kMaxComponents = 32;
+            for(std::size_t c = 0; c < obj.components.size() && c < kMaxComponents; ++c)
+                comps.push_back(obj.components[c]);
+            if(obj.components.size() > kMaxComponents) truncated = true;
+            arr.push_back({{"name", obj.name}, {"components", std::move(comps)}});
+            ++emitted;
+        }
+        if(listOffset + emitted < total) truncated = true;
+        return {
+            {"protocolVersion",1},{"requestId",id},{"runId",runId_},{"ok",true},
+            {"objects", std::move(arr)},
+            {"offset", listOffset},
+            {"limit", listLimit},
+            {"total", total},
+            {"truncated", truncated},
+        };
+    }
+    if(pause) {
+        if(!ready_ || !playing_) return error("not_ready",id);
+        paused_ = true;
+        pendingStepFrames_ = 0;
+        return {{"protocolVersion",1},{"requestId",id},{"runId",runId_},{"ok",true},
+            {"paused",true},{"frame",frameCounter_},{"physicsTick",physicsTickCounter_}};
+    }
+    if(resume) {
+        if(!ready_ || !playing_) return error("not_ready",id);
+        paused_ = false;
+        pendingStepFrames_ = 0;
+        return {{"protocolVersion",1},{"requestId",id},{"runId",runId_},{"ok",true},
+            {"paused",false},{"frame",frameCounter_},{"physicsTick",physicsTickCounter_}};
+    }
+    if(step) {
+        if(!ready_ || !playing_) return error("not_ready",id);
+        if(!paused_) return error("not_paused",id);
+        if(pendingStepFrames_ > 0) return error("queue_full",id);
+        pendingStepFrames_ = stepFrames;
+        return {{"protocolVersion",1},{"requestId",id},{"runId",runId_},{"ok",true},
+            {"paused",true},{"frames",stepFrames},{"pendingSteps",pendingStepFrames_},
+            {"frame",frameCounter_},{"physicsTick",physicsTickCounter_}};
+    }
+    if(perf) {
+        if(!ready_ || !playing_) return error("not_ready",id);
+        const int available = static_cast<int>(perfCount_);
+        const int take = (std::min)(perfFrames, available);
+        std::vector<float> frameMs, updateMs, drawMs, presentMs;
+        frameMs.reserve(static_cast<std::size_t>(take));
+        updateMs.reserve(static_cast<std::size_t>(take));
+        drawMs.reserve(static_cast<std::size_t>(take));
+        presentMs.reserve(static_cast<std::size_t>(take));
+        for(int i = 0; i < take; ++i) {
+            const std::size_t idx = (perfWrite_ + kRuntimeTestPerfCapacity - static_cast<std::size_t>(take) + static_cast<std::size_t>(i))
+                % kRuntimeTestPerfCapacity;
+            const auto& s = perfRing_[idx];
+            frameMs.push_back(s.frameMs);
+            updateMs.push_back(s.updateMs);
+            drawMs.push_back(s.drawMs);
+            presentMs.push_back(s.presentMs);
+        }
+        double fpsAvg = 0.0;
+        if(!frameMs.empty()) {
+            double invSum = 0.0;
+            int finite = 0;
+            for(float ms : frameMs) {
+                if(ms > 1e-6f) { invSum += 1000.0 / static_cast<double>(ms); ++finite; }
+            }
+            if(finite > 0) fpsAvg = invSum / static_cast<double>(finite);
+        }
+        return {
+            {"protocolVersion",1},{"requestId",id},{"runId",runId_},{"ok",true},
+            {"frames", take},{"available", available},{"requested", perfFrames},
+            {"frameMs", PerfStatsJson(frameMs)},
+            {"updateMs", PerfStatsJson(updateMs)},
+            {"drawMs", PerfStatsJson(drawMs)},
+            {"presentMs", PerfStatsJson(presentMs)},
+            {"fps", {{"avg", fpsAvg}}},
         };
     }
     if(capture) {
@@ -550,10 +747,17 @@ Json Protocol::Request(const std::string& frame) {
                             captureState_.status == CaptureState::Status::Completed ? "completed" :
                             captureState_.status == CaptureState::Status::Failed ? "failed" : "idle";
 
-    return {{"protocolVersion",1},{"requestId",id},{"runId",runId_},{"ok",true},
+    Json reply = {{"protocolVersion",1},{"requestId",id},{"runId",runId_},{"ok",true},
         {"pid",pid_},{"sessionId",session_},{"ready",ready_},{"playing",playing_},
-        {"state",ready_ ? (playing_ ? "playing" : "ready") : "loading"},{"scene",scene_},
-        {"capabilities",Json::array({"hello","status","quit","keyboard","observe","capture","mouse","controller","events","controller_probe"})},
+        {"state",ready_ ? (playing_ ? (paused_ ? "paused" : "playing") : "ready") : "loading"},
+        {"scene",scene_},
+        {"paused",paused_},
+        {"pendingSteps",pendingStepFrames_},
+        {"frame",frameCounter_},
+        {"physicsTick",physicsTickCounter_},
+        {"capabilities",Json::array({
+            "hello","status","quit","keyboard","observe","capture","mouse","controller","events",
+            "controller_probe","list_objects","pause","resume","step","perf"})},
         {"keyboard",{{"status",InputStatus()},{"requestId",keyboardReqId_},
             {"remainingUpdates",keyboardUpdatesRemaining_},{"cancelRequested",cancelInput_},{"preparing",inputState_==InputState::Preparing}}},
         {"mouse",{{"status",MouseStatus()},{"requestId",mouseReqId_},
@@ -562,6 +766,9 @@ Json Protocol::Request(const std::string& frame) {
             {"remainingUpdates",controllerOp_.Remaining()},{"cancelRequested",controllerOp_.CancelRequested()}}},
         {"capture",{{"status",capStatus},{"requestId",captureState_.requestId},
             {"width",captureState_.width},{"height",captureState_.height},{"basename",captureState_.basename},{"error",captureState_.error}}}};
+    if(!readyDetail_.empty())
+        reply["readyDetail"] = readyDetail_;
+    return reply;
 }
 }
 
@@ -772,11 +979,45 @@ void Bridge::FinishInputUpdate() {
     impl_->protocol.ExpireController(GetTickCount64());
     impl_->protocol.EndInput();
 }
-bool Bridge::PublishAndTakeQuit(bool ready, bool playing, const std::string& scene, std::vector<ObservedTarget> targets) {
+bool Bridge::PublishAndTakeQuit(bool ready, bool playing, const std::string& scene,
+    std::vector<ObservedTarget> targets, std::vector<ListedObject> objects,
+    const char* readyDetail) {
     if(!impl_) return false;
     std::lock_guard lock(impl_->mutex);
-    impl_->protocol.Publish(ready,playing,scene,std::move(targets));
+    impl_->protocol.Publish(ready,playing,scene,std::move(targets),std::move(objects),readyDetail);
     return impl_->protocol.TakeQuit();
+}
+void Bridge::ExpireInputDeadlines() {
+    if(!impl_) return;
+    std::lock_guard lock(impl_->mutex);
+    impl_->protocol.ExpireKeyboard(GetTickCount64());
+    impl_->protocol.ExpireMouse(GetTickCount64());
+    impl_->protocol.ExpireController(GetTickCount64());
+}
+bool Bridge::IsPaused() {
+    if(!impl_) return false;
+    std::lock_guard lock(impl_->mutex);
+    return impl_->protocol.IsPaused();
+}
+bool Bridge::ShouldRunSimTick() {
+    if(!impl_) return true;
+    std::lock_guard lock(impl_->mutex);
+    return impl_->protocol.ShouldRunSimTick();
+}
+void Bridge::NoteSimFrame() {
+    if(!impl_) return;
+    std::lock_guard lock(impl_->mutex);
+    impl_->protocol.NoteSimFrame();
+}
+void Bridge::NotePhysicsTick() {
+    if(!impl_) return;
+    std::lock_guard lock(impl_->mutex);
+    impl_->protocol.NotePhysicsTick();
+}
+void Bridge::RecordPerfSample(const PerfSample& sample) {
+    if(!impl_) return;
+    std::lock_guard lock(impl_->mutex);
+    impl_->protocol.RecordPerfSample(sample);
 }
 
 void Bridge::MaybeExecuteCapture() {

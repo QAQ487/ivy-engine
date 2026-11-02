@@ -679,6 +679,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\testing\runtime_test_bridge.h" />
+    <ClInclude Include="engine\testing\runtime_test_scene_arg.h" />
     <ClInclude Include="engine\testing\controller_inject_protocol.h" />
     <ClInclude Include="engine\testing\controller_probe_trace.h" />
     <ClCompile Include="engine\testing\runtime_test_bridge.cpp" />

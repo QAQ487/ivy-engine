@@ -36,21 +36,33 @@ UTF-8 JSON, one request/response per LF-terminated frame. Request body max **409
 
 Capabilities advertised by `hello` / `status` (as implemented):
 
-`hello`, `status`, `quit`, `keyboard`, `observe`, `capture`, `mouse`, `controller`, `events`, `controller_probe`
+`hello`, `status`, `quit`, `keyboard`, `observe`, `capture`, `mouse`, `controller`, `events`, `controller_probe`, `list_objects`, `pause`, `resume`, `step`, `perf`
 
 ### Common verbs
 
 | Verb | Role |
 | --- | --- |
-| `hello` / `status` | Identity, ready/playing/scene snapshot, input op status, capabilities |
+| `hello` / `status` | Identity, ready/playing/paused/scene snapshot, frame counters, input op status, capabilities. When not ready, `readyDetail` explains `scene_path_empty`, `preload_active`, or `not_playing`. |
 | `quit` | Requests exit; response has `requiresReceipt: true` — client must send a lone LF receipt |
 | `keyboard` | Internal key inject (`keys`, `updates`) |
 | `mouse` | Internal mouse inject (`dx`, `dy`, `buttons`, `updates`, optional `wheel`) |
-| `observe` | Named GameObject position/velocity from the last published snapshot |
+| `observe` | Named GameObject snapshot: legacy `position`/`velocity`, plus `rotation` (Euler degrees), `rotationQuaternion`, `scale`, `angularVelocity`, and `rigidbody.kinematic` when present. Sleeping/contact counts are omitted (not cheaply available). |
+| `list_objects` | Bounded GameObject name + component type list (`offset`, `limit` 1…64, default 32). Response includes `total` and `truncated`. |
+| `pause` / `resume` | Freeze or resume the sim loop. Status reports `paused`, `pendingSteps`, `frame`, `physicsTick`. |
+| `step` | While paused only: queue `frames` 1…600 fixed-timestep update/physics ticks. Input inject and `controller_probe` advance on stepped ticks. Error `not_paused` if running. |
+| `perf` | Stats over the last N frames (ring capacity 600): avg/min/max/p95 for `frameMs`/`updateMs`/`drawMs`/`presentMs` (same stages as the FPS log) plus average FPS. |
 | `capture` | Queued back-buffer PNG under `IVY_RUNTIME_TEST_OUTPUT_DIR` |
 | `events` | Bounded checkpoint event ring (see existing event docs in zh-TW notes) |
 | `controller` | One-at-a-time controller inject (below) |
 | `controller_probe` | Read-only consumer-trace snapshot (below) |
+
+### `--scene` (Debug GAME_RUNTIME + bridge enabled only)
+
+```text
+IvyEngineRuntime.exe --scene rom/scene/scene_runtime_bridge_player.json
+```
+
+Honored only when `IVY_RUNTIME_TEST_BRIDGE=1` (and a valid run id) starts the bridge; otherwise logged and ignored. Path rules: `rom/`-relative, no `..`, no absolute path, `.json` extension, must resolve via the existing `rom/` → `resources/` fallback. On validation/resolve/load failure the runtime logs a clear error and exits non-zero (no silent title-scene fallback). Loaded scene is reported in `hello`/`status` `scene`.
 
 CLI examples:
 
@@ -58,6 +70,12 @@ CLI examples:
 py -3 tools/runtime_test_client.py --pid <PID> --run-id <runId> --request-id 1 hello
 py -3 tools/runtime_test_client.py --pid <PID> --run-id <runId> --request-id 2 status
 py -3 tools/runtime_test_client.py --pid <PID> --run-id <runId> --request-id 3 controller --lx 0 --ly 0 --lt 1 --updates 2
+py -3 tools/runtime_test_client.py --pid <PID> --run-id <runId> --request-id 4 list_objects --offset 0 --limit 32
+py -3 tools/runtime_test_client.py --pid <PID> --run-id <runId> --request-id 5 pause
+py -3 tools/runtime_test_client.py --pid <PID> --run-id <runId> --request-id 6 step --frames 3
+py -3 tools/runtime_test_client.py --pid <PID> --run-id <runId> --request-id 7 observe --target Player
+py -3 tools/runtime_test_client.py --pid <PID> --run-id <runId> --request-id 8 perf --frames 60
+py -3 tools/runtime_test_client.py --pid <PID> --run-id <runId> --request-id 9 resume
 py -3 tools/runtime_test_client.py --pid <PID> --run-id <runId> --request-id 10 controller_probe
 py -3 tools/runtime_test_client.py --pid <PID> --run-id <runId> --request-id 11 quit
 ```
@@ -113,7 +131,9 @@ Assert ops against frames with `sequence > latestSequence` recorded **before** t
 
 ## Isolated fixture
 
-`testbed/rom/scene/scene_runtime_bridge_controller_probe.json` — directional light + ground only (no player scripts). Do **not** change repo `project.json` / default scene; stage a throwaway package and set that copy’s `rom/scene/default_scene.txt`.
+`testbed/rom/scene/scene_runtime_bridge_controller_probe.json` — directional light + ground only (no player scripts). Player/mouse/controller acceptance uses `testbed/rom/scene/scene_runtime_bridge_player.json`. Do **not** change repo `project.json` / default scene; stage a throwaway package (acceptance runners copy the Debug OutDir, write `rom/scene/default_scene.txt`, copy any scene-referenced `rom/` assets still missing from the package — including `testbed/rom/model/player/*` — fail fast if any remain unresolved, and pass `--scene rom/scene/...`).
+
+Without staging/`--scene`, Debug runtime launched from OutDir falls back to in-repo `testbed/` and boots `scene_sample_menu.json` (title UI). Boot also preloads every scene under `rom/scene`, which can keep `ready=false` past a 25s acceptance deadline while the pipe is already up and FPS later appears in logs.
 
 ## How to run checks
 
@@ -121,22 +141,23 @@ Assert ops against frames with `sequence > latestSequence` recorded **before** t
 
 ```bat
 msbuild IvyEngine.sln /t:IvyEngineRuntime /p:Configuration=Debug /p:Platform=x64
-tools\run_runtime_bridge_checks.cmd x64\phase5-probe-check
+tools\run_runtime_bridge_checks.cmd x64\phase6-bridge-check
 ```
 
-Runs protocol/axes/probe validators, in-process controller checks (including consumer assertions), Python unit tests, and Release/Editor compile-out. Optional second argument runs live acceptance runners:
+Runs protocol/axes/probe/phase6 validators, in-process controller checks (including consumer assertions), Python unit tests, and Release/Editor compile-out. Optional second argument runs live acceptance runners:
 
 ```bat
-tools\run_runtime_bridge_checks.cmd x64\phase5-probe-check x64\Debug\IvyEngineRuntime.exe
+tools\run_runtime_bridge_checks.cmd x64\phase6-bridge-check x64\Debug\IvyEngineRuntime.exe
 ```
 
 Expected highlights:
 
+- `PASS Phase 6 observe extensions + list_objects/pause/resume/step/perf protocol`
 - `PASS controller probe validators`
 - `consumer assertions executed: 63`
 - `All controller bridge checks PASSED`
 - `PASS Release compile-out ...` / `PASS Editor compile-out ...`
-- With an exe: probe acceptance `"status": "PASS"`
+- With an exe: mouse/controller/probe acceptance `"status": "PASS"`
 
 ### Standalone consumer-trace runtime acceptance
 

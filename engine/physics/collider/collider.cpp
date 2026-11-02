@@ -284,9 +284,9 @@ static XMFLOAT3 ClosestPointOnOBB_World(const XMFLOAT3& pointWS,
 
     XMFLOAT3 l; XMStoreFloat3(&l, local);
     XMFLOAT3 half{ boxSize.x * 0.5f, boxSize.y * 0.5f, boxSize.z * 0.5f };
-    l.x = max(-half.x, min(half.x, l.x));
-    l.y = max(-half.y, min(half.y, l.y));
-    l.z = max(-half.z, min(half.z, l.z));
+    l.x = std::max(-half.x, std::min(half.x, l.x));
+    l.y = std::max(-half.y, std::min(half.y, l.y));
+    l.z = std::max(-half.z, std::min(half.z, l.z));
 
     XMVECTOR world = XMVector3TransformCoord(XMLoadFloat3(&l), R) + c;
     XMFLOAT3 out; XMStoreFloat3(&out, world);
@@ -310,7 +310,7 @@ static bool SphereOBB_Contact(const XMFLOAT3& sphereCenter,
     float distSq = dx * dx + dy * dy + dz * dz;
     float r = radius;
     if (distSq <= r * r) {
-        float dist = std::sqrt(max(distSq, 1e-12f));
+        float dist = std::sqrt(std::max(distSq, 1e-12f));
         if (dist > 1e-6f) {
             outNormal = { dx / dist, dy / dist, dz / dist };
             outPenetration = r - dist;
@@ -320,7 +320,7 @@ static bool SphereOBB_Contact(const XMFLOAT3& sphereCenter,
             outNormal = { sphereCenter.x - boxCenter.x,
                 sphereCenter.y - boxCenter.y,
                 sphereCenter.z - boxCenter.z };
-            float nlen = std::sqrt(max(outNormal.x * outNormal.x + outNormal.y * outNormal.y + outNormal.z * outNormal.z, 1e-12f));
+            float nlen = std::sqrt(std::max(outNormal.x * outNormal.x + outNormal.y * outNormal.y + outNormal.z * outNormal.z, 1e-12f));
             outNormal.x /= nlen; outNormal.y /= nlen; outNormal.z /= nlen;
             outPenetration = r;
         }
@@ -811,7 +811,7 @@ static void ResolveContact(GameObject* self, GameObject* other,
     // the impulse on rotation and overwrites Integrate, which fights gravity tip.
     const bool doPosition = (static_cast<int>(solve) & static_cast<int>(ContactSolve::Position)) != 0;
     const bool doVelocity = (static_cast<int>(solve) & static_cast<int>(ContactSolve::Velocity)) != 0;
-    float pen = max(0.0f, penetration - slope) * 0.95f;
+    float pen = std::max(0.0f, penetration - slope) * 0.95f;
     if (doPosition && pen > 0.0f && invSum > 0.0f) {
         constexpr float kPosBeta = 0.75f;
         float corr = kPosBeta * pen;
@@ -1175,9 +1175,9 @@ bool BoxCollider::CheckCollision(const Collider* other) const {
 
         XMFLOAT3 local; XMStoreFloat3(&local, vLocal);
         XMFLOAT3 half{ sizeA.x * 0.5f, sizeA.y * 0.5f, sizeA.z * 0.5f };
-        float cx = max(-half.x, min(half.x, local.x));
-        float cy = max(-half.y, min(half.y, local.y));
-        float cz = max(-half.z, min(half.z, local.z));
+        float cx = std::max(-half.x, std::min(half.x, local.x));
+        float cy = std::max(-half.y, std::min(half.y, local.y));
+        float cz = std::max(-half.z, std::min(half.z, local.z));
 
         XMVECTOR closestW = XMVector3TransformCoord(XMVectorSet(cx, cy, cz, 1.0f), rotMatrixA) + vCenterA;
         XMFLOAT3 cw; XMStoreFloat3(&cw, closestW);
@@ -2892,7 +2892,7 @@ bool MeshCollider::TriangleIntersectsSphere(const XMFLOAT3& v0,
         auto closestPointOnSegment = [](XMVECTOR a, XMVECTOR b, XMVECTOR p) {
             XMVECTOR ab = b - a;
             float t = XMVectorGetX(XMVector3Dot(p - a, ab)) / XMVectorGetX(XMVector3Dot(ab, ab));
-            t = max(0.0f, min(1.0f, t));
+            t = std::max(0.0f, std::min(1.0f, t));
             return a + ab * t;
             };
 
@@ -2915,7 +2915,7 @@ bool MeshCollider::TriangleIntersectsSphere(const XMFLOAT3& v0,
     float distSq = XMVectorGetX(XMVector3LengthSq(diff));
 
     if (distSq <= sphereRadius * sphereRadius) {
-        float dist = std::sqrt(max(distSq, 1e-12f));
+        float dist = std::sqrt(std::max(distSq, 1e-12f));
         XMVECTOR n;
 
         auto orientNormalTowardSphere = [&]() {

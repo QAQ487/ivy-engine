@@ -321,7 +321,7 @@ def main():
     p.add_argument("--run-id",required=True)
     p.add_argument("--request-id",type=int,required=True,help="strictly increasing across the run")
     p.add_argument("--timeout",type=float,default=2)
-    p.add_argument("verb",choices=("hello","status","quit","keyboard","observe","capture","mouse","controller","events","controller_probe"))
+    p.add_argument("verb",choices=("hello","status","quit","keyboard","observe","capture","mouse","controller","events","controller_probe","list_objects","pause","resume","step","perf"))
     p.add_argument("--keys",nargs="+")
     p.add_argument("--updates",type=int)
     p.add_argument("--completion-timeout",type=float,default=7)
@@ -336,6 +336,9 @@ def main():
     p.add_argument("--ry",type=float,default=None)
     p.add_argument("--lt",type=float,default=None)
     p.add_argument("--rt",type=float,default=None)
+    p.add_argument("--offset",type=int,default=None)
+    p.add_argument("--limit",type=int,default=None)
+    p.add_argument("--frames",type=int,default=None)
     a=p.parse_args()
     if a.verb=="keyboard" and (a.keys is None or a.updates is None): p.error("keyboard requires --keys and --updates")
     if a.verb!="keyboard" and (a.keys is not None): p.error("keys payload requires keyboard verb")
@@ -345,6 +348,12 @@ def main():
     if a.verb!="controller" and (a.lx is not None or a.ly is not None or a.rx is not None or a.ry is not None or a.lt is not None or a.rt is not None):
         p.error("lx/ly/rx/ry/lt/rt payload requires controller verb")
     if a.verb=="observe" and not a.target: p.error("observe requires --target")
+    if a.verb=="step" and a.frames is None: p.error("step requires --frames")
+    if a.verb=="perf" and a.frames is None: p.error("perf requires --frames")
+    if a.verb!="list_objects" and (a.offset is not None or a.limit is not None):
+        p.error("offset/limit require list_objects")
+    if a.verb not in ("step","perf") and a.frames is not None:
+        p.error("frames requires step or perf")
     try:
         with Client(a.pid,a.run_id,a.timeout) as c:
             if a.verb=="keyboard":
@@ -361,6 +370,13 @@ def main():
                 r=c.events(a.request_id)
             elif a.verb=="controller_probe":
                 r=c.controller_probe(a.request_id)
+            elif a.verb=="list_objects":
+                payload={}
+                if a.offset is not None: payload["offset"]=a.offset
+                if a.limit is not None: payload["limit"]=a.limit
+                r=c.request(a.verb,a.request_id,payload or None)
+            elif a.verb in ("step","perf"):
+                r=c.request(a.verb,a.request_id,{"frames":a.frames})
             else:
                 r=c.request(a.verb,a.request_id)
         print(json.dumps(r,ensure_ascii=False))

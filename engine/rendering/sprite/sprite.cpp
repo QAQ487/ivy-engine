@@ -315,10 +315,10 @@ void Sprite_DrawRadialFill(int texid, float X, float Y, float width, float heigh
 		float tTop = (dy < 0.0f) ? (-halfH / dy) : FLT_MAX;
 
 		float tMin = FLT_MAX;
-		if (tRight > 0.0f) tMin = min(tMin, tRight);
-		if (tLeft > 0.0f) tMin = min(tMin, tLeft);
-		if (tBottom > 0.0f) tMin = min(tMin, tBottom);
-		if (tTop > 0.0f) tMin = min(tMin, tTop);
+		if (tRight > 0.0f) tMin = std::min(tMin, tRight);
+		if (tLeft > 0.0f) tMin = std::min(tMin, tLeft);
+		if (tBottom > 0.0f) tMin = std::min(tMin, tBottom);
+		if (tTop > 0.0f) tMin = std::min(tMin, tTop);
 
 		// Calculate local pos and clamp
 		float localX = dx * tMin;

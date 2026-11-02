@@ -1,7 +1,9 @@
 """Unit tests and pure validation helpers check for mouse runtime acceptance."""
 import hashlib
+import json
 import os
 import pathlib
+import shutil
 import struct
 import subprocess
 import sys
@@ -198,6 +200,65 @@ class MouseAcceptancePureValidationTests(unittest.TestCase):
                 text=True,
             )
             self.assertNotEqual(res.returncode, 0)
+
+    def test_collect_fixture_rom_paths_from_player_scene(self):
+        scene = json.loads(runner.DEFAULT_FIXTURE.read_text(encoding="utf-8"))
+        paths = runner.collect_fixture_rom_paths(scene)
+        self.assertIn("rom/model/player/Y Bot_white.fbx", paths)
+        self.assertIn("rom/model/player/Idle.fbx", paths)
+        self.assertIn("rom/model/player/Running.fbx", paths)
+        self.assertIn("rom/model/player/Jump01.fbx", paths)
+        self.assertIn("rom/model/object/Box_Brown.fbx", paths)
+        self.assertIn("rom/model/object/Box_Blue.fbx", paths)
+        self.assertIn("rom/skybox/MySkybox.dds", paths)
+        self.assertIn("rom/texture/consolab_ascii_512.png", paths)
+
+    def test_stage_fixture_copies_player_models_and_fails_on_missing(self):
+        with tempfile.TemporaryDirectory() as td:
+            temp_dir = pathlib.Path(td)
+            out_dir = temp_dir / "out"
+            out_dir.mkdir()
+            exe_dir = temp_dir / "Debug"
+            exe_dir.mkdir()
+            exe = exe_dir / "IvyEngineRuntime.exe"
+            exe.write_bytes(b"MZ\x00\x00")
+            # Simulate OutDir that already has resources/ but not testbed player FBX.
+            (exe_dir / "resources" / "skybox").mkdir(parents=True)
+            (exe_dir / "resources" / "skybox" / "MySkybox.dds").write_bytes(b"DDS")
+            (exe_dir / "resources" / "texture").mkdir(parents=True)
+            (exe_dir / "resources" / "texture" / "consolab_ascii_512.png").write_bytes(b"PNG")
+
+            staged_exe, package = runner.stage_fixture_package(exe, out_dir, runner.DEFAULT_FIXTURE)
+            self.assertEqual(staged_exe, package / exe.name)
+            for rel in (
+                "rom/model/player/Y Bot_white.fbx",
+                "rom/model/player/Idle.fbx",
+                "rom/model/player/Running.fbx",
+                "rom/model/player/Jump01.fbx",
+                "rom/model/object/Box_Brown.fbx",
+                "rom/model/object/Box_Blue.fbx",
+            ):
+                self.assertTrue((package / rel).is_file(), "expected staged %s" % rel)
+                self.assertTrue(runner.fixture_asset_readable(package, rel))
+
+            # Skybox/texture may stay on the resources/ fallback without a rom/ copy.
+            self.assertTrue(runner.fixture_asset_readable(package, "rom/skybox/MySkybox.dds"))
+            self.assertTrue(runner.fixture_asset_readable(package, "rom/texture/consolab_ascii_512.png"))
+
+            broken = {
+                "nodes": [{"components": {"visual": {"model": "rom/model/player/Missing.fbx"}}}],
+                "settings": {"render": {"skyboxCubemap": "rom/skybox/NoSuch.dds"}},
+            }
+            broken_scene = temp_dir / "broken.json"
+            broken_scene.write_text(json.dumps(broken), encoding="utf-8")
+            empty_pkg = temp_dir / "empty_pkg"
+            empty_pkg.mkdir()
+            with self.assertRaises(SystemExit) as raised:
+                runner.stage_fixture_scene_assets(empty_pkg, broken_scene, repo_root=temp_dir)
+            message = str(raised.exception)
+            self.assertIn("fixture scene references missing assets", message)
+            self.assertIn("rom/model/player/Missing.fbx", message)
+            self.assertIn("rom/skybox/NoSuch.dds", message)
 
 
 if __name__ == "__main__":
