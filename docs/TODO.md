@@ -32,7 +32,11 @@
   - 覆蓋：剛好 2:1 行為同舊版（face=`height/2` 必須係 2 的冪）。`height ≤ width/2` 用垂直覆蓋 `360*height/width`（或可選 `skyboxVerticalFov`，(0,180]，0=auto）置中地平線，帶外 clamp 到頂／底行。`height > width/2`、解唔開、路徑唔安全會寫 `content_hot_reload.log` 同顯示 **Panorama failed**，唔會淨係 clear color。非 2:1 的 face 係 ≤`width/4` 的最大 2 的冪。最大 8192×4096（face 2048）。經度係 Debevec lat-long：圖像中心係 +Z，頂向 +Y，u 向右去 +X。面序同 `tools/bake_ibl.py`／texassemble：+X −X +Y −Y +Z −Z。
   - IBL：panorama 會重烤 irradiance（32）同 prefilter（128、5 mip，每面自己的 mip chain，BGRA8，同 `bake_ibl.py`）。`brdf_lut.png` 唔重做。烤唔到或 LUT 缺失就 log，editor Rendering Settings 顯示「IBL not matching sky」，唔會靜默沿用舊 `rom/skybox/ibl/`。DDS 天空仍然用場景自己的 IBL 路徑。
   - 部署：editor 打包前先烤場景 JSON 入面的 panorama，包內帶 cache DDS。Runtime 只喺 stamp 唔夾（缺檔、mtime、內容或 FOV 變）先至自己烤，寫入包裝的 `rom/`。`deploy.bat` 唔會主動烤，只係抄已有的 `rom/`；缺 cache 就等 runtime。
-  - 驗收場景：`testbed/rom/scene/scene_panorama_sky.json` 用 `testbed/rom/skybox/panorama_test.png`（64×32，約 157 bytes）。Linux `tests/equirect_cubemap_test.cpp`（`g++ -std=c++20`）PASS。Windows editor、打包 runtime、畫面同 PBR 反射未跑。
+  - 驗收場景：`testbed/rom/scene/scene_panorama_sky.json` 用 `testbed/rom/skybox/panorama_test.png`（64×32，約 157 bytes）。Linux `tests/equirect_cubemap_test.cpp`（`g++ -std=c++20`）PASS。Terry 喺 2026-11-01 接受咗 PR #11（合併 `5965b8a`）嘅 Windows runtime：editor 畫面、PBR 反射、打包 runtime、非 2:1 panorama、拖放同右鍵 Set as > Skybox。
+- [x] **Scene／prefab JSON float 三位同選取唔 dirty**（Terry 喺 2026-11-02 接受 PR #12 Windows runtime；合併 `429d57c`）
+  - Scene／prefab JSON 浮點經 `engine/scene/json_float.h` 最多存三位小數：去尾零、`-0` → `0`、NaN／Inf → `null`。
+  - 選物件唔再標 dirty：Inspect 唔再 `EnsureVisualComponent` 自動加 Visual；gizmo 淨係 translate 唔再改寫 rotation／scale；dirty／undo 以三位小數比較。
+  - 留意：fog density UI 用 `%.4f`、UV scroll `< 0.001` 可能失精。
 
 
 ## AI 系統套件（source audit：引擎內全部 missing）
@@ -86,9 +90,8 @@ PBR 球場已由引擎待辦移除：倉庫只有 PBR shader 同 `testbed/rom/sc
 
 1. ImGuizmo 參數順序同 PR #7 視覺檢查（lighting、CSM、post-process、gizmo）一齊喺 Windows 做。
 2. Content reload 紅燈（刪未引用資產）。
-3. Skybox panorama（source 已做：equirect PNG → cache DDS，含 IBL 重烤）。Windows 畫面同打包 runtime 未驗收。
-4. 重做 Properties Panel／Inspector（先有 UI 草案；現有編輯同 Undo 要保住）。
-5. AI 套件：Waypoint → Perception → BT／Blackboard → EQS。NavMesh 繼續暫緩。
+3. 重做 Properties Panel／Inspector（先有 UI 草案；現有編輯同 Undo 要保住）。
+4. AI 套件：Waypoint → Perception → BT／Blackboard → EQS。NavMesh 繼續暫緩。
 
 Box friction torque 同 World-space UI 未排入上面次序：前者只有想箱子傾側先做；後者驗收仍待設計。
 
