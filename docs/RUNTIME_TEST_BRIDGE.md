@@ -131,7 +131,7 @@ Assert ops against frames with `sequence > latestSequence` recorded **before** t
 
 ## Isolated fixture
 
-`testbed/rom/scene/scene_runtime_bridge_controller_probe.json` — directional light + ground only (no player scripts). Player/mouse/controller acceptance uses `testbed/rom/scene/scene_runtime_bridge_player.json`. Do **not** change repo `project.json` / default scene; stage a throwaway package (acceptance runners copy the Debug OutDir, write `rom/scene/default_scene.txt`, and pass `--scene rom/scene/...`).
+`testbed/rom/scene/scene_runtime_bridge_controller_probe.json` — directional light + ground only (no player scripts). Player/mouse/controller acceptance uses `testbed/rom/scene/scene_runtime_bridge_player.json`. Do **not** change repo `project.json` / default scene; stage a throwaway package (acceptance runners copy the Debug OutDir, write `rom/scene/default_scene.txt`, copy any scene-referenced `rom/` assets still missing from the package — including `testbed/rom/model/player/*` — fail fast if any remain unresolved, and pass `--scene rom/scene/...`).
 
 Without staging/`--scene`, Debug runtime launched from OutDir falls back to in-repo `testbed/` and boots `scene_sample_menu.json` (title UI). Boot also preloads every scene under `rom/scene`, which can keep `ready=false` past a 25s acceptance deadline while the pipe is already up and FPS later appears in logs.
 

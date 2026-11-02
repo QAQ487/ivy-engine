@@ -37,7 +37,8 @@ ENV_CLEAR = (
     "IVY_SKIP_CLOSE_CONFIRM",
 )
 
-DEFAULT_FIXTURE = HERE.parent / "testbed" / "rom" / "scene" / "scene_runtime_bridge_player.json"
+REPO_ROOT = HERE.parent
+DEFAULT_FIXTURE = REPO_ROOT / "testbed" / "rom" / "scene" / "scene_runtime_bridge_player.json"
 EXPECTED_SCENE = "scene_runtime_bridge_player.json"
 SCENE_ARG = "rom/scene/scene_runtime_bridge_player.json"
 
@@ -140,6 +141,69 @@ def validate_frame_hashes(sha_before, sha_forward, sha_reverse):
     return (sha_before != sha_forward) and (sha_forward != sha_reverse)
 
 
+def collect_fixture_rom_paths(scene_data):
+    """Collect unique rom/... asset path strings referenced by a scene JSON tree."""
+    found = set()
+
+    def walk(node):
+        if isinstance(node, dict):
+            for value in node.values():
+                walk(value)
+        elif isinstance(node, list):
+            for value in node:
+                walk(value)
+        elif isinstance(node, str):
+            normalized = node.replace("\\", "/")
+            if normalized.startswith("rom/") and ".." not in normalized.split("/"):
+                found.add(normalized)
+
+    walk(scene_data)
+    return sorted(found)
+
+
+def fixture_asset_readable(package, rom_path):
+    """True when package resolves rom/... via rom/ or resources/ (content_path fallback)."""
+    normalized = rom_path.replace("\\", "/")
+    if (package / pathlib.Path(normalized)).is_file():
+        return True
+    if normalized.startswith("rom/"):
+        return (package / "resources" / normalized[4:]).is_file()
+    return False
+
+
+def resolve_repo_asset(rom_path, repo_root=None):
+    """Locate a rom/... asset under testbed/rom, rom/, or resources/ in the repo."""
+    root = pathlib.Path(repo_root) if repo_root is not None else REPO_ROOT
+    normalized = rom_path.replace("\\", "/")
+    candidates = [root / "testbed" / normalized, root / normalized]
+    if normalized.startswith("rom/"):
+        candidates.append(root / "resources" / normalized[4:])
+    for candidate in candidates:
+        if candidate.is_file():
+            return candidate
+    return None
+
+
+def stage_fixture_scene_assets(package, fixture_src, repo_root=None):
+    """Copy scene-referenced assets into the fixture; fail fast listing any still missing."""
+    scene_data = json.loads(pathlib.Path(fixture_src).read_text(encoding="utf-8"))
+    missing = []
+    for rom_path in collect_fixture_rom_paths(scene_data):
+        if fixture_asset_readable(package, rom_path):
+            continue
+        src = resolve_repo_asset(rom_path, repo_root=repo_root)
+        if src is None:
+            missing.append(rom_path)
+            continue
+        dest = package / pathlib.Path(rom_path)
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(src, dest)
+    if missing:
+        raise SystemExit(
+            "fixture scene references missing assets:\n  %s" % "\n  ".join(missing)
+        )
+
+
 def stage_fixture_package(exe, out_dir, fixture_scene):
     """Copy the Debug runtime tree and pin the player bridge fixture via default_scene + --scene."""
     exe = pathlib.Path(exe).resolve()
@@ -158,6 +222,7 @@ def stage_fixture_package(exe, out_dir, fixture_scene):
     shutil.copy2(fixture_src, rom_scene / EXPECTED_SCENE)
     (rom_scene / "default_scene.txt").write_text(EXPECTED_SCENE + "\n", encoding="ascii")
     (package / "rom" / "skip_boot_preload").write_text("", encoding="ascii")
+    stage_fixture_scene_assets(package, fixture_src)
     return staged_exe, package
 
 
