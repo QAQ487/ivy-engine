@@ -16,8 +16,11 @@ static void check(bool b, const char* label) {
     if (!b) { std::cerr << "FAIL " << label << std::endl; std::exit(1); }
 }
 
+static Json baseFor(const char* runId, std::int64_t id, const char* verb) {
+    return Json{{"protocolVersion",1},{"requestId",id},{"runId",runId},{"verb",verb}};
+}
 static Json base(std::int64_t id, const char* verb) {
-    return Json{{"protocolVersion",1},{"requestId",id},{"runId","world"},{"verb",verb}};
+    return baseFor("world", id, verb);
 }
 
 int main() {
@@ -136,12 +139,20 @@ int main() {
     unknownKey["force"] = Json::array({1.0, 0.0, 0.0});
     check(p.Request(unknownKey.dump()).value("error","") == "invalid_request", "apply_impulse rejects unknown keys");
 
+    // Match list_objects/capture/pause: world verbs need ready+playing. Cold
+    // Protocol runId must match the request (else run_mismatch masks not_ready).
     Protocol cold("cold", 1, 1);
-    auto notReady = cold.Request(base(1, "set_transform").dump());
-    // missing object -> invalid before not_ready? size check: verb only has 4 keys without object -> invalid_request
-    check(notReady.value("error","") == "invalid_request", "set_transform without object invalid");
-    auto nr = base(2, "reset_scene");
+    auto missingObject = baseFor("cold", 1, "set_transform");
+    check(cold.Request(missingObject.dump()).value("error","") == "invalid_request",
+        "set_transform without object invalid");
+    auto nr = baseFor("cold", 2, "reset_scene");
     check(cold.Request(nr.dump()).value("error","") == "not_ready", "reset_scene not_ready when cold");
+    cold.Publish(true, false, "fixture");
+    auto notPlaying = baseFor("cold", 3, "apply_impulse");
+    notPlaying["object"] = "DynamicBox";
+    notPlaying["impulse"] = Json::array({1.0, 0.0, 0.0});
+    check(cold.Request(notPlaying.dump()).value("error","") == "not_ready",
+        "apply_impulse not_ready when not playing");
 
     std::cout << "PASS world manip reset_scene/set_transform/set_velocity/impulse protocol\n";
     return 0;

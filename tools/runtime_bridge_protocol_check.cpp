@@ -15,6 +15,7 @@
 using namespace ivy::testing;
 void check(bool b, const char* message) { if (!b) { std::cerr << "FAIL " << message << std::endl; std::exit(1); } }
 int main(int argc, char** argv) {
+#ifdef _WIN32
     if(argc>1) {
         KeyLogger_Initialize();
         Controller_Initialize();
@@ -37,6 +38,9 @@ int main(int argc, char** argv) {
         server.Stop();
         return cancel ? 0 : 2;
     }
+#else
+    (void)argc; (void)argv;
+#endif
     check(RemainingFrameTimeout(2000, 1999) == 1, "one millisecond remains");
     check(RemainingFrameTimeout(2000, 2000) == 0, "deadline reached");
     check(RemainingFrameTimeout(2000, 2001) == 0, "expired deadline never wraps to INFINITE");
@@ -116,6 +120,7 @@ int main(int argc, char** argv) {
     check(r.value("error", "") == "queue_full", "bounded one quit slot");
     p.ConfirmQuitReceipt();
     check(p.TakeQuit() && !p.TakeQuit(), "exactly one main-thread quit");
+#ifdef _WIN32
     Bridge bridge;
     SetEnvironmentVariableA("IVY_RUNTIME_TEST_BRIDGE", nullptr);
     check(!bridge.StartFromEnvironment(), "off has no worker/endpoint");
@@ -139,4 +144,7 @@ int main(int argc, char** argv) {
     bridge.Stop();
     check(GetTickCount64()-start < 1000, "cancel and join with no peer");
     std::cout << "PASS protocol validation/snapshot/quit-slot + opt-in/no-peer cancellation\n";
+#else
+    std::cout << "PASS protocol validation/snapshot/quit-slot (pipe transport checks skipped on non-Windows)\n";
+#endif
 }
