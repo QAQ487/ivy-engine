@@ -589,6 +589,9 @@
     <ClCompile Include="src\app\main.cpp">
       <Filter>src\app</Filter>
     </ClCompile>
+    <ClCompile Include="src\app\runtime_test_world_apply.cpp">
+      <Filter>src\app</Filter>
+    </ClCompile>
     <ClCompile Include="src\app\rendering\fade.cpp">
       <Filter>src\app\rendering</Filter>
     </ClCompile>
@@ -682,6 +685,7 @@
     <ClInclude Include="engine\testing\runtime_test_scene_arg.h" />
     <ClInclude Include="engine\testing\controller_inject_protocol.h" />
     <ClInclude Include="engine\testing\controller_probe_trace.h" />
+    <ClInclude Include="src\app\runtime_test_world_apply.h" />
     <ClCompile Include="engine\testing\runtime_test_bridge.cpp" />
   </ItemGroup>
   <ItemGroup>

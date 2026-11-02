@@ -94,6 +94,43 @@ bool RuntimeTestSceneOverride_Has();
 const std::string& RuntimeTestSceneOverride_Get();
 void RuntimeTestSceneOverride_Clear();
 
+// Queued world-manipulation op (validated on the pipe worker; applied on WinMain).
+enum class WorldOpKind {
+    ResetScene,
+    SetTransform,
+    SetVelocity,
+    ApplyImpulse,
+    ApplyTorqueImpulse,
+};
+
+struct WorldOpRequest {
+    WorldOpKind kind = WorldOpKind::ResetScene;
+    std::int64_t requestId = 0;
+    std::string object;     // GameObject name (same as list_objects/observe)
+    std::string scenePath;  // reset_scene optional rom/...json
+    bool hasPosition = false;
+    float posX = 0.0f, posY = 0.0f, posZ = 0.0f;
+    bool hasRotationEuler = false;
+    float rotX = 0.0f, rotY = 0.0f, rotZ = 0.0f;
+    bool hasRotationQuat = false;
+    float quatX = 0.0f, quatY = 0.0f, quatZ = 0.0f, quatW = 1.0f;
+    bool hasScale = false;
+    float scaleX = 1.0f, scaleY = 1.0f, scaleZ = 1.0f;
+    bool zeroVelocity = true;
+    bool hasLinear = false;
+    float linX = 0.0f, linY = 0.0f, linZ = 0.0f;
+    bool hasAngular = false;
+    float angX = 0.0f, angY = 0.0f, angZ = 0.0f;
+    bool hasImpulse = false;
+    float impX = 0.0f, impY = 0.0f, impZ = 0.0f;
+    bool hasPoint = false;
+    float pointX = 0.0f, pointY = 0.0f, pointZ = 0.0f;
+    bool hasTorqueImpulse = false;
+    float torX = 0.0f, torY = 0.0f, torZ = 0.0f;
+};
+
+using WorldOpHandler = bool(*)(const WorldOpRequest& op, std::string& errorOut);
+
 class Protocol {
 public:
     Protocol(std::string runId, unsigned long pid, unsigned long session);
@@ -126,6 +163,9 @@ public:
 
     bool HasPendingCapture(std::int64_t& outId) const;
     void CompleteCapture(std::int64_t id, bool ok, uint32_t w, uint32_t h, const std::string& basename, const std::string& err);
+    bool HasPendingWorldOp(WorldOpRequest& out) const;
+    void CompleteWorldOp(std::int64_t id, bool ok, const std::string& err);
+    void CancelWorldOp();
     const std::string& RunId() const { return runId_; }
 
     bool IsPaused() const { return paused_; }
@@ -181,6 +221,14 @@ private:
         std::string error;
     } captureState_;
 
+    struct WorldOpState {
+        enum class Status { Idle, Queued, Completed, Failed };
+        Status status = Status::Idle;
+        WorldOpRequest request;
+        std::string error;
+        const char* VerbName() const;
+    } worldOp_;
+
     bool paused_ = false;
     int pendingStepFrames_ = 0;
     std::uint64_t frameCounter_ = 0;
@@ -199,6 +247,7 @@ public:
     bool StartFromEnvironment();
     void Stop();
     void SetCaptureHandler(CaptureHandler handler);
+    void SetWorldOpHandler(WorldOpHandler handler);
     bool PublishAndTakeQuit(bool ready, bool playing, const std::string& scene,
         std::vector<ObservedTarget> targets = {},
         std::vector<ListedObject> objects = {},
@@ -207,6 +256,7 @@ public:
     void FinishInputUpdate();
     void ExpireInputDeadlines();
     void MaybeExecuteCapture();
+    void MaybeApplyWorldOps();
     bool IsPaused();
     bool ShouldRunSimTick();
     void NoteSimFrame();

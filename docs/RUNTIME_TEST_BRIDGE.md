@@ -36,14 +36,14 @@ UTF-8 JSON, one request/response per LF-terminated frame. Request body max **409
 
 Capabilities advertised by `hello` / `status` (as implemented):
 
-`hello`, `status`, `quit`, `keyboard`, `observe`, `capture`, `mouse`, `controller`, `events`, `controller_probe`, `list_objects`, `pause`, `resume`, `step`, `perf`
+`hello`, `status`, `quit`, `keyboard`, `observe`, `capture`, `mouse`, `controller`, `events`, `controller_probe`, `list_objects`, `pause`, `resume`, `step`, `perf`, `reset_scene`, `set_transform`, `set_velocity`, `apply_impulse`, `apply_torque_impulse`
 
 ### Common verbs
 
 | Verb | Role |
 | --- | --- |
 | `hello` / `status` | Identity, ready/playing/paused/scene snapshot, frame counters, input op status, capabilities. When not ready, `readyDetail` explains `scene_path_empty`, `preload_active`, or `not_playing`. |
-| `quit` | Requests exit; response has `requiresReceipt: true` — client must send a lone LF receipt |
+| `quit` | Requests exit; response has `requiresReceipt: true` — client must send a lone LF receipt. Accepted while paused; the host drains exit without waiting for a sim tick. |
 | `keyboard` | Internal key inject (`keys`, `updates`) |
 | `mouse` | Internal mouse inject (`dx`, `dy`, `buttons`, `updates`, optional `wheel`) |
 | `observe` | Named GameObject snapshot: legacy `position`/`velocity`, plus `rotation` (Euler degrees), `rotationQuaternion`, `scale`, `angularVelocity`, and `rigidbody.kinematic` when present. Sleeping/contact counts are omitted (not cheaply available). |
@@ -51,6 +51,11 @@ Capabilities advertised by `hello` / `status` (as implemented):
 | `pause` / `resume` | Freeze or resume the sim loop. Status reports `paused`, `pendingSteps`, `frame`, `physicsTick`. |
 | `step` | While paused only: queue `frames` 1…600 fixed-timestep update/physics ticks. Input inject and `controller_probe` advance on stepped ticks. Error `not_paused` if running. |
 | `perf` | Stats over the last N frames (ring capacity 600): avg/min/max/p95 for `frameMs`/`updateMs`/`drawMs`/`presentMs` (same stages as the FPS log) plus average FPS. |
+| `reset_scene` | Reload the current scene (or optional validated `scene` `rom/...json`) to its initial state. Queued like `capture`; `status.worldOp` reports completion. |
+| `set_transform` | Teleport a named object (`object` matches `list_objects`/`observe` names). Optional `position`/`rotation` (euler deg length 3 or quaternion length 4)/`scale` as finite arrays; optional `zeroVelocity` (default true) clears rigidbody velocities/forces after syncing `m_previousPosition`. |
+| `set_velocity` | Set dynamic rigidbody `linear` and/or `angular` velocity arrays. Error `not_dynamic` for kinematic/static/missing body. |
+| `apply_impulse` | Apply a linear `impulse` array to a dynamic body; optional world-space `point` uses force-at-position. Error `not_dynamic` / `unknown_object`. |
+| `apply_torque_impulse` | Apply `torqueImpulse` array to a dynamic body. |
 | `capture` | Queued back-buffer PNG under `IVY_RUNTIME_TEST_OUTPUT_DIR` |
 | `events` | Bounded checkpoint event ring (see existing event docs in zh-TW notes) |
 | `controller` | One-at-a-time controller inject (below) |
@@ -77,10 +82,23 @@ py -3 tools/runtime_test_client.py --pid <PID> --run-id <runId> --request-id 7 o
 py -3 tools/runtime_test_client.py --pid <PID> --run-id <runId> --request-id 8 perf --frames 60
 py -3 tools/runtime_test_client.py --pid <PID> --run-id <runId> --request-id 9 resume
 py -3 tools/runtime_test_client.py --pid <PID> --run-id <runId> --request-id 10 controller_probe
-py -3 tools/runtime_test_client.py --pid <PID> --run-id <runId> --request-id 11 quit
+py -3 tools/runtime_test_client.py --pid <PID> --run-id <runId> --request-id 11 pause
+py -3 tools/runtime_test_client.py --pid <PID> --run-id <runId> --request-id 12 set_transform --object DynamicBox --position 3 2 0
+py -3 tools/runtime_test_client.py --pid <PID> --run-id <runId> --request-id 13 apply_impulse --object DynamicBox --impulse 8 0 0
+py -3 tools/runtime_test_client.py --pid <PID> --run-id <runId> --request-id 14 step --frames 10
+py -3 tools/runtime_test_client.py --pid <PID> --run-id <runId> --request-id 15 reset_scene
+py -3 tools/runtime_test_client.py --pid <PID> --run-id <runId> --request-id 16 quit
 ```
 
-`Client.controller(...)` polls `status` until the controller op completes or is cancelled; the outer `requestId` on the final poll is **not** necessarily `startId + 1`. Always continue from the last returned id.
+`Client.controller(...)` polls `status` until the controller op completes or is cancelled; the outer `requestId` on the final poll is **not** necessarily `startId + 1`. Always continue from the last returned id. World-manipulation helpers (`reset_scene`, `set_transform`, `set_velocity`, `apply_impulse`, `apply_torque_impulse`) likewise poll `status.worldOp` until `completed` / `failed`.
+
+### World manipulation notes
+
+- Object addressing uses the same GameObject **name** strings as `list_objects` / `observe` (field name: `object`). Unknown names fail the queued op with `unknown_object`.
+- Impulses / velocity writes require a **dynamic** rigidbody (`Rigidbody` component, non-kinematic, mass > 0). Kinematic/static bodies fail with `not_dynamic`.
+- Works with `pause` / `step` for deterministic tests: `pause` → `set_transform` → `apply_impulse` → `step N` → `observe`.
+- Continuous `apply_force` / `apply_torque` held for N frames are **not** implemented (would need a multi-frame queue like keyboard inject); use impulses or `set_velocity` instead.
+- Fixture: `testbed/rom/scene/scene_runtime_bridge_world_manip.json` (`DynamicBox` + `Ground`).
 
 ## Controller injection (`controller`)
 
@@ -131,11 +149,19 @@ Assert ops against frames with `sequence > latestSequence` recorded **before** t
 
 ## Isolated fixture
 
-`testbed/rom/scene/scene_runtime_bridge_controller_probe.json` — directional light + ground only (no player scripts). Player/mouse/controller acceptance uses `testbed/rom/scene/scene_runtime_bridge_player.json`. Do **not** change repo `project.json` / default scene; stage a throwaway package (acceptance runners copy the Debug OutDir, write `rom/scene/default_scene.txt`, copy any scene-referenced `rom/` assets still missing from the package — including `testbed/rom/model/player/*` — fail fast if any remain unresolved, and pass `--scene rom/scene/...`).
+`testbed/rom/scene/scene_runtime_bridge_controller_probe.json` — directional light + ground only (no player scripts). Player/mouse/controller acceptance uses `testbed/rom/scene/scene_runtime_bridge_player.json`. World-manip acceptance uses `testbed/rom/scene/scene_runtime_bridge_world_manip.json` (`DynamicBox`). Do **not** change repo `project.json` / default scene; stage a throwaway package (acceptance runners copy the Debug OutDir, write `rom/scene/default_scene.txt`, copy any scene-referenced `rom/` assets still missing from the package — including `testbed/rom/model/player/*` — fail fast if any remain unresolved, and pass `--scene rom/scene/...`).
 
 Without staging/`--scene`, Debug runtime launched from OutDir falls back to in-repo `testbed/` and boots `scene_sample_menu.json` (title UI). Boot also preloads every scene under `rom/scene`, which can keep `ready=false` past a 25s acceptance deadline while the pipe is already up and FPS later appears in logs.
 
 ## How to run checks
+
+### Linux offline protocol checks (no named pipes)
+
+```bash
+tools/run_runtime_bridge_offline_linux.sh x64/linux-bridge-offline
+```
+
+Compiles and runs `runtime_bridge_protocol_check`, `runtime_bridge_phase6_check`, and `runtime_bridge_world_manip_check` with Win32/input stubs (`tools/linux_win32_shim/`). Pipe DACL / `--serve` transport checks remain Windows-only.
 
 ### Batch harness (MSVC x64)
 
@@ -153,11 +179,12 @@ tools\run_runtime_bridge_checks.cmd x64\phase6-bridge-check x64\Debug\IvyEngineR
 Expected highlights:
 
 - `PASS Phase 6 observe extensions + list_objects/pause/resume/step/perf protocol`
+- `PASS world manip reset_scene/set_transform/set_velocity/impulse protocol`
 - `PASS controller probe validators`
 - `consumer assertions executed: 63`
 - `All controller bridge checks PASSED`
 - `PASS Release compile-out ...` / `PASS Editor compile-out ...`
-- With an exe: mouse/controller/probe acceptance `"status": "PASS"`
+- With an exe: mouse/controller/probe/world-manip acceptance `"status": "PASS"`
 
 ### Standalone consumer-trace runtime acceptance
 

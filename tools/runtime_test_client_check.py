@@ -192,6 +192,23 @@ class ClientChecks(unittest.TestCase):
         with self.assertRaises(ValueError): c.observe("x"*65, 1)
         with self.assertRaises(ValueError): c.observe(123, 1)
 
+    def test_world_manip_client_validation(self):
+        c=Client.__new__(Client)
+        with self.assertRaises(ValueError): c.reset_scene(1, scene="../rom/scene/x.json")
+        with self.assertRaises(ValueError): c.reset_scene(1, scene="rom/scene/x.txt")
+        with self.assertRaises(ValueError): c.set_transform("", 1, position=[0, 0, 0])
+        with self.assertRaises(ValueError): c.set_transform("Box", 1)
+        with self.assertRaises(ValueError): c.set_transform("Box", 1, position=[1, 2])
+        with self.assertRaises(ValueError): c.set_transform("Box", 1, position=[1, 2, float("nan")])
+        with self.assertRaises(ValueError): c.set_transform("Box", 1, position=[1, 2, 3], zero_velocity="yes")
+        with self.assertRaises(ValueError): c.set_transform("Box", 1, rotation=[0, 0, 0, 0])
+        with self.assertRaises(ValueError): c.set_velocity("Box", 1)
+        with self.assertRaises(ValueError): c.set_velocity("Box!", 1, linear=[1, 0, 0])
+        with self.assertRaises(ValueError): c.apply_impulse("Box", [1, 0], 1)
+        with self.assertRaises(ValueError): c.apply_impulse("Box", [1, 0, 0], 1, point=[0, 1])
+        with self.assertRaises(ValueError): c.apply_torque_impulse("Box", [0, 1], 1)
+        with self.assertRaises(ValueError): c.apply_impulse("Box", [1, 0, 0], 2147483647)
+
     def test_mouse_client_validation(self):
         c=Client.__new__(Client)
         for bad_dx in (-601, 601, "0", 1.5, True):

@@ -1,0 +1,199 @@
+{
+    "canvas": {
+        "elements": [
+            {
+                "alignment": "LEFT",
+                "anchor": "TOP_LEFT",
+                "characterSpacing": 18.0,
+                "color": {
+                    "a": 0.8999999761581421,
+                    "b": 1.0,
+                    "g": 1.0,
+                    "r": 1.0
+                },
+                "font": {
+                    "charHeight": 32.0,
+                    "charWidth": 32.0,
+                    "charsPerRow": 16,
+                    "texture": "rom/texture/consolab_ascii_512.png"
+                },
+                "fontSize": 1.0,
+                "name": "Hint",
+                "position": {
+                    "x": 24.0,
+                    "y": 24.0
+                },
+                "text": "Runtime Bridge World Manip Fixture",
+                "type": "text",
+                "visible": true
+            }
+        ],
+        "name": "scene"
+    },
+    "nodes": [
+        {
+            "children": [],
+            "components": {
+                "DirectionalLight": {
+                    "castShadows": true,
+                    "color": [
+                        1.0,
+                        0.9700000286102295,
+                        0.9200000166893005
+                    ],
+                    "enabled": true,
+                    "intensity": 1.100000023841858,
+                    "specColor": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ],
+                    "specPower": 32.0
+                },
+                "SceneTransform": {
+                    "posX": 0.0,
+                    "posY": 10.0,
+                    "posZ": 0.0,
+                    "rotX": 45.0,
+                    "rotY": -30.0,
+                    "rotZ": 0.0,
+                    "scaleX": 1.0,
+                    "scaleY": 1.0,
+                    "scaleZ": 1.0
+                }
+            },
+            "name": "Directional Light",
+            "tag": 0
+        },
+        {
+            "children": [],
+            "components": {
+                "Collider": {
+                    "colliderCenter": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    },
+                    "colliderType": 1,
+                    "halfExtents": {
+                        "x": 20.0,
+                        "y": 0.5,
+                        "z": 20.0
+                    },
+                    "height": 1.0,
+                    "meshSizePadding": 0.0,
+                    "radius": 0.5,
+                    "showDebugCollider": false
+                },
+                "SceneTransform": {
+                    "posX": 0.0,
+                    "posY": -0.5,
+                    "posZ": 0.0,
+                    "rotX": 0.0,
+                    "rotY": 0.0,
+                    "rotZ": 0.0,
+                    "scaleX": 40.0,
+                    "scaleY": 1.0,
+                    "scaleZ": 40.0
+                },
+                "visual": {
+                    "model": "rom/model/object/Box_Brown.fbx",
+                    "shader": "standard"
+                }
+            },
+            "name": "Ground",
+            "tag": 2
+        },
+        {
+            "children": [],
+            "components": {
+                "Collider": {
+                    "colliderCenter": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    },
+                    "colliderType": 1,
+                    "halfExtents": {
+                        "x": 0.4,
+                        "y": 0.4,
+                        "z": 0.4
+                    },
+                    "height": 1.0,
+                    "isTrigger": false,
+                    "meshSizePadding": 0.0,
+                    "radius": 0.5,
+                    "showDebugCollider": true
+                },
+                "Material": {
+                    "color": [
+                        0.9,
+                        0.25,
+                        0.2
+                    ],
+                    "metallic": 0.0,
+                    "roughness": 0.5
+                },
+                "Rigidbody": {
+                    "angularDrag": 0.05,
+                    "drag": 0.0,
+                    "friction": 0.0,
+                    "isKinematic": false,
+                    "mass": 1.0,
+                    "restitution": 0.0,
+                    "useGravity": false
+                },
+                "SceneTransform": {
+                    "posX": 0.0,
+                    "posY": 2.0,
+                    "posZ": 0.0,
+                    "rotX": 0.0,
+                    "rotY": 0.0,
+                    "rotZ": 0.0,
+                    "scaleX": 0.8,
+                    "scaleY": 0.8,
+                    "scaleZ": 0.8
+                },
+                "visual": {
+                    "model": "rom/model/object/Box_Red.fbx",
+                    "shader": "standard"
+                }
+            },
+            "name": "DynamicBox",
+            "tag": 0
+        }
+    ],
+    "settings": {
+        "render": {
+            "clearColor": [
+                0.6899999976158142,
+                0.7699999809265137,
+                0.8700000047683716,
+                1.0
+            ],
+            "defaultShader": "standard",
+            "fogColor": [
+                0.6899999976158142,
+                0.7699999809265137,
+                0.8700000047683716
+            ],
+            "fogDensity": 0.019999999552965164,
+            "fogEnabled": false,
+            "fogHeight": 5.0,
+            "fogHeightFalloff": 0.15000000596046448,
+            "fogStart": 10.0,
+            "shadowQuality": "medium",
+            "skyboxCubemap": "rom/skybox/MySkybox.dds",
+            "skyboxEnabled": true,
+            "skyboxExposure": 1.0,
+            "skyboxRotationYDeg": 0.0,
+            "skyboxTint": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+            ]
+        }
+    },
+    "version": 4
+}
