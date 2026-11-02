@@ -154,6 +154,18 @@ int main() {
     check(cold.Request(notPlaying.dump()).value("error","") == "not_ready",
         "apply_impulse not_ready when not playing");
 
+    // Quit must be accepted while paused (host flushes exit without a sim tick).
+    Protocol pausedQuit("paused-quit", 9, 1);
+    pausedQuit.Publish(true, true, "rom/scene/fixture.json");
+    check(pausedQuit.Request(baseFor("paused-quit", 1, "pause").dump())["ok"] == true, "pause before quit");
+    check(pausedQuit.IsPaused(), "paused for quit");
+    check(!pausedQuit.ShouldRunSimTick(), "paused freezes sim ticks");
+    auto quitWhilePaused = pausedQuit.Request(baseFor("paused-quit", 2, "quit").dump());
+    check(quitWhilePaused["ok"] == true && quitWhilePaused["requiresReceipt"] == true,
+        "quit accepted while paused");
+    pausedQuit.ConfirmQuitReceipt();
+    check(pausedQuit.TakeQuit(), "quit receipt ready while paused");
+
     std::cout << "PASS world manip reset_scene/set_transform/set_velocity/impulse protocol\n";
     return 0;
 }

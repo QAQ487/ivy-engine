@@ -43,7 +43,7 @@ Capabilities advertised by `hello` / `status` (as implemented):
 | Verb | Role |
 | --- | --- |
 | `hello` / `status` | Identity, ready/playing/paused/scene snapshot, frame counters, input op status, capabilities. When not ready, `readyDetail` explains `scene_path_empty`, `preload_active`, or `not_playing`. |
-| `quit` | Requests exit; response has `requiresReceipt: true` — client must send a lone LF receipt |
+| `quit` | Requests exit; response has `requiresReceipt: true` — client must send a lone LF receipt. Accepted while paused; the host drains exit without waiting for a sim tick. |
 | `keyboard` | Internal key inject (`keys`, `updates`) |
 | `mouse` | Internal mouse inject (`dx`, `dy`, `buttons`, `updates`, optional `wheel`) |
 | `observe` | Named GameObject snapshot: legacy `position`/`velocity`, plus `rotation` (Euler degrees), `rotationQuaternion`, `scale`, `angularVelocity`, and `rigidbody.kinematic` when present. Sleeping/contact counts are omitted (not cheaply available). |

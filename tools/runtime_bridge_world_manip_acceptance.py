@@ -234,9 +234,27 @@ def run(args):
             raise RuntimeError("reset_scene did not restore initial transform: pos=%s vel=%s"
                                % (pos_of(restored), vel_of(restored)))
 
+        # Quit while still paused (contract: host flushes exit without resume/sim tick).
+        status_before_quit = link.req("status")
+        report["checks"]["paused_before_quit"] = {
+            "pass": status_before_quit.get("paused") is True,
+            "paused": status_before_quit.get("paused"),
+            "pendingSteps": status_before_quit.get("pendingSteps"),
+        }
         quit_reply = link.req("quit")
-        report["checks"]["quit"] = {"pass": quit_reply.get("ok") is True}
-        exit_code = child.wait(timeout=10)
+        quit_ok = quit_reply.get("ok") is True and quit_reply.get("requiresReceipt") is True
+        report["checks"]["quit"] = {
+            "pass": quit_ok,
+            "ok": quit_reply.get("ok"),
+            "requiresReceipt": quit_reply.get("requiresReceipt"),
+        }
+        if not quit_ok:
+            raise RuntimeError("invalid quit reply: %s" % quit_reply)
+        link.close()
+        try:
+            exit_code = child.wait(timeout=15)
+        except subprocess.TimeoutExpired:
+            raise RuntimeError("runtime did not exit within 15s after quit while paused")
         report["exitCode"] = exit_code
         report["checks"]["exit"] = {"pass": exit_code == 0, "exitCode": exit_code}
         if exit_code != 0:

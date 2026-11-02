@@ -626,8 +626,13 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstanc
                         }
                     }
                     if (runtimeTestBridge.PublishAndTakeQuit(ready, EngineGUI_IsPlaying(), scene,
-                            std::move(targets), std::move(objects), readyDetail))
+                            std::move(targets), std::move(objects), readyDetail)) {
                         EngineGUI_RequestExitGame();
+                        // RequestExitGame is deferred to EngineGUI_Update. While the
+                        // bridge is paused, ShouldRunSimTick is false and Update is
+                        // skipped, so drain the exit here on WinMain (posts WM_APP+48).
+                        EngineGUI_Update(0.0);
+                    }
                 }
 #endif
 				frame_count++;
