@@ -314,9 +314,8 @@ class Client:
             raise
 
     def keyboard(self,keys,updates,request_id,completion_timeout=7.0):
-        allowed={"W","A","S","D","SPACE","UP","DOWN","LEFT","RIGHT"}
-        if not isinstance(keys,(list,tuple)) or not 1<=len(keys)<=9 or any(not isinstance(k,str) or k not in allowed for k in keys) or len(set(keys))!=len(keys):
-            raise ValueError("keys must be unique whitelist names")
+        from runtime_bridge_keyboard_keys import validate_keyboard_keys
+        validate_keyboard_keys(keys)
         if type(updates) is not int or not 1<=updates<=120:
             raise ValueError("updates must be an integer in [1,120]")
         if type(request_id) is not int or not 1<=request_id<2147483647:

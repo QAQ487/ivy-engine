@@ -68,10 +68,25 @@ class ClientChecks(unittest.TestCase):
         p=subprocess.Popen([os.environ["IVY_BRIDGE_HARNESS"],"--serve"],env=env,stdout=subprocess.PIPE,text=True)
         try:
             with Client(p.pid,run) as c:
-                for keys,updates in ((["W"],True),(["W"],1.0),(["W"],0),(["W"],121),(["W","W"],1),(["ESCAPE"],1),([],1),("W",1),([True],1)):
+                for keys,updates in ((["W"],True),(["W"],1.0),(["W"],0),(["W"],121),(["W","W"],1),(["NOTAKEY"],1),(["LEFTWINDOWS"],1),(["LALT","F4"],1),([],1),("W",1),([True],1)):
                     with self.subTest(keys=keys,updates=updates):
                         with self.assertRaises(ValueError): c.keyboard(keys,updates,1)
                 self.assertTrue(c.request("quit",1)["ok"])
+            self.assertEqual(p.wait(timeout=3),0)
+        finally:
+            if p.poll() is None: p.kill();p.wait(timeout=3)
+            p.stdout.close()
+
+    def test_keyboard_client_accepts_expanded_keys_before_send(self):
+        run=uuid.uuid4().hex
+        env=dict(os.environ, IVY_RUNTIME_TEST_BRIDGE="1", IVY_RUNTIME_TEST_RUN_ID=run)
+        p=subprocess.Popen([os.environ["IVY_BRIDGE_HARNESS"],"--serve"],env=env,stdout=subprocess.PIPE,text=True)
+        try:
+            with Client(p.pid,run,timeout=2) as c:
+                r=c.keyboard(["ESCAPE","ENTER","LCTRL","E"],3,1)
+                self.assertTrue(r["ok"])
+                self.assertEqual(r["keyboard"]["status"],"completed")
+                self.assertTrue(c.request("quit",r["requestId"]+1)["ok"])
             self.assertEqual(p.wait(timeout=3),0)
         finally:
             if p.poll() is None: p.kill();p.wait(timeout=3)

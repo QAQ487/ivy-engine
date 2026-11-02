@@ -134,6 +134,26 @@ class SchemaValidationTests(unittest.TestCase):
                 "count": 1,
             }]))
 
+    def test_keyboard_expanded_keys_and_rejections(self):
+        ok = validate_scenario(_minimal(steps=[{
+            "type": "keyboard",
+            "keys": ["ESCAPE", "ENTER", "LCTRL", "E"],
+            "updates": 3,
+        }]))
+        self.assertEqual(ok["steps"][0]["keys"], ["ESCAPE", "ENTER", "LCTRL", "E"])
+        with self.assertRaises(ScenarioValidationError):
+            validate_scenario(_minimal(steps=[{
+                "type": "keyboard",
+                "keys": ["NOTAKEY"],
+                "updates": 1,
+            }]))
+        with self.assertRaises(ScenarioValidationError):
+            validate_scenario(_minimal(steps=[{
+                "type": "keyboard",
+                "keys": ["LALT", "F4"],
+                "updates": 1,
+            }]))
+
 
 class ResolveAndAssertTests(unittest.TestCase):
     def test_resolve_observe_path(self):

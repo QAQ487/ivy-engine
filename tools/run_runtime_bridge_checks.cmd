@@ -54,6 +54,8 @@ if errorlevel 1 exit /b 1
 "%~1\runtime_bridge_checkpoint_check.exe"
 if errorlevel 1 exit /b 1
 set IVY_BRIDGE_HARNESS=%CD%\%~1\runtime_bridge_protocol_check.exe
+py -3 tools\runtime_bridge_keyboard_keys_check.py -v
+if errorlevel 1 exit /b 1
 py -3 tools\runtime_test_client_check.py -v
 if errorlevel 1 exit /b 1
 py -3 tools\runtime_bridge_mouse_acceptance_check.py -v

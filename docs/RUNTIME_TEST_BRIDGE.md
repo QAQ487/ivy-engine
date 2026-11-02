@@ -44,7 +44,7 @@ Capabilities advertised by `hello` / `status` (as implemented):
 | --- | --- |
 | `hello` / `status` | Identity, ready/playing/paused/scene snapshot, frame counters, input op status, capabilities. When not ready, `readyDetail` explains `scene_path_empty`, `preload_active`, or `not_playing`. |
 | `quit` | Requests exit; response has `requiresReceipt: true` — client must send a lone LF receipt. Accepted while paused; the host drains exit without waiting for a sim tick. |
-| `keyboard` | Internal key inject (`keys`, `updates`) |
+| `keyboard` | Internal key inject (`keys`, `updates`); see [Keyboard injection](#keyboard-injection-keyboard) |
 | `mouse` | Internal mouse inject (`dx`, `dy`, `buttons`, `updates`, optional `wheel`) |
 | `observe` | Named GameObject snapshot: legacy `position`/`velocity`, plus `rotation` (Euler degrees), `rotationQuaternion`, `scale`, `angularVelocity`, and when a `Rigidbody` is present: `rigidbody.{kinematic,mass,drag,angularDrag,friction,useGravity,localInverseInertia}`. Sleeping/contact counts are omitted (not cheaply available). |
 | `list_objects` | Bounded GameObject name + component type list (`offset`, `limit` 1…64, default 32). Response includes `total` and `truncated`. |
@@ -151,6 +151,27 @@ Minimal sketch:
 ```
 
 Examples already ported: `world_manip.json`, `angular_free_spin.json`, `keyboard_move.json`.
+
+## Keyboard injection (`keyboard`)
+
+One queued operation at a time. Requires ready + playing. Injection is **internal** (`Keyboard_TestInject`) — it never sends OS virtual-key events.
+
+| Field | Required | Range / notes |
+| --- | --- | --- |
+| `keys` | yes | 1…9 **unique** bridge names from the table below |
+| `updates` | yes | Integer 1…120 (engine `Update` hold count) |
+
+Lifecycle matches other inject verbs: preparation Update → hold for `updates` → release Update → clear. Disconnect / not-playing / wall deadline cancel releases keys (no stuck inject).
+
+Modifiers (`LCTRL` / `RCTRL` / `LSHIFT` / `RSHIFT` / `LALT` / `RALT`) may be combined with other keys in the same request so chords stay held for N updates.
+
+**Rejected:** unknown names; Win keys (`LEFTWINDOWS` / `RIGHTWINDOWS` are not in the table); any request that includes **ALT** (`LALT` or `RALT`) together with **F4**.
+
+Bridge names (explicit table → `KK_*`; never raw VK codes). Digits are `"0"`…`"9"`; letters `"A"`…`"Z"`:
+
+`BACK`, `TAB`, `ENTER`, `PAUSE`, `CAPSLOCK`, `KANA`, `KANJI`, `ESCAPE`, `IMECONVERT`, `IMENOCONVERT`, `SPACE`, `PAGEUP`, `PAGEDOWN`, `END`, `HOME`, `LEFT`, `UP`, `RIGHT`, `DOWN`, `SELECT`, `PRINT`, `EXECUTE`, `PRINTSCREEN`, `INSERT`, `DELETE`, `HELP`, `0`–`9`, `A`–`Z`, `APPS`, `SLEEP`, `NUMPAD0`–`NUMPAD9`, `MULTIPLY`, `ADD`, `SEPARATOR`, `SUBTRACT`, `DECIMAL`, `DIVIDE`, `F1`–`F24`, `NUMLOCK`, `SCROLL`, `LSHIFT`, `RSHIFT`, `LCTRL`, `RCTRL`, `LALT`, `RALT`, `BROWSERBACK`, `BROWSERFORWARD`, `BROWSERREFRESH`, `BROWSERSTOP`, `BROWSERSEARCH`, `BROWSERFAVORITES`, `BROWSERHOME`, `VOLUMEMUTE`, `VOLUMEDOWN`, `VOLUMEUP`, `MEDIANEXTTRACK`, `MEDIAPREVIOUSTRACK`, `MEDIASTOP`, `MEDIAPLAYPAUSE`, `LAUNCHMAIL`, `SELECTMEDIA`, `LAUNCHAPPLICATION1`, `LAUNCHAPPLICATION2`, `OEMSEMICOLON`, `OEMPLUS`, `OEMCOMMA`, `OEMMINUS`, `OEMPERIOD`, `OEMQUESTION`, `OEMTILDE`, `OEMOPENBRACKETS`, `OEMPIPE`, `OEMCLOSEBRACKETS`, `OEMQUOTES`, `OEM8`, `OEMBACKSLASH`, `PROCESSKEY`, `OEMCOPY`, `OEMAUTO`, `OEMENLW`, `ATTN`, `CRSEL`, `EXSEL`, `ERASEEOF`, `PLAY`, `ZOOM`, `PA1`, `OEMCLEAR`
+
+Canonical sources: `kBridgeKeyTable` in `engine/testing/runtime_test_bridge.cpp` and `KEYBOARD_KEYS` in `tools/runtime_bridge_keyboard_keys.py` (kept equal by `tools/runtime_bridge_keyboard_keys_check.py`).
 
 ## Controller injection (`controller`)
 
