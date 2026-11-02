@@ -20,6 +20,7 @@
 #include "play_fps_overlay.h"
 #include "engine_gui_internal.h"
 #include "engine/scene/scene_loader.h"
+#include "engine/scene/json_float.h"
 #include "engine/scene/scene_asset_preload.h"
 #include "engine/scene/scene_file_monitor.h"
 #include "engine/scene/render_settings.h"
@@ -660,13 +661,6 @@ static std::unique_ptr<GameObject> CreateEmptyGameObject() {
     node->AddComponent<engine::Transform>();
     node->AddComponent<VisualComponent>();
     return node;
-}
-
-static VisualComponent* EnsureVisualComponent(GameObject* node) {
-    if (!node) return nullptr;
-    if (auto* vc = node->GetComponent<VisualComponent>())
-        return vc;
-    return node->AddComponent<VisualComponent>();
 }
 
 static std::unique_ptr<GameObject> CreateDirectionalLightObject() {
@@ -4351,10 +4345,9 @@ void EngineGUI_Draw() {
                 strncpy_s(nodeNameBuf, g_selNode->GetName().c_str(), sizeof(nodeNameBuf) - 1);
             }
 
-            const bool hadVisual = g_selNode->GetComponent<VisualComponent>() != nullptr;
-            VisualComponent* vc = EnsureVisualComponent(g_selNode);
-            if (!hadVisual)
-                runtimeDirty = true;
+            // Do not auto-add Visual on select/inspect — that marked scenes dirty
+            // without a user edit. Add via the component combo instead.
+            VisualComponent* vc = g_selNode->GetComponent<VisualComponent>();
 
             ImGui::Text("Node: %s", g_selNode->GetName().c_str());
             ImGui::Separator();
@@ -4407,39 +4400,58 @@ void EngineGUI_Draw() {
                 ImGui::Text("Transform");
                 ImGui::Separator();
                 EditorUndo_BeginComponentEdit(g_selNode, "SceneTransform");
+                const float xformBefore[9] = {
+                    t->localPosition.x, t->localPosition.y, t->localPosition.z,
+                    t->localRotation.x, t->localRotation.y, t->localRotation.z,
+                    t->localScale.x, t->localScale.y, t->localScale.z
+                };
+                bool xformEdited = false;
                 ImGui::Text("Position");
                 ImGui::Text("X:"); ImGui::SameLine(40);
-                runtimeDirty |= ImGui::DragFloat("##NPX", &t->localPosition.x, 0.1f);
-                runtimeDirty |= ScrollValue(&t->localPosition.x);
+                xformEdited |= ImGui::DragFloat("##NPX", &t->localPosition.x, 0.1f);
+                xformEdited |= ScrollValue(&t->localPosition.x);
                 ImGui::Text("Y:"); ImGui::SameLine(40);
-                runtimeDirty |= ImGui::DragFloat("##NPY", &t->localPosition.y, 0.1f);
-                runtimeDirty |= ScrollValue(&t->localPosition.y);
+                xformEdited |= ImGui::DragFloat("##NPY", &t->localPosition.y, 0.1f);
+                xformEdited |= ScrollValue(&t->localPosition.y);
                 ImGui::Text("Z:"); ImGui::SameLine(40);
-                runtimeDirty |= ImGui::DragFloat("##NPZ", &t->localPosition.z, 0.1f);
-                runtimeDirty |= ScrollValue(&t->localPosition.z);
+                xformEdited |= ImGui::DragFloat("##NPZ", &t->localPosition.z, 0.1f);
+                xformEdited |= ScrollValue(&t->localPosition.z);
                 ImGui::Spacing();
                 ImGui::Text("Rotation");
                 ImGui::Text("X:"); ImGui::SameLine(40);
-                runtimeDirty |= ImGui::DragFloat("##NRX", &t->localRotation.x, 1.0f);
-                runtimeDirty |= ScrollValue(&t->localRotation.x, 1.0f);
+                xformEdited |= ImGui::DragFloat("##NRX", &t->localRotation.x, 1.0f);
+                xformEdited |= ScrollValue(&t->localRotation.x, 1.0f);
                 ImGui::Text("Y:"); ImGui::SameLine(40);
-                runtimeDirty |= ImGui::DragFloat("##NRY", &t->localRotation.y, 1.0f);
-                runtimeDirty |= ScrollValue(&t->localRotation.y, 1.0f);
+                xformEdited |= ImGui::DragFloat("##NRY", &t->localRotation.y, 1.0f);
+                xformEdited |= ScrollValue(&t->localRotation.y, 1.0f);
                 ImGui::Text("Z:"); ImGui::SameLine(40);
-                runtimeDirty |= ImGui::DragFloat("##NRZ", &t->localRotation.z, 1.0f);
-                runtimeDirty |= ScrollValue(&t->localRotation.z, 1.0f);
+                xformEdited |= ImGui::DragFloat("##NRZ", &t->localRotation.z, 1.0f);
+                xformEdited |= ScrollValue(&t->localRotation.z, 1.0f);
                 ImGui::Spacing();
                 ImGui::Text("Scale");
                 ImGui::Text("X:"); ImGui::SameLine(40);
-                runtimeDirty |= ImGui::DragFloat("##NSX", &t->localScale.x, 0.1f, 0.001f, 1000.0f);
-                runtimeDirty |= ScrollValue(&t->localScale.x);
+                xformEdited |= ImGui::DragFloat("##NSX", &t->localScale.x, 0.1f, 0.001f, 1000.0f);
+                xformEdited |= ScrollValue(&t->localScale.x);
                 ImGui::Text("Y:"); ImGui::SameLine(40);
-                runtimeDirty |= ImGui::DragFloat("##NSY", &t->localScale.y, 0.1f, 0.001f, 1000.0f);
-                runtimeDirty |= ScrollValue(&t->localScale.y);
+                xformEdited |= ImGui::DragFloat("##NSY", &t->localScale.y, 0.1f, 0.001f, 1000.0f);
+                xformEdited |= ScrollValue(&t->localScale.y);
                 ImGui::Text("Z:"); ImGui::SameLine(40);
-                runtimeDirty |= ImGui::DragFloat("##NSZ", &t->localScale.z, 0.1f, 0.001f, 1000.0f);
-                runtimeDirty |= ScrollValue(&t->localScale.z);
+                xformEdited |= ImGui::DragFloat("##NSZ", &t->localScale.z, 0.1f, 0.001f, 1000.0f);
+                xformEdited |= ScrollValue(&t->localScale.z);
                 ImGui::Spacing();
+                const float xformAfter[9] = {
+                    t->localPosition.x, t->localPosition.y, t->localPosition.z,
+                    t->localRotation.x, t->localRotation.y, t->localRotation.z,
+                    t->localScale.x, t->localScale.y, t->localScale.z
+                };
+                if (xformEdited && JsonFloat_TransformChanged(xformBefore, xformAfter))
+                    runtimeDirty = true;
+                else if (xformEdited && !JsonFloat_TransformChanged(xformBefore, xformAfter)) {
+                    // DragFloat/Scroll reported a change that does not survive 3dp — keep bits.
+                    t->localPosition = { xformBefore[0], xformBefore[1], xformBefore[2] };
+                    t->localRotation = { xformBefore[3], xformBefore[4], xformBefore[5] };
+                    t->localScale    = { xformBefore[6], xformBefore[7], xformBefore[8] };
+                }
                 g_selNode->SyncLegacyTransformFromComponents();
                 EditorUndo_EndComponentEdit(g_selNode, "SceneTransform");
             }
@@ -4531,6 +4543,7 @@ void EngineGUI_Draw() {
             }
             ImGui::Spacing();
 
+            if (vc) {
             ImGui::Separator();
             ImGui::Text("Visual");
             EditorUndo_BeginComponentEdit(g_selNode, "visual");
@@ -4670,6 +4683,7 @@ void EngineGUI_Draw() {
                 }
             }
             EditorUndo_EndComponentEdit(g_selNode, "visual");
+            }
 
             ImGui::Spacing();
 

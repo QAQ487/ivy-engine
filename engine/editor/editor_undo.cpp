@@ -20,6 +20,7 @@
 #include "engine/ecs/material_component.h"
 #include "engine/ecs/point_light_component.h"
 #include "engine/ecs/prefab_serializer.h"
+#include "engine/scene/json_float.h"
 #include "engine/ecs/rigidbody_component.h"
 #include "engine/ecs/physics2d_components.h"
 #include "engine/ecs/spot_light_component.h"
@@ -813,14 +814,14 @@ void EditorUndo_Clear() {
 }
 
 void EditorUndo_PushTransform(GameObject* node, std::string beforeJson, std::string afterJson) {
-	if (!node || beforeJson == afterJson) return;
+	if (!node || JsonFloat_JsonEqual(beforeJson, afterJson)) return;
 	EditorUndo_Push(std::make_unique<TransformCommand>(
 		MakeNodeRef(node), std::move(beforeJson), std::move(afterJson)));
 }
 
 void EditorUndo_PushComponentEdit(GameObject* node, const std::string& compType,
 	std::string beforeJson, std::string afterJson) {
-	if (!node || beforeJson == afterJson) return;
+	if (!node || JsonFloat_JsonEqual(beforeJson, afterJson)) return;
 	EditorUndo_Push(std::make_unique<ComponentEditCommand>(
 		MakeNodeRef(node), compType, std::move(beforeJson), std::move(afterJson)));
 }
@@ -888,7 +889,8 @@ void EditorUndo_EndComponentEdit(GameObject* node, const char* compType) {
 		if (WasAnyItemDeactivatedAfterEdit()) {
 			// Single-frame edit (checkbox, combo, etc.)
 			std::string afterJson = SerializeComponent(node, compType);
-			if (!g_sectionBeforeJson.empty() && afterJson != g_sectionBeforeJson) {
+			if (!g_sectionBeforeJson.empty() &&
+				!JsonFloat_JsonEqual(g_sectionBeforeJson, afterJson)) {
 				EditorUndo_PushComponentEdit(node, compType,
 					g_sectionBeforeJson, std::move(afterJson));
 			}
@@ -905,7 +907,8 @@ void EditorUndo_EndComponentEdit(GameObject* node, const char* compType) {
 
 		// Silent mutations this frame (asset drop, scroll wheel).
 		std::string afterJson = SerializeComponent(node, compType);
-		if (!g_sectionBeforeJson.empty() && afterJson != g_sectionBeforeJson) {
+		if (!g_sectionBeforeJson.empty() &&
+			!JsonFloat_JsonEqual(g_sectionBeforeJson, afterJson)) {
 			EditorUndo_PushComponentEdit(node, compType,
 				g_sectionBeforeJson, std::move(afterJson));
 		}
@@ -917,7 +920,7 @@ void EditorUndo_EndComponentEdit(GameObject* node, const char* compType) {
 		return;
 
 	std::string afterJson = SerializeComponent(node, compType);
-	if (afterJson != g_compEdit.beforeJson) {
+	if (!JsonFloat_JsonEqual(afterJson, g_compEdit.beforeJson)) {
 		EditorUndo_PushComponentEdit(node, g_compEdit.compType,
 			std::move(g_compEdit.beforeJson), std::move(afterJson));
 	}

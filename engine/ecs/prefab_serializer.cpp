@@ -11,6 +11,7 @@
 #include "component_factory.h"
 #include "tag_registry.h"
 #include "engine/scene/scene_json_validation.h"
+#include "engine/scene/json_float.h"
 #include "engine/core/content_path.h"
 
 #include <fstream>
@@ -119,7 +120,7 @@ static const json* FindPrefabNodeJson(const json& root) {
 // ── Public API ────────────────────────────────────────────────────────────
 
 std::string PrefabSerializer::Serialize(const GameObject& root) {
-    return SerializeNode(root).dump(4);
+    return JsonFloat_Dump(SerializeNode(root), 4);
 }
 
 bool PrefabSerializer::SaveToFile(const GameObject& root,
@@ -139,7 +140,7 @@ bool PrefabSerializer::SaveToFile(const GameObject& root,
     json prefab;
     prefab["version"] = 4;
     prefab["nodes"] = json::array({ SerializeNode(root) });
-    f << prefab.dump(4);
+    f << JsonFloat_Dump(prefab, 4);
     return true;
 }
 
