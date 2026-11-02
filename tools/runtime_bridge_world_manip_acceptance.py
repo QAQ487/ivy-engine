@@ -70,7 +70,11 @@ def wait_ready(link, timeout=25.0):
 
 
 def wait_world_op(link, start_request_id, timeout=8.0):
-    """Poll status.worldOp until completed/failed; keep Link request counter in sync."""
+    """Poll status.worldOp until completed/failed; keep Link request counter in sync.
+
+    Bridge seals completed only after the observe/list snapshot publish that
+    follows WinMain apply, so a subsequent observe sees the new transform.
+    """
     deadline = time.monotonic() + timeout
     last = None
     while time.monotonic() < deadline:
