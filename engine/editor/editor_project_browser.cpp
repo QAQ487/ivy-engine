@@ -3,8 +3,10 @@
 
 #include "editor_project_browser.h"
 
+#include "asset_browser_text.h"
 #include "project_asset_index.h"
 #include "project_asset_ops.h"
+#include "project_manager.h"
 #include "imgui/imgui.h"
 #include "imgui/icons_font_awesome.h"
 #include "engine/ecs/game_object.h"
@@ -16,9 +18,14 @@
 #include "engine/core/engine_gui.h"
 #include "engine/rendering/environment/skybox_asset_path.h"
 
+#include "libraries/nlohmann/json.hpp"
+
+#include <algorithm>
 #include <filesystem>
+#include <fstream>
 #include <memory>
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace fs = std::filesystem;
@@ -412,6 +419,121 @@ static void CloseModalIfDismissed(BrowserModalOp op, bool stillOpen) {
         ResetModal();
 }
 
+static float MeasureImGuiText(std::string_view text, void* /*user*/) {
+    return ImGui::CalcTextSize(text.data(), text.data() + text.size()).x;
+}
+
+static void DrawMultilineCentered(
+    ImDrawList* drawList,
+    ImVec2 topLeft,
+    float width,
+    const std::string& text,
+    ImU32 col)
+{
+    if (!drawList || text.empty())
+        return;
+    float y = topLeft.y;
+    const float lineH = ImGui::GetTextLineHeight();
+    std::size_t start = 0;
+    while (start <= text.size()) {
+        const std::size_t end = text.find('\n', start);
+        const std::string_view line = (end == std::string::npos)
+            ? std::string_view(text).substr(start)
+            : std::string_view(text).substr(start, end - start);
+        const ImVec2 size = ImGui::CalcTextSize(line.data(), line.data() + line.size());
+        const float x = topLeft.x + (width - size.x) * 0.5f;
+        drawList->AddText(ImVec2(x, y), col, line.data(), line.data() + line.size());
+        y += lineH;
+        if (end == std::string::npos)
+            break;
+        start = end + 1;
+    }
+}
+
+struct BrowserSelection {
+    std::string name;
+    std::string assetPath;
+    std::string relativePath;
+    bool isFolder = false;
+};
+
+static void SetBrowserSelection(
+    BrowserSelection& selection,
+    const ProjectAssetIndex::ProjectEntry& entry)
+{
+    selection.name = entry.name;
+    selection.assetPath = entry.assetPath;
+    selection.relativePath = entry.relativePath;
+    selection.isFolder = (entry.kind == ProjectAssetIndex::Kind::Folder);
+}
+
+static void HandleAssetItemActivation(
+    const ProjectAssetIndex::ProjectEntry& entry,
+    std::string& selectedFolder,
+    std::vector<std::unique_ptr<GameObject>>& nodes,
+    GameObject*& spawned,
+    bool activated,
+    bool doubleClicked)
+{
+    if (activated) {
+        if (entry.kind == ProjectAssetIndex::Kind::Folder) {
+            selectedFolder = entry.relativePath;
+        }
+        else if (entry.kind == ProjectAssetIndex::Kind::Model ||
+            entry.kind == ProjectAssetIndex::Kind::Prefab) {
+            GameObject* node = TryOpenOrUseAsset(entry, nodes);
+            if (node)
+                spawned = node;
+        }
+        else if (entry.kind == ProjectAssetIndex::Kind::Scene) {
+            SceneLoader_CopySceneFileName(
+                fs::path(entry.relativePath).filename().string());
+        }
+    }
+    if (doubleClicked && entry.kind == ProjectAssetIndex::Kind::Scene)
+        TryLoadSceneAsset(entry);
+}
+
+static void HandleAssetItemDragDrop(const ProjectAssetIndex::ProjectEntry& entry) {
+    if (entry.kind == ProjectAssetIndex::Kind::Prefab &&
+        ImGui::BeginDragDropSource(ImGuiDragDropFlags_None)) {
+        ImGui::SetDragDropPayload(
+            "ASSET_PREFAB", entry.assetPath.c_str(), entry.assetPath.size() + 1);
+        ImGui::Text("Prefab: %s", entry.name.c_str());
+        ImGui::EndDragDropSource();
+    }
+    if (EmitsAssetPath(entry.kind) &&
+        ImGui::BeginDragDropSource(ImGuiDragDropFlags_None)) {
+        ImGui::SetDragDropPayload(
+            "ASSET_PATH", entry.assetPath.c_str(), entry.assetPath.size() + 1);
+        ImGui::Text("%s", entry.name.c_str());
+        ImGui::EndDragDropSource();
+    }
+}
+
+static void DrawAssetItemContext(
+    const ProjectAssetIndex::ProjectEntry& entry,
+    std::vector<std::unique_ptr<GameObject>>& nodes,
+    GameObject*& spawned)
+{
+    if (entry.kind == ProjectAssetIndex::Kind::Folder)
+        DrawFolderContextMenu(entry.relativePath, entry.name);
+    else
+        DrawAssetContextMenu(entry, nodes, spawned);
+}
+
+static void DrawAssetHoverTooltip(const ProjectAssetIndex::ProjectEntry& entry) {
+    if (!ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal))
+        return;
+    ImGui::BeginTooltip();
+    ImGui::TextUnformatted(entry.name.c_str());
+    if (!entry.assetPath.empty())
+        ImGui::TextDisabled("%s", entry.assetPath.c_str());
+    else if (!entry.relativePath.empty())
+        ImGui::TextDisabled("rom/%s", entry.relativePath.c_str());
+    ImGui::EndTooltip();
+}
+
 static void DrawBrowserModals(std::string& selectedFolder) {
     bool renameAssetOpen = (s_modal.op == BrowserModalOp::RenameAsset);
     if (renameAssetOpen)
@@ -609,12 +731,88 @@ GameObject* ProjectBrowserPanel(std::vector<std::unique_ptr<GameObject>>& nodes)
     static ImGuiTextFilter s_filter;
     static std::string s_selectedFolder;
     static bool s_initialized = false;
+    static bool s_listView = false;
+    static int s_tileSize = 100;
+    static std::string s_prefsProjectRoot;
+    static BrowserSelection s_selection;
 
     ProjectAssetIndex& index = ProjectAssetIndex::Instance();
     if (!s_initialized) {
         index.Refresh();
         s_initialized = true;
     }
+
+    // Sync view prefs when the open project changes (project.json, then ui_prefs overlay).
+    ProjectManager& project = ProjectManager::Instance();
+    const std::string& root = project.IsOpen() ? project.GetRootPath() : std::string{};
+    if (s_prefsProjectRoot != root) {
+        s_prefsProjectRoot = root;
+        if (project.IsOpen()) {
+            s_listView = project.GetAssetBrowserListView();
+            s_tileSize = ProjectManager::ClampAssetBrowserTileSize(
+                project.GetAssetBrowserTileSize());
+            // ui_prefs.json is written immediately on toggle/slider; prefer it when present.
+            try {
+                const fs::path prefsPath =
+                    fs::path(project.GetRootPath()) / "rom" / "editor" / "ui_prefs.json";
+                std::ifstream prefsFile(prefsPath);
+                if (prefsFile.is_open()) {
+                    nlohmann::json j;
+                    prefsFile >> j;
+                    if (j.contains("assetBrowserListView"))
+                        s_listView = j.value("assetBrowserListView", s_listView);
+                    if (j.contains("assetBrowserTileSize")) {
+                        s_tileSize = ProjectManager::ClampAssetBrowserTileSize(
+                            j.value("assetBrowserTileSize", s_tileSize));
+                    }
+                    project.SetAssetBrowserListView(s_listView);
+                    project.SetAssetBrowserTileSize(s_tileSize);
+                }
+            }
+            catch (...) {
+            }
+        }
+        else {
+            s_listView = false;
+            s_tileSize = 100;
+        }
+        s_selection = {};
+    }
+
+    auto persistBrowserPrefs = [&]() {
+        if (!project.IsOpen())
+            return;
+        project.SetAssetBrowserListView(s_listView);
+        project.SetAssetBrowserTileSize(s_tileSize);
+        // Immediate write alongside zoom/FPS prefs (merge into ui_prefs.json).
+        try {
+            const fs::path dest =
+                fs::path(project.GetRootPath()) / "rom" / "editor" / "ui_prefs.json";
+            std::error_code ec;
+            fs::create_directories(dest.parent_path(), ec);
+            nlohmann::json j = nlohmann::json::object();
+            {
+                std::ifstream existing(dest);
+                if (existing.is_open()) {
+                    try {
+                        existing >> j;
+                    }
+                    catch (...) {
+                        j = nlohmann::json::object();
+                    }
+                }
+            }
+            if (!j.is_object())
+                j = nlohmann::json::object();
+            j["assetBrowserListView"] = s_listView;
+            j["assetBrowserTileSize"] = s_tileSize;
+            std::ofstream file(dest, std::ios::trunc);
+            if (file.is_open())
+                file << j.dump(2);
+        }
+        catch (...) {
+        }
+    };
 
     if (ImGui::Button("Refresh##ProjectBrowser", ImVec2(90, 0))) {
         EngineGUI_RequestContentRefresh();
@@ -624,17 +822,42 @@ GameObject* ProjectBrowserPanel(std::vector<std::unique_ptr<GameObject>>& nodes)
     DrawBreadcrumb(s_selectedFolder);
     ImGui::SameLine();
     s_filter.Draw("Search##ProjectBrowser", 180.0f);
+
+    ImGui::SameLine();
+    if (ImGui::Button(s_listView ? (ICON_FA_TABLE_CELLS " Grid##AssetView")
+                                 : (ICON_FA_LIST " List##AssetView"))) {
+        s_listView = !s_listView;
+        persistBrowserPrefs();
+    }
+    if (ImGui::IsItemHovered())
+        ImGui::SetTooltip("%s", s_listView ? "Switch to grid view" : "Switch to list view");
+
+    if (!s_listView) {
+        ImGui::SameLine();
+        ImGui::SetNextItemWidth(120.0f);
+        if (ImGui::SliderInt("Tile##AssetTileSize", &s_tileSize, 64, 160)) {
+            s_tileSize = ProjectManager::ClampAssetBrowserTileSize(s_tileSize);
+            if (project.IsOpen()) {
+                project.SetAssetBrowserListView(s_listView);
+                project.SetAssetBrowserTileSize(s_tileSize);
+            }
+        }
+        if (ImGui::IsItemDeactivatedAfterEdit())
+            persistBrowserPrefs();
+    }
+
     ImGui::Separator();
 
     const float folderWidth = 200.0f;
-    ImGui::BeginChild("ProjectFolderTree", ImVec2(folderWidth, 0), true);
+    const float statusHeight = ImGui::GetTextLineHeightWithSpacing() + 6.0f;
+    ImGui::BeginChild("ProjectFolderTree", ImVec2(folderWidth, -statusHeight), true);
     DrawFolderTreeNode(index.GetFolderTree(), s_selectedFolder);
     ImGui::EndChild();
 
     ImGui::SameLine();
 
     GameObject* spawned = nullptr;
-    ImGui::BeginChild("ProjectFileGrid", ImVec2(0, 0), true);
+    ImGui::BeginChild("ProjectFileGrid", ImVec2(0, -statusHeight), true);
     const std::vector<ProjectAssetIndex::ProjectEntry> contents =
         index.GetFolderContents(s_selectedFolder);
 
@@ -652,63 +875,126 @@ GameObject* ProjectBrowserPanel(std::vector<std::unique_ptr<GameObject>>& nodes)
         if (visible.empty()) {
             ImGui::TextDisabled("No matching assets");
         }
+        else if (s_listView) {
+            const float availW = ImGui::GetContentRegionAvail().x;
+            const float iconW = ImGui::CalcTextSize(ICON_FA_FILE).x + ImGui::GetStyle().ItemSpacing.x;
+            for (const ProjectAssetIndex::ProjectEntry* entry : visible) {
+                ImGui::PushID(entry->assetPath.empty()
+                    ? entry->relativePath.c_str()
+                    : entry->assetPath.c_str());
+
+                const bool selected = (s_selection.assetPath == entry->assetPath &&
+                    s_selection.relativePath == entry->relativePath);
+                const float nameBudget = (std::max)(0.0f, availW - iconW - 8.0f);
+                const std::string clippedName = asset_browser_text::Ellipsize(
+                    entry->name, nameBudget, MeasureImGuiText, nullptr);
+                const std::string label = std::string(EntryKindIcon(entry->kind)) + " " +
+                    clippedName + "##row";
+
+                const bool activated = ImGui::Selectable(
+                    label.c_str(),
+                    selected,
+                    ImGuiSelectableFlags_AllowDoubleClick);
+                const bool doubleClicked = ImGui::IsItemHovered() &&
+                    ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left);
+
+                if (ImGui::IsItemClicked())
+                    SetBrowserSelection(s_selection, *entry);
+
+                HandleAssetItemActivation(
+                    *entry, s_selectedFolder, nodes, spawned, activated, doubleClicked);
+                DrawAssetItemContext(*entry, nodes, spawned);
+                HandleAssetItemDragDrop(*entry);
+                DrawAssetHoverTooltip(*entry);
+
+                ImGui::PopID();
+            }
+        }
         else {
-            float visX2 = ImGui::GetWindowPos().x + ImGui::GetWindowContentRegionMax().x;
+            const float tileW = static_cast<float>(s_tileSize);
+            const float lineH = ImGui::GetTextLineHeight();
+            const float textPad = 4.0f;
+            const float textAreaH = lineH * 2.0f + textPad;
+            const float iconAreaH = tileW * 0.45f;
+            const float tileH = iconAreaH + textAreaH + 6.0f;
+            const float nameWidth = tileW - 8.0f;
+
+            const float visX2 = ImGui::GetWindowPos().x + ImGui::GetWindowContentRegionMax().x;
             int drawn = 0;
             for (const ProjectAssetIndex::ProjectEntry* entry : visible) {
-                ImGui::PushID(entry->assetPath.c_str());
+                ImGui::PushID(entry->assetPath.empty()
+                    ? entry->relativePath.c_str()
+                    : entry->assetPath.c_str());
 
-                std::string label = std::string(EntryKindIcon(entry->kind)) + "\n" + entry->name;
-                if (ImGui::Button(label.c_str(), ImVec2(100, 70))) {
-                    if (entry->kind == ProjectAssetIndex::Kind::Folder) {
-                        s_selectedFolder = entry->relativePath;
-                    }
-                    else if (entry->kind == ProjectAssetIndex::Kind::Model ||
-                        entry->kind == ProjectAssetIndex::Kind::Prefab) {
-                        GameObject* node = TryOpenOrUseAsset(*entry, nodes);
-                        if (node)
-                            spawned = node;
-                    }
-                    else if (entry->kind == ProjectAssetIndex::Kind::Scene) {
-                        SceneLoader_CopySceneFileName(
-                            fs::path(entry->relativePath).filename().string());
-                    }
-                }
+                const bool selected = (s_selection.assetPath == entry->assetPath &&
+                    s_selection.relativePath == entry->relativePath);
+                const ImVec2 tileSize(tileW, tileH);
+                ImGui::InvisibleButton("##tile", tileSize);
+                const bool hovered = ImGui::IsItemHovered();
+                const bool activated = ImGui::IsItemClicked(ImGuiMouseButton_Left);
+                const bool doubleClicked = hovered &&
+                    ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left);
 
-                if (entry->kind == ProjectAssetIndex::Kind::Scene &&
-                    ImGui::IsItemHovered() &&
-                    ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
-                    TryLoadSceneAsset(*entry);
-                }
+                if (activated)
+                    SetBrowserSelection(s_selection, *entry);
 
-                if (entry->kind == ProjectAssetIndex::Kind::Folder)
-                    DrawFolderContextMenu(entry->relativePath, entry->name);
-                else
-                    DrawAssetContextMenu(*entry, nodes, spawned);
+                ImDrawList* dl = ImGui::GetWindowDrawList();
+                const ImVec2 rmin = ImGui::GetItemRectMin();
+                const ImVec2 rmax = ImGui::GetItemRectMax();
+                const ImU32 bg = selected
+                    ? ImGui::GetColorU32(ImGuiCol_ButtonActive)
+                    : (hovered ? ImGui::GetColorU32(ImGuiCol_ButtonHovered)
+                               : ImGui::GetColorU32(ImGuiCol_FrameBg));
+                dl->AddRectFilled(rmin, rmax, bg, ImGui::GetStyle().FrameRounding);
+                if (selected || hovered)
+                    dl->AddRect(rmin, rmax, ImGui::GetColorU32(ImGuiCol_Border),
+                        ImGui::GetStyle().FrameRounding);
 
-                if (entry->kind == ProjectAssetIndex::Kind::Prefab &&
-                    ImGui::BeginDragDropSource(ImGuiDragDropFlags_None)) {
-                    ImGui::SetDragDropPayload(
-                        "ASSET_PREFAB", entry->assetPath.c_str(), entry->assetPath.size() + 1);
-                    ImGui::Text("Prefab: %s", entry->name.c_str());
-                    ImGui::EndDragDropSource();
-                }
-                if (EmitsAssetPath(entry->kind) &&
-                    ImGui::BeginDragDropSource(ImGuiDragDropFlags_None)) {
-                    ImGui::SetDragDropPayload(
-                        "ASSET_PATH", entry->assetPath.c_str(), entry->assetPath.size() + 1);
-                    ImGui::Text("%s", entry->name.c_str());
-                    ImGui::EndDragDropSource();
-                }
+                const char* icon = EntryKindIcon(entry->kind);
+                const ImVec2 iconSize = ImGui::CalcTextSize(icon);
+                const ImVec2 iconPos(
+                    rmin.x + (tileW - iconSize.x) * 0.5f,
+                    rmin.y + (iconAreaH - iconSize.y) * 0.5f + 2.0f);
+                dl->AddText(iconPos, ImGui::GetColorU32(ImGuiCol_Text), icon);
+
+                const std::string wrapped = asset_browser_text::WrapEllipsize(
+                    entry->name, nameWidth, 2, MeasureImGuiText, nullptr);
+                DrawMultilineCentered(
+                    dl,
+                    ImVec2(rmin.x + 4.0f, rmin.y + iconAreaH),
+                    nameWidth,
+                    wrapped,
+                    ImGui::GetColorU32(ImGuiCol_Text));
+
+                HandleAssetItemActivation(
+                    *entry, s_selectedFolder, nodes, spawned, activated, doubleClicked);
+                DrawAssetItemContext(*entry, nodes, spawned);
+                HandleAssetItemDragDrop(*entry);
+                DrawAssetHoverTooltip(*entry);
 
                 ++drawn;
-                float last_x2 = ImGui::GetItemRectMax().x;
-                float next_x2 = last_x2 + ImGui::GetStyle().ItemSpacing.x + 100;
+                const float last_x2 = ImGui::GetItemRectMax().x;
+                const float next_x2 = last_x2 + ImGui::GetStyle().ItemSpacing.x + tileW;
                 if (drawn < static_cast<int>(visible.size()) && next_x2 < visX2)
                     ImGui::SameLine();
                 ImGui::PopID();
             }
         }
+    }
+    ImGui::EndChild();
+
+    // Status line: selected asset full name + rom/-relative path.
+    ImGui::BeginChild("ProjectBrowserStatus", ImVec2(0, 0), false);
+    if (s_selection.name.empty()) {
+        ImGui::TextDisabled("No asset selected");
+    }
+    else {
+        const char* path = !s_selection.assetPath.empty()
+            ? s_selection.assetPath.c_str()
+            : s_selection.relativePath.c_str();
+        ImGui::TextUnformatted(s_selection.name.c_str());
+        ImGui::SameLine();
+        ImGui::TextDisabled("— %s", path);
     }
     ImGui::EndChild();
 

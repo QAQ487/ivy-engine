@@ -195,7 +195,7 @@ Typical panels and workflows:
 
 1. **Scene hierarchy** — select objects, expand children.
 2. **Inspector / properties** — edit transform, components, script fields, and **tags** (pick / add / delete custom).
-3. **Project / prefab browser** — drag assets and prefabs into the scene (indexes the open project’s `rom/` and `game/scripts/`).
+3. **Asset Browser (project / prefab browser)** — indexes the open project’s `rom/` and `game/scripts/`. Folder tree + breadcrumb navigate; **Refresh** and **Search** filter the current folder. **Grid / List** toggles the right-hand view; in Grid, a **Tile** size slider (64–160) scales icons. Grid names wrap up to two lines and ellipsize when still too long; hover shows the full file name and `rom/`-relative path; the status line at the bottom shows the selected asset’s name and path. List view is one row per asset (icon + full name, single-line ellipsis only if the panel is narrower than the name). Drag-drop (`ASSET_PATH` / `ASSET_PREFAB`), double-click, and right-click menus (including **Set as > Skybox** for eligible cubemaps) work in both views. View mode and tile size are stored in `project.json` → `editor` and `rom/editor/ui_prefs.json`.
 4. **Viewport** — 3D game view with a **fixed aspect ratio** (see below); transform gizmo and selection wireframe.
 5. **Play toolbar** — Play / Stop (F3).
 6. **UI edit mode** — switch edit mode to place canvas elements on screen.
@@ -217,7 +217,7 @@ The editor can drive different camera behaviors (third-person, scene camera node
 ### Saving work
 
 - **Save Scene** (Ctrl+S) — writes the current scene JSON under `rom/scene/`.
-- **Save Project** (Ctrl+Shift+S) — saves the scene **and** writes `project.json` (last opened scene, default scene, UI zoom). Unsaved scene changes still warn before load/exit/project switch.
+- **Save Project** (Ctrl+Shift+S) — saves the scene **and** writes `project.json` (last opened scene, default scene, UI zoom, Asset Browser view mode / tile size). Unsaved scene changes still warn before load/exit/project switch. Asset Browser view prefs also update `rom/editor/ui_prefs.json` immediately when changed.
 
 ---
 

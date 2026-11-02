@@ -290,6 +290,7 @@ exit /b 0</Command>
     <ClInclude Include="engine\editor\project_manager.h" />
     <ClInclude Include="engine\editor\playable_package_builder.h" />
     <ClInclude Include="engine\editor\editor_project_browser.h" />
+    <ClInclude Include="engine\editor\asset_browser_text.h" />
     <ClInclude Include="engine\editor\project_asset_ops.h" />
     <ClInclude Include="engine\editor\editor_ui_panel.h" />
     <ClInclude Include="engine\editor\editor_undo.h" />

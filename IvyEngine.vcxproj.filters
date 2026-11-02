@@ -228,6 +228,9 @@
     <ClInclude Include="engine\editor\editor_project_browser.h">
       <Filter>engine\editor</Filter>
     </ClInclude>
+    <ClInclude Include="engine\editor\asset_browser_text.h">
+      <Filter>engine\editor</Filter>
+    </ClInclude>
     <ClInclude Include="engine\editor\project_asset_ops.h">
       <Filter>engine\editor</Filter>
     </ClInclude>
