@@ -256,8 +256,23 @@ static void SaveUiPrefs() {
         std::error_code ec;
         fs::create_directories(dest.parent_path(), ec);
         json j;
+        // Preserve unknown keys (and Asset Browser prefs) when rewriting zoom/FPS.
+        try {
+            std::ifstream existing(dest);
+            if (existing.is_open())
+                existing >> j;
+        }
+        catch (...) {
+            j = json::object();
+        }
+        if (!j.is_object())
+            j = json::object();
         j["uiZoomPercent"] = g_uiZoomPercent;
         PlayFpsOverlay::WritePrefs(j);
+        if (ProjectManager::Instance().IsOpen()) {
+            j["assetBrowserListView"] = ProjectManager::Instance().GetAssetBrowserListView();
+            j["assetBrowserTileSize"] = ProjectManager::Instance().GetAssetBrowserTileSize();
+        }
         std::ofstream file(dest);
         if (file.is_open())
             file << j.dump(2);
@@ -280,6 +295,13 @@ static void LoadUiPrefs() {
         if (IsValidUiZoomPercent(percent)) {
             g_uiZoomPercent = percent;
             g_uiZoom = static_cast<float>(percent) / 100.0f;
+        }
+        // Asset Browser prefs are applied when a project is open / panel syncs.
+        if (ProjectManager::Instance().IsOpen()) {
+            ProjectManager::Instance().SetAssetBrowserListView(
+                j.value("assetBrowserListView", false));
+            ProjectManager::Instance().SetAssetBrowserTileSize(
+                j.value("assetBrowserTileSize", 100));
         }
     }
     catch (...) {

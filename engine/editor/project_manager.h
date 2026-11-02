@@ -17,6 +17,10 @@ public:
 
     struct EditorSettings {
         int uiZoomPercent = 100;
+        // Asset Browser: false = grid tiles, true = list rows.
+        bool assetBrowserListView = false;
+        // Grid tile width in pixels (clamped on set). Default matches legacy 100px tiles.
+        int assetBrowserTileSize = 100;
     };
 
     struct PhysicsSettings {
@@ -66,6 +70,11 @@ public:
     void SetDefaultScene(const std::string& fileName);
     void SetEditorUiZoomPercent(int percent);
     int GetEditorUiZoomPercent() const { return m_data.editor.uiZoomPercent; }
+    void SetAssetBrowserListView(bool listView);
+    bool GetAssetBrowserListView() const { return m_data.editor.assetBrowserListView; }
+    void SetAssetBrowserTileSize(int tileSize);
+    int GetAssetBrowserTileSize() const { return m_data.editor.assetBrowserTileSize; }
+    static int ClampAssetBrowserTileSize(int tileSize);
     void SetPhysicsGravity(float gravity);
     float GetPhysicsGravity() const { return m_data.physics.gravity; }
     void SetAudioBuses(float master, float bgm, float sfx, float voice);

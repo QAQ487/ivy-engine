@@ -382,6 +382,8 @@ ProjectManager::ProjectData ProjectManager::MakeDefaultData(const std::string& r
     data.defaultScene = fromTxt.empty() ? "scene_main.json" : fromTxt;
     data.lastOpenedScene = data.defaultScene;
     data.editor.uiZoomPercent = 100;
+    data.editor.assetBrowserListView = false;
+    data.editor.assetBrowserTileSize = 100;
     data.physics.gravity = GRAVITY;
 
     try {
@@ -390,6 +392,9 @@ ProjectManager::ProjectData ProjectManager::MakeDefaultData(const std::string& r
             json j;
             prefs >> j;
             data.editor.uiZoomPercent = j.value("uiZoomPercent", 100);
+            data.editor.assetBrowserListView = j.value("assetBrowserListView", false);
+            data.editor.assetBrowserTileSize = ClampAssetBrowserTileSize(
+                j.value("assetBrowserTileSize", 100));
         }
     }
     catch (...) {
@@ -416,8 +421,15 @@ bool ProjectManager::LoadProjectFile(const std::string& rootPath, ProjectData* o
         out->lastOpenedScene = j.value("lastOpenedScene", std::string{});
         out->defaultScene = j.value("defaultScene", std::string{});
         out->editor.uiZoomPercent = 100;
-        if (j.contains("editor") && j["editor"].is_object())
+        out->editor.assetBrowserListView = false;
+        out->editor.assetBrowserTileSize = 100;
+        if (j.contains("editor") && j["editor"].is_object()) {
             out->editor.uiZoomPercent = j["editor"].value("uiZoomPercent", 100);
+            out->editor.assetBrowserListView =
+                j["editor"].value("assetBrowserListView", false);
+            out->editor.assetBrowserTileSize = ClampAssetBrowserTileSize(
+                j["editor"].value("assetBrowserTileSize", 100));
+        }
         out->physics.gravity = GRAVITY;
         if (j.contains("physics") && j["physics"].is_object())
             out->physics.gravity = j["physics"].value("gravity", GRAVITY);
@@ -471,6 +483,9 @@ bool ProjectManager::WriteProjectFile(const std::string& rootPath, const Project
         j["defaultScene"] = data.defaultScene;
         j["editor"] = json::object();
         j["editor"]["uiZoomPercent"] = data.editor.uiZoomPercent;
+        j["editor"]["assetBrowserListView"] = data.editor.assetBrowserListView;
+        j["editor"]["assetBrowserTileSize"] =
+            ClampAssetBrowserTileSize(data.editor.assetBrowserTileSize);
         j["physics"] = json::object();
         j["physics"]["gravity"] = data.physics.gravity;
         j["audio"] = json::object();
@@ -715,6 +730,22 @@ void ProjectManager::SetDefaultScene(const std::string& fileName) {
 
 void ProjectManager::SetEditorUiZoomPercent(int percent) {
     m_data.editor.uiZoomPercent = percent;
+}
+
+int ProjectManager::ClampAssetBrowserTileSize(int tileSize) {
+    if (tileSize < 64)
+        return 64;
+    if (tileSize > 160)
+        return 160;
+    return tileSize;
+}
+
+void ProjectManager::SetAssetBrowserListView(bool listView) {
+    m_data.editor.assetBrowserListView = listView;
+}
+
+void ProjectManager::SetAssetBrowserTileSize(int tileSize) {
+    m_data.editor.assetBrowserTileSize = ClampAssetBrowserTileSize(tileSize);
 }
 
 void ProjectManager::SetPhysicsGravity(float gravity) {

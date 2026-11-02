@@ -37,6 +37,10 @@
   - Scene／prefab JSON 浮點經 `engine/scene/json_float.h` 最多存三位小數：去尾零、`-0` → `0`、NaN／Inf → `null`。
   - 選物件唔再標 dirty：Inspect 唔再 `EnsureVisualComponent` 自動加 Visual；gizmo 淨係 translate 唔再改寫 rotation／scale；dirty／undo 以三位小數比較。
   - 留意：fog density UI 用 `%.4f`、UV scroll `< 0.001` 可能失精。
+- [ ] **Asset Browser 長檔名／Grid·List**（source 已做；等 Windows editor 驗收）
+  - Grid tile 名最多兩行，超出用 UTF-8 安全 `...`；hover tooltip 同底部 status 顯示全名 + `rom/` 路徑。
+  - Toolbar 有 Grid/List 同 tile size；view mode／tile size 寫入 `project.json` → `editor` 同 `rom/editor/ui_prefs.json`。
+  - Linux：`tests/asset_browser_text_test.cpp`（`g++ -std=c++17 -I.`）。Windows 要目視長檔名、list 拖放／右鍵 Skybox、設定重開後保留。
 
 
 ## AI 系統套件（source audit：引擎內全部 missing）
