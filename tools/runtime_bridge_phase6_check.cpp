@@ -12,14 +12,28 @@ static void check(bool b, const char* label) {
 
 int main() {
     Protocol p("phase6", 42, 1);
+    ObservedTarget player{};
+    player.name = "Player";
+    player.posX = 1.0f; player.posY = 2.0f; player.posZ = 3.0f;
+    player.velX = 0.1f; player.velY = 0.0f; player.velZ = 0.2f;
+    player.hasRotation = true;
+    player.rotX = 10.0f; player.rotY = 20.0f; player.rotZ = 30.0f;
+    player.quatW = 1.0f;
+    player.hasScale = true;
+    player.scaleX = 1.0f; player.scaleY = 1.0f; player.scaleZ = 1.0f;
+    player.hasAngularVelocity = true;
+    player.angVelY = 1.0f;
+    player.hasRigidbody = true;
+    player.kinematic = false;
+    player.mass = 2.0f;
+    player.drag = 0.01f;
+    player.angularDrag = 0.05f;
+    player.friction = 0.4f;
+    player.useGravity = true;
+    player.hasLocalInverseInertia = true;
+    player.invInertiaX = 6.0f; player.invInertiaY = 6.0f; player.invInertiaZ = 6.0f;
     p.Publish(true, true, "rom/scene/fixture.json", {
-        ObservedTarget{
-            "Player", 1.0f, 2.0f, 3.0f, 0.1f, 0.0f, 0.2f,
-            true, 10.0f, 20.0f, 30.0f, 0.0f, 0.0f, 0.0f, 1.0f,
-            true, 1.0f, 1.0f, 1.0f,
-            true, 0.0f, 1.0f, 0.0f,
-            true, false
-        }
+        player
     }, {
         ListedObject{"Player", {"SceneTransform", "Rigidbody", "visual"}},
         ListedObject{"Ground", {"SceneTransform", "BoxCollider"}},
@@ -32,6 +46,14 @@ int main() {
     check(obs.contains("rotationQuaternion") && obs["rotationQuaternion"].contains("w"), "observe quaternion");
     check(obs.contains("scale") && obs.contains("angularVelocity"), "observe scale and angularVelocity");
     check(obs.contains("rigidbody") && obs["rigidbody"]["kinematic"] == false, "observe rigidbody kinematic");
+    check(obs["rigidbody"]["mass"] == 2.0f, "observe rigidbody mass");
+    check(obs["rigidbody"]["angularDrag"] == 0.05f, "observe rigidbody angularDrag");
+    check(obs["rigidbody"]["drag"] == 0.01f, "observe rigidbody drag");
+    check(obs["rigidbody"]["friction"] == 0.4f, "observe rigidbody friction");
+    check(obs["rigidbody"]["useGravity"] == true, "observe rigidbody useGravity");
+    check(obs["rigidbody"].contains("localInverseInertia") &&
+          obs["rigidbody"]["localInverseInertia"]["x"] == 6.0f,
+          "observe rigidbody localInverseInertia");
     check(!obs.contains("sleeping") && !obs.contains("contactCount"), "omit unavailable sleep/contact fields");
 
     auto badObs = p.Request(R"({"protocolVersion":1,"requestId":2,"runId":"phase6","verb":"observe","target":"Player","extra":1})");

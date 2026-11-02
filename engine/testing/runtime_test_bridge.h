@@ -43,6 +43,14 @@ struct ObservedTarget {
     float angVelX = 0.0f, angVelY = 0.0f, angVelZ = 0.0f;
     bool hasRigidbody = false;
     bool kinematic = false;
+    // Read-only rigidbody params for angular acceptance (mass / damping / inertia).
+    float mass = 1.0f;
+    float drag = 0.0f;
+    float angularDrag = 0.0f;
+    float friction = 0.0f;
+    bool useGravity = false;
+    bool hasLocalInverseInertia = false;
+    float invInertiaX = 0.0f, invInertiaY = 0.0f, invInertiaZ = 0.0f;
 };
 
 struct ListedObject {
