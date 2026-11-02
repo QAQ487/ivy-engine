@@ -135,6 +135,48 @@ class AngularValidatorTests(unittest.TestCase):
         ]
         self.assertFalse(runner.validate_rolling(bad, radius=0.5)["pass"])
 
+    def test_validate_rolling_terry_windows_samples(self):
+        """Real angular-runtime samples from Terry @ e55467d (sphere_rolling).
+
+        Early frames already show RH Y-up sign (vx>0 ⇒ wz<0). Slip shrinks toward
+        wz = -vx/R (R=0.5 ⇒ wz = -2*vx). Mid/late frames decelerate to rest — the
+        axis check must use an early developing sample, not a post-stop mid index.
+        """
+        samples = [
+            {"vx": 1.528, "wz": -1.008},
+            {"vx": 0.793, "wz": -1.009},
+            {"vx": 0.355, "wz": -0.497},
+            {"vx": 0.148, "wz": -0.295},
+            {"vx": 0.080, "wz": -0.160},  # near no-slip: wz ≈ -2*vx
+            {"vx": 0.040, "wz": -0.080},
+            {"vx": 0.020, "wz": -0.040},
+            {"vx": 0.010, "wz": -0.020},
+            {"vx": 0.005, "wz": -0.010},
+            {"vx": 0.002, "wz": -0.004},
+            {"vx": 0.000, "wz": 0.000},
+            {"vx": 0.000, "wz": 0.000},
+        ]
+        self.assertEqual(runner.expected_rolling_wz_sign(1.528), -1)
+        self.assertLess(
+            runner.rolling_slip(samples[4]["vx"], samples[4]["wz"], 0.5), 0.01)
+        result = runner.validate_rolling(samples, radius=0.5)
+        self.assertTrue(result["pass"], result)
+        self.assertTrue(result["axisOk"], result)
+        self.assertTrue(result["slipOk"], result)
+        self.assertEqual(result["expectedWzSign"], -1)
+        self.assertEqual(result["convention"], "RH_Yup_wz_eq_minus_vx_over_R")
+        # Axis sample must be early (developing), not a late near-rest frame.
+        self.assertGreater(abs(result["axisSample"]["wz"]), 0.2)
+
+    def test_rolling_convention_matches_cross3(self):
+        # r=(0,-R,0), ω=(0,0,wz) ⇒ ω×r = (wz*R, 0, 0); no-slip vx = -wz*R.
+        r = (0.0, -0.5, 0.0)
+        omega = (0.0, 0.0, -3.0)  # negative wz
+        omega_cross_r = runner.v_cross(omega, r)
+        self.assertAlmostEqual(omega_cross_r[0], -3.0 * 0.5, places=9)  # -1.5
+        # v + ω×r = 0 ⇒ vx = +1.5 when wz = -3 (same sign relation as Terry samples).
+        self.assertAlmostEqual(runner.rolling_slip(1.5, -3.0, 0.5), 0.0, places=12)
+
     def test_validate_tipping_upright(self):
         obs = {"rotationQuaternion": {"x": 0.0, "y": 0.0, "z": 0.0, "w": 1.0}}
         self.assertTrue(runner.validate_tipping(obs)["pass"])

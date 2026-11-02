@@ -181,11 +181,41 @@ def body_up_axis_from_quat(q):
 
 
 def rolling_slip(vx, wz, radius):
-    """|v - ω×r| magnitude for planar +X rolling with contact r=(0,-R,0).
+    """|v − ω×r| slip speed for planar +X rolling on Y-up ground.
 
-    ω=(0,0,wz), ω×r = (wz*R, 0, 0); no-slip needs vx = -wz*R, slip = |vx + wz*R|.
+    Engine physics uses a right-handed cross product (Rigidbody ``Cross3``, same
+    as DirectXMath ``XMVector3Cross`` / scenario-2 ``r × J``). Contact lever from
+    COM to ground is ``r = (0, −R, 0)``. With ``ω = (0, 0, wz)``:
+
+        ω × r = (wz * R, 0, 0)
+
+    No-slip requires ``v_contact = v + ω×r = 0`` ⇒ ``vx = −wz·R`` ⇒ ``wz = −vx/R``.
+    So for ``+vx``, expected ``wz`` is **negative**. Slip magnitude is ``|vx + wz·R|``.
     """
     return abs(float(vx) + float(wz) * float(radius))
+
+
+def expected_rolling_wz_sign(vx):
+    """Sign of wz for rolling without slip under engine RH Y-up convention.
+
+    Returns -1 when +vx expects wz < 0, +1 when −vx expects wz > 0, else 0.
+    """
+    if vx > 1e-6:
+        return -1
+    if vx < -1e-6:
+        return 1
+    return 0
+
+
+def pick_rolling_axis_sample(samples, min_abs_wz=0.05):
+    """First sample with meaningful |wz| while still translating (not post-stop)."""
+    for sample in samples:
+        if abs(float(sample.get("wz", 0.0))) >= min_abs_wz and abs(float(sample.get("vx", 0.0))) >= 0.05:
+            return sample
+    for sample in samples:
+        if abs(float(sample.get("wz", 0.0))) >= min_abs_wz:
+            return sample
+    return samples[0]
 
 
 def validate_free_spin(obs_after_impulse, torque, steps, obs_after_steps):
@@ -267,18 +297,30 @@ def validate_rotation_integration(q0, omega_samples, q_final, dt=PHYSICS_DT):
 
 
 def validate_rolling(samples, radius=SPHERE_RADIUS):
-    """samples: list of {vx, wz}. Assert ω develops with correct sign and slip shrinks."""
+    """Assert ω develops with engine RH Y-up rolling sign and slip shrinks.
+
+    Axis check uses the first sample with meaningful |wz| (not a mid/late sample
+    after the sphere has already decelerated to rest — Terry Windows run at
+    e55467d failed that way while early samples already had the correct ``wz < 0``
+    for ``+vx``). Convention is documented on ``rolling_slip`` / matched by
+    scenario-2 ``r × J`` (right-handed ``Cross3``).
+    """
     if len(samples) < 2:
         return {"pass": False, "error": "need >=2 samples"}
     first = samples[0]
-    mid = samples[len(samples) // 2]
     last = samples[-1]
-    # +vx should produce wz < 0 for contact below COM.
-    axis_ok = float(mid["wz"]) * float(first["vx"] or mid["vx"] or 1.0) < 0.0 or abs(mid["wz"]) > 0.05
-    if float(first.get("vx", 0.0)) > 0.1:
-        axis_ok = float(mid["wz"]) < -0.05
-    elif float(first.get("vx", 0.0)) < -0.1:
-        axis_ok = float(mid["wz"]) > 0.05
+    axis_sample = pick_rolling_axis_sample(samples)
+    vx = float(axis_sample.get("vx", 0.0))
+    wz = float(axis_sample.get("wz", 0.0))
+    # Prefer sign from the axis sample's own vx; fall back to the first sample.
+    sign_ref_vx = vx if abs(vx) >= 0.05 else float(first.get("vx", 0.0))
+    want = expected_rolling_wz_sign(sign_ref_vx)
+    if want < 0:
+        axis_ok = wz < -0.05
+    elif want > 0:
+        axis_ok = wz > 0.05
+    else:
+        axis_ok = abs(wz) > 0.05
     slip0 = rolling_slip(first["vx"], first["wz"], radius)
     slip1 = rolling_slip(last["vx"], last["wz"], radius)
     # If already nearly rolling at start, require slip stays small.
@@ -292,6 +334,9 @@ def validate_rolling(samples, radius=SPHERE_RADIUS):
         "slipOk": slip_ok,
         "slip0": slip0,
         "slipN": slip1,
+        "axisSample": axis_sample,
+        "expectedWzSign": want,
+        "convention": "RH_Yup_wz_eq_minus_vx_over_R",
         "samples": samples,
     }
 
