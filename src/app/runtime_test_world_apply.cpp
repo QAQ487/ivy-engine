@@ -70,10 +70,11 @@ GameObject* FindNamedObject(const std::string& name) {
     return found;
 }
 
-bool IsDynamicBody(const GameObject& obj, RigidbodyComponent** outRc = nullptr) {
-    auto* rc = obj.GetComponent<RigidbodyComponent>();
+bool IsDynamicBody(GameObject& obj, RigidbodyComponent** outRc = nullptr) {
+    // Non-const GameObject so GetComponent returns RigidbodyComponent* (mutable Body()).
+    RigidbodyComponent* rc = obj.GetComponent<RigidbodyComponent>();
     if (!rc) return false;
-    const Rigidbody& body = rc->Body();
+    Rigidbody& body = rc->Body();
     if (body.IsKinematic() || body.GetMass() <= 0.0f) return false;
     if (outRc) *outRc = rc;
     return true;
