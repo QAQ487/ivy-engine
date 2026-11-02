@@ -60,6 +60,7 @@ ASSERT_OPS = frozenset({
     "lt",
     "between",
     "changed",
+    "delta_gt",
     "axis_dot",
 })
 
@@ -463,6 +464,9 @@ def _validate_assert(step: dict, path: str) -> dict:
     if op == "changed":
         if "value" in step:
             _err(path, "changed assert must not set value")
+    elif op == "approx" and "value" not in step:
+        # Compare against the previous observe/assert of the same target.
+        pass
     elif op == "between":
         value = step.get("value")
         if not isinstance(value, list) or len(value) != 2:
@@ -474,6 +478,10 @@ def _validate_assert(step: dict, path: str) -> dict:
         out["value"] = [lo, hi]
     elif op == "axis_dot":
         out["value"] = _require_vec(step.get("value"), "%s.value" % path, 3)
+    elif op == "delta_gt":
+        out["value"] = _require_finite(step.get("value"), "%s.value" % path)
+        if out["value"] < 0:
+            _err("%s.value" % path, "delta_gt value must be >= 0")
     elif "value" not in step:
         _err("%s.value" % path, "value is required for op %s" % op)
     else:
@@ -720,6 +728,28 @@ def eval_assert(
             return fail("no previous value for changed")
         return ok() if actual != previous else fail("value did not change")
 
+    if op == "delta_gt":
+        if previous is None:
+            return fail("no previous value for delta_gt")
+        if not _is_number(value):
+            return fail("delta_gt requires a finite min-delta value")
+        min_delta = float(value)
+        actual_vec = _as_vec3(actual)
+        prev_vec = _as_vec3(previous)
+        if actual_vec is not None and prev_vec is not None:
+            # Horizontal (XZ) displacement — ignores vertical settle/drift.
+            dx = actual_vec[0] - prev_vec[0]
+            dz = actual_vec[2] - prev_vec[2]
+            delta = math.sqrt(dx * dx + dz * dz)
+            detail["delta"] = delta
+            detail["deltaY"] = actual_vec[1] - prev_vec[1]
+            return ok() if delta > min_delta else fail("horizontal delta not greater")
+        if not (_is_number(actual) and _is_number(previous)):
+            return fail("delta_gt requires numbers or vec3")
+        delta = abs(float(actual) - float(previous))
+        detail["delta"] = delta
+        return ok() if delta > min_delta else fail("delta not greater")
+
     if op == "eq":
         if isinstance(value, float) or isinstance(actual, float):
             if not (_is_number(actual) and _is_number(value)):
@@ -729,16 +759,22 @@ def eval_assert(
 
     if op == "approx":
         t = 1e-3 if tol is None else float(tol)
+        compare = previous if value is None else value
+        if value is None and previous is None:
+            return fail("approx without value requires a previous sample")
+        detail["value"] = compare
         actual_vec = _as_vec3(actual)
-        value_vec = _as_vec3(value) if not _is_number(value) else None
-        if actual_vec is not None and isinstance(value, list) and len(value) == 3:
-            value_vec = [float(v) for v in value]
+        if actual_vec is not None and (
+                isinstance(compare, list) and len(compare) == 3 or _as_vec3(compare) is not None):
+            value_vec = _as_vec3(compare) if not isinstance(compare, list) else [float(v) for v in compare]
+            if value_vec is None:
+                return fail("approx vector mismatch")
             deltas = [abs(actual_vec[i] - value_vec[i]) for i in range(3)]
             detail["deltas"] = deltas
             return ok() if all(d <= t for d in deltas) else fail("approx vector mismatch")
-        if not (_is_number(actual) and _is_number(value)):
+        if not (_is_number(actual) and _is_number(compare)):
             return fail("approx requires finite numbers or vec3")
-        return ok() if abs(float(actual) - float(value)) <= t else fail("approx mismatch")
+        return ok() if abs(float(actual) - float(compare)) <= t else fail("approx mismatch")
 
     if op in ("gt", "lt"):
         if not (_is_number(actual) and _is_number(value)):

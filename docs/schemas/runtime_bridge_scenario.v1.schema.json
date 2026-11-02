@@ -308,11 +308,12 @@
           "description": "Path such as DynamicBox.position.x or sample[-1].angularVelocity.z"
         },
         "op": {
-          "enum": ["eq", "approx", "gt", "lt", "between", "changed", "axis_dot"]
+          "enum": ["eq", "approx", "gt", "lt", "between", "changed", "delta_gt", "axis_dot"]
         },
         "value": true,
         "tol": { "type": "number", "minimum": 0 }
-      }
+      },
+      "description": "approx may omit value to compare against the previous observe of the same target. delta_gt requires a previous sample; for vec3 targets it uses horizontal XZ displacement."
     },
     "assertEvent": {
       "type": "object",

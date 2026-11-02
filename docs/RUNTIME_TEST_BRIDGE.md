@@ -127,10 +127,10 @@ tools\run_runtime_bridge_scenarios.cmd x64\scenarios-runtime x64\Debug\IvyEngine
 
 1. Set `"version": 1`, a short `"name"`, and `"scene": "rom/scene/<fixture>.json"` (must stay under `rom/`, end in `.json`, no `..`).
 2. Prefer deterministic flows: `wait_ready` → `pause` → world manip / `step` / `observe` → `assert`. Use `sample` for pause+step+observe loops.
-3. Assert targets are paths into the last observe or sample, e.g. `DynamicBox.position.x`, `sample[-1].angularVelocity.z`. Ops: `eq`, `approx`, `gt`, `lt`, `between`, `changed`, `axis_dot`.
+3. Assert targets are paths into the last observe or sample, e.g. `DynamicBox.position.x`, `sample[-1].angularVelocity.z`. Ops: `eq`, `approx`, `gt`, `lt`, `between`, `changed`, `delta_gt`, `axis_dot`. `approx` without `value` compares to the previous observe of the same target (good for settle-relative height). `delta_gt` on a vec3 uses horizontal XZ displacement vs the previous sample.
 4. Unknown keys/types are rejected with path-based errors (`$.steps[3].frames`). Keep numbers finite; bound frames/counts/timeouts.
 5. Do **not** add a new Python acceptance script for a flow that fits these steps — write JSON under `testbed/scenarios/` and run the scenario runner.
-6. Variables are intentionally omitted in v1; use successive `observe` + `changed` / absolute tolerances instead.
+6. Variables are intentionally omitted in v1; use successive `observe` + `changed` / `approx` (no value) / `delta_gt` instead of absolute spawn heights that settle.
 
 Minimal sketch:
 

@@ -504,7 +504,9 @@ def execute_step(step: dict, bridge: Any, ctx: ScenarioContext, deadline: float)
             record["elapsedSec"] = round(time.monotonic() - started, 4)
             raise AssertionError("assert resolve failed for %s: %s" % (target, exc)) from exc
         previous = ctx.previous_values.get(target)
-        if previous is None and op == "changed":
+        needs_previous = op in ("changed", "delta_gt") or (
+            op == "approx" and "value" not in step)
+        if previous is None and needs_previous:
             try:
                 previous = resolve_path(target, {
                     "observes": ctx.prior_observes,

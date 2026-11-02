@@ -4,7 +4,10 @@
   "scene": "rom/scene/scene_runtime_bridge_player.json",
   "timeoutSec": 120,
   "steps": [
-    { "type": "comment", "text": "Port of phase4 W-walk: inject W and assert Player position changes." },
+    {
+      "type": "comment",
+      "text": "Port of phase4 W-walk. Spawn Y settles to ~0.5; assert height vs pre-move baseline and horizontal XZ delta (not absolute Y)."
+    },
     { "type": "wait_ready", "timeoutSec": 25 },
     { "type": "observe", "object": "Player" },
     {
@@ -15,13 +18,6 @@
       "tol": 0.25
     },
     {
-      "type": "assert",
-      "target": "Player.position.y",
-      "op": "approx",
-      "value": 1.0,
-      "tol": 0.35
-    },
-    {
       "type": "keyboard",
       "keys": ["W"],
       "updates": 120
@@ -29,15 +25,15 @@
     { "type": "observe", "object": "Player" },
     {
       "type": "assert",
-      "target": "Player.position",
-      "op": "changed"
+      "target": "Player.position.y",
+      "op": "approx",
+      "tol": 0.35
     },
     {
       "type": "assert",
-      "target": "Player.position.y",
-      "op": "approx",
-      "value": 1.0,
-      "tol": 0.35
+      "target": "Player.position",
+      "op": "delta_gt",
+      "value": 5.0
     }
   ]
 }

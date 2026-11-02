@@ -182,6 +182,31 @@ class ResolveAndAssertTests(unittest.TestCase):
             tol=0.98,
         )["pass"])
 
+    def test_approx_against_previous(self):
+        self.assertTrue(eval_assert(
+            "approx", 0.50, value=None, tol=0.35, previous=0.49)["pass"])
+        self.assertFalse(eval_assert(
+            "approx", 1.0, value=None, tol=0.35, previous=0.49)["pass"])
+        doc = validate_scenario(_minimal(steps=[{
+            "type": "assert",
+            "target": "Player.position.y",
+            "op": "approx",
+            "tol": 0.35,
+        }]))
+        self.assertNotIn("value", doc["steps"][0])
+
+    def test_delta_gt_horizontal(self):
+        before = {"x": 0.0, "y": 0.5, "z": 0.0}
+        after = {"x": 0.0, "y": 0.49, "z": -8.0}
+        self.assertTrue(eval_assert(
+            "delta_gt", after, value=5.0, previous=before)["pass"])
+        self.assertFalse(eval_assert(
+            "delta_gt", after, value=20.0, previous=before)["pass"])
+        # Pure vertical settle must not count as horizontal motion.
+        settled = {"x": 0.0, "y": 0.5, "z": 0.0}
+        self.assertFalse(eval_assert(
+            "delta_gt", settled, value=0.1, previous={"x": 0.0, "y": 1.0, "z": 0.0})["pass"])
+
     def test_approx_vec3(self):
         self.assertTrue(eval_assert(
             "approx",
