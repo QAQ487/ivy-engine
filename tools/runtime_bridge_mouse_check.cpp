@@ -58,7 +58,22 @@ int main() {
     check(dx == 10 && dy == -20, "injected delta reported");
     check(Mouse_GetWheelDelta() == 50, "injected wheel delta reported");
 
+    // Absolute cursor override (backbuffer pixels); does not call SetCursorPos
+    Mouse_ClearInjection();
+    Mouse_TestInject(0, 0, MOUSE_BUTTON_LEFT, 0, true, 320, 180);
+    check(Mouse_IsInjectionActive(), "absolute injection active");
+    int px = 0, py = 0;
+    Mouse_GetPosition(px, py);
+    check(px == 320 && py == 180, "Mouse_GetPosition returns injected absolute");
+    check(Mouse_GetX() == 320 && Mouse_GetY() == 180, "GetX/GetY follow absolute inject");
+    Mouse_TestInject(0, 0, MOUSE_BUTTON_NONE, 0, true, 11, 22);
+    Mouse_GetPosition(px, py);
+    check(px == 11 && py == 22, "absolute re-inject updates position");
+    Mouse_ClearInjection();
+    check(!Mouse_IsInjectionActive(), "absolute cleared with injection");
+
     // Physical message arrival while injection active does not overwrite injected state
+    Mouse_TestInject(10, -20, MOUSE_BUTTON_LEFT, 50);
     Mouse_ProcessMessage(WM_LBUTTONUP, 0, 0, nullptr);
     check(Mouse_IsLeftDown(), "physical WM does not overwrite injected left");
 
@@ -82,16 +97,21 @@ int main() {
     check(p.request("mouse", {{"dx", 0}, {"dy", 0}, {"buttons", Json::array()}, {"wheel", 121}, {"updates", 1}}).value("error", "") == "invalid_request", "reject wheel>120");
     check(p.request("mouse", {{"dx", 0}, {"dy", 0}, {"buttons", Json::array()}, {"updates", 0}}).value("error", "") == "invalid_request", "reject updates 0");
     check(p.request("mouse", {{"dx", 0}, {"dy", 0}, {"buttons", Json::array()}, {"updates", 121}}).value("error", "") == "invalid_request", "reject updates >120");
+    check(p.request("mouse", {{"dx", 0}, {"dy", 0}, {"buttons", Json::array()}, {"updates", 1}, {"x", 1280}, {"y", 0}}).value("error", "") == "invalid_request", "reject absolute x at backbuffer width");
+    check(p.request("mouse", {{"dx", 0}, {"dy", 0}, {"buttons", Json::array()}, {"updates", 1}, {"x", 0}}).value("error", "") == "invalid_request", "reject x without y over pipe");
 
-    // Lifecycle: N=1 update
-    check(p.request("mouse", {{"dx", 30}, {"dy", -40}, {"buttons", {"LEFT", "MIDDLE"}}, {"wheel", 60}, {"updates", 1}}).value("ok", false), "N=1 mouse accepted");
+    // Lifecycle: N=1 update with absolute cursor
+    check(p.request("mouse", {{"dx", 30}, {"dy", -40}, {"buttons", {"LEFT", "MIDDLE"}}, {"wheel", 60}, {"updates", 1}, {"x", 400}, {"y", 300}}).value("ok", false), "N=1 mouse accepted with absolute");
     
-    // Prep update: neutral (no delta, no buttons)
+    // Prep update: neutral (no delta, no buttons); absolute still applied
     b.PollAndApplyInput(true);
     check(Mouse_IsInjectionActive(), "active during prep");
     Mouse_GetDelta(dx, dy);
     check(dx == 0 && dy == 0, "neutral prep has 0 delta");
     check(!Mouse_IsLeftDown() && !Mouse_IsMiddleDown(), "neutral prep has 0 buttons");
+    int absX = 0, absY = 0;
+    Mouse_GetPosition(absX, absY);
+    check(absX == 400 && absY == 300, "absolute during prep");
     b.FinishInputUpdate();
 
     // Active update 1
@@ -101,6 +121,8 @@ int main() {
     check(dx == 30 && dy == -40, "active update has injected delta");
     check(Mouse_IsLeftDown() && Mouse_IsMiddleDown(), "active update has injected buttons");
     check(Mouse_GetWheelDelta() == 60, "active update has injected wheel");
+    Mouse_GetPosition(absX, absY);
+    check(absX == 400 && absY == 300, "absolute during hold");
     b.FinishInputUpdate();
 
     check(p.request("status")["mouse"]["status"] == "active", "status active before release");
@@ -111,6 +133,8 @@ int main() {
     Mouse_GetDelta(dx, dy);
     check(dx == 0 && dy == 0, "neutral release has 0 delta");
     check(!Mouse_IsLeftDown() && !Mouse_IsMiddleDown(), "neutral release has 0 buttons");
+    Mouse_GetPosition(absX, absY);
+    check(absX == 400 && absY == 300, "absolute during release");
     check(p.request("status")["mouse"]["status"] == "releasing", "releasing status");
     b.FinishInputUpdate();
 

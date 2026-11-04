@@ -1,32 +1,65 @@
 """Bounded local-only Windows named-pipe client (stdlib; no process launcher)."""
 import argparse
 import ctypes as C
-from ctypes import wintypes as W
 import json
 import math
 import re
+import sys
 import time
 
-K=C.WinDLL("kernel32", use_last_error=True)
-class OVERLAPPED(C.Structure):
-    _fields_=[("Internal",C.c_size_t),("InternalHigh",C.c_size_t),
-              ("Offset",W.DWORD),("OffsetHigh",W.DWORD),("hEvent",W.HANDLE)]
-K.CreateFileW.argtypes=[W.LPCWSTR,W.DWORD,W.DWORD,C.c_void_p,W.DWORD,W.DWORD,W.HANDLE]
-K.CreateFileW.restype=W.HANDLE
-K.CreateEventW.argtypes=[C.c_void_p,W.BOOL,W.BOOL,W.LPCWSTR]
-K.CreateEventW.restype=W.HANDLE
-for fn in ("ReadFile","WriteFile"):
-    getattr(K,fn).argtypes=[W.HANDLE,C.c_void_p,W.DWORD,C.POINTER(W.DWORD),C.POINTER(OVERLAPPED)]
-    getattr(K,fn).restype=W.BOOL
-K.GetOverlappedResult.argtypes=[W.HANDLE,C.POINTER(OVERLAPPED),C.POINTER(W.DWORD),W.BOOL]
-K.GetOverlappedResult.restype=W.BOOL
-K.CancelIoEx.argtypes=[W.HANDLE,C.POINTER(OVERLAPPED)]
-K.WaitForSingleObject.argtypes=[W.HANDLE,W.DWORD]
-K.WaitForSingleObject.restype=W.DWORD
-K.CloseHandle.argtypes=[W.HANDLE]
-K.GetNamedPipeServerProcessId.argtypes=[W.HANDLE,C.POINTER(W.ULONG)]
-INVALID=C.c_void_p(-1).value
+# Pipe transport is Windows-only; pure helpers below stay importable on Linux
+# for offline validation unit tests.
+K=None
+W=None
+INVALID=None
+if sys.platform == "win32":
+    from ctypes import wintypes as W
+    K=C.WinDLL("kernel32", use_last_error=True)
+    class OVERLAPPED(C.Structure):
+        _fields_=[("Internal",C.c_size_t),("InternalHigh",C.c_size_t),
+                  ("Offset",W.DWORD),("OffsetHigh",W.DWORD),("hEvent",W.HANDLE)]
+    K.CreateFileW.argtypes=[W.LPCWSTR,W.DWORD,W.DWORD,C.c_void_p,W.DWORD,W.DWORD,W.HANDLE]
+    K.CreateFileW.restype=W.HANDLE
+    K.CreateEventW.argtypes=[C.c_void_p,W.BOOL,W.BOOL,W.LPCWSTR]
+    K.CreateEventW.restype=W.HANDLE
+    for fn in ("ReadFile","WriteFile"):
+        getattr(K,fn).argtypes=[W.HANDLE,C.c_void_p,W.DWORD,C.POINTER(W.DWORD),C.POINTER(OVERLAPPED)]
+        getattr(K,fn).restype=W.BOOL
+    K.GetOverlappedResult.argtypes=[W.HANDLE,C.POINTER(OVERLAPPED),C.POINTER(W.DWORD),W.BOOL]
+    K.GetOverlappedResult.restype=W.BOOL
+    K.CancelIoEx.argtypes=[W.HANDLE,C.POINTER(OVERLAPPED)]
+    K.WaitForSingleObject.argtypes=[W.HANDLE,W.DWORD]
+    K.WaitForSingleObject.restype=W.DWORD
+    K.CloseHandle.argtypes=[W.HANDLE]
+    K.GetNamedPipeServerProcessId.argtypes=[W.HANDLE,C.POINTER(W.ULONG)]
+    INVALID=C.c_void_p(-1).value
+else:
+    class OVERLAPPED(C.Structure):
+        _fields_=[]
 MAX_EVENTS=64
+
+def build_mouse_payload(dx, dy, buttons, updates, wheel=0, x=None, y=None):
+    """Validate mouse fields and return the JSON payload (no I/O)."""
+    if type(dx) is not int or not -600<=dx<=600:
+        raise ValueError("dx must be an integer in [-600,600]")
+    if type(dy) is not int or not -600<=dy<=600:
+        raise ValueError("dy must be an integer in [-600,600]")
+    allowed={"LEFT","RIGHT","MIDDLE"}
+    if not isinstance(buttons,(list,tuple)) or len(buttons)>3 or any(not isinstance(b,str) or b not in allowed for b in buttons) or len(set(buttons))!=len(buttons):
+        raise ValueError("buttons must be unique subset of LEFT,RIGHT,MIDDLE")
+    if type(wheel) is not int or not -120<=wheel<=120:
+        raise ValueError("wheel must be an integer in [-120,120]")
+    if type(updates) is not int or not 1<=updates<=120:
+        raise ValueError("updates must be an integer in [1,120]")
+    if (x is None) != (y is None):
+        raise ValueError("absolute cursor requires both x and y (backbuffer pixels)")
+    payload={"dx":dx,"dy":dy,"buttons":list(buttons),"wheel":wheel,"updates":updates}
+    if x is not None:
+        if type(x) is not int or type(y) is not int or x < 0 or y < 0:
+            raise ValueError("x,y must be non-negative integers (backbuffer pixels; server enforces size)")
+        payload["x"]=x
+        payload["y"]=y
+    return payload
 
 def _valid_event_name(name):
     if not isinstance(name,str) or not 1<=len(name)<=64: return False
@@ -342,25 +375,14 @@ class Client:
             self.close()
             raise
 
-    def mouse(self,dx,dy,buttons,updates,request_id,wheel=0,completion_timeout=7.0):
-        if type(dx) is not int or not -600<=dx<=600:
-            raise ValueError("dx must be an integer in [-600,600]")
-        if type(dy) is not int or not -600<=dy<=600:
-            raise ValueError("dy must be an integer in [-600,600]")
-        allowed={"LEFT","RIGHT","MIDDLE"}
-        if not isinstance(buttons,(list,tuple)) or len(buttons)>3 or any(not isinstance(b,str) or b not in allowed for b in buttons) or len(set(buttons))!=len(buttons):
-            raise ValueError("buttons must be unique subset of LEFT,RIGHT,MIDDLE")
-        if type(wheel) is not int or not -120<=wheel<=120:
-            raise ValueError("wheel must be an integer in [-120,120]")
-        if type(updates) is not int or not 1<=updates<=120:
-            raise ValueError("updates must be an integer in [1,120]")
+    def mouse(self,dx,dy,buttons,updates,request_id,wheel=0,completion_timeout=7.0,x=None,y=None):
+        payload=build_mouse_payload(dx,dy,buttons,updates,wheel=wheel,x=x,y=y)
         if type(request_id) is not int or not 1<=request_id<2147483647:
             raise ValueError("request ID must leave room for completion polls")
         if not math.isfinite(completion_timeout) or not 0<completion_timeout<=10:
             raise ValueError("completion timeout must be in (0,10]")
         try:
             deadline=time.monotonic()+completion_timeout
-            payload={"dx":dx,"dy":dy,"buttons":list(buttons),"wheel":wheel,"updates":updates}
             result=self.request("mouse",request_id,payload,deadline=deadline)
             if not result.get("ok"): return result
             operation_id=request_id
@@ -456,6 +478,8 @@ def main():
     p.add_argument("--no-zero-velocity",dest="zero_velocity",action="store_false")
     p.add_argument("--dx",type=int,default=0)
     p.add_argument("--dy",type=int,default=0)
+    p.add_argument("--x",type=int,default=None,help="optional absolute backbuffer X (requires --y)")
+    p.add_argument("--y",type=int,default=None,help="optional absolute backbuffer Y (requires --x)")
     p.add_argument("--buttons",nargs="*",default=[])
     p.add_argument("--wheel",type=int,default=0)
     p.add_argument("--lx",type=float,default=None)
@@ -493,7 +517,7 @@ def main():
             if a.verb=="keyboard":
                 r=c.keyboard(a.keys,a.updates,a.request_id,a.completion_timeout)
             elif a.verb=="mouse":
-                r=c.mouse(a.dx,a.dy,a.buttons,a.updates,a.request_id,a.wheel,a.completion_timeout)
+                r=c.mouse(a.dx,a.dy,a.buttons,a.updates,a.request_id,a.wheel,a.completion_timeout,x=a.x,y=a.y)
             elif a.verb=="controller":
                 r=c.controller(a.lx,a.ly,a.updates,a.request_id,a.completion_timeout,rx=a.rx,ry=a.ry,lt=a.lt,rt=a.rt,buttons=a.buttons or None)
             elif a.verb=="observe":

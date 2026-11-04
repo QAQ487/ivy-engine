@@ -15,7 +15,20 @@ void Keyboard_ClearInjection() {}
 bool Keyboard_IsInjectionActive() { return false; }
 #endif
 
-void Mouse_Initialize() {}
+#if defined(_DEBUG) && defined(GAME_RUNTIME)
+static bool g_stubMouseInject = false;
+static bool g_stubMouseAbs = false;
+static int g_stubMouseAbsX = 0;
+static int g_stubMouseAbsY = 0;
+#endif
+void Mouse_Initialize() {
+#if defined(_DEBUG) && defined(GAME_RUNTIME)
+    g_stubMouseInject = false;
+    g_stubMouseAbs = false;
+    g_stubMouseAbsX = 0;
+    g_stubMouseAbsY = 0;
+#endif
+}
 void Mouse_ResetFrame() {}
 void Mouse_ProcessMessage(UINT, WPARAM, LPARAM, HWND) {}
 void Mouse_GetDelta(int& dx, int& dy) { dx = 0; dy = 0; }
@@ -24,14 +37,42 @@ bool Mouse_IsRightDown() { return false; }
 bool Mouse_IsMiddleDown() { return false; }
 int Mouse_GetWheelDelta() { return 0; }
 void Mouse_ClearWheel() {}
-int Mouse_GetX() { return 0; }
-int Mouse_GetY() { return 0; }
-void Mouse_GetPosition(int& x, int& y) { x = 0; y = 0; }
+int Mouse_GetX() {
+    int x = 0, y = 0;
+    Mouse_GetPosition(x, y);
+    return x;
+}
+int Mouse_GetY() {
+    int x = 0, y = 0;
+    Mouse_GetPosition(x, y);
+    return y;
+}
+void Mouse_GetPosition(int& x, int& y) {
+#if defined(_DEBUG) && defined(GAME_RUNTIME)
+    if (g_stubMouseInject && g_stubMouseAbs) {
+        x = g_stubMouseAbsX;
+        y = g_stubMouseAbsY;
+        return;
+    }
+#endif
+    x = 0;
+    y = 0;
+}
 void Mouse_GetClientPosition(int& x, int& y) { x = 0; y = 0; }
 #if defined(_DEBUG) && defined(GAME_RUNTIME)
-void Mouse_TestInject(int, int, unsigned int, int) {}
-void Mouse_ClearInjection() {}
-bool Mouse_IsInjectionActive() { return false; }
+void Mouse_TestInject(int, int, unsigned int, int, bool hasAbsolute, int absX, int absY) {
+    g_stubMouseInject = true;
+    g_stubMouseAbs = hasAbsolute;
+    g_stubMouseAbsX = absX;
+    g_stubMouseAbsY = absY;
+}
+void Mouse_ClearInjection() {
+    g_stubMouseInject = false;
+    g_stubMouseAbs = false;
+    g_stubMouseAbsX = 0;
+    g_stubMouseAbsY = 0;
+}
+bool Mouse_IsInjectionActive() { return g_stubMouseInject; }
 #endif
 
 void Controller_Initialize() {}

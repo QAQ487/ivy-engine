@@ -225,6 +225,7 @@ class ClientChecks(unittest.TestCase):
         with self.assertRaises(ValueError): c.apply_impulse("Box", [1, 0, 0], 2147483647)
 
     def test_mouse_client_validation(self):
+        from runtime_test_client import build_mouse_payload
         c=Client.__new__(Client)
         for bad_dx in (-601, 601, "0", 1.5, True):
             with self.subTest(bad_dx=bad_dx):
@@ -241,6 +242,15 @@ class ClientChecks(unittest.TestCase):
         for bad_updates in (0, 121, True, 1.5, "5"):
             with self.subTest(bad_updates=bad_updates):
                 with self.assertRaises(ValueError): c.mouse(0, 0, [], bad_updates, 1)
+        with self.assertRaises(ValueError): build_mouse_payload(0, 0, [], 5, x=10)
+        with self.assertRaises(ValueError): build_mouse_payload(0, 0, [], 5, y=10)
+        for bad_xy in ((-1, 0), (0, -1), (1.5, 0), (True, 0), ("0", 0), (0, True)):
+            with self.subTest(bad_xy=bad_xy):
+                with self.assertRaises(ValueError):
+                    build_mouse_payload(0, 0, [], 5, x=bad_xy[0], y=bad_xy[1])
+        payload=build_mouse_payload(1, -2, ["LEFT"], 3, wheel=4, x=100, y=200)
+        self.assertEqual(payload, {"dx":1,"dy":-2,"buttons":["LEFT"],"wheel":4,"updates":3,"x":100,"y":200})
+        self.assertNotIn("x", build_mouse_payload(0, 0, [], 1))
 
     def test_events_client_validation(self):
         from runtime_test_client import validate_events_reply

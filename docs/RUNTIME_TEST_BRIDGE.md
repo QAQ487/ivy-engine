@@ -45,7 +45,7 @@ Capabilities advertised by `hello` / `status` (as implemented):
 | `hello` / `status` | Identity, ready/playing/paused/scene snapshot, frame counters, input op status, capabilities. When not ready, `readyDetail` explains `scene_path_empty`, `preload_active`, or `not_playing`. |
 | `quit` | Requests exit; response has `requiresReceipt: true` — client must send a lone LF receipt. Accepted while paused; the host drains exit without waiting for a sim tick. |
 | `keyboard` | Internal key inject (`keys`, `updates`); see [Keyboard injection](#keyboard-injection-keyboard) |
-| `mouse` | Internal mouse inject (`dx`, `dy`, `buttons`, `updates`, optional `wheel`) |
+| `mouse` | Internal mouse inject (`dx`, `dy`, `buttons`, `updates`, optional `wheel`, optional absolute `x`/`y`) |
 | `observe` | Named GameObject snapshot: `position`/`velocity`, plus `rotation` (Euler degrees), `rotationQuaternion`, `scale`, `angularVelocity`, and when a `Rigidbody` is present: `rigidbody.{kinematic,mass,drag,angularDrag,friction,useGravity,localInverseInertia}`. Pose prefers the `Transform` component via `GameObject::GetWorldPose` (world space when parented; equals local with no parent transform); falls back to legacy `m_position`/`m_rotation`/`m_scale` only when no Transform is attached. Sleeping/contact counts are omitted (not cheaply available). |
 | `list_objects` | Bounded GameObject name + component type list (`offset`, `limit` 1…64, default 32). Response includes `total` and `truncated`. |
 | `pause` / `resume` | Freeze or resume the sim loop. Status reports `paused`, `pendingSteps`, `frame`, `physicsTick`. |
@@ -151,6 +151,24 @@ Minimal sketch:
 ```
 
 Examples already ported: `world_manip.json`, `angular_free_spin.json`, `keyboard_move.json`.
+
+## Mouse injection (`mouse`)
+
+One queued operation at a time. Requires ready + playing. Injection is **internal** (`Mouse_TestInject`) — it never synthesizes OS mouse messages and never calls `SetCursorPos`.
+
+| Field | Required | Range / notes |
+| --- | --- | --- |
+| `dx`, `dy` | yes | Integer deltas in [-600, 600] (backbuffer-scaled movement) |
+| `buttons` | yes | Array of unique `LEFT` / `RIGHT` / `MIDDLE` (max 3) |
+| `updates` | yes | Integer 1…120 (engine `Update` hold count) |
+| `wheel` | no | Integer [-120, 120]; default 0 |
+| `x`, `y` | no (both or neither) | Absolute **backbuffer** pixel cursor. Finite JSON integers in `[0, width)` × `[0, height)` for the **current** backbuffer; otherwise `invalid_request`. |
+
+**Absolute cursor semantics:** When `x` and `y` are present, `Mouse_GetPosition` / `Mouse_GetX` / `Mouse_GetY` (and thus `ScriptApi_MouseGetPosition`) return those backbuffer coordinates for the whole isolating lifecycle (prep → hold → release). The override clears with injection after the op completes or cancels. Omitting `x`/`y` leaves position on the real OS cursor (`GetCursorPos`) while still injecting deltas/buttons/wheel. Relative `dx`/`dy` remain neutral on prep/release frames (same as before).
+
+Stock client: `Client.mouse(..., x=None, y=None)` / CLI `--x` `--y`. Client validates types and both-or-neither; the server enforces live backbuffer bounds.
+
+**Follow-up (not in this change):** a world→screen helper for the active 2D/3D camera so clients can aim at world positions without computing VP themselves.
 
 ## Keyboard injection (`keyboard`)
 
@@ -283,6 +301,8 @@ Stages the isolated fixture under the out-dir, sets bridge env vars, uses stock 
 
 ## Known limitations
 
+- **Absolute mouse cursor injection** is verified by Linux offline protocol checks and Windows in-process `runtime_bridge_mouse_check`. Full Debug GAME_RUNTIME verification on Windows (live named-pipe + `ScriptApi_MouseGetPosition` against a playable scene) is **pending**.
+- **World→screen for mouse aim** is not provided by the bridge client yet (use camera view/proj + backbuffer size, or wait for a follow-up helper).
 - **Injected triggers/sticks are exact floats** returned by `Controller_GetLeftTrigger` / `Controller_GetRightTrigger` (and stick getters) on the Debug inject path. They do **not** go through XInput BYTE quantization or deadzone remapping. Physical-pad quantization is out of scope for these acceptance checks.
 - **Unplug physical controllers** (or ignore non-isolated frames) when asserting cancel/idle suffixes: after injection clears, getters reflect hardware; a connected pad can keep `connected: true` and non-zero axes.
 - Linux can run pure protocol/validator tests; it cannot claim Windows named-pipe or D3D11 runtime PASS.
