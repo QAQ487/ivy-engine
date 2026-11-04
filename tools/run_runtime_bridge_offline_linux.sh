@@ -44,4 +44,7 @@ python3 "$ROOT/tools/runtime_bridge_angular_acceptance_check.py" -v
 echo "==> python scenario runner unit tests"
 python3 "$ROOT/tools/runtime_bridge_scenario_check.py" -v
 
+echo "==> runtime host asset coverage"
+python3 "$ROOT/tools/check_runtime_host_assets.py"
+
 echo "PASS Linux offline runtime bridge protocol checks"
