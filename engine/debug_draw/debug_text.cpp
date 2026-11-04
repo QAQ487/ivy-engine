@@ -8,6 +8,7 @@
 
  ===========================================================================**/
 #include "debug_text.h"
+#include "engine/core/content_path.h"
 #include "engine/core/frame_capture.h"
 #include "WICTextureLoader11.h"
 using namespace DirectX;
@@ -42,7 +43,10 @@ namespace hal
 			m_pTextureView->AddRef();
 		}
 		else {
-			if (FAILED(CreateWICTextureFromFile(pDevice, pFontTextureFileName, &m_pTexture, &m_pTextureView))) {
+			// rom/<rest> -> project rom, then <exe-dir>/resources/<rest> (TextureLoad pattern).
+			const std::wstring resolved = content_path::ReadableWideCurrent(pFontTextureFileName);
+			const wchar_t* openPath = resolved.empty() ? pFontTextureFileName : resolved.c_str();
+			if (FAILED(CreateWICTextureFromFile(pDevice, openPath, &m_pTexture, &m_pTextureView))) {
 				MessageBoxW(nullptr, L"Failed to load font texture.", pFontTextureFileName, MB_OK | MB_ICONERROR);
 				return;
 			}

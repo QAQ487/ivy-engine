@@ -22,6 +22,7 @@ Linux checks (no Windows runtime claim):
 g++ -std=c++17 -I. tools/content_path_check.cpp -o /tmp/content_path_check && /tmp/content_path_check
 python3 tools/check_testbed_assets.py
 python3 tools/check_engine_resource_paths.py
+python3 tools/check_runtime_host_assets.py
 ```
 
 The checks above are the Linux gate. Do not treat them as a Windows runtime pass.
