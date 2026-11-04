@@ -295,9 +295,184 @@ void Protocol::RecordPerfSample(const PerfSample& sample) {
 bool Protocol::TakeQuit() { const bool result=quitReady_; quitReady_=false; return result; }
 void Protocol::ConfirmQuitReceipt() { if(quitPending_) { quitReady_=true; quitPending_=false; } }
 void Protocol::AbandonQuit() { quitPending_=false; }
-static const std::set<std::string> kAllowedKeys = {
-    "W", "A", "S", "D", "SPACE", "UP", "DOWN", "LEFT", "RIGHT"
+// Explicit bridge key-name table (never raw VK codes). Keep in sync with
+// tools/runtime_bridge_keyboard_keys.py KEYBOARD_KEYS — checked by
+// tools/runtime_bridge_keyboard_keys_check.py. Omits Win keys; ALT+F4 rejected separately.
+struct BridgeKeyEntry { const char* name; Keyboard_Keys code; };
+static const BridgeKeyEntry kBridgeKeyTable[] = {
+    {"BACK", KK_BACK},
+    {"TAB", KK_TAB},
+    {"ENTER", KK_ENTER},
+    {"PAUSE", KK_PAUSE},
+    {"CAPSLOCK", KK_CAPSLOCK},
+    {"KANA", KK_KANA},
+    {"KANJI", KK_KANJI},
+    {"ESCAPE", KK_ESCAPE},
+    {"IMECONVERT", KK_IMECONVERT},
+    {"IMENOCONVERT", KK_IMENOCONVERT},
+    {"SPACE", KK_SPACE},
+    {"PAGEUP", KK_PAGEUP},
+    {"PAGEDOWN", KK_PAGEDOWN},
+    {"END", KK_END},
+    {"HOME", KK_HOME},
+    {"LEFT", KK_LEFT},
+    {"UP", KK_UP},
+    {"RIGHT", KK_RIGHT},
+    {"DOWN", KK_DOWN},
+    {"SELECT", KK_SELECT},
+    {"PRINT", KK_PRINT},
+    {"EXECUTE", KK_EXECUTE},
+    {"PRINTSCREEN", KK_PRINTSCREEN},
+    {"INSERT", KK_INSERT},
+    {"DELETE", KK_DELETE},
+    {"HELP", KK_HELP},
+    {"0", KK_D0},
+    {"1", KK_D1},
+    {"2", KK_D2},
+    {"3", KK_D3},
+    {"4", KK_D4},
+    {"5", KK_D5},
+    {"6", KK_D6},
+    {"7", KK_D7},
+    {"8", KK_D8},
+    {"9", KK_D9},
+    {"A", KK_A},
+    {"B", KK_B},
+    {"C", KK_C},
+    {"D", KK_D},
+    {"E", KK_E},
+    {"F", KK_F},
+    {"G", KK_G},
+    {"H", KK_H},
+    {"I", KK_I},
+    {"J", KK_J},
+    {"K", KK_K},
+    {"L", KK_L},
+    {"M", KK_M},
+    {"N", KK_N},
+    {"O", KK_O},
+    {"P", KK_P},
+    {"Q", KK_Q},
+    {"R", KK_R},
+    {"S", KK_S},
+    {"T", KK_T},
+    {"U", KK_U},
+    {"V", KK_V},
+    {"W", KK_W},
+    {"X", KK_X},
+    {"Y", KK_Y},
+    {"Z", KK_Z},
+    {"APPS", KK_APPS},
+    {"SLEEP", KK_SLEEP},
+    {"NUMPAD0", KK_NUMPAD0},
+    {"NUMPAD1", KK_NUMPAD1},
+    {"NUMPAD2", KK_NUMPAD2},
+    {"NUMPAD3", KK_NUMPAD3},
+    {"NUMPAD4", KK_NUMPAD4},
+    {"NUMPAD5", KK_NUMPAD5},
+    {"NUMPAD6", KK_NUMPAD6},
+    {"NUMPAD7", KK_NUMPAD7},
+    {"NUMPAD8", KK_NUMPAD8},
+    {"NUMPAD9", KK_NUMPAD9},
+    {"MULTIPLY", KK_MULTIPLY},
+    {"ADD", KK_ADD},
+    {"SEPARATOR", KK_SEPARATOR},
+    {"SUBTRACT", KK_SUBTRACT},
+    {"DECIMAL", KK_DECIMAL},
+    {"DIVIDE", KK_DIVIDE},
+    {"F1", KK_F1},
+    {"F2", KK_F2},
+    {"F3", KK_F3},
+    {"F4", KK_F4},
+    {"F5", KK_F5},
+    {"F6", KK_F6},
+    {"F7", KK_F7},
+    {"F8", KK_F8},
+    {"F9", KK_F9},
+    {"F10", KK_F10},
+    {"F11", KK_F11},
+    {"F12", KK_F12},
+    {"F13", KK_F13},
+    {"F14", KK_F14},
+    {"F15", KK_F15},
+    {"F16", KK_F16},
+    {"F17", KK_F17},
+    {"F18", KK_F18},
+    {"F19", KK_F19},
+    {"F20", KK_F20},
+    {"F21", KK_F21},
+    {"F22", KK_F22},
+    {"F23", KK_F23},
+    {"F24", KK_F24},
+    {"NUMLOCK", KK_NUMLOCK},
+    {"SCROLL", KK_SCROLL},
+    {"LSHIFT", KK_LEFTSHIFT},
+    {"RSHIFT", KK_RIGHTSHIFT},
+    {"LCTRL", KK_LEFTCONTROL},
+    {"RCTRL", KK_RIGHTCONTROL},
+    {"LALT", KK_LEFTALT},
+    {"RALT", KK_RIGHTALT},
+    {"BROWSERBACK", KK_BROWSERBACK},
+    {"BROWSERFORWARD", KK_BROWSERFORWARD},
+    {"BROWSERREFRESH", KK_BROWSERREFRESH},
+    {"BROWSERSTOP", KK_BROWSERSTOP},
+    {"BROWSERSEARCH", KK_BROWSERSEARCH},
+    {"BROWSERFAVORITES", KK_BROWSERFAVORITES},
+    {"BROWSERHOME", KK_BROWSERHOME},
+    {"VOLUMEMUTE", KK_VOLUMEMUTE},
+    {"VOLUMEDOWN", KK_VOLUMEDOWN},
+    {"VOLUMEUP", KK_VOLUMEUP},
+    {"MEDIANEXTTRACK", KK_MEDIANEXTTRACK},
+    {"MEDIAPREVIOUSTRACK", KK_MEDIAPREVIOUSTRACK},
+    {"MEDIASTOP", KK_MEDIASTOP},
+    {"MEDIAPLAYPAUSE", KK_MEDIAPLAYPAUSE},
+    {"LAUNCHMAIL", KK_LAUNCHMAIL},
+    {"SELECTMEDIA", KK_SELECTMEDIA},
+    {"LAUNCHAPPLICATION1", KK_LAUNCHAPPLICATION1},
+    {"LAUNCHAPPLICATION2", KK_LAUNCHAPPLICATION2},
+    {"OEMSEMICOLON", KK_OEMSEMICOLON},
+    {"OEMPLUS", KK_OEMPLUS},
+    {"OEMCOMMA", KK_OEMCOMMA},
+    {"OEMMINUS", KK_OEMMINUS},
+    {"OEMPERIOD", KK_OEMPERIOD},
+    {"OEMQUESTION", KK_OEMQUESTION},
+    {"OEMTILDE", KK_OEMTILDE},
+    {"OEMOPENBRACKETS", KK_OEMOPENBRACKETS},
+    {"OEMPIPE", KK_OEMPIPE},
+    {"OEMCLOSEBRACKETS", KK_OEMCLOSEBRACKETS},
+    {"OEMQUOTES", KK_OEMQUOTES},
+    {"OEM8", KK_OEM8},
+    {"OEMBACKSLASH", KK_OEMBACKSLASH},
+    {"PROCESSKEY", KK_PROCESSKEY},
+    {"OEMCOPY", KK_OEMCOPY},
+    {"OEMAUTO", KK_OEMAUTO},
+    {"OEMENLW", KK_OEMENLW},
+    {"ATTN", KK_ATTN},
+    {"CRSEL", KK_CRSEL},
+    {"EXSEL", KK_EXSEL},
+    {"ERASEEOF", KK_ERASEEOF},
+    {"PLAY", KK_PLAY},
+    {"ZOOM", KK_ZOOM},
+    {"PA1", KK_PA1},
+    {"OEMCLEAR", KK_OEMCLEAR},
 };
+bool LookupBridgeKey(const std::string& name, Keyboard_Keys* out = nullptr) {
+    for(const auto& entry : kBridgeKeyTable) {
+        if(name == entry.name) {
+            if(out) *out = entry.code;
+            return true;
+        }
+    }
+    return false;
+}
+bool ForbiddenKeyboardCombo(const std::vector<std::string>& keys) {
+    bool alt = false, f4 = false;
+    for(const auto& name : keys) {
+        if(name == "LALT" || name == "RALT") alt = true;
+        if(name == "F4") f4 = true;
+    }
+    return alt && f4;
+}
 
 const char* Protocol::InputStatus() const {
     switch(inputState_) {
@@ -577,9 +752,10 @@ Json Protocol::Request(const std::string& frame) {
         for(const auto& item:q["keys"]) {
             if(!item.is_string()) return error("invalid_request");
             auto name=item.get<std::string>();
-            if(!kAllowedKeys.count(name) || !seen.insert(name).second) return error("invalid_request");
+            if(!LookupBridgeKey(name) || !seen.insert(name).second) return error("invalid_request");
             keys.push_back(std::move(name));
         }
+        if(ForbiddenKeyboardCombo(keys)) return error("invalid_request");
         updates=q["updates"].get<int>();
     } else if(mouse) {
         const bool hasWheel = q.contains("wheel");
@@ -1164,26 +1340,17 @@ void Bridge::SetWorldOpHandler(WorldOpHandler handler) {
     if (impl_) impl_->worldOpHandler = handler;
 }
 
-static Keyboard_Keys ParseKeyName(const std::string& name) {
-    if (name == "W") return KK_W;
-    if (name == "A") return KK_A;
-    if (name == "S") return KK_S;
-    if (name == "D") return KK_D;
-    if (name == "SPACE") return KK_SPACE;
-    if (name == "UP") return KK_UP;
-    if (name == "DOWN") return KK_DOWN;
-    if (name == "LEFT") return KK_LEFT;
-    if (name == "RIGHT") return KK_RIGHT;
-    return KK_NONE;
-}
-
 void Bridge::PollAndApplyInput(bool inGamePlaying) {
     if(!impl_) return;
     std::lock_guard lock(impl_->mutex);
     impl_->protocol.BeginInput(inGamePlaying, GetTickCount64());
     if(impl_->protocol.KeyboardIsolating()) {
         std::vector<Keyboard_Keys> keys;
-        for(const auto& name : impl_->protocol.InputKeys()) keys.push_back(ParseKeyName(name));
+        for(const auto& name : impl_->protocol.InputKeys()) {
+            Keyboard_Keys code = KK_NONE;
+            LookupBridgeKey(name, &code);
+            keys.push_back(code);
+        }
         Keyboard_TestInject(keys.data(), static_cast<int>(keys.size()));
     } else {
         Keyboard_ClearInjection();

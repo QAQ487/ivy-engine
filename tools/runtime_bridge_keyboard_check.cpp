@@ -124,5 +124,36 @@ int main() {
     check(KeyLogger_IsRelease(KK_DOWN),"not-playing transition releases active keys");b.FinishInputUpdate();
     check(p4.request("status")["keyboard"]["status"]=="cancelled","not-playing active cancellation acknowledged");
     b.Stop();
-    std::cout << "PASS keyboard N=1/N=3 trigger/hold/release physical isolation disconnect/reconnect deadline/shutdown/restart\n";
+
+    check(b.StartFromEnvironment(),"expanded-key restart");b.PublishAndTakeQuit(true,true,"fixture");
+    Peer p5(b);
+    check(!p5.request("keyboard",{{"keys",{"NOTAKEY"}},{"updates",1}}).value("ok",true),"reject unknown key name");
+    check(!p5.request("keyboard",{{"keys",{"LEFTWINDOWS"}},{"updates",1}}).value("ok",true),"reject Win key name");
+    check(!p5.request("keyboard",{{"keys",{"LALT","F4"}},{"updates",1}}).value("ok",true),"reject ALT+F4");
+    check(p5.request("keyboard",{{"keys",{"ESCAPE","ENTER"}},{"updates",2}}).value("ok",false),"ESCAPE/ENTER accepted");
+    b.PollAndApplyInput(true);KeyLogger_Update(19.0/60);b.FinishInputUpdate();
+    b.PollAndApplyInput(true);KeyLogger_Update(20.0/60);
+    check(KeyLogger_IsPressed(KK_ESCAPE) && KeyLogger_IsPressed(KK_ENTER),"expanded keys visible to KeyLogger");
+    b.FinishInputUpdate();
+    b.PollAndApplyInput(true);KeyLogger_Update(21.0/60);b.FinishInputUpdate();
+    b.PollAndApplyInput(true);KeyLogger_Update(22.0/60);
+    check(KeyLogger_IsRelease(KK_ESCAPE) && KeyLogger_IsRelease(KK_ENTER),"expanded keys release at deadline");
+    b.FinishInputUpdate();
+    check(p5.request("status")["keyboard"]["status"]=="completed","expanded keys completed");
+    check(p5.request("keyboard",{{"keys",{"LCTRL","E"}},{"updates",3}}).value("ok",false),"modifier combo accepted");
+    b.PollAndApplyInput(true);KeyLogger_Update(23.0/60);b.FinishInputUpdate();
+    b.PollAndApplyInput(true);KeyLogger_Update(24.0/60);
+    check(KeyLogger_IsPressed(KK_LEFTCONTROL) && KeyLogger_IsPressed(KK_E) && KeyLogger_IsTrigger(KK_E),"modifier+key held together");
+    b.FinishInputUpdate();
+    for(int i=0;i<2;++i) {
+        b.PollAndApplyInput(true);KeyLogger_Update((25+i)/60.0);
+        check(KeyLogger_IsPressed(KK_LEFTCONTROL) && KeyLogger_IsPressed(KK_E) && !KeyLogger_IsTrigger(KK_E),"modifier hold no retrigger");
+        b.FinishInputUpdate();
+    }
+    b.PollAndApplyInput(true);KeyLogger_Update(27.0/60);
+    check(KeyLogger_IsRelease(KK_LEFTCONTROL) && KeyLogger_IsRelease(KK_E),"modifier combo released on deadline");
+    b.FinishInputUpdate();
+    check(p5.request("status")["keyboard"]["status"]=="completed","modifier combo completed");
+    b.Stop();
+    std::cout << "PASS keyboard N=1/N=3 trigger/hold/release physical isolation disconnect/reconnect deadline/shutdown/restart expanded-keys/modifiers\n";
 }

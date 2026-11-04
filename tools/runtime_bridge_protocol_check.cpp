@@ -84,10 +84,20 @@ int main(int argc, char** argv) {
         auto bad=Json{{"protocolVersion",1},{"requestId",1},{"runId","keyboard"},{"verb","keyboard"},{"keys",{"W"}},{"updates",badUpdates}};
         check(invalid.Request(bad.dump()).value("error","")=="invalid_request","reject invalid or overflowing updates before narrowing");
     }
-    for(const auto& badKeys : {Json::array(),Json::array({"W","W"}),Json::array({"ESCAPE"}),Json::array({true}),Json("W")}) {
+    for(const auto& badKeys : {Json::array(),Json::array({"W","W"}),Json::array({"NOTAKEY"}),Json::array({"LEFTWINDOWS"}),Json::array({"RIGHTWINDOWS"}),Json::array({true}),Json("W")}) {
         Protocol invalid("keyboard",123,7); invalid.Publish(true,true,"fixture");
         auto bad=Json{{"protocolVersion",1},{"requestId",1},{"runId","keyboard"},{"verb","keyboard"},{"keys",badKeys},{"updates",1}};
         check(!invalid.Request(bad.dump()).value("ok",true),"reject duplicate/unknown/invalid keys");
+    }
+    for(const auto& forbidden : {Json::array({"LALT","F4"}),Json::array({"RALT","F4"}),Json::array({"F4","LALT","E"})}) {
+        Protocol invalid("keyboard",123,7); invalid.Publish(true,true,"fixture");
+        auto bad=Json{{"protocolVersion",1},{"requestId",1},{"runId","keyboard"},{"verb","keyboard"},{"keys",forbidden},{"updates",1}};
+        check(!invalid.Request(bad.dump()).value("ok",true),"reject ALT+F4 system combo");
+    }
+    for(const auto& goodKeys : {Json::array({"ESCAPE"}),Json::array({"ENTER"}),Json::array({"TAB"}),Json::array({"E"}),Json::array({"1"}),Json::array({"LCTRL","E"}),Json::array({"LSHIFT","TAB"}),Json::array({"LALT","TAB"})}) {
+        Protocol valid("keyboard",123,7); valid.Publish(true,true,"fixture");
+        auto good=Json{{"protocolVersion",1},{"requestId",1},{"runId","keyboard"},{"verb","keyboard"},{"keys",goodKeys},{"updates",1}};
+        check(valid.Request(good.dump()).value("ok",false),"accept expanded key table and modifier combos");
     }
     Protocol policy("policy",123,7);
     Json input{{"protocolVersion",1},{"requestId",1},{"runId","policy"},{"verb","keyboard"},{"keys",{"W"}},{"updates",120}};
@@ -108,7 +118,7 @@ int main(int argc, char** argv) {
     check(policy.Request(input.dump()).value("error","")=="queue_full","one queued input slot");
     policy.CancelKeyboard();
     input["requestId"]=5;input["keys"]=Json::array({"W","A","S","D","SPACE","UP","DOWN","LEFT","RIGHT"});
-    check(policy.Request(input.dump()).value("ok",false),"all nine whitelist keys supported");
+    check(policy.Request(input.dump()).value("ok",false),"max nine unique keys still supported");
     policy.BeginInput(false,GetTickCount64());
     auto cancelled=policy.Request(R"({"protocolVersion":1,"requestId":6,"runId":"policy","verb":"status"})");
     check(cancelled["keyboard"]["status"]=="cancelled","not-playing cancels queued input");

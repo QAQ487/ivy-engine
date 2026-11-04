@@ -8,6 +8,8 @@ import math
 import re
 from typing import Any
 
+from runtime_bridge_keyboard_keys import KEYBOARD_KEYS, is_forbidden_keyboard_combo
+
 SCHEMA_VERSION = 1
 SCENARIO_SCHEMA_ID = "ivy.runtime_bridge.scenario/1"
 
@@ -62,10 +64,6 @@ ASSERT_OPS = frozenset({
     "changed",
     "delta_gt",
     "axis_dot",
-})
-
-KEYBOARD_KEYS = frozenset({
-    "W", "A", "S", "D", "SPACE", "UP", "DOWN", "LEFT", "RIGHT",
 })
 
 MOUSE_BUTTONS = frozenset({"LEFT", "RIGHT", "MIDDLE"})
@@ -275,6 +273,8 @@ def _validate_keyboard(step: dict, path: str) -> dict:
             _err(kpath, "duplicate key %r" % name)
         seen.add(name)
         out_keys.append(name)
+    if is_forbidden_keyboard_combo(out_keys):
+        _err("%s.keys" % path, "forbidden combo ALT+F4")
     updates = _require_int_range(step.get("updates"), "%s.updates" % path, 1, MAX_UPDATES)
     return {"type": "keyboard", "keys": out_keys, "updates": updates}
 

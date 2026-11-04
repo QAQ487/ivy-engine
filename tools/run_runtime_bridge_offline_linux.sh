@@ -35,6 +35,9 @@ echo "==> run runtime_bridge_phase6_check"
 echo "==> run runtime_bridge_protocol_check"
 "$OUT/runtime_bridge_protocol_check"
 
+echo "==> python keyboard key-table sync + validation"
+python3 "$ROOT/tools/runtime_bridge_keyboard_keys_check.py" -v
+
 echo "==> python angular acceptance unit tests"
 python3 "$ROOT/tools/runtime_bridge_angular_acceptance_check.py" -v
 
