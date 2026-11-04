@@ -189,6 +189,34 @@ std::uint32_t RemainingFrameTimeout(std::uint64_t deadline, std::uint64_t now) n
     const auto remaining = deadline - now;
     return static_cast<std::uint32_t>(remaining > 2000 ? 2000 : remaining);
 }
+
+std::uint64_t InputInjectDeadlineMs(int updates) noexcept {
+    if (updates < 1) updates = 1;
+    if (updates > kInputInjectMaxUpdates) updates = kInputInjectMaxUpdates;
+    return kInputInjectDeadlineBaseMs +
+        static_cast<std::uint64_t>(updates) * kInputInjectDeadlinePerUpdateMs;
+}
+
+ObservePose ResolveObservedPose(
+    bool hasTransformComponent,
+    const ObservePose& legacy,
+    const ObservePose& transform) noexcept {
+    return hasTransformComponent ? transform : legacy;
+}
+
+void AssignObservedPose(ObservedTarget& target, const ObservePose& pose) noexcept {
+    target.posX = pose.position.x;
+    target.posY = pose.position.y;
+    target.posZ = pose.position.z;
+    target.hasRotation = true;
+    target.rotX = pose.rotation.x;
+    target.rotY = pose.rotation.y;
+    target.rotZ = pose.rotation.z;
+    target.hasScale = true;
+    target.scaleX = pose.scale.x;
+    target.scaleY = pose.scale.y;
+    target.scaleZ = pose.scale.z;
+}
 Protocol::Protocol(std::string runId, unsigned long pid, unsigned long session)
     : runId_(std::move(runId)), pid_(pid), session_(session) {}
 namespace {
@@ -746,7 +774,8 @@ Json Protocol::Request(const std::string& frame) {
     WorldOpRequest pendingWorld{};
     if(input) {
         if(q.size()!=6 || !q.contains("keys") || !q["keys"].is_array() || q["keys"].empty() || q["keys"].size()>9
-            || !q.contains("updates") || !q["updates"].is_number_integer() || q["updates"]<1 || q["updates"]>120)
+            || !q.contains("updates") || !q["updates"].is_number_integer()
+            || q["updates"]<1 || q["updates"]>kInputInjectMaxUpdates)
             return error("invalid_request");
         std::set<std::string> seen;
         for(const auto& item:q["keys"]) {
@@ -951,7 +980,7 @@ Json Protocol::Request(const std::string& frame) {
         keyboardReqId_=id;
         keyboardKeys_=std::move(keys);
         keyboardUpdatesRemaining_=updates;
-        inputDeadline_=GetTickCount64()+5000;
+        inputDeadline_=GetTickCount64()+InputInjectDeadlineMs(updates);
         return {{"protocolVersion",1},{"requestId",id},{"runId",runId_},{"ok",true},{"status","queued"}};
     }
     if(mouse) {

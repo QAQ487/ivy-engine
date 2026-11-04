@@ -45,6 +45,40 @@ int main(int argc, char** argv) {
     check(RemainingFrameTimeout(2000, 2000) == 0, "deadline reached");
     check(RemainingFrameTimeout(2000, 2001) == 0, "expired deadline never wraps to INFINITE");
     check(RemainingFrameTimeout(2000, 0) == 2000, "bounded frame timeout");
+    check(InputInjectDeadlineMs(1) == kInputInjectDeadlineBaseMs + kInputInjectDeadlinePerUpdateMs,
+          "keyboard deadline base + one update");
+    check(InputInjectDeadlineMs(kInputInjectMaxUpdates) == kInputInjectDeadlineMaxMs,
+          "keyboard deadline at max updates equals documented upper bound");
+    check(InputInjectDeadlineMs(kInputInjectMaxUpdates) >
+              kInputInjectDeadlineBaseMs + static_cast<std::uint64_t>(kInputInjectMaxUpdates) * 40,
+          "scaled deadline covers Debug ~23 FPS max hold (not fixed 5000ms)");
+    check(InputInjectDeadlineMs(0) == InputInjectDeadlineMs(1), "deadline clamps updates below 1");
+    check(InputInjectDeadlineMs(kInputInjectMaxUpdates + 50) == kInputInjectDeadlineMaxMs,
+          "deadline clamps updates above max");
+    {
+        Protocol deadlineProto("deadline-scale", 123, 7);
+        deadlineProto.Publish(true, true, "fixture");
+        const auto t0 = GetTickCount64();
+        auto queued = deadlineProto.Request(
+            R"({"protocolVersion":1,"requestId":1,"runId":"deadline-scale","verb":"keyboard","keys":["W"],"updates":120})");
+        check(queued.value("ok", false), "max-updates keyboard accepted for deadline probe");
+        // Former fixed 5000ms budget cancelled ~23 FPS holds; scaled budget must survive 5.2s.
+        deadlineProto.BeginInput(true, t0 + 5200);
+        deadlineProto.EndInput();
+        auto mid = deadlineProto.Request(
+            R"({"protocolVersion":1,"requestId":2,"runId":"deadline-scale","verb":"status"})");
+        check(mid["keyboard"]["status"] == "active" && mid["keyboard"]["cancelRequested"] == false,
+              "5.2s elapsed does not cancel updates=120 under scaled deadline");
+        deadlineProto.BeginInput(true, t0 + InputInjectDeadlineMs(120) + 1);
+        auto late = deadlineProto.Request(
+            R"({"protocolVersion":1,"requestId":3,"runId":"deadline-scale","verb":"status"})");
+        check(late["keyboard"]["status"] == "releasing" && late["keyboard"]["cancelRequested"] == true,
+              "past scaled deadline begins release with cancelRequested");
+        deadlineProto.EndInput();
+        auto done = deadlineProto.Request(
+            R"({"protocolVersion":1,"requestId":4,"runId":"deadline-scale","verb":"status"})");
+        check(done["keyboard"]["status"] == "cancelled", "scaled deadline cancellation acknowledged");
+    }
     Protocol boundary("boundary", 123, 7);
     boundary.Publish(true, true, std::string(1023, 'a') + "\xC3\xA9");
     auto boundaryReply = boundary.Request(R"({"protocolVersion":1,"requestId":1,"runId":"boundary","verb":"status"})");

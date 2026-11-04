@@ -27,6 +27,7 @@ build_one() {
 build_one runtime_bridge_world_manip_check "$ROOT/tools/runtime_bridge_world_manip_check.cpp"
 build_one runtime_bridge_phase6_check "$ROOT/tools/runtime_bridge_phase6_check.cpp"
 build_one runtime_bridge_protocol_check "$ROOT/tools/runtime_bridge_protocol_check.cpp"
+build_one runtime_bridge_observe_pose_check "$ROOT/tools/runtime_bridge_observe_pose_check.cpp"
 
 echo "==> run runtime_bridge_world_manip_check"
 "$OUT/runtime_bridge_world_manip_check"
@@ -34,6 +35,8 @@ echo "==> run runtime_bridge_phase6_check"
 "$OUT/runtime_bridge_phase6_check"
 echo "==> run runtime_bridge_protocol_check"
 "$OUT/runtime_bridge_protocol_check"
+echo "==> run runtime_bridge_observe_pose_check"
+"$OUT/runtime_bridge_observe_pose_check"
 
 echo "==> python keyboard key-table sync + validation"
 python3 "$ROOT/tools/runtime_bridge_keyboard_keys_check.py" -v
