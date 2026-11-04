@@ -30,6 +30,18 @@ constexpr std::size_t kRuntimeTestPerfCapacity = 600;
 constexpr std::size_t kRuntimeTestListObjectsDefaultLimit = 32;
 constexpr std::size_t kRuntimeTestListObjectsMaxLimit = 64;
 
+// Keyboard inject hold count (matches request validation). Wall deadline scales with this.
+constexpr int kInputInjectMaxUpdates = 120;
+constexpr std::uint64_t kInputInjectDeadlineBaseMs = 5000;
+// Per-update allowance so Debug (~23 FPS) can finish max holds; upper bound is base+max*per.
+constexpr std::uint64_t kInputInjectDeadlinePerUpdateMs = 100;
+constexpr std::uint64_t kInputInjectDeadlineMaxMs =
+    kInputInjectDeadlineBaseMs +
+    static_cast<std::uint64_t>(kInputInjectMaxUpdates) * kInputInjectDeadlinePerUpdateMs;
+
+// Wall-clock budget for a queued keyboard inject: base + updates*per, clamped to max.
+std::uint64_t InputInjectDeadlineMs(int updates) noexcept;
+
 struct ObservedTarget {
     std::string name;
     float posX = 0.0f, posY = 0.0f, posZ = 0.0f;
@@ -52,6 +64,25 @@ struct ObservedTarget {
     bool hasLocalInverseInertia = false;
     float invInertiaX = 0.0f, invInertiaY = 0.0f, invInertiaZ = 0.0f;
 };
+
+// Pose selection for observe snapshots. Prefer Transform-component values when present
+// (callers should pass world-space from GetWorldPositionRotationScale / GetWorldPose when
+// available); otherwise legacy GameObject fields. Read-only — does not mutate object state.
+struct ObserveVec3 {
+    float x = 0.0f;
+    float y = 0.0f;
+    float z = 0.0f;
+};
+struct ObservePose {
+    ObserveVec3 position{};
+    ObserveVec3 rotation{};
+    ObserveVec3 scale{1.0f, 1.0f, 1.0f};
+};
+ObservePose ResolveObservedPose(
+    bool hasTransformComponent,
+    const ObservePose& legacy,
+    const ObservePose& transform) noexcept;
+void AssignObservedPose(ObservedTarget& target, const ObservePose& pose) noexcept;
 
 struct ListedObject {
     std::string name;

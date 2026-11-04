@@ -578,25 +578,40 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstanc
                             if (!obj.GetName().empty()) {
                                 ivy::testing::ObservedTarget t;
                                 t.name = obj.GetName();
-                                const auto pos = obj.GetPosition();
-                                t.posX = pos.x; t.posY = pos.y; t.posZ = pos.z;
-                                const auto rot = obj.GetRotation();
-                                t.hasRotation = true;
-                                t.rotX = rot.x; t.rotY = rot.y; t.rotZ = rot.z;
+                                // Prefer Transform component (world pose via GetWorldPose) over
+                                // legacy m_position/m_rotation/m_scale, which scripts that write
+                                // localPosition directly leave stale after scene load.
                                 {
                                     using namespace DirectX;
+                                    const XMFLOAT3 legacyPos = obj.GetPosition();
+                                    const XMFLOAT3 legacyRot = obj.GetRotation();
+                                    const XMFLOAT3 legacyScale = obj.GetScale();
+                                    ivy::testing::ObservePose legacy{
+                                        {legacyPos.x, legacyPos.y, legacyPos.z},
+                                        {legacyRot.x, legacyRot.y, legacyRot.z},
+                                        {legacyScale.x, legacyScale.y, legacyScale.z}};
+                                    ivy::testing::ObservePose fromTransform = legacy;
+                                    const bool hasTransform = obj.GetTransform() != nullptr;
+                                    if (hasTransform) {
+                                        XMFLOAT3 worldPos{}, worldRot{}, worldScale{};
+                                        obj.GetWorldPose(worldPos, worldRot, worldScale);
+                                        fromTransform = {
+                                            {worldPos.x, worldPos.y, worldPos.z},
+                                            {worldRot.x, worldRot.y, worldRot.z},
+                                            {worldScale.x, worldScale.y, worldScale.z}};
+                                    }
+                                    const auto pose = ivy::testing::ResolveObservedPose(
+                                        hasTransform, legacy, fromTransform);
+                                    ivy::testing::AssignObservedPose(t, pose);
                                     // Match Transform::GetLocalMatrix ZYX Euler convention.
                                     const XMMATRIX R =
-                                        XMMatrixRotationZ(XMConvertToRadians(rot.z)) *
-                                        XMMatrixRotationY(XMConvertToRadians(rot.y)) *
-                                        XMMatrixRotationX(XMConvertToRadians(rot.x));
+                                        XMMatrixRotationZ(XMConvertToRadians(pose.rotation.z)) *
+                                        XMMatrixRotationY(XMConvertToRadians(pose.rotation.y)) *
+                                        XMMatrixRotationX(XMConvertToRadians(pose.rotation.x));
                                     XMFLOAT4 qf{};
                                     XMStoreFloat4(&qf, XMQuaternionRotationMatrix(R));
                                     t.quatX = qf.x; t.quatY = qf.y; t.quatZ = qf.z; t.quatW = qf.w;
                                 }
-                                const auto scale = obj.GetScale();
-                                t.hasScale = true;
-                                t.scaleX = scale.x; t.scaleY = scale.y; t.scaleZ = scale.z;
                                 if (const auto* rc = obj.GetComponent<RigidbodyComponent>()) {
                                     const auto& body = rc->Body();
                                     const auto vel = body.GetVelocity();

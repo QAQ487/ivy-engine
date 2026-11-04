@@ -46,7 +46,7 @@ Capabilities advertised by `hello` / `status` (as implemented):
 | `quit` | Requests exit; response has `requiresReceipt: true` — client must send a lone LF receipt. Accepted while paused; the host drains exit without waiting for a sim tick. |
 | `keyboard` | Internal key inject (`keys`, `updates`); see [Keyboard injection](#keyboard-injection-keyboard) |
 | `mouse` | Internal mouse inject (`dx`, `dy`, `buttons`, `updates`, optional `wheel`) |
-| `observe` | Named GameObject snapshot: legacy `position`/`velocity`, plus `rotation` (Euler degrees), `rotationQuaternion`, `scale`, `angularVelocity`, and when a `Rigidbody` is present: `rigidbody.{kinematic,mass,drag,angularDrag,friction,useGravity,localInverseInertia}`. Sleeping/contact counts are omitted (not cheaply available). |
+| `observe` | Named GameObject snapshot: `position`/`velocity`, plus `rotation` (Euler degrees), `rotationQuaternion`, `scale`, `angularVelocity`, and when a `Rigidbody` is present: `rigidbody.{kinematic,mass,drag,angularDrag,friction,useGravity,localInverseInertia}`. Pose prefers the `Transform` component via `GameObject::GetWorldPose` (world space when parented; equals local with no parent transform); falls back to legacy `m_position`/`m_rotation`/`m_scale` only when no Transform is attached. Sleeping/contact counts are omitted (not cheaply available). |
 | `list_objects` | Bounded GameObject name + component type list (`offset`, `limit` 1…64, default 32). Response includes `total` and `truncated`. |
 | `pause` / `resume` | Freeze or resume the sim loop. Status reports `paused`, `pendingSteps`, `frame`, `physicsTick`. |
 | `step` | While paused only: queue `frames` 1…600 fixed-timestep update/physics ticks. Input inject and `controller_probe` advance on stepped ticks. Error `not_paused` if running. |
@@ -159,9 +159,11 @@ One queued operation at a time. Requires ready + playing. Injection is **interna
 | Field | Required | Range / notes |
 | --- | --- | --- |
 | `keys` | yes | 1…9 **unique** bridge names from the table below |
-| `updates` | yes | Integer 1…120 (engine `Update` hold count) |
+| `updates` | yes | Integer 1…`kInputInjectMaxUpdates` (120) (engine `Update` hold count) |
 
 Lifecycle matches other inject verbs: preparation Update → hold for `updates` → release Update → clear. Disconnect / not-playing / wall deadline cancel releases keys (no stuck inject).
+
+**Wall deadline:** `kInputInjectDeadlineBaseMs` (5000) + `updates` × `kInputInjectDeadlinePerUpdateMs` (100), capped at `kInputInjectDeadlineMaxMs` (= base + maxUpdates × per). The fixed former 5000 ms budget cancelled long holds under Debug (~23 FPS); the scaled budget covers max updates with margin while still cancelling stalled injects.
 
 Modifiers (`LCTRL` / `RCTRL` / `LSHIFT` / `RSHIFT` / `LALT` / `RALT`) may be combined with other keys in the same request so chords stay held for N updates.
 
@@ -234,7 +236,7 @@ Without staging/`--scene`, Debug runtime launched from OutDir falls back to in-r
 tools/run_runtime_bridge_offline_linux.sh x64/linux-bridge-offline
 ```
 
-Compiles and runs `runtime_bridge_protocol_check`, `runtime_bridge_phase6_check`, and `runtime_bridge_world_manip_check` with Win32/input stubs (`tools/linux_win32_shim/`), then Python unit tests for angular acceptance validators and the Phase 5 scenario runner (schema / asserts / fake-client). Pipe DACL / `--serve` transport checks remain Windows-only.
+Compiles and runs `runtime_bridge_protocol_check`, `runtime_bridge_phase6_check`, `runtime_bridge_world_manip_check`, and `runtime_bridge_observe_pose_check` with Win32/input stubs (`tools/linux_win32_shim/`), then Python unit tests for angular acceptance validators and the Phase 5 scenario runner (schema / asserts / fake-client). Pipe DACL / `--serve` transport checks remain Windows-only. Windows Debug runtime verification of live observe/keyboard inject remains pending when only Linux offline checks are run.
 
 ### Batch harness (MSVC x64)
 

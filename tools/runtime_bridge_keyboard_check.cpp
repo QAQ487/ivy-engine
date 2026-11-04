@@ -103,7 +103,8 @@ int main() {
     b.PollAndApplyInput(true);KeyLogger_Update(13.0/60);b.FinishInputUpdate();
     const auto stall=GetTickCount64();
     Json stalled;
-    do { Sleep(100);stalled=p3.request("status")["keyboard"]; } while(GetTickCount64()-stall<5200);
+    const auto stallWaitMs = InputInjectDeadlineMs(120) + 200;
+    do { Sleep(100);stalled=p3.request("status")["keyboard"]; } while(GetTickCount64()-stall<stallWaitMs);
     check(stalled["status"]=="active" && stalled["cancelRequested"]==true,"wall deadline requests cancellation without false completion while Update stalled");
     b.PollAndApplyInput(true);KeyLogger_Update(14.0/60);
     check(KeyLogger_IsRelease(KK_W),"deadline released on resumed Update");b.FinishInputUpdate();
