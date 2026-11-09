@@ -193,7 +193,10 @@ public:
     void CancelMouse();
     void ExpireMouse(std::uint64_t now);
     bool MouseIsolating() const;
-    void GetMouseInput(int& dx, int& dy, unsigned int& buttonsMask, int& wheel) const;
+    // Relative fields are non-zero only while Active. Absolute (when requested)
+    // is available for the whole isolating lifecycle (prep/active/release).
+    void GetMouseInput(int& dx, int& dy, unsigned int& buttonsMask, int& wheel,
+                       bool& hasAbsolute, int& absX, int& absY) const;
 
     void CancelController();
     void ExpireController(std::uint64_t now);
@@ -247,6 +250,9 @@ private:
     int mouseDy_ = 0;
     unsigned int mouseButtons_ = 0;
     int mouseWheel_ = 0;
+    bool mouseHasAbsolute_ = false;
+    int mouseAbsX_ = 0;
+    int mouseAbsY_ = 0;
     int mouseUpdatesRemaining_ = 0;
     const char* MouseStatus() const;
 

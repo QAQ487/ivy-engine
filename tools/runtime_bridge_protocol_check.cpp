@@ -157,6 +157,73 @@ int main(int argc, char** argv) {
     auto cancelled=policy.Request(R"({"protocolVersion":1,"requestId":6,"runId":"policy","verb":"status"})");
     check(cancelled["keyboard"]["status"]=="cancelled","not-playing cancels queued input");
     check(r["capabilities"] == Json::array({"hello","status","quit","keyboard","observe","capture","mouse","controller","events","controller_probe","list_objects","pause","resume","step","perf","reset_scene","set_transform","set_velocity","apply_impulse","apply_torque_impulse"}), "capabilities include observe, capture, mouse, controller, events, controller_probe, list_objects, pause, resume, step, perf, and world manip verbs");
+
+    // Absolute cursor (optional x,y in backbuffer pixels). Stubs report 1280x720.
+    {
+        Protocol mouseAbs("mouse-abs", 123, 7);
+        mouseAbs.Publish(true, true, "fixture");
+        auto okAbs = Json{{"protocolVersion",1},{"requestId",1},{"runId","mouse-abs"},{"verb","mouse"},
+            {"dx",0},{"dy",0},{"buttons",Json::array({"LEFT"})},{"updates",1},{"x",640},{"y",360}};
+        check(mouseAbs.Request(okAbs.dump()).value("ok", false), "accept absolute x,y within backbuffer");
+        auto onlyX = Json{{"protocolVersion",1},{"requestId",2},{"runId","mouse-abs"},{"verb","mouse"},
+            {"dx",0},{"dy",0},{"buttons",Json::array()},{"updates",1},{"x",10}};
+        check(mouseAbs.Request(onlyX.dump()).value("error","")=="invalid_request", "reject x without y");
+        Protocol mouseAbs2("mouse-abs2", 123, 7);
+        mouseAbs2.Publish(true, true, "fixture");
+        auto onlyY = Json{{"protocolVersion",1},{"requestId",1},{"runId","mouse-abs2"},{"verb","mouse"},
+            {"dx",0},{"dy",0},{"buttons",Json::array()},{"updates",1},{"y",10}};
+        check(mouseAbs2.Request(onlyY.dump()).value("error","")=="invalid_request", "reject y without x");
+        for (const auto& badPair : {
+            Json{{"x", -1}, {"y", 0}},
+            Json{{"x", 0}, {"y", -1}},
+            Json{{"x", 1280}, {"y", 0}},
+            Json{{"x", 0}, {"y", 720}},
+            Json{{"x", 1.5}, {"y", 0}},
+            Json{{"x", true}, {"y", 0}},
+            Json{{"x", "10"}, {"y", 0}},
+        }) {
+            Protocol invalid("mouse-abs-bad", 123, 7);
+            invalid.Publish(true, true, "fixture");
+            auto bad = Json{{"protocolVersion",1},{"requestId",1},{"runId","mouse-abs-bad"},{"verb","mouse"},
+                {"dx",0},{"dy",0},{"buttons",Json::array()},{"updates",1},
+                {"x", badPair["x"]}, {"y", badPair["y"]}};
+            check(invalid.Request(bad.dump()).value("error","")=="invalid_request",
+                "reject non-int or out-of-backbuffer absolute cursor");
+        }
+        Protocol mouseLife("mouse-life", 123, 7);
+        mouseLife.Publish(true, true, "fixture");
+        check(mouseLife.Request(Json{{"protocolVersion",1},{"requestId",1},{"runId","mouse-life"},{"verb","mouse"},
+            {"dx",5},{"dy",-5},{"buttons",Json::array({"LEFT"})},{"wheel",10},{"updates",1},
+            {"x",100},{"y",200}}.dump()).value("ok", false), "accept absolute with wheel");
+        int mdx=0,mdy=0,mw=0,ax=0,ay=0; unsigned int mb=0; bool hasAbs=false;
+        mouseLife.BeginInput(true, GetTickCount64());
+        mouseLife.GetMouseInput(mdx, mdy, mb, mw, hasAbs, ax, ay);
+        check(hasAbs && ax==100 && ay==200 && mdx==0 && mb==0, "absolute available during prep; relative neutral");
+        mouseLife.EndInput();
+        mouseLife.BeginInput(true, GetTickCount64());
+        mouseLife.GetMouseInput(mdx, mdy, mb, mw, hasAbs, ax, ay);
+        check(hasAbs && ax==100 && ay==200 && mdx==5 && mdy==-5 && (mb & 1) && mw==10,
+            "absolute + relative during active hold");
+        mouseLife.EndInput();
+        mouseLife.BeginInput(true, GetTickCount64());
+        mouseLife.GetMouseInput(mdx, mdy, mb, mw, hasAbs, ax, ay);
+        check(hasAbs && ax==100 && ay==200 && mdx==0 && mb==0, "absolute persists through release; relative neutral");
+        mouseLife.EndInput();
+        mouseLife.BeginInput(true, GetTickCount64());
+        mouseLife.GetMouseInput(mdx, mdy, mb, mw, hasAbs, ax, ay);
+        check(!hasAbs && !mouseLife.MouseIsolating(), "absolute cleared after mouse op completes");
+        mouseLife.EndInput();
+        Protocol mouseRel("mouse-rel", 123, 7);
+        mouseRel.Publish(true, true, "fixture");
+        check(mouseRel.Request(Json{{"protocolVersion",1},{"requestId",1},{"runId","mouse-rel"},{"verb","mouse"},
+            {"dx",1},{"dy",1},{"buttons",Json::array()},{"updates",1}}.dump()).value("ok", false),
+            "relative-only mouse still accepted");
+        mouseRel.BeginInput(true, GetTickCount64());
+        mouseRel.GetMouseInput(mdx, mdy, mb, mw, hasAbs, ax, ay);
+        check(!hasAbs, "omitting x,y leaves absolute override off");
+        mouseRel.EndInput();
+    }
+
     r = p.Request(R"({"protocolVersion":1,"requestId":6,"runId":"test-run","verb":"quit"})");
     check(r.value("requiresReceipt", false), "quit requires receipt before main-thread exit");
     check(!p.TakeQuit(), "no quit before receipt");

@@ -10,6 +10,8 @@
 #include "engine/input/controller.h"
 #include "engine/input/keyboard.h"
 #include "engine/input/mouse.h"
+float GetBackBufferWidth();
+float GetBackBufferHeight();
 #if defined(IVY_RUNTIME_TEST_BRIDGE_AVAILABLE)
 #ifndef NOMINMAX
 #define NOMINMAX
@@ -539,7 +541,8 @@ bool Protocol::ControllerIsolating() const {
 std::vector<std::string> Protocol::InputKeys() const {
     return inputState_ == InputState::Active ? keyboardKeys_ : std::vector<std::string>{};
 }
-void Protocol::GetMouseInput(int& dx, int& dy, unsigned int& buttonsMask, int& wheel) const {
+void Protocol::GetMouseInput(int& dx, int& dy, unsigned int& buttonsMask, int& wheel,
+                             bool& hasAbsolute, int& absX, int& absY) const {
     if (mouseState_ == InputState::Active) {
         dx = mouseDx_;
         dy = mouseDy_;
@@ -550,6 +553,15 @@ void Protocol::GetMouseInput(int& dx, int& dy, unsigned int& buttonsMask, int& w
         dy = 0;
         buttonsMask = 0;
         wheel = 0;
+    }
+    if (MouseIsolating() && mouseHasAbsolute_) {
+        hasAbsolute = true;
+        absX = mouseAbsX_;
+        absY = mouseAbsY_;
+    } else {
+        hasAbsolute = false;
+        absX = 0;
+        absY = 0;
     }
 }
 void Protocol::GetControllerInput(float& lx, float& ly, float& rx, float& ry, float& lt, float& rt, std::uint16_t& buttons) const {
@@ -576,6 +588,7 @@ void Protocol::CancelMouse() {
         mouseState_ = InputState::Cancelled;
         mouseUpdatesRemaining_ = 0;
         mouseDx_ = 0; mouseDy_ = 0; mouseButtons_ = 0; mouseWheel_ = 0;
+        mouseHasAbsolute_ = false; mouseAbsX_ = 0; mouseAbsY_ = 0;
     } else if(MouseIsolating()) {
         cancelMouse_ = true;
     }
@@ -608,6 +621,8 @@ void Protocol::BeginInput(bool playing, std::uint64_t now) {
         mouseState_ = InputState::Releasing;
         mouseUpdatesRemaining_ = 0;
         mouseDx_ = 0; mouseDy_ = 0; mouseButtons_ = 0; mouseWheel_ = 0;
+        // Keep mouseHasAbsolute_/mouseAbsX_/mouseAbsY_ through release so
+        // Mouse_GetPosition stays overridden for the whole isolating lifecycle.
     }
     controllerOp_.Begin(playing);
 }
@@ -766,6 +781,8 @@ Json Protocol::Request(const std::string& frame) {
     int updates=0;
     int mouseDx=0, mouseDy=0, mouseWheel=0, mouseUpdates=0;
     unsigned int mouseButtonsMask=0;
+    bool mouseHasAbsolute=false;
+    int mouseAbsX=0, mouseAbsY=0;
     ControllerCommand controllerCmd;
     std::string observeTarget;
     int listOffset=0, listLimit=static_cast<int>(kRuntimeTestListObjectsDefaultLimit);
@@ -788,7 +805,10 @@ Json Protocol::Request(const std::string& frame) {
         updates=q["updates"].get<int>();
     } else if(mouse) {
         const bool hasWheel = q.contains("wheel");
-        const size_t expectedSize = hasWheel ? 9 : 8;
+        const bool hasX = q.contains("x");
+        const bool hasY = q.contains("y");
+        if(hasX != hasY) return error("invalid_request");
+        const size_t expectedSize = 8u + (hasWheel ? 1u : 0u) + (hasX ? 2u : 0u);
         if(q.size() != expectedSize) return error("invalid_request");
         if(!q.contains("dx") || !q["dx"].is_number_integer() || q["dx"] < -600 || q["dx"] > 600)
             return error("invalid_request");
@@ -804,6 +824,19 @@ Json Protocol::Request(const std::string& frame) {
             mouseWheel = q["wheel"].get<int>();
         } else {
             mouseWheel = 0;
+        }
+        if(hasX) {
+            // Finite ints in current backbuffer pixel bounds [0, width) x [0, height).
+            if(!q["x"].is_number_integer() || !q["y"].is_number_integer())
+                return error("invalid_request");
+            const int bbW = static_cast<int>(GetBackBufferWidth());
+            const int bbH = static_cast<int>(GetBackBufferHeight());
+            mouseAbsX = q["x"].get<int>();
+            mouseAbsY = q["y"].get<int>();
+            if(bbW <= 0 || bbH <= 0 || mouseAbsX < 0 || mouseAbsY < 0
+                || mouseAbsX >= bbW || mouseAbsY >= bbH)
+                return error("invalid_request");
+            mouseHasAbsolute = true;
         }
         std::set<std::string> seen;
         for(const auto& item : q["buttons"]) {
@@ -993,6 +1026,9 @@ Json Protocol::Request(const std::string& frame) {
         mouseDy_=mouseDy;
         mouseButtons_=mouseButtonsMask;
         mouseWheel_=mouseWheel;
+        mouseHasAbsolute_=mouseHasAbsolute;
+        mouseAbsX_=mouseAbsX;
+        mouseAbsY_=mouseAbsY;
         mouseUpdatesRemaining_=mouseUpdates;
         mouseDeadline_=GetTickCount64()+5000;
         return {{"protocolVersion",1},{"requestId",id},{"runId",runId_},{"ok",true},{"status","queued"}};
@@ -1385,10 +1421,11 @@ void Bridge::PollAndApplyInput(bool inGamePlaying) {
         Keyboard_ClearInjection();
     }
     if(impl_->protocol.MouseIsolating()) {
-        int mdx = 0, mdy = 0, mwheel = 0;
+        int mdx = 0, mdy = 0, mwheel = 0, max = 0, may = 0;
         unsigned int mbuttons = 0;
-        impl_->protocol.GetMouseInput(mdx, mdy, mbuttons, mwheel);
-        Mouse_TestInject(mdx, mdy, mbuttons, mwheel);
+        bool hasAbs = false;
+        impl_->protocol.GetMouseInput(mdx, mdy, mbuttons, mwheel, hasAbs, max, may);
+        Mouse_TestInject(mdx, mdy, mbuttons, mwheel, hasAbs, max, may);
     } else {
         Mouse_ClearInjection();
     }

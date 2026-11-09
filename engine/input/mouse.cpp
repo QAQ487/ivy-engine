@@ -22,13 +22,20 @@ static int g_injectedDx = 0;
 static int g_injectedDy = 0;
 static unsigned int g_injectedButtons = 0;
 static int g_injectedWheel = 0;
+static bool g_injectedHasAbsolute = false;
+static int g_injectedAbsX = 0;
+static int g_injectedAbsY = 0;
 
-void Mouse_TestInject(int dx, int dy, unsigned int buttonsMask, int wheel) {
+void Mouse_TestInject(int dx, int dy, unsigned int buttonsMask, int wheel,
+                      bool hasAbsolute, int absX, int absY) {
     g_mouseInjectionActive = true;
     g_injectedDx = dx;
     g_injectedDy = dy;
     g_injectedButtons = buttonsMask;
     g_injectedWheel = wheel;
+    g_injectedHasAbsolute = hasAbsolute;
+    g_injectedAbsX = absX;
+    g_injectedAbsY = absY;
 }
 
 void Mouse_ClearInjection() {
@@ -37,6 +44,9 @@ void Mouse_ClearInjection() {
     g_injectedDy = 0;
     g_injectedButtons = 0;
     g_injectedWheel = 0;
+    g_injectedHasAbsolute = false;
+    g_injectedAbsX = 0;
+    g_injectedAbsY = 0;
 }
 
 bool Mouse_IsInjectionActive() {
@@ -232,6 +242,13 @@ int Mouse_GetY() {
 }
 
 void Mouse_GetPosition(int& x, int& y) {
+#if defined(_DEBUG) && defined(GAME_RUNTIME)
+    if (g_mouseInjectionActive && g_injectedHasAbsolute) {
+        x = g_injectedAbsX;
+        y = g_injectedAbsY;
+        return;
+    }
+#endif
     RefreshClientPositionFromCursor();
     ClientToBackbufferInt(g_lastClientX, g_lastClientY, x, y);
 }
