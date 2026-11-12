@@ -64,6 +64,23 @@
   - 既有規劃包含 grid-based pathfinding＋path smoothing；與本項合併管理，唔當兩份獨立必做任務。
   - 無障礙 arena 可先用 steering，唔預設一定要 NavMesh。
 
+## 渲染效能：Culling
+
+現況：引擎冇 per-object frustum／distance／occlusion culling。`Model3D::Draw`（`engine/rendering/model/model.cpp`）同 `GameObject::DrawVisual`（`engine/ecs/game_object.cpp`）、sprite／billboard／particle draw path 直送 draw call，冇視錐或距離測試。有嘅只係 rasterizer back-face `CullMode`（`engine/rendering/d3d11/renderer.cpp`；sprite／billboard／particle／skybox 多數 `D3D11_CULL_NONE`），同 CSM 用 camera frustum corners（`BuildFrustumCorners`／`FitOrthoCascade` 喺 `engine/rendering/lighting/shadow.cpp`）計 cascade ortho bounds——唔係物件 culling。Physics collider 有 AABB／bounding sphere，渲染未用。`D3D11_QUERY` 目前只見 timestamp／pipeline stats（`engine/core/frame_capture.cpp`），冇 occlusion predicate。
+
+參考：Unity 模型——自動 frustum culling、手動 baked occlusion、Unity 6 GPU occlusion、`CullingGroup` API。
+
+- [ ] **Frustum culling（3D）**
+  - 每個 renderer 用 world-space AABB（或 bounding sphere）對 camera frustum 測試，視錐外唔送 draw call；陰影 pass 按每個 CSM cascade 嘅光源 frustum 另做一次 culling。
+  - 驗收：Release build 一個大場景 draw call 數按視角下降，畫面無物件提早消失（邊緣、skinned／animated mesh bounds 要包住動畫）。Editor 加 debug overlay 顯示 visible／culled 數量。
+- [ ] **2D camera rect culling**
+  - sprite／tilemap／billboard／particle 用 camera 正交矩形剔除，village-and-goblin 呢類俯視 2D 遊戲用。
+  - 驗收同上，以 Release 證據為準。
+- [ ] **Distance／layer cull distance 同 LOD**
+  - 仿 Unity `Camera.layerCullDistances` 同 LOD Group，按 layer 設剔除距離，近遠換 mesh 精度。排喺 frustum culling 之後。
+- [ ] **Occlusion culling（暫緩）**
+  - 等 Release profiling 顯示 draw call／overdraw 係瓶頸、場景有大量遮擋先做。起點：D3D11 occlusion predicate（`D3D11_QUERY_OCCLUSION_PREDICATE`）或 Hi-Z（上一 frame depth pyramid）；baked PVS（似 Unity Umbra）需要 editor bake 流程，放最後。
+
 ## 歷史 backlog（source audit 結果）
 
 以下已對 `3f5afe9` 源碼同 git 核實。勾選代表 source review 完成，唔等於另一次 runtime acceptance。
@@ -97,7 +114,7 @@ PBR 球場已由引擎待辦移除：倉庫只有 PBR shader 同 `testbed/rom/sc
 3. 重做 Properties Panel／Inspector（先有 UI 草案；現有編輯同 Undo 要保住）。
 4. AI 套件：Waypoint → Perception → BT／Blackboard → EQS。NavMesh 繼續暫緩。
 
-Box friction torque 同 World-space UI 未排入上面次序：前者只有想箱子傾側先做；後者驗收仍待設計。
+Box friction torque 同 World-space UI 未排入上面次序：前者只有想箱子傾側先做；後者驗收仍待設計。渲染 Culling 一節亦未排入；開做時先做 frustum culling。
 
 ## 維護規則
 
