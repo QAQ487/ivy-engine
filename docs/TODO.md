@@ -66,7 +66,7 @@
 
 ## 渲染效能：Culling
 
-現況：3D main camera pass 已有 per-object frustum culling；CSM depth passes 已有 per-cascade light-ortho caster culling（open near）。仍然冇 distance／occlusion culling；2D sprite／billboard／particle／UI 未做 rect culling。Physics AABB 仍然唔共用。`D3D11_QUERY` 仍然只見 timestamp／pipeline stats。
+現況：3D main camera pass 已有 per-object frustum culling；CSM depth passes 已有 per-cascade light-ortho caster culling（open near）；2D ortho sprite 已有 view-rect culling。仍然冇 distance／occlusion culling；billboard／particle／screen-space UI／tilemap 未做。Physics AABB 仍然唔共用。`D3D11_QUERY` 仍然只見 timestamp／pipeline stats。
 
 參考：Unity 模型——自動 frustum culling、手動 baked occlusion、Unity 6 GPU occlusion、`CullingGroup` API。
 
@@ -81,9 +81,11 @@
   - Toggle：`settings.render.shadowCascadeCullingEnabled`（預設 true）。Counters：frame totals + per-cascade —— Rendering Settings；frame totals —— FPS／collision-viz／`perf.shadowCull`。
   - Linux：`./tools/run_shadow_cull_check.sh`。
   - 剩餘：Windows Release A/B（ON vs OFF capture 像素一致於畫面內陰影；遠方 caster `shadowCull.culled` 上升；畫面外 caster 陰影仍在）。
-- [ ] **2D camera rect culling**
-  - sprite／tilemap／billboard／particle 用 camera 正交矩形剔除，village-and-goblin 呢類俯視 2D 遊戲用。
-  - 驗收同上，以 Release 證據為準。
+- [x] **2D camera rect culling**（source 已做；等 Windows Release runtime 驗收）
+  - `SpriteRenderer` 喺 `Draw` 前用 size／pivot／world matrix（含 rotation／scale／renderOffset）計保守 world AABB，對 ortho camera 嘅 world-XY view rect（含細 margin）測試；完全在外就唔 `Sprite_DrawWorld`。Animator／physics／scripts 唔受影響。Screen-space UI 唔閘。Perspective camera 下 sprite 保持 unculled。
+  - Toggle：`settings.render.spriteCullingEnabled`（預設 true）。Counters：considered／culled／drawn —— Rendering Settings、collision-viz、FPS `2CULL`、`perf.spriteCull`。
+  - Linux：`./tools/run_sprite_cull_check.sh`。
+  - 剩餘：Windows Release A/B（ON vs OFF capture 像素一致；離屏 sprite `spriteCull.culled` 上升）；tilemap／billboard／particle 之後另做。
 - [ ] **Distance／layer cull distance 同 LOD**
   - 仿 Unity `Camera.layerCullDistances` 同 LOD Group，按 layer 設剔除距離，近遠換 mesh 精度。排喺 frustum culling 之後。
 - [ ] **Occlusion culling（暫緩）**

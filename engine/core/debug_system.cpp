@@ -7,6 +7,7 @@
 #include "engine/physics/core/physics_system.h"
 #include "engine/rendering/culling/frustum_cull.h"
 #include "engine/rendering/culling/shadow_cascade_cull.h"
+#include "engine/rendering/culling/sprite_cull.h"
 #include "third_person_camera.h"
 
 #include <cstdio>
@@ -195,16 +196,19 @@ void RefreshOverlay() {
 
 	const FrustumCullStats cull = FrustumCull_GetLastStats();
 	const ShadowCascadeCullStats shadowCull = ShadowCascadeCull_GetLastStats();
+	const SpriteCullStats spriteCull = SpriteCull_GetLastStats();
 	if (s_collisionViz) {
 		const PhysicsDebugStats st = PhysicsSystem_GetDebugStats();
 		std::snprintf(s_overlayText, sizeof(s_overlayText),
 			"COLLISION VIZ %s   TIME %s\n"
 			"colliders:%d pairs:%d contacts:%d triggers:%d\n"
 			"frustum considered:%d culled:%d drawn:%d\n"
-			"shadow considered:%d culled:%d drawn:%d",
+			"shadow considered:%d culled:%d drawn:%d\n"
+			"sprite considered:%d culled:%d drawn:%d",
 			viz, timeBuf, st.colliders, st.pairs, st.contacts, st.triggers,
 			cull.considered, cull.culled, cull.drawn,
-			shadowCull.considered, shadowCull.culled, shadowCull.drawn);
+			shadowCull.considered, shadowCull.culled, shadowCull.drawn,
+			spriteCull.considered, spriteCull.culled, spriteCull.drawn);
 	} else {
 		std::snprintf(s_overlayText, sizeof(s_overlayText),
 			"COLLISION VIZ %s   TIME %s",

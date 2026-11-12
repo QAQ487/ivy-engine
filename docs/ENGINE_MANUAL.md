@@ -558,6 +558,7 @@ Known fields:
 - `defaultShader`
 - `frustumCullingEnabled` — bool, default `true`. Main-camera 3D mesh frustum culling only.
 - `shadowCascadeCullingEnabled` — bool, default `true`. Per-cascade light-ortho caster culling (open near toward the light so casters between the light and the cascade still cast).
+- `spriteCullingEnabled` — bool, default `true`. Orthographic 2D sprite view-rect culling (render submission only; animator/physics/scripts unchanged).
 
 Use render settings for scene-level rendering defaults. Use `VisualComponent::shaderOverride` only for per-object overrides.
 

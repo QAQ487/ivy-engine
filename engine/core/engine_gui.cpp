@@ -26,6 +26,7 @@
 #include "engine/scene/render_settings.h"
 #include "engine/rendering/culling/frustum_cull.h"
 #include "engine/rendering/culling/shadow_cascade_cull.h"
+#include "engine/rendering/culling/sprite_cull.h"
 #include "engine/rendering/d3d11/shader.h"
 #include "engine/rendering/d3d11/post_process.h"
 #include "engine/core/job_system.h"
@@ -1275,6 +1276,13 @@ static void DrawRenderingSettingsWindow(bool* open) {
                 i, cs.considered, cs.culled, cs.drawn);
         }
         ImGui::TextDisabled("Per-cascade light ortho; open near toward light.");
+    }
+    ImGui::Checkbox("Sprite Culling (2D)", &rs.spriteCullingEnabled);
+    {
+        const SpriteCullStats sc = SpriteCull_GetLastStats();
+        ImGui::TextDisabled("sprite   considered %d  |  culled %d  |  drawn %d",
+            sc.considered, sc.culled, sc.drawn);
+        ImGui::TextDisabled("Ortho view-rect; render submit only.");
     }
 
     ImGui::Spacing();

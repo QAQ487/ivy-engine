@@ -336,6 +336,12 @@
     <ClInclude Include="engine\rendering\culling\shadow_cascade_cull.h">
       <Filter>engine\rendering\culling</Filter>
     </ClInclude>
+    <ClInclude Include="engine\rendering\culling\sprite_cull.h">
+      <Filter>engine\rendering\culling</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\rendering\culling\sprite_cull_math.h">
+      <Filter>engine\rendering\culling</Filter>
+    </ClInclude>
     <ClInclude Include="engine\rendering\model\model.h">
       <Filter>engine\rendering\model</Filter>
     </ClInclude>
@@ -732,6 +738,9 @@
       <Filter>engine\rendering\culling</Filter>
     </ClCompile>
     <ClCompile Include="engine\rendering\culling\shadow_cascade_cull.cpp">
+      <Filter>engine\rendering\culling</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\rendering\culling\sprite_cull.cpp">
       <Filter>engine\rendering\culling</Filter>
     </ClCompile>
     <ClCompile Include="engine\rendering\model\model.cpp">
