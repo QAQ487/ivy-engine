@@ -25,6 +25,13 @@ using Json = nlohmann::json;
 using CaptureHandler = bool(*)(const wchar_t*, uint32_t*, uint32_t*);
 
 std::uint32_t RemainingFrameTimeout(std::uint64_t deadline, std::uint64_t now) noexcept;
+// Pipe read timeout while assembling one request frame.
+// frameStarted=false (idle between requests): INFINITE — wait for first byte/stop/disconnect.
+// frameStarted=true: remaining mid-frame body deadline (bounded by kRuntimeTestFrameBodyTimeoutMs).
+std::uint32_t RequestFrameByteTimeout(bool frameStarted, std::uint64_t bodyDeadline, std::uint64_t now) noexcept;
+
+// Mid-frame body read budget (ms). Does NOT apply while idle between complete requests.
+constexpr std::uint32_t kRuntimeTestFrameBodyTimeoutMs = 2000;
 
 constexpr std::size_t kRuntimeTestPerfCapacity = 600;
 constexpr std::size_t kRuntimeTestListObjectsDefaultLimit = 32;
@@ -214,7 +221,8 @@ public:
     void GetControllerInput(float& lx, float& ly, float& rx, float& ry, float& lt, float& rt, std::uint16_t& buttons) const;
 
     bool HasPendingCapture(std::int64_t& outId) const;
-    void CompleteCapture(std::int64_t id, bool ok, uint32_t w, uint32_t h, const std::string& basename, const std::string& err);
+    void CompleteCapture(std::int64_t id, bool ok, uint32_t w, uint32_t h, const std::string& basename,
+        const std::string& path, const std::string& err);
     bool HasPendingWorldOp(WorldOpRequest& out) const;
     // In-process tests: Queued -> Completed/Failed immediately.
     void CompleteWorldOp(std::int64_t id, bool ok, const std::string& err);
@@ -281,6 +289,7 @@ private:
         uint32_t width = 0;
         uint32_t height = 0;
         std::string basename;
+        std::string path;
         std::string error;
     } captureState_;
 

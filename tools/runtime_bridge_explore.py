@@ -30,7 +30,7 @@ ALLOWED_CONTROLLER_STATUS = frozenset({
     "queued", "preparing", "active", "releasing", "completed", "cancelled",
 })
 MAX_COMMAND_BYTES = 4096
-KEEPALIVE_INTERVAL = 0.5  # bridge idle disconnect ~2s; keep status traffic bounded
+KEEPALIVE_INTERVAL = 0.5  # optional status heartbeat; idle gaps no longer disconnect the pipe
 DEFAULT_SCENE = "scene_runtime_bridge_player.json"
 
 

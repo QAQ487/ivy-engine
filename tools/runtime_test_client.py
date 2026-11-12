@@ -3,6 +3,7 @@ import argparse
 import ctypes as C
 import json
 import math
+import os
 import re
 import sys
 import time
@@ -81,6 +82,22 @@ def build_mouse_payload(dx, dy, buttons, updates=None, wheel=0, x=None, y=None, 
 def _valid_event_name(name):
     if not isinstance(name,str) or not 1<=len(name)<=64: return False
     return all(ch.isalnum() or ch in "_-" for ch in name)
+
+def resolve_capture_path(basename, output_dir=None):
+    """Resolve a capture basename against IVY_RUNTIME_TEST_OUTPUT_DIR (or output_dir).
+
+    Server replies include basename always; completed captures also include absolute `path`.
+    Clients that only have basename may rebuild the path as join(output_dir, basename)
+    where output_dir is the same directory passed to the runtime via
+    IVY_RUNTIME_TEST_OUTPUT_DIR.
+    """
+    if not isinstance(basename, str) or not basename or "/" in basename or "\\" in basename or basename in (".", "..") or ".." in basename:
+        raise ValueError("basename must be a plain file name without path separators")
+    if output_dir is None:
+        output_dir = os.environ.get("IVY_RUNTIME_TEST_OUTPUT_DIR")
+    if not isinstance(output_dir, str) or not output_dir.strip():
+        raise ValueError("output_dir or IVY_RUNTIME_TEST_OUTPUT_DIR required")
+    return os.path.join(output_dir, basename)
 
 def validate_events_reply(payload):
     """Fail-closed semantic validator for fixed checkpoint_reached event schema."""
@@ -341,6 +358,21 @@ class Client:
             raise ValueError("torque_impulse must be 3 finite numbers")
         payload = {"object": object_name, "torqueImpulse": [float(torque_impulse[0]), float(torque_impulse[1]), float(torque_impulse[2])]}
         return self._await_world_op(request_id, "apply_torque_impulse", payload, completion_timeout)
+
+    @staticmethod
+    def capture_output_path(capture_status, output_dir=None):
+        """Return the absolute capture file path from a capture status object.
+
+        Prefers the server-provided `path` field when present; otherwise resolves
+        `basename` against `output_dir` / IVY_RUNTIME_TEST_OUTPUT_DIR.
+        """
+        if not isinstance(capture_status, dict):
+            raise ValueError("capture_status must be a dict")
+        path = capture_status.get("path")
+        if isinstance(path, str) and path:
+            return path
+        basename = capture_status.get("basename")
+        return resolve_capture_path(basename, output_dir=output_dir)
 
     def capture(self, request_id, completion_timeout=5.0):
         if type(request_id) is not int or not 1 <= request_id < 2147483647:

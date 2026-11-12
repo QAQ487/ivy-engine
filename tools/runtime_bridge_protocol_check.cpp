@@ -45,6 +45,33 @@ int main(int argc, char** argv) {
     check(RemainingFrameTimeout(2000, 2000) == 0, "deadline reached");
     check(RemainingFrameTimeout(2000, 2001) == 0, "expired deadline never wraps to INFINITE");
     check(RemainingFrameTimeout(2000, 0) == 2000, "bounded frame timeout");
+    // Idle between complete requests must wait indefinitely (stop/client close), not the 2s
+    // mid-frame body deadline — that idle disconnect produced ERROR_PIPE_NOT_CONNECTED (233).
+    check(RequestFrameByteTimeout(false, 2000, 0) == INFINITE,
+          "idle between requests waits indefinitely for first byte");
+    check(RequestFrameByteTimeout(true, 2000, 0) == 2000,
+          "partial frame uses bounded body deadline");
+    check(RequestFrameByteTimeout(true, 2000, 2000) == 0,
+          "partial frame body deadline expiry returns 0");
+    check(kRuntimeTestFrameBodyTimeoutMs == 2000, "documented mid-frame body timeout is 2000ms");
+    {
+        Protocol capProto("cap-path", 11, 1);
+        capProto.Publish(true, true, "fixture");
+        auto queued = capProto.Request(
+            R"({"protocolVersion":1,"requestId":1,"runId":"cap-path","verb":"capture"})");
+        check(queued.value("ok", false) && queued.value("status", "") == "queued",
+              "capture queues for path field check");
+        capProto.CompleteCapture(1, true, 1920, 1080, "capture-cap-path-1.png",
+            "C:\\out\\capture-cap-path-1.png", "");
+        auto done = capProto.Request(
+            R"({"protocolVersion":1,"requestId":2,"runId":"cap-path","verb":"status"})");
+        check(done["capture"]["status"] == "completed", "capture completed after CompleteCapture");
+        check(done["capture"]["basename"] == "capture-cap-path-1.png", "capture keeps basename");
+        check(done["capture"]["path"] == "C:\\out\\capture-cap-path-1.png",
+              "capture status includes full output path");
+        check(done["capture"]["width"] == 1920 && done["capture"]["height"] == 1080,
+              "capture dimensions preserved with path");
+    }
     check(InputInjectDeadlineMs(1) == kInputInjectDeadlineBaseMs + kInputInjectDeadlinePerUpdateMs,
           "keyboard deadline base + one update");
     check(InputInjectDeadlineMs(kInputInjectMaxUpdates) == kInputInjectDeadlineMaxMs,

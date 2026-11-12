@@ -14,6 +14,8 @@ $env:IVY_RUNTIME_TEST_RUN_ID=[guid]::NewGuid().ToString('N')
 
 Endpoint：`\\.\pipe\IvyRuntimeTest-<PID>-<runId>`（本機、current-user DACL）。
 
+**連線壽命：** 同一個 Client 可以連續打好多個 op（含 `set_transform`／`capture`／input completion helpers）；請求同請求之間嘅空檔唔會因為 2s idle 斷 pipe。只有「已經開始讀但未完成嘅 frame」先有 2000ms body timeout。Completion timeout／真正 peer close 仍然會關連線（要 reconnect）。`capture` status 會帶 `basename` 同完成時嘅絕對 `path`；亦可用 `resolve_capture_path`／`Client.capture_output_path`。詳見英文 doc「Connection lifetime」。
+
 可選：`IvyEngineRuntime.exe --scene rom/scene/scene_runtime_bridge_player.json`（只喺 bridge 啟用時生效；路徑要 `rom/`-relative、`.json`，經 `rom/` → `resources/` resolve；失敗會非零退出）。
 
 ## 常用檢查

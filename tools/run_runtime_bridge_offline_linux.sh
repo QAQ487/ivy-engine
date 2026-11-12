@@ -47,6 +47,14 @@ echo "==> python mouse absolute client payload validation"
 echo "==> python client bridge rejection identity handling"
 ( cd "$ROOT/tools" && python3 -m unittest runtime_test_client_check.ClientChecks.test_request_surfaces_bridge_error_when_identity_echoed -v )
 
+echo "==> python client capture path + sequential connection helpers"
+( cd "$ROOT/tools" && python3 -m unittest \
+  runtime_test_client_check.ClientChecks.test_resolve_capture_path_helper \
+  runtime_test_client_check.ClientChecks.test_sequential_completion_helpers_keep_one_connection -v )
+
+echo "==> python connection acceptance unit tests"
+python3 "$ROOT/tools/runtime_bridge_connection_acceptance_check.py" -v
+
 echo "==> python angular acceptance unit tests"
 python3 "$ROOT/tools/runtime_bridge_angular_acceptance_check.py" -v
 

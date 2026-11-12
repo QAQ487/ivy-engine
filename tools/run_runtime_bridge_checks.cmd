@@ -78,6 +78,8 @@ py -3 tools\runtime_bridge_phase4_check.py -v
 if errorlevel 1 exit /b 1
 py -3 tools\runtime_bridge_world_manip_acceptance_check.py -v
 if errorlevel 1 exit /b 1
+py -3 tools\runtime_bridge_connection_acceptance_check.py -v
+if errorlevel 1 exit /b 1
 py -3 tools\runtime_bridge_angular_acceptance_check.py -v
 if errorlevel 1 exit /b 1
 py -3 tools\runtime_bridge_scenario_check.py -v
@@ -102,6 +104,8 @@ if errorlevel 1 exit /b 1
 py -3 tools\runtime_bridge_controller_probe_acceptance.py --exe "%~2" --out-dir "%~1\controller-probe-runtime"
 if errorlevel 1 exit /b 1
 py -3 tools\runtime_bridge_world_manip_acceptance.py --exe "%~2" --out-dir "%~1\world-manip-runtime"
+if errorlevel 1 exit /b 1
+py -3 tools\runtime_bridge_connection_acceptance.py --exe "%~2" --out-dir "%~1\connection-runtime"
 if errorlevel 1 exit /b 1
 py -3 tools\runtime_bridge_angular_acceptance.py --exe "%~2" --out-dir "%~1\angular-runtime"
 if errorlevel 1 exit /b 1
