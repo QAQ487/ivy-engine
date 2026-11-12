@@ -8,6 +8,7 @@
 #include "engine/ecs/rigidbody_component.h"
 #include "engine/core/content_path.h"
 #if defined(IVY_RUNTIME_TEST_BRIDGE_AVAILABLE)
+#include "engine/ecs/prefab_runtime.h"
 #include "src/app/runtime_test_world_apply.h"
 static ivy::testing::Bridge* g_pRuntimeTestBridge = nullptr;
 static bool g_runtimeTestSceneArgFatal = false;
@@ -575,9 +576,14 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstanc
                     std::vector<ivy::testing::ListedObject> objects;
                     if (ready && EngineGUI_IsPlaying()) {
                         std::function<void(const GameObject&)> collect = [&](const GameObject& obj) {
+                            // PrefabRuntime_Destroy marks pending then SetActive(false); omit the
+                            // whole subtree so observe returns found:false before FlushDestroyed.
+                            if (PrefabRuntime_IsPendingDestroy(&obj))
+                                return;
                             if (!obj.GetName().empty()) {
                                 ivy::testing::ObservedTarget t;
                                 t.name = obj.GetName();
+                                t.active = obj.IsActive();
                                 // Prefer Transform component (world pose via GetWorldPose) over
                                 // legacy m_position/m_rotation/m_scale, which scripts that write
                                 // localPosition directly leave stale after scene load.

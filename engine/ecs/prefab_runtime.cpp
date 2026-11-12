@@ -227,6 +227,12 @@ void PrefabRuntime_Destroy(GameObject* obj) {
     g_pendingDestroySet.insert(obj);
 }
 
+bool PrefabRuntime_IsPendingDestroy(const GameObject* obj) {
+    if (!obj) return false;
+    std::lock_guard<std::mutex> lock(g_pendingMutex);
+    return g_pendingDestroySet.count(const_cast<GameObject*>(obj)) != 0;
+}
+
 void PrefabRuntime_DestroyAllSpawnedChildren() {
     std::vector<GameObject*> children;
     for (const auto& root : SceneLoader_GetSceneNodes()) {

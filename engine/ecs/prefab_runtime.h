@@ -27,6 +27,7 @@ GameObject* PrefabRuntime_Instantiate(const char* prefabPath,
                                       bool startActive);
 
 void PrefabRuntime_Destroy(GameObject* obj);
+bool PrefabRuntime_IsPendingDestroy(const GameObject* obj);
 void PrefabRuntime_DestroyAllSpawnedChildren();
 void PrefabRuntime_FlushSpawned();
 void PrefabRuntime_FlushDestroyed();

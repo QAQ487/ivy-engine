@@ -50,6 +50,8 @@ struct ObservedTarget {
     std::string name;
     float posX = 0.0f, posY = 0.0f, posZ = 0.0f;
     float velX = 0.0f, velY = 0.0f, velZ = 0.0f;
+    // GameObject::IsActive(); pending-destroy objects are omitted from the snapshot.
+    bool active = true;
     bool hasRotation = false;
     float rotX = 0.0f, rotY = 0.0f, rotZ = 0.0f;
     float quatX = 0.0f, quatY = 0.0f, quatZ = 0.0f, quatW = 1.0f;
