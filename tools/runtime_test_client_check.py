@@ -251,6 +251,18 @@ class ClientChecks(unittest.TestCase):
         payload=build_mouse_payload(1, -2, ["LEFT"], 3, wheel=4, x=100, y=200)
         self.assertEqual(payload, {"dx":1,"dy":-2,"buttons":["LEFT"],"wheel":4,"updates":3,"x":100,"y":200})
         self.assertNotIn("x", build_mouse_payload(0, 0, [], 1))
+        with self.assertRaises(ValueError):
+            build_mouse_payload(0, 0, ["LEFT"], 5, duration_ms=100)
+        with self.assertRaises(ValueError):
+            build_mouse_payload(0, 0, ["LEFT"])
+        for bad_duration in (0, 30001, True, 1.5, "100", -1):
+            with self.subTest(bad_duration=bad_duration):
+                with self.assertRaises(ValueError):
+                    build_mouse_payload(0, 0, ["LEFT"], duration_ms=bad_duration)
+        duration_payload=build_mouse_payload(0, 0, ["LEFT"], duration_ms=3500, x=189, y=527)
+        self.assertEqual(duration_payload, {
+            "dx":0,"dy":0,"buttons":["LEFT"],"wheel":0,"durationMs":3500,"x":189,"y":527})
+        self.assertNotIn("updates", duration_payload)
 
     def test_events_client_validation(self):
         from runtime_test_client import validate_events_reply

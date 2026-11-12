@@ -22,6 +22,7 @@ DEFAULT_TIMEOUT_SEC = 120.0
 MAX_FRAMES = 600
 MAX_SAMPLE_COUNT = 600
 MAX_UPDATES = 120
+MAX_MOUSE_DURATION_MS = 30000
 MAX_KEYS = 9
 MAX_LIST_LIMIT = 64
 
@@ -280,7 +281,7 @@ def _validate_keyboard(step: dict, path: str) -> dict:
 
 
 def _validate_mouse(step: dict, path: str) -> dict:
-    _reject_unknown(step, {"type", "dx", "dy", "buttons", "updates", "wheel"}, path)
+    _reject_unknown(step, {"type", "dx", "dy", "buttons", "updates", "durationMs", "wheel"}, path)
     dx = _require_finite(step.get("dx"), "%s.dx" % path)
     dy = _require_finite(step.get("dy"), "%s.dy" % path)
     if not -600 <= dx <= 600:
@@ -301,14 +302,21 @@ def _validate_mouse(step: dict, path: str) -> dict:
             _err(bpath, "duplicate button %r" % name)
         seen.add(name)
         out_buttons.append(name)
-    updates = _require_int_range(step.get("updates"), "%s.updates" % path, 1, MAX_UPDATES)
+    has_updates = "updates" in step
+    has_duration = "durationMs" in step
+    if has_updates == has_duration:
+        _err(path, "mouse requires exactly one of updates or durationMs")
     out: dict[str, Any] = {
         "type": "mouse",
         "dx": dx,
         "dy": dy,
         "buttons": out_buttons,
-        "updates": updates,
     }
+    if has_updates:
+        out["updates"] = _require_int_range(step.get("updates"), "%s.updates" % path, 1, MAX_UPDATES)
+    else:
+        out["durationMs"] = _require_int_range(
+            step.get("durationMs"), "%s.durationMs" % path, 1, MAX_MOUSE_DURATION_MS)
     if "wheel" in step:
         wheel = _require_finite(step["wheel"], "%s.wheel" % path)
         if not -120 <= wheel <= 120:

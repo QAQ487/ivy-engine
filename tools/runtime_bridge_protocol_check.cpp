@@ -224,6 +224,129 @@ int main(int argc, char** argv) {
         mouseRel.EndInput();
     }
 
+    // durationMs wall-clock mouse hold (exclusive with updates).
+    check(InputInjectDeadlineFromDurationMs(1) == kInputInjectDeadlineBaseMs + 1,
+          "duration deadline base + one ms");
+    check(InputInjectDeadlineFromDurationMs(kInputInjectMaxDurationMs) ==
+              kInputInjectDeadlineBaseMs + static_cast<std::uint64_t>(kInputInjectMaxDurationMs),
+          "duration deadline at max durationMs");
+    check(InputInjectDeadlineFromDurationMs(0) == InputInjectDeadlineFromDurationMs(1),
+          "duration deadline clamps below 1");
+    check(InputInjectDeadlineFromDurationMs(kInputInjectMaxDurationMs + 50) ==
+              InputInjectDeadlineFromDurationMs(kInputInjectMaxDurationMs),
+          "duration deadline clamps above max");
+    {
+        Protocol mouseDur("mouse-dur", 123, 7);
+        mouseDur.Publish(true, true, "fixture");
+        auto both = Json{{"protocolVersion",1},{"requestId",1},{"runId","mouse-dur"},{"verb","mouse"},
+            {"dx",0},{"dy",0},{"buttons",Json::array({"LEFT"})},{"updates",1},{"durationMs",100}};
+        check(mouseDur.Request(both.dump()).value("error","")=="invalid_request",
+              "reject updates and durationMs together");
+        Protocol mouseDurNeither("mouse-dur-neither", 123, 7);
+        mouseDurNeither.Publish(true, true, "fixture");
+        auto neither = Json{{"protocolVersion",1},{"requestId",1},{"runId","mouse-dur-neither"},{"verb","mouse"},
+            {"dx",0},{"dy",0},{"buttons",Json::array({"LEFT"})}};
+        check(mouseDurNeither.Request(neither.dump()).value("error","")=="invalid_request",
+              "reject mouse without updates or durationMs");
+        for (const auto& badDuration : {Json(0), Json(30001), Json(true), Json(1.5), Json(-1), Json("100")}) {
+            Protocol invalid("mouse-dur-bad", 123, 7);
+            invalid.Publish(true, true, "fixture");
+            auto bad = Json{{"protocolVersion",1},{"requestId",1},{"runId","mouse-dur-bad"},{"verb","mouse"},
+                {"dx",0},{"dy",0},{"buttons",Json::array()},{"durationMs",badDuration}};
+            check(invalid.Request(bad.dump()).value("error","")=="invalid_request",
+                  "reject non-int or out-of-range durationMs");
+        }
+        Protocol mouseDurOk("mouse-dur-ok", 123, 7);
+        mouseDurOk.Publish(true, true, "fixture");
+        check(mouseDurOk.Request(Json{{"protocolVersion",1},{"requestId",1},{"runId","mouse-dur-ok"},{"verb","mouse"},
+            {"dx",0},{"dy",0},{"buttons",Json::array({"LEFT"})},{"durationMs",3500},
+            {"x",189},{"y",527}}.dump()).value("ok", false),
+            "accept durationMs LEFT hold with absolute cursor");
+
+        // Hold remains pressed until elapsed >= durationMs (injectable now).
+        // Use GetTickCount64()-based times so ExpireMouse deadline (set at Request) does not fire first.
+        Protocol mouseHold("mouse-hold", 123, 7);
+        mouseHold.Publish(true, true, "fixture");
+        check(mouseHold.Request(Json{{"protocolVersion",1},{"requestId",1},{"runId","mouse-hold"},{"verb","mouse"},
+            {"dx",0},{"dy",0},{"buttons",Json::array({"LEFT"})},{"durationMs",100},
+            {"x",189},{"y",527}}.dump()).value("ok", false), "queue durationMs=100 hold");
+        const std::uint64_t tHold = GetTickCount64();
+        int hdx=0,hdy=0,hw=0,hx=0,hy=0; unsigned int hb=0; bool hAbs=false;
+        mouseHold.BeginInput(true, tHold); // Queued -> Preparing
+        mouseHold.GetMouseInput(hdx, hdy, hb, hw, hAbs, hx, hy);
+        check(hAbs && hx==189 && hy==527 && hb==0, "prep frame: absolute on, buttons neutral");
+        mouseHold.EndInput(); // Preparing -> Active
+        mouseHold.BeginInput(true, tHold); // Active; hold clock starts
+        mouseHold.GetMouseInput(hdx, hdy, hb, hw, hAbs, hx, hy);
+        check(hAbs && hx==189 && hy==527 && (hb & 1u), "active: LEFT held at duration start");
+        mouseHold.EndInput();
+        mouseHold.BeginInput(true, tHold + 99);
+        mouseHold.GetMouseInput(hdx, hdy, hb, hw, hAbs, hx, hy);
+        check((hb & 1u) && mouseHold.MouseIsolating(), "still holding at durationMs-1");
+        auto midHold = mouseHold.Request(
+            R"({"protocolVersion":1,"requestId":2,"runId":"mouse-hold","verb":"status"})");
+        check(midHold["mouse"]["status"] == "active" && midHold["mouse"]["cancelRequested"] == false,
+              "status active before duration elapses");
+        mouseHold.EndInput();
+        mouseHold.BeginInput(true, tHold + 100);
+        mouseHold.GetMouseInput(hdx, hdy, hb, hw, hAbs, hx, hy);
+        check(hb==0 && hAbs && hx==189 && hy==527, "release at elapsed==durationMs; absolute kept");
+        auto releasing = mouseHold.Request(
+            R"({"protocolVersion":1,"requestId":3,"runId":"mouse-hold","verb":"status"})");
+        check(releasing["mouse"]["status"] == "releasing", "status releasing when duration elapses");
+        mouseHold.EndInput();
+        auto doneHold = mouseHold.Request(
+            R"({"protocolVersion":1,"requestId":4,"runId":"mouse-hold","verb":"status"})");
+        check(doneHold["mouse"]["status"] == "completed", "duration hold completes without cancel");
+
+        // Deadline scales with durationMs (base + duration); long holds are not cancelled early.
+        Protocol mouseDeadline("mouse-deadline", 123, 7);
+        mouseDeadline.Publish(true, true, "fixture");
+        const auto t0 = GetTickCount64();
+        check(mouseDeadline.Request(Json{{"protocolVersion",1},{"requestId",1},{"runId","mouse-deadline"},
+            {"verb","mouse"},{"dx",0},{"dy",0},{"buttons",Json::array({"LEFT"})},
+            {"durationMs",30000}}.dump()).value("ok", false), "max durationMs accepted for deadline probe");
+        mouseDeadline.BeginInput(true, t0);
+        mouseDeadline.EndInput();
+        mouseDeadline.BeginInput(true, t0); // start hold clock
+        mouseDeadline.EndInput();
+        mouseDeadline.BeginInput(true, t0 + 5200);
+        auto midDl = mouseDeadline.Request(
+            R"({"protocolVersion":1,"requestId":2,"runId":"mouse-deadline","verb":"status"})");
+        check(midDl["mouse"]["status"] == "active" && midDl["mouse"]["cancelRequested"] == false,
+              "5.2s elapsed does not cancel durationMs=30000 under scaled deadline");
+        mouseDeadline.EndInput();
+        mouseDeadline.BeginInput(true, t0 + InputInjectDeadlineFromDurationMs(30000) + 1);
+        auto lateDl = mouseDeadline.Request(
+            R"({"protocolVersion":1,"requestId":3,"runId":"mouse-deadline","verb":"status"})");
+        check(lateDl["mouse"]["status"] == "releasing" && lateDl["mouse"]["cancelRequested"] == true,
+              "past duration deadline begins release with cancelRequested");
+        mouseDeadline.EndInput();
+        auto doneDl = mouseDeadline.Request(
+            R"({"protocolVersion":1,"requestId":4,"runId":"mouse-deadline","verb":"status"})");
+        check(doneDl["mouse"]["status"] == "cancelled", "duration deadline cancellation acknowledged");
+
+        // updates-mode mouse also uses scaled InputInjectDeadlineMs (parity with keyboard).
+        Protocol mouseUpdDl("mouse-upd-dl", 123, 7);
+        mouseUpdDl.Publish(true, true, "fixture");
+        const auto tUpd = GetTickCount64();
+        check(mouseUpdDl.Request(Json{{"protocolVersion",1},{"requestId",1},{"runId","mouse-upd-dl"},
+            {"verb","mouse"},{"dx",0},{"dy",0},{"buttons",Json::array()},{"updates",120}}.dump())
+            .value("ok", false), "updates=120 mouse accepted for deadline probe");
+        mouseUpdDl.BeginInput(true, tUpd + 5200);
+        mouseUpdDl.EndInput();
+        auto midUpd = mouseUpdDl.Request(
+            R"({"protocolVersion":1,"requestId":2,"runId":"mouse-upd-dl","verb":"status"})");
+        check(midUpd["mouse"]["status"] == "active" && midUpd["mouse"]["cancelRequested"] == false,
+              "5.2s elapsed does not cancel updates=120 mouse under scaled deadline");
+        mouseUpdDl.BeginInput(true, tUpd + InputInjectDeadlineMs(120) + 1);
+        auto lateUpd = mouseUpdDl.Request(
+            R"({"protocolVersion":1,"requestId":3,"runId":"mouse-upd-dl","verb":"status"})");
+        check(lateUpd["mouse"]["status"] == "releasing" && lateUpd["mouse"]["cancelRequested"] == true,
+              "past updates-scaled mouse deadline begins release with cancelRequested");
+        mouseUpdDl.EndInput();
+    }
+
     r = p.Request(R"({"protocolVersion":1,"requestId":6,"runId":"test-run","verb":"quit"})");
     check(r.value("requiresReceipt", false), "quit requires receipt before main-thread exit");
     check(!p.TakeQuit(), "no quit before receipt");

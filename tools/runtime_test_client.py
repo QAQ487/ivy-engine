@@ -38,8 +38,13 @@ else:
         _fields_=[]
 MAX_EVENTS=64
 
-def build_mouse_payload(dx, dy, buttons, updates, wheel=0, x=None, y=None):
-    """Validate mouse fields and return the JSON payload (no I/O)."""
+MAX_MOUSE_DURATION_MS=30000
+
+def build_mouse_payload(dx, dy, buttons, updates=None, wheel=0, x=None, y=None, duration_ms=None):
+    """Validate mouse fields and return the JSON payload (no I/O).
+
+    Exactly one of updates (frame hold) or duration_ms (wall-clock hold) is required.
+    """
     if type(dx) is not int or not -600<=dx<=600:
         raise ValueError("dx must be an integer in [-600,600]")
     if type(dy) is not int or not -600<=dy<=600:
@@ -49,11 +54,23 @@ def build_mouse_payload(dx, dy, buttons, updates, wheel=0, x=None, y=None):
         raise ValueError("buttons must be unique subset of LEFT,RIGHT,MIDDLE")
     if type(wheel) is not int or not -120<=wheel<=120:
         raise ValueError("wheel must be an integer in [-120,120]")
-    if type(updates) is not int or not 1<=updates<=120:
-        raise ValueError("updates must be an integer in [1,120]")
+    has_updates=updates is not None
+    has_duration=duration_ms is not None
+    if has_updates==has_duration:
+        raise ValueError("mouse requires exactly one of updates or duration_ms")
+    if has_updates:
+        if type(updates) is not int or not 1<=updates<=120:
+            raise ValueError("updates must be an integer in [1,120]")
+    else:
+        if type(duration_ms) is not int or not 1<=duration_ms<=MAX_MOUSE_DURATION_MS:
+            raise ValueError("duration_ms must be an integer in [1,%d]" % MAX_MOUSE_DURATION_MS)
     if (x is None) != (y is None):
         raise ValueError("absolute cursor requires both x and y (backbuffer pixels)")
-    payload={"dx":dx,"dy":dy,"buttons":list(buttons),"wheel":wheel,"updates":updates}
+    payload={"dx":dx,"dy":dy,"buttons":list(buttons),"wheel":wheel}
+    if has_updates:
+        payload["updates"]=updates
+    else:
+        payload["durationMs"]=duration_ms
     if x is not None:
         if type(x) is not int or type(y) is not int or x < 0 or y < 0:
             raise ValueError("x,y must be non-negative integers (backbuffer pixels; server enforces size)")
@@ -375,12 +392,15 @@ class Client:
             self.close()
             raise
 
-    def mouse(self,dx,dy,buttons,updates,request_id,wheel=0,completion_timeout=7.0,x=None,y=None):
-        payload=build_mouse_payload(dx,dy,buttons,updates,wheel=wheel,x=x,y=y)
+    def mouse(self,dx,dy,buttons,updates,request_id,wheel=0,completion_timeout=None,x=None,y=None,duration_ms=None):
+        payload=build_mouse_payload(dx,dy,buttons,updates,wheel=wheel,x=x,y=y,duration_ms=duration_ms)
         if type(request_id) is not int or not 1<=request_id<2147483647:
             raise ValueError("request ID must leave room for completion polls")
-        if not math.isfinite(completion_timeout) or not 0<completion_timeout<=10:
-            raise ValueError("completion timeout must be in (0,10]")
+        if completion_timeout is None:
+            completion_timeout=7.0 if duration_ms is None else (duration_ms/1000.0)+7.0
+        max_completion=10.0 if duration_ms is None else 60.0
+        if not math.isfinite(completion_timeout) or not 0<completion_timeout<=max_completion:
+            raise ValueError("completion timeout must be in (0,%g]" % max_completion)
         try:
             deadline=time.monotonic()+completion_timeout
             result=self.request("mouse",request_id,payload,deadline=deadline)
@@ -462,6 +482,8 @@ def main():
     p.add_argument("verb",choices=("hello","status","quit","keyboard","observe","capture","mouse","controller","events","controller_probe","list_objects","pause","resume","step","perf","reset_scene","set_transform","set_velocity","apply_impulse","apply_torque_impulse"))
     p.add_argument("--keys",nargs="+")
     p.add_argument("--updates",type=int)
+    p.add_argument("--duration-ms",type=int,default=None,dest="duration_ms",
+                   help="mouse wall-clock hold ms (exclusive with --updates; 1..30000)")
     p.add_argument("--completion-timeout",type=float,default=7)
     p.add_argument("--target",type=str)
     p.add_argument("--object",type=str,dest="object_name")
@@ -494,7 +516,11 @@ def main():
     a=p.parse_args()
     if a.verb=="keyboard" and (a.keys is None or a.updates is None): p.error("keyboard requires --keys and --updates")
     if a.verb!="keyboard" and (a.keys is not None): p.error("keys payload requires keyboard verb")
-    if a.verb=="mouse" and a.updates is None: p.error("mouse requires --updates")
+    if a.verb=="mouse":
+        if (a.updates is None) == (a.duration_ms is None):
+            p.error("mouse requires exactly one of --updates or --duration-ms")
+    elif a.duration_ms is not None:
+        p.error("--duration-ms requires mouse verb")
     if a.verb=="controller" and (a.lx is None or a.ly is None or a.updates is None):
         p.error("controller requires --lx, --ly and --updates")
     if a.verb!="controller" and (a.lx is not None or a.ly is not None or a.rx is not None or a.ry is not None or a.lt is not None or a.rt is not None):
@@ -517,7 +543,10 @@ def main():
             if a.verb=="keyboard":
                 r=c.keyboard(a.keys,a.updates,a.request_id,a.completion_timeout)
             elif a.verb=="mouse":
-                r=c.mouse(a.dx,a.dy,a.buttons,a.updates,a.request_id,a.wheel,a.completion_timeout,x=a.x,y=a.y)
+                # Default 7s completion timeout is too short for long durationMs holds;
+                # pass None so Client.mouse derives duration_ms/1000+7.
+                mouse_ct=None if (a.duration_ms is not None and a.completion_timeout==7) else a.completion_timeout
+                r=c.mouse(a.dx,a.dy,a.buttons,a.updates,a.request_id,a.wheel,mouse_ct,x=a.x,y=a.y,duration_ms=a.duration_ms)
             elif a.verb=="controller":
                 r=c.controller(a.lx,a.ly,a.updates,a.request_id,a.completion_timeout,rx=a.rx,ry=a.ry,lt=a.lt,rt=a.rt,buttons=a.buttons or None)
             elif a.verb=="observe":

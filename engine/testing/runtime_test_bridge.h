@@ -32,6 +32,8 @@ constexpr std::size_t kRuntimeTestListObjectsMaxLimit = 64;
 
 // Keyboard inject hold count (matches request validation). Wall deadline scales with this.
 constexpr int kInputInjectMaxUpdates = 120;
+// Mouse durationMs hold (wall/game ms); exclusive with updates on mouse ops.
+constexpr int kInputInjectMaxDurationMs = 30000;
 constexpr std::uint64_t kInputInjectDeadlineBaseMs = 5000;
 // Per-update allowance so Debug (~23 FPS) can finish max holds; upper bound is base+max*per.
 constexpr std::uint64_t kInputInjectDeadlinePerUpdateMs = 100;
@@ -39,8 +41,10 @@ constexpr std::uint64_t kInputInjectDeadlineMaxMs =
     kInputInjectDeadlineBaseMs +
     static_cast<std::uint64_t>(kInputInjectMaxUpdates) * kInputInjectDeadlinePerUpdateMs;
 
-// Wall-clock budget for a queued keyboard inject: base + updates*per, clamped to max.
+// Wall-clock budget for a queued keyboard/mouse updates inject: base + updates*per, clamped to max.
 std::uint64_t InputInjectDeadlineMs(int updates) noexcept;
+// Wall-clock budget for a mouse durationMs hold: base + durationMs, clamped to max duration.
+std::uint64_t InputInjectDeadlineFromDurationMs(int durationMs) noexcept;
 
 struct ObservedTarget {
     std::string name;
@@ -254,6 +258,10 @@ private:
     int mouseAbsX_ = 0;
     int mouseAbsY_ = 0;
     int mouseUpdatesRemaining_ = 0;
+    // durationMs mode: >0 means wall-clock hold; 0 means updates mode.
+    int mouseDurationMs_ = 0;
+    std::uint64_t mouseHoldStartMs_ = 0;
+    bool MouseHoldFinished(std::uint64_t now) const noexcept;
     const char* MouseStatus() const;
 
     ControllerOperation controllerOp_;

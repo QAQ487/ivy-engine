@@ -199,6 +199,12 @@ std::uint64_t InputInjectDeadlineMs(int updates) noexcept {
         static_cast<std::uint64_t>(updates) * kInputInjectDeadlinePerUpdateMs;
 }
 
+std::uint64_t InputInjectDeadlineFromDurationMs(int durationMs) noexcept {
+    if (durationMs < 1) durationMs = 1;
+    if (durationMs > kInputInjectMaxDurationMs) durationMs = kInputInjectMaxDurationMs;
+    return kInputInjectDeadlineBaseMs + static_cast<std::uint64_t>(durationMs);
+}
+
 ObservePose ResolveObservedPose(
     bool hasTransformComponent,
     const ObservePose& legacy,
@@ -583,10 +589,19 @@ void Protocol::CancelKeyboard() {
         cancelInput_ = true;
     }
 }
+bool Protocol::MouseHoldFinished(std::uint64_t now) const noexcept {
+    if(mouseDurationMs_ > 0) {
+        return mouseHoldStartMs_ != 0 &&
+            now >= mouseHoldStartMs_ + static_cast<std::uint64_t>(mouseDurationMs_);
+    }
+    return mouseUpdatesRemaining_ == 0;
+}
 void Protocol::CancelMouse() {
     if(mouseState_ == InputState::Queued) {
         mouseState_ = InputState::Cancelled;
         mouseUpdatesRemaining_ = 0;
+        mouseDurationMs_ = 0;
+        mouseHoldStartMs_ = 0;
         mouseDx_ = 0; mouseDy_ = 0; mouseButtons_ = 0; mouseWheel_ = 0;
         mouseHasAbsolute_ = false; mouseAbsX_ = 0; mouseAbsY_ = 0;
     } else if(MouseIsolating()) {
@@ -617,7 +632,9 @@ void Protocol::BeginInput(bool playing, std::uint64_t now) {
         keyboardKeys_.clear();
     }
     if(mouseState_ == InputState::Queued) mouseState_ = InputState::Preparing;
-    if(mouseState_ == InputState::Active && (cancelMouse_ || mouseUpdatesRemaining_ == 0)) {
+    if(mouseState_ == InputState::Active && mouseDurationMs_ > 0 && mouseHoldStartMs_ == 0)
+        mouseHoldStartMs_ = now;
+    if(mouseState_ == InputState::Active && (cancelMouse_ || MouseHoldFinished(now))) {
         mouseState_ = InputState::Releasing;
         mouseUpdatesRemaining_ = 0;
         mouseDx_ = 0; mouseDy_ = 0; mouseButtons_ = 0; mouseWheel_ = 0;
@@ -633,9 +650,12 @@ void Protocol::EndInput() {
         inputState_ = cancelInput_ ? InputState::Cancelled : InputState::Completed;
     }
     if(mouseState_ == InputState::Preparing) mouseState_ = InputState::Active;
-    else if(mouseState_ == InputState::Active && mouseUpdatesRemaining_ > 0) --mouseUpdatesRemaining_;
+    else if(mouseState_ == InputState::Active && mouseDurationMs_ == 0 && mouseUpdatesRemaining_ > 0)
+        --mouseUpdatesRemaining_;
     else if(mouseState_ == InputState::Releasing) {
         mouseState_ = cancelMouse_ ? InputState::Cancelled : InputState::Completed;
+        mouseDurationMs_ = 0;
+        mouseHoldStartMs_ = 0;
     }
     controllerOp_.End();
 }
@@ -779,7 +799,7 @@ Json Protocol::Request(const std::string& frame) {
     const bool worldOp=resetScene||setTransform||setVelocity||applyImpulse||applyTorqueImpulse;
     std::vector<std::string> keys;
     int updates=0;
-    int mouseDx=0, mouseDy=0, mouseWheel=0, mouseUpdates=0;
+    int mouseDx=0, mouseDy=0, mouseWheel=0, mouseUpdates=0, mouseDurationMs=0;
     unsigned int mouseButtonsMask=0;
     bool mouseHasAbsolute=false;
     int mouseAbsX=0, mouseAbsY=0;
@@ -807,6 +827,10 @@ Json Protocol::Request(const std::string& frame) {
         const bool hasWheel = q.contains("wheel");
         const bool hasX = q.contains("x");
         const bool hasY = q.contains("y");
+        const bool hasUpdates = q.contains("updates");
+        const bool hasDurationMs = q.contains("durationMs");
+        // Exactly one of updates (frame hold) or durationMs (wall-clock hold).
+        if(hasUpdates == hasDurationMs) return error("invalid_request");
         if(hasX != hasY) return error("invalid_request");
         const size_t expectedSize = 8u + (hasWheel ? 1u : 0u) + (hasX ? 2u : 0u);
         if(q.size() != expectedSize) return error("invalid_request");
@@ -816,8 +840,18 @@ Json Protocol::Request(const std::string& frame) {
             return error("invalid_request");
         if(!q.contains("buttons") || !q["buttons"].is_array() || q["buttons"].size() > 3)
             return error("invalid_request");
-        if(!q.contains("updates") || !q["updates"].is_number_integer() || q["updates"] < 1 || q["updates"] > 120)
-            return error("invalid_request");
+        if(hasUpdates) {
+            if(!q["updates"].is_number_integer() || q["updates"] < 1 || q["updates"] > kInputInjectMaxUpdates)
+                return error("invalid_request");
+            mouseUpdates = q["updates"].get<int>();
+            mouseDurationMs = 0;
+        } else {
+            if(!q["durationMs"].is_number_integer() || q["durationMs"] < 1
+                || q["durationMs"] > kInputInjectMaxDurationMs)
+                return error("invalid_request");
+            mouseDurationMs = q["durationMs"].get<int>();
+            mouseUpdates = 0;
+        }
         if(hasWheel) {
             if(!q["wheel"].is_number_integer() || q["wheel"] < -120 || q["wheel"] > 120)
                 return error("invalid_request");
@@ -850,7 +884,6 @@ Json Protocol::Request(const std::string& frame) {
         }
         mouseDx = q["dx"].get<int>();
         mouseDy = q["dy"].get<int>();
-        mouseUpdates = q["updates"].get<int>();
     } else if(controller) {
         if(ParseControllerCommand(q, controllerCmd) != ControllerParseStatus::Ok) return error("invalid_request");
     } else if(observe) {
@@ -1030,7 +1063,11 @@ Json Protocol::Request(const std::string& frame) {
         mouseAbsX_=mouseAbsX;
         mouseAbsY_=mouseAbsY;
         mouseUpdatesRemaining_=mouseUpdates;
-        mouseDeadline_=GetTickCount64()+5000;
+        mouseDurationMs_=mouseDurationMs;
+        mouseHoldStartMs_=0;
+        mouseDeadline_=GetTickCount64() + (mouseDurationMs_ > 0
+            ? InputInjectDeadlineFromDurationMs(mouseDurationMs_)
+            : InputInjectDeadlineMs(mouseUpdates));
         return {{"protocolVersion",1},{"requestId",id},{"runId",runId_},{"ok",true},{"status","queued"}};
     }
     if(controller) {

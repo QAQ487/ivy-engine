@@ -97,6 +97,9 @@ int main() {
     check(p.request("mouse", {{"dx", 0}, {"dy", 0}, {"buttons", Json::array()}, {"wheel", 121}, {"updates", 1}}).value("error", "") == "invalid_request", "reject wheel>120");
     check(p.request("mouse", {{"dx", 0}, {"dy", 0}, {"buttons", Json::array()}, {"updates", 0}}).value("error", "") == "invalid_request", "reject updates 0");
     check(p.request("mouse", {{"dx", 0}, {"dy", 0}, {"buttons", Json::array()}, {"updates", 121}}).value("error", "") == "invalid_request", "reject updates >120");
+    check(p.request("mouse", {{"dx", 0}, {"dy", 0}, {"buttons", Json::array()}, {"updates", 1}, {"durationMs", 100}}).value("error", "") == "invalid_request", "reject updates+durationMs");
+    check(p.request("mouse", {{"dx", 0}, {"dy", 0}, {"buttons", Json::array()}, {"durationMs", 0}}).value("error", "") == "invalid_request", "reject durationMs 0");
+    check(p.request("mouse", {{"dx", 0}, {"dy", 0}, {"buttons", Json::array()}, {"durationMs", 30001}}).value("error", "") == "invalid_request", "reject durationMs >30000");
     check(p.request("mouse", {{"dx", 0}, {"dy", 0}, {"buttons", Json::array()}, {"updates", 1}, {"x", 1280}, {"y", 0}}).value("error", "") == "invalid_request", "reject absolute x at backbuffer width");
     check(p.request("mouse", {{"dx", 0}, {"dy", 0}, {"buttons", Json::array()}, {"updates", 1}, {"x", 0}}).value("error", "") == "invalid_request", "reject x without y over pipe");
 

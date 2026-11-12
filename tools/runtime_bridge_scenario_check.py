@@ -154,6 +154,57 @@ class SchemaValidationTests(unittest.TestCase):
                 "updates": 1,
             }]))
 
+    def test_mouse_duration_ms(self):
+        ok = validate_scenario(_minimal(steps=[{
+            "type": "mouse",
+            "dx": 0,
+            "dy": 0,
+            "buttons": ["LEFT"],
+            "durationMs": 3500,
+        }]))
+        self.assertEqual(ok["steps"][0]["durationMs"], 3500)
+        self.assertNotIn("updates", ok["steps"][0])
+        updates_ok = validate_scenario(_minimal(steps=[{
+            "type": "mouse",
+            "dx": 0,
+            "dy": 0,
+            "buttons": ["LEFT"],
+            "updates": 60,
+        }]))
+        self.assertEqual(updates_ok["steps"][0]["updates"], 60)
+        with self.assertRaises(ScenarioValidationError):
+            validate_scenario(_minimal(steps=[{
+                "type": "mouse",
+                "dx": 0,
+                "dy": 0,
+                "buttons": ["LEFT"],
+                "updates": 60,
+                "durationMs": 1000,
+            }]))
+        with self.assertRaises(ScenarioValidationError):
+            validate_scenario(_minimal(steps=[{
+                "type": "mouse",
+                "dx": 0,
+                "dy": 0,
+                "buttons": ["LEFT"],
+            }]))
+        with self.assertRaises(ScenarioValidationError):
+            validate_scenario(_minimal(steps=[{
+                "type": "mouse",
+                "dx": 0,
+                "dy": 0,
+                "buttons": ["LEFT"],
+                "durationMs": 0,
+            }]))
+        with self.assertRaises(ScenarioValidationError):
+            validate_scenario(_minimal(steps=[{
+                "type": "mouse",
+                "dx": 0,
+                "dy": 0,
+                "buttons": ["LEFT"],
+                "durationMs": 30001,
+            }]))
+
 
 class ResolveAndAssertTests(unittest.TestCase):
     def test_resolve_observe_path(self):
