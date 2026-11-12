@@ -44,6 +44,9 @@ python3 "$ROOT/tools/runtime_bridge_keyboard_keys_check.py" -v
 echo "==> python mouse absolute client payload validation"
 ( cd "$ROOT/tools" && python3 -m unittest runtime_test_client_check.ClientChecks.test_mouse_client_validation -v )
 
+echo "==> python client bridge rejection identity handling"
+( cd "$ROOT/tools" && python3 -m unittest runtime_test_client_check.ClientChecks.test_request_surfaces_bridge_error_when_identity_echoed -v )
+
 echo "==> python angular acceptance unit tests"
 python3 "$ROOT/tools/runtime_bridge_angular_acceptance_check.py" -v
 
