@@ -12,6 +12,8 @@
 #include "engine/scripting/script_component.h"
 #include "engine/scene/render_settings.h"
 #include "engine/rendering/d3d11/shader.h"
+#include "engine/rendering/culling/frustum_cull.h"
+#include "engine/rendering/lighting/shadow.h"
 #include "engine/audio/audio_manager.h"
 #include "engine/physics/core/physics_system.h"
 #include "engine/core/debug_system.h"
@@ -251,7 +253,31 @@ void GameObject::DrawVisual(bool useRealModel) {
                 model->SetPosition(worldPos);
                 model->SetRotateEulerDeg(worldRot);
                 model->SetScale(worldScale);
-                model->Draw();
+
+                // Main-camera frustum cull only. Shadow cascades stay unculled so
+                // off-screen casters that still project into view keep their shadows.
+                bool submitDraw = true;
+                const bool cullEnabled = RenderSettings_GetConst().frustumCullingEnabled;
+                const bool mainPass = FrustumCull_IsMainPassActive()
+                    && Shadow::GetRenderingLightIndex() < 0;
+                if (cullEnabled && mainPass && model->HasLocalAabb()) {
+                    FrustumCull_RecordConsidered();
+                    frustum_cull::Aabb local{};
+                    model->GetLocalAabb(local.min, local.max);
+                    local.valid = true;
+                    const frustum_cull::Aabb world =
+                        frustum_cull::TransformAabbTRS(local, worldPos, worldRot, worldScale);
+                    if (!frustum_cull::AabbIntersectsFrustum(world, FrustumCull_GetPlanes())) {
+                        FrustumCull_RecordCulled();
+                        submitDraw = false;
+                    }
+                }
+
+                if (submitDraw) {
+                    if (cullEnabled && mainPass)
+                        FrustumCull_RecordDrawn();
+                    model->Draw();
+                }
                 model->SetTextureOverride(nullptr);
                 model->ClearMaterialOverride();
                 model->SetEmission(prevEmission);

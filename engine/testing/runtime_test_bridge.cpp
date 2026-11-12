@@ -1156,6 +1156,10 @@ Json Protocol::Request(const std::string& frame) {
         updateMs.reserve(static_cast<std::size_t>(take));
         drawMs.reserve(static_cast<std::size_t>(take));
         presentMs.reserve(static_cast<std::size_t>(take));
+        std::vector<float> cullConsidered, cullCulled, cullDrawn;
+        cullConsidered.reserve(static_cast<std::size_t>(take));
+        cullCulled.reserve(static_cast<std::size_t>(take));
+        cullDrawn.reserve(static_cast<std::size_t>(take));
         for(int i = 0; i < take; ++i) {
             const std::size_t idx = (perfWrite_ + kRuntimeTestPerfCapacity - static_cast<std::size_t>(take) + static_cast<std::size_t>(i))
                 % kRuntimeTestPerfCapacity;
@@ -1164,6 +1168,9 @@ Json Protocol::Request(const std::string& frame) {
             updateMs.push_back(s.updateMs);
             drawMs.push_back(s.drawMs);
             presentMs.push_back(s.presentMs);
+            cullConsidered.push_back(static_cast<float>(s.cullConsidered));
+            cullCulled.push_back(static_cast<float>(s.cullCulled));
+            cullDrawn.push_back(static_cast<float>(s.cullDrawn));
         }
         double fpsAvg = 0.0;
         if(!frameMs.empty()) {
@@ -1182,6 +1189,11 @@ Json Protocol::Request(const std::string& frame) {
             {"drawMs", PerfStatsJson(drawMs)},
             {"presentMs", PerfStatsJson(presentMs)},
             {"fps", {{"avg", fpsAvg}}},
+            {"frustumCull", {
+                {"considered", PerfStatsJson(cullConsidered)},
+                {"culled", PerfStatsJson(cullCulled)},
+                {"drawn", PerfStatsJson(cullDrawn)}
+            }},
         };
     }
     if(worldOp) {

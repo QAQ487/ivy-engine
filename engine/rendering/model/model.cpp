@@ -10,6 +10,7 @@
 	#include "model.h"
 #include "model_util.h"
 #include "engine/core/content_path.h"
+#include "engine/rendering/culling/frustum_cull_math.h"
 
 #include <Windows.h>
 #include <fstream>
@@ -68,6 +69,9 @@ void Model3D::Release() {
 		m_mesh = nullptr;
 		m_meshNode = nullptr;
 		m_isAnimInstance = false;
+		m_hasLocalAabb = false;
+		m_localAabbMin = XMFLOAT3(0, 0, 0);
+		m_localAabbMax = XMFLOAT3(0, 0, 0);
 		return;
 	}
 
@@ -130,6 +134,35 @@ void Model3D::Release() {
 
 	m_diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 	m_hasTexture = false;
+	m_hasLocalAabb = false;
+	m_localAabbMin = XMFLOAT3(0, 0, 0);
+	m_localAabbMax = XMFLOAT3(0, 0, 0);
+}
+
+void Model3D::CacheLocalAabbFromPositions(const XMFLOAT3* positions, size_t count, bool inflateForSkin) {
+	m_hasLocalAabb = false;
+	m_localAabbMin = XMFLOAT3(0, 0, 0);
+	m_localAabbMax = XMFLOAT3(0, 0, 0);
+	if (!positions || count == 0)
+		return;
+
+	frustum_cull::Aabb box = frustum_cull::MakeAabbFromPoints(positions, count);
+	if (!box.valid)
+		return;
+
+	// Bind-pose AABB underestimates skinned / animated meshes. Inflate
+	// conservatively so edge silhouettes do not pop when culled.
+	if (inflateForSkin) {
+		const float hx = 0.5f * (box.max.x - box.min.x);
+		const float hy = 0.5f * (box.max.y - box.min.y);
+		const float hz = 0.5f * (box.max.z - box.min.z);
+		const float pad = (std::max)(hx, (std::max)(hy, hz)) * 0.5f;
+		frustum_cull::InflateAabb(box, pad);
+	}
+
+	m_localAabbMin = box.min;
+	m_localAabbMax = box.max;
+	m_hasLocalAabb = true;
 }
 
 /**===========================================================================
@@ -356,6 +389,14 @@ bool Model3D::LoadOBJ(const wchar_t* objPath, const wchar_t* fallbackTex) {
 			return false;
 		}
 		m_indexCount = static_cast<UINT>(indices.size());
+	}
+
+	{
+		std::vector<XMFLOAT3> positions;
+		positions.reserve(vertices.size());
+		for (const auto& v : vertices)
+			positions.push_back(v.Position);
+		CacheLocalAabbFromPositions(positions.data(), positions.size(), false);
 	}
 
 	return true;
@@ -918,6 +959,14 @@ bool Model3D::LoadFBXInternal(const wchar_t* fbxPath, bool reportErrors) {
 		}
 	}
 	matSRV.clear();
+
+	{
+		std::vector<XMFLOAT3> positions;
+		positions.reserve(m_verticesCPU.size());
+		for (const auto& v : m_verticesCPU)
+			positions.push_back(v.Position);
+		CacheLocalAabbFromPositions(positions.data(), positions.size(), m_hasSkin);
+	}
 
 	return true;
 }
@@ -2143,6 +2192,9 @@ std::unique_ptr<Model3D> Model3D::CreateAnimInstanceFrom(const Model3D& shared) 
 	inst->m_indexCount = shared.m_indexCount;
 	inst->m_hasTexture = shared.m_hasTexture;
 	inst->m_diffuse = shared.m_diffuse;
+	inst->m_hasLocalAabb = shared.m_hasLocalAabb;
+	inst->m_localAabbMin = shared.m_localAabbMin;
+	inst->m_localAabbMax = shared.m_localAabbMax;
 
 	// Shared FBX / bake metadata (read-only after load).
 	inst->m_baseScene = shared.m_baseScene;

@@ -17,6 +17,7 @@
 
 #include "engine/rendering/d3d11/shader.h"
 #include "engine/scene/render_settings.h"
+#include "engine/rendering/culling/frustum_cull.h"
 #include "engine/rendering/lighting/shadow.h"
 #include "engine/physics/core/physics_system.h"
 #include "engine/physics/core/rigidbody.h"
@@ -691,8 +692,10 @@ void GameScene::Object_Draw() {
 		SetDepthEnable(true);
 
 		const auto& cam = GetCamera();
-		Shader_SetProjectionMatrix(cam.GetProjMatrix(vw, vh));
-		Shader_SetViewMatrix(cam.GetViewMatrix());
+		const DirectX::XMMATRIX view = cam.GetViewMatrix();
+		const DirectX::XMMATRIX proj = cam.GetProjMatrix(vw, vh);
+		Shader_SetProjectionMatrix(proj);
+		Shader_SetViewMatrix(view);
 
 		std::vector<DirectX::XMMATRIX> vps;
 		vps.reserve(cascadeCount);
@@ -704,9 +707,13 @@ void GameScene::Object_Draw() {
 		for (int i = 0; i < cascadeCount; ++i) srvs[i] = Shadow::GetShadowSRV(i);
 		Shader_BindShadowMaps(srvs, cascadeCount);
 
-		Skybox_Draw(cam.GetViewMatrix(), cam.GetProjMatrix(vw, vh));
+		Skybox_Draw(view, proj);
 
+		// Cull against this viewport's camera (editor debug cam or play cam).
+		// Shadow passes above intentionally stay unculled.
+		FrustumCull_BeginMainPass(view * proj);
 		SetRenderObject(RENDER_MAIN);
+		FrustumCull_EndMainPass();
 	}
 
 	// Billboard pass

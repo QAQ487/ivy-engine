@@ -66,13 +66,16 @@
 
 ## 渲染效能：Culling
 
-現況：引擎冇 per-object frustum／distance／occlusion culling。`Model3D::Draw`（`engine/rendering/model/model.cpp`）同 `GameObject::DrawVisual`（`engine/ecs/game_object.cpp`）、sprite／billboard／particle draw path 直送 draw call，冇視錐或距離測試。有嘅只係 rasterizer back-face `CullMode`（`engine/rendering/d3d11/renderer.cpp`；sprite／billboard／particle／skybox 多數 `D3D11_CULL_NONE`），同 CSM 用 camera frustum corners（`BuildFrustumCorners`／`FitOrthoCascade` 喺 `engine/rendering/lighting/shadow.cpp`）計 cascade ortho bounds——唔係物件 culling。Physics collider 有 AABB／bounding sphere，渲染未用。`D3D11_QUERY` 目前只見 timestamp／pipeline stats（`engine/core/frame_capture.cpp`），冇 occlusion predicate。
+現況：3D main camera pass 已有 per-object frustum culling（見下項）。仍然冇 distance／occlusion culling；2D sprite／billboard／particle／UI 未做 rect culling。Shadow cascades **刻意唔 cull**（避免畫面外 caster 失落影）。Physics AABB 仍然唔共用。`D3D11_QUERY` 仍然只見 timestamp／pipeline stats。
 
 參考：Unity 模型——自動 frustum culling、手動 baked occlusion、Unity 6 GPU occlusion、`CullingGroup` API。
 
-- [ ] **Frustum culling（3D）**
-  - 每個 renderer 用 world-space AABB（或 bounding sphere）對 camera frustum 測試，視錐外唔送 draw call；陰影 pass 按每個 CSM cascade 嘅光源 frustum 另做一次 culling。
-  - 驗收：Release build 一個大場景 draw call 數按視角下降，畫面無物件提早消失（邊緣、skinned／animated mesh bounds 要包住動畫）。Editor 加 debug overlay 顯示 visible／culled 數量。
+- [x] **Frustum culling（3D）**（source 已做；等 Windows Release runtime 驗收）
+  - 每個 mesh 喺 load 時 cache local AABB（FBX／OBJ／primitives；skinned 喺 bind-pose 上再 inflate 半個最大半軸，保守包動畫）。`GameObject::DrawVisual` 轉 world AABB（scale／rotation 用 8 corners），對 camera view×proj 抽出嘅 6 planes（D3D z∈[0,1]）測試；完全在外就唔 `Model3D::Draw`。無有效 bounds 永不 cull。
+  - **Shadow**：main pass 先 cull；CSM depth passes 保持 unculled（安全選項），唔會因 camera frustum 剔走會投進畫面嘅 caster。之後若要省 shadow draw，再按每個 cascade 嘅 light ortho 另做。
+  - Toggle：`settings.render.frustumCullingEnabled`（預設 true；Rendering Settings checkbox）。Counters：considered／culled／drawn —— Rendering Settings 即時顯示、collision-viz overlay、play FPS overlay、runtime bridge `perf.frustumCull`。
+  - Linux：`g++ -std=c++17 -I. -Itools/linux_win32_shim tools/frustum_cull_check.cpp -o /tmp/frustum_cull_check && /tmp/frustum_cull_check`。
+  - 剩餘：Windows Release 大場景目視（culled 隨視角升、toggle off 畫面一致、畫面外 caster 陰影仍在）；更緊嘅 per-clip skinned bounds（而家係 inflate）。
 - [ ] **2D camera rect culling**
   - sprite／tilemap／billboard／particle 用 camera 正交矩形剔除，village-and-goblin 呢類俯視 2D 遊戲用。
   - 驗收同上，以 Release 證據為準。

@@ -74,6 +74,12 @@ public:
     // Getter for vertices (for collision mesh extraction)
     const std::vector<Model3D::VertexPNTC>& GetVerticesCPU() const { return m_verticesCPU; }
 
+    // Local-space AABB cached at load (bind pose). Invalid when the mesh has no verts.
+    bool HasLocalAabb() const { return m_hasLocalAabb; }
+    void GetLocalAabb(DirectX::XMFLOAT3& outMin, DirectX::XMFLOAT3& outMax) const {
+        outMin = m_localAabbMin;
+        outMax = m_localAabbMax;
+    }
 
     void SetPosition(const DirectX::XMFLOAT3& p);
     void SetRotateEulerDeg(const DirectX::XMFLOAT3& rDeg);
@@ -145,6 +151,10 @@ private:
     DirectX::XMFLOAT3 m_position {0, 0, 0};
     DirectX::XMFLOAT3 m_rotateDeg {0, 0, 0};
     DirectX::XMFLOAT3 m_scale {1, 1, 1};
+
+    bool m_hasLocalAabb = false;
+    DirectX::XMFLOAT3 m_localAabbMin {0, 0, 0};
+    DirectX::XMFLOAT3 m_localAabbMax {0, 0, 0};
 
     DirectX::XMFLOAT4 m_diffuse {1.0f, 1.0f, 1.0f, 1.0f};
 
@@ -281,6 +291,7 @@ private:
 
     const SkinMeshGeo* FindGeoForCP(int cpi) const;
     static DirectX::XMFLOAT3 ApplyGeoPosition(const fbxsdk::FbxAMatrix& geo, const DirectX::XMFLOAT3& p);
+    void CacheLocalAabbFromPositions(const DirectX::XMFLOAT3* positions, size_t count, bool inflateForSkin);
 };
 
 #endif // MODEL_H

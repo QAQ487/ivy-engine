@@ -172,6 +172,7 @@ static MainStaticDestructionMarker s_mainStaticMarker;
 #include "engine/debug_draw/debug_ofstream.h"
 #include "engine/core/engine_gui.h"
 #include "engine/core/play_fps_overlay.h"
+#include "engine/rendering/culling/frustum_cull.h"
 
 #ifndef GAME_RUNTIME
 #include "imgui/imgui.h"
@@ -561,6 +562,12 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstanc
                     sample.updateMs = static_cast<float>(FrameTimer_LastMs(FrameTimerStage::Update));
                     sample.drawMs = static_cast<float>(FrameTimer_LastMs(FrameTimerStage::Draw));
                     sample.presentMs = static_cast<float>(FrameTimer_LastMs(FrameTimerStage::Present));
+                    {
+                        const FrustumCullStats cull = FrustumCull_GetLastStats();
+                        sample.cullConsidered = cull.considered;
+                        sample.cullCulled = cull.culled;
+                        sample.cullDrawn = cull.drawn;
+                    }
                     runtimeTestBridge.RecordPerfSample(sample);
 
                     // Update workers and render work have joined. Copy only on WinMain.
@@ -919,6 +926,12 @@ static void DrawWorld(void) {
 
 			std::stringstream ss;
 			ss << "FPS:" << static_cast<int>(g_fps);
+			{
+				const FrustumCullStats cull = FrustumCull_GetLastStats();
+				ss << "\nCULL c:" << cull.considered
+				   << " x:" << cull.culled
+				   << " d:" << cull.drawn;
+			}
 			const std::string fpsText = ss.str();
 
 			hal::DebugText dt(GetDevice(), GetDeviceContext(),
