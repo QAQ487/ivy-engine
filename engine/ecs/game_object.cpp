@@ -13,6 +13,7 @@
 #include "engine/scene/render_settings.h"
 #include "engine/rendering/d3d11/shader.h"
 #include "engine/rendering/culling/frustum_cull.h"
+#include "engine/rendering/culling/shadow_cascade_cull.h"
 #include "engine/rendering/lighting/shadow.h"
 #include "engine/audio/audio_manager.h"
 #include "engine/physics/core/physics_system.h"
@@ -254,28 +255,55 @@ void GameObject::DrawVisual(bool useRealModel) {
                 model->SetRotateEulerDeg(worldRot);
                 model->SetScale(worldScale);
 
-                // Main-camera frustum cull only. Shadow cascades stay unculled so
-                // off-screen casters that still project into view keep their shadows.
+                // Main-camera frustum cull and/or per-cascade light-ortho caster cull.
+                // Cascade cull uses open-near so casters between the light and the
+                // cascade volume still cast; camera-frustum culling never gates shadows.
                 bool submitDraw = true;
-                const bool cullEnabled = RenderSettings_GetConst().frustumCullingEnabled;
+                const auto& renderSettings = RenderSettings_GetConst();
+                const bool frustumEnabled = renderSettings.frustumCullingEnabled;
+                const bool shadowCullEnabled = renderSettings.shadowCascadeCullingEnabled;
                 const bool mainPass = FrustumCull_IsMainPassActive()
                     && Shadow::GetRenderingLightIndex() < 0;
-                if (cullEnabled && mainPass && model->HasLocalAabb()) {
+                const bool shadowPass = ShadowCascadeCull_IsCascadePassActive()
+                    && Shadow::GetRenderingLightIndex() >= 0;
+
+                frustum_cull::Aabb world{};
+                bool haveWorldAabb = false;
+                auto ensureWorldAabb = [&]() -> const frustum_cull::Aabb& {
+                    if (!haveWorldAabb) {
+                        frustum_cull::Aabb local{};
+                        model->GetLocalAabb(local.min, local.max);
+                        local.valid = true;
+                        world = frustum_cull::TransformAabbTRS(
+                            local, worldPos, worldRot, worldScale);
+                        haveWorldAabb = true;
+                    }
+                    return world;
+                };
+
+                if (frustumEnabled && mainPass && model->HasLocalAabb()) {
                     FrustumCull_RecordConsidered();
-                    frustum_cull::Aabb local{};
-                    model->GetLocalAabb(local.min, local.max);
-                    local.valid = true;
-                    const frustum_cull::Aabb world =
-                        frustum_cull::TransformAabbTRS(local, worldPos, worldRot, worldScale);
-                    if (!frustum_cull::AabbIntersectsFrustum(world, FrustumCull_GetPlanes())) {
+                    if (!frustum_cull::AabbIntersectsFrustum(
+                            ensureWorldAabb(), FrustumCull_GetPlanes())) {
                         FrustumCull_RecordCulled();
                         submitDraw = false;
                     }
                 }
 
+                if (submitDraw && shadowCullEnabled && shadowPass && model->HasLocalAabb()) {
+                    ShadowCascadeCull_RecordConsidered();
+                    if (!frustum_cull::AabbIntersectsFrustumOpenNear(
+                            ensureWorldAabb(), ShadowCascadeCull_GetPlanes())) {
+                        ShadowCascadeCull_RecordCulled();
+                        submitDraw = false;
+                    }
+                }
+
                 if (submitDraw) {
-                    if (cullEnabled && mainPass)
+                    if (frustumEnabled && mainPass)
                         FrustumCull_RecordDrawn();
+                    if (shadowCullEnabled && shadowPass)
+                        ShadowCascadeCull_RecordDrawn();
                     model->Draw();
                 }
                 model->SetTextureOverride(nullptr);

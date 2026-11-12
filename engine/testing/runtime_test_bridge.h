@@ -111,6 +111,10 @@ struct PerfSample {
     int cullConsidered = 0;
     int cullCulled = 0;
     int cullDrawn = 0;
+    // Last completed shadow-cascade caster cull totals (0 when culling off).
+    int shadowCullConsidered = 0;
+    int shadowCullCulled = 0;
+    int shadowCullDrawn = 0;
 };
 
 // Consumer probe: samples public Controller_* getters once per Update after

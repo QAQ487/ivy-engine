@@ -25,6 +25,7 @@
 #include "engine/scene/scene_file_monitor.h"
 #include "engine/scene/render_settings.h"
 #include "engine/rendering/culling/frustum_cull.h"
+#include "engine/rendering/culling/shadow_cascade_cull.h"
 #include "engine/rendering/d3d11/shader.h"
 #include "engine/rendering/d3d11/post_process.h"
 #include "engine/core/job_system.h"
@@ -1258,9 +1259,22 @@ static void DrawRenderingSettingsWindow(bool* open) {
     ImGui::Checkbox("Frustum Culling (3D)", &rs.frustumCullingEnabled);
     {
         const FrustumCullStats cull = FrustumCull_GetLastStats();
-        ImGui::TextDisabled("considered %d  |  culled %d  |  drawn %d",
+        ImGui::TextDisabled("frustum  considered %d  |  culled %d  |  drawn %d",
             cull.considered, cull.culled, cull.drawn);
-        ImGui::TextDisabled("Main camera pass only; shadow cascades stay unculled.");
+        ImGui::TextDisabled("Main camera pass only.");
+    }
+    ImGui::Checkbox("Shadow Cascade Culling", &rs.shadowCascadeCullingEnabled);
+    {
+        const ShadowCascadeCullStats sc = ShadowCascadeCull_GetLastStats();
+        ImGui::TextDisabled("shadow   considered %d  |  culled %d  |  drawn %d",
+            sc.considered, sc.culled, sc.drawn);
+        const int cascades = ShadowCascadeCull_GetLastCascadeCount();
+        for (int i = 0; i < cascades; ++i) {
+            const ShadowCascadeCullStats cs = ShadowCascadeCull_GetLastCascadeStats(i);
+            ImGui::TextDisabled("  cascade %d  c:%d x:%d d:%d",
+                i, cs.considered, cs.culled, cs.drawn);
+        }
+        ImGui::TextDisabled("Per-cascade light ortho; open near toward light.");
     }
 
     ImGui::Spacing();

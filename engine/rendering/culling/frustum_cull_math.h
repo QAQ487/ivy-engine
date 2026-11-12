@@ -211,4 +211,25 @@ inline bool AabbIntersectsFrustum(const Aabb& box, const FrustumPlanes& frustum)
     return true;
 }
 
+// Same as AabbIntersectsFrustum but skips the near plane (index 4).
+// Directional shadow cascade caster cull: casters between the light and the
+// cascade near plane must still draw (pancaking / open near toward the light).
+// Far + lateral planes still cull. Invalid bounds never cull.
+inline bool AabbIntersectsFrustumOpenNear(const Aabb& box, const FrustumPlanes& frustum) {
+    if (!box.valid)
+        return true;
+
+    for (int i = 0; i < 6; ++i) {
+        if (i == 4)
+            continue; // skip near
+        const DirectX::XMFLOAT4& p = frustum.planes[i];
+        const float px = (p.x >= 0.0f) ? box.max.x : box.min.x;
+        const float py = (p.y >= 0.0f) ? box.max.y : box.min.y;
+        const float pz = (p.z >= 0.0f) ? box.max.z : box.min.z;
+        if (p.x * px + p.y * py + p.z * pz + p.w < 0.0f)
+            return false;
+    }
+    return true;
+}
+
 } // namespace frustum_cull

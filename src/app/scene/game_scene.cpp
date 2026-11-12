@@ -18,6 +18,7 @@
 #include "engine/rendering/d3d11/shader.h"
 #include "engine/scene/render_settings.h"
 #include "engine/rendering/culling/frustum_cull.h"
+#include "engine/rendering/culling/shadow_cascade_cull.h"
 #include "engine/rendering/lighting/shadow.h"
 #include "engine/physics/core/physics_system.h"
 #include "engine/physics/core/rigidbody.h"
@@ -667,8 +668,9 @@ void GameScene::Object_Draw() {
 		Shadow::UpdateForCamera(cp, RenderSettings_GetShadowPreset().maxDistance);
 	}
 
-	// Cascade depth passes
+	// Cascade depth passes (optional per-cascade light-ortho caster cull).
 	const int cascadeCount = Shadow::GetCascadeCount();
+	ShadowCascadeCull_BeginFrame();
 	for (int i = 0; i < cascadeCount; ++i) {
 		Shadow::Begin(i);
 		Shader3D_Begin(RenderSettings_GetDefaultShader());
@@ -676,10 +678,13 @@ void GameScene::Object_Draw() {
 		Shader_SetProjectionMatrix(Shadow::GetLightProj(i));
 		Shader_SetViewMatrix(Shadow::GetLightView(i));
 		Shader_SetUseExternalVP(true);
+		ShadowCascadeCull_BeginCascade(i, Shadow::GetLightViewProj(i));
 		SetRenderObject(RENDER_SHADOW);
+		ShadowCascadeCull_EndCascade();
 		Shader_SetUseExternalVP(false);
 		Shadow::End();
 	}
+	ShadowCascadeCull_EndFrame();
 
 	// Camera pass into offscreen PostRT (shadows use their own DSVs).
 	Renderer_BindPostTarget();
@@ -710,7 +715,7 @@ void GameScene::Object_Draw() {
 		Skybox_Draw(view, proj);
 
 		// Cull against this viewport's camera (editor debug cam or play cam).
-		// Shadow passes above intentionally stay unculled.
+		// Shadow passes above use per-cascade light-ortho cull (open near).
 		FrustumCull_BeginMainPass(view * proj);
 		SetRenderObject(RENDER_MAIN);
 		FrustumCull_EndMainPass();
