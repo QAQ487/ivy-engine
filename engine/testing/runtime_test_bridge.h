@@ -115,6 +115,10 @@ struct PerfSample {
     int shadowCullConsidered = 0;
     int shadowCullCulled = 0;
     int shadowCullDrawn = 0;
+    // Last completed 2D sprite view-rect cull totals (0 when culling off).
+    int spriteCullConsidered = 0;
+    int spriteCullCulled = 0;
+    int spriteCullDrawn = 0;
 };
 
 // Consumer probe: samples public Controller_* getters once per Update after

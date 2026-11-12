@@ -6,9 +6,11 @@
 #include <cmath>
 #include "sprite_renderer_component.h"
 #include "engine/scene/scene_loader.h"
+#include "engine/scene/render_settings.h"
 #include "engine/rendering/sprite/sprite.h"
 #include "engine/rendering/sprite/texture.h"
 #include "engine/rendering/d3d11/renderer.h"
+#include "engine/rendering/culling/sprite_cull.h"
 #include "engine/core/utf8_path.h"
 #include "camera.h"
 #include <algorithm>
@@ -67,7 +69,23 @@ void SpriteRendererComponent::Draw() const {
     const auto& camera=GetCamera();
     auto world = transform ? transform->GetWorldMatrix() : DirectX::XMMatrixIdentity();
     world.r[3] = DirectX::XMVectorAdd(world.r[3], DirectX::XMVectorSet(renderOffset.x, renderOffset.y, 0.0f, 0.0f));
-    Sprite_DrawWorld(texture,w/pixelsPerUnit,h/pixelsPerUnit,pivot,uv,drawTint,
+    const float worldW = w / pixelsPerUnit;
+    const float worldH = h / pixelsPerUnit;
+
+    // View-rect cull is render-submission only (animator / physics / scripts unchanged).
+    const bool cullEnabled = RenderSettings_GetConst().spriteCullingEnabled;
+    if (cullEnabled && SpriteCull_IsCullReady()) {
+        SpriteCull_RecordConsidered();
+        const frustum_cull::Aabb worldAabb =
+            sprite_cull::MakeSpriteWorldAabb(worldW, worldH, pivot.x, pivot.y, world);
+        if (!sprite_cull::AabbIntersectsViewRect(worldAabb, SpriteCull_GetViewRect())) {
+            SpriteCull_RecordCulled();
+            return;
+        }
+        SpriteCull_RecordDrawn();
+    }
+
+    Sprite_DrawWorld(texture,worldW,worldH,pivot,uv,drawTint,
         world,
         camera.GetViewMatrix(),camera.GetProjMatrix(GetRenderViewportWidth(),GetRenderViewportHeight()));
 }
@@ -83,7 +101,19 @@ void DrawSceneSprites() {
     std::stable_sort(sprites.begin(),sprites.end(),[](const auto* a,const auto* b){
         return std::tie(a->sortingLayer,a->orderInLayer)<std::tie(b->sortingLayer,b->orderInLayer);
     });
+
+    const auto& camera = GetCamera();
+    const float vw = GetRenderViewportWidth();
+    const float vh = GetRenderViewportHeight();
+    const float aspect = (vw > 0.0f && vh > 0.0f) ? (vw / vh) : 1.0f;
+    SpriteCull_BeginPass(
+        camera.position.x,
+        camera.position.y,
+        camera.orthographicHeight,
+        aspect,
+        camera.orthographic);
     for(const auto* sprite:sprites) sprite->Draw();
+    SpriteCull_EndPass();
 }
 
 DirectX::XMFLOAT2 SpriteRendererComponent::GetWorldSize() const {

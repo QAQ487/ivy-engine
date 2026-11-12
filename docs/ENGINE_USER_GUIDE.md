@@ -668,6 +668,7 @@ Edit `settings.render` in the scene JSON (or via editor if exposed):
 - Height fog parameters
 - `frustumCullingEnabled` (default `true`) — skip 3D mesh draws fully outside the **main** camera frustum. Does not gate shadow depth passes. Toggle off in Rendering Settings for A/B. Counters (considered / culled / drawn) show in Rendering Settings, the play FPS overlay, and collision-viz debug text.
 - `shadowCascadeCullingEnabled` (default `true`) — per cascade, skip shadow casters whose world AABB is outside that cascade's light-space ortho volume. Near plane is open toward the light (casters between light and cascade still cast). Off-screen casters that still project into a cascade keep their shadows. Counters: frame totals + per-cascade in Rendering Settings; frame totals on FPS / collision-viz overlays and bridge `perf.shadowCull`.
+- `spriteCullingEnabled` (default `true`) — skip 2D sprite draws whose world AABB (size, pivot, rotation, scale) is fully outside the orthographic camera view rect, with a small margin against edge popping. Does not affect animation, physics, or scripts. Screen-space UI is untouched. Perspective cameras leave sprites unculled. Counters (considered / culled / drawn) show in Rendering Settings, FPS overlay `2CULL`, collision-viz, and bridge `perf.spriteCull`.
 
 Reload skybox after changing the cubemap path (`RenderSettings_ReloadSkybox` / editor path). Manual check scene: `testbed/rom/scene/scene_panorama_sky.json`.
 

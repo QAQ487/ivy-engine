@@ -49,6 +49,8 @@ struct RenderSettingsData {
     bool frustumCullingEnabled = true;
     // Per-cascade light-ortho caster culling (open near toward the light).
     bool shadowCascadeCullingEnabled = true;
+    // 2D orthographic view-rect sprite culling (render submission only).
+    bool spriteCullingEnabled = true;
 };
 
 void RenderSettings_ResetToDefaults();

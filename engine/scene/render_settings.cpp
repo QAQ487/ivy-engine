@@ -176,6 +176,8 @@ RenderSettingsData RenderSettings_ParseJson(const nlohmann::json& renderJson, Re
         "frustumCullingEnabled", settings.frustumCullingEnabled);
     settings.shadowCascadeCullingEnabled = renderJson.value(
         "shadowCascadeCullingEnabled", settings.shadowCascadeCullingEnabled);
+    settings.spriteCullingEnabled = renderJson.value(
+        "spriteCullingEnabled", settings.spriteCullingEnabled);
 
     return settings;
 }
@@ -225,6 +227,7 @@ nlohmann::json RenderSettings_ToJson() {
     render["fogHeightFalloff"] = g_renderSettings.fogHeightFalloff;
     render["frustumCullingEnabled"] = g_renderSettings.frustumCullingEnabled;
     render["shadowCascadeCullingEnabled"] = g_renderSettings.shadowCascadeCullingEnabled;
+    render["spriteCullingEnabled"] = g_renderSettings.spriteCullingEnabled;
     return render;
 }
 

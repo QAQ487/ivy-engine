@@ -174,6 +174,7 @@ static MainStaticDestructionMarker s_mainStaticMarker;
 #include "engine/core/play_fps_overlay.h"
 #include "engine/rendering/culling/frustum_cull.h"
 #include "engine/rendering/culling/shadow_cascade_cull.h"
+#include "engine/rendering/culling/sprite_cull.h"
 
 #ifndef GAME_RUNTIME
 #include "imgui/imgui.h"
@@ -572,6 +573,10 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstanc
                         sample.shadowCullConsidered = sc.considered;
                         sample.shadowCullCulled = sc.culled;
                         sample.shadowCullDrawn = sc.drawn;
+                        const SpriteCullStats spriteCull = SpriteCull_GetLastStats();
+                        sample.spriteCullConsidered = spriteCull.considered;
+                        sample.spriteCullCulled = spriteCull.culled;
+                        sample.spriteCullDrawn = spriteCull.drawn;
                     }
                     runtimeTestBridge.RecordPerfSample(sample);
 
@@ -934,12 +939,16 @@ static void DrawWorld(void) {
 			{
 				const FrustumCullStats cull = FrustumCull_GetLastStats();
 				const ShadowCascadeCullStats sc = ShadowCascadeCull_GetLastStats();
+				const SpriteCullStats spriteCull = SpriteCull_GetLastStats();
 				ss << "\nCULL c:" << cull.considered
 				   << " x:" << cull.culled
 				   << " d:" << cull.drawn
 				   << "\nSCULL c:" << sc.considered
 				   << " x:" << sc.culled
-				   << " d:" << sc.drawn;
+				   << " d:" << sc.drawn
+				   << "\n2CULL c:" << spriteCull.considered
+				   << " x:" << spriteCull.culled
+				   << " d:" << spriteCull.drawn;
 			}
 			const std::string fpsText = ss.str();
 
