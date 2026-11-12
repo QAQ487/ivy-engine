@@ -142,7 +142,11 @@ def validate_jump_samples(samples, baseline_y):
 
 
 class Link:
-    """Request helper that reconnects: the bridge closes an idle connection after 2 s."""
+    """Request helper that reconnects on unexpected pipe errors.
+
+    After the connection-lifetime fix, idle gaps no longer disconnect the pipe;
+    reconnect remains a safety net for real peer closes (timeouts, quit, crash).
+    """
 
     def __init__(self, pid, run_id, report):
         self.pid, self.run_id, self.report = pid, run_id, report

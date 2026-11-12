@@ -189,7 +189,13 @@ ControllerProbeSnapshot RuntimeTestControllerProbe_CopySnapshot() {
 std::uint32_t RemainingFrameTimeout(std::uint64_t deadline, std::uint64_t now) noexcept {
     if (now >= deadline) return 0;
     const auto remaining = deadline - now;
-    return static_cast<std::uint32_t>(remaining > 2000 ? 2000 : remaining);
+    return static_cast<std::uint32_t>(
+        remaining > kRuntimeTestFrameBodyTimeoutMs ? kRuntimeTestFrameBodyTimeoutMs : remaining);
+}
+
+std::uint32_t RequestFrameByteTimeout(bool frameStarted, std::uint64_t bodyDeadline, std::uint64_t now) noexcept {
+    if (!frameStarted) return INFINITE;
+    return RemainingFrameTimeout(bodyDeadline, now);
 }
 
 std::uint64_t InputInjectDeadlineMs(int updates) noexcept {
@@ -669,12 +675,14 @@ bool Protocol::HasPendingCapture(std::int64_t& outId) const {
     return false;
 }
 
-void Protocol::CompleteCapture(std::int64_t id, bool ok, uint32_t w, uint32_t h, const std::string& basename, const std::string& err) {
+void Protocol::CompleteCapture(std::int64_t id, bool ok, uint32_t w, uint32_t h, const std::string& basename,
+    const std::string& path, const std::string& err) {
     if (captureState_.status == CaptureState::Status::Queued && captureState_.requestId == id) {
         captureState_.status = ok ? CaptureState::Status::Completed : CaptureState::Status::Failed;
         captureState_.width = w;
         captureState_.height = h;
         captureState_.basename = basename;
+        captureState_.path = path;
         captureState_.error = err;
     }
 }
@@ -1217,6 +1225,7 @@ Json Protocol::Request(const std::string& frame) {
         captureState_.width = 0;
         captureState_.height = 0;
         captureState_.basename.clear();
+        captureState_.path.clear();
         captureState_.error.clear();
         return {{"protocolVersion",1},{"requestId",id},{"runId",runId_},{"ok",true},{"status","queued"}};
     }
@@ -1288,7 +1297,8 @@ Json Protocol::Request(const std::string& frame) {
         {"controller",{{"status",ControllerStatus()},{"requestId",controllerOp_.RequestId()},
             {"remainingUpdates",controllerOp_.Remaining()},{"cancelRequested",controllerOp_.CancelRequested()}}},
         {"capture",{{"status",capStatus},{"requestId",captureState_.requestId},
-            {"width",captureState_.width},{"height",captureState_.height},{"basename",captureState_.basename},{"error",captureState_.error}}},
+            {"width",captureState_.width},{"height",captureState_.height},
+            {"basename",captureState_.basename},{"path",captureState_.path},{"error",captureState_.error}}},
         {"worldOp",{{"status",worldStatus},{"requestId",worldOp_.request.requestId},
             {"verb",worldOp_.status==WorldOpState::Status::Idle ? Json(nullptr) : Json(worldOp_.VerbName())},
             {"error",worldOp_.error}}}};
@@ -1365,14 +1375,30 @@ struct Bridge::Impl {
             for(;;) {
                 std::string frame;
                 char c=0;
-                const ULONGLONG deadline=GetTickCount64()+2000;
+                // Idle between requests: wait for first byte (or stop / client close).
+                // Applying the mid-frame 2s body deadline here disconnected live Clients
+                // after quiet gaps and produced ERROR_PIPE_NOT_CONNECTED (233) on the next op.
                 bool complete=false;
-                for (;;) {
-                    const auto timeout = RemainingFrameTimeout(deadline, GetTickCount64());
-                    if (timeout == 0 || !Byte(c, timeout)) break;
-                    if(c=='\n') {complete=true; break;}
-                    frame+=c;
-                    if(frame.size()>4096) {complete=true;break;}
+                {
+                    const auto idleTimeout = RequestFrameByteTimeout(false, 0, GetTickCount64());
+                    if (!Byte(c, idleTimeout)) break;
+                    if (c == '\n') {
+                        complete = true;
+                    } else {
+                        frame += c;
+                        if (frame.size() > 4096) {
+                            complete = true;
+                        } else {
+                            const ULONGLONG deadline = GetTickCount64() + kRuntimeTestFrameBodyTimeoutMs;
+                            for (;;) {
+                                const auto timeout = RequestFrameByteTimeout(true, deadline, GetTickCount64());
+                                if (timeout == 0 || !Byte(c, timeout)) break;
+                                if (c == '\n') { complete = true; break; }
+                                frame += c;
+                                if (frame.size() > 4096) { complete = true; break; }
+                            }
+                        }
+                    }
                 }
                 if(!complete) break;
                 Json response;
@@ -1551,14 +1577,14 @@ void Bridge::MaybeExecuteCapture() {
     }
     if(!impl_->captureHandler) {
         std::lock_guard lock(impl_->mutex);
-        impl_->protocol.CompleteCapture(reqId, false, 0, 0, "", "capture_unavailable");
+        impl_->protocol.CompleteCapture(reqId, false, 0, 0, "", "", "capture_unavailable");
         return;
     }
     char outDir[MAX_PATH]{};
     const DWORD len = GetEnvironmentVariableA("IVY_RUNTIME_TEST_OUTPUT_DIR", outDir, MAX_PATH);
     if(len == 0 || len >= MAX_PATH) {
         std::lock_guard lock(impl_->mutex);
-        impl_->protocol.CompleteCapture(reqId, false, 0, 0, "", "output_dir_not_configured");
+        impl_->protocol.CompleteCapture(reqId, false, 0, 0, "", "", "output_dir_not_configured");
         return;
     }
     const std::string runId = impl_->protocol.RunId();
@@ -1569,7 +1595,8 @@ void Bridge::MaybeExecuteCapture() {
     const bool ok = impl_->captureHandler(wpath.c_str(), &w, &h);
     {
         std::lock_guard lock(impl_->mutex);
-        impl_->protocol.CompleteCapture(reqId, ok, w, h, ok ? basename : "", ok ? "" : "capture_failed");
+        impl_->protocol.CompleteCapture(reqId, ok, w, h, ok ? basename : "", ok ? fullPath : "",
+            ok ? "" : "capture_failed");
     }
 }
 

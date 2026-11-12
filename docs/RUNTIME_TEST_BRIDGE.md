@@ -30,6 +30,21 @@ $env:IVY_SKIP_CLOSE_CONFIRM = '1'                              # optional; skip 
 - Pipe name: `\\.\pipe\IvyRuntimeTest-<PID>-<runId>` (local, `PIPE_REJECT_REMOTE_CLIENTS`, current-user DACL).
 - Stock client: `tools/runtime_test_client.py` (stdlib + `ctypes`; verifies server PID).
 
+### Connection lifetime
+
+One named-pipe Client may issue many requests in sequence (including completion-waiting helpers such as `set_transform`, `capture`, `keyboard` / `mouse` / `controller`) without reconnecting.
+
+| Rule | Behavior |
+| --- | --- |
+| Idle between complete requests | Server waits indefinitely for the next frame’s first byte (or stop / client close). Quiet gaps do **not** disconnect the pipe. |
+| Mid-frame body timeout | Once the first byte of a request arrives, the remainder must complete within **2000 ms** (`kRuntimeTestFrameBodyTimeoutMs`) or the server drops that client session (`DisconnectNamedPipe`) and accepts a new connection. |
+| Intentional client close | Completion helpers close the handle on `TimeoutError` / hard I/O failure (documented: `test_keyboard_completion_timeout_closes_connection`). Reconnect with a new `Client` and continue with a strictly increasing `requestId`. |
+| `quit` | Server waits for the LF receipt, then stops accepting further work on that session. |
+| Scene reload (`reset_scene`) | Bridge process/pipe endpoint stays alive; the same Client connection remains valid across a successful reset. |
+| Process exit / crash | Pipe goes away; clients see `OSError` / `ERROR_PIPE_NOT_CONNECTED` (233) and must open a new `Client` if the runtime is restarted with a new PID/run id. |
+
+Acceptance: `tools/runtime_bridge_connection_acceptance.py` (wired into `run_runtime_bridge_checks.cmd` live section) runs ≥10 mixed ops on one connection with idle gaps >2 s and fails on any reconnect.
+
 ## Protocol (v1)
 
 UTF-8 JSON, one request/response per LF-terminated frame. Request body max **4096** bytes (excluding LF). Required envelope fields: `protocolVersion` (1), `requestId` (1…2147483647, **strictly increasing for the whole run**, including reconnects), `runId`, `verb`.
@@ -58,7 +73,7 @@ Capabilities advertised by `hello` / `status` (as implemented):
 | `set_velocity` | Set dynamic rigidbody `linear` and/or `angular` velocity arrays. Error `not_dynamic` for kinematic/static/missing body. |
 | `apply_impulse` | Apply a linear `impulse` array to a dynamic body; optional world-space `point` uses force-at-position. Error `not_dynamic` / `unknown_object`. |
 | `apply_torque_impulse` | Apply `torqueImpulse` array to a dynamic body. |
-| `capture` | Queued back-buffer PNG under `IVY_RUNTIME_TEST_OUTPUT_DIR` |
+| `capture` | Queued back-buffer PNG under `IVY_RUNTIME_TEST_OUTPUT_DIR`. Status reports `basename` (e.g. `capture-<runId>-<requestId>.png`) and, when completed, absolute `path` (`<IVY_RUNTIME_TEST_OUTPUT_DIR>\\<basename>`). Stock helpers: `resolve_capture_path(basename)` / `Client.capture_output_path(capture_status)`. |
 | `events` | Bounded checkpoint event ring (see existing event docs in zh-TW notes) |
 | `controller` | One-at-a-time controller inject (below) |
 | `controller_probe` | Read-only consumer-trace snapshot (below) |

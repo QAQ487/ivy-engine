@@ -92,6 +92,29 @@ class ClientChecks(unittest.TestCase):
             if p.poll() is None: p.kill();p.wait(timeout=3)
             p.stdout.close()
 
+    def test_idle_gap_keeps_single_connection(self):
+        """Quiet gaps >2s must not force ERROR_PIPE_NOT_CONNECTED on the next request."""
+        run=uuid.uuid4().hex
+        env=dict(os.environ, IVY_RUNTIME_TEST_BRIDGE="1", IVY_RUNTIME_TEST_RUN_ID=run)
+        p=subprocess.Popen([os.environ["IVY_BRIDGE_HARNESS"],"--serve"],env=env,stdout=subprocess.PIPE,text=True)
+        try:
+            with Client(p.pid,run,timeout=5) as c:
+                self.assertTrue(c.request("status",1)["ok"])
+                time.sleep(2.5)
+                self.assertIsNotNone(c.handle)
+                self.assertTrue(c.request("status",2)["ok"])
+                self.assertTrue(c.request("hello",3)["ok"])
+                time.sleep(2.5)
+                r=c.keyboard(["W"],1,4)
+                self.assertEqual(r["keyboard"]["status"],"completed")
+                self.assertIsNotNone(c.handle)
+                self.assertTrue(c.request("status",r["requestId"]+1)["ok"])
+                self.assertTrue(c.request("quit",r["requestId"]+2)["ok"])
+            self.assertEqual(p.wait(timeout=3),0)
+        finally:
+            if p.poll() is None: p.kill();p.wait(timeout=3)
+            p.stdout.close()
+
     def test_real_hello_status_quit(self):
         run=uuid.uuid4().hex
         env=dict(os.environ, IVY_RUNTIME_TEST_BRIDGE="1", IVY_RUNTIME_TEST_RUN_ID=run)
@@ -249,6 +272,109 @@ class ClientChecks(unittest.TestCase):
         c._reply={"protocolVersion":1,"requestId":9,"runId":"other-run","ok":False,"error":"invalid_request"}
         with self.assertRaisesRegex(RuntimeError,r"response identity mismatch"):
             c.request("mouse",9,{"dx":0,"dy":0,"buttons":[],"durationMs":0})
+
+    def test_resolve_capture_path_helper(self):
+        from runtime_test_client import resolve_capture_path
+        with self.assertRaises(ValueError):
+            resolve_capture_path("")
+        with self.assertRaises(ValueError):
+            resolve_capture_path("../x.png")
+        with self.assertRaises(ValueError):
+            resolve_capture_path("a/b.png")
+        with self.assertRaises(ValueError):
+            resolve_capture_path("ok.png", output_dir="")
+        resolved = resolve_capture_path("capture-run-1.png", output_dir=r"C:\out")
+        self.assertEqual(resolved, os.path.join(r"C:\out", "capture-run-1.png"))
+        prev = os.environ.get("IVY_RUNTIME_TEST_OUTPUT_DIR")
+        try:
+            os.environ["IVY_RUNTIME_TEST_OUTPUT_DIR"] = r"D:\caps"
+            self.assertEqual(resolve_capture_path("capture-run-2.png"),
+                             os.path.join(r"D:\caps", "capture-run-2.png"))
+        finally:
+            if prev is None:
+                os.environ.pop("IVY_RUNTIME_TEST_OUTPUT_DIR", None)
+            else:
+                os.environ["IVY_RUNTIME_TEST_OUTPUT_DIR"] = prev
+        status = {
+            "basename": "capture-run-3.png",
+            "path": r"E:\out\capture-run-3.png",
+            "status": "completed",
+        }
+        self.assertEqual(Client.capture_output_path(status), r"E:\out\capture-run-3.png")
+        self.assertEqual(
+            Client.capture_output_path({"basename": "capture-run-4.png", "status": "completed"},
+                                       output_dir=r"F:\caps"),
+            os.path.join(r"F:\caps", "capture-run-4.png"))
+
+    def test_sequential_completion_helpers_keep_one_connection(self):
+        """Completion-waiting helpers must not close the handle on success."""
+        class FakeSequentialClient(Client):
+            def __init__(self):
+                self.pid = 1
+                self.run_id = "seq-conn"
+                self.timeout = 2
+                self.handle = object()
+                self.calls = []
+                self._world_polls = 0
+                self._cap_polls = 0
+                self._kb_polls = 0
+            def request(self, verb, request_id, payload=None, deadline=None):
+                self.calls.append((verb, request_id))
+                base = {"protocolVersion": 1, "runId": self.run_id, "requestId": request_id, "ok": True}
+                if verb == "set_transform":
+                    return dict(base, status="queued")
+                if verb == "capture":
+                    return dict(base, status="queued")
+                if verb == "keyboard":
+                    return dict(base, status="queued")
+                if verb == "status":
+                    if self._world_polls < 1 and any(c[0] == "set_transform" for c in self.calls):
+                        self._world_polls += 1
+                        return dict(base, worldOp={"status": "queued", "requestId": 1})
+                    if self._world_polls == 1:
+                        self._world_polls += 1
+                        return dict(base, worldOp={"status": "completed", "requestId": 1, "verb": "set_transform"})
+                    if self._cap_polls < 1:
+                        self._cap_polls += 1
+                        return dict(base, capture={"status": "queued", "requestId": 10})
+                    if self._cap_polls == 1:
+                        self._cap_polls += 1
+                        return dict(base, capture={
+                            "status": "completed", "requestId": 10,
+                            "basename": "capture-seq-conn-10.png",
+                            "path": r"C:\out\capture-seq-conn-10.png",
+                            "width": 8, "height": 8, "error": "",
+                        })
+                    if self._kb_polls < 1:
+                        self._kb_polls += 1
+                        return dict(base, keyboard={"status": "active", "requestId": 20, "remainingUpdates": 1})
+                    return dict(base, keyboard={"status": "completed", "requestId": 20, "remainingUpdates": 0})
+                if verb in ("hello", "perf", "list_objects"):
+                    return dict(base, objects=[], frames=1)
+                return base
+            def close(self):
+                self.handle = None
+        c = FakeSequentialClient()
+        self.assertTrue(c.request("hello", 100)["ok"])
+        self.assertIsNotNone(c.handle)
+        tf = c.set_transform("Box", 1, position=[1, 2, 3], completion_timeout=2.0)
+        self.assertEqual(tf["worldOp"]["status"], "completed")
+        self.assertIsNotNone(c.handle)
+        self.assertTrue(c.request("perf", 200, {"frames": 1})["ok"])
+        cap = c.capture(10, completion_timeout=2.0)
+        self.assertEqual(cap["capture"]["status"], "completed")
+        self.assertEqual(Client.capture_output_path(cap["capture"]), r"C:\out\capture-seq-conn-10.png")
+        self.assertIsNotNone(c.handle)
+        kb = c.keyboard(["W"], 1, 20, completion_timeout=2.0)
+        self.assertEqual(kb["keyboard"]["status"], "completed")
+        self.assertIsNotNone(c.handle)
+        self.assertTrue(c.request("list_objects", 300)["ok"])
+        self.assertIsNotNone(c.handle)
+        verbs = [v for v, _ in c.calls]
+        self.assertIn("set_transform", verbs)
+        self.assertIn("capture", verbs)
+        self.assertIn("keyboard", verbs)
+        self.assertGreaterEqual(len(c.calls), 8)
 
     def test_mouse_client_validation(self):
         from runtime_test_client import build_mouse_payload
