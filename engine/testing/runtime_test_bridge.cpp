@@ -234,6 +234,7 @@ Json ObserveTargetJson(const ObservedTarget& t) {
         {"protocolVersion", 1},
         {"found", true},
         {"target", t.name},
+        {"active", t.active},
         {"position", {{"x", t.posX}, {"y", t.posY}, {"z", t.posZ}}},
         {"velocity", {{"x", t.velX}, {"y", t.velY}, {"z", t.velZ}}},
     };
@@ -769,8 +770,12 @@ Json Protocol::Request(const std::string& frame) {
     ExpireKeyboard(GetTickCount64());
     ExpireMouse(GetTickCount64());
     ExpireController(GetTickCount64());
-    auto error = [this](const char* name, Json id=nullptr) -> Json {
-        return {{"protocolVersion",1},{"requestId",id},{"runId",runId_},{"ok",false},{"error",name}};
+    // Echo requestId in all error replies once the envelope validated it.
+    // Unparseable frames / missing-or-invalid requestId keep requestId null.
+    Json requestIdForReply = nullptr;
+    auto error = [this, &requestIdForReply](const char* name, Json id = nullptr) -> Json {
+        if (id.is_null()) id = requestIdForReply;
+        return {{"protocolVersion",1},{"requestId",std::move(id)},{"runId",runId_},{"ok",false},{"error",name}};
     };
     if(frame.size()>4096) return error("message_too_large");
     auto q=Json::parse(frame,nullptr,false);
@@ -779,6 +784,7 @@ Json Protocol::Request(const std::string& frame) {
         || !q.contains("requestId") || !q["requestId"].is_number_integer() || q["requestId"]<1 || q["requestId"]>2147483647
         || !q.contains("runId") || !q["runId"].is_string() || !q.contains("verb") || !q["verb"].is_string())
         return error("invalid_request");
+    requestIdForReply = q["requestId"];
     const bool input=q["verb"]=="keyboard";
     const bool mouse=q["verb"]=="mouse";
     const bool controller=q["verb"]=="controller";

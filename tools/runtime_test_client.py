@@ -209,9 +209,13 @@ class Client:
         r=self.read_response(deadline)
         if r.get("protocolVersion")!=1 or r.get("runId")!=self.run_id or r.get("requestId")!=request_id:
             raise RuntimeError("response identity mismatch")
-        if r.get("ok") and verb in ("hello","status") and r.get("pid")!=self.pid:
+        # Matching identity + ok:false is a bridge rejection; return it so callers
+        # can read error without raw send/read. Genuine identity mismatches stay above.
+        if r.get("ok") is False:
+            return r
+        if verb in ("hello","status") and r.get("pid")!=self.pid:
             raise RuntimeError("response PID mismatch")
-        if r.get("ok") and verb=="quit":
+        if verb=="quit":
             if r.get("requiresReceipt") is not True: raise RuntimeError("missing quit receipt contract")
             self.send_raw(b"\n",deadline)
         return r

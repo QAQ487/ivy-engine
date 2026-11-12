@@ -240,22 +240,39 @@ int main(int argc, char** argv) {
         mouseDur.Publish(true, true, "fixture");
         auto both = Json{{"protocolVersion",1},{"requestId",1},{"runId","mouse-dur"},{"verb","mouse"},
             {"dx",0},{"dy",0},{"buttons",Json::array({"LEFT"})},{"updates",1},{"durationMs",100}};
-        check(mouseDur.Request(both.dump()).value("error","")=="invalid_request",
+        auto bothReply = mouseDur.Request(both.dump());
+        check(bothReply.value("error","")=="invalid_request",
               "reject updates and durationMs together");
+        check(bothReply["requestId"] == 1 && bothReply["runId"] == "mouse-dur" && bothReply["ok"] == false,
+              "rejected mouse (updates+durationMs) echoes requestId");
         Protocol mouseDurNeither("mouse-dur-neither", 123, 7);
         mouseDurNeither.Publish(true, true, "fixture");
         auto neither = Json{{"protocolVersion",1},{"requestId",1},{"runId","mouse-dur-neither"},{"verb","mouse"},
             {"dx",0},{"dy",0},{"buttons",Json::array({"LEFT"})}};
-        check(mouseDurNeither.Request(neither.dump()).value("error","")=="invalid_request",
+        auto neitherReply = mouseDurNeither.Request(neither.dump());
+        check(neitherReply.value("error","")=="invalid_request",
               "reject mouse without updates or durationMs");
+        check(neitherReply["requestId"] == 1 && neitherReply["ok"] == false,
+              "rejected mouse (neither hold field) echoes requestId");
         for (const auto& badDuration : {Json(0), Json(30001), Json(true), Json(1.5), Json(-1), Json("100")}) {
             Protocol invalid("mouse-dur-bad", 123, 7);
             invalid.Publish(true, true, "fixture");
             auto bad = Json{{"protocolVersion",1},{"requestId",1},{"runId","mouse-dur-bad"},{"verb","mouse"},
                 {"dx",0},{"dy",0},{"buttons",Json::array()},{"durationMs",badDuration}};
-            check(invalid.Request(bad.dump()).value("error","")=="invalid_request",
+            auto badReply = invalid.Request(bad.dump());
+            check(badReply.value("error","")=="invalid_request",
                   "reject non-int or out-of-range durationMs");
+            check(badReply["requestId"] == 1 && badReply["ok"] == false,
+                  "rejected mouse durationMs echoes requestId");
         }
+        // Unparseable / missing requestId may keep requestId null; valid envelope must echo.
+        auto malformed = mouseDur.Request("{");
+        check(malformed.value("error","")=="malformed_json" && malformed["requestId"].is_null(),
+              "malformed JSON keeps requestId null");
+        auto missingId = mouseDur.Request(
+            R"({"protocolVersion":1,"runId":"mouse-dur","verb":"mouse","dx":0,"dy":0,"buttons":[],"updates":1})");
+        check(missingId.value("error","")=="invalid_request" && missingId["requestId"].is_null(),
+              "missing requestId keeps requestId null");
         Protocol mouseDurOk("mouse-dur-ok", 123, 7);
         mouseDurOk.Publish(true, true, "fixture");
         check(mouseDurOk.Request(Json{{"protocolVersion",1},{"requestId",1},{"runId","mouse-dur-ok"},{"verb","mouse"},

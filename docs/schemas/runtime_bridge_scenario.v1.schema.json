@@ -331,7 +331,7 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 256,
-          "description": "Path such as DynamicBox.position.x or sample[-1].angularVelocity.z"
+          "description": "Path such as DynamicBox.position.x, DynamicBox.active, DynamicBox.found, or sample[-1].angularVelocity.z"
         },
         "op": {
           "enum": ["eq", "approx", "gt", "lt", "between", "changed", "delta_gt", "axis_dot"]

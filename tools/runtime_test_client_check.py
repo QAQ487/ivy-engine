@@ -224,6 +224,32 @@ class ClientChecks(unittest.TestCase):
         with self.assertRaises(ValueError): c.apply_torque_impulse("Box", [0, 1], 1)
         with self.assertRaises(ValueError): c.apply_impulse("Box", [1, 0, 0], 2147483647)
 
+    def test_request_surfaces_bridge_error_when_identity_echoed(self):
+        """Rejected replies with echoed requestId must not raise identity mismatch."""
+        class FakePipeClient(Client):
+            def __init__(self):
+                self.pid=1
+                self.run_id="reject-echo"
+                self.timeout=2
+                self.handle=object()
+                self._reply=None
+            def send_raw(self,data,deadline=None):
+                return len(data)
+            def read_response(self,deadline=None):
+                return dict(self._reply)
+        c=FakePipeClient()
+        c._reply={"protocolVersion":1,"requestId":7,"runId":"reject-echo","ok":False,"error":"invalid_request"}
+        r=c.request("mouse",7,{"dx":0,"dy":0,"buttons":[],"updates":1,"durationMs":100})
+        self.assertEqual(r["error"],"invalid_request")
+        self.assertEqual(r["requestId"],7)
+        self.assertIs(r["ok"],False)
+        c._reply={"protocolVersion":1,"requestId":None,"runId":"reject-echo","ok":False,"error":"invalid_request"}
+        with self.assertRaisesRegex(RuntimeError,r"response identity mismatch"):
+            c.request("mouse",8,{"dx":0,"dy":0,"buttons":[],"durationMs":0})
+        c._reply={"protocolVersion":1,"requestId":9,"runId":"other-run","ok":False,"error":"invalid_request"}
+        with self.assertRaisesRegex(RuntimeError,r"response identity mismatch"):
+            c.request("mouse",9,{"dx":0,"dy":0,"buttons":[],"durationMs":0})
+
     def test_mouse_client_validation(self):
         from runtime_test_client import build_mouse_payload
         c=Client.__new__(Client)
