@@ -279,8 +279,9 @@ class LiveBridge:
         if verb == "mouse":
             p = payload or {}
             reply = self.client.mouse(
-                p["dx"], p["dy"], p.get("buttons") or [], p["updates"],
-                self.link._next(), wheel=p.get("wheel", 0))
+                int(p["dx"]), int(p["dy"]), p.get("buttons") or [],
+                p.get("updates"), self.link._next(), wheel=int(p.get("wheel", 0) or 0),
+                duration_ms=p.get("durationMs"))
             self.link.counter = max(self.link.counter, int(reply.get("requestId") or self.link.counter))
             return reply
         if verb == "controller":

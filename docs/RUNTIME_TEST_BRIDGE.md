@@ -45,7 +45,7 @@ Capabilities advertised by `hello` / `status` (as implemented):
 | `hello` / `status` | Identity, ready/playing/paused/scene snapshot, frame counters, input op status, capabilities. When not ready, `readyDetail` explains `scene_path_empty`, `preload_active`, or `not_playing`. |
 | `quit` | Requests exit; response has `requiresReceipt: true` — client must send a lone LF receipt. Accepted while paused; the host drains exit without waiting for a sim tick. |
 | `keyboard` | Internal key inject (`keys`, `updates`); see [Keyboard injection](#keyboard-injection-keyboard) |
-| `mouse` | Internal mouse inject (`dx`, `dy`, `buttons`, `updates`, optional `wheel`, optional absolute `x`/`y`) |
+| `mouse` | Internal mouse inject (`dx`, `dy`, `buttons`, exactly one of `updates` or `durationMs`, optional `wheel`, optional absolute `x`/`y`) |
 | `observe` | Named GameObject snapshot: `position`/`velocity`, plus `rotation` (Euler degrees), `rotationQuaternion`, `scale`, `angularVelocity`, and when a `Rigidbody` is present: `rigidbody.{kinematic,mass,drag,angularDrag,friction,useGravity,localInverseInertia}`. Pose prefers the `Transform` component via `GameObject::GetWorldPose` (world space when parented; equals local with no parent transform); falls back to legacy `m_position`/`m_rotation`/`m_scale` only when no Transform is attached. Sleeping/contact counts are omitted (not cheaply available). |
 | `list_objects` | Bounded GameObject name + component type list (`offset`, `limit` 1…64, default 32). Response includes `total` and `truncated`. |
 | `pause` / `resume` | Freeze or resume the sim loop. Status reports `paused`, `pendingSteps`, `frame`, `physicsTick`. |
@@ -160,13 +160,20 @@ One queued operation at a time. Requires ready + playing. Injection is **interna
 | --- | --- | --- |
 | `dx`, `dy` | yes | Integer deltas in [-600, 600] (backbuffer-scaled movement) |
 | `buttons` | yes | Array of unique `LEFT` / `RIGHT` / `MIDDLE` (max 3) |
-| `updates` | yes | Integer 1…120 (engine `Update` hold count) |
+| `updates` | exactly one of `updates` or `durationMs` | Integer 1…120 (engine `Update` hold count). Frame-rate dependent. |
+| `durationMs` | exactly one of `updates` or `durationMs` | Integer 1…`kInputInjectMaxDurationMs` (30000). Wall-clock hold while Active (buttons stay pressed until elapsed ≥ `durationMs`, then release). Prefer this when the game measures hold progress in seconds. |
 | `wheel` | no | Integer [-120, 120]; default 0 |
 | `x`, `y` | no (both or neither) | Absolute **backbuffer** pixel cursor. Finite JSON integers in `[0, width)` × `[0, height)` for the **current** backbuffer; otherwise `invalid_request`. |
 
+Providing both `updates` and `durationMs`, or neither, is `invalid_request`. Non-integer / out-of-range `durationMs` is also `invalid_request`.
+
+**Hold modes:** `updates` keeps the existing prep → N Active Updates → release lifecycle. `durationMs` uses the same prep/release frames, but the Active phase is timed with the injectable bridge clock (`GetTickCount64` live; tests pass synthetic `now` into `BeginInput` / `ExpireMouse`). Absolute `x`/`y` (when set) stay applied for the whole isolating lifecycle in both modes.
+
+**Wall deadline:** scales so long holds are not cancelled early — `updates` mode uses `InputInjectDeadlineMs(updates)` (same as keyboard: base 5000 + updates×100); `durationMs` mode uses `InputInjectDeadlineFromDurationMs(durationMs)` (base 5000 + durationMs).
+
 **Absolute cursor semantics:** When `x` and `y` are present, `Mouse_GetPosition` / `Mouse_GetX` / `Mouse_GetY` (and thus `ScriptApi_MouseGetPosition`) return those backbuffer coordinates for the whole isolating lifecycle (prep → hold → release). The override clears with injection after the op completes or cancels. Omitting `x`/`y` leaves position on the real OS cursor (`GetCursorPos`) while still injecting deltas/buttons/wheel. Relative `dx`/`dy` remain neutral on prep/release frames (same as before).
 
-Stock client: `Client.mouse(..., x=None, y=None)` / CLI `--x` `--y`. Client validates types and both-or-neither; the server enforces live backbuffer bounds.
+Stock client: `Client.mouse(..., updates=..., duration_ms=None, x=None, y=None)` / CLI `--updates` or `--duration-ms`, plus optional `--x` `--y`. Client validates types, exclusivity, and both-or-neither absolute coords; the server enforces live backbuffer bounds. Completion poll timeout defaults to 7s for `updates`, or `duration_ms/1000+7` (max 60s) for `durationMs`.
 
 **Follow-up (not in this change):** a world→screen helper for the active 2D/3D camera so clients can aim at world positions without computing VP themselves.
 
