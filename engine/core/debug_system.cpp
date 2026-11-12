@@ -5,6 +5,7 @@
 #include "debug_system.h"
 
 #include "engine/physics/core/physics_system.h"
+#include "engine/rendering/culling/frustum_cull.h"
 #include "third_person_camera.h"
 
 #include <cstdio>
@@ -191,12 +192,15 @@ void RefreshOverlay() {
 	else
 		std::snprintf(timeBuf, sizeof(timeBuf), "0.25x");
 
+	const FrustumCullStats cull = FrustumCull_GetLastStats();
 	if (s_collisionViz) {
 		const PhysicsDebugStats st = PhysicsSystem_GetDebugStats();
 		std::snprintf(s_overlayText, sizeof(s_overlayText),
 			"COLLISION VIZ %s   TIME %s\n"
-			"colliders:%d pairs:%d contacts:%d triggers:%d",
-			viz, timeBuf, st.colliders, st.pairs, st.contacts, st.triggers);
+			"colliders:%d pairs:%d contacts:%d triggers:%d\n"
+			"frustum considered:%d culled:%d drawn:%d",
+			viz, timeBuf, st.colliders, st.pairs, st.contacts, st.triggers,
+			cull.considered, cull.culled, cull.drawn);
 	} else {
 		std::snprintf(s_overlayText, sizeof(s_overlayText),
 			"COLLISION VIZ %s   TIME %s",

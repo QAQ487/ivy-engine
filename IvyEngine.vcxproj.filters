@@ -52,6 +52,9 @@
     <Filter Include="engine\rendering\lighting">
       <UniqueIdentifier>{cc996a20-be56-4b7e-9dd0-fcadfe564372}</UniqueIdentifier>
     </Filter>
+    <Filter Include="engine\rendering\culling">
+      <UniqueIdentifier>{e7c4a91b-2d5f-4e8a-9b3c-1f6a8d0e4c72}</UniqueIdentifier>
+    </Filter>
     <Filter Include="engine\rendering\model">
       <UniqueIdentifier>{ac14084b-4d9c-41b6-b131-d9cb01070e55}</UniqueIdentifier>
     </Filter>
@@ -323,6 +326,12 @@
     </ClInclude>
     <ClInclude Include="engine\rendering\lighting\shadow.h">
       <Filter>engine\rendering\lighting</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\rendering\culling\frustum_cull.h">
+      <Filter>engine\rendering\culling</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\rendering\culling\frustum_cull_math.h">
+      <Filter>engine\rendering\culling</Filter>
     </ClInclude>
     <ClInclude Include="engine\rendering\model\model.h">
       <Filter>engine\rendering\model</Filter>
@@ -715,6 +724,9 @@
     </ClCompile>
     <ClCompile Include="engine\rendering\lighting\shadow.cpp">
       <Filter>engine\rendering\lighting</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\rendering\culling\frustum_cull.cpp">
+      <Filter>engine\rendering\culling</Filter>
     </ClCompile>
     <ClCompile Include="engine\rendering\model\model.cpp">
       <Filter>engine\rendering\model</Filter>

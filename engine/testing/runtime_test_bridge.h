@@ -100,6 +100,10 @@ struct PerfSample {
     float updateMs = 0.0f;
     float drawMs = 0.0f;
     float presentMs = 0.0f;
+    // Last completed main-pass frustum cull counters (0 when culling off).
+    int cullConsidered = 0;
+    int cullCulled = 0;
+    int cullDrawn = 0;
 };
 
 // Consumer probe: samples public Controller_* getters once per Update after

@@ -52,7 +52,7 @@ Capabilities advertised by `hello` / `status` (as implemented):
 | `list_objects` | Bounded GameObject name + component type list (`offset`, `limit` 1…64, default 32). Response includes `total` and `truncated`. |
 | `pause` / `resume` | Freeze or resume the sim loop. Status reports `paused`, `pendingSteps`, `frame`, `physicsTick`. |
 | `step` | While paused only: queue `frames` 1…600 fixed-timestep update/physics ticks. Input inject and `controller_probe` advance on stepped ticks. Error `not_paused` if running. |
-| `perf` | Stats over the last N frames (ring capacity 600): avg/min/max/p95 for `frameMs`/`updateMs`/`drawMs`/`presentMs` (same stages as the FPS log) plus average FPS. |
+| `perf` | Stats over the last N frames (ring capacity 600): avg/min/max/p95 for `frameMs`/`updateMs`/`drawMs`/`presentMs` (same stages as the FPS log) plus average FPS. Also `frustumCull.{considered,culled,drawn}` (avg/min/max/p95 over the window; main-pass 3D mesh cull counters, 0 when culling is off). |
 | `reset_scene` | Reload the current scene (or optional validated `scene` `rom/...json`) to its initial state. Queued like `capture`; `status.worldOp` reports completion. |
 | `set_transform` | Teleport a named object (`object` matches `list_objects`/`observe` names). Optional `position`/`rotation` (euler deg length 3 or quaternion length 4)/`scale` as finite arrays; optional `zeroVelocity` (default true) clears rigidbody velocities/forces after syncing `m_previousPosition`. |
 | `set_velocity` | Set dynamic rigidbody `linear` and/or `angular` velocity arrays. Error `not_dynamic` for kinematic/static/missing body. |

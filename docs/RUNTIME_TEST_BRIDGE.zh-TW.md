@@ -23,7 +23,7 @@ tools\run_runtime_bridge_checks.cmd x64\phase6-bridge-check
 tools\run_runtime_bridge_checks.cmd x64\phase6-bridge-check x64\Debug\IvyEngineRuntime.exe
 ```
 
-需要 VS 同 `py -3`。新 verbs：`list_objects`、`pause`／`resume`／`step`、`perf`、`reset_scene`／`set_transform`／`set_velocity`／`apply_impulse`／`apply_torque_impulse`；`observe` 加咗 rotation／quaternion／scale／angularVelocity，以及 `rigidbody.{kinematic,mass,drag,angularDrag,friction,useGravity,localInverseInertia}`。連續 `apply_force`／`apply_torque`（N frames）未實作。
+需要 VS 同 `py -3`。新 verbs：`list_objects`、`pause`／`resume`／`step`、`perf`、`reset_scene`／`set_transform`／`set_velocity`／`apply_impulse`／`apply_torque_impulse`；`observe` 加咗 rotation／quaternion／scale／angularVelocity，以及 `rigidbody.{kinematic,mass,drag,angularDrag,friction,useGravity,localInverseInertia}`。`perf` 另有 `frustumCull.{considered,culled,drawn}`（3D main-pass cull counters）。連續 `apply_force`／`apply_torque`（N frames）未實作。
 
 ## 狀態摘要
 

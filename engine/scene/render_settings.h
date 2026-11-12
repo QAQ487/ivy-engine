@@ -44,6 +44,9 @@ struct RenderSettingsData {
     float fogStart = 10.0f;
     float fogHeight = 5.0f;
     float fogHeightFalloff = 0.15f;
+
+    // 3D mesh frustum culling (main camera pass only; shadow cascades stay unculled).
+    bool frustumCullingEnabled = true;
 };
 
 void RenderSettings_ResetToDefaults();

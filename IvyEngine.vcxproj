@@ -257,6 +257,8 @@ exit /b 0</Command>
     <ClInclude Include="engine\core\engine_gui_internal.h" />
     <ClInclude Include="engine\rendering\lighting\lighting.h" />
     <ClInclude Include="engine\rendering\lighting\shadow.h" />
+    <ClInclude Include="engine\rendering\culling\frustum_cull.h" />
+    <ClInclude Include="engine\rendering\culling\frustum_cull_math.h" />
     <ClInclude Include="engine\core\game_object.h" />
     <ClInclude Include="engine\ecs\collider_component.h" />
     <ClInclude Include="engine\ecs\effect_component.h" />
@@ -396,6 +398,7 @@ exit /b 0</Command>
     <ClCompile Include="engine\core\engine_gui_persistence.cpp" />
     <ClCompile Include="engine\rendering\lighting\lighting.cpp" />
     <ClCompile Include="engine\rendering\lighting\shadow.cpp" />
+    <ClCompile Include="engine\rendering\culling\frustum_cull.cpp" />
     <ClCompile Include="engine\ecs\collider_component.cpp" />
     <ClCompile Include="engine\ecs\effect_component.cpp" />
     <ClCompile Include="engine\ecs\audio_component.cpp" />
