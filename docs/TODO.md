@@ -66,16 +66,21 @@
 
 ## 渲染效能：Culling
 
-現況：3D main camera pass 已有 per-object frustum culling（見下項）。仍然冇 distance／occlusion culling；2D sprite／billboard／particle／UI 未做 rect culling。Shadow cascades **刻意唔 cull**（避免畫面外 caster 失落影）。Physics AABB 仍然唔共用。`D3D11_QUERY` 仍然只見 timestamp／pipeline stats。
+現況：3D main camera pass 已有 per-object frustum culling；CSM depth passes 已有 per-cascade light-ortho caster culling（open near）。仍然冇 distance／occlusion culling；2D sprite／billboard／particle／UI 未做 rect culling。Physics AABB 仍然唔共用。`D3D11_QUERY` 仍然只見 timestamp／pipeline stats。
 
 參考：Unity 模型——自動 frustum culling、手動 baked occlusion、Unity 6 GPU occlusion、`CullingGroup` API。
 
 - [x] **Frustum culling（3D）**（source 已做；等 Windows Release runtime 驗收）
   - 每個 mesh 喺 load 時 cache local AABB（FBX／OBJ／primitives；skinned 喺 bind-pose 上再 inflate 半個最大半軸，保守包動畫）。`GameObject::DrawVisual` 轉 world AABB（scale／rotation 用 8 corners），對 camera view×proj 抽出嘅 6 planes（D3D z∈[0,1]）測試；完全在外就唔 `Model3D::Draw`。無有效 bounds 永不 cull。
-  - **Shadow**：main pass 先 cull；CSM depth passes 保持 unculled（安全選項），唔會因 camera frustum 剔走會投進畫面嘅 caster。之後若要省 shadow draw，再按每個 cascade 嘅 light ortho 另做。
+  - **Shadow**：main pass 先 cull；camera frustum **唔**閘 shadow depth。Per-cascade light-ortho cull 見下項。
   - Toggle：`settings.render.frustumCullingEnabled`（預設 true；Rendering Settings checkbox）。Counters：considered／culled／drawn —— Rendering Settings 即時顯示、collision-viz overlay、play FPS overlay、runtime bridge `perf.frustumCull`。
   - Linux：`g++ -std=c++17 -I. -Itools/linux_win32_shim tools/frustum_cull_check.cpp -o /tmp/frustum_cull_check && /tmp/frustum_cull_check`。
   - 剩餘：Windows Release 大場景目視（culled 隨視角升、toggle off 畫面一致、畫面外 caster 陰影仍在）；更緊嘅 per-clip skinned bounds（而家係 inflate）。
+- [x] **Shadow cascade caster culling**（source 已做；等 Windows Release runtime 驗收）
+  - 每個 cascade 用 `lightView*lightProj` 抽出 6 planes；AABB 測試 **跳過 near**（open toward light／pancaking），只 cull 側向同 far。畫面外但仍投影入 cascade 嘅 caster 會畫 shadow。
+  - Toggle：`settings.render.shadowCascadeCullingEnabled`（預設 true）。Counters：frame totals + per-cascade —— Rendering Settings；frame totals —— FPS／collision-viz／`perf.shadowCull`。
+  - Linux：`./tools/run_shadow_cull_check.sh`。
+  - 剩餘：Windows Release A/B（ON vs OFF capture 像素一致於畫面內陰影；遠方 caster `shadowCull.culled` 上升；畫面外 caster 陰影仍在）。
 - [ ] **2D camera rect culling**
   - sprite／tilemap／billboard／particle 用 camera 正交矩形剔除，village-and-goblin 呢類俯視 2D 遊戲用。
   - 驗收同上，以 Release 證據為準。

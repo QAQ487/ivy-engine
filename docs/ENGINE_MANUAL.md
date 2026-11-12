@@ -556,7 +556,8 @@ Known fields:
 - `skyboxRotationYDeg`
 - `clearColor`
 - `defaultShader`
-- `frustumCullingEnabled` — bool, default `true`. Main-camera 3D mesh frustum culling only; CSM shadow passes are not culled.
+- `frustumCullingEnabled` — bool, default `true`. Main-camera 3D mesh frustum culling only.
+- `shadowCascadeCullingEnabled` — bool, default `true`. Per-cascade light-ortho caster culling (open near toward the light so casters between the light and the cascade still cast).
 
 Use render settings for scene-level rendering defaults. Use `VisualComponent::shaderOverride` only for per-object overrides.
 

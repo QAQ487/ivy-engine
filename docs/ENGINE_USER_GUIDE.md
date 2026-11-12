@@ -666,7 +666,8 @@ Edit `settings.render` in the scene JSON (or via editor if exposed):
 - Default shader for objects without override
 - Shadow quality (Low / Medium / High)
 - Height fog parameters
-- `frustumCullingEnabled` (default `true`) — skip 3D mesh draws fully outside the **main** camera frustum. Shadow cascades stay unculled so off-screen casters can still cast into view. Toggle off in Rendering Settings for A/B. Counters (considered / culled / drawn) show in Rendering Settings, the play FPS overlay, and collision-viz debug text.
+- `frustumCullingEnabled` (default `true`) — skip 3D mesh draws fully outside the **main** camera frustum. Does not gate shadow depth passes. Toggle off in Rendering Settings for A/B. Counters (considered / culled / drawn) show in Rendering Settings, the play FPS overlay, and collision-viz debug text.
+- `shadowCascadeCullingEnabled` (default `true`) — per cascade, skip shadow casters whose world AABB is outside that cascade's light-space ortho volume. Near plane is open toward the light (casters between light and cascade still cast). Off-screen casters that still project into a cascade keep their shadows. Counters: frame totals + per-cascade in Rendering Settings; frame totals on FPS / collision-viz overlays and bridge `perf.shadowCull`.
 
 Reload skybox after changing the cubemap path (`RenderSettings_ReloadSkybox` / editor path). Manual check scene: `testbed/rom/scene/scene_panorama_sky.json`.
 
