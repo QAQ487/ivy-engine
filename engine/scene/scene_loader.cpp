@@ -687,10 +687,10 @@ void SceneLoader_ApplyPrepared(std::shared_ptr<PreparedScene> prepared, bool pre
     for (auto& node : g_sceneNodes) node->AttachPreparedComponents();
     SceneCanvas_ApplyPrepared(std::move(prepared->canvas), prepared->canvasJson);
     ApplySceneSettings(*prepared, preserveEditorView);
-    const fs::path scenePath(prepared->path);
+    const fs::path scenePath = PathFromUtf8(prepared->path);
     const auto relativePath = content_path::LexicalChildPath(scenePath, SCENE_DIR);
-    SceneLoader_CopySceneFileName(!relativePath.empty() ? relativePath.generic_string()
-                                                        : scenePath.filename().generic_string());
+    SceneLoader_CopySceneFileName(!relativePath.empty() ? PathToUtf8(relativePath)
+                                                        : PathToUtf8(scenePath.filename()));
     g_currentScenePath = prepared->path;
     g_currentSceneContent = std::move(prepared->content);
     ++g_contentRevision;
@@ -737,7 +737,8 @@ bool SceneLoader_SaveToFile(const char* filename) {
     file.close();
     if (!file) return false;
     std::error_code ec;
-    if (!g_currentScenePath.empty() && fs::equivalent(dest, g_currentScenePath, ec) && !ec) {
+    if (!g_currentScenePath.empty() &&
+        fs::equivalent(dest, PathFromUtf8(g_currentScenePath), ec) && !ec) {
         g_currentSceneContent = content;
         ++g_contentRevision;
     }

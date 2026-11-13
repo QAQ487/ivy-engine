@@ -2732,8 +2732,8 @@ void EngineGUI_FlushSceneLoadPending() {
     EditorUndo_Clear();
 
     if (ProjectManager::Instance().IsOpen()) {
-        const std::filesystem::path filePath(path);
-        ProjectManager::Instance().SetLastOpenedScene(filePath.filename().string());
+        ProjectManager::Instance().SetLastOpenedScene(
+            PathToUtf8(PathFromUtf8(path).filename()));
     }
 
     g_loadingStage = "Preloading assets...";
@@ -3368,14 +3368,26 @@ void EngineGUI_Update(double elapsed_time) {
         auto changes = g_contentMonitor.Poll(root);
         g_contentChanges.insert(g_contentChanges.end(), changes.begin(), changes.end());
         if (!IsSceneLoadBusy() && !g_contentChanges.empty()) {
-            try {
-                const bool directoryChanged = std::any_of(g_contentChanges.begin(), g_contentChanges.end(),
-                    [](const auto& change) { return change.added || change.removed; });
-                if (directoryChanged) {
+            const bool directoryChanged = std::any_of(g_contentChanges.begin(), g_contentChanges.end(),
+                [](const auto& change) { return change.added || change.removed; });
+            if (directoryChanged) {
+                try {
                     ProjectAssetIndex::Instance().Refresh();
                     SceneLoader_RefreshSceneAssets();
+                } catch (const std::system_error& error) {
+                    g_contentReloadLight.Failure();
+                    g_contentReloadStatus = std::string("Content index refresh error: ") + error.what();
+                    LogContentReload(g_contentReloadStatus);
+                } catch (const std::exception& error) {
+                    g_contentReloadLight.Failure();
+                    g_contentReloadStatus = std::string("Content index refresh error: ") + error.what();
+                    LogContentReload(g_contentReloadStatus);
                 }
-                for (const auto& change : g_contentChanges) {
+            }
+            // Per-change try/catch so one bad path cannot drop the rest of a batch
+            // after ContentFileMonitor::Observe has already advanced its baseline.
+            for (const auto& change : g_contentChanges) {
+                try {
                     const std::string path = ContentFileMonitor::Utf8Path(std::filesystem::path("rom") / PathFromUtf8(change.path));
                     auto ext = PathToUtf8(PathFromUtf8(path).extension());
                     std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) { return char(std::tolower(c)); });
@@ -3482,15 +3494,15 @@ void EngineGUI_Update(double elapsed_time) {
                         }
                     }
                     if (!change.added || content_reload::SceneJsonReferencesRomPath(SceneLoader_GetCurrentSceneContent(), path)) g_contentSceneReload = true;
+                } catch (const std::system_error& error) {
+                    g_contentReloadLight.Failure();
+                    g_contentReloadStatus = std::string("Content path error: ") + error.what();
+                    LogContentReload(g_contentReloadStatus);
+                } catch (const std::exception& error) {
+                    g_contentReloadLight.Failure();
+                    g_contentReloadStatus = std::string("Content reload error: ") + error.what();
+                    LogContentReload(g_contentReloadStatus);
                 }
-            } catch (const std::system_error& error) {
-                g_contentReloadLight.Failure();
-                g_contentReloadStatus = std::string("Content path error: ") + error.what();
-                LogContentReload(g_contentReloadStatus);
-            } catch (const std::exception& error) {
-                g_contentReloadLight.Failure();
-                g_contentReloadStatus = std::string("Content reload error: ") + error.what();
-                LogContentReload(g_contentReloadStatus);
             }
             g_contentChanges.clear();
         }
