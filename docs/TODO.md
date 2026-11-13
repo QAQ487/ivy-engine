@@ -107,8 +107,8 @@ PBR 球場已由引擎待辦移除：倉庫只有 PBR shader 同 `testbed/rom/sc
 
 ## 最近同步留下嘅驗證事項
 
-- [x] **ImGuizmo／ImGui AddPolyline 參數順序**（source 已做；等 Windows editor 目視驗收）
-  - `libraries/imguizmo/ImGuizmo.cpp` 三個 `AddPolyline` 改返 ImGui 1.92.5 簽名 `(flags, thickness)`。Linux：`python3 tools/check_imguizmo_addpolyline_order.py`。MSVC 仍保留 PR #7 對 `ImGuizmo.cpp` 嘅 C4244 suppression。
+- [ ] **ImGuizmo／ImGui AddPolyline 參數順序**（code fix 已入；等 Windows editor 目視驗收）
+  - `libraries/imguizmo/ImGuizmo.cpp` 三個 `AddPolyline` 已改返 ImGui 1.92.5 簽名 `(flags, thickness)`。Linux：`python3 tools/check_imguizmo_addpolyline_order.py`。MSVC 仍保留 PR #7 對 `ImGuizmo.cpp` 嘅 C4244 suppression。
   - 剩餘：Windows editor 目視——旋轉環厚度 = `RotationLineThickness`（預設 2）；拖旋轉扇形邊閉合；平移平面外觀不變。
 - [x] **PR #5 資產清理**：被刪嘅 `.ua/`、`rom/effects/`、`rom/skybox/001/`、`rom/model/character/YBot_white.fbx`、`rom/model/object/{tree,Wall,Cone_Yellow}.fbx`、`external_template/`、已刪 sample script，scene／prefab JSON 冇殘留引用。玩家模型其後喺 `testbed/rom/model/player/Y Bot_white.fbx`。`rom/effects/` 只剩 hot-reload 路徑前綴。當時 `samples/scenes` 的 2D 場景引用 `rom/texture/sprite_demo/`，呢批 PNG 唔喺 repo、亦唔係 PR #5 刪走。之後 testbed 用細 placeholder PNG 補咗四張圖（`adventurer_walk`、`test_sheet`、`hp_fill`、`hp_frame`），場景已移去 `testbed/rom/scene/`。
 - [x] **In-repo testbed**：`testbed/` 係 Debug editor 喺冇最近專案可開時會打開嘅 content project。`samples/scenes` 已移入 `testbed/rom/scene/`。引擎預設其後搬去 repo 根 `resources/`，用 `rom/<rest>` → `resources/<rest>` fallback，唔再做 NTFS junction。Testbed 專用模型同 sprite placeholder 喺 `testbed/rom/`。Linux：`tools/content_path_check.cpp`、`python3 tools/check_testbed_assets.py`、`python3 tools/check_engine_resource_paths.py`。Windows editor 實測未在呢次做。
@@ -125,8 +125,8 @@ PBR 球場已由引擎待辦移除：倉庫只有 PBR shader 同 `testbed/rom/sc
 
 ## 建議優先次序
 
-1. Content reload 紅燈（刪未引用資產）。
-2. ImGuizmo／PR #7 視覺檢查（lighting、CSM、post-process、gizmo）喺 Windows 做（source 已修 AddPolyline）。
+1. ImGuizmo 參數順序同 PR #7 視覺檢查（lighting、CSM、post-process、gizmo）一齊喺 Windows 做。
+2. Content reload 紅燈（刪未引用資產）。
 3. 重做 Properties Panel／Inspector（先有 UI 草案；現有編輯同 Undo 要保住）。
 4. AI 套件：Waypoint → Perception → BT／Blackboard → EQS。NavMesh 繼續暫緩。
 
