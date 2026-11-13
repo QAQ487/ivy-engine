@@ -13,10 +13,11 @@ When asked to work on the engine, start here:
 
 - Engine code lives in `engine/`.
 - Application and runtime glue lives in `src/app/`.
-- Content, assets, scenes, prefabs, and game scripts live in `rom/` and `game/scripts/`.
+- Content projects own `rom/` and `game/scripts/` (in-repo: `testbed/`; external: copy `external_content_template/`). Engine defaults live in `resources/`.
 - Do not change game content or game-specific scripts unless the user asks for game behavior changes.
 - Scene and prefab data are JSON files. Prefer preserving existing key names and component names exactly.
-- Component serialization names are case-sensitive: `SceneTransform`, `visual`, `Billboard`, `Material`, `Rigidbody`, `Script`, `Collider`, `Effect`, `DirectionalLight`, `PointLight`, `SpotLight`, `Camera`, `Audio`, `AudioListener`.
+- Component serialization names are case-sensitive: `SceneTransform`, `BoxCollider`, `SphereCollider`, `CapsuleCollider`, `CylinderCollider`, `MeshCollider`, `Rigidbody2D`, `Collider2D`, `SpriteAnimator`, `SpriteRenderer`, `visual`, `Billboard`, `Material`, `Rigidbody`, `Script`, `Collider`, `Effect`, `DirectionalLight`, `PointLight`, `SpotLight`, `Camera`, `Audio`, `AudioListener`.
+- Game-repo agents: start with [`docs/agent/README.md`](agent/README.md) (docs-only pack; export via `tools/export_agent_docs.py`).
 - User-authored scripts are loaded through the `GameScripts` DLL and referenced from JSON with `"scriptClass"`.
 - Third-person play follow looks for objects tagged `TAG_PLAYER` (not a hard-coded script class name).
 - UI buttons use builtin actions `LoadScene` / `ExitGame`, or a `UICanvasScript::OnClick` on the element — not game-specific engine binders.
@@ -41,12 +42,12 @@ The repository contains an editor/application target, a runtime target, and a sc
 
 - `IvyEngine.vcxproj` builds the main editor/application executable (`IvyEngine.exe`). It owns the windowed app target, shader build integration, editor GUI, and development-time runtime.
 - `IvyEngineRuntime.vcxproj` builds the runtime host (`IvyEngineRuntime.exe`) with `GAME_RUNTIME` defined. Runtime builds reuse most engine and app code but replace editor GUI behavior with runtime shims.
-- `game/scripts/GameScripts/GameScripts.vcxproj` builds user-authored game scripts into `GameScripts.dll`.
-- `engine/` contains reusable engine systems: ECS, scene loading, scripting bridge, rendering, physics, UI, input, audio, effects, and editor helpers.
+- Content-project `game/scripts/GameScripts/GameScripts.vcxproj` builds user-authored game scripts into `GameScripts.dll` (not in the engine `.sln`).
+- `engine/` contains reusable engine systems: ECS, scene loading, scripting bridge, rendering, physics (3D + optional Box2D), UI, input, audio, effects, and editor helpers.
 - `src/app/` contains the Windows entry point, game loop, scene manager integration, camera helpers, and the main `GameScene`.
-- `rom/` contains runtime content such as scenes, prefabs, models, textures, effects, shader output, and default-scene configuration.
-- `shaders/` contains HLSL source compiled by the project build.
-- `libraries/` contains third-party dependencies such as ImGui, nlohmann JSON, DirectXTex, FBX SDK, and Effekseer.
+- `resources/` holds read-only engine defaults; content projects keep writable assets under their own `rom/` (`rom/<rest>` → project file, else `<exe-dir>/resources/<rest>`).
+- `shaders/` contains HLSL source compiled by the project build into `resources/shader/*.cso`.
+- `libraries/` contains third-party dependencies such as ImGui, nlohmann JSON, DirectXTex, FBX SDK, Effekseer, and Box2D.
 
 Main runtime flow:
 
@@ -92,7 +93,7 @@ A **content project** is a directory containing at least `rom/` and usually `pro
 
 Recent projects are stored outside the content tree in `%AppData%/GameEngine/recent_projects.json`.
 
-Startup loads the first recent project that still has `rom/`. A Debug editor with no loadable recent project opens the in-repo `testbed/` (see [`CONTENT_PROJECT.md`](CONTENT_PROJECT.md)). The build output directory is not a project. Opening `testbed/` links engine `rom/` defaults instead of copying them, and rejects path targets that do not stay inside that `rom/`.
+Startup loads the first recent project that still has `rom/`. A Debug editor with no loadable recent project opens the in-repo `testbed/` (see [`CONTENT_PROJECT.md`](CONTENT_PROJECT.md)). The build output directory is not a project. Opening `testbed/` uses normal content-path resolution (`rom/<rest>` → project file, else `<exe-dir>/resources/<rest>`); the editor does not create NTFS junctions or copy engine defaults into the project.
 
 New Project scaffolds `rom/scene/scene_main.json` and may copy `external_content_template` scripts when the engine repo is discoverable. It does not copy engine defaults; those resolve from `<exe-dir>/resources/` (`rom/<rest>` → `resources/<rest>`). See also [`CONTENT_PROJECT.md`](CONTENT_PROJECT.md).
 
