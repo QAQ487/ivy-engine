@@ -1,7 +1,7 @@
 # Ivy Engine — Complete Ability & API Reference
 
 Exhaustive catalog of **Ivy Engine** capabilities and public functions,
-scanned from every header under `engine/` and `src/app/` (107 headers).
+scanned from every header under `engine/` and `src/app/` (~157 headers; regenerate to refresh).
 
 **Learning how to use the engine?** Start with [`ENGINE_USER_GUIDE.md`](ENGINE_USER_GUIDE.md).  
 For concepts, JSON schemas, and agent conventions, see [`ENGINE_MANUAL.md`](ENGINE_MANUAL.md).  
@@ -49,11 +49,12 @@ For external content-project setup, see [`CONTENT_PROJECT.md`](CONTENT_PROJECT.m
 |------|---------|
 | `engine/` | Reusable engine systems |
 | `src/app/` | WinMain, game loop, cameras, fades, `GameScene` |
-| `game/scripts/` | Game-specific scripts (not engine core) |
-| `rom/` | Runtime assets (scenes, models, audio, effects, fonts, prefabs) |
-| `shaders/` | HLSL sources |
-| `libraries/` | imgui, imguizmo, nlohmann, fbxsdk, effekseer, directxtex |
-| `docs/` | This manual set |
+| `resources/` | Read-only engine defaults (mirrored beside the exe; `rom/<rest>` falls back here) |
+| `testbed/` | In-repo content project (`project.json` + `rom/`) |
+| `external_content_template/` | Starter for an external content project (`game/scripts/`, `rom/`) |
+| `shaders/` | HLSL sources → `resources/shader/*.cso` |
+| `libraries/` | imgui, imguizmo, nlohmann, fbxsdk, effekseer, directxtex, box2d |
+| `docs/` | This manual set + `docs/agent/` for game-repo agents |
 
 ### Entry points
 
@@ -95,7 +96,7 @@ For external content-project setup, see [`CONTENT_PROJECT.md`](CONTENT_PROJECT.m
 
 ### Registered component type names (JSON, case-sensitive)
 
-`SceneTransform`, `visual`, `Billboard`, `Material`, `Rigidbody`, `Script`, `Collider`, `Effect`, `DirectionalLight`, `PointLight`, `SpotLight`, `Camera`, `Audio`, `AudioListener`
+`SceneTransform`, `BoxCollider`, `SphereCollider`, `CapsuleCollider`, `CylinderCollider`, `MeshCollider`, `Rigidbody2D`, `Collider2D`, `SpriteAnimator`, `SpriteRenderer`, `visual`, `Billboard`, `Material`, `Rigidbody`, `Script`, `Collider`, `Effect`, `DirectionalLight`, `PointLight`, `SpotLight`, `Camera`, `Audio`, `AudioListener`
 
 ### `Tag` values
 

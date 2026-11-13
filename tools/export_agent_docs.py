@@ -97,6 +97,11 @@ def upsert_managed_section(path: pathlib.Path, dry_run: bool, actions: list[str]
         path.write_text(new_text, encoding="utf-8")
 
 
+def _rewrite_exported_markdown(text: str) -> str:
+    """Point schema links at the exported sibling schemas/ folder."""
+    return text.replace("](../schemas/", "](schemas/")
+
+
 def _copy_tree(src: pathlib.Path, dst: pathlib.Path, dry_run: bool, actions: list[str]) -> None:
     for path in sorted(src.rglob("*")):
         if path.is_dir():
@@ -106,7 +111,10 @@ def _copy_tree(src: pathlib.Path, dst: pathlib.Path, dry_run: bool, actions: lis
         actions.append(f"copy {path} -> {target}")
         if not dry_run:
             target.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(path, target)
+            if path.suffix.lower() == ".md":
+                target.write_text(_rewrite_exported_markdown(path.read_text(encoding="utf-8")), encoding="utf-8")
+            else:
+                shutil.copy2(path, target)
 
 
 def _remove_stale(dest_root: pathlib.Path, keep: set[pathlib.Path], dry_run: bool, actions: list[str]) -> None:

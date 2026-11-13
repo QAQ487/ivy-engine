@@ -11,7 +11,7 @@ Open `IvyEngine.sln` (VS2022, toolset `v145` in project files).
 | `IvyEngine` | `IvyEngine.exe` | ImGui Editor |
 | `IvyEngineRuntime` | `IvyEngineRuntime.exe` | Editor-less Runtime (`GAME_RUNTIME` define on x64) |
 
-Prefer **x64** Debug/Release. Content projects build `GameScripts` separately (see [`../CONTENT_PROJECT.md`](../CONTENT_PROJECT.md)).
+Prefer **x64** Debug/Release. Content projects build `GameScripts` separately (engine `docs/CONTENT_PROJECT.md`).
 
 ## Debug vs Release
 

@@ -74,6 +74,10 @@ class ExportAgentDocsTests(unittest.TestCase):
 
     def test_copy_docs_and_version_marker(self) -> None:
         fake_hash = "abc123def456"
+        _write(
+            self.engine / "docs" / "agent" / "README.md",
+            "# Agent\nSee [schema](../schemas/runtime_bridge_scenario.v1.schema.json).\n",
+        )
         with mock.patch.object(export, "git_commit_hash", return_value=fake_hash):
             result = export.export_docs(self.engine, self.game, dry_run=False)
         dest = self.game / "docs" / "ivy-engine"
@@ -82,6 +86,9 @@ class ExportAgentDocsTests(unittest.TestCase):
         self.assertTrue(
             (dest / "schemas" / "runtime_bridge_scenario.v1.schema.json").is_file()
         )
+        readme = (dest / "README.md").read_text(encoding="utf-8")
+        self.assertIn("](schemas/runtime_bridge_scenario.v1.schema.json)", readme)
+        self.assertNotIn("](../schemas/", readme)
         version = (dest / "ENGINE_COMMIT").read_text(encoding="utf-8").strip()
         self.assertEqual(version, fake_hash)
         self.assertFalse(result.dry_run)

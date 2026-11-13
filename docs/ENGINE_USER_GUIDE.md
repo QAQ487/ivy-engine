@@ -6,7 +6,8 @@ The repo ships a **minimal sample pack** (menu + playground) instead of a full g
 
 If you need every function signature, use [`ENGINE_API_REFERENCE.md`](ENGINE_API_REFERENCE.md).  
 If you need JSON schemas and source maps for tools/agents, use [`ENGINE_MANUAL.md`](ENGINE_MANUAL.md).  
-For a content-only external repo, see [`CONTENT_PROJECT.md`](CONTENT_PROJECT.md).
+For a content-only external repo, see [`CONTENT_PROJECT.md`](CONTENT_PROJECT.md).  
+AI agents in a separate game repo: start with [`docs/agent/README.md`](agent/README.md) (export with `tools/export_agent_docs.py`).
 
 ---
 
@@ -372,6 +373,10 @@ Enable `showDebugCollider` while tuning.
 ```
 
 `properties` overrides C++ defaults for that instance. Omit `properties` when defaults are fine.
+
+### 2D — `SpriteRenderer`, `SpriteAnimator`, `Rigidbody2D`, `Collider2D`
+
+JSON type names are case-sensitive (same registry as 3D). Use with scene `settings.renderPath` `"2d"` / `physicsMode` `"2d"` when authoring top-down or orthographic 2D scenes. Shape colliders also register as `BoxCollider`, `SphereCollider`, `CapsuleCollider`, `CylinderCollider`, `MeshCollider`.
 
 ### Lights
 

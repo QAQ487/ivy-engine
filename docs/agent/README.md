@@ -14,7 +14,7 @@ Starter: `external_content_template/`. In-repo exercise project: `testbed/`. Ful
 
 ## Asset resolution (`rom/` vs `resources/`)
 
-Safe `rom/<rest>` paths resolve **project first**, then `<exe-dir>/resources/<rest>` (`content_path::ResolveRomForRead`). **Writes always go to the project** (`content_path::ResolveRomForWrite`) — never into exe `resources/`. Engine defaults (shaders, fonts, branding, primitives, IBL/skybox) live in repo-root `resources/` and are mirrored beside the exe.
+Safe `rom/<rest>` paths resolve **project first**, then `<exe-dir>/resources/<rest>` (`api:ResolveRomForRead` in `api:content_path`). **Writes always go to the project** (`api:ResolveRomForWrite`) — never into exe `resources/`. Engine defaults (shaders, fonts, branding, primitives, IBL/skybox) live in repo-root `resources/` and are mirrored beside the exe.
 
 ## Drift markers
 
@@ -37,4 +37,4 @@ C++ API identifiers in this pack use an `api:` prefix inside backticks (for exam
 | [`api/camera.md`](api/camera.md) | Scene / third-person / first-person cameras |
 | [`api/assets.md`](api/assets.md) | Textures, prefab instantiate/destroy, content paths |
 
-Also: [`../RUNTIME_TEST_BRIDGE.md`](../RUNTIME_TEST_BRIDGE.md), [`../schemas/`](../schemas/).
+Also (engine repo docs, not always exported): `docs/RUNTIME_TEST_BRIDGE.md`, `docs/CONTENT_PROJECT.md`. Bridge scenario schema: [`../schemas/runtime_bridge_scenario.v1.schema.json`](../schemas/runtime_bridge_scenario.v1.schema.json) (`export_agent_docs.py` rewrites this link to `schemas/` under `docs/ivy-engine/`).

@@ -21,7 +21,7 @@
 - **Gameplay runtime** — ECS architecture; play mode (F3) runs the exact same components as the deployed game
 - **Physics** — AABB / sphere / capsule / box collision, triggers with `OnTriggerEnter/Exit` events, 4-type raycasting, swept resolution, contact visualization
 - **Concurrency** — custom job system: worker pool, dependency graph, parallel script updates with per-script safety flags and a sequential fallback that is behavior-identical
-- **Scripting** — hot-reloadable C++ DLL scripts (`ScriptRuntimeApi` v40), scene JSON authoring, prefab system
+- **Scripting** — hot-reloadable C++ DLL scripts (`ScriptRuntimeApi` v48), scene JSON authoring, prefab system
 - **Debug tools** — time-scale cycling (F7), frame stepping (F12), collision visualizer (F11), live physics stats overlay
 - **Asset pipeline** — time-sliced asset preloading (editor overlays + runtime boot loading screen with logo and progress bar), process-lifetime model/animation cache
 - **Deploy** — one-click "Build Current Project" packages any content project into a standalone `/MT` exe named after the game, with engine branding overlaid (content can override it)
@@ -43,8 +43,9 @@ The engine and game content are fully decoupled:
 ### Docs
 
 - [Content Project guide](docs/CONTENT_PROJECT.md) — external games, and the in-repo `testbed/` used by the Debug editor
+- [Agent docs pack](docs/agent/README.md) — concise docs for AI agents in a separate game repo (`tools/export_agent_docs.py`)
 - [Engine manual](docs/ENGINE_MANUAL.md) · [API reference](docs/ENGINE_API_REFERENCE.md) · [User guide](docs/ENGINE_USER_GUIDE.md)
-- [Runtime test bridge](docs/RUNTIME_TEST_BRIDGE.md) — Debug-runtime-only named-pipe harness (controller inject + consumer probe) · [zh summary](docs/RUNTIME_TEST_BRIDGE.zh-TW.md)
+- [Runtime test bridge](docs/RUNTIME_TEST_BRIDGE.md) — Debug named-pipe harness for Runtime and Editor Play mode · [zh summary](docs/RUNTIME_TEST_BRIDGE.zh-TW.md)
 - [Architecture overview](docs/diagrams/ivy-engine-architecture.html) · [架構圖（粵）](docs/diagrams/ivy-engine-architecture.zh-HK.html)
 - [Architecture decisions](docs/adr/)
 - [Engine to-do](docs/TODO.md) — recorded engine backlog
@@ -61,7 +62,7 @@ The engine and game content are fully decoupled:
 - **エディタ** — フル ImGui エディタ：ヒエラルキー、インスペクタ、アセットブラウザ、 transform ギズモ、UI キャンバス、**Undo/Redo**（コマンドパターン、最大 100 ステップ）、ブランド付きスタート画面
 - **物理** — AABB / 球 / カプセル / ボックス衝突、トリガーイベント（`OnTriggerEnter/Exit`）、4 種類のレイキャスト、接触可視化
 - **並列処理** — 自作ジョブシステム：ワーカープール、依存グラフ、スクリプト並列更新（安全フラグ付き、逐次フォールバックと挙動一致）
-- **スクリプト** — ホットリロード対応 C++ DLL スクリプト（`ScriptRuntimeApi` v40）、シーン JSON、プレハブシステム
+- **スクリプト** — ホットリロード対応 C++ DLL スクリプト（`ScriptRuntimeApi` v48）、シーン JSON、プレハブシステム
 - **デバッグ** — タイムスケール（F7）、フレームステップ（F12）、コリジョン可視化（F11）、物理統計オーバーレイ
 - **アセット** — タイムスライス方式のプリロード（エディタ.overlay + ランタイム起動時のロゴ＆プログレスバー付きローディング画面）、プロセス寿命のモデル/アニメーションキャッシュ
 - **デプロイ** — ワンクリック「Build Current Project」で、コンテンツプロジェクトをゲーム名そのままのスタンドアロン `/MT` exe にパッケージ化

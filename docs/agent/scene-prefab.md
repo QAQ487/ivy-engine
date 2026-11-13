@@ -42,14 +42,16 @@ Other `render.*` keys (skybox, fog, shadows, clear color, …) match `api:Render
 
 Exact type names from `api:SceneLoader_RegisterComponentTypes`:
 
-| JSON type name | Component |
-|----------------|-----------|
-| `SceneTransform` | `api:Transform` (engine) |
-| `BoxColliderComponent` | box collider component |
-| `SphereColliderComponent` | sphere |
-| `CapsuleColliderComponent` | capsule |
-| `CylinderColliderComponent` | cylinder |
-| `MeshColliderComponent` | mesh |
+JSON type names come from each component's `GetTypeName()` (via `REGISTER_COMPONENT` / explicit `Register`):
+
+| JSON type name | C++ type |
+|----------------|----------|
+| `SceneTransform` | `api:Transform` |
+| `BoxCollider` | `api:BoxColliderComponent` |
+| `SphereCollider` | `api:SphereColliderComponent` |
+| `CapsuleCollider` | `api:CapsuleColliderComponent` |
+| `CylinderCollider` | `api:CylinderColliderComponent` |
+| `MeshCollider` | `api:MeshColliderComponent` |
 | `Rigidbody2D` | `api:Rigidbody2DComponent` |
 | `Collider2D` | `api:Collider2DComponent` |
 | `SpriteAnimator` | `api:SpriteAnimatorComponent` |
@@ -59,11 +61,11 @@ Exact type names from `api:SceneLoader_RegisterComponentTypes`:
 | `Material` | `api:MaterialComponent` |
 | `Rigidbody` | `api:RigidbodyComponent` |
 | `Script` | `api:ScriptComponent` (`scriptClass` + optional `properties`) |
-| `Collider` | `api:ColliderComponent` |
+| `Collider` | `api:ColliderComponent` (generic; shape variants above preferred) |
 | `Effect` | `api:EffectComponent` |
-| `DirectionalLight` | directional light |
-| `PointLight` | point light |
-| `SpotLight` | spot light |
+| `DirectionalLight` | directional light component |
+| `PointLight` | point light component |
+| `SpotLight` | spot light component |
 | `Camera` | `api:CameraComponent` |
 | `Audio` | `api:AudioComponent` |
 | `AudioListener` | `api:AudioListenerComponent` |
@@ -96,4 +98,4 @@ Runtime spawn/destroy from scripts: `api:ScriptApi_PrefabInstantiate`, `api:Scri
 
 ## Bridge scenarios
 
-Automated bridge plans: [`../schemas/runtime_bridge_scenario.v1.schema.json`](../schemas/runtime_bridge_scenario.v1.schema.json). Ops guide: [`../RUNTIME_TEST_BRIDGE.md`](../RUNTIME_TEST_BRIDGE.md).
+Automated bridge plans: [`../schemas/runtime_bridge_scenario.v1.schema.json`](../schemas/runtime_bridge_scenario.v1.schema.json). Ops guide: engine `docs/RUNTIME_TEST_BRIDGE.md` (condensed: [`testing-bridge.md`](testing-bridge.md)).

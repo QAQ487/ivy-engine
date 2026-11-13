@@ -1,6 +1,6 @@
 # Runtime test bridge (condensed)
 
-Debug-only named-pipe harness for **Runtime** (`GAME_RUNTIME`) and **Editor** Play mode. Not shipping input. Full guide: [`../RUNTIME_TEST_BRIDGE.md`](../RUNTIME_TEST_BRIDGE.md).
+Debug-only named-pipe harness for **Runtime** (`GAME_RUNTIME`) and **Editor** Play mode. Not shipping input. Full guide: engine `docs/RUNTIME_TEST_BRIDGE.md`.
 
 **Linux note:** offline protocol/unit checks exist; do **not** claim Windows live named-pipe / D3D verification from this environment.
 
@@ -42,4 +42,4 @@ UTF-8 JSON, one LF-terminated frame. Envelope: `protocolVersion` (1), `requestId
 | `play_exit` | Stop Play; pipe survives |
 | `load_scene` | Required `scene` `rom/...json`; Runtime → `unsupported_host` (use `reset_scene`) |
 
-Edit mode (`playing=false`) rejects play-world ops with `not_playing`. Schema for scenario files: [`../schemas/runtime_bridge_scenario.v1.schema.json`](../schemas/runtime_bridge_scenario.v1.schema.json).
+Edit mode (`playing=false`) rejects play-world ops with `not_playing`. Schema: [`../schemas/runtime_bridge_scenario.v1.schema.json`](../schemas/runtime_bridge_scenario.v1.schema.json).
