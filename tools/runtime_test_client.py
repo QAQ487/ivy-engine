@@ -83,6 +83,35 @@ def _valid_event_name(name):
     if not isinstance(name,str) or not 1<=len(name)<=64: return False
     return all(ch.isalnum() or ch in "_-" for ch in name)
 
+SETTING_KEYS = (
+    "frustumCullingEnabled",
+    "shadowCascadeCullingEnabled",
+    "spriteCullingEnabled",
+)
+
+def build_play_enter_payload(mode=None):
+    """Validate play_enter fields and return JSON payload (no I/O)."""
+    payload = {}
+    if mode is not None:
+        if mode not in ("viewport", "fullscreen"):
+            raise ValueError("mode must be 'viewport' or 'fullscreen'")
+        payload["mode"] = mode
+    return payload
+
+def build_load_scene_payload(scene):
+    """Validate load_scene path and return JSON payload (no I/O)."""
+    if not isinstance(scene, str) or not scene.startswith("rom/") or ".." in scene.split("/") or not scene.lower().endswith(".json"):
+        raise ValueError("scene must be a rom/...json path without '..'")
+    return {"scene": scene}
+
+def build_set_setting_payload(key, value):
+    """Validate set_setting whitelist + bool value; return JSON payload (no I/O)."""
+    if key not in SETTING_KEYS:
+        raise ValueError("key must be one of: " + ", ".join(SETTING_KEYS))
+    if type(value) is not bool:
+        raise ValueError("value must be bool")
+    return {"key": key, "value": value}
+
 def resolve_capture_path(basename, output_dir=None):
     """Resolve a capture basename against IVY_RUNTIME_TEST_OUTPUT_DIR (or output_dir).
 
@@ -287,6 +316,52 @@ class Client:
         except (OSError, ValueError, RuntimeError, TimeoutError):
             self.close()
             raise
+
+    def _await_editor_op(self, request_id, verb, payload, completion_timeout=8.0):
+        if type(request_id) is not int or not 1 <= request_id < 2147483647:
+            raise ValueError("request ID must leave room for completion polls")
+        if not math.isfinite(completion_timeout) or not 0 < completion_timeout <= 30:
+            raise ValueError("completion timeout must be in (0,30]")
+        try:
+            deadline = time.monotonic() + completion_timeout
+            result = self.request(verb, request_id, payload, deadline=deadline)
+            if not result.get("ok"):
+                return result
+            # Idempotent play_exit may complete inline without editorOp queue.
+            if result.get("status") != "queued":
+                return result
+            operation_id = request_id
+            while time.monotonic() < deadline:
+                request_id += 1
+                if request_id > 2147483647:
+                    raise ValueError("request ID exhausted")
+                result = self.request("status", request_id, deadline=deadline)
+                if not result.get("ok"):
+                    raise RuntimeError("editorOp status rejected: " + str(result))
+                operation = result.get("editorOp", {})
+                if operation.get("requestId") != operation_id:
+                    raise RuntimeError("editorOp operation identity mismatch")
+                if operation.get("status") == "completed":
+                    return result
+                if operation.get("status") == "failed":
+                    raise RuntimeError("editorOp failed: " + str(operation.get("error")))
+                time.sleep(min(.01, max(0, deadline - time.monotonic())))
+            raise TimeoutError("editorOp completion deadline")
+        except (OSError, ValueError, RuntimeError, TimeoutError):
+            self.close()
+            raise
+
+    def play_enter(self, request_id, mode=None, completion_timeout=8.0):
+        return self._await_editor_op(request_id, "play_enter", build_play_enter_payload(mode), completion_timeout)
+
+    def play_exit(self, request_id, completion_timeout=8.0):
+        return self._await_editor_op(request_id, "play_exit", None, completion_timeout)
+
+    def load_scene(self, request_id, scene, completion_timeout=15.0):
+        return self._await_editor_op(request_id, "load_scene", build_load_scene_payload(scene), completion_timeout)
+
+    def set_setting(self, request_id, key, value, completion_timeout=5.0):
+        return self._await_editor_op(request_id, "set_setting", build_set_setting_payload(key, value), completion_timeout)
 
     def reset_scene(self, request_id, scene=None, completion_timeout=8.0):
         payload = {}
@@ -515,7 +590,10 @@ def main():
     p.add_argument("--run-id",required=True)
     p.add_argument("--request-id",type=int,required=True,help="strictly increasing across the run")
     p.add_argument("--timeout",type=float,default=2)
-    p.add_argument("verb",choices=("hello","status","quit","keyboard","observe","capture","mouse","controller","events","controller_probe","list_objects","pause","resume","step","perf","reset_scene","set_transform","set_velocity","apply_impulse","apply_torque_impulse"))
+    p.add_argument("verb",choices=("hello","status","quit","keyboard","observe","capture","mouse","controller","events","controller_probe","list_objects","pause","resume","step","perf","reset_scene","set_transform","set_velocity","apply_impulse","apply_torque_impulse","play_enter","play_exit","load_scene","set_setting"))
+    p.add_argument("--mode",choices=("viewport","fullscreen"),default=None,help="play_enter mode")
+    p.add_argument("--key",type=str,default=None,help="set_setting key")
+    p.add_argument("--value",type=str,default=None,help="set_setting bool value (true/false)")
     p.add_argument("--keys",nargs="+")
     p.add_argument("--updates",type=int)
     p.add_argument("--duration-ms",type=int,default=None,dest="duration_ms",
@@ -611,6 +689,18 @@ def main():
                 r=c.apply_impulse(a.object_name,a.impulse,a.request_id,point=a.point,completion_timeout=a.completion_timeout)
             elif a.verb=="apply_torque_impulse":
                 r=c.apply_torque_impulse(a.object_name,a.torque_impulse,a.request_id,completion_timeout=a.completion_timeout)
+            elif a.verb=="play_enter":
+                r=c.play_enter(a.request_id,mode=a.mode,completion_timeout=a.completion_timeout)
+            elif a.verb=="play_exit":
+                r=c.play_exit(a.request_id,completion_timeout=a.completion_timeout)
+            elif a.verb=="load_scene":
+                if not a.scene: p.error("load_scene requires --scene")
+                r=c.load_scene(a.request_id,a.scene,completion_timeout=a.completion_timeout)
+            elif a.verb=="set_setting":
+                if a.key is None or a.value is None: p.error("set_setting requires --key and --value")
+                val=a.value.strip().lower()
+                if val not in ("true","false","1","0"): p.error("--value must be true/false")
+                r=c.set_setting(a.request_id,a.key,val in ("true","1"),completion_timeout=a.completion_timeout)
             else:
                 r=c.request(a.verb,a.request_id)
         print(json.dumps(r,ensure_ascii=False))

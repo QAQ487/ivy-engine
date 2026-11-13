@@ -12,7 +12,7 @@
 ============================================================================**/
 #include "controller.h"
 
-#if defined(_DEBUG) && defined(GAME_RUNTIME)
+#if defined(_DEBUG)
 #include "controller_test_inject.h"
 static_assert(static_cast<unsigned short>(ControllerButton::DPadUp) == ivy::testing::kInjectButtonDpadUp, "dpad up");
 static_assert(static_cast<unsigned short>(ControllerButton::DPadDown) == ivy::testing::kInjectButtonDpadDown, "dpad down");
@@ -53,7 +53,7 @@ namespace {
     static short g_deadzoneRightStick = XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE;  // 8689
     static BYTE  g_deadzoneTrigger = XINPUT_GAMEPAD_TRIGGER_THRESHOLD;     // 30
 
-#if defined(_DEBUG) && defined(GAME_RUNTIME)
+#if defined(_DEBUG)
     static ivy::testing::ControllerInjectOverlay g_inject;
 #endif
 
@@ -85,7 +85,7 @@ namespace {
     }
 } // anonymous
 
-#if defined(_DEBUG) && defined(GAME_RUNTIME)
+#if defined(_DEBUG)
 void Controller_TestInjectLeftStick(float lx, float ly) {
     g_inject.SetLeftStick(lx, ly);
 }
@@ -129,7 +129,7 @@ bool Controller_IsInjectionActive() {
 #endif
 
 void Controller_Initialize() {
-#if defined(_DEBUG) && defined(GAME_RUNTIME)
+#if defined(_DEBUG)
     Controller_ClearInjection();
 #endif
     ZeroMemory(g_curr, sizeof(g_curr));
@@ -144,7 +144,7 @@ void Controller_Initialize() {
 }
 
 void Controller_Finalize() {
-#if defined(_DEBUG) && defined(GAME_RUNTIME)
+#if defined(_DEBUG)
     Controller_ClearInjection();
 #endif
     // XInput needs no explicit teardown currently
@@ -185,14 +185,14 @@ void Controller_Update() {
 
 bool Controller_IsConnected(int padIndex) {
     if (padIndex < 0 || padIndex >= CONTROLLER_MAX) return false;
-#if defined(_DEBUG) && defined(GAME_RUNTIME)
+#if defined(_DEBUG)
     if (padIndex == 0 && g_inject.Active()) return true;
 #endif
     return g_connected[padIndex];
 }
 
 bool Controller_IsPressed(ControllerButton button, int padIndex) {
-#if defined(_DEBUG) && defined(GAME_RUNTIME)
+#if defined(_DEBUG)
     if (padIndex == 0 && g_inject.Active())
         return g_inject.Pressed(static_cast<unsigned short>(button));
 #endif
@@ -201,7 +201,7 @@ bool Controller_IsPressed(ControllerButton button, int padIndex) {
 }
 
 bool Controller_IsTrigger(ControllerButton button, int padIndex) {
-#if defined(_DEBUG) && defined(GAME_RUNTIME)
+#if defined(_DEBUG)
     if (padIndex == 0 && g_inject.Active())
         return g_inject.PressedEdge(static_cast<unsigned short>(button));
 #endif
@@ -213,7 +213,7 @@ bool Controller_IsTrigger(ControllerButton button, int padIndex) {
 }
 
 bool Controller_IsRelease(ControllerButton button, int padIndex) {
-#if defined(_DEBUG) && defined(GAME_RUNTIME)
+#if defined(_DEBUG)
     if (padIndex == 0 && g_inject.Active())
         return g_inject.ReleasedEdge(static_cast<unsigned short>(button));
 #endif
@@ -225,7 +225,7 @@ bool Controller_IsRelease(ControllerButton button, int padIndex) {
 }
 
 XMFLOAT2 Controller_GetLeftStick(int padIndex) {
-#if defined(_DEBUG) && defined(GAME_RUNTIME)
+#if defined(_DEBUG)
     if (padIndex == 0 && g_inject.Active()) return XMFLOAT2(g_inject.LeftX(), g_inject.LeftY());
 #endif
     if (!Controller_IsConnected(padIndex)) return XMFLOAT2(0, 0);
@@ -233,7 +233,7 @@ XMFLOAT2 Controller_GetLeftStick(int padIndex) {
 }
 
 XMFLOAT2 Controller_GetRightStick(int padIndex) {
-#if defined(_DEBUG) && defined(GAME_RUNTIME)
+#if defined(_DEBUG)
     if (padIndex == 0 && g_inject.Active()) return XMFLOAT2(g_inject.RightX(), g_inject.RightY());
 #endif
     if (!Controller_IsConnected(padIndex)) return XMFLOAT2(0, 0);
@@ -241,7 +241,7 @@ XMFLOAT2 Controller_GetRightStick(int padIndex) {
 }
 
 float Controller_GetLeftTrigger(int padIndex) {
-#if defined(_DEBUG) && defined(GAME_RUNTIME)
+#if defined(_DEBUG)
     if (padIndex == 0 && g_inject.Active()) return g_inject.LeftTrigger();
 #endif
     if (!Controller_IsConnected(padIndex)) return 0.0f;
@@ -249,7 +249,7 @@ float Controller_GetLeftTrigger(int padIndex) {
 }
 
 float Controller_GetRightTrigger(int padIndex) {
-#if defined(_DEBUG) && defined(GAME_RUNTIME)
+#if defined(_DEBUG)
     if (padIndex == 0 && g_inject.Active()) return g_inject.RightTrigger();
 #endif
     if (!Controller_IsConnected(padIndex)) return 0.0f;

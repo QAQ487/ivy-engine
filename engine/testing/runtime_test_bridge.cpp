@@ -231,8 +231,40 @@ void AssignObservedPose(ObservedTarget& target, const ObservePose& pose) noexcep
     target.scaleY = pose.scale.y;
     target.scaleZ = pose.scale.z;
 }
-Protocol::Protocol(std::string runId, unsigned long pid, unsigned long session)
-    : runId_(std::move(runId)), pid_(pid), session_(session) {}
+Protocol::Protocol(std::string runId, unsigned long pid, unsigned long session, BridgeHostKind host)
+    : runId_(std::move(runId)), pid_(pid), session_(session), host_(host) {}
+
+bool IsRuntimeTestBridgeSettingKey(const std::string& key) {
+    return key == "frustumCullingEnabled"
+        || key == "shadowCascadeCullingEnabled"
+        || key == "spriteCullingEnabled";
+}
+
+bool ParseRuntimeTestBridgeSettingValue(const Json& value, bool& outBool, std::string& err) {
+    err.clear();
+    if (!value.is_boolean()) {
+        err = "value must be boolean";
+        return false;
+    }
+    outBool = value.get<bool>();
+    return true;
+}
+
+EditorPlayModeKind ParseRuntimeTestBridgePlayMode(const char* mode) noexcept {
+    if (mode == nullptr || mode[0] == '\0') return EditorPlayModeKind::Viewport;
+    if (std::strcmp(mode, "viewport") == 0) return EditorPlayModeKind::Viewport;
+    if (std::strcmp(mode, "fullscreen") == 0) return EditorPlayModeKind::Fullscreen;
+    return EditorPlayModeKind::Invalid;
+}
+
+const char* EditorPlayModeKindName(EditorPlayModeKind mode) noexcept {
+    switch (mode) {
+    case EditorPlayModeKind::Viewport: return "viewport";
+    case EditorPlayModeKind::Fullscreen: return "fullscreen";
+    case EditorPlayModeKind::None: return "none";
+    default: return "invalid";
+    }
+}
 namespace {
 std::string g_sceneOverride;
 Json ObserveTargetJson(const ObservedTarget& t) {
@@ -297,8 +329,17 @@ void RuntimeTestSceneOverride_Clear() { g_sceneOverride.clear(); }
 
 void Protocol::Publish(bool ready, bool playing, const std::string& scene,
     std::vector<ObservedTarget> targets, std::vector<ListedObject> objects,
-    const char* readyDetail) {
+    const char* readyDetail, EditorPlayModeKind playMode) {
     ready_ = ready; playing_ = playing;
+    if (host_ == BridgeHostKind::Editor) {
+        if (!playing_) playMode_ = EditorPlayModeKind::None;
+        else if (playMode == EditorPlayModeKind::Viewport || playMode == EditorPlayModeKind::Fullscreen)
+            playMode_ = playMode;
+        else if (playMode_ != EditorPlayModeKind::Viewport && playMode_ != EditorPlayModeKind::Fullscreen)
+            playMode_ = EditorPlayModeKind::Viewport;
+    } else {
+        playMode_ = EditorPlayModeKind::None;
+    }
     std::size_t end = scene.size() < 1024 ? scene.size() : 1024;
     if (end < scene.size()) {
         while (end > 0 && (static_cast<unsigned char>(scene[end]) & 0xC0) == 0x80) --end;
@@ -309,6 +350,7 @@ void Protocol::Publish(bool ready, bool playing, const std::string& scene,
     // Seal world ops only after the observe/list snapshot is replaced so
     // worldOp.status==completed implies a subsequent observe sees the apply.
     SealAppliedWorldOp();
+    SealAppliedEditorOp();
     if (readyDetail && readyDetail[0])
         readyDetail_ = readyDetail;
     else if (!ready_)
@@ -738,6 +780,56 @@ void Protocol::CancelWorldOp() {
     }
 }
 
+const char* Protocol::EditorOpState::VerbName() const {
+    switch (request.kind) {
+    case EditorOpKind::PlayEnter: return "play_enter";
+    case EditorOpKind::PlayExit: return "play_exit";
+    case EditorOpKind::LoadScene: return "load_scene";
+    case EditorOpKind::SetSetting: return "set_setting";
+    }
+    return "unknown";
+}
+
+bool Protocol::HasPendingEditorOp(EditorOpRequest& out) const {
+    if (editorOp_.status == EditorOpState::Status::Queued) {
+        out = editorOp_.request;
+        return true;
+    }
+    return false;
+}
+
+void Protocol::CompleteEditorOp(std::int64_t id, bool ok, const std::string& err) {
+    if (editorOp_.status == EditorOpState::Status::Queued && editorOp_.request.requestId == id) {
+        editorOp_.status = ok ? EditorOpState::Status::Completed : EditorOpState::Status::Failed;
+        editorOp_.appliedOk = ok;
+        editorOp_.error = err;
+    }
+}
+
+void Protocol::MarkEditorOpApplied(std::int64_t id, bool ok, const std::string& err) {
+    if (editorOp_.status == EditorOpState::Status::Queued && editorOp_.request.requestId == id) {
+        editorOp_.status = EditorOpState::Status::Applied;
+        editorOp_.appliedOk = ok;
+        editorOp_.error = err;
+    }
+}
+
+void Protocol::SealAppliedEditorOp() {
+    if (editorOp_.status != EditorOpState::Status::Applied)
+        return;
+    editorOp_.status = editorOp_.appliedOk ? EditorOpState::Status::Completed
+                                           : EditorOpState::Status::Failed;
+}
+
+void Protocol::CancelEditorOp() {
+    if (editorOp_.status == EditorOpState::Status::Queued
+        || editorOp_.status == EditorOpState::Status::Applied) {
+        editorOp_.status = EditorOpState::Status::Failed;
+        editorOp_.appliedOk = false;
+        editorOp_.error = "cancelled";
+    }
+}
+
 namespace {
 bool FiniteNumber(const Json& v, float& out) {
     if (!v.is_number() || v.is_boolean()) return false;
@@ -810,6 +902,10 @@ Json Protocol::Request(const std::string& frame) {
     const bool setVelocity=q["verb"]=="set_velocity";
     const bool applyImpulse=q["verb"]=="apply_impulse";
     const bool applyTorqueImpulse=q["verb"]=="apply_torque_impulse";
+    const bool playEnter=q["verb"]=="play_enter";
+    const bool playExit=q["verb"]=="play_exit";
+    const bool loadScene=q["verb"]=="load_scene";
+    const bool setSetting=q["verb"]=="set_setting";
     const bool worldOp=resetScene||setTransform||setVelocity||applyImpulse||applyTorqueImpulse;
     std::vector<std::string> keys;
     int updates=0;
@@ -823,6 +919,8 @@ Json Protocol::Request(const std::string& frame) {
     int stepFrames=0;
     int perfFrames=0;
     WorldOpRequest pendingWorld{};
+    EditorOpRequest pendingEditor{};
+    bool pendingEditorValid=false;
     if(input) {
         if(q.size()!=6 || !q.contains("keys") || !q["keys"].is_array() || q["keys"].empty() || q["keys"].size()>9
             || !q.contains("updates") || !q["updates"].is_number_integer()
@@ -1045,6 +1143,62 @@ Json Protocol::Request(const std::string& frame) {
             return error("invalid_request");
         pendingWorld.kind = WorldOpKind::ApplyTorqueImpulse;
         pendingWorld.hasTorqueImpulse = true;
+    } else if(playEnter) {
+        if(host_ != BridgeHostKind::Editor) {
+            // unsupported_host after envelope/id checks
+        } else if(!OnlyKeys(q, {"protocolVersion","requestId","runId","verb","mode"})) {
+            return error("invalid_request");
+        } else {
+            std::string modeOwned;
+            const char* modeStr = nullptr;
+            if(q.contains("mode")) {
+                if(!q["mode"].is_string()) return error("invalid_request");
+                modeOwned = q["mode"].get<std::string>();
+                modeStr = modeOwned.c_str();
+            }
+            const auto mode = ParseRuntimeTestBridgePlayMode(modeStr);
+            if(mode == EditorPlayModeKind::Invalid) return error("invalid_request");
+            pendingEditor.kind = EditorOpKind::PlayEnter;
+            pendingEditor.playMode = mode;
+            pendingEditorValid = true;
+        }
+    } else if(playExit) {
+        if(host_ != BridgeHostKind::Editor) {
+        } else if(q.size()!=4) {
+            return error("invalid_request");
+        } else {
+            pendingEditor.kind = EditorOpKind::PlayExit;
+            pendingEditorValid = true;
+        }
+    } else if(loadScene) {
+        if(host_ != BridgeHostKind::Editor) {
+        } else if(!OnlyKeys(q, {"protocolVersion","requestId","runId","verb","scene"})) {
+            return error("invalid_request");
+        } else if(!q.contains("scene") || !q["scene"].is_string()) {
+            return error("invalid_request");
+        } else {
+            std::string normalized, err;
+            if(!ValidateRuntimeTestSceneArg(q["scene"].get<std::string>(), &normalized, &err))
+                return error("invalid_request");
+            pendingEditor.kind = EditorOpKind::LoadScene;
+            pendingEditor.scenePath = std::move(normalized);
+            pendingEditorValid = true;
+        }
+    } else if(setSetting) {
+        if(!OnlyKeys(q, {"protocolVersion","requestId","runId","verb","key","value"}))
+            return error("invalid_request");
+        if(!q.contains("key") || !q["key"].is_string() || !q.contains("value"))
+            return error("invalid_request");
+        const auto key = q["key"].get<std::string>();
+        if(!IsRuntimeTestBridgeSettingKey(key)) return error("invalid_request");
+        bool value = false;
+        std::string serr;
+        if(!ParseRuntimeTestBridgeSettingValue(q["value"], value, serr))
+            return error("invalid_request");
+        pendingEditor.kind = EditorOpKind::SetSetting;
+        pendingEditor.settingKey = key;
+        pendingEditor.settingBoolValue = value;
+        pendingEditorValid = true;
     } else if(q.size()!=4) return error("invalid_request");
 
     if(q["protocolVersion"]!=1) return error("unsupported_version",q["requestId"]);
@@ -1052,8 +1206,59 @@ Json Protocol::Request(const std::string& frame) {
     const auto id=q["requestId"].get<std::int64_t>();
     if(id<=lastId_) return error("duplicate_request_id",id);
     lastId_=id;
+    auto playGateError = [&]() -> const char* {
+        if(host_ == BridgeHostKind::Editor) {
+            if(!ready_) return "not_ready";
+            if(!playing_) return "not_playing";
+            return nullptr;
+        }
+        if(!ready_ || !playing_) return "not_ready";
+        return nullptr;
+    };
+    if(playEnter || playExit || loadScene) {
+        if(host_ != BridgeHostKind::Editor) return error("unsupported_host",id);
+    }
+    if(playEnter) {
+        if(playing_) return error("already_playing",id);
+        if(editorOp_.status == EditorOpState::Status::Queued
+            || editorOp_.status == EditorOpState::Status::Applied)
+            return error("queue_full",id);
+        editorOp_.status = EditorOpState::Status::Queued;
+        editorOp_.request = pendingEditor;
+        editorOp_.request.requestId = id;
+        editorOp_.error.clear();
+        editorOp_.appliedOk = true;
+        return {{"protocolVersion",1},{"requestId",id},{"runId",runId_},{"ok",true},{"status","queued"}};
+    }
+    if(playExit) {
+        if(!playing_) {
+            return {{"protocolVersion",1},{"requestId",id},{"runId",runId_},{"ok",true},
+                {"playing",false},{"playMode","none"}};
+        }
+        if(editorOp_.status == EditorOpState::Status::Queued
+            || editorOp_.status == EditorOpState::Status::Applied)
+            return error("queue_full",id);
+        editorOp_.status = EditorOpState::Status::Queued;
+        editorOp_.request = pendingEditor;
+        editorOp_.request.requestId = id;
+        editorOp_.error.clear();
+        editorOp_.appliedOk = true;
+        return {{"protocolVersion",1},{"requestId",id},{"runId",runId_},{"ok",true},{"status","queued"}};
+    }
+    if(loadScene || setSetting) {
+        if(!pendingEditorValid) return error("invalid_request",id);
+        if(editorOp_.status == EditorOpState::Status::Queued
+            || editorOp_.status == EditorOpState::Status::Applied)
+            return error("queue_full",id);
+        editorOp_.status = EditorOpState::Status::Queued;
+        editorOp_.request = pendingEditor;
+        editorOp_.request.requestId = id;
+        editorOp_.error.clear();
+        editorOp_.appliedOk = true;
+        return {{"protocolVersion",1},{"requestId",id},{"runId",runId_},{"ok",true},{"status","queued"}};
+    }
     if(input) {
-        if(!ready_ || !playing_) return error("not_ready",id);
+        if(const char* gate = playGateError()) return error(gate,id);
         if(inputState_==InputState::Queued || KeyboardIsolating()) return error("queue_full",id);
         inputState_=InputState::Queued;
         cancelInput_=false;
@@ -1064,7 +1269,7 @@ Json Protocol::Request(const std::string& frame) {
         return {{"protocolVersion",1},{"requestId",id},{"runId",runId_},{"ok",true},{"status","queued"}};
     }
     if(mouse) {
-        if(!ready_ || !playing_) return error("not_ready",id);
+        if(const char* gate = playGateError()) return error(gate,id);
         if(mouseState_==InputState::Queued || MouseIsolating()) return error("queue_full",id);
         mouseState_=InputState::Queued;
         cancelMouse_=false;
@@ -1085,13 +1290,13 @@ Json Protocol::Request(const std::string& frame) {
         return {{"protocolVersion",1},{"requestId",id},{"runId",runId_},{"ok",true},{"status","queued"}};
     }
     if(controller) {
-        if(!ready_ || !playing_) return error("not_ready",id);
+        if(const char* gate = playGateError()) return error(gate,id);
         if(!controllerOp_.TryQueue(id, controllerCmd)) return error("queue_full",id);
         controllerDeadline_=GetTickCount64()+5000;
         return {{"protocolVersion",1},{"requestId",id},{"runId",runId_},{"ok",true},{"status","queued"}};
     }
     if(observe) {
-        if(!ready_ || !playing_) return error("not_ready",id);
+        if(const char* gate = playGateError()) return error(gate,id);
         for(const auto& t : targets_) {
             if(t.name == observeTarget) {
                 Json body = ObserveTargetJson(t);
@@ -1107,7 +1312,7 @@ Json Protocol::Request(const std::string& frame) {
         };
     }
     if(listObjects) {
-        if(!ready_ || !playing_) return error("not_ready",id);
+        if(const char* gate = playGateError()) return error(gate,id);
         const int total = static_cast<int>(objects_.size());
         Json arr = Json::array();
         int emitted = 0;
@@ -1133,21 +1338,21 @@ Json Protocol::Request(const std::string& frame) {
         };
     }
     if(pause) {
-        if(!ready_ || !playing_) return error("not_ready",id);
+        if(const char* gate = playGateError()) return error(gate,id);
         paused_ = true;
         pendingStepFrames_ = 0;
         return {{"protocolVersion",1},{"requestId",id},{"runId",runId_},{"ok",true},
             {"paused",true},{"frame",frameCounter_},{"physicsTick",physicsTickCounter_}};
     }
     if(resume) {
-        if(!ready_ || !playing_) return error("not_ready",id);
+        if(const char* gate = playGateError()) return error(gate,id);
         paused_ = false;
         pendingStepFrames_ = 0;
         return {{"protocolVersion",1},{"requestId",id},{"runId",runId_},{"ok",true},
             {"paused",false},{"frame",frameCounter_},{"physicsTick",physicsTickCounter_}};
     }
     if(step) {
-        if(!ready_ || !playing_) return error("not_ready",id);
+        if(const char* gate = playGateError()) return error(gate,id);
         if(!paused_) return error("not_paused",id);
         if(pendingStepFrames_ > 0) return error("queue_full",id);
         pendingStepFrames_ = stepFrames;
@@ -1156,7 +1361,7 @@ Json Protocol::Request(const std::string& frame) {
             {"frame",frameCounter_},{"physicsTick",physicsTickCounter_}};
     }
     if(perf) {
-        if(!ready_ || !playing_) return error("not_ready",id);
+        if(const char* gate = playGateError()) return error(gate,id);
         const int available = static_cast<int>(perfCount_);
         const int take = (std::min)(perfFrames, available);
         std::vector<float> frameMs, updateMs, drawMs, presentMs;
@@ -1229,7 +1434,7 @@ Json Protocol::Request(const std::string& frame) {
         };
     }
     if(worldOp) {
-        if(!ready_ || !playing_) return error("not_ready",id);
+        if(const char* gate = playGateError()) return error(gate,id);
         if(worldOp_.status == WorldOpState::Status::Queued
             || worldOp_.status == WorldOpState::Status::Applied)
             return error("queue_full",id);
@@ -1242,7 +1447,7 @@ Json Protocol::Request(const std::string& frame) {
             {"status","queued"},{"verb",worldOp_.VerbName()}};
     }
     if(capture) {
-        if(!ready_ || !playing_) return error("not_ready",id);
+        if(const char* gate = playGateError()) return error(gate,id);
         if(captureState_.status == CaptureState::Status::Queued) return error("queue_full",id);
         captureState_.status = CaptureState::Status::Queued;
         captureState_.requestId = id;
@@ -1254,7 +1459,7 @@ Json Protocol::Request(const std::string& frame) {
         return {{"protocolVersion",1},{"requestId",id},{"runId",runId_},{"ok",true},{"status","queued"}};
     }
     if(events) {
-        if(!ready_ || !playing_) return error("not_ready",id);
+        if(const char* gate = playGateError()) return error(gate,id);
         Json arr = Json::array();
         for (const auto& ev : events_) {
             arr.push_back({
@@ -1273,7 +1478,7 @@ Json Protocol::Request(const std::string& frame) {
         };
     }
     if(controllerProbe) {
-        if(!ready_ || !playing_) return error("not_ready",id);
+        if(const char* gate = playGateError()) return error(gate,id);
         const auto snap = RuntimeTestControllerProbe_CopySnapshot();
         Json arr = Json::array();
         for (const auto& frame : snap.frames)
@@ -1301,19 +1506,32 @@ Json Protocol::Request(const std::string& frame) {
                                || worldOp_.status == WorldOpState::Status::Applied) ? "queued" :
                               worldOp_.status == WorldOpState::Status::Completed ? "completed" :
                               worldOp_.status == WorldOpState::Status::Failed ? "failed" : "idle";
+    const char* editorStatus = (editorOp_.status == EditorOpState::Status::Queued
+                               || editorOp_.status == EditorOpState::Status::Applied) ? "queued" :
+                              editorOp_.status == EditorOpState::Status::Completed ? "completed" :
+                              editorOp_.status == EditorOpState::Status::Failed ? "failed" : "idle";
+
+    Json caps = Json::array({
+            "hello","status","quit","keyboard","observe","capture","mouse","controller","events",
+            "controller_probe","list_objects","pause","resume","step","perf",
+            "reset_scene","set_transform","set_velocity","apply_impulse","apply_torque_impulse",
+            "set_setting"});
+    if(host_ == BridgeHostKind::Editor) {
+        caps.push_back("play_enter");
+        caps.push_back("play_exit");
+        caps.push_back("load_scene");
+    }
 
     Json reply = {{"protocolVersion",1},{"requestId",id},{"runId",runId_},{"ok",true},
         {"pid",pid_},{"sessionId",session_},{"ready",ready_},{"playing",playing_},
+        {"host", host_ == BridgeHostKind::Editor ? "editor" : "runtime"},
         {"state",ready_ ? (playing_ ? (paused_ ? "paused" : "playing") : "ready") : "loading"},
         {"scene",scene_},
         {"paused",paused_},
         {"pendingSteps",pendingStepFrames_},
         {"frame",frameCounter_},
         {"physicsTick",physicsTickCounter_},
-        {"capabilities",Json::array({
-            "hello","status","quit","keyboard","observe","capture","mouse","controller","events",
-            "controller_probe","list_objects","pause","resume","step","perf",
-            "reset_scene","set_transform","set_velocity","apply_impulse","apply_torque_impulse"})},
+        {"capabilities", std::move(caps)},
         {"keyboard",{{"status",InputStatus()},{"requestId",keyboardReqId_},
             {"remainingUpdates",keyboardUpdatesRemaining_},{"cancelRequested",cancelInput_},{"preparing",inputState_==InputState::Preparing}}},
         {"mouse",{{"status",MouseStatus()},{"requestId",mouseReqId_},
@@ -1325,7 +1543,13 @@ Json Protocol::Request(const std::string& frame) {
             {"basename",captureState_.basename},{"path",captureState_.path},{"error",captureState_.error}}},
         {"worldOp",{{"status",worldStatus},{"requestId",worldOp_.request.requestId},
             {"verb",worldOp_.status==WorldOpState::Status::Idle ? Json(nullptr) : Json(worldOp_.VerbName())},
-            {"error",worldOp_.error}}}};
+            {"error",worldOp_.error}}},
+        {"editorOp",{{"status",editorStatus},{"requestId",editorOp_.request.requestId},
+            {"verb",editorOp_.status==EditorOpState::Status::Idle ? Json(nullptr) : Json(editorOp_.VerbName())},
+            {"error",editorOp_.error}}}};
+    if(host_ == BridgeHostKind::Editor)
+        reply["playMode"] = EditorPlayModeKindName(
+            playing_ ? playMode_ : EditorPlayModeKind::None);
     if(!readyDetail_.empty())
         reply["readyDetail"] = readyDetail_;
     return reply;
@@ -1347,9 +1571,11 @@ struct Bridge::Impl {
     Protocol protocol;
     CaptureHandler captureHandler = nullptr;
     WorldOpHandler worldOpHandler = nullptr;
+    EditorOpHandler editorOpHandler = nullptr;
     std::mutex mutex;
     std::thread worker;
-    Impl(std::string run, DWORD pid, DWORD session) : protocol(run,pid,session) {
+    Impl(std::string run, DWORD pid, DWORD session, BridgeHostKind host)
+        : protocol(run, pid, session, host) {
         name="\\\\.\\pipe\\IvyRuntimeTest-"+std::to_string(pid)+"-"+run;
     }
     ~Impl() {
@@ -1436,7 +1662,7 @@ struct Bridge::Impl {
                 }
                 if(frame.size()>4096) break;
             }
-            { std::lock_guard lock(mutex); protocol.AbandonQuit(); protocol.CancelKeyboard(); protocol.CancelMouse(); protocol.CancelController(); protocol.CancelWorldOp(); }
+            { std::lock_guard lock(mutex); protocol.AbandonQuit(); protocol.CancelKeyboard(); protocol.CancelMouse(); protocol.CancelController(); protocol.CancelWorldOp(); protocol.CancelEditorOp(); }
             if(receipt) {
                 WaitForSingleObject(stop,INFINITE); break;
             }
@@ -1455,7 +1681,12 @@ bool Bridge::StartFromEnvironment() {
     for(DWORD i=0;i<length;++i) if(!((run[i]>='a'&&run[i]<='z') || (run[i]>='A'&&run[i]<='Z') || (run[i]>='0'&&run[i]<='9') || run[i]=='-')) return false;
     DWORD session=0;
     if(!ProcessIdToSessionId(GetCurrentProcessId(),&session)) return false;
-    auto p=std::make_unique<Impl>(run,GetCurrentProcessId(),session);
+#if defined(GAME_RUNTIME)
+    const BridgeHostKind host = BridgeHostKind::Runtime;
+#else
+    const BridgeHostKind host = BridgeHostKind::Editor;
+#endif
+    auto p=std::make_unique<Impl>(run,GetCurrentProcessId(),session,host);
     HANDLE token=nullptr;
     if(!OpenProcessToken(GetCurrentProcess(),TOKEN_QUERY,&token)) return false;
     DWORD size=0; GetTokenInformation(token,TokenUser,nullptr,0,&size);
@@ -1509,6 +1740,9 @@ void Bridge::SetCaptureHandler(CaptureHandler handler) {
 void Bridge::SetWorldOpHandler(WorldOpHandler handler) {
     if (impl_) impl_->worldOpHandler = handler;
 }
+void Bridge::SetEditorOpHandler(EditorOpHandler handler) {
+    if (impl_) impl_->editorOpHandler = handler;
+}
 
 void Bridge::PollAndApplyInput(bool inGamePlaying) {
     if(!impl_) return;
@@ -1553,10 +1787,10 @@ void Bridge::FinishInputUpdate() {
 }
 bool Bridge::PublishAndTakeQuit(bool ready, bool playing, const std::string& scene,
     std::vector<ObservedTarget> targets, std::vector<ListedObject> objects,
-    const char* readyDetail) {
+    const char* readyDetail, EditorPlayModeKind playMode) {
     if(!impl_) return false;
     std::lock_guard lock(impl_->mutex);
-    impl_->protocol.Publish(ready,playing,scene,std::move(targets),std::move(objects),readyDetail);
+    impl_->protocol.Publish(ready,playing,scene,std::move(targets),std::move(objects),readyDetail,playMode);
     return impl_->protocol.TakeQuit();
 }
 void Bridge::ExpireInputDeadlines() {
@@ -1641,6 +1875,26 @@ void Bridge::MaybeApplyWorldOps() {
     {
         std::lock_guard lock(impl_->mutex);
         impl_->protocol.MarkWorldOpApplied(op.requestId, ok, ok ? std::string{} : err);
+    }
+}
+
+void Bridge::MaybeApplyEditorOps() {
+    if(!impl_) return;
+    EditorOpRequest op;
+    {
+        std::lock_guard lock(impl_->mutex);
+        if(!impl_->protocol.HasPendingEditorOp(op)) return;
+    }
+    if(!impl_->editorOpHandler) {
+        std::lock_guard lock(impl_->mutex);
+        impl_->protocol.MarkEditorOpApplied(op.requestId, false, "editor_op_unavailable");
+        return;
+    }
+    std::string err;
+    const bool ok = impl_->editorOpHandler(op, err);
+    {
+        std::lock_guard lock(impl_->mutex);
+        impl_->protocol.MarkEditorOpApplied(op.requestId, ok, ok ? std::string{} : err);
     }
 }
 }

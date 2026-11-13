@@ -1,6 +1,6 @@
 # Runtime Test Bridge
 
-Debug-only named-pipe harness for Ivy Engine’s playable **GAME_RUNTIME** build. It lets a local client drive keyboard, mouse, and controller test input and read bounded observations (including a controller consumer probe). It is **not** shipping gameplay input and is compiled out of Release and Editor builds.
+Debug-only named-pipe harness for Ivy Engine’s playable **GAME_RUNTIME** build and (Phase 7) the **Editor** while driving Play mode. It lets a local client drive keyboard, mouse, and controller test input and read bounded observations (including a controller consumer probe). It is **not** shipping gameplay input and is compiled out of Release builds.
 
 Cantonese summary: [`RUNTIME_TEST_BRIDGE.zh-TW.md`](RUNTIME_TEST_BRIDGE.zh-TW.md). This page is the canonical operations guide (including controller injection and `controller_probe` after PR #3).
 
@@ -8,15 +8,17 @@ Cantonese summary: [`RUNTIME_TEST_BRIDGE.zh-TW.md`](RUNTIME_TEST_BRIDGE.zh-TW.md
 
 | Configuration | Bridge / inject / probe |
 | --- | --- |
-| `_DEBUG` **and** `GAME_RUNTIME` (Debug `IvyEngineRuntime`) | Available when opted in via environment |
+| `_DEBUG` **and** `GAME_RUNTIME` (Debug `IvyEngineRuntime`) | Available when opted in via environment (`host: "runtime"`) |
+| `_DEBUG` Editor (Debug `IvyEngine`, no `GAME_RUNTIME`) | Available when opted in via environment (`host: "editor"`) |
 | Release (`NDEBUG` / no `_DEBUG`) | Compiled out (`IVY_RUNTIME_TEST_BRIDGE_AVAILABLE` unset) |
-| Editor (no `GAME_RUNTIME`) | Compiled out |
 
-Shipping controller code paths are unchanged when the bridge is off. Release/Editor compile-out is checked by `tools/runtime_bridge_release_check.cpp`.
+Shipping controller code paths are unchanged when the bridge is off. Release compile-out and Debug presence are checked by `tools/runtime_bridge_release_check.cpp`.
+
+**Phase naming:** repo **Phase 6** is `--scene` / observe extensions / `list_objects` / pause / step / `perf`. **Phase 7** is the Editor Play-mode bridge (`play_enter` / `play_exit` / `load_scene` / `set_setting`).
 
 ## Enable (Windows interactive session)
 
-From a launcher that starts Debug `IvyEngineRuntime.exe` and records the child PID:
+From a launcher that starts Debug `IvyEngineRuntime.exe` **or** Debug `IvyEngine.exe` (Editor) and records the child PID:
 
 ```powershell
 $env:IVY_RUNTIME_TEST_BRIDGE = '1'
@@ -53,7 +55,11 @@ Error replies (`ok: false`) echo `requestId` (and the session `runId`) whenever 
 
 Capabilities advertised by `hello` / `status` (as implemented):
 
-`hello`, `status`, `quit`, `keyboard`, `observe`, `capture`, `mouse`, `controller`, `events`, `controller_probe`, `list_objects`, `pause`, `resume`, `step`, `perf`, `reset_scene`, `set_transform`, `set_velocity`, `apply_impulse`, `apply_torque_impulse`
+`hello`, `status`, `quit`, `keyboard`, `observe`, `capture`, `mouse`, `controller`, `events`, `controller_probe`, `list_objects`, `pause`, `resume`, `step`, `perf`, `reset_scene`, `set_transform`, `set_velocity`, `apply_impulse`, `apply_torque_impulse`, `set_setting`
+
+Editor host also advertises: `play_enter`, `play_exit`, `load_scene`.
+
+Additive identity fields: `host` (`"runtime"` | `"editor"`). Editor also reports `playMode` (`"none"` | `"viewport"` | `"fullscreen"`).
 
 ### Common verbs
 
@@ -73,10 +79,21 @@ Capabilities advertised by `hello` / `status` (as implemented):
 | `set_velocity` | Set dynamic rigidbody `linear` and/or `angular` velocity arrays. Error `not_dynamic` for kinematic/static/missing body. |
 | `apply_impulse` | Apply a linear `impulse` array to a dynamic body; optional world-space `point` uses force-at-position. Error `not_dynamic` / `unknown_object`. |
 | `apply_torque_impulse` | Apply `torqueImpulse` array to a dynamic body. |
-| `capture` | Queued back-buffer PNG under `IVY_RUNTIME_TEST_OUTPUT_DIR`. Status reports `basename` (e.g. `capture-<runId>-<requestId>.png`) and, when completed, absolute `path` (`<IVY_RUNTIME_TEST_OUTPUT_DIR>\\<basename>`). Stock helpers: `resolve_capture_path(basename)` / `Client.capture_output_path(capture_status)`. |
+| `capture` | Queued PNG under `IVY_RUNTIME_TEST_OUTPUT_DIR`. Crops to the **game viewport** (`EngineGUI_GetGameViewportRect`) so Editor captures exclude ImGui chrome; Runtime / fullscreen Play remain full-frame. Status reports `basename` (e.g. `capture-<runId>-<requestId>.png`) and, when completed, absolute `path`. Stock helpers: `resolve_capture_path(basename)` / `Client.capture_output_path(capture_status)`. |
 | `events` | Bounded checkpoint event ring (see existing event docs in zh-TW notes) |
 | `controller` | One-at-a-time controller inject (below) |
 | `controller_probe` | Read-only consumer-trace snapshot (below) |
+| `set_setting` | Whitelisted render toggles: `frustumCullingEnabled`, `shadowCascadeCullingEnabled`, `spriteCullingEnabled` (JSON bool `value`). Works on Runtime and Editor (Edit or Play). Queued; `status.editorOp` reports completion. |
+
+### Editor Play-mode verbs (Phase 7; `host: "editor"` only)
+
+| Verb | Role |
+| --- | --- |
+| `play_enter` | Enter Play. Optional `mode`: `"viewport"` (default) or `"fullscreen"`. Error `already_playing` if already playing. Runtime → `unsupported_host`. |
+| `play_exit` | Exit Play and restore edit-time scene snapshot (same as Editor Stop). Idempotent when already stopped. Pipe connection survives. |
+| `load_scene` | Required `scene` `rom/...json` (same path rules as `--scene`). Queues an Editor scene load; pipe stays up across the load. Runtime → `unsupported_host` (use `reset_scene`). |
+
+Edit-mode gating: when `host=editor` and `playing=false`, play-world ops (`keyboard` / `mouse` / `controller` / `controller_probe` / `observe` / `list_objects` / `pause` / `resume` / `step` / `perf` / `capture` / world manip) return `not_playing` with echoed `requestId`. Runtime keeps the existing `not_ready` when `!ready \|\| !playing`. Bridge handlers must not steal focus / force the Editor foreground.
 
 ### `--scene` (Debug GAME_RUNTIME + bridge enabled only)
 
@@ -278,7 +295,7 @@ Without staging/`--scene`, Debug runtime launched from OutDir falls back to in-r
 tools/run_runtime_bridge_offline_linux.sh x64/linux-bridge-offline
 ```
 
-Compiles and runs `runtime_bridge_protocol_check`, `runtime_bridge_phase6_check`, `runtime_bridge_world_manip_check`, and `runtime_bridge_observe_pose_check` with Win32/input stubs (`tools/linux_win32_shim/`), then Python unit tests for angular acceptance validators and the Phase 5 scenario runner (schema / asserts / fake-client). Pipe DACL / `--serve` transport checks remain Windows-only. Windows Debug runtime verification of live observe/keyboard inject remains pending when only Linux offline checks are run.
+Compiles and runs `runtime_bridge_protocol_check`, `runtime_bridge_phase6_check`, `runtime_bridge_world_manip_check`, `runtime_bridge_observe_pose_check`, and `runtime_bridge_editor_play_check` (Phase 7 parse/whitelist/gating) with Win32/input stubs (`tools/linux_win32_shim/`), then Python unit tests for angular acceptance validators, editor client helpers, and the Phase 5 scenario runner (schema / asserts / fake-client). Pipe DACL / `--serve` transport checks remain Windows-only. Windows Debug runtime/Editor verification of live named-pipe ops remains pending when only Linux offline checks are run.
 
 ### Batch harness (MSVC x64)
 
@@ -296,11 +313,12 @@ tools\run_runtime_bridge_checks.cmd x64\phase6-bridge-check x64\Debug\IvyEngineR
 Expected highlights:
 
 - `PASS Phase 6 observe extensions + list_objects/pause/resume/step/perf protocol`
+- `PASS Phase 7 editor play-mode bridge protocol`
 - `PASS world manip reset_scene/set_transform/set_velocity/impulse protocol`
 - `PASS controller probe validators`
 - `consumer assertions executed: 63`
 - `All controller bridge checks PASSED`
-- `PASS Release compile-out ...` / `PASS Editor compile-out ...`
+- `PASS Release compile-out ...` / `PASS Release Editor compile-out ...` / `PASS Debug Editor bridge ... present`
 - With an exe: mouse/controller/probe/world-manip/angular acceptance `"status": "PASS"`, then `run_runtime_bridge_scenarios.cmd` for example JSON scenarios
 
 ### Standalone angular physics acceptance

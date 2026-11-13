@@ -16,7 +16,7 @@ float GetBackBufferWidth();
 float GetBackBufferHeight();
 void Renderer_ClientToBackbuffer(float clientX, float clientY, float& backbufferX, float& backbufferY);
 
-#if defined(_DEBUG) && defined(GAME_RUNTIME)
+#if defined(_DEBUG)
 static bool g_mouseInjectionActive = false;
 static int g_injectedDx = 0;
 static int g_injectedDy = 0;
@@ -101,7 +101,7 @@ namespace {
 }
 
 void Mouse_Initialize() {
-#if defined(_DEBUG) && defined(GAME_RUNTIME)
+#if defined(_DEBUG)
     Mouse_ClearInjection();
 #endif
     g_lastClientX = g_lastClientY = 0;
@@ -163,7 +163,7 @@ void Mouse_ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, HWND hWnd) {
 }
 
 void Mouse_GetDelta(int& dx, int& dy) {
-#if defined(_DEBUG) && defined(GAME_RUNTIME)
+#if defined(_DEBUG)
     if (g_mouseInjectionActive) {
         dx = g_injectedDx;
         dy = g_injectedDy;
@@ -184,28 +184,28 @@ void Mouse_GetDelta(int& dx, int& dy) {
 }
 
 bool Mouse_IsLeftDown() {
-#if defined(_DEBUG) && defined(GAME_RUNTIME)
+#if defined(_DEBUG)
     if (g_mouseInjectionActive) return (g_injectedButtons & MOUSE_BUTTON_LEFT) != 0;
 #endif
     return g_lDown;
 }
 
 bool Mouse_IsRightDown() {
-#if defined(_DEBUG) && defined(GAME_RUNTIME)
+#if defined(_DEBUG)
     if (g_mouseInjectionActive) return (g_injectedButtons & MOUSE_BUTTON_RIGHT) != 0;
 #endif
     return g_rDown;
 }
 
 bool Mouse_IsMiddleDown() {
-#if defined(_DEBUG) && defined(GAME_RUNTIME)
+#if defined(_DEBUG)
     if (g_mouseInjectionActive) return (g_injectedButtons & MOUSE_BUTTON_MIDDLE) != 0;
 #endif
     return g_mDown;
 }
 
 int Mouse_GetWheelDelta() {
-#if defined(_DEBUG) && defined(GAME_RUNTIME)
+#if defined(_DEBUG)
     if (g_mouseInjectionActive) {
         int delta = g_injectedWheel;
         g_injectedWheel = 0;
@@ -218,7 +218,7 @@ int Mouse_GetWheelDelta() {
 }
 
 void Mouse_ClearWheel() {
-#if defined(_DEBUG) && defined(GAME_RUNTIME)
+#if defined(_DEBUG)
     if (g_mouseInjectionActive) {
         g_injectedWheel = 0;
         return;
@@ -242,7 +242,7 @@ int Mouse_GetY() {
 }
 
 void Mouse_GetPosition(int& x, int& y) {
-#if defined(_DEBUG) && defined(GAME_RUNTIME)
+#if defined(_DEBUG)
     if (g_mouseInjectionActive && g_injectedHasAbsolute) {
         x = g_injectedAbsX;
         y = g_injectedAbsY;

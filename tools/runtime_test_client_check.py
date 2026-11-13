@@ -416,6 +416,29 @@ class ClientChecks(unittest.TestCase):
             "dx":0,"dy":0,"buttons":["LEFT"],"wheel":0,"durationMs":3500,"x":189,"y":527})
         self.assertNotIn("updates", duration_payload)
 
+    def test_editor_play_client_validation(self):
+        from runtime_test_client import (
+            build_play_enter_payload, build_load_scene_payload, build_set_setting_payload, SETTING_KEYS)
+        self.assertEqual(build_play_enter_payload(), {})
+        self.assertEqual(build_play_enter_payload("viewport"), {"mode": "viewport"})
+        self.assertEqual(build_play_enter_payload("fullscreen"), {"mode": "fullscreen"})
+        with self.assertRaises(ValueError):
+            build_play_enter_payload("bogus")
+        self.assertEqual(build_load_scene_payload("rom/scene/a.json"), {"scene": "rom/scene/a.json"})
+        for bad in ("scene.json", "rom/../x.json", "rom/scene/a.txt", "../rom/a.json", ""):
+            with self.subTest(bad_scene=bad):
+                with self.assertRaises(ValueError):
+                    build_load_scene_payload(bad)
+        for key in SETTING_KEYS:
+            self.assertEqual(build_set_setting_payload(key, True), {"key": key, "value": True})
+            self.assertEqual(build_set_setting_payload(key, False), {"key": key, "value": False})
+        with self.assertRaises(ValueError):
+            build_set_setting_payload("fogEnabled", True)
+        with self.assertRaises(ValueError):
+            build_set_setting_payload("frustumCullingEnabled", 1)
+        with self.assertRaises(ValueError):
+            build_set_setting_payload("frustumCullingEnabled", "true")
+
     def test_events_client_validation(self):
         from runtime_test_client import validate_events_reply
         c=Client.__new__(Client)

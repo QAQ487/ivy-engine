@@ -254,6 +254,12 @@ exit /b 0</Command>
     <ClInclude Include="engine\rendering\effect\effect_object.h" />
     <ClInclude Include="engine\rendering\effect\effect_system.h" />
     <ClInclude Include="engine\core\engine_gui.h" />
+    <ClInclude Include="engine\testing\runtime_test_bridge.h" />
+    <ClInclude Include="engine\testing\runtime_test_scene_arg.h" />
+    <ClInclude Include="engine\testing\controller_inject_protocol.h" />
+    <ClInclude Include="engine\testing\controller_probe_trace.h" />
+    <ClInclude Include="src\app\runtime_test_world_apply.h" />
+    <ClInclude Include="src\app\runtime_test_editor_apply.h" />
     <ClInclude Include="engine\core\engine_gui_internal.h" />
     <ClInclude Include="engine\rendering\lighting\lighting.h" />
     <ClInclude Include="engine\rendering\lighting\shadow.h" />
@@ -521,6 +527,9 @@ exit /b 0</Command>
       <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Debug|x64' Or '$(Configuration)|$(Platform)'=='Release|x64'" />
     </ClCompile>
     <ClCompile Include="src\app\main.cpp" />
+    <ClCompile Include="engine\testing\runtime_test_bridge.cpp" />
+    <ClCompile Include="src\app\runtime_test_world_apply.cpp" />
+    <ClCompile Include="src\app\runtime_test_editor_apply.cpp" />
     <ClCompile Include="src\app\scene\scene_manager.cpp" />
     <ClCompile Include="src\app\camera\third_person_camera.cpp" />
     <ClCompile Include="src\app\camera\first_person_camera.cpp" />

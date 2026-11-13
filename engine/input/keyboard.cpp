@@ -17,7 +17,7 @@ static_assert(sizeof(Keyboard_State) == 256 / 8, "Keyboard_State size mismatch")
 
 static Keyboard_State gState = {};
 static Keyboard_State gStateOld = {};
-#if defined(_DEBUG) && defined(GAME_RUNTIME)
+#if defined(_DEBUG)
 static Keyboard_State gPhysicalState = {};
 static bool gInjectionActive = false;
 
@@ -46,7 +46,7 @@ void keycopy() {
 static void keyDown(int key) {
 	if (key < 0 || key > 0xfe) { return; }
 
-	#if defined(_DEBUG) && defined(GAME_RUNTIME)
+	#if defined(_DEBUG)
     unsigned int* p = reinterpret_cast<unsigned int*>(&gPhysicalState);
 #else
     unsigned int* p = reinterpret_cast<unsigned int*>(&gState);
@@ -54,7 +54,7 @@ static void keyDown(int key) {
 	unsigned int bf = 1u << (key & 0x1f);
 
 	p[(key >> 5)] |= bf;
-#if defined(_DEBUG) && defined(GAME_RUNTIME)
+#if defined(_DEBUG)
     if(!gInjectionActive) gState=gPhysicalState;
 #endif
 }
@@ -62,20 +62,20 @@ static void keyDown(int key) {
 static void keyUp(int key) {
 	if (key < 0 || key > 0xfe) { return; }
 
-	#if defined(_DEBUG) && defined(GAME_RUNTIME)
+	#if defined(_DEBUG)
     unsigned int* p = reinterpret_cast<unsigned int*>(&gPhysicalState);
 #else
     unsigned int* p = reinterpret_cast<unsigned int*>(&gState);
 #endif
 	unsigned int bf = 1u << (key & 0x1f);
 	p[(key >> 5)] &= ~bf;
-#if defined(_DEBUG) && defined(GAME_RUNTIME)
+#if defined(_DEBUG)
     if(!gInjectionActive) gState=gPhysicalState;
 #endif
 }
 
 void Keyboard_Initialize(void) {
-#if defined(_DEBUG) && defined(GAME_RUNTIME)
+#if defined(_DEBUG)
     gInjectionActive=false;
 #endif
 	Keyboard_Reset();
@@ -129,7 +129,7 @@ const Keyboard_State* Keyboard_GetStateOld(void) {
 }
 
 void Keyboard_Reset(void) {
-#if defined(_DEBUG) && defined(GAME_RUNTIME)
+#if defined(_DEBUG)
     ZeroMemory(&gPhysicalState, sizeof(gPhysicalState));
     if(gInjectionActive) return; // Focus messages cannot erase synthetic input.
 #endif

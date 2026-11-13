@@ -9,20 +9,20 @@ bool Keyboard_IsKeyDown(Keyboard_Keys) { return false; }
 bool Keyboard_IsKeyUp(Keyboard_Keys) { return false; }
 bool Keyboard_IsKeyDownTrigger(Keyboard_Keys) { return false; }
 void Keyboard_ProcessMessage(UINT, WPARAM, LPARAM) {}
-#if defined(_DEBUG) && defined(GAME_RUNTIME)
+#if defined(_DEBUG)
 void Keyboard_TestInject(const Keyboard_Keys*, int) {}
 void Keyboard_ClearInjection() {}
 bool Keyboard_IsInjectionActive() { return false; }
 #endif
 
-#if defined(_DEBUG) && defined(GAME_RUNTIME)
+#if defined(_DEBUG)
 static bool g_stubMouseInject = false;
 static bool g_stubMouseAbs = false;
 static int g_stubMouseAbsX = 0;
 static int g_stubMouseAbsY = 0;
 #endif
 void Mouse_Initialize() {
-#if defined(_DEBUG) && defined(GAME_RUNTIME)
+#if defined(_DEBUG)
     g_stubMouseInject = false;
     g_stubMouseAbs = false;
     g_stubMouseAbsX = 0;
@@ -48,7 +48,7 @@ int Mouse_GetY() {
     return y;
 }
 void Mouse_GetPosition(int& x, int& y) {
-#if defined(_DEBUG) && defined(GAME_RUNTIME)
+#if defined(_DEBUG)
     if (g_stubMouseInject && g_stubMouseAbs) {
         x = g_stubMouseAbsX;
         y = g_stubMouseAbsY;
@@ -59,7 +59,7 @@ void Mouse_GetPosition(int& x, int& y) {
     y = 0;
 }
 void Mouse_GetClientPosition(int& x, int& y) { x = 0; y = 0; }
-#if defined(_DEBUG) && defined(GAME_RUNTIME)
+#if defined(_DEBUG)
 void Mouse_TestInject(int, int, unsigned int, int, bool hasAbsolute, int absX, int absY) {
     g_stubMouseInject = true;
     g_stubMouseAbs = hasAbsolute;
@@ -89,7 +89,7 @@ float Controller_GetRightTrigger(int) { return 0.0f; }
 void Controller_SetStickDeadzone(short, short) {}
 void Controller_SetTriggerDeadzone(BYTE) {}
 void Controller_SetVibration(float, float, int) {}
-#if defined(_DEBUG) && defined(GAME_RUNTIME)
+#if defined(_DEBUG)
 void Controller_TestInjectLeftStick(float, float) {}
 void Controller_TestInjectRightStick(float, float) {}
 void Controller_TestInjectTriggers(float, float) {}

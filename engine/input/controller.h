@@ -71,7 +71,7 @@ void Controller_SetTriggerDeadzone(BYTE trigger);
 // Vibration (0.0f-1.0f)
 void Controller_SetVibration(float leftMotor, float rightMotor, int padIndex = 0);
 
-#if defined(_DEBUG) && defined(GAME_RUNTIME)
+#if defined(_DEBUG)
 void Controller_TestInjectLeftStick(float lx, float ly);
 void Controller_TestInjectRightStick(float rx, float ry);
 void Controller_TestInjectTriggers(float left, float right);

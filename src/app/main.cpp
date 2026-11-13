@@ -10,6 +10,7 @@
 #if defined(IVY_RUNTIME_TEST_BRIDGE_AVAILABLE)
 #include "engine/ecs/prefab_runtime.h"
 #include "src/app/runtime_test_world_apply.h"
+#include "src/app/runtime_test_editor_apply.h"
 static ivy::testing::Bridge* g_pRuntimeTestBridge = nullptr;
 static bool g_runtimeTestSceneArgFatal = false;
 #endif
@@ -421,6 +422,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstanc
     if (runtimeTestEnabled) {
         runtimeTestBridge.SetCaptureHandler(&Renderer_CaptureBackBufferPNG);
         runtimeTestBridge.SetWorldOpHandler(&RuntimeTestWorld_Apply);
+        runtimeTestBridge.SetEditorOpHandler(&RuntimeTestEditor_Apply);
         g_pRuntimeTestBridge = &runtimeTestBridge;
         if (g_runtimeTestSceneArgFatal || (!runtimeTestSceneArgRaw.empty())) {
             std::string normalized, err;
@@ -526,8 +528,9 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstanc
 				FrameTimer_Begin(FrameTimerStage::Update);
 #if defined(IVY_RUNTIME_TEST_BRIDGE_AVAILABLE)
                 if(runtimeTestEnabled) {
-                    // Drain world ops even while paused so pause->set_transform->impulse->step works.
+                    // Drain world/editor ops even while paused so pause->set_transform->impulse->step works.
                     runtimeTestBridge.MaybeApplyWorldOps();
+                    runtimeTestBridge.MaybeApplyEditorOps();
                     if (runSim) {
                         runtimeTestBridge.PollAndApplyInput(EngineGUI_IsPlaying()
                             && !EngineGUI_IsSceneAssetPreloadActive() && !SceneLoader_GetCurrentScenePath().empty());
@@ -673,8 +676,15 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstanc
                             if (node) collect(*node);
                         }
                     }
+                    ivy::testing::EditorPlayModeKind bridgePlayMode =
+                        ivy::testing::EditorPlayModeKind::None;
+                    if (EngineGUI_IsPlaying()) {
+                        bridgePlayMode = (EngineGUI_GetPlayMode() == PlayMode::Fullscreen)
+                            ? ivy::testing::EditorPlayModeKind::Fullscreen
+                            : ivy::testing::EditorPlayModeKind::Viewport;
+                    }
                     if (runtimeTestBridge.PublishAndTakeQuit(ready, EngineGUI_IsPlaying(), scene,
-                            std::move(targets), std::move(objects), readyDetail)) {
+                            std::move(targets), std::move(objects), readyDetail, bridgePlayMode)) {
                         EngineGUI_RequestExitGame();
                         // RequestExitGame is deferred to EngineGUI_Update. While the
                         // bridge is paused, ShouldRunSimTick is false and Update is
