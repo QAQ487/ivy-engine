@@ -319,6 +319,26 @@ int TextureLoad(const wchar_t* path, bool mipmap) { return TextureLoadInternal(p
 int TextureLoadQuiet(const wchar_t* path, bool mipmap) { return TextureLoadInternal(path,mipmap,false); }
 
 
+bool TextureIsLoaded(const wchar_t* path) {
+    if (!path || !path[0]) return false;
+    const auto key = TexturePathKey(path);
+    for (const auto& slot : g_textures) {
+        if (!slot.m_ptr_Texture) continue;
+        if (_wcsicmp(TexturePathKey(slot.m_filename).c_str(), key.c_str()) == 0) return true;
+    }
+    return false;
+}
+
+bool CubemapIsLoaded(const wchar_t* path) {
+    if (!path || !path[0]) return false;
+    const auto key = TexturePathKey(path);
+    for (const auto& slot : g_cubemaps) {
+        if (!slot.srv) continue;
+        if (_wcsicmp(TexturePathKey(slot.filename).c_str(), key.c_str()) == 0) return true;
+    }
+    return false;
+}
+
 TextureReloadResult TextureReload(const wchar_t* path) {
     if (!path || !g_pDevice) return TextureReloadResult::Failed;
     const std::wstring resolvedName = content_path::ReadableWideCurrent(path);

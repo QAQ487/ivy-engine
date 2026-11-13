@@ -83,6 +83,8 @@ public:
     void Stop(const std::string& id);
     void StopAll();
     bool ReloadContent(const std::string& path);
+    // True when any loaded/source/instance playback holds this content path.
+    bool IsContentLoaded(const std::string& path) const;
     void StopAllByType(AudioType type);
     bool IsPlaying(const std::string& id);
 

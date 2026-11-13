@@ -243,6 +243,16 @@ std::vector<const ModelAssetCache::ObjectDef*> ModelAssetCache::GetObjectDefinit
     return result;
 }
 
+bool ModelAssetCache::IsModelLoaded(const std::string& modelNameOrPath) const {
+    if (m_finalized || modelNameOrPath.empty()) return false;
+    const ModelAssetCache::ObjectDef* def = FindObjectDef(m_objectDefs, modelNameOrPath);
+    const std::string cacheKey = def
+        ? def->lowerName
+        : NormalizeAssetKey(modelNameOrPath);
+    auto it = m_modelCache.find(cacheKey);
+    return it != m_modelCache.end() && it->second != nullptr;
+}
+
 Model3D* ModelAssetCache::GetModel(const std::string& modelName) {
     if (m_finalized) return nullptr;
 

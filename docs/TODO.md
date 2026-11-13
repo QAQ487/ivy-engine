@@ -20,9 +20,10 @@
   - Mesh 唔再用 box 嘅外接球，亦唔用 capsule 嘅三粒取樣球去近似圓柱。每隻三角形係零厚度凸形，對實心有限圓柱（平頂蓋）做 GJK/EPA，所以頂蓋唔會鼓出。非均勻 mesh scale 用現有 world matrix 把三角形變去世界空間，圓柱維持圓形。Broadphase 仍係圓柱外接球。Resolve 沿用 mesh 最多 4 個法線簇、`StabilizeFloorContactNormal`，slope `0.001`，而且會把接觸點交俾 `ResolveContact`。動態 mesh 對 kinematic 圓柱都會解（其他 mesh 配對仍然跳過 kinematic）。
   - 限制：只保證凸形。凹 mesh 係逐三角形，唔係實心體積。零或負 radius／half-height 當無碰撞。接觸斑係線或圓盤時，witness 可以係斑入面任意一點。GJK/EPA 有數值誤差。
   - 驗收場景：`testbed/rom/scene/scene_regression_3d.json`（紅色落體要停低）同 `testbed/rom/scene/scene_cylinder_pairs.json`（盒／mesh／圓柱、X／Z 90°、地面盒、疊柱）。Editor：File → Open Testbed，再打開場景。Linux `tests/cylinder_pair_test.cpp`（`g++ -std=c++20`）已覆蓋分離、軸對齊重疊、旋轉、頂蓋、側面、非法尺寸同法線對稱。Terry 喺 PR #8 接受咗 Windows runtime，所以呢項剔走。
-- [ ] **Content reload 紅燈：刪除未被引用嘅資產**
-  - `engine/core/engine_gui.cpp` 約 3241 行：`rom/` 底下任何 `change.removed` 都會 `g_contentReloadLight.Failure()`（紅燈），文案係 `Content removed; existing resources retained`。新增而且目前 scene JSON 搵唔到嘅檔會跳過；刪除唔會先查場景有冇引用。
-  - 驗收：刪除未被目前場景（同已載入資源）引用嘅檔，Content 燈維持 Watching，唔好轉成 Failed。刪除確實被引用嘅檔仍要報失敗並保留現有資源。改完要分開 source review 同 editor 實測。
+- [x] **Content reload 紅燈：刪除未被引用嘅資產**（source 已做；等 Windows editor 驗收）
+  - `content_reload::DecideRemovedContentAction`（`engine/editor/content_removal_policy.h`）：`rom/` 刪檔若唔喺目前 scene JSON，亦唔喺 texture／cubemap／`ModelUtil`／`ModelAssetCache`／audio cache，Content 燈維持 Watching，並寫 `content_hot_reload.log`。被引用或已載入仍然 `Failure` 同保留資源。新增未引用檔繼續 skip（共用 `SceneJsonReferencesRomPath`）。
+  - Linux：`tests/content_removal_policy_test.cpp`（`g++ -std=c++17 -I.`）。見 `docs/EDITOR_CONTENT_HOT_RELOAD.md`。
+  - 剩餘：Windows editor——刪未引用 PNG／prefab 燈唔轉紅；刪場景引用或已載入資產仍紅燈並保留資源。
 - [ ] **Box friction torque（可選，只有想箱子傾側先做）**
   - `collider.cpp` 的 `ResolveContact` 對 box 把摩擦衝量嘅力臂設成 0，箱子只留線性摩擦，避免喺邊緣滾動；球體仍有角向摩擦。呢個係現有設計，唔係空 stub。
   - 驗收（若開做）：box 可以因摩擦傾側，同時唔好無故原地打轉；球體滾動無回歸。
@@ -120,7 +121,7 @@ PBR 球場已由引擎待辦移除：倉庫只有 PBR shader 同 `testbed/rom/sc
 ## 建議優先次序
 
 1. ImGuizmo 參數順序同 PR #7 視覺檢查（lighting、CSM、post-process、gizmo）一齊喺 Windows 做。
-2. Content reload 紅燈（刪未引用資產）。
+2. Content reload 紅燈（刪未引用資產）Windows editor 驗收（source 已做）。
 3. 重做 Properties Panel／Inspector（先有 UI 草案；現有編輯同 Undo 要保住）。
 4. AI 套件：Waypoint → Perception → BT／Blackboard → EQS。NavMesh 繼續暫緩。
 

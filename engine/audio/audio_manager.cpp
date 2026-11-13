@@ -1124,6 +1124,29 @@ void AudioManager::TryLoadBusVolumesFromNearbyProject() {
     LoadBusVolumesFromProjectFile(nearby.string());
 }
 
+bool AudioManager::IsContentLoaded(const std::string& path) const {
+    if (path.empty()) return false;
+    std::error_code ec;
+    const auto key = std::filesystem::absolute(path, ec).lexically_normal().wstring();
+    if (ec) return false;
+    auto matches = [&](const Playback& source) {
+        if (source.contentPath.empty()) return false;
+        std::error_code inner;
+        const auto cached = std::filesystem::absolute(source.contentPath, inner).lexically_normal().wstring();
+        return !inner && _wcsicmp(cached.c_str(), key.c_str()) == 0;
+    };
+    for (const auto& entry : m_loadedAudio) {
+        if (entry.second && matches(*entry.second)) return true;
+    }
+    for (const auto& entry : m_sources) {
+        if (entry.second && matches(*entry.second)) return true;
+    }
+    for (const auto& entry : m_instances) {
+        if (entry.second && matches(*entry.second)) return true;
+    }
+    return false;
+}
+
 bool AudioManager::ReloadContent(const std::string& path) {
     Playback candidate{};
     if (!LoadWav(path, &candidate)) return false;
