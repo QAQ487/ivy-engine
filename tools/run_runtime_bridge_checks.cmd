@@ -108,12 +108,14 @@ if errorlevel 1 exit /b 1
 if errorlevel 1 exit /b 1
 py -3 tools\runtime_bridge_editor_host_gate_check.py
 if errorlevel 1 exit /b 1
+py -3 tools\runtime_bridge_cmd_echo_redirect_check.py
+if errorlevel 1 exit /b 1
 rem Build the real Editor project when MSBuild is on PATH (after vcvars).
 where msbuild >nul 2>&1
 if errorlevel 1 (
   echo SKIP IvyEngine.vcxproj Debug msbuild ^(msbuild not on PATH^)
 ) else (
-  echo ==> msbuild IvyEngine.vcxproj Debug^|x64
+  echo ==^> msbuild IvyEngine.vcxproj Debug^|x64
   msbuild IvyEngine.vcxproj /t:Build /p:Configuration=Debug /p:Platform=x64 /v:m
   if errorlevel 1 exit /b 1
 )

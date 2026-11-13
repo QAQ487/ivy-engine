@@ -13,7 +13,7 @@ if not exist "%~1" mkdir "%~1"
 set FAILED=0
 
 for %%F in (testbed\scenarios\*.json) do (
-    echo ==> validate %%~nxF
+    echo ==^> validate %%~nxF
     py -3 tools\runtime_bridge_scenario_runner.py --scenario "%%F" --validate-only
     if errorlevel 1 (
         echo FAIL validate %%~nxF
@@ -24,7 +24,7 @@ for %%F in (testbed\scenarios\*.json) do (
 if "%~2"=="" goto :summary
 
 for %%F in (testbed\scenarios\*.json) do (
-    echo ==> run %%~nxF
+    echo ==^> run %%~nxF
     py -3 tools\runtime_bridge_scenario_runner.py --exe "%~2" --scenario "%%F" --out-dir "%~1\%%~nF"
     if errorlevel 1 (
         echo FAIL run %%~nxF
