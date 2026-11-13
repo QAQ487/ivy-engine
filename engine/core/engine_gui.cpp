@@ -87,6 +87,7 @@
 #include "engine/editor/camera_orientation_gizmo.h"
 #include "engine/editor/editor_undo.h"
 #include "engine/editor/content_file_monitor.h"
+#include "engine/editor/content_removal_policy.h"
 #include "engine/ui/ui_font.h"
 #include "engine/rendering/effect/effect_system.h"
 #include "engine/ecs/visual_component.h"
@@ -425,6 +426,14 @@ static void LogContentReload(const std::string& message) {
     const auto size = std::filesystem::file_size("content_hot_reload.log", ec);
     std::ofstream log("content_hot_reload.log", !ec && size > 1024 * 1024 ? std::ios::trunc : std::ios::app);
     log << message << std::endl;
+}
+static bool ContentPathCurrentlyLoaded(const std::string& path) {
+    const auto widePath = PathFromUtf8(path).wstring();
+    if (TextureIsLoaded(widePath.c_str()) || CubemapIsLoaded(widePath.c_str())) return true;
+    if (ModelUtil_IsTextureCached(widePath.c_str())) return true;
+    if (ModelAssetCache::Instance().IsModelLoaded(path)) return true;
+    if (AudioManager::Instance().IsContentLoaded(path)) return true;
+    return false;
 }
 static std::string g_contentProjectRoot;
 static ContentFileMonitor g_contentMonitor;
@@ -3385,8 +3394,14 @@ void EngineGUI_Update(double elapsed_time) {
                     }
                     continue;
                 }
-                if (change.added && SceneLoader_GetCurrentSceneContent().find(path) == std::string::npos) continue;
+                if (change.added && !content_reload::SceneJsonReferencesRomPath(SceneLoader_GetCurrentSceneContent(), path)) continue;
                 if (change.removed) {
+                    const auto removal = content_reload::DecideRemovedContentAction(
+                        path, SceneLoader_GetCurrentSceneContent(), ContentPathCurrentlyLoaded(path));
+                    if (removal == content_reload::RemovedContentAction::KeepWatching) {
+                        LogContentReload("Content removed (unreferenced, not loaded); watching: " + path);
+                        continue;
+                    }
                     g_contentReloadLight.Failure();
                     g_contentReloadStatus = "Content removed; existing resources retained: " + path;
                     LogContentReload(g_contentReloadStatus);
@@ -3436,7 +3451,7 @@ void EngineGUI_Update(double elapsed_time) {
                         }
                         g_contentReloadLight.Success(); g_contentReloadStatus = "Texture updated: " + path;
                         // Shared model/material textures also need their owning components rebuilt.
-                        if ((change.added && result == TextureReloadResult::NotLoaded && SceneLoader_GetCurrentSceneContent().find(path) != std::string::npos) || (!change.added && (result == TextureReloadResult::NotLoaded || ModelUtil_IsTextureCached(widePath.c_str()) || path.rfind("rom/model/", 0) == 0 || path.rfind("rom/effects/", 0) == 0))) g_contentSceneReload = true;
+                        if ((change.added && result == TextureReloadResult::NotLoaded && content_reload::SceneJsonReferencesRomPath(SceneLoader_GetCurrentSceneContent(), path)) || (!change.added && (result == TextureReloadResult::NotLoaded || ModelUtil_IsTextureCached(widePath.c_str()) || path.rfind("rom/model/", 0) == 0 || path.rfind("rom/effects/", 0) == 0))) g_contentSceneReload = true;
                     }
                     continue;
                 }
@@ -3459,7 +3474,7 @@ void EngineGUI_Update(double elapsed_time) {
                         LogContentReload(g_contentReloadStatus); continue;
                     }
                 }
-                if (!change.added || SceneLoader_GetCurrentSceneContent().find(path) != std::string::npos) g_contentSceneReload = true;
+                if (!change.added || content_reload::SceneJsonReferencesRomPath(SceneLoader_GetCurrentSceneContent(), path)) g_contentSceneReload = true;
             }
             g_contentChanges.clear();
         }

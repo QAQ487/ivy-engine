@@ -48,6 +48,8 @@ public:
         const std::string& folderRelativePath) const;
 
     Model3D* GetModel(const std::string& modelNameOrPath);
+    // True when a non-null model occupies the cache for this path/name.
+    bool IsModelLoaded(const std::string& modelNameOrPath) const;
 
 private:
     ModelAssetCache() = default;

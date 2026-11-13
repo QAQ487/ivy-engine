@@ -22,6 +22,9 @@ void Texture_Finalize();
 int  TextureLoad(const wchar_t* ptr_file_name, bool mipmap = true);
 enum class TextureReloadResult { NotLoaded, Reloaded, Failed };
 TextureReloadResult TextureReload(const wchar_t* path);
+// True when path already occupies a texture / cubemap slot (no disk read).
+bool TextureIsLoaded(const wchar_t* path);
+bool CubemapIsLoaded(const wchar_t* path);
 bool TextureValidateFile(const wchar_t* path);
 int TextureLoadQuiet(const wchar_t* ptr_file_name, bool mipmap = true);
 int  TextureCreateFromRGBA(const wchar_t* name, const unsigned char* rgba, int width, int height);
