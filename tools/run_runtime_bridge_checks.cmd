@@ -49,6 +49,10 @@ cl /nologo /EHsc /W4 /std:c++20 /utf-8 /DNOMINMAX /MTd /D_DEBUG /DGAME_RUNTIME /
 if errorlevel 1 exit /b 1
 "%~1\runtime_bridge_world_manip_check.exe"
 if errorlevel 1 exit /b 1
+cl /nologo /EHsc /W4 /std:c++20 /utf-8 /DNOMINMAX /MTd /D_DEBUG /DGAME_RUNTIME /I. tools\runtime_bridge_editor_play_check.cpp engine\testing\runtime_test_bridge.cpp engine\input\keyboard.cpp engine\input\mouse.cpp engine\input\controller.cpp tools\test_renderer_stubs.cpp /Fo:"%~1\\" /Fe:"%~1\runtime_bridge_editor_play_check.exe" /link advapi32.lib user32.lib
+if errorlevel 1 exit /b 1
+"%~1\runtime_bridge_editor_play_check.exe"
+if errorlevel 1 exit /b 1
 cl /nologo /EHsc /W4 /std:c++20 /utf-8 /DNOMINMAX /I. tests\runtime_test_scene_arg_test.cpp /Fo:"%~1\\" /Fe:"%~1\runtime_test_scene_arg_check.exe"
 if errorlevel 1 exit /b 1
 "%~1\runtime_test_scene_arg_check.exe"
@@ -90,10 +94,31 @@ cl /nologo /EHsc /W4 /std:c++20 /utf-8 /DNOMINMAX /MT /DGAME_RUNTIME /I. tools\r
 if errorlevel 1 exit /b 1
 "%~1\runtime_bridge_release_check.exe"
 if errorlevel 1 exit /b 1
-cl /nologo /EHsc /W4 /std:c++20 /utf-8 /DNOMINMAX /MTd /D_DEBUG /I. tools\runtime_bridge_release_check.cpp engine\testing\runtime_test_bridge.cpp engine\input\keyboard.cpp engine\input\controller.cpp /Fo:"%~1\\" /Fe:"%~1\runtime_bridge_editor_check.exe" /link user32.lib
+cl /nologo /EHsc /W4 /std:c++20 /utf-8 /DNOMINMAX /MT /I. tools\runtime_bridge_release_check.cpp engine\testing\runtime_test_bridge.cpp engine\input\keyboard.cpp engine\input\controller.cpp /Fo:"%~1\\" /Fe:"%~1\runtime_bridge_release_editor_check.exe" /link user32.lib
+if errorlevel 1 exit /b 1
+"%~1\runtime_bridge_release_editor_check.exe"
+if errorlevel 1 exit /b 1
+cl /nologo /EHsc /W4 /std:c++20 /utf-8 /DNOMINMAX /MTd /D_DEBUG /I. tools\runtime_bridge_release_check.cpp engine\testing\runtime_test_bridge.cpp engine\input\keyboard.cpp engine\input\mouse.cpp engine\input\controller.cpp tools\test_renderer_stubs.cpp /Fo:"%~1\\" /Fe:"%~1\runtime_bridge_editor_check.exe" /link advapi32.lib user32.lib
 if errorlevel 1 exit /b 1
 "%~1\runtime_bridge_editor_check.exe"
 if errorlevel 1 exit /b 1
+cl /nologo /EHsc /W4 /std:c++20 /utf-8 /DNOMINMAX /MTd /D_DEBUG /I. tools\runtime_bridge_editor_host_compile_check.cpp tools\test_renderer_stubs.cpp /Fo:"%~1\\" /Fe:"%~1\runtime_bridge_editor_host_compile_check.exe" /link shell32.lib user32.lib
+if errorlevel 1 exit /b 1
+"%~1\runtime_bridge_editor_host_compile_check.exe"
+if errorlevel 1 exit /b 1
+py -3 tools\runtime_bridge_editor_host_gate_check.py
+if errorlevel 1 exit /b 1
+py -3 tools\runtime_bridge_cmd_echo_redirect_check.py
+if errorlevel 1 exit /b 1
+rem Build the real Editor project when MSBuild is on PATH (after vcvars).
+where msbuild >nul 2>&1
+if errorlevel 1 (
+  echo SKIP IvyEngine.vcxproj Debug msbuild ^(msbuild not on PATH^)
+) else (
+  echo ==^> msbuild IvyEngine.vcxproj Debug^|x64
+  msbuild IvyEngine.vcxproj /t:Build /p:Configuration=Debug /p:Platform=x64 /v:m
+  if errorlevel 1 exit /b 1
+)
 rem Live acceptances: avoid parenthesized blocks so `exit /b` propagates
 rem correctly (cmd can fall through to a later exit /b 0 inside `(...)`).
 if "%~2"=="" goto :done

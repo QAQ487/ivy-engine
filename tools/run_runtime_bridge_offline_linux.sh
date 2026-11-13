@@ -28,6 +28,7 @@ build_one runtime_bridge_world_manip_check "$ROOT/tools/runtime_bridge_world_man
 build_one runtime_bridge_phase6_check "$ROOT/tools/runtime_bridge_phase6_check.cpp"
 build_one runtime_bridge_protocol_check "$ROOT/tools/runtime_bridge_protocol_check.cpp"
 build_one runtime_bridge_observe_pose_check "$ROOT/tools/runtime_bridge_observe_pose_check.cpp"
+build_one runtime_bridge_editor_play_check "$ROOT/tools/runtime_bridge_editor_play_check.cpp"
 
 echo "==> run runtime_bridge_world_manip_check"
 "$OUT/runtime_bridge_world_manip_check"
@@ -37,6 +38,25 @@ echo "==> run runtime_bridge_protocol_check"
 "$OUT/runtime_bridge_protocol_check"
 echo "==> run runtime_bridge_observe_pose_check"
 "$OUT/runtime_bridge_observe_pose_check"
+echo "==> run runtime_bridge_editor_play_check"
+"$OUT/runtime_bridge_editor_play_check"
+
+# Editor Debug host compile probe (no GAME_RUNTIME) — catches declaration/include gate drift.
+echo "==> building runtime_bridge_editor_host_compile_check (Editor Debug defines)"
+"$CXX" -std=c++20 -Wall -Wextra -Wno-unused-parameter \
+  -D_DEBUG -DNOMINMAX \
+  -I"$SHIM" -I"$ROOT" \
+  "$ROOT/tools/runtime_bridge_editor_host_compile_check.cpp" \
+  "$SHIM/win32_api_stubs.cpp" \
+  -pthread -o "$OUT/runtime_bridge_editor_host_compile_check"
+echo "==> run runtime_bridge_editor_host_compile_check"
+"$OUT/runtime_bridge_editor_host_compile_check"
+
+echo "==> Editor host gate sync (grep/static)"
+python3 "$ROOT/tools/runtime_bridge_editor_host_gate_check.py"
+
+echo "==> tools/*.cmd echo redirect check"
+python3 "$ROOT/tools/runtime_bridge_cmd_echo_redirect_check.py"
 
 echo "==> python keyboard key-table sync + validation"
 python3 "$ROOT/tools/runtime_bridge_keyboard_keys_check.py" -v
@@ -46,6 +66,9 @@ echo "==> python mouse absolute client payload validation"
 
 echo "==> python client bridge rejection identity handling"
 ( cd "$ROOT/tools" && python3 -m unittest runtime_test_client_check.ClientChecks.test_request_surfaces_bridge_error_when_identity_echoed -v )
+
+echo "==> python client editor play helpers"
+( cd "$ROOT/tools" && python3 -m unittest   runtime_test_client_check.ClientChecks.test_editor_play_client_validation -v )
 
 echo "==> python client capture path + sequential connection helpers"
 ( cd "$ROOT/tools" && python3 -m unittest \

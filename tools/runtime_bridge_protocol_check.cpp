@@ -183,7 +183,8 @@ int main(int argc, char** argv) {
     policy.BeginInput(false,GetTickCount64());
     auto cancelled=policy.Request(R"({"protocolVersion":1,"requestId":6,"runId":"policy","verb":"status"})");
     check(cancelled["keyboard"]["status"]=="cancelled","not-playing cancels queued input");
-    check(r["capabilities"] == Json::array({"hello","status","quit","keyboard","observe","capture","mouse","controller","events","controller_probe","list_objects","pause","resume","step","perf","reset_scene","set_transform","set_velocity","apply_impulse","apply_torque_impulse"}), "capabilities include observe, capture, mouse, controller, events, controller_probe, list_objects, pause, resume, step, perf, and world manip verbs");
+    check(r["capabilities"] == Json::array({"hello","status","quit","keyboard","observe","capture","mouse","controller","events","controller_probe","list_objects","pause","resume","step","perf","reset_scene","set_transform","set_velocity","apply_impulse","apply_torque_impulse","set_setting"}), "capabilities include observe, capture, mouse, controller, events, controller_probe, list_objects, pause, resume, step, perf, world manip, and set_setting");
+    check(r["host"] == "runtime", "runtime host advertised");
 
     // Absolute cursor (optional x,y in backbuffer pixels). Stubs report 1280x720.
     {

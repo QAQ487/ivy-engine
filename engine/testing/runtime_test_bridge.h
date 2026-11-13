@@ -4,12 +4,12 @@
 #pragma once
 
 namespace ivy::testing {
-// Always-visible tag for Debug-runtime API detection (ADL). Declared even when
-// the bridge is compiled out so Release/Editor checks can prove absence.
+// Always-visible tag for Debug bridge API detection (ADL). Declared even when
+// the bridge is compiled out so Release checks can prove absence.
 struct ControllerProbeApiTag {};
 }
 
-#if defined(_DEBUG) && defined(GAME_RUNTIME)
+#if defined(_DEBUG)
 #define IVY_RUNTIME_TEST_BRIDGE_AVAILABLE 1
 #include "libraries/nlohmann/json.hpp"
 #include "engine/testing/controller_inject_protocol.h"
@@ -195,13 +195,44 @@ struct WorldOpRequest {
 
 using WorldOpHandler = bool(*)(const WorldOpRequest& op, std::string& errorOut);
 
+enum class BridgeHostKind { Runtime = 0, Editor = 1 };
+enum class EditorPlayModeKind { None = 0, Viewport = 1, Fullscreen = 2, Invalid = 3 };
+enum class EditorOpKind { PlayEnter, PlayExit, LoadScene, SetSetting };
+
+struct EditorOpRequest {
+    EditorOpKind kind = EditorOpKind::PlayEnter;
+    std::int64_t requestId = 0;
+    EditorPlayModeKind playMode = EditorPlayModeKind::Viewport;
+    std::string scenePath;
+    std::string settingKey;
+    bool settingBoolValue = false;
+};
+
+using EditorOpHandler = bool(*)(const EditorOpRequest& op, std::string& errorOut);
+
+// Pure helpers (unit-tested on Linux offline).
+bool IsRuntimeTestBridgeSettingKey(const std::string& key);
+bool ParseRuntimeTestBridgeSettingValue(const Json& value, bool& outBool, std::string& err);
+EditorPlayModeKind ParseRuntimeTestBridgePlayMode(const char* mode) noexcept;
+const char* EditorPlayModeKindName(EditorPlayModeKind mode) noexcept;
+
+// Editor bridge-quit policy (WinMain posts WM_APP+48 DestroyWindow; Runtime unchanged).
+struct EditorBridgeQuitPlan {
+    bool stopPlayFirst = false;
+    bool postDestroyWindow = false;
+    bool skipUnsavedConfirm = false;
+};
+EditorBridgeQuitPlan PlanEditorBridgeHostQuit(bool playing) noexcept;
+
 class Protocol {
 public:
-    Protocol(std::string runId, unsigned long pid, unsigned long session);
+    Protocol(std::string runId, unsigned long pid, unsigned long session,
+        BridgeHostKind host = BridgeHostKind::Runtime);
     void Publish(bool ready, bool playing, const std::string& scene,
         std::vector<ObservedTarget> targets = {},
         std::vector<ListedObject> objects = {},
-        const char* readyDetail = nullptr);
+        const char* readyDetail = nullptr,
+        EditorPlayModeKind playMode = EditorPlayModeKind::None);
     bool TakeQuit();
     void ConfirmQuitReceipt();
     void AbandonQuit();
@@ -238,6 +269,11 @@ public:
     // so clients waiting on worldOp.completed see a fresh observe/list snapshot.
     void MarkWorldOpApplied(std::int64_t id, bool ok, const std::string& err);
     void CancelWorldOp();
+    bool HasPendingEditorOp(EditorOpRequest& out) const;
+    void CompleteEditorOp(std::int64_t id, bool ok, const std::string& err);
+    void MarkEditorOpApplied(std::int64_t id, bool ok, const std::string& err);
+    void CancelEditorOp();
+    BridgeHostKind HostKind() const { return host_; }
     const std::string& RunId() const { return runId_; }
 
     bool IsPaused() const { return paused_; }
@@ -259,6 +295,8 @@ private:
     std::int64_t lastId_ = 0;
     std::string runId_;
     unsigned long pid_, session_;
+    BridgeHostKind host_ = BridgeHostKind::Runtime;
+    EditorPlayModeKind playMode_ = EditorPlayModeKind::None;
     enum class InputState { Idle, Queued, Preparing, Active, Releasing, Completed, Cancelled };
     InputState inputState_ = InputState::Idle;
     bool cancelInput_ = false;
@@ -311,6 +349,16 @@ private:
     } worldOp_;
     void SealAppliedWorldOp();
 
+    struct EditorOpState {
+        enum class Status { Idle, Queued, Applied, Completed, Failed };
+        Status status = Status::Idle;
+        EditorOpRequest request;
+        std::string error;
+        bool appliedOk = true;
+        const char* VerbName() const;
+    } editorOp_;
+    void SealAppliedEditorOp();
+
     bool paused_ = false;
     int pendingStepFrames_ = 0;
     std::uint64_t frameCounter_ = 0;
@@ -330,15 +378,18 @@ public:
     void Stop();
     void SetCaptureHandler(CaptureHandler handler);
     void SetWorldOpHandler(WorldOpHandler handler);
+    void SetEditorOpHandler(EditorOpHandler handler);
     bool PublishAndTakeQuit(bool ready, bool playing, const std::string& scene,
         std::vector<ObservedTarget> targets = {},
         std::vector<ListedObject> objects = {},
-        const char* readyDetail = nullptr);
+        const char* readyDetail = nullptr,
+        EditorPlayModeKind playMode = EditorPlayModeKind::None);
     void PollAndApplyInput(bool inGamePlaying);
     void FinishInputUpdate();
     void ExpireInputDeadlines();
     void MaybeExecuteCapture();
     void MaybeApplyWorldOps();
+    void MaybeApplyEditorOps();
     bool IsPaused();
     bool ShouldRunSimTick();
     void NoteSimFrame();

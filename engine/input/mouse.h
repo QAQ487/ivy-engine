@@ -19,7 +19,7 @@ enum Mouse_ButtonMask {
     MOUSE_BUTTON_MIDDLE = 1 << 2
 };
 
-#if defined(_DEBUG) && defined(GAME_RUNTIME)
+#if defined(_DEBUG)
 // hasAbsolute/absX/absY: optional backbuffer-pixel cursor override for Mouse_GetPosition.
 // Cleared with Mouse_ClearInjection (or the next inject that omits hasAbsolute).
 void Mouse_TestInject(int dx, int dy, unsigned int buttonsMask, int wheel = 0,

@@ -556,6 +556,7 @@ exit /b 0</Command>
     <ClCompile Include="src\app\scene\game_scene.cpp" />
     <ClCompile Include="src\app\main.cpp" />
     <ClCompile Include="src\app\runtime_test_world_apply.cpp" />
+    <ClCompile Include="src\app\runtime_test_editor_apply.cpp" />
     <ClCompile Include="src\app\scene\scene_manager.cpp" />
     <ClCompile Include="src\app\camera\third_person_camera.cpp" />
     <ClCompile Include="src\app\camera\first_person_camera.cpp" />
@@ -586,6 +587,7 @@ exit /b 0</Command>
   <ItemGroup>
     <ClInclude Include="engine\testing\runtime_test_bridge.h" />
     <ClInclude Include="src\app\runtime_test_world_apply.h" />
+    <ClInclude Include="src\app\runtime_test_editor_apply.h" />
     <ClInclude Include="engine\testing\runtime_test_scene_arg.h" />
     <ClInclude Include="engine\testing\controller_inject_protocol.h" />
     <ClInclude Include="engine\testing\controller_probe_trace.h" />

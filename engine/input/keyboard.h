@@ -403,7 +403,7 @@ bool Keyboard_IsKeyUp(Keyboard_Keys key, const Keyboard_State* pState);
 // Reset keyboard state
 void Keyboard_Reset(void);
 
-#if defined(_DEBUG) && defined(GAME_RUNTIME)
+#if defined(_DEBUG)
 // Owner-thread internal override; isolates all physical keys until cleared.
 void Keyboard_TestInject(const Keyboard_Keys* keys, int count);
 void Keyboard_ClearInjection();

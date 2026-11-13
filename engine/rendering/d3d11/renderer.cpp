@@ -12,6 +12,7 @@
 #include "engine/scene/render_settings.h"
 #include <d3d11sdklayers.h> // InfoQueue
 #include <wrl/client.h> // For ComPtr
+#include <algorithm>
 #include <cstdio>
 
  // Globals
@@ -640,8 +641,9 @@ void Present(void) {
 }
 
 
-#if defined(_DEBUG) && defined(GAME_RUNTIME)
+#if defined(_DEBUG)
 #include "libraries/directxtex/DirectXTex.h"
+#include "engine/core/engine_gui.h"
 #pragma comment(lib, "windowscodecs.lib")
 
 bool Renderer_CaptureBackBufferPNG(const wchar_t* filePath, uint32_t* outW, uint32_t* outH) {
@@ -652,8 +654,6 @@ bool Renderer_CaptureBackBufferPNG(const wchar_t* filePath, uint32_t* outW, uint
 
     D3D11_TEXTURE2D_DESC desc = {};
     pBackBuffer->GetDesc(&desc);
-    if (outW) *outW = desc.Width;
-    if (outH) *outH = desc.Height;
 
     DirectX::ScratchImage scratch;
     hr = DirectX::CaptureTexture(g_D3DDevice, g_ImmediateContext, pBackBuffer, scratch);
@@ -663,7 +663,39 @@ bool Renderer_CaptureBackBufferPNG(const wchar_t* filePath, uint32_t* outW, uint
     const DirectX::Image* img = scratch.GetImage(0, 0, 0);
     if (!img) return false;
 
-    hr = DirectX::SaveToWICFile(*img, DirectX::WIC_FLAGS_NONE, DirectX::GetWICCodec(DirectX::WIC_CODEC_PNG), filePath);
+    // Crop to the game viewport (full backbuffer in Runtime / fullscreen Play;
+    // inset scene view in Editor viewport Play — never the whole ImGui chrome).
+    float vx = 0.0f, vy = 0.0f, vw = 0.0f, vh = 0.0f;
+    EngineGUI_GetGameViewportRect(vx, vy, vw, vh);
+    size_t x = 0, y = 0, w = img->width, h = img->height;
+    if (vw > 0.5f && vh > 0.5f) {
+        x = static_cast<size_t>((std::max)(0.0f, vx));
+        y = static_cast<size_t>((std::max)(0.0f, vy));
+        w = static_cast<size_t>((std::max)(1.0f, vw));
+        h = static_cast<size_t>((std::max)(1.0f, vh));
+        if (x >= img->width) x = 0;
+        if (y >= img->height) y = 0;
+        if (x + w > img->width) w = img->width - x;
+        if (y + h > img->height) h = img->height - y;
+    }
+
+    DirectX::ScratchImage cropped;
+    const DirectX::Image* saveImg = img;
+    if (x != 0 || y != 0 || w != img->width || h != img->height) {
+        hr = cropped.Initialize2D(img->format, w, h, 1, 1);
+        if (FAILED(hr)) return false;
+        const DirectX::Image* dst = cropped.GetImage(0, 0, 0);
+        if (!dst) return false;
+        hr = DirectX::CopyRectangle(*img, DirectX::Rect(x, y, w, h), *dst,
+            DirectX::TEX_FILTER_DEFAULT, 0, 0);
+        if (FAILED(hr)) return false;
+        saveImg = dst;
+    }
+
+    if (outW) *outW = static_cast<uint32_t>(saveImg->width);
+    if (outH) *outH = static_cast<uint32_t>(saveImg->height);
+
+    hr = DirectX::SaveToWICFile(*saveImg, DirectX::WIC_FLAGS_NONE, DirectX::GetWICCodec(DirectX::WIC_CODEC_PNG), filePath);
     return SUCCEEDED(hr);
 }
 #endif

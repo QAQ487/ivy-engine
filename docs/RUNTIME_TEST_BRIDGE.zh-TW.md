@@ -1,6 +1,6 @@
 # Runtime Test Bridge（摘要）
 
-Debug-only named-pipe harness，只喺 `_DEBUG && GAME_RUNTIME` 編譯；Release／Editor 會 compile out。唔係玩法輸入。
+Debug-only named-pipe harness，喺 `_DEBUG` 編譯（Debug `IvyEngineRuntime` 同 Debug Editor）；Release（無 `_DEBUG`）會 compile out。唔係玩法輸入。Editor Play-mode bridge 係 Phase 7（repo Phase 6 仍然 observe／list／pause／perf）。
 
 **完整操作說明（啟用、protocol、controller／probe、`--scene`、pause／step／perf、檢查指令）以英文為準：**  
 [`RUNTIME_TEST_BRIDGE.md`](RUNTIME_TEST_BRIDGE.md)
@@ -35,4 +35,5 @@ tools\run_runtime_bridge_checks.cmd x64\phase6-bridge-check x64\Debug\IvyEngineR
 - World manip（plan Phase 3）：`reset_scene`／`set_transform`／`set_velocity`／impulse；fixture `scene_runtime_bridge_world_manip.json`；acceptance 經 `run_runtime_bridge_checks.cmd` 第二參數。
 - Angular acceptance（plan Phase 4）：fixture `scene_runtime_bridge_angular.json`；`tools/runtime_bridge_angular_acceptance.py`；Linux 只跑 validator unit tests（`run_runtime_bridge_offline_linux.sh`），唔聲稱 Windows runtime PASS。Box friction rolling 係 expected-skip。
 - Scenario runner（plan Phase 5）：`tools/runtime_bridge_scenario_runner.py` + `testbed/scenarios/*.json`；JSON Schema 喺 `docs/schemas/runtime_bridge_scenario.v1.schema.json`；AI／人寫 scenario 就唔使再加 Python acceptance。Linux offline 跑 schema／assert／fake-client unit tests；唔聲稱 Windows runtime PASS。
+- Editor Play-mode bridge（Phase 7）：同一個 named pipe 可以 drive Debug Editor；`play_enter`／`play_exit`／`load_scene`／`set_setting`（culling whitelist）；Edit mode 拒絕 play ops（`not_playing`）；capture 裁遊戲 viewport；pipe 跨 Play／scene load 存活；唔搶 focus。Linux offline：`runtime_bridge_editor_play_check`；唔聲稱 Windows Editor PASS。
 - Fixture：`testbed/rom/scene/scene_runtime_bridge_*.json`；玩家模型用 `rom/model/player/`。

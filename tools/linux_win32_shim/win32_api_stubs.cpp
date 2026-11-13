@@ -117,3 +117,13 @@ BOOL ConvertStringSecurityDescriptorToSecurityDescriptorA(LPCSTR, DWORD, PSECURI
     return *sd != nullptr;
 }
 void* LocalFree(void* p) { std::free(p); return nullptr; }
+
+LPWSTR GetCommandLineW() {
+    static wchar_t empty[] = L"";
+    return empty;
+}
+
+LPWSTR* CommandLineToArgvW(LPCWSTR, int* argc) {
+    if (argc) *argc = 0;
+    return nullptr;
+}

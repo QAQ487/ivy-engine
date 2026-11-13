@@ -2867,6 +2867,14 @@ void EngineGUI_StartPlay(PlayMode mode) {
 }
 void EngineGUI_StopPlay() { ReturnToStart(); }
 void EngineGUI_RequestExitGame() { g_exitGameRequested.store(true); }
+void EngineGUI_RequestBridgeHostQuit() {
+    // Bridge-initiated process exit only. Do not use RequestExitGame — that
+    // path ReturnToStart()s in the Editor and never destroys the HWND.
+    if (g_isPlaying)
+        ReturnToStart();
+    if (HWND hwnd = GetWindowHandle())
+        PostMessageW(hwnd, WM_APP + 48, 0, 0);
+}
 CameraMode EngineGUI_GetCameraMode() { return g_cameraMode; }
 void EngineGUI_SetCameraMode(CameraMode m) { g_cameraMode = m; }
 const std::string& EngineGUI_GetActiveCameraNodeName() { return g_activeCameraNode; }
