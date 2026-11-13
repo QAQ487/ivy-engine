@@ -67,26 +67,28 @@
 
 ## 渲染效能：Culling
 
-現況：3D main camera pass 已有 per-object frustum culling；CSM depth passes 已有 per-cascade light-ortho caster culling（open near）；2D ortho sprite 已有 view-rect culling。仍然冇 distance／occlusion culling；billboard／particle／screen-space UI／tilemap 未做。Physics AABB 仍然唔共用。`D3D11_QUERY` 仍然只見 timestamp／pipeline stats。
+現況：3D main camera frustum culling（PR #25 `ba52894`）同 CSM per-cascade caster culling（PR #27 合併 `6db6040`）已入 master；後者 Windows Release A/B 已驗收。2D ortho sprite view-rect culling（PR #28 合併 `6adb343`）Windows Release runtime 已驗收。仍然冇 distance／occlusion culling；billboard／particle／screen-space UI／tilemap 未做。Physics AABB 仍然唔共用。`D3D11_QUERY` 仍然只見 timestamp／pipeline stats。
 
 參考：Unity 模型——自動 frustum culling、手動 baked occlusion、Unity 6 GPU occlusion、`CullingGroup` API。
 
-- [x] **Frustum culling（3D）**（source 已做；等 Windows Release runtime 驗收）
+- [x] **Frustum culling（3D）**（PR #25 `ba52894`；Release counters 喺 PR #27 跑時見過；單獨像素 A/B 未另記）
   - 每個 mesh 喺 load 時 cache local AABB（FBX／OBJ／primitives；skinned 喺 bind-pose 上再 inflate 半個最大半軸，保守包動畫）。`GameObject::DrawVisual` 轉 world AABB（scale／rotation 用 8 corners），對 camera view×proj 抽出嘅 6 planes（D3D z∈[0,1]）測試；完全在外就唔 `Model3D::Draw`。無有效 bounds 永不 cull。
   - **Shadow**：main pass 先 cull；camera frustum **唔**閘 shadow depth。Per-cascade light-ortho cull 見下項。
   - Toggle：`settings.render.frustumCullingEnabled`（預設 true；Rendering Settings checkbox）。Counters：considered／culled／drawn —— Rendering Settings 即時顯示、collision-viz overlay、play FPS overlay、runtime bridge `perf.frustumCull`。
   - Linux：`g++ -std=c++17 -I. -Itools/linux_win32_shim tools/frustum_cull_check.cpp -o /tmp/frustum_cull_check && /tmp/frustum_cull_check`。
-  - 剩餘：Windows Release 大場景目視（culled 隨視角升、toggle off 畫面一致、畫面外 caster 陰影仍在）；更緊嘅 per-clip skinned bounds（而家係 inflate）。
-- [x] **Shadow cascade caster culling**（source 已做；等 Windows Release runtime 驗收）
+  - 證據（PR #27 跑時順帶）：Windows Release 望開時 main camera culled 21／23 objects。
+  - 剩餘：PR #25 單獨嘅 ON／OFF 像素 A/B 未另記；更緊嘅 per-clip skinned bounds（而家係 inflate）。
+- [x] **Shadow cascade caster culling**（PR #27 合併 `6db6040`；Terry 接受 Windows Release runtime）
   - 每個 cascade 用 `lightView*lightProj` 抽出 6 planes；AABB 測試 **跳過 near**（open toward light／pancaking），只 cull 側向同 far。畫面外但仍投影入 cascade 嘅 caster 會畫 shadow。
   - Toggle：`settings.render.shadowCascadeCullingEnabled`（預設 true）。Counters：frame totals + per-cascade —— Rendering Settings；frame totals —— FPS／collision-viz／`perf.shadowCull`。
   - Linux：`./tools/run_shadow_cull_check.sh`。
-  - 剩餘：Windows Release A/B（ON vs OFF capture 像素一致於畫面內陰影；遠方 caster `shadowCull.culled` 上升；畫面外 caster 陰影仍在）。
-- [x] **2D camera rect culling**（source 已做；等 Windows Release runtime 驗收）
+  - 驗收（Windows Release A/B）：望住場景／望開：vertices −60%／−74%，GPU −0.7／−1.04 ms，像素 diff 0；畫面外 caster 陰影仍在；`shadowCull` culled 67／92（望住）同 75／92（望開）。
+- [x] **2D camera rect culling**（PR #28 合併 `6adb343`；Terry 接受 Windows Release runtime）
   - `SpriteRenderer` 喺 `Draw` 前用 size／pivot／world matrix（含 rotation／scale／renderOffset）計保守 world AABB，對 ortho camera 嘅 world-XY view rect（含細 margin）測試；完全在外就唔 `Sprite_DrawWorld`。Animator／physics／scripts 唔受影響。Screen-space UI 唔閘。Perspective camera 下 sprite 保持 unculled。
   - Toggle：`settings.render.spriteCullingEnabled`（預設 true）。Counters：considered／culled／drawn —— Rendering Settings、collision-viz、FPS `2CULL`、`perf.spriteCull`。
   - Linux：`./tools/run_sprite_cull_check.sh`。
-  - 剩餘：Windows Release A/B（ON vs OFF capture 像素一致；離屏 sprite `spriteCull.culled` 上升）；tilemap／billboard／particle 之後另做。
+  - 驗收：Windows Debug＋Release 已 build；Release ON vs OFF capture 像素 diff 0；115-sprite 場景 overlay `2CULL c:115 x:84 d:31`，sprite draws 115→31，GPU 0.97→0.17 ms。Terry 批准合併。
+  - 剩餘：tilemap／billboard／particle 之後另做。
 - [ ] **Distance／layer cull distance 同 LOD**
   - 仿 Unity `Camera.layerCullDistances` 同 LOD Group，按 layer 設剔除距離，近遠換 mesh 精度。排喺 frustum culling 之後。
 - [ ] **Occlusion culling（暫緩）**
@@ -118,6 +120,9 @@ PBR 球場已由引擎待辦移除：倉庫只有 PBR shader 同 `testbed/rom/sc
 
 已完成嘅 Physics Material、primitive meshes、render thread、Inspector Undo 修補、IBL／資產補齊、angular dynamics v1、Cylinder recursion fix、Collider Auto-Fit/scaling，保留喺 [[Engine Changelog]] 嘅完成紀錄，唔再混入未完成清單。歷史 backlog 嘅勾選同證據留喺上面一節。
 
+- [x] **Runtime test bridge（Phases 1–7）**：Runtime + Editor Play mode、scenario runner（PR #14–#21、#23、#24、#26、#29）。詳見 `docs/RUNTIME_TEST_BRIDGE.md`。
+- [x] **Agent docs pack**：`docs/agent/` + `tools/export_agent_docs.py`（PR #30 合併 `025ea1b`）。入口：`docs/agent/README.md`。
+
 ## 建議優先次序
 
 1. ImGuizmo 參數順序同 PR #7 視覺檢查（lighting、CSM、post-process、gizmo）一齊喺 Windows 做。
@@ -125,7 +130,7 @@ PBR 球場已由引擎待辦移除：倉庫只有 PBR shader 同 `testbed/rom/sc
 3. 重做 Properties Panel／Inspector（先有 UI 草案；現有編輯同 Undo 要保住）。
 4. AI 套件：Waypoint → Perception → BT／Blackboard → EQS。NavMesh 繼續暫緩。
 
-Box friction torque 同 World-space UI 未排入上面次序：前者只有想箱子傾側先做；後者驗收仍待設計。渲染 Culling 一節亦未排入；開做時先做 frustum culling。
+Box friction torque 同 World-space UI 未排入上面次序：前者只有想箱子傾側先做；後者驗收仍待設計。Culling 主線（3D frustum／shadow cascade／2D sprite）已入 master；距離／occlusion／tilemap／billboard／particle 未排入。
 
 ## 維護規則
 
