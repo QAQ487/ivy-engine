@@ -32,9 +32,9 @@ From `api:SceneExecutionPolicy` + `api:RenderSettings_ToJson` / parse:
 | `render.frustumCullingEnabled` | bool — main-pass 3D mesh cull |
 | `render.shadowCascadeCullingEnabled` | bool — shadow cascade caster cull |
 | `render.spriteCullingEnabled` | bool — 2D ortho sprite view-rect cull |
-| `camera.mode` | `"scene"`, `"thirdPerson"`, or `"firstPerson"` |
+| `camera.mode` | JSON strings from `PrepareSceneSettings` in `engine/scene/scene_loader.cpp`: `"thirdPerson"`, `"firstPerson"`, or default `"scene"` (→ `api:CameraMode` `SceneCamera`). C++ also has `CameraMode::Intro`; it is **not** a JSON mode string |
 | `camera.node` | Preferred scene camera node name |
-| `debugCamera` | Optional editor/play debug camera (`mode`, `enabledOnPlay`, `yawDeg`, `pitchDeg`, `position`) |
+| `debugCamera` | Same `.cpp` parser: `mode` (`"orbit"` default / `"fly"`), `enabledOnPlay`, `yawDeg`, `pitchDeg`, optional `position` object `{x,y,z}` |
 
 Other `render.*` keys (skybox, fog, shadows, clear color, …) match `api:RenderSettingsData` / `api:RenderSettings_ParseJson`.
 

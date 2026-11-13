@@ -74,12 +74,12 @@ void MySpinScript::OnUpdate(engine::GameObject& self, float dt) {
 | Area | APIs |
 |------|------|
 | Transform | `api:ScriptApi_FindTransform` |
-| Prefab | `api:ScriptApi_PrefabInstantiate`, `api:ScriptApi_PrefabDestroy` |
-| Visual | `api:ScriptApi_FindVisualComponent`, `api:ScriptApi_Visual_PlayClip`, `api:ScriptApi_Visual_PlayClipLoop`, `api:ScriptApi_Visual_GetClipDuration`, `api:ScriptApi_Visual_SetAnimSpeed` |
+| Prefab | `GameObject* ScriptApi_PrefabInstantiate(...)` / `ScriptApi_PrefabDestroy` — see [`api/assets.md`](api/assets.md) (`api:ScriptApi_PrefabInstantiate`, `api:ScriptApi_PrefabDestroy`) |
+| Visual | `api:ScriptApi_FindVisualComponent`, `ScriptApi_Visual_PlayClip(VisualComponent*, const char*)` — [`api/render.md`](api/render.md) |
 | Audio | `api:ScriptApi_FindAudioComponent`, `api:ScriptApi_Audio_Play`, `api:ScriptApi_Audio_Stop` |
-| Physics 3D | `api:ScriptApi_Physics_Raycast`, collider helpers in [`api/physics-3d.md`](api/physics-3d.md) |
-| Physics 2D | `api:ScriptApi_Physics2DSetVelocity`, `api:ScriptApi_Physics2DGetVelocity`, `api:ScriptApi_Physics2DMovePosition`, `api:ScriptApi_Physics2DRaycast` |
-| Sprite | `api:ScriptApi_SpritePlay`, `api:ScriptApi_SpritePause`, `api:ScriptApi_SpriteStop`, `api:ScriptApi_SpriteSetFlip`, `api:ScriptApi_SpriteSetTint` |
-| Input (direct headers) | `api:Keyboard_GetState`, `api:KeyLogger_IsTrigger`, `api:Controller_GetLeftStick`, `api:Controller_IsPressed`, `api:ScriptApi_MouseGetPosition` |
+| Physics 3D | `ScriptApi_Physics_Raycast(...)` — [`api/physics-3d.md`](api/physics-3d.md) |
+| Physics 2D | full signatures in [`api/physics-2d.md`](api/physics-2d.md) |
+| Sprite | `ScriptApi_SpritePlay(GameObject*, const char* clipName, bool restart = false)` — [`api/render.md`](api/render.md) |
+| Input | `api:Keyboard_GetState`, `api:KeyLogger_IsTrigger`, `api:Controller_GetLeftStick`, `api:Controller_IsPressed`, `void ScriptApi_MouseGetPosition(int& x, int& y)` |
 
-Camera follow helpers (`api:ThirdPersonCamera_Initialize`, `api:FirstPersonCamera_Initialize`, …) live under `src/app/camera/` — see [`api/camera.md`](api/camera.md).
+Camera follow: `void ThirdPersonCamera_SetTarget(DirectX::XMFLOAT3* positionPtr, float* yawPtr)` / same shape for `FirstPersonCamera_SetTarget` — [`api/camera.md`](api/camera.md) (`api:ThirdPersonCamera_SetTarget`, `api:FirstPersonCamera_SetTarget`).

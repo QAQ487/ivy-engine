@@ -15,12 +15,14 @@ Events: `api:Physics2DEvent` (`engine/physics/2d/physics2d.h`). Sample scripts m
 
 ## Script API
 
-- `api:ScriptApi_Physics2DSetVelocity`
-- `api:ScriptApi_Physics2DGetVelocity`
-- `api:ScriptApi_Physics2DMovePosition`
-- `api:ScriptApi_Physics2DRaycast` — origin, direction, distance; optional hit object/point/normal/distance; `mask` (default all bits); `includeTriggers`
+- `bool ScriptApi_Physics2DSetVelocity(GameObject* object, DirectX::XMFLOAT2 velocity)` — `api:ScriptApi_Physics2DSetVelocity`
+- `bool ScriptApi_Physics2DGetVelocity(GameObject* object, DirectX::XMFLOAT2* velocity)` — `api:ScriptApi_Physics2DGetVelocity`
+- `bool ScriptApi_Physics2DMovePosition(GameObject* object, DirectX::XMFLOAT2 position)` — `api:ScriptApi_Physics2DMovePosition`
+- `bool ScriptApi_Physics2DRaycast(DirectX::XMFLOAT2 origin, DirectX::XMFLOAT2 direction, float distance, GameObject** outObject, DirectX::XMFLOAT2* outPoint, DirectX::XMFLOAT2* outNormal, float* outDistance, std::uint32_t mask = 0xffffffffu, bool includeTriggers = false)` — `api:ScriptApi_Physics2DRaycast`
 
 ## Sprites (usually paired)
 
-- `api:ScriptApi_SpritePlay` / `api:ScriptApi_SpritePause` / `api:ScriptApi_SpriteStop`
-- `api:ScriptApi_SpriteSetFlip` / `api:ScriptApi_SpriteSetTint`
+- `bool ScriptApi_SpritePlay(GameObject* object, const char* clipName, bool restart = false)` — `api:ScriptApi_SpritePlay`
+- `void ScriptApi_SpritePause(GameObject* object)` / `void ScriptApi_SpriteStop(GameObject* object)` — `api:ScriptApi_SpritePause` / `api:ScriptApi_SpriteStop`
+- `void ScriptApi_SpriteSetFlip(GameObject* object, bool flipX, bool flipY)` — `api:ScriptApi_SpriteSetFlip`
+- `void ScriptApi_SpriteSetTint(GameObject* object, DirectX::XMFLOAT4 tint)` — `api:ScriptApi_SpriteSetTint`

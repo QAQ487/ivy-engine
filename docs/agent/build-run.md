@@ -4,23 +4,27 @@ Windows-only Visual Studio toolchain. **This Linux agent environment cannot veri
 
 ## Solution
 
-Open `IvyEngine.sln` (VS2022, toolset `v145` in project files).
+Open `IvyEngine.sln`. Project files set `<PlatformToolset>v145</PlatformToolset>` (Visual Studio **18 / 2026** toolset — not VS 2022’s `v143`).
 
 | Target | Output | Role |
 |--------|--------|------|
 | `IvyEngine` | `IvyEngine.exe` | ImGui Editor |
-| `IvyEngineRuntime` | `IvyEngineRuntime.exe` | Editor-less Runtime (`GAME_RUNTIME` define on x64) |
+| `IvyEngineRuntime` | `IvyEngineRuntime.exe` | Editor-less Runtime (`GAME_RUNTIME` define on x64 configs) |
 
 Prefer **x64** Debug/Release. Content projects build `GameScripts` separately (engine `docs/CONTENT_PROJECT.md`).
 
-## Debug vs Release
+## Debug vs Release (from `.vcxproj`)
 
-| | Debug | Release |
+Verified fields in `IvyEngine.vcxproj` / `IvyEngineRuntime.vcxproj` (x64):
+
+| | Debug (x64) | Release (x64) |
 |---|--------|---------|
-| Preprocessor | `_DEBUG` | `NDEBUG` |
-| Runtime library (x64) | `/MTd` (`MultiThreadedDebug`) | `/MT` (`MultiThreaded`) |
-| Test bridge | Available when opted in (Runtime **and** Editor) | Compiled out (`IVY_RUNTIME_TEST_BRIDGE_AVAILABLE` unset) |
-| Optimization | Debug defaults | No explicit `<Optimization>` in `.vcxproj`; MSVC defaults to **MaxSpeed (`/O2`)** when unset + `UseDebugLibraries=false`. Both projects set `WholeProgramOptimization` on Release |
+| `UseDebugLibraries` | `true` | `false` |
+| Preprocessor | `_DEBUG` (+ `GAME_RUNTIME` on Runtime) | `NDEBUG` (+ `GAME_RUNTIME` on Runtime) |
+| `RuntimeLibrary` | `MultiThreadedDebug` (`/MTd`) | `MultiThreaded` (`/MT`) |
+| `WholeProgramOptimization` | unset | `true` |
+| `<Optimization>` | **not set** in either project | **not set** — do not claim a specific `/O*` flag from the vcxproj |
+| Test bridge | Available when opted in (Runtime **and** Editor) | Compiled out (`api:IVY_RUNTIME_TEST_BRIDGE_AVAILABLE` unset) |
 
 ## Shaders
 

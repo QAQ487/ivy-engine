@@ -4,13 +4,13 @@ Scene canvas + element scripts. Canvas blob is the scene JSON `canvas` field.
 
 ## Canvas access
 
-- `api:ScriptApi_SceneCanvasGetCanvas` → `api:UICanvas`
-- `api:ScriptApi_SceneCanvasSetTimerSeconds`
-- `api:ScriptApi_SceneCanvasRequestSceneFile` — load `rom/...` scene; optional play-on-load
-- `api:ScriptApi_UICanvasGetElement` / `api:ScriptApi_UICanvasGetSprite`
-- `api:ScriptApi_UICanvasAddSprite` / `api:ScriptApi_UICanvasRemoveElement`
-- `api:ScriptApi_UITextSetText` (`api:UIText`)
-- `api:ScriptApi_UIElementSetVisible` (`api:UIElement`)
+- `UICanvas* ScriptApi_SceneCanvasGetCanvas()` — `api:ScriptApi_SceneCanvasGetCanvas` → `api:UICanvas`
+- `void ScriptApi_SceneCanvasSetTimerSeconds(float seconds)` — `api:ScriptApi_SceneCanvasSetTimerSeconds`
+- `void ScriptApi_SceneCanvasRequestSceneFile(const char* sceneFile, bool playOnLoad)` — `api:ScriptApi_SceneCanvasRequestSceneFile`
+- `UIElement* ScriptApi_UICanvasGetElement(UICanvas& canvas, const char* name)` / `UISprite* ScriptApi_UICanvasGetSprite(UICanvas& canvas, const char* name)` — `api:ScriptApi_UICanvasGetElement` / `api:ScriptApi_UICanvasGetSprite`
+- `api:ScriptApi_UICanvasAddSprite` / `void ScriptApi_UICanvasRemoveElement(UICanvas& canvas, const char* name)` — `api:ScriptApi_UICanvasRemoveElement`
+- `void ScriptApi_UITextSetText(UIText& text, const char* value)` — `api:ScriptApi_UITextSetText` (`api:UIText`)
+- `void ScriptApi_UIElementSetVisible(UIElement& element, bool visible)` — `api:ScriptApi_UIElementSetVisible` (`api:UIElement`)
 - Sprite helpers: `api:ScriptApi_UISpriteSetTexture`, `api:ScriptApi_UISpriteSetRadial360Fill`, `api:ScriptApi_UISpriteSetFillNone`, `api:ScriptApi_UISpriteSetSourceRect` (`api:UISprite`, `api:UIAnchor`)
 
 ## `api:UICanvasScript`

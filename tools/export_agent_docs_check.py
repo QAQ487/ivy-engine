@@ -146,6 +146,25 @@ class ExportAgentDocsTests(unittest.TestCase):
         self.assertFalse((self.game / "AGENTS.md").exists())
         self.assertIn("dry-run", buf.getvalue().lower())
 
+    def test_dry_run_lists_stale_under_managed_folder(self) -> None:
+        dest = self.game / "docs" / "ivy-engine"
+        _write(dest / "stale.md", "gone\n")
+        _write(dest / "nested" / "old.md", "gone\n")
+        _write(self.game / "docs" / "outside.md", "keep\n")
+        with mock.patch.object(export, "git_commit_hash", return_value="h"):
+            buf = io.StringIO()
+            with redirect_stdout(buf):
+                result = export.export_docs(self.engine, self.game, dry_run=True)
+        out = buf.getvalue()
+        self.assertTrue(result.dry_run)
+        self.assertIn("dry-run remove stale", out)
+        self.assertIn(str(dest / "stale.md"), out)
+        self.assertIn(str(dest / "nested" / "old.md"), out)
+        self.assertNotIn("outside.md", out)
+        # Nothing written
+        self.assertTrue((dest / "stale.md").is_file())
+        self.assertFalse((self.game / "AGENTS.md").exists())
+
 
 class ExportCliSmoke(unittest.TestCase):
     def test_module_main_help(self) -> None:

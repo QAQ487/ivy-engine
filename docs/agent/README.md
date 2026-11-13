@@ -14,11 +14,14 @@ Starter: `external_content_template/`. In-repo exercise project: `testbed/`. Ful
 
 ## Asset resolution (`rom/` vs `resources/`)
 
-Safe `rom/<rest>` paths resolve **project first**, then `<exe-dir>/resources/<rest>` (`api:ResolveRomForRead` in `api:content_path`). **Writes always go to the project** (`api:ResolveRomForWrite`) — never into exe `resources/`. Engine defaults (shaders, fonts, branding, primitives, IBL/skybox) live in repo-root `resources/` and are mirrored beside the exe.
+Safe `rom/<rest>` paths resolve **project first**, then `<exe-dir>/resources/<rest>` (`api:ResolveRomForRead` in `mod:content_path`). **Writes always go to the project** (`api:ResolveRomForWrite`) — never into exe `resources/`. Engine defaults (shaders, fonts, branding, primitives, IBL/skybox) live in repo-root `resources/` and are mirrored beside the exe.
 
 ## Drift markers
 
-C++ API identifiers in this pack use an `api:` prefix inside backticks (for example `api:Script`) so `tools/agent_docs_check.py` can verify them against `engine/**/*.h` and `src/app/**/*.h`. JSON field names and file paths stay in normal backticks (no `api:`).
+- ``api:<Symbol>`` in backticks — C++ symbol / type / macro; checked against tokens in `engine/**/*.h` and `src/app/**/*.h` (example: `api:Script`)
+- ``mod:<Stem>`` in backticks — module / header stem; must match a `*.h` basename under those trees (example: `mod:content_path` → `content_path.h`); not for C++ callables
+
+JSON field names and ordinary file paths stay in normal backticks (no `api:` / `mod:` prefix).
 
 ## Doc index
 

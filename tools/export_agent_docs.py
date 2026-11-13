@@ -164,13 +164,20 @@ def export_docs(
             planned.append(dest_root / "schemas" / path.relative_to(schemas_src))
     version_path = dest_root / "ENGINE_COMMIT"
     planned.append(version_path)
-    keep = {p.resolve() for p in planned} if not dry_run else set()
+    planned_rels = {p.relative_to(dest_root) for p in planned}
 
     if dry_run:
         actions.append(f"dry-run: would sync into {dest_root}")
         for p in planned:
             actions.append(f"dry-run copy/write {p}")
         actions.append(f"dry-run ENGINE_COMMIT={commit}")
+        if dest_root.is_dir():
+            for path in sorted(dest_root.rglob("*")):
+                if not path.is_file():
+                    continue
+                rel = path.relative_to(dest_root)
+                if rel not in planned_rels:
+                    actions.append(f"dry-run remove stale {path}")
         for name in ("AGENTS.md", "CLAUDE.md"):
             actions.append(f"dry-run upsert managed section {game / name}")
         print("\n".join(actions))
