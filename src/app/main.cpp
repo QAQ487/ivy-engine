@@ -686,11 +686,17 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstanc
                     }
                     if (runtimeTestBridge.PublishAndTakeQuit(ready, EngineGUI_IsPlaying(), scene,
                             std::move(targets), std::move(objects), readyDetail, bridgePlayMode)) {
+#ifdef GAME_RUNTIME
                         EngineGUI_RequestExitGame();
                         // RequestExitGame is deferred to EngineGUI_Update. While the
                         // bridge is paused, ShouldRunSimTick is false and Update is
                         // skipped, so drain the exit here on WinMain (posts WM_APP+48).
                         EngineGUI_Update(0.0);
+#else
+                        // Editor: RequestExitGame only ReturnToStart()s. Bridge quit
+                        // must DestroyWindow (and StopPlay first if still playing).
+                        EngineGUI_RequestBridgeHostQuit();
+#endif
                     }
                 }
 #endif
@@ -1081,13 +1087,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 #endif
 		return 0;
 
-#ifdef GAME_RUNTIME
-    // A confirmed in-game exit bypasses the separate window-close dialog.
+    // Confirmed exit (Runtime ExitGame / bridge quit). Bypasses WM_CLOSE
+    // confirmations and Editor unsaved popup — only posted by intentional quit paths.
     case WM_APP + 48:
         JoinRenderBeforeDeviceTouch();
         DestroyWindow(hWnd);
         return 0;
-#endif
 	case WM_CLOSE: // window close requested
 		JoinRenderBeforeDeviceTouch();
 #ifdef _DEBUG

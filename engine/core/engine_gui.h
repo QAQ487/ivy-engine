@@ -35,6 +35,10 @@ void EngineGUI_StartPlay(PlayMode mode = PlayMode::None);
 void EngineGUI_StopPlay();
 // Deferred until the next host update: stop Editor Play or close Runtime.
 void EngineGUI_RequestExitGame();
+// Bridge quit only: terminate the host process (WM_APP+48 → DestroyWindow).
+// Editor: StopPlay first if playing, then post destroy (skips unsaved/close dialogs).
+// Runtime: same as RequestExitGame. Does not change normal WM_CLOSE / user exit.
+void EngineGUI_RequestBridgeHostQuit();
 void EngineGUI_SetEnabled(bool enabled);
 bool EngineGUI_IsEnabled();
 void EngineGUI_GetGameViewportRect(float& x, float& y, float& width, float& height);

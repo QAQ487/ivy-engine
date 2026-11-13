@@ -216,6 +216,14 @@ bool ParseRuntimeTestBridgeSettingValue(const Json& value, bool& outBool, std::s
 EditorPlayModeKind ParseRuntimeTestBridgePlayMode(const char* mode) noexcept;
 const char* EditorPlayModeKindName(EditorPlayModeKind mode) noexcept;
 
+// Editor bridge-quit policy (WinMain posts WM_APP+48 DestroyWindow; Runtime unchanged).
+struct EditorBridgeQuitPlan {
+    bool stopPlayFirst = false;
+    bool postDestroyWindow = false;
+    bool skipUnsavedConfirm = false;
+};
+EditorBridgeQuitPlan PlanEditorBridgeHostQuit(bool playing) noexcept;
+
 class Protocol {
 public:
     Protocol(std::string runId, unsigned long pid, unsigned long session,

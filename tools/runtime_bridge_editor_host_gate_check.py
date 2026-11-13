@@ -39,6 +39,12 @@ RULES = [
         None,
         "main.cpp must include <shellapi.h> for CommandLineToArgvW",
     ),
+    (
+        "tools/runtime_bridge_editor_host_compile_check.cpp",
+        r"#include\s*<windows\.h>[\s\S]*?#include\s*<shellapi\.h>",
+        None,
+        "editor host compile check must include <windows.h> before <shellapi.h> (MSVC)",
+    ),
 ]
 
 
@@ -88,13 +94,34 @@ def main() -> int:
                     "main.cpp <shellapi.h> should be near IVY_RUNTIME_TEST_BRIDGE_AVAILABLE "
                     "so Release Editor compiles it out")
 
+    # Editor bridge quit must DestroyWindow, not RequestExitGame (ReturnToStart).
+    if "EngineGUI_RequestBridgeHostQuit" not in main_cpp:
+        failures.append(
+            "main.cpp must call EngineGUI_RequestBridgeHostQuit for Editor bridge quit")
+    if not re.search(
+            r"#ifndef\s+GAME_RUNTIME[\s\S]*?EngineGUI_RequestBridgeHostQuit",
+            main_cpp):
+        failures.append(
+            "Editor bridge quit (RequestBridgeHostQuit) must be under #ifndef GAME_RUNTIME")
+    if not re.search(r"case\s+WM_APP\s*\+\s*48\s*:", main_cpp):
+        failures.append("main.cpp must handle WM_APP+48 DestroyWindow for bridge quit")
+    # The WndProc case must not be GAME_RUNTIME-only (Editor bridge quit needs it).
+    if re.search(
+            r"#ifdef\s+GAME_RUNTIME\s*\n\s*//[^\n]*\n\s*case\s+WM_APP\s*\+\s*48\s*:",
+            main_cpp) or re.search(
+            r"#ifdef\s+GAME_RUNTIME\s*\n\s*case\s+WM_APP\s*\+\s*48\s*:",
+            main_cpp):
+        failures.append(
+            "WM_APP+48 DestroyWindow case must not be inside #ifdef GAME_RUNTIME "
+            "(Editor bridge quit needs it)")
+
     if failures:
         print("FAIL Editor host bridge gate check:")
         for f in failures:
             print(" -", f)
         return 1
     print("PASS Editor host bridge gate check "
-          "(world/editor apply + shellapi aligned with IVY_RUNTIME_TEST_BRIDGE_AVAILABLE)")
+          "(world/editor apply + shellapi + Editor quit DestroyWindow)")
     return 0
 
 

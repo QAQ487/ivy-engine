@@ -131,6 +131,11 @@ void EngineGUI_StartPlay(PlayMode /*mode*/) {
 
 void EngineGUI_RequestExitGame() { g_exitGameRequested.store(true); }
 
+void EngineGUI_RequestBridgeHostQuit() {
+    // Runtime: same confirmed-exit path as in-game ExitGame / bridge quit.
+    EngineGUI_RequestExitGame();
+}
+
 void EngineGUI_StopPlay() {
     TeardownScenePlaySession(true);
     g_runtimePlaying = false;

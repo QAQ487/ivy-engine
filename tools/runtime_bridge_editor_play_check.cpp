@@ -165,6 +165,23 @@ int main() {
     auto st = ed.Request(R"({"protocolVersion":1,"requestId":22,"runId":"editor7","verb":"status"})");
     check(st["playMode"] == "fullscreen", "status reports fullscreen");
 
+    // --- Editor bridge quit policy (StopPlay then DestroyWindow; skip unsaved) ---
+    {
+        const auto playingQuit = PlanEditorBridgeHostQuit(true);
+        check(playingQuit.stopPlayFirst, "quit while playing stops Play first");
+        check(playingQuit.postDestroyWindow, "quit posts DestroyWindow");
+        check(playingQuit.skipUnsavedConfirm, "quit skips unsaved confirm");
+        const auto editQuit = PlanEditorBridgeHostQuit(false);
+        check(!editQuit.stopPlayFirst, "quit in Edit mode does not StopPlay");
+        check(editQuit.postDestroyWindow && editQuit.skipUnsavedConfirm,
+              "quit in Edit mode still destroys without unsaved popup");
+    }
+
+    // Protocol quit still ACKs with receipt (host process exit is WinMain-side).
+    auto quitAck = ed.Request(R"({"protocolVersion":1,"requestId":23,"runId":"editor7","verb":"quit"})");
+    check(quitAck["ok"] == true && quitAck["requiresReceipt"] == true, "editor quit ack");
+    check(quitAck["requestId"] == 23, "quit echoes requestId");
+
     std::cout << "PASS Phase 7 editor play-mode bridge protocol\n";
     return 0;
 }

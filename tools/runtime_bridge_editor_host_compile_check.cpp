@@ -14,6 +14,10 @@
 
 #include "src/app/runtime_test_world_apply.h"
 #include "src/app/runtime_test_editor_apply.h"
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <windows.h>
 #include <shellapi.h>
 #include <string>
 

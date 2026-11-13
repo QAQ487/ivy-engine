@@ -265,6 +265,16 @@ const char* EditorPlayModeKindName(EditorPlayModeKind mode) noexcept {
     default: return "invalid";
     }
 }
+
+EditorBridgeQuitPlan PlanEditorBridgeHostQuit(bool playing) noexcept {
+    // Mirror EngineGUI_RequestBridgeHostQuit: StopPlay if needed, then destroy
+    // via WM_APP+48 (bypasses unsaved/close dialogs). Runtime keeps RequestExitGame.
+    EditorBridgeQuitPlan plan;
+    plan.stopPlayFirst = playing;
+    plan.postDestroyWindow = true;
+    plan.skipUnsavedConfirm = true;
+    return plan;
+}
 namespace {
 std::string g_sceneOverride;
 Json ObserveTargetJson(const ObservedTarget& t) {
