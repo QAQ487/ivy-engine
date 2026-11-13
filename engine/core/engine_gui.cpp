@@ -50,6 +50,7 @@
 #include <iomanip>
 #include <sstream>
 #include <locale>
+#include <system_error>
 #include <Windows.h>
 #include <filesystem>
 
@@ -482,7 +483,7 @@ static void QueueSceneHotLoad(SceneFileMonitor::Version version) {
             const auto path = value.get<std::string>();
             if (path.empty()) return;
             const auto file = PathFromUtf8(path);
-            auto ext = file.extension().string();
+            auto ext = PathToUtf8(file.extension());
             std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) { return char(std::tolower(c)); });
             if (ext == ".png" || ext == ".jpg" || ext == ".jpeg" || ext == ".dds" || ext == ".tga")
                 if (!TextureValidateFile(file.c_str())) throw std::runtime_error("Cannot read texture: " + path);
@@ -3367,114 +3368,129 @@ void EngineGUI_Update(double elapsed_time) {
         auto changes = g_contentMonitor.Poll(root);
         g_contentChanges.insert(g_contentChanges.end(), changes.begin(), changes.end());
         if (!IsSceneLoadBusy() && !g_contentChanges.empty()) {
-            const bool directoryChanged = std::any_of(g_contentChanges.begin(), g_contentChanges.end(),
-                [](const auto& change) { return change.added || change.removed; });
-            if (directoryChanged) {
-                ProjectAssetIndex::Instance().Refresh();
-                SceneLoader_RefreshSceneAssets();
-            }
-            for (const auto& change : g_contentChanges) {
-                const std::string path = ContentFileMonitor::Utf8Path(std::filesystem::path("rom") / PathFromUtf8(change.path));
-                auto ext = PathFromUtf8(path).extension().string();
-                std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) { return char(std::tolower(c)); });
-                if (!SceneLoader_GetCurrentScenePath().empty() && std::filesystem::absolute(path).lexically_normal() == std::filesystem::absolute(SceneLoader_GetCurrentScenePath()).lexically_normal()) {
-                    std::string content;
-                    if (change.removed) {
-                        g_contentReloadLight.Failure(); g_contentReloadStatus = "Current scene removed; live scene retained: " + path;
-                        LogContentReload(g_contentReloadStatus);
-                    } else if (SceneFileMonitor::Read(path, content) && content != SceneLoader_GetCurrentSceneContent()) g_contentSceneReload = true;
-                    continue;
+            try {
+                const bool directoryChanged = std::any_of(g_contentChanges.begin(), g_contentChanges.end(),
+                    [](const auto& change) { return change.added || change.removed; });
+                if (directoryChanged) {
+                    ProjectAssetIndex::Instance().Refresh();
+                    SceneLoader_RefreshSceneAssets();
                 }
-                if (ext == ".dll") continue; // ScriptFactory owns DLL validation and module lifetime.
-                if (path.rfind("rom/skybox/cache/", 0) == 0) {
-                    if (!change.removed && ext == ".dds") {
-                        const auto widePath = PathFromUtf8(path).wstring();
-                        if (CubemapReload(widePath.c_str()) == TextureReloadResult::Reloaded)
-                            RenderSettings_ReloadSkybox();
-                    }
-                    continue;
-                }
-                if (change.added && !content_reload::SceneJsonReferencesRomPath(SceneLoader_GetCurrentSceneContent(), path)) continue;
-                if (change.removed) {
-                    const auto removal = content_reload::DecideRemovedContentAction(
-                        path, SceneLoader_GetCurrentSceneContent(), ContentPathCurrentlyLoaded(path));
-                    if (removal == content_reload::RemovedContentAction::KeepWatching) {
-                        LogContentReload("Content removed (unreferenced, not loaded); watching: " + path);
+                for (const auto& change : g_contentChanges) {
+                    const std::string path = ContentFileMonitor::Utf8Path(std::filesystem::path("rom") / PathFromUtf8(change.path));
+                    auto ext = PathToUtf8(PathFromUtf8(path).extension());
+                    std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) { return char(std::tolower(c)); });
+                    std::error_code changeEc, sceneEc;
+                    const auto absChange = std::filesystem::absolute(PathFromUtf8(path), changeEc).lexically_normal();
+                    const auto absScene = SceneLoader_GetCurrentScenePath().empty()
+                        ? std::filesystem::path{}
+                        : std::filesystem::absolute(PathFromUtf8(SceneLoader_GetCurrentScenePath()), sceneEc).lexically_normal();
+                    if (!absScene.empty() && !changeEc && !sceneEc && absChange == absScene) {
+                        std::string content;
+                        if (change.removed) {
+                            g_contentReloadLight.Failure(); g_contentReloadStatus = "Current scene removed; live scene retained: " + path;
+                            LogContentReload(g_contentReloadStatus);
+                        } else if (SceneFileMonitor::Read(path, content) && content != SceneLoader_GetCurrentSceneContent()) g_contentSceneReload = true;
                         continue;
                     }
-                    g_contentReloadLight.Failure();
-                    g_contentReloadStatus = "Content removed; existing resources retained: " + path;
-                    LogContentReload(g_contentReloadStatus);
-                    continue;
-                }
-                if (ext == ".png" || ext == ".jpg" || ext == ".jpeg" || ext == ".dds" || ext == ".tga") {
-                    if (ext == ".png" && panorama::IsEquirectSkyPath(path) &&
-                        panorama::SameRomPath(path, RenderSettings_GetConst().skyboxCubemapPath)) {
-                        const panorama::Prep prep = panorama::PrepareSky(RenderSettings_GetConst().skyboxCubemapPath);
-                        if (!prep.ok) {
-                            g_contentReloadLight.Failure();
-                            g_contentReloadStatus = "Panorama skybox failed: " + prep.error;
+                    if (ext == ".dll") continue; // ScriptFactory owns DLL validation and module lifetime.
+                    if (path.rfind("rom/skybox/cache/", 0) == 0) {
+                        if (!change.removed && ext == ".dds") {
+                            const auto widePath = PathFromUtf8(path).wstring();
+                            if (CubemapReload(widePath.c_str()) == TextureReloadResult::Reloaded)
+                                RenderSettings_ReloadSkybox();
+                        }
+                        continue;
+                    }
+                    if (change.added && !content_reload::SceneJsonReferencesRomPath(SceneLoader_GetCurrentSceneContent(), path)) continue;
+                    if (change.removed) {
+                        const auto removal = content_reload::DecideRemovedContentAction(
+                            path, SceneLoader_GetCurrentSceneContent(), ContentPathCurrentlyLoaded(path));
+                        if (removal == content_reload::RemovedContentAction::KeepWatching) {
+                            LogContentReload("Content removed (unreferenced, not loaded); watching: " + path);
+                            continue;
+                        }
+                        g_contentReloadLight.Failure();
+                        g_contentReloadStatus = "Content removed; existing resources retained: " + path;
+                        LogContentReload(g_contentReloadStatus);
+                        continue;
+                    }
+                    if (ext == ".png" || ext == ".jpg" || ext == ".jpeg" || ext == ".dds" || ext == ".tga") {
+                        if (ext == ".png" && panorama::IsEquirectSkyPath(path) &&
+                            panorama::SameRomPath(path, RenderSettings_GetConst().skyboxCubemapPath)) {
+                            const panorama::Prep prep = panorama::PrepareSky(RenderSettings_GetConst().skyboxCubemapPath);
+                            if (!prep.ok) {
+                                g_contentReloadLight.Failure();
+                                g_contentReloadStatus = "Panorama skybox failed: " + prep.error;
+                                LogContentReload(g_contentReloadStatus);
+                                continue;
+                            }
+                            auto reloadCube = [](const std::string& rom) {
+                                if (rom.empty())
+                                    return;
+                                const std::wstring wide = PathFromUtf8(rom).wstring();
+                                CubemapReload(wide.c_str());
+                            };
+                            reloadCube(prep.cubemapRom);
+                            reloadCube(prep.irradianceRom);
+                            reloadCube(prep.prefilterRom);
+                            RenderSettings_ReloadSkybox();
+                            if (prep.iblReady) {
+                                g_contentReloadLight.Success();
+                                g_contentReloadStatus = "Panorama skybox updated: " + path;
+                            } else {
+                                g_contentReloadLight.Failure();
+                                g_contentReloadStatus = "IBL not matching sky: " + prep.error;
+                            }
                             LogContentReload(g_contentReloadStatus);
                             continue;
                         }
-                        auto reloadCube = [](const std::string& rom) {
-                            if (rom.empty())
-                                return;
-                            const std::wstring wide = PathFromUtf8(rom).wstring();
-                            CubemapReload(wide.c_str());
-                        };
-                        reloadCube(prep.cubemapRom);
-                        reloadCube(prep.irradianceRom);
-                        reloadCube(prep.prefilterRom);
-                        RenderSettings_ReloadSkybox();
-                        if (prep.iblReady) {
-                            g_contentReloadLight.Success();
-                            g_contentReloadStatus = "Panorama skybox updated: " + path;
+                        const auto widePath = PathFromUtf8(path).wstring();
+                        const auto cube = CubemapReload(widePath.c_str());
+                        if (cube == TextureReloadResult::Reloaded) RenderSettings_ReloadSkybox();
+                        const auto result = cube != TextureReloadResult::NotLoaded ? cube : TextureReload(widePath.c_str());
+                        if (result == TextureReloadResult::Failed) {
+                            g_contentReloadLight.Failure(); g_contentReloadStatus = "Texture reload failed; previous version retained: " + path;
+                            LogContentReload(g_contentReloadStatus);
                         } else {
-                            g_contentReloadLight.Failure();
-                            g_contentReloadStatus = "IBL not matching sky: " + prep.error;
+                            if (path.rfind("rom/effects/", 0) == 0 && !EffectSystem::ReloadContent()) {
+                                g_contentReloadLight.Failure(); g_contentReloadStatus = "Effect resource reload failed: " + path;
+                                LogContentReload(g_contentReloadStatus); continue;
+                            }
+                            g_contentReloadLight.Success(); g_contentReloadStatus = "Texture updated: " + path;
+                            // Shared model/material textures also need their owning components rebuilt.
+                            if ((change.added && result == TextureReloadResult::NotLoaded && content_reload::SceneJsonReferencesRomPath(SceneLoader_GetCurrentSceneContent(), path)) || (!change.added && (result == TextureReloadResult::NotLoaded || ModelUtil_IsTextureCached(widePath.c_str()) || path.rfind("rom/model/", 0) == 0 || path.rfind("rom/effects/", 0) == 0))) g_contentSceneReload = true;
                         }
-                        LogContentReload(g_contentReloadStatus);
                         continue;
                     }
-                    const auto widePath = PathFromUtf8(path).wstring();
-                    const auto cube = CubemapReload(widePath.c_str());
-                    if (cube == TextureReloadResult::Reloaded) RenderSettings_ReloadSkybox();
-                    const auto result = cube != TextureReloadResult::NotLoaded ? cube : TextureReload(widePath.c_str());
-                    if (result == TextureReloadResult::Failed) {
-                        g_contentReloadLight.Failure(); g_contentReloadStatus = "Texture reload failed; previous version retained: " + path;
-                        LogContentReload(g_contentReloadStatus);
-                    } else {
-                        if (path.rfind("rom/effects/", 0) == 0 && !EffectSystem::ReloadContent()) {
-                            g_contentReloadLight.Failure(); g_contentReloadStatus = "Effect resource reload failed: " + path;
-                            LogContentReload(g_contentReloadStatus); continue;
-                        }
-                        g_contentReloadLight.Success(); g_contentReloadStatus = "Texture updated: " + path;
-                        // Shared model/material textures also need their owning components rebuilt.
-                        if ((change.added && result == TextureReloadResult::NotLoaded && content_reload::SceneJsonReferencesRomPath(SceneLoader_GetCurrentSceneContent(), path)) || (!change.added && (result == TextureReloadResult::NotLoaded || ModelUtil_IsTextureCached(widePath.c_str()) || path.rfind("rom/model/", 0) == 0 || path.rfind("rom/effects/", 0) == 0))) g_contentSceneReload = true;
-                    }
-                    continue;
-                }
-                if ((ext == ".ttf" || ext == ".otf") && !UIFont_Reload(PathFromUtf8(path).c_str())) {
-                    g_contentReloadLight.Failure(); g_contentReloadStatus = "Invalid font; previous version retained: " + path;
-                    LogContentReload(g_contentReloadStatus); continue;
-                }
-                if (path.rfind("rom/effects/", 0) == 0 && !EffectSystem::ReloadContent()) {
-                    g_contentReloadLight.Failure(); g_contentReloadStatus = "Invalid effect; previous version retained: " + path;
-                    LogContentReload(g_contentReloadStatus); continue;
-                }
-                if (ext == ".wav" && !AudioManager::Instance().ReloadContent(path)) {
-                    g_contentReloadLight.Failure(); g_contentReloadStatus = "Invalid audio; previous version retained: " + path;
-                    LogContentReload(g_contentReloadStatus); continue;
-                }
-                if (ext == ".json" || ext == ".physmat") {
-                    std::string content;
-                    if (!SceneFileMonitor::Read(path, content) || nlohmann::json::parse(content, nullptr, false).is_discarded()) {
-                        g_contentReloadLight.Failure(); g_contentReloadStatus = "Invalid content; previous scene retained: " + path;
+                    if ((ext == ".ttf" || ext == ".otf") && !UIFont_Reload(PathFromUtf8(path).c_str())) {
+                        g_contentReloadLight.Failure(); g_contentReloadStatus = "Invalid font; previous version retained: " + path;
                         LogContentReload(g_contentReloadStatus); continue;
                     }
+                    if (path.rfind("rom/effects/", 0) == 0 && !EffectSystem::ReloadContent()) {
+                        g_contentReloadLight.Failure(); g_contentReloadStatus = "Invalid effect; previous version retained: " + path;
+                        LogContentReload(g_contentReloadStatus); continue;
+                    }
+                    if (ext == ".wav" && !AudioManager::Instance().ReloadContent(path)) {
+                        g_contentReloadLight.Failure(); g_contentReloadStatus = "Invalid audio; previous version retained: " + path;
+                        LogContentReload(g_contentReloadStatus); continue;
+                    }
+                    if (ext == ".json" || ext == ".physmat") {
+                        std::string content;
+                        if (!SceneFileMonitor::Read(path, content) || nlohmann::json::parse(content, nullptr, false).is_discarded()) {
+                            g_contentReloadLight.Failure(); g_contentReloadStatus = "Invalid content; previous scene retained: " + path;
+                            LogContentReload(g_contentReloadStatus); continue;
+                        }
+                    }
+                    if (!change.added || content_reload::SceneJsonReferencesRomPath(SceneLoader_GetCurrentSceneContent(), path)) g_contentSceneReload = true;
                 }
-                if (!change.added || content_reload::SceneJsonReferencesRomPath(SceneLoader_GetCurrentSceneContent(), path)) g_contentSceneReload = true;
+            } catch (const std::system_error& error) {
+                g_contentReloadLight.Failure();
+                g_contentReloadStatus = std::string("Content path error: ") + error.what();
+                LogContentReload(g_contentReloadStatus);
+            } catch (const std::exception& error) {
+                g_contentReloadLight.Failure();
+                g_contentReloadStatus = std::string("Content reload error: ") + error.what();
+                LogContentReload(g_contentReloadStatus);
             }
             g_contentChanges.clear();
         }

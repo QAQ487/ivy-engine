@@ -15,6 +15,7 @@
 #include "scene_json_validation.h"
 #include "engine/scene/json_float.h"
 #include "engine/core/content_path.h"
+#include "engine/core/utf8_path.h"
 
 #include "engine/scene/render_settings.h"
 #include "engine/ecs/component_factory.h"
@@ -332,18 +333,18 @@ void SceneLoader_RefreshSceneAssets() {
         if (!entry.is_regular_file(ec)) continue;
 
         fs::path path = entry.path();
-        if (ToLowerString(path.extension().string()) != ".json") continue;
+        if (ToLowerString(PathToUtf8(path.extension())) != ".json") continue;
 
         SceneAssetEntry asset;
-        asset.path = path.string();
+        asset.path = PathToUtf8(path);
 
         fs::path relativePath = content_path::LexicalChildPath(path, SCENE_DIR);
         if (relativePath.empty())
             relativePath = path.filename();
 
-        asset.fileName = relativePath.generic_string();
+        asset.fileName = PathToUtf8(relativePath);
         relativePath.replace_extension();
-        asset.displayName = relativePath.generic_string();
+        asset.displayName = PathToUtf8(relativePath);
         asset.sortName = ToLowerString(asset.displayName);
         g_sceneAssets.push_back(asset);
     }

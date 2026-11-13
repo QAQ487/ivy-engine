@@ -16,6 +16,7 @@
 #include <set>
 #include <cstddef>
 #include "engine/core/content_path.h"
+#include "engine/core/utf8_path.h"
 #ifdef _WIN32
 #ifndef NOMINMAX
 #define NOMINMAX
@@ -51,8 +52,7 @@ public:
     using Snapshot = std::map<std::string, File>;
     struct Change { std::string path; bool added = false, removed = false; };
     static std::string Utf8Path(const std::filesystem::path& path) {
-        const auto bytes = path.generic_u8string();
-        return std::string(bytes.begin(), bytes.end());
+        return PathToUtf8(path);
     }
     ~ContentFileMonitor() { StopWatch(); }
     static Snapshot Scan(const std::filesystem::path& root, const Snapshot& previous = {}, bool audit = true, const std::set<std::string>& dirty = {}) {
@@ -70,7 +70,7 @@ public:
             }
             if (it->is_directory(ec)) { result.emplace(relative + "/", File{}); continue; }
             if (!it->is_regular_file(ec)) continue;
-            auto ext = it->path().extension().string();
+            auto ext = Utf8Path(it->path().extension());
             std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) { return char(std::tolower(c)); });
             if (ext == ".tmp" || ext == ".bak" || (ext == ".obj" && relative.rfind("model/", 0) != 0) ||
                 ext == ".pdb" || ext == ".ilk" || ext == ".log" || name.find(".hot_") != std::string::npos || name.back() == '~') continue;
