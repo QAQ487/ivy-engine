@@ -295,7 +295,7 @@ Without staging/`--scene`, Debug runtime launched from OutDir falls back to in-r
 tools/run_runtime_bridge_offline_linux.sh x64/linux-bridge-offline
 ```
 
-Compiles and runs `runtime_bridge_protocol_check`, `runtime_bridge_phase6_check`, `runtime_bridge_world_manip_check`, `runtime_bridge_observe_pose_check`, and `runtime_bridge_editor_play_check` (Phase 7 parse/whitelist/gating) with Win32/input stubs (`tools/linux_win32_shim/`), then Python unit tests for angular acceptance validators, editor client helpers, and the Phase 5 scenario runner (schema / asserts / fake-client). Pipe DACL / `--serve` transport checks remain Windows-only. Windows Debug runtime/Editor verification of live named-pipe ops remains pending when only Linux offline checks are run.
+Compiles and runs `runtime_bridge_protocol_check`, `runtime_bridge_phase6_check`, `runtime_bridge_world_manip_check`, `runtime_bridge_observe_pose_check`, and `runtime_bridge_editor_play_check` (Phase 7 parse/whitelist/gating) with Win32/input stubs (`tools/linux_win32_shim/`), plus an **Editor Debug host** compile probe (`runtime_bridge_editor_host_compile_check`, `-D_DEBUG` without `GAME_RUNTIME`) and `runtime_bridge_editor_host_gate_check.py` (declaration/include gate sync). Then Python unit tests for angular acceptance validators, editor client helpers, and the Phase 5 scenario runner. Pipe DACL / `--serve` transport checks remain Windows-only. On Windows, `run_runtime_bridge_checks.cmd` also `msbuild`s `IvyEngine.vcxproj` Debug when MSBuild is available. Live named-pipe Editor verification remains pending when only Linux offline checks are run.
 
 ### Batch harness (MSVC x64)
 

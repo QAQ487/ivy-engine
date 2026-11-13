@@ -11,6 +11,7 @@
 #include "engine/ecs/prefab_runtime.h"
 #include "src/app/runtime_test_world_apply.h"
 #include "src/app/runtime_test_editor_apply.h"
+#include <shellapi.h> // CommandLineToArgvW (bridge --scene); links via shell32.lib below
 static ivy::testing::Bridge* g_pRuntimeTestBridge = nullptr;
 static bool g_runtimeTestSceneArgFatal = false;
 #endif
