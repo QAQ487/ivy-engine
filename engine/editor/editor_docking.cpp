@@ -242,6 +242,44 @@ bool EditorDocking_HasCentralNode()
     return g_hasCentral;
 }
 
+EditorClientRect EditorDocking_GetGameViewportClientRect()
+{
+    if (g_hasCentral)
+        return FitEditor16x9Viewport(g_centralClient);
+    return FitEditor16x9Viewport(EditorClientRect{0.0f, 0.0f, 1.0f, 1.0f});
+}
+
+void EditorDocking_DrawLetterboxBars()
+{
+    if (!g_hasCentral)
+        return;
+
+    const EditorClientRect& node = g_centralClient;
+    const EditorClientRect game = FitEditor16x9Viewport(node);
+    ImDrawList* dl = ImGui::GetBackgroundDrawList();
+    const ImU32 black = IM_COL32(0, 0, 0, 255);
+
+    // Top / bottom letterbox strips (full node width).
+    if (game.y > node.y + 0.5f)
+        dl->AddRectFilled(
+            ImVec2(node.x, node.y), ImVec2(node.x + node.w, game.y), black);
+    const float gameBottom = game.y + game.h;
+    const float nodeBottom = node.y + node.h;
+    if (gameBottom + 0.5f < nodeBottom)
+        dl->AddRectFilled(
+            ImVec2(node.x, gameBottom), ImVec2(node.x + node.w, nodeBottom), black);
+
+    // Left / right pillarbox strips (only beside the game rect).
+    if (game.x > node.x + 0.5f)
+        dl->AddRectFilled(
+            ImVec2(node.x, game.y), ImVec2(game.x, gameBottom), black);
+    const float gameRight = game.x + game.w;
+    const float nodeRight = node.x + node.w;
+    if (gameRight + 0.5f < nodeRight)
+        dl->AddRectFilled(
+            ImVec2(gameRight, game.y), ImVec2(nodeRight, gameBottom), black);
+}
+
 EditorPanelVisibility& EditorDocking_PanelVisibility()
 {
     return g_panelVisibility;

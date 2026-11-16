@@ -197,16 +197,16 @@ Typical panels and workflows:
 1. **Scene hierarchy** — select objects, expand children.
 2. **Inspector / properties** — edit transform, components, script fields, and **tags** (pick / add / delete custom).
 3. **Asset Browser (project / prefab browser)** — indexes the open project’s `rom/` and `game/scripts/`. Folder tree + breadcrumb navigate; **Refresh** and **Search** filter the current folder. **Grid / List** toggles the right-hand view; in Grid, a **Tile** size slider (64–160) scales icons. Grid names wrap up to two lines and ellipsize when still too long; hover shows the full file name and `rom/`-relative path; the status line at the bottom shows the selected asset’s name and path. List view is one row per asset (icon + full name, single-line ellipsis only if the panel is narrower than the name). Drag-drop (`ASSET_PATH` / `ASSET_PREFAB`), double-click, and right-click menus (including **Set as > Skybox** for eligible cubemaps) work in both views. View mode and tile size are stored in `project.json` → `editor` and `rom/editor/ui_prefs.json`.
-4. **Viewport** — 3D game view in the docking central node (free aspect; see below); transform gizmo and selection wireframe.
+4. **Viewport** — 3D game view in the docking central node (fixed **16:9** letterbox/pillarbox; see below); transform gizmo and selection wireframe.
 5. **Play toolbar** — Play / Stop (F2 viewport / F3 fullscreen).
 6. **UI edit mode** — switch edit mode to place canvas elements on screen.
 7. **File menu** — New / Open / Save Project, Recent Projects, Save Scene, New Scene.
 
 ### Viewport aspect ratio
 
-The editor game viewport is the ImGui docking **central node** (passthrough: the D3D scene shows through; panels dock around it). Its aspect follows the central node size (free aspect) as you resize splitters or the window — there is no letterboxed fixed preview ratio.
+The editor game viewport is the largest centered **16:9** rectangle inside the ImGui docking central node (passthrough: the D3D scene shows through the game rect; panels dock around the node). Unused gutters are solid black letterbox/pillarbox bars — the image is never stretched. There is no aspect menu or render-setting toggle.
 
-Play mode (F2 keeps chrome; F3 uses the full backbuffer), cameras, shadows, and UI hit-testing use that viewport rectangle’s width÷height. There is no separate “aspect” field in Render Settings. If a shipped game needs a fixed aspect, letterbox inside the central node (or the fullscreen backbuffer) in content code — the editor does not force one.
+Play mode uses the same 16:9 contract (F2 inside the central node; F3 letterboxed in the full window). Cameras, shadows, picking, gizmos, and UI hit-testing use that rectangle’s width÷height. The shipped runtime (non-editor) still uses the full backbuffer.
 
 Layout (Hierarchy / Properties / Asset Browser) persists per content project at `rom/editor/imgui_layout.ini`. Use **Window → Reset Layout** to restore the default left/right/bottom arrangement.
 

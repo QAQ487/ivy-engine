@@ -65,7 +65,7 @@ bool GetGizmoCenter(float& outX, float& outY) {
     if (!EditorDocking_HasCentralNode())
         return false;
 
-    const EditorClientRect& c = EditorDocking_GetCentralNodeClientRect();
+    const EditorClientRect c = EditorDocking_GetGameViewportClientRect();
     if (c.w < 120.0f || c.h < 120.0f)
         return false;
 

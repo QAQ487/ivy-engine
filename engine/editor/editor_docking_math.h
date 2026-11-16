@@ -44,6 +44,78 @@ inline constexpr float kEditorDockBottomPanelMinHeight = 340.0f;
 inline constexpr float kEditorDockBottomPanelScreenFraction = 0.34f;
 inline constexpr float kEditorDockViewportMinHeight = 120.0f;
 inline constexpr float kEditorDockViewportMinWidth = 64.0f;
+// Editor / F2 / F3 game view is locked to 16:9 (letterbox or pillarbox inside bounds).
+inline constexpr float kEditorViewportAspectW = 16.0f;
+inline constexpr float kEditorViewportAspectH = 9.0f;
+
+// Largest centered rect of aspect (aspectW:aspectH) that fits inside bounds.
+// Degenerate / non-finite bounds clamp to a 1x1 rect at the origin of bounds.
+inline EditorClientRect FitFixedAspectRect(
+    const EditorClientRect& bounds, float aspectW, float aspectH)
+{
+    EditorClientRect out{};
+    float bx = std::isfinite(bounds.x) ? bounds.x : 0.0f;
+    float by = std::isfinite(bounds.y) ? bounds.y : 0.0f;
+    float bw = (std::isfinite(bounds.w) && bounds.w > 0.0f) ? bounds.w : 0.0f;
+    float bh = (std::isfinite(bounds.h) && bounds.h > 0.0f) ? bounds.h : 0.0f;
+    if (bw < 1.0f) bw = 1.0f;
+    if (bh < 1.0f) bh = 1.0f;
+
+    const float aw = (aspectW > 0.0f && std::isfinite(aspectW)) ? aspectW : 16.0f;
+    const float ah = (aspectH > 0.0f && std::isfinite(aspectH)) ? aspectH : 9.0f;
+    const float targetAspect = aw / ah;
+    const float boundsAspect = bw / bh;
+
+    float w = 0.0f;
+    float h = 0.0f;
+    if (boundsAspect > targetAspect) {
+        // Wider than target → pillarbox (left/right bars).
+        h = bh;
+        w = h * targetAspect;
+    } else {
+        // Taller or equal → letterbox (top/bottom bars).
+        w = bw;
+        h = w / targetAspect;
+    }
+
+    if (w > bw) w = bw;
+    if (h > bh) h = bh;
+
+    // Prefer aspect; only inflate below 1px when bounds allow.
+    if (w < 1.0f && bw >= 1.0f) {
+        w = 1.0f;
+        h = w / targetAspect;
+        if (h > bh) h = bh;
+    }
+    if (h < 1.0f && bh >= 1.0f) {
+        h = 1.0f;
+        w = h * targetAspect;
+        if (w > bw) w = bw;
+    }
+    if (w < 1.0f) w = 1.0f;
+    if (h < 1.0f) h = 1.0f;
+    if (w > bw) w = bw;
+    if (h > bh) h = bh;
+
+    out.x = bx + (bw - w) * 0.5f;
+    out.y = by + (bh - h) * 0.5f;
+    out.w = w;
+    out.h = h;
+
+    // Keep edges inside bounds after float rounding.
+    if (out.x < bx) out.x = bx;
+    if (out.y < by) out.y = by;
+    if (out.x + out.w > bx + bw) out.w = (bx + bw) - out.x;
+    if (out.y + out.h > by + bh) out.h = (by + bh) - out.y;
+    if (out.w < 1.0f) out.w = 1.0f;
+    if (out.h < 1.0f) out.h = 1.0f;
+    return out;
+}
+
+inline EditorClientRect FitEditor16x9Viewport(const EditorClientRect& bounds)
+{
+    return FitFixedAspectRect(bounds, kEditorViewportAspectW, kEditorViewportAspectH);
+}
 
 inline EditorDefaultPanelSizes ComputeDefaultPanelSizes(
     float hostW, float hostH, float uiZoom)

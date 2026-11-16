@@ -98,6 +98,78 @@ static void TestUsableViewport()
     Expect(IsUsableViewportRect({0, 0, 64, 120}), "min size accepted");
 }
 
+static bool RectInside(const EditorClientRect& inner, const EditorClientRect& outer, float eps)
+{
+    return inner.x + eps >= outer.x
+        && inner.y + eps >= outer.y
+        && inner.x + inner.w <= outer.x + outer.w + eps
+        && inner.y + inner.h <= outer.y + outer.h + eps;
+}
+
+static void TestFit16x9()
+{
+    // Wide node → pillarbox (fit height, side bars).
+    {
+        const EditorClientRect node{100.0f, 50.0f, 1920.0f, 800.0f};
+        const EditorClientRect r = FitEditor16x9Viewport(node);
+        ExpectNear(r.h, 800.0f, 0.01f, "wide: height fills node");
+        ExpectNear(r.w, 800.0f * 16.0f / 9.0f, 0.05f, "wide: width is 16:9");
+        ExpectNear(r.y, 50.0f, 0.01f, "wide: y flush top");
+        Expect(r.x > node.x, "wide: left pillarbox");
+        Expect(r.x + r.w < node.x + node.w, "wide: right pillarbox");
+        Expect(RectInside(r, node, 0.01f), "wide: stays inside");
+        ExpectNear(r.w / r.h, 16.0f / 9.0f, 1e-4f, "wide: aspect 16:9");
+    }
+
+    // Tall node → letterbox (fit width, top/bottom bars).
+    {
+        const EditorClientRect node{0.0f, 0.0f, 1280.0f, 1200.0f};
+        const EditorClientRect r = FitEditor16x9Viewport(node);
+        ExpectNear(r.w, 1280.0f, 0.01f, "tall: width fills node");
+        ExpectNear(r.h, 1280.0f * 9.0f / 16.0f, 0.05f, "tall: height is 16:9");
+        ExpectNear(r.x, 0.0f, 0.01f, "tall: x flush left");
+        Expect(r.y > node.y, "tall: top letterbox");
+        Expect(r.y + r.h < node.y + node.h, "tall: bottom letterbox");
+        Expect(RectInside(r, node, 0.01f), "tall: stays inside");
+        ExpectNear(r.w / r.h, 16.0f / 9.0f, 1e-4f, "tall: aspect 16:9");
+    }
+
+    // Exact 16:9 → fills the node.
+    {
+        const EditorClientRect node{10.0f, 20.0f, 1600.0f, 900.0f};
+        const EditorClientRect r = FitEditor16x9Viewport(node);
+        ExpectNear(r.x, 10.0f, 0.01f, "exact: x");
+        ExpectNear(r.y, 20.0f, 0.01f, "exact: y");
+        ExpectNear(r.w, 1600.0f, 0.01f, "exact: w");
+        ExpectNear(r.h, 900.0f, 0.01f, "exact: h");
+    }
+
+    // Degenerate / zero sizes → min 1x1, finite, no crash.
+    {
+        const EditorClientRect zero{5.0f, 7.0f, 0.0f, 0.0f};
+        const EditorClientRect r = FitEditor16x9Viewport(zero);
+        Expect(std::isfinite(r.x) && std::isfinite(r.y), "zero: finite pos");
+        Expect(std::isfinite(r.w) && std::isfinite(r.h), "zero: finite size");
+        Expect(r.w >= 1.0f && r.h >= 1.0f, "zero: min size");
+    }
+    {
+        const EditorClientRect neg{0.0f, 0.0f, -10.0f, -5.0f};
+        const EditorClientRect r = FitEditor16x9Viewport(neg);
+        Expect(r.w >= 1.0f && r.h >= 1.0f, "neg: min size");
+        Expect(std::isfinite(r.w / r.h), "neg: finite aspect");
+        // Bounds collapse to 1x1 — aspect may be sacrificed to stay inside.
+        Expect(RectInside(r, EditorClientRect{0, 0, 1, 1}, 0.01f), "neg: inside 1x1 hole");
+    }
+
+    // Non-integer sizes stay inside the node.
+    {
+        const EditorClientRect node{0.5f, 1.25f, 1000.333f, 501.777f};
+        const EditorClientRect r = FitEditor16x9Viewport(node);
+        Expect(RectInside(r, node, 0.02f), "fractional: stays inside");
+        ExpectNear(r.w / r.h, 16.0f / 9.0f, 1e-3f, "fractional: aspect");
+    }
+}
+
 int main()
 {
     TestDefaultPanelSizesMatchLegacyLook();
@@ -105,6 +177,7 @@ int main()
     TestIniPathResolution();
     TestClientToBackbuffer();
     TestUsableViewport();
+    TestFit16x9();
     if (g_failed) {
         std::fprintf(stderr, "%d check(s) failed\n", g_failed);
         return 1;

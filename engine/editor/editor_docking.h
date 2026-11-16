@@ -35,6 +35,12 @@ void EditorDocking_DrawHost();
 const EditorClientRect& EditorDocking_GetCentralNodeClientRect();
 bool EditorDocking_HasCentralNode();
 
+// 16:9 game view fitted inside the central node (ImGui client coords).
+EditorClientRect EditorDocking_GetGameViewportClientRect();
+
+// Fill letterbox/pillarbox gutters inside the central node with solid black.
+void EditorDocking_DrawLetterboxBars();
+
 EditorPanelVisibility& EditorDocking_PanelVisibility();
 
 // True when ImGui should block game picking/gizmos (panel/tab/menu hover).

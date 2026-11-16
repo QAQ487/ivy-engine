@@ -60,7 +60,7 @@ float EditorTopChrome() {
 
 EditorLayoutMetrics ComputeEditorLayout(float screenW, float screenH) {
     // Fallback geometry when the docking central node is not yet available.
-    // Free aspect: viewport fills the hole between default panel sizes (no letterbox).
+    // Available hole between default panel sizes; game view is 16:9-fitted inside.
     EditorLayoutMetrics layout;
     layout.topChrome = EditorTopChrome();
     const EditorDefaultPanelSizes panels =
@@ -69,12 +69,19 @@ EditorLayoutMetrics ComputeEditorLayout(float screenW, float screenH) {
     layout.rightWidth = panels.rightWidth;
     layout.bottomHeight = panels.bottomHeight;
 
-    layout.viewportX = layout.leftWidth;
-    layout.viewportY = layout.topChrome;
-    layout.viewportW = (std::max)(kEditorDockViewportMinWidth,
+    EditorClientRect hole{};
+    hole.x = layout.leftWidth;
+    hole.y = layout.topChrome;
+    hole.w = (std::max)(kEditorDockViewportMinWidth,
         screenW - layout.leftWidth - layout.rightWidth);
-    layout.viewportH = (std::max)(kEditorDockViewportMinHeight,
+    hole.h = (std::max)(kEditorDockViewportMinHeight,
         screenH - layout.topChrome - layout.bottomHeight);
-    layout.sidePanelH = layout.viewportH;
+    layout.sidePanelH = hole.h;
+
+    const EditorClientRect fitted = FitEditor16x9Viewport(hole);
+    layout.viewportX = fitted.x;
+    layout.viewportY = fitted.y;
+    layout.viewportW = fitted.w;
+    layout.viewportH = fitted.h;
     return layout;
 }

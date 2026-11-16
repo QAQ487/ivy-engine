@@ -1397,10 +1397,13 @@ bool EngineGUI_IsUiEditMode() { return g_editMode == EditorEditMode::UI; }
 void EngineGUI_GetGameViewportRect(float& x, float& y, float& width, float& height) {
     const float screenW = GetBackBufferWidth();
     const float screenH = GetBackBufferHeight();
+    const float clientW = GetClientWidth();
+    const float clientH = GetClientHeight();
 
-    // F3 fullscreen play and runtime (!g_enabled) use the full backbuffer.
-    // F2 viewport play keeps editor chrome; central dock node is the game view.
-    if (g_playMode == PlayMode::Fullscreen || !g_enabled) {
+    // Shipped runtime (!g_enabled and not F3): full backbuffer.
+    // Editor edit + F2 use the dock central node; F3 uses the full client area.
+    // In all editor cases the game rect is the largest centered 16:9 fit.
+    if (!g_enabled && g_playMode != PlayMode::Fullscreen) {
         x = 0.0f;
         y = 0.0f;
         width = (std::max)(1.0f, screenW);
@@ -1408,20 +1411,25 @@ void EngineGUI_GetGameViewportRect(float& x, float& y, float& width, float& heig
         return;
     }
 
-    EditorClientRect client{};
-    if (EditorDocking_HasCentralNode()) {
-        client = EditorDocking_GetCentralNodeClientRect();
+    EditorClientRect bounds{};
+    if (g_playMode == PlayMode::Fullscreen) {
+        bounds.x = 0.0f;
+        bounds.y = 0.0f;
+        bounds.w = (std::max)(1.0f, clientW);
+        bounds.h = (std::max)(1.0f, clientH);
+    } else if (EditorDocking_HasCentralNode()) {
+        bounds = EditorDocking_GetCentralNodeClientRect();
     } else {
-        const EditorLayoutMetrics layout = ComputeEditorLayout(
-            GetClientWidth(), GetClientHeight());
-        client.x = layout.viewportX;
-        client.y = layout.viewportY;
-        client.w = layout.viewportW;
-        client.h = layout.viewportH;
+        const EditorLayoutMetrics layout = ComputeEditorLayout(clientW, clientH);
+        bounds.x = layout.viewportX;
+        bounds.y = layout.viewportY;
+        bounds.w = layout.viewportW;
+        bounds.h = layout.viewportH;
     }
 
+    const EditorClientRect fitted = FitEditor16x9Viewport(bounds);
     const EditorBackbufferRect bb = ClientRectToBackbuffer(
-        client, GetClientWidth(), GetClientHeight(), screenW, screenH);
+        fitted, clientW, clientH, screenW, screenH);
     x = bb.x;
     y = bb.y;
     width = bb.w;
@@ -2546,11 +2554,13 @@ void EngineGUI_Draw() {
     DrawEditorInspectorPanel(playVisuals, &panels.properties);
     DrawEditorAssetPanel(playVisuals, sceneLoadBusy, &panels.assetBrowser);
 
-    // Drop target uses ImGui client coords (central node), not backbuffer.
-    const EditorClientRect& central = EditorDocking_GetCentralNodeClientRect();
+    EditorDocking_DrawLetterboxBars();
+
+    // Drop / overlays use the 16:9 game rect (ImGui client), not the full node.
+    const EditorClientRect gameView = EditorDocking_GetGameViewportClientRect();
     const ImRect dropRect(
-        ImVec2(central.x, central.y),
-        ImVec2(central.x + central.w, central.y + central.h));
+        ImVec2(gameView.x, gameView.y),
+        ImVec2(gameView.x + gameView.w, gameView.y + gameView.h));
     if(!sceneLoadBusy && !playVisuals && g_editMode==EditorEditMode::Scene3D
         && !EditorDocking_WantCaptureMouseForGame()
         && ImGui::BeginDragDropTargetViewport(ImGui::GetMainViewport(),&dropRect)) {
@@ -2578,11 +2588,11 @@ void EngineGUI_Draw() {
         }
         ImGui::EndDragDropTarget();
     }
-    // Grid overlay is drawn in ImGui client space (same as central node).
-    const float gizmoX = central.x;
-    const float gizmoY = central.y;
-    const float gizmoW = central.w;
-    const float gizmoH = central.h;
+    // Grid overlay is drawn in ImGui client space (16:9 game rect).
+    const float gizmoX = gameView.x;
+    const float gizmoY = gameView.y;
+    const float gizmoW = gameView.w;
+    const float gizmoH = gameView.h;
     auto* gizmoLayer=ImGui::GetBackgroundDrawList();
     gizmoLayer->PushClipRect(ImVec2(gizmoX,gizmoY),ImVec2(gizmoX+gizmoW,gizmoY+gizmoH),true);
     if(!playVisuals && DebugCamera_Is2DView() && Grid_IsVisible() && gizmoH>0) {

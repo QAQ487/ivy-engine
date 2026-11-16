@@ -245,7 +245,7 @@ static void ApplyMatrixToTransform(engine::Transform* transform, GameObject* own
 static bool IsMouseInGameViewport() {
     if (!EditorDocking_HasCentralNode())
         return false;
-    const EditorClientRect& c = EditorDocking_GetCentralNodeClientRect();
+    const EditorClientRect c = EditorDocking_GetGameViewportClientRect();
     if (c.w <= 0.0f || c.h <= 0.0f) return false;
 
     const ImVec2 mouse = ImGui::GetIO().MousePos;
@@ -334,7 +334,7 @@ void Draw(GameObject* selected) {
 
     if (!EditorDocking_HasCentralNode())
         return;
-    const EditorClientRect& c = EditorDocking_GetCentralNodeClientRect();
+    const EditorClientRect c = EditorDocking_GetGameViewportClientRect();
     if (c.w <= 0.0f || c.h <= 0.0f) return;
 
     ImGuizmo::SetDrawlist(ImGui::GetBackgroundDrawList());
