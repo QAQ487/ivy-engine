@@ -262,39 +262,51 @@ bool IsInteracting() {
     return ImGuizmo::IsOver() || ImGuizmo::IsUsing();
 }
 
+namespace {
+
+bool ToolbarIconToggle(const char* icon, bool active, const char* tooltip)
+{
+    const float sz = static_cast<float>(static_cast<int>(ImGui::GetFrameHeight() + 0.5f));
+    if (active) {
+        ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive));
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive));
+    }
+    const bool pressed = ImGui::Button(icon, ImVec2(sz, sz));
+    if (active)
+        ImGui::PopStyleColor(2);
+    if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort))
+        ImGui::SetTooltip("%s", tooltip);
+    return pressed;
+}
+
+} // namespace
+
 void DrawToolbarControls() {
-    if (ImGui::RadioButton(ICON_FA_ARROWS_UP_DOWN_LEFT_RIGHT, g_operation == ImGuizmo::TRANSLATE)) {
+    if (ToolbarIconToggle(ICON_FA_ARROWS_UP_DOWN_LEFT_RIGHT,
+            g_operation == ImGuizmo::TRANSLATE, "Move (W)")) {
         g_visible = true;
         g_operation = ImGuizmo::TRANSLATE;
     }
-    if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort))
-        ImGui::SetTooltip("Move (W)");
     ImGui::SameLine();
-    if (ImGui::RadioButton(ICON_FA_ROTATE, g_operation == ImGuizmo::ROTATE)) {
+    if (ToolbarIconToggle(ICON_FA_ROTATE,
+            g_operation == ImGuizmo::ROTATE, "Rotate (E)")) {
         g_visible = true;
         g_operation = ImGuizmo::ROTATE;
     }
-    if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort))
-        ImGui::SetTooltip("Rotate (E)");
     ImGui::SameLine();
-    if (ImGui::RadioButton(ICON_FA_UP_DOWN_LEFT_RIGHT, g_operation == ImGuizmo::SCALE)) {
+    if (ToolbarIconToggle(ICON_FA_UP_DOWN_LEFT_RIGHT,
+            g_operation == ImGuizmo::SCALE, "Scale (R)")) {
         g_visible = true;
         g_operation = ImGuizmo::SCALE;
     }
-    if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort))
-        ImGui::SetTooltip("Scale (R)");
 
     if (g_operation != ImGuizmo::SCALE) {
         ImGui::SameLine();
-        if (ImGui::RadioButton(ICON_FA_LOCATION_DOT, g_mode == ImGuizmo::LOCAL))
+        if (ToolbarIconToggle(ICON_FA_LOCATION_DOT, g_mode == ImGuizmo::LOCAL, "Local space"))
             g_mode = ImGuizmo::LOCAL;
-        if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort))
-            ImGui::SetTooltip("Local space");
         ImGui::SameLine();
-        if (ImGui::RadioButton(ICON_FA_GLOBE, g_mode == ImGuizmo::WORLD))
+        if (ToolbarIconToggle(ICON_FA_GLOBE, g_mode == ImGuizmo::WORLD, "World space"))
             g_mode = ImGuizmo::WORLD;
-        if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort))
-            ImGui::SetTooltip("World space");
     }
 }
 

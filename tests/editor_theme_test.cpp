@@ -137,12 +137,43 @@ static void TestImGuiColCoverage() {
     Expect(sem.windowBg.x < 0.1f && sem.windowBg.y < 0.15f, "Ivy canopy dark");
 }
 
+static void TestToolbarChromeFitsFont() {
+    // Mirrors engine_gui EditorToolbarHeight compact chrome (padY=4 at 100%).
+    // Old fixed Ui(36) could not fit Trellis/HollowSoft theme WindowPadding+FramePadding.
+    constexpr float kPadY = 4.0f;
+    constexpr float kOldToolbar = 36.0f;
+    const float zooms[] = { 1.0f, 1.25f, 1.5f, 1.75f, 2.0f };
+    const float fontBases[] = { 15.5f, 16.0f }; // Trellis / Hollow Soft
+
+    // At 100%, theme padding alone already exceeds the old fixed 36px row.
+    Expect(15.5f + 4.0f * 2.0f + 8.0f * 2.0f > kOldToolbar, "Trellis theme chrome > 36");
+    Expect(16.0f + 6.0f * 2.0f + 12.0f * 2.0f > kOldToolbar, "HollowSoft theme chrome > 36");
+
+    for (float fontBase : fontBases) {
+        for (float zoom : zooms) {
+            const float fontSize = fontBase * zoom;
+            const float padY = kPadY * zoom;
+            const float frameH = fontSize + padY * 2.0f;
+            const float toolbarH = frameH + padY * 2.0f;
+            // Square icon button: content box == fontSize after FramePadding.
+            const float iconContent = frameH - padY * 2.0f;
+
+            char msg[128];
+            std::snprintf(msg, sizeof(msg),
+                "chrome fits fontBase=%.1f zoom=%.2f (h=%.1f)", fontBase, zoom, toolbarH);
+            Expect(toolbarH + 0.01f >= frameH, msg);
+            Expect(iconContent + 0.01f >= fontSize, msg);
+        }
+    }
+}
+
 int main() {
     TestParsePreset();
     TestParseScheme();
     TestClamp();
     TestNames();
     TestImGuiColCoverage();
+    TestToolbarChromeFitsFont();
 
     if (g_failed != 0) {
         std::fprintf(stderr, "editor_theme_test: %d failure(s)\n", g_failed);

@@ -545,11 +545,17 @@ bool LoadFonts(ImGuiIO& io, Fonts* out, float bodySize, float monoSize)
         ImFontConfig faCfg;
         faCfg.MergeMode = true;
         faCfg.PixelSnapH = true;
-        faCfg.GlyphMinAdvanceX = bodySize;
+        // Natural advances center better inside square toolbar buttons than a
+        // forced bodySize cell (which left-aligns the glyph in CalcTextSize).
+        faCfg.GlyphMinAdvanceX = 0.0f;
+        // Optical vertical center vs IBM Plex Sans JP metrics.
+        faCfg.GlyphOffset = ImVec2(0.0f, 1.0f);
         faCfg.OversampleH = 2;
         faCfg.OversampleV = 2;
         static const ImWchar faRanges[] = { (ImWchar)ICON_MIN_FA, (ImWchar)ICON_MAX_FA, 0 };
         std::snprintf(faCfg.Name, sizeof(faCfg.Name), "Font Awesome 6 Solid");
+        // Rasterize at the same base size as the body font; ImGui 1.92
+        // FontScaleMain re-bakes crisply under UI zoom / DPI.
         if (!io.Fonts->AddFontFromFileTTF(faPath.c_str(), bodySize, &faCfg, faRanges)) {
             std::fprintf(stderr,
                 "Warning: failed to merge icon font rom/font/fa-solid-900.ttf\n");

@@ -226,7 +226,13 @@ static char g_buildDest[1024] = {};
 static int g_buildConfigIndex = 0;
 static EditorEditMode g_editMode = EditorEditMode::Scene3D;
 
-static constexpr float kToolbarHeight = 36.0f;
+// Toolbar chrome uses compact local padding (see PushToolbarChromeStyle) so
+// FontSizeBase 15.5/16 + theme FramePadding no longer clip in a fixed 36px row.
+static constexpr float kToolbarWindowPadX = 6.0f;
+static constexpr float kToolbarWindowPadY = 4.0f;
+static constexpr float kToolbarFramePadX = 6.0f;
+static constexpr float kToolbarFramePadY = 4.0f;
+static constexpr float kToolbarItemSpacingX = 4.0f;
 static constexpr float kLeftPanelWidth = 300.0f;
 static constexpr float kRightPanelWidth = 350.0f;
 static constexpr float kBottomPanelMinHeight = 340.0f;
@@ -599,11 +605,55 @@ static void RemapSceneTagsAfterDelete(int deletedId) {
         RemapNodeTagsAfterDelete(root.get(), deletedId);
 }
 
+static ImVec2 ToolbarWindowPadding()
+{
+    return ImVec2(Ui(kToolbarWindowPadX), Ui(kToolbarWindowPadY));
+}
+
+static ImVec2 ToolbarFramePadding()
+{
+    return ImVec2(Ui(kToolbarFramePadX), Ui(kToolbarFramePadY));
+}
+
+static void PushToolbarChromeStyle()
+{
+    const ImVec2 windowPad = ToolbarWindowPadding();
+    const ImVec2 framePad = ToolbarFramePadding();
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, windowPad);
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, framePad);
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing,
+        ImVec2(Ui(kToolbarItemSpacingX), framePad.y));
+}
+
+static void PopToolbarChromeStyle()
+{
+    ImGui::PopStyleVar(3);
+}
+
+// Square icon hit-target sized from the (toolbar-local) frame height.
+static float ToolbarIconSize()
+{
+    return IM_TRUNC(ImGui::GetFrameHeight() + 0.5f);
+}
+
 static bool ToolbarIconButton(const char* icon, const char* tooltip)
 {
-    const bool pressed = ImGui::Button(icon, ImVec2(Ui(28.0f), 0.0f));
+    const float sz = ToolbarIconSize();
+    const bool pressed = ImGui::Button(icon, ImVec2(sz, sz));
     if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort))
         ImGui::SetTooltip("%s", tooltip);
+    return pressed;
+}
+
+static bool ToolbarIconToggle(const char* icon, bool active, const char* tooltip)
+{
+    if (active) {
+        ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive));
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive));
+    }
+    const bool pressed = ToolbarIconButton(icon, tooltip);
+    if (active)
+        ImGui::PopStyleColor(2);
     return pressed;
 }
 
@@ -682,8 +732,18 @@ static float EditorMenuBarHeight() {
     return g_imguiInitialized ? ImGui::GetFrameHeight() : 22.0f;
 }
 
+// Must match PushToolbarChromeStyle padding: frame + window pad on both sides.
+static float EditorToolbarHeight() {
+    if (!g_imguiInitialized)
+        return 36.0f;
+    const ImVec2 windowPad = ToolbarWindowPadding();
+    const ImVec2 framePad = ToolbarFramePadding();
+    const float frameH = ImGui::GetFontSize() + framePad.y * 2.0f;
+    return IM_TRUNC(frameH + windowPad.y * 2.0f + 0.5f);
+}
+
 static float EditorTopChrome() {
-    return EditorMenuBarHeight() + Ui(kToolbarHeight);
+    return EditorMenuBarHeight() + EditorToolbarHeight();
 }
 
 static EditorLayoutMetrics ComputeEditorLayout(float screenW, float screenH) {
@@ -4081,8 +4141,11 @@ void EngineGUI_OnBackbufferResized() {
 
 static void DrawReloadLight(const char* id, const char* name, ReloadLightState state,
     const ReloadLight& light, const std::string& detail) {
-    const float size = Ui(18.0f);
-    const auto origin = ImGui::GetCursorScreenPos();
+    // Size from the current (toolbar-local) frame height so lights track font zoom.
+    const float size = IM_TRUNC(ImGui::GetFrameHeight() * 0.65f + 0.5f);
+    const float glowR = IM_TRUNC(size * 0.40f + 0.5f);
+    const float coreR = IM_TRUNC(size * 0.22f + 0.5f);
+    const ImVec2 origin = ImGui::GetCursorScreenPos();
     ImGui::InvisibleButton(id, ImVec2(size, size));
     const bool bright = state == ReloadLightState::Watching && ImGui::GetTime() < light.brightUntil;
     ImU32 color;
@@ -4094,9 +4157,9 @@ static void DrawReloadLight(const char* id, const char* name, ReloadLightState s
     default: color = bright ? IM_COL32(135, 255, 165, 255) : IM_COL32(60, 165, 95, 255);
         status = bright ? "Reload succeeded" : "Watching"; break;
     }
-    const ImVec2 center(origin.x + size * 0.5f, origin.y + size * 0.5f);
-    if (bright) ImGui::GetWindowDrawList()->AddCircleFilled(center, Ui(7.0f), IM_COL32(90, 255, 140, 65));
-    ImGui::GetWindowDrawList()->AddCircleFilled(center, Ui(4.0f), color);
+    const ImVec2 center(IM_TRUNC(origin.x + size * 0.5f), IM_TRUNC(origin.y + size * 0.5f));
+    if (bright) ImGui::GetWindowDrawList()->AddCircleFilled(center, glowR, IM_COL32(90, 255, 140, 65));
+    ImGui::GetWindowDrawList()->AddCircleFilled(center, coreR, color);
     if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort)) {
         ImGui::BeginTooltip();
         ImGui::Text("%s: %s", name, status);
@@ -4220,20 +4283,23 @@ void EngineGUI_Draw() {
     DrawShortcutHintsWindow(&g_showShortcutHints);
 
     // --- Toolbar ---
+    const float toolbarH = EditorToolbarHeight();
     ImGui::SetNextWindowPos(ImVec2(0, menuBarHeight));
-    ImGui::SetNextWindowSize(ImVec2(screenW, Ui(kToolbarHeight)));
+    ImGui::SetNextWindowSize(ImVec2(screenW, toolbarH));
+    PushToolbarChromeStyle();
     ImGui::Begin("##Toolbar", nullptr,
         ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize |
         ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar);
     {
-        const float lightSize = Ui(18.0f);
-        const float lightGap = Ui(4.0f);
+        const float iconSz = ToolbarIconSize();
+        const float lightSize = IM_TRUNC(iconSz * 0.65f + 0.5f);
+        const float lightGap = ImGui::GetStyle().ItemSpacing.x;
         const float lightsX = ImGui::GetWindowContentRegionMax().x - lightSize * 3 - lightGap * 2;
         const float lightsY = ImGui::GetCursorPosY() + (ImGui::GetFrameHeight() - lightSize) * 0.5f;
         const auto toolbarPos = ImGui::GetWindowPos();
         const auto contentMin = ImGui::GetWindowContentRegionMin();
         ImGui::PushClipRect(ImVec2(contentMin.x + toolbarPos.x, contentMin.y + toolbarPos.y),
-            ImVec2(toolbarPos.x + lightsX - Ui(4.0f), toolbarPos.y + ImGui::GetWindowContentRegionMax().y), true);
+            ImVec2(toolbarPos.x + lightsX - lightGap, toolbarPos.y + ImGui::GetWindowContentRegionMax().y), true);
         const auto& theme = editor_theme::GetSemanticColors();
         if (playVisuals) {
             ImGui::PushStyleColor(ImGuiCol_Button, theme.danger);
@@ -4251,8 +4317,10 @@ void EngineGUI_Draw() {
             if (ToolbarIconButton(ICON_FA_PLAY, "Play in Viewport (F2)")) {
                 StartPlay(PlayMode::Viewport);
             }
-            ImGui::SameLine(0.0f, Ui(2.0f));
-            const bool openPlayMenu = ImGui::Button(ICON_FA_CARET_DOWN "##PlayMenuBtn", ImVec2(Ui(16.0f), 0.0f));
+            ImGui::SameLine(0.0f, 2.0f);
+            const float caretW = IM_TRUNC(iconSz * 0.55f + 0.5f);
+            const bool openPlayMenu = ImGui::Button(ICON_FA_CARET_DOWN "##PlayMenuBtn",
+                ImVec2(caretW, iconSz));
             if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort))
                 ImGui::SetTooltip("Play Mode");
             if (openPlayMenu)
@@ -4310,10 +4378,8 @@ void EngineGUI_Draw() {
         }
 
         ImGui::SameLine();
-        if (ImGui::Button(ICON_FA_ARROWS_ROTATE, ImVec2(Ui(28.0f), 0.0f)))
+        if (ToolbarIconButton(ICON_FA_ARROWS_ROTATE, "Reload Scripts"))
             SceneLoader_ScanScriptDllsForChanges(true);
-        if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort))
-            ImGui::SetTooltip("Reload Scripts");
 
         if (!playVisuals) {
             ImGui::SameLine();
@@ -4348,21 +4414,21 @@ void EngineGUI_Draw() {
                 ImGui::PopStyleColor();
 
             ImGui::SameLine();
-            if (ImGui::RadioButton(ICON_FA_CUBE, g_editMode == EditorEditMode::Scene3D))
+            if (ToolbarIconToggle(ICON_FA_CUBE, g_editMode == EditorEditMode::Scene3D,
+                    "Scene Edit Mode"))
                 EngineGUI_SetEditMode(EditorEditMode::Scene3D);
-            if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort))
-                ImGui::SetTooltip("Scene Edit Mode");
             ImGui::SameLine();
-            if (ImGui::RadioButton(ICON_FA_LAYER_GROUP, g_editMode == EditorEditMode::UI))
+            if (ToolbarIconToggle(ICON_FA_LAYER_GROUP, g_editMode == EditorEditMode::UI,
+                    "UI Edit Mode"))
                 EngineGUI_SetEditMode(EditorEditMode::UI);
-            if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort))
-                ImGui::SetTooltip("UI Edit Mode");
 
             ImGui::SameLine();
-            bool view2D=DebugCamera_Is2DView();
+            bool view2D = DebugCamera_Is2DView();
             ImGui::BeginDisabled(playVisuals);
-            if(ImGui::Checkbox("2D View",&view2D)) DebugCamera_Set2DView(view2D);
-            ImGui::EndDisabled(); ImGui::SameLine();
+            if (ImGui::Checkbox("2D View", &view2D))
+                DebugCamera_Set2DView(view2D);
+            ImGui::EndDisabled();
+            ImGui::SameLine();
             TransformGizmo::DrawToolbarControls();
 
             ImGui::SameLine();
@@ -4388,9 +4454,17 @@ void EngineGUI_Draw() {
                 const std::string currentLabel = validSelection ? g_activeCameraNode
                     : camNames.empty() ? "No enabled game camera" : "Select game camera";
 
-                ImGui::Text("Camera:");
+                ImGui::AlignTextToFramePadding();
+                ImGui::TextUnformatted("Camera:");
                 ImGui::SameLine();
-                ImGui::SetNextItemWidth(160.0f);
+                const float comboPad =
+                    ImGui::GetFrameHeight() + ImGui::GetStyle().FramePadding.x * 2.0f;
+                float comboW = ImGui::CalcTextSize(currentLabel.c_str()).x + comboPad;
+                comboW = ImMax(comboW,
+                    ImGui::CalcTextSize("No enabled game camera").x + comboPad);
+                comboW = ImMax(comboW,
+                    ImGui::CalcTextSize("Select game camera").x + comboPad);
+                ImGui::SetNextItemWidth(IM_TRUNC(comboW + 0.5f));
                 if (ImGui::BeginCombo("##Camera", currentLabel.c_str())) {
                     for (const auto& name : camNames) {
                         bool sel = (g_cameraMode == CameraMode::SceneCamera && g_activeCameraNode == name);
@@ -4405,7 +4479,7 @@ void EngineGUI_Draw() {
             }
         }
         ImGui::PopClipRect();
-        ImGui::SetCursorPos(ImVec2(lightsX, lightsY));
+        ImGui::SetCursorPos(ImVec2(IM_TRUNC(lightsX + 0.5f), IM_TRUNC(lightsY + 0.5f)));
         const bool projectOpen = ProjectManager::Instance().IsOpen();
         DrawReloadLight("##SceneReloadLight", "Scene JSON",
             GetReloadLightState(projectOpen && !SceneLoader_GetCurrentScenePath().empty(), false,
@@ -4421,6 +4495,7 @@ void EngineGUI_Draw() {
             g_scriptReloadLight, g_scriptReloadStatus);
     }
     ImGui::End();
+    PopToolbarChromeStyle();
 
     // --- Scene Hierarchy (left) ---
     ImGui::SetNextWindowPos(ImVec2(0, centerTop));
