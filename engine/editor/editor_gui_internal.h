@@ -8,6 +8,7 @@
 #include "engine/core/engine_gui_internal.h"
 #include "engine/core/play_fps_overlay.h"
 #include "engine/editor/editor_layout.h"
+#include "engine/editor/editor_docking.h"
 #include "engine/editor/editor_theme.h"
 #include "engine/editor/content_file_monitor.h"
 #include "engine/physics/collider/collider.h"
@@ -200,9 +201,9 @@ void DrawRenderingSettingsWindow(bool* open);
 
 void DrawEditorToolbar(bool playVisuals, bool sceneLoadBusy, float screenW, float menuBarHeight);
 void DrawSceneNodeHierarchy(GameObject* node, GameObject* rootOwner);
-void DrawEditorHierarchyPanel(bool playVisuals, float leftWidth, float centerTop, float centerH);
-void DrawEditorInspectorPanel(bool playVisuals, float screenW, float rightWidth, float centerTop, float centerH);
-void DrawEditorAssetPanel(bool playVisuals, bool sceneLoadBusy, float screenW, float screenH, float bottomHeight);
+void DrawEditorHierarchyPanel(bool playVisuals, bool* open);
+void DrawEditorInspectorPanel(bool playVisuals, bool* open);
+void DrawEditorAssetPanel(bool playVisuals, bool sceneLoadBusy, bool* open);
 
 void PushToolbarChromeStyle();
 void PopToolbarChromeStyle();

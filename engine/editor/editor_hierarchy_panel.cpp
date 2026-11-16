@@ -100,13 +100,16 @@ void DrawSceneNodeHierarchy(GameObject* node, GameObject* rootOwner) {
 }
 
 
-void DrawEditorHierarchyPanel(bool playVisuals, float leftWidth, float centerTop, float centerH)
+void DrawEditorHierarchyPanel(bool playVisuals, bool* open)
 {
-    // --- Scene Hierarchy (left) ---
-    ImGui::SetNextWindowPos(ImVec2(0, centerTop));
-    ImGui::SetNextWindowSize(ImVec2(leftWidth, centerH));
-    ImGui::Begin("Scene Hierarchy", nullptr,
-        ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
+    if (open && !*open)
+        return;
+
+    // --- Scene Hierarchy (dockable) ---
+    if (!ImGui::Begin(kEditorHierarchyWindowTitle, open)) {
+        ImGui::End();
+        return;
+    }
     {
         if (playVisuals)
             ImGui::BeginDisabled(true);

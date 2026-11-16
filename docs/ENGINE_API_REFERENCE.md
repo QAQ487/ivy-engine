@@ -116,7 +116,7 @@ Header: `engine/editor/project_manager.h`
 
 ### Editor viewport aspect
 
-The ImGui editor game viewport uses a **fixed aspect ratio** (fit-inside layout from the original 1920×1080 chrome). Projection and play use that viewport size; there is no separate aspect setting in render settings.
+The ImGui editor game viewport is the docking central node rect (free aspect). `EngineGUI_GetGameViewportRect` returns that rect in backbuffer pixels (ImGui client → backbuffer via `Renderer_ClientToBackbuffer`). F2 play keeps chrome; F3 / runtime use the full backbuffer. There is no separate aspect setting in render settings; letterbox inside the viewport in content if a fixed game aspect is required.
 
 ---
 

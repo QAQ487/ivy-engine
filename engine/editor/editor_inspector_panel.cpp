@@ -103,13 +103,16 @@ void DrawPropertiesEmptyState() {
 }
 
 
-void DrawEditorInspectorPanel(bool playVisuals, float screenW, float rightWidth, float centerTop, float centerH)
+void DrawEditorInspectorPanel(bool playVisuals, bool* open)
 {
-    // --- Properties (right) ---
-    ImGui::SetNextWindowPos(ImVec2(screenW - rightWidth, centerTop));
-    ImGui::SetNextWindowSize(ImVec2(rightWidth, centerH));
-    ImGui::Begin("Properties", nullptr,
-        ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
+    if (open && !*open)
+        return;
+
+    // --- Properties (dockable) ---
+    if (!ImGui::Begin(kEditorPropertiesWindowTitle, open)) {
+        ImGui::End();
+        return;
+    }
     {
         if (playVisuals)
             ImGui::BeginDisabled(true);

@@ -1,7 +1,9 @@
 // editor_layout.cpp
-// Extracted from engine/core/engine_gui.cpp (phase-1 editor UI split; behaviour-preserving).
+// Editor chrome metrics and fallback viewport geometry (free aspect).
+// Live game viewport comes from the docking central node (see editor_docking).
 
 #include "editor_gui_common_includes.h"
+#include "engine/editor/editor_docking_math.h"
 
 // Toolbar chrome uses compact local padding (see PushToolbarChromeStyle) so
 // FontSizeBase 15.5/16 + theme FramePadding no longer clip in a fixed 36px row.
@@ -10,15 +12,6 @@ static constexpr float kToolbarWindowPadY = 4.0f;
 static constexpr float kToolbarFramePadX = 6.0f;
 static constexpr float kToolbarFramePadY = 4.0f;
 static constexpr float kToolbarItemSpacingX = 4.0f;
-static constexpr float kLeftPanelWidth = 300.0f;
-static constexpr float kRightPanelWidth = 350.0f;
-static constexpr float kBottomPanelMinHeight = 340.0f;
-static constexpr float kBottomPanelScreenFraction = 0.34f;
-static constexpr float kEditorViewportMinHeight = 120.0f;
-// Preserve preview aspect from original 1920x1080 layout (250px bottom, 58px top chrome).
-static constexpr float kEditorViewportAspect =
-    (1920.0f - kLeftPanelWidth - kRightPanelWidth) /
-    (1080.0f - 58.0f - 250.0f);
 
 float Ui(float px) { return px * g_uiZoom; }
 
@@ -66,34 +59,22 @@ float EditorTopChrome() {
 }
 
 EditorLayoutMetrics ComputeEditorLayout(float screenW, float screenH) {
+    // Fallback geometry when the docking central node is not yet available.
+    // Free aspect: viewport fills the hole between default panel sizes (no letterbox).
     EditorLayoutMetrics layout;
     layout.topChrome = EditorTopChrome();
-    layout.leftWidth = Ui(kLeftPanelWidth);
-    layout.rightWidth = Ui(kRightPanelWidth);
+    const EditorDefaultPanelSizes panels =
+        ComputeDefaultPanelSizes(screenW, (std::max)(1.0f, screenH - layout.topChrome), g_uiZoom);
+    layout.leftWidth = panels.leftWidth;
+    layout.rightWidth = panels.rightWidth;
+    layout.bottomHeight = panels.bottomHeight;
 
-    layout.bottomHeight = (std::max)(Ui(kBottomPanelMinHeight), screenH * kBottomPanelScreenFraction);
-    const float maxBottomHeight = screenH - layout.topChrome - Ui(kEditorViewportMinHeight);
-    layout.bottomHeight = (std::min)(layout.bottomHeight, maxBottomHeight);
-
-    const float previewAvailX = layout.leftWidth;
-    const float previewAvailY = layout.topChrome;
-    const float previewAvailW = (std::max)(1.0f, screenW - layout.leftWidth - layout.rightWidth);
-    const float previewAvailH = (std::max)(
-        1.0f, screenH - layout.topChrome - layout.bottomHeight);
-    layout.sidePanelH = previewAvailH;
-
-    layout.viewportW = previewAvailW;
-    layout.viewportH = layout.viewportW / kEditorViewportAspect;
-    if (layout.viewportH > previewAvailH) {
-        layout.viewportH = previewAvailH;
-        layout.viewportW = layout.viewportH * kEditorViewportAspect;
-    }
-    layout.viewportX = previewAvailX + (previewAvailW - layout.viewportW) * 0.5f;
-    layout.viewportY = previewAvailY + (previewAvailH - layout.viewportH) * 0.5f;
-
-    // Side panels extend to viewport edges so letterbox gutters are filled.
-    layout.leftWidth = layout.viewportX;
-    layout.rightWidth = screenW - (layout.viewportX + layout.viewportW);
+    layout.viewportX = layout.leftWidth;
+    layout.viewportY = layout.topChrome;
+    layout.viewportW = (std::max)(kEditorDockViewportMinWidth,
+        screenW - layout.leftWidth - layout.rightWidth);
+    layout.viewportH = (std::max)(kEditorDockViewportMinHeight,
+        screenH - layout.topChrome - layout.bottomHeight);
+    layout.sidePanelH = layout.viewportH;
     return layout;
 }
-

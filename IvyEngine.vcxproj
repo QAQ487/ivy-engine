@@ -308,6 +308,8 @@ exit /b 0</Command>
     <ClInclude Include="engine\editor\editor_ui_panel.h" />
     <ClInclude Include="engine\editor\editor_undo.h" />
     <ClInclude Include="engine\editor\editor_layout.h" />
+    <ClInclude Include="engine\editor\editor_docking.h" />
+    <ClInclude Include="engine\editor\editor_docking_math.h" />
     <ClInclude Include="engine\editor\editor_gui_internal.h" />
     <ClInclude Include="engine\editor\editor_gui_common_includes.h" />
     <ClInclude Include="engine\ecs\prefab_serializer.h" />
@@ -466,6 +468,7 @@ exit /b 0</Command>
     <ClCompile Include="engine\editor\editor_ui_panel.cpp" />
     <ClCompile Include="engine\editor\editor_undo.cpp" />
     <ClCompile Include="engine\editor\editor_layout.cpp" />
+    <ClCompile Include="engine\editor\editor_docking.cpp" />
     <ClCompile Include="engine\editor\editor_toolbar.cpp" />
     <ClCompile Include="engine\editor\editor_hierarchy_panel.cpp" />
     <ClCompile Include="engine\editor\editor_inspector_panel.cpp" />

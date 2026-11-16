@@ -4,6 +4,7 @@
 #include "ui_gizmo.h"
 
 #include "engine/core/engine_gui.h"
+#include "engine/editor/editor_docking.h"
 #include "engine/editor/editor_undo.h"
 #include "engine/input/mouse.h"
 #include "engine/ui/scene_canvas.h"
@@ -355,7 +356,8 @@ void HandleInput(UIElement* selected) {
     const bool mouseInViewport = EngineGUI_MouseToViewportLocal(localMouseX, localMouseY);
     const bool resizable = IsResizable(selected);
 
-    if (mouseInViewport && !ImGui::GetIO().WantCaptureMouse)
+    const bool uiBlocksMouse = EditorDocking_WantCaptureMouseForGame();
+    if (mouseInViewport && !uiBlocksMouse)
         g_hoverHandle = HitTestHandle(localMouseX, localMouseY, localRect, resizable, selected->GetPivotScreenPosition());
     else
         g_hoverHandle = GizmoHandle::None;
@@ -365,7 +367,7 @@ void HandleInput(UIElement* selected) {
     const bool released = !lDown && g_prevLDown;
     g_prevLDown = lDown;
 
-    if (!mouseInViewport || ImGui::GetIO().WantCaptureMouse) {
+    if (!mouseInViewport || uiBlocksMouse) {
         if (released && g_interacting && g_dragElement) {
             const std::string afterJson = SceneCanvas_SerializeElement(*g_dragElement);
             EditorUndo_PushUiEdit(g_dragElement, g_beforeJson, afterJson);
