@@ -68,6 +68,7 @@ flowchart TD
 - `src/app/scene/scene_manager.h`: `SceneBase` and singleton `SceneManager`.
 - `src/app/scene/game_scene.cpp`: central runtime scene. It initializes engine GUI/runtime GUI, scene loading, shadows, lighting, model cache, UI canvas, skybox, billboards, and per-frame update/draw passes.
 - `engine/core/engine_gui.cpp`: editor-mode ImGui scene editor, play/stop control, prefab panels, selection, scene dirty state, project File menu, fixed-aspect game viewport, and script reload handling.
+- `engine/editor/editor_theme.cpp`: Dear ImGui style presets (Trellis / Hollow Soft) and color schemes (Ivy / Ivy Dark / Classic Dark / Neutral Gray / Light), fonts, and semantic button colors.
 - `engine/core/engine_gui_runtime.cpp`: runtime replacement for editor GUI functions under `GAME_RUNTIME`.
 - `engine/editor/project_manager.cpp`: Unity-style content projects (`project.json`, cwd switch, New/Open/Save, recent list).
 
@@ -84,6 +85,8 @@ A **content project** is a directory containing at least `rom/` and usually `pro
 | `lastOpenedScene` | string | Scene file name restored on open |
 | `defaultScene` | string | Default / play scene; mirrored to `rom/scene/default_scene.txt` |
 | `editor.uiZoomPercent` | int | ImGui scale percent |
+| `editor.uiStylePreset` | string | ImGui style preset (`Trellis` / `Hollow Soft`; invalid → Trellis) |
+| `editor.uiColorScheme` | string | ImGui color scheme (`Ivy` / `Ivy Dark` / `Classic Dark` / `Neutral Gray` / `Light`; invalid → Ivy) |
 | `physics.gravity` | float | World gravity for play and runtime builds |
 | `audio.masterVolume` | float | Master bus (0–1) |
 | `audio.bgmVolume` | float | BGM bus |
