@@ -18,10 +18,10 @@ enum class StylePreset : int {
 
 enum class ColorScheme : int {
     Ivy = 0,           // default: portfolio canopy / fern palette
-    ClassicDark = 1,   // ImGui StyleColorsDark (previous editor look)
-    NeutralGray = 2,
-    Light = 3,
-    IvyDark = 4,       // darker Ivy surfaces; same fern accent / lumen text
+	IvyDark = 1,       // darker Ivy surfaces; same fern accent / lumen text
+    ClassicDark = 2,   // ImGui StyleColorsDark (previous editor look)
+    NeutralGray = 3,
+    Light = 4,
     Count
 };
 

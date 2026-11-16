@@ -406,10 +406,10 @@ const char* ColorSchemeName(ColorScheme scheme)
 {
     switch (scheme) {
     case ColorScheme::Ivy: return "Ivy";
+	case ColorScheme::IvyDark: return "Ivy Dark";
     case ColorScheme::ClassicDark: return "Classic Dark";
     case ColorScheme::NeutralGray: return "Neutral Gray";
     case ColorScheme::Light: return "Light";
-    case ColorScheme::IvyDark: return "Ivy Dark";
     default: return kDefaultSchemeName;
     }
 }
