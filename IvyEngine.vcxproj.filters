@@ -249,6 +249,15 @@
     <ClInclude Include="engine\editor\editor_undo.h">
       <Filter>engine\editor</Filter>
     </ClInclude>
+    <ClInclude Include="engine\editor\editor_layout.h">
+      <Filter>engine\editor</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\editor\editor_gui_internal.h">
+      <Filter>engine\editor</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\editor\editor_gui_common_includes.h">
+      <Filter>engine\editor</Filter>
+    </ClInclude>
     <ClInclude Include="engine\editor\light_gizmo.h">
       <Filter>engine\editor</Filter>
     </ClInclude>
@@ -666,6 +675,33 @@
       <Filter>engine\editor</Filter>
     </ClCompile>
     <ClCompile Include="engine\editor\editor_undo.cpp">
+      <Filter>engine\editor</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\editor\editor_layout.cpp">
+      <Filter>engine\editor</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\editor\editor_toolbar.cpp">
+      <Filter>engine\editor</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\editor\editor_hierarchy_panel.cpp">
+      <Filter>engine\editor</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\editor\editor_inspector_panel.cpp">
+      <Filter>engine\editor</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\editor\editor_asset_panel.cpp">
+      <Filter>engine\editor</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\editor\editor_menu_bar.cpp">
+      <Filter>engine\editor</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\editor\editor_popups.cpp">
+      <Filter>engine\editor</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\editor\editor_start_screen.cpp">
+      <Filter>engine\editor</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\editor\editor_tool_windows.cpp">
       <Filter>engine\editor</Filter>
     </ClCompile>
     <ClCompile Include="engine\editor\light_gizmo.cpp">
