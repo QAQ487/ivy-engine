@@ -19,6 +19,8 @@
 #include "engine_gui.h"
 #include "play_fps_overlay.h"
 #include "engine_gui_internal.h"
+#include "engine/editor/editor_gui_internal.h"
+#include "engine/editor/editor_layout.h"
 #include "engine/scene/scene_loader.h"
 #include "engine/scene/json_float.h"
 #include "engine/scene/scene_asset_preload.h"
@@ -134,14 +136,14 @@ namespace fs = std::filesystem;
 using json = nlohmann::json;
 
 // --- State ---
-static bool        g_enabled = true;
+bool        g_enabled = true;
 bool              g_isPlaying = false;
 static std::atomic<bool> g_exitGameRequested{false};
-static PlayMode    g_playMode = PlayMode::None;
-static PlayMode    g_pendingPlayMode = PlayMode::Viewport;
-static bool        g_holdPlayVisuals = false;
-static bool        g_isOnStart = true;
-static bool        g_imguiInitialized = false;
+PlayMode    g_playMode = PlayMode::None;
+PlayMode    g_pendingPlayMode = PlayMode::Viewport;
+bool        g_holdPlayVisuals = false;
+bool        g_isOnStart = true;
+bool        g_imguiInitialized = false;
 
 // When the editor skips ImGui::NewFrame (play / F2-hide), stop queuing Win32
 // inputs into ImGui and flush any backlog so exit does not trickle-consume them.
@@ -168,7 +170,7 @@ static void SyncImGuiInputAcceptance(bool willProcessImGuiFrame) {
 static SceneAssetPreloader g_sceneAssetPreloader;
 static bool        g_playWhenPreloadDone = false;
 bool               g_sceneLoadPending = false;
-static bool IsSceneLoadBusy();
+bool IsSceneLoadBusy();
 static std::string g_pendingSceneLoadPath;
 static std::shared_ptr<ScenePreparationJob> g_scenePreparation;
 static bool g_loadingPresented = false, g_loadingDrawn = false, g_sceneReadyToApply = false;
@@ -197,79 +199,60 @@ void EngineGUI_NotifyFramePresented() {
     }
 }
 
-static CameraMode  g_cameraMode = CameraMode::SceneCamera;
-static std::string g_activeCameraNode;
-static float g_scrollSensitivity = 1.0f;
-static char  g_newSceneName[128] = "new_scene";
-static char  g_newTagName[64] = "";
-static bool  g_showRenderingSettings = false;
-static bool  g_showPostFxShowcase = false;
-static bool  g_showShortcutHints = false;
-static bool  g_showNewScenePopup = false;
-static bool  g_showAddTagPopup = false;
-static bool  g_showDeleteTagPopup = false;
-static int   g_pendingDeleteTagId = -1;
-static bool  g_showDefaultScenePopup = false;
-static bool  g_showGravityPopup = false;
-static bool  g_showAudioPopup = false;
-static bool  g_showUiOverlay = true;
-static bool g_newProject2D=false;
-static bool  g_showNewProjectPopup = false;
-static char  g_newProjectName[128] = "NewProject";
-static std::string g_newProjectParentDir;
-static std::string g_projectStatusMessage;
-enum class PendingFolderPickAction { None = 0, NewProject, OpenProject, BuildOutput };
-static PendingFolderPickAction g_pendingFolderPick = PendingFolderPickAction::None;
-static bool g_showBuildUnsavedPopup = false;
-static bool g_showBuildPreflight = false;
-static bool g_showBuildLog = false;
-static char g_buildDest[1024] = {};
-static int g_buildConfigIndex = 0;
-static EditorEditMode g_editMode = EditorEditMode::Scene3D;
+CameraMode  g_cameraMode = CameraMode::SceneCamera;
+std::string g_activeCameraNode;
+float g_scrollSensitivity = 1.0f;
+char  g_newSceneName[128] = "new_scene";
+char  g_newTagName[64] = "";
+bool  g_showRenderingSettings = false;
+bool  g_showPostFxShowcase = false;
+bool  g_showShortcutHints = false;
+bool  g_showNewScenePopup = false;
+bool  g_showAddTagPopup = false;
+bool  g_showDeleteTagPopup = false;
+int   g_pendingDeleteTagId = -1;
+bool  g_showDefaultScenePopup = false;
+bool  g_showGravityPopup = false;
+bool  g_showAudioPopup = false;
+bool  g_showUiOverlay = true;
+bool g_newProject2D=false;
+bool  g_showNewProjectPopup = false;
+char  g_newProjectName[128] = "NewProject";
+std::string g_newProjectParentDir;
+std::string g_projectStatusMessage;
+PendingFolderPickAction g_pendingFolderPick = PendingFolderPickAction::None;
+bool g_showBuildUnsavedPopup = false;
+bool g_showBuildPreflight = false;
+bool g_showBuildLog = false;
+char g_buildDest[1024] = {};
+int g_buildConfigIndex = 0;
+EditorEditMode g_editMode = EditorEditMode::Scene3D;
 
 // Toolbar chrome uses compact local padding (see PushToolbarChromeStyle) so
 // FontSizeBase 15.5/16 + theme FramePadding no longer clip in a fixed 36px row.
-static constexpr float kToolbarWindowPadX = 6.0f;
-static constexpr float kToolbarWindowPadY = 4.0f;
-static constexpr float kToolbarFramePadX = 6.0f;
-static constexpr float kToolbarFramePadY = 4.0f;
-static constexpr float kToolbarItemSpacingX = 4.0f;
-static constexpr float kLeftPanelWidth = 300.0f;
-static constexpr float kRightPanelWidth = 350.0f;
-static constexpr float kBottomPanelMinHeight = 340.0f;
-static constexpr float kBottomPanelScreenFraction = 0.34f;
-static constexpr float kEditorViewportMinHeight = 120.0f;
-// Preserve preview aspect from original 1920x1080 layout (250px bottom, 58px top chrome).
-static constexpr float kEditorViewportAspect =
-    (1920.0f - kLeftPanelWidth - kRightPanelWidth) /
-    (1080.0f - 58.0f - 250.0f);
 
-// Editor UI zoom (100 / 125 / 150 / 175 / 200). Default 100%; persisted to rom/editor/ui_prefs.json.
-static constexpr const char* kUiPrefsPath = PlayFpsOverlay::kPrefsPath;
-static constexpr int kUiZoomPercents[] = { 100, 125, 150, 175, 200 };
-static int g_uiZoomPercent = 100;
-static float g_uiZoom = 1.0f;
-static ImGuiStyle g_baseStyle{};
-static bool g_baseStyleCaptured = false;
-static editor_theme::StylePreset g_uiStylePreset = editor_theme::StylePreset::Trellis;
-static editor_theme::ColorScheme g_uiColorScheme = editor_theme::ColorScheme::Ivy;
+int g_uiZoomPercent = 100;
+float g_uiZoom = 1.0f;
+ImGuiStyle g_baseStyle{};
+bool g_baseStyleCaptured = false;
+editor_theme::StylePreset g_uiStylePreset = editor_theme::StylePreset::Trellis;
+editor_theme::ColorScheme g_uiColorScheme = editor_theme::ColorScheme::Ivy;
 
-static float Ui(float px) { return px * g_uiZoom; }
 
-static bool IsValidUiZoomPercent(int percent) {
+bool IsValidUiZoomPercent(int percent) {
     for (int p : kUiZoomPercents) {
         if (p == percent) return true;
     }
     return false;
 }
 
-static void CaptureBaseStyleFromCurrent() {
+void CaptureBaseStyleFromCurrent() {
     g_baseStyle = ImGui::GetStyle();
     g_baseStyle.FontScaleMain = 1.0f;
     g_baseStyleCaptured = true;
 }
 
-static void ApplyEditorTheme(editor_theme::StylePreset preset,
+void ApplyEditorTheme(editor_theme::StylePreset preset,
                              editor_theme::ColorScheme scheme) {
     g_uiStylePreset = editor_theme::ClampStylePreset(static_cast<int>(preset));
     g_uiColorScheme = editor_theme::ClampColorScheme(static_cast<int>(scheme));
@@ -279,7 +262,7 @@ static void ApplyEditorTheme(editor_theme::StylePreset preset,
     CaptureBaseStyleFromCurrent();
 }
 
-static void ApplyUiZoom(int percent) {
+void ApplyUiZoom(int percent) {
     if (!IsValidUiZoomPercent(percent))
         percent = 100;
     g_uiZoomPercent = percent;
@@ -297,7 +280,7 @@ static void ApplyUiZoom(int percent) {
     style.FontScaleMain = g_uiZoom;
 }
 
-static void SaveUiPrefs() {
+void SaveUiPrefs() {
     try {
         const fs::path dest = content_path::WritableFileCurrent(kUiPrefsPath);
         if (dest.empty())
@@ -332,7 +315,7 @@ static void SaveUiPrefs() {
     }
 }
 
-static void LoadUiPrefs() {
+void LoadUiPrefs() {
     PlayFpsOverlay::SetEnabled(false);
     g_uiZoomPercent = 100;
     g_uiZoom = 1.0f;
@@ -365,25 +348,6 @@ static void LoadUiPrefs() {
     }
 }
 
-static std::string ShaderVariantPreviewLabel(Shader3DVariant v) {
-    const char* label = Shader3DVariantLabel(v);
-    if (Shader3DVariantIsUserVisible(v))
-        return label;
-    return std::string(label) + " (legacy)";
-}
-
-struct EditorLayoutMetrics {
-    float topChrome = 0.0f;
-    float leftWidth = 0.0f;
-    float rightWidth = 0.0f;
-    float bottomHeight = 0.0f;
-    float sidePanelH = 0.0f;
-    float viewportX = 0.0f;
-    float viewportY = 0.0f;
-    float viewportW = 0.0f;
-    float viewportH = 0.0f;
-};
-
 GameObject* g_selNode = nullptr;
 UIElement* g_selUiElement = nullptr;
 
@@ -410,22 +374,13 @@ bool EngineGUI_ApplySkyboxCubemapPath(const std::string& assetPath) {
 void EngineGUI_ClearSceneDirty() { g_sceneDirty = false; }
 
 // Unsaved-changes popup state. Used to gate scene switches and exit.
-enum class PendingEditorAction {
-    None = 0,
-    LoadScene,
-    NewScene,
-    OpenProject,
-    CreateProject,
-    CloseProject,
-    Exit,
-};
 
-static PendingEditorAction g_pendingEditorAction = PendingEditorAction::None;
-static std::string g_pendingEditorSceneFile;
-static std::string g_pendingProjectPath;
-static std::string g_pendingCreateProjectParent;
-static std::string g_pendingCreateProjectName;
-static bool g_showUnsavedChangesPopup = false;
+PendingEditorAction g_pendingEditorAction = PendingEditorAction::None;
+std::string g_pendingEditorSceneFile;
+std::string g_pendingProjectPath;
+std::string g_pendingCreateProjectParent;
+std::string g_pendingCreateProjectName;
+bool g_showUnsavedChangesPopup = false;
 
 void EngineGUI_QueueUnsavedLoad(const char* filename) {
     if (!filename || !filename[0]) return;
@@ -440,22 +395,9 @@ void EngineGUI_QueueUnsavedExit() {
     g_showUnsavedChangesPopup = true;
 }
 
-const std::string PREFAB_DIR = "rom/prefabs/";
 
-enum class ReloadLightState { Paused, Watching, Pending, Failed };
-struct ReloadLight {
-    bool failed = false;
-    double brightUntil = 0;
-    void Success() { failed = false; brightUntil = ImGui::GetTime() + 1.2; }
-    void Failure() { failed = true; brightUntil = 0; }
-};
-static ReloadLight g_sceneReloadLight, g_scriptReloadLight;
-static unsigned long long g_scriptFeedbackRevision = 0;
-static ReloadLightState GetReloadLightState(bool active, bool paused, bool pending, const ReloadLight& light) {
-    if (!active || paused) return ReloadLightState::Paused;
-    if (pending) return ReloadLightState::Pending;
-    return light.failed ? ReloadLightState::Failed : ReloadLightState::Watching;
-}
+ReloadLight g_sceneReloadLight, g_scriptReloadLight;
+unsigned long long g_scriptFeedbackRevision = 0;
 static void LogContentReload(const std::string& message) {
     std::error_code ec;
     const auto size = std::filesystem::file_size("content_hot_reload.log", ec);
@@ -471,18 +413,18 @@ static bool ContentPathCurrentlyLoaded(const std::string& path) {
     return false;
 }
 static std::string g_contentProjectRoot;
-static ContentFileMonitor g_contentMonitor;
+ContentFileMonitor g_contentMonitor;
 void EngineGUI_RequestContentRefresh() { g_contentMonitor.RefreshSoon(); }
-static std::vector<ContentFileMonitor::Change> g_contentChanges;
-static ReloadLight g_contentReloadLight;
-static std::string g_contentReloadStatus = "Watching project content";
-static bool g_contentSceneReload = false;
+std::vector<ContentFileMonitor::Change> g_contentChanges;
+ReloadLight g_contentReloadLight;
+std::string g_contentReloadStatus = "Watching project content";
+bool g_contentSceneReload = false;
 static PlayMode g_contentPlayMode = PlayMode::None;
-static SceneFileMonitor g_sceneFileMonitor;
+SceneFileMonitor g_sceneFileMonitor;
 static unsigned long long g_monitoredSceneRevision = 0;
-static std::optional<SceneFileMonitor::Version> g_sceneReloadConflict;
+std::optional<SceneFileMonitor::Version> g_sceneReloadConflict;
 static std::optional<SceneFileMonitor::Version> g_pendingSceneHotLoad;
-static std::string g_sceneReloadStatus = "Watching current scene JSON";
+std::string g_sceneReloadStatus = "Watching current scene JSON";
 static void ResetSceneHotLoad() {
     g_sceneFileMonitor.Reset();
     g_sceneReloadLight = {};
@@ -556,26 +498,24 @@ static void ResolveSceneReloadConflict(bool loadDisk) {
 #ifdef _DEBUG
 static void SceneHotLoadCheck_Tick(double elapsed);
 #endif
-static std::string g_scriptReloadStatus = "Script DLL reload: not initialized";
+std::string g_scriptReloadStatus = "Script DLL reload: not initialized";
 
-static void SaveScene();
-static void SaveSceneToFile(const std::string& sceneFile);
-static void NewScene();
-static void SaveProject();
-static void ApplyProjectSessionState();
-static bool SwitchToOpenedProject();
-static void RequestOpenProject(const std::string& rootPath);
-static void RequestCloseProject();
-static void CloseOpenedProject();
-static void BeginNewProjectFlow();
-static void BeginOpenProjectFlow();
-static void OpenBuildPreflight();
-static void RequestBuildCurrentProject();
-static void ConsumePendingFolderPick();
-static void DrawEngineStartScreen();
-static void DrawEditorPopups();
+void SaveScene();
+void SaveSceneToFile(const std::string& sceneFile);
+void NewScene();
+void SaveProject();
+void ApplyProjectSessionState();
+bool SwitchToOpenedProject();
+void RequestOpenProject(const std::string& rootPath);
+void RequestCloseProject();
+void CloseOpenedProject();
+void BeginNewProjectFlow();
+void BeginOpenProjectFlow();
+void OpenBuildPreflight();
+void RequestBuildCurrentProject();
+void ConsumePendingFolderPick();
 
-static void RemapNodeTagsAfterDelete(GameObject* node, int deletedId) {
+void RemapNodeTagsAfterDelete(GameObject* node, int deletedId) {
     if (!node)
         return;
 
@@ -601,54 +541,13 @@ static void RemapNodeTagsAfterDelete(GameObject* node, int deletedId) {
         RemapNodeTagsAfterDelete(child.get(), deletedId);
 }
 
-static void RemapSceneTagsAfterDelete(int deletedId) {
+void RemapSceneTagsAfterDelete(int deletedId) {
     for (auto& root : SceneLoader_GetSceneNodes())
         RemapNodeTagsAfterDelete(root.get(), deletedId);
 }
 
-static ImVec2 ToolbarWindowPadding()
-{
-    return ImVec2(Ui(kToolbarWindowPadX), Ui(kToolbarWindowPadY));
-}
 
-static ImVec2 ToolbarFramePadding()
-{
-    return ImVec2(Ui(kToolbarFramePadX), Ui(kToolbarFramePadY));
-}
-
-static void PushToolbarChromeStyle()
-{
-    const ImVec2 windowPad = ToolbarWindowPadding();
-    const ImVec2 framePad = ToolbarFramePadding();
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, windowPad);
-    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, framePad);
-    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing,
-        ImVec2(Ui(kToolbarItemSpacingX), framePad.y));
-}
-
-static void PopToolbarChromeStyle()
-{
-    ImGui::PopStyleVar(3);
-}
-
-// Square icon hit-target sized from the (toolbar-local) frame height.
-static float ToolbarIconSize()
-{
-    return IM_TRUNC(ImGui::GetFrameHeight() + 0.5f);
-}
-
-static bool ToolbarIconButton(const char* icon, const char* tooltip)
-{
-    return editor_icon_button::IconButtonTooltip(icon, tooltip, ImVec2(ToolbarIconSize(), 0.0f));
-}
-
-static bool ToolbarIconToggle(const char* icon, bool active, const char* tooltip)
-{
-    return editor_icon_button::IconToggleTooltip(
-        icon, active, tooltip, ImVec2(ToolbarIconSize(), 0.0f));
-}
-
-static std::string TrimString(const std::string& value) {
+std::string TrimString(const std::string& value) {
     const char* whitespace = " \t\r\n";
     const size_t begin = value.find_first_not_of(whitespace);
     if (begin == std::string::npos) return "";
@@ -656,7 +555,7 @@ static std::string TrimString(const std::string& value) {
     return value.substr(begin, end - begin + 1);
 }
 
-static std::string NormalizeSceneFileName(const std::string& sceneName) {
+std::string NormalizeSceneFileName(const std::string& sceneName) {
     std::string trimmed = TrimString(sceneName);
     if (trimmed.empty()) return "";
 
@@ -675,108 +574,15 @@ bool EngineGUI_IsSceneGraphObject(GameObject* obj) {
     return SceneLoader_IsSceneGraphObject(obj);
 }
 
-static std::unique_ptr<GameObject> CreateModelGameObject(
-    const std::string& modelName, const std::string& displayName)
-{
-    auto node = std::make_unique<GameObject>(displayName.empty() ? modelName : displayName);
-    node->AddComponent<engine::Transform>();
-    auto* vc = node->AddComponent<VisualComponent>();
-    vc->modelPath = modelName;
-    node->AddComponent<ColliderComponent>();
-    return node;
-}
 
-namespace {
-    struct PrimitiveCreateSpec {
-        const char* menuLabel;
-        const char* displayName;
-        const char* assetPath;
-        ColliderType colliderType;
-        float height;
-    };
-
-    const PrimitiveCreateSpec kDefaultPrimitives[] = {
-        { "Cube",     "Cube",     "rom/model/primitives/Cube.fbx",     ColliderType::BOX,      1.0f },
-        { "Sphere",   "Sphere",   "rom/model/primitives/Sphere.fbx",   ColliderType::SPHERE,   1.0f },
-        { "Cylinder", "Cylinder", "rom/model/primitives/Cylinder.fbx", ColliderType::CYLINDER, 1.0f },
-        { "Cone",     "Cone",     "rom/model/primitives/Cone.fbx",     ColliderType::MESH,     1.0f },
-        // CapsuleCollider height = cylinder segment (sphere centers), not total
-        // extent. Mesh is total H=2 with r=0.5 → segment = 2 - 2*r = 1.
-        { "Capsule",  "Capsule",  "rom/model/primitives/Capsule.fbx",  ColliderType::CAPSULE,  1.0f },
-        { "Donut",    "Donut",    "rom/model/primitives/Donut.fbx",    ColliderType::MESH,     1.0f },
-    };
-}
-
-static std::unique_ptr<GameObject> CreatePrimitiveGameObject(const PrimitiveCreateSpec& spec)
-{
-    auto node = CreateModelGameObject(spec.assetPath, spec.displayName);
-    if (auto* col = FindColliderComponent(node)) {
-        col->colliderType = spec.colliderType;
-        col->radius = 0.5f;
-        col->halfExtents = { 0.5f, 0.5f, 0.5f };
-        col->height = spec.height;
-    }
-    return node;
-}
-
-static float EditorMenuBarHeight() {
-    return g_imguiInitialized ? ImGui::GetFrameHeight() : 22.0f;
-}
-
-// Must match PushToolbarChromeStyle padding: frame + window pad on both sides.
-static float EditorToolbarHeight() {
-    if (!g_imguiInitialized)
-        return 36.0f;
-    const ImVec2 windowPad = ToolbarWindowPadding();
-    const ImVec2 framePad = ToolbarFramePadding();
-    const float frameH = ImGui::GetFontSize() + framePad.y * 2.0f;
-    return IM_TRUNC(frameH + windowPad.y * 2.0f + 0.5f);
-}
-
-static float EditorTopChrome() {
-    return EditorMenuBarHeight() + EditorToolbarHeight();
-}
-
-static EditorLayoutMetrics ComputeEditorLayout(float screenW, float screenH) {
-    EditorLayoutMetrics layout;
-    layout.topChrome = EditorTopChrome();
-    layout.leftWidth = Ui(kLeftPanelWidth);
-    layout.rightWidth = Ui(kRightPanelWidth);
-
-    layout.bottomHeight = (std::max)(Ui(kBottomPanelMinHeight), screenH * kBottomPanelScreenFraction);
-    const float maxBottomHeight = screenH - layout.topChrome - Ui(kEditorViewportMinHeight);
-    layout.bottomHeight = (std::min)(layout.bottomHeight, maxBottomHeight);
-
-    const float previewAvailX = layout.leftWidth;
-    const float previewAvailY = layout.topChrome;
-    const float previewAvailW = (std::max)(1.0f, screenW - layout.leftWidth - layout.rightWidth);
-    const float previewAvailH = (std::max)(
-        1.0f, screenH - layout.topChrome - layout.bottomHeight);
-    layout.sidePanelH = previewAvailH;
-
-    layout.viewportW = previewAvailW;
-    layout.viewportH = layout.viewportW / kEditorViewportAspect;
-    if (layout.viewportH > previewAvailH) {
-        layout.viewportH = previewAvailH;
-        layout.viewportW = layout.viewportH * kEditorViewportAspect;
-    }
-    layout.viewportX = previewAvailX + (previewAvailW - layout.viewportW) * 0.5f;
-    layout.viewportY = previewAvailY + (previewAvailH - layout.viewportH) * 0.5f;
-
-    // Side panels extend to viewport edges so letterbox gutters are filled.
-    layout.leftWidth = layout.viewportX;
-    layout.rightWidth = screenW - (layout.viewportX + layout.viewportW);
-    return layout;
-}
-
-static std::unique_ptr<GameObject> CreateEmptyGameObject() {
+std::unique_ptr<GameObject> CreateEmptyGameObject() {
     auto node = std::make_unique<GameObject>("GameObject");
     node->AddComponent<engine::Transform>();
     node->AddComponent<VisualComponent>();
     return node;
 }
 
-static std::unique_ptr<GameObject> CreateDirectionalLightObject() {
+std::unique_ptr<GameObject> CreateDirectionalLightObject() {
     auto node = std::make_unique<GameObject>("Directional Light");
     auto* t = node->AddComponent<engine::Transform>();
     t->localRotation = { 50.0f, -30.0f, 0.0f };
@@ -785,7 +591,7 @@ static std::unique_ptr<GameObject> CreateDirectionalLightObject() {
     return node;
 }
 
-static std::unique_ptr<GameObject> CreatePointLightObject() {
+std::unique_ptr<GameObject> CreatePointLightObject() {
     auto node = std::make_unique<GameObject>("Point Light");
     auto* t = node->AddComponent<engine::Transform>();
     t->localPosition = { 0.0f, 8.0f, 0.0f };
@@ -794,7 +600,7 @@ static std::unique_ptr<GameObject> CreatePointLightObject() {
     return node;
 }
 
-static std::unique_ptr<GameObject> CreateSpotLightObject() {
+std::unique_ptr<GameObject> CreateSpotLightObject() {
     auto node = std::make_unique<GameObject>("Spot Light");
     auto* t = node->AddComponent<engine::Transform>();
     t->localRotation = { 45.0f, 0.0f, 0.0f };
@@ -803,7 +609,7 @@ static std::unique_ptr<GameObject> CreateSpotLightObject() {
     return node;
 }
 
-static std::unique_ptr<GameObject> CreateCameraObject(bool debugFly = false) {
+std::unique_ptr<GameObject> CreateCameraObject(bool debugFly) {
     const std::string base = debugFly ? "Debug Camera" : "Camera";
     std::vector<std::string> names;
     std::function<void(GameObject*)> collect = [&](GameObject* n) {
@@ -824,7 +630,7 @@ static std::unique_ptr<GameObject> CreateCameraObject(bool debugFly = false) {
     return node;
 }
 
-static void SpawnRootGameObject(std::unique_ptr<GameObject> node) {
+void SpawnRootGameObject(std::unique_ptr<GameObject> node) {
     if (!node) return;
     GameObject* raw = node.get();
     g_sceneNodes.push_back(std::move(node));
@@ -835,7 +641,7 @@ static void SpawnRootGameObject(std::unique_ptr<GameObject> node) {
     SyncSceneRuntime();
 }
 
-static void SpawnChildGameObject(GameObject* parent) {
+void SpawnChildGameObject(GameObject* parent) {
     if (!parent) return;
     auto node = CreateEmptyGameObject();
     GameObject* raw = node.get();
@@ -848,11 +654,11 @@ static void SpawnChildGameObject(GameObject* parent) {
     SyncSceneRuntime();
 }
 
-static std::unique_ptr<GameObject> DuplicateGameObject(const GameObject& src) {
+std::unique_ptr<GameObject> DuplicateGameObject(const GameObject& src) {
     return PrefabSerializer::Deserialize(PrefabSerializer::Serialize(src));
 }
 
-static void SpawnDuplicate(GameObject* source) {
+void SpawnDuplicate(GameObject* source) {
     if (!source) return;
     auto dup = DuplicateGameObject(*source);
     if (!dup) return;
@@ -874,7 +680,7 @@ static void SpawnDuplicate(GameObject* source) {
     SyncSceneRuntime();
 }
 
-static void DeleteGameObject(GameObject* toDelete, bool recordUndo = true) {
+void DeleteGameObject(GameObject* toDelete, bool recordUndo) {
     if (!toDelete) return;
     if (recordUndo)
         EditorUndo_PushDelete(toDelete);
@@ -899,7 +705,7 @@ static void DeleteGameObject(GameObject* toDelete, bool recordUndo = true) {
     SyncSceneRuntime();
 }
 
-static void ClearScene() {
+void ClearScene() {
     ClearSceneRuntime();
     g_sceneNodes.clear();
     g_selNode = nullptr;
@@ -911,495 +717,8 @@ static void ClearScene() {
 }
 
 // --- Helpers ---
-static bool ScrollValue(float* value, float baseSpeed = 1.0f) {
-    if (ImGui::IsItemHovered()) {
-        float wheel = ImGui::GetIO().MouseWheel;
-        if (wheel != 0.0f) {
-            *value += wheel * baseSpeed * g_scrollSensitivity;
-            return true;
-        }
-    }
-    return false;
-}
 
-static std::string LowerAssetExtension(const char* path) {
-    if (!path) return "";
-    std::string ext = PathToUtf8(PathFromUtf8(path).extension());
-    std::transform(ext.begin(), ext.end(), ext.begin(),
-        [](unsigned char c) {
-            return static_cast<char>(std::tolower(c));
-        });
-    return ext;
-}
-
-static bool AssetPathHasExtension(const char* path, const char* const* extensions, int count) {
-    const std::string ext = LowerAssetExtension(path);
-    for (int i = 0; i < count; ++i) {
-        if (ext == extensions[i])
-            return true;
-    }
-    return false;
-}
-
-static bool AcceptAssetPathDrop(const char* const* extensions, int count, std::string& outPath) {
-    bool accepted = false;
-    if (ImGui::BeginDragDropTarget()) {
-        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ASSET_PATH")) {
-            const char* path = static_cast<const char*>(payload->Data);
-            if (path && AssetPathHasExtension(path, extensions, count)) {
-                outPath = path;
-                accepted = true;
-            }
-        }
-        ImGui::EndDragDropTarget();
-    }
-    return accepted;
-}
-
-static bool DrawScriptPropertyField(GameObject* editNode,
-                                    const std::string& key,
-                                    nlohmann::json& val) {
-    std::string wid = "##SC_" + key;
-    if (val.is_number_float()) {
-        float f = val.get<float>();
-        ImGui::Text("%s:", key.c_str()); ImGui::SameLine(80);
-        if (ImGui::DragFloat(wid.c_str(), &f, 0.1f)) { val = f; return true; }
-        if (ImGui::IsItemHovered()) {
-            float wheel = ImGui::GetIO().MouseWheel;
-            if (wheel != 0.0f) { f += wheel * 0.1f * g_scrollSensitivity; val = f; return true; }
-        }
-    }
-    else if (val.is_number_integer() || val.is_number_unsigned()) {
-        int iv = val.get<int>();
-        ImGui::Text("%s:", key.c_str()); ImGui::SameLine(80);
-        ImGui::SetNextItemWidth(-1);
-        if (ImGui::InputInt(wid.c_str(), &iv)) { val = iv; return true; }
-    }
-    else if (val.is_boolean()) {
-        bool bv = val.get<bool>();
-        ImGui::Text("%s:", key.c_str()); ImGui::SameLine(80);
-        if (ImGui::Checkbox(wid.c_str(), &bv)) { val = bv; return true; }
-    }
-    else if (val.is_string()) {
-        static GameObject* s_editNode = nullptr;
-        static std::string s_editKey;
-        static char s_strBuf[256] = {};
-        ImGui::Text("%s:", key.c_str()); ImGui::SameLine(80);
-        ImGui::SetNextItemWidth(-1);
-        if (s_editNode != editNode || s_editKey != key) {
-            s_editNode = editNode; s_editKey = key;
-            strncpy_s(s_strBuf, val.get<std::string>().c_str(), sizeof(s_strBuf) - 1);
-        }
-        if (ImGui::InputText(wid.c_str(), s_strBuf, sizeof(s_strBuf),
-            ImGuiInputTextFlags_EnterReturnsTrue)) {
-            val = std::string(s_strBuf);
-            return true;
-        }
-        if (!ImGui::IsItemActive())
-            strncpy_s(s_strBuf, val.get<std::string>().c_str(), sizeof(s_strBuf) - 1);
-    }
-    return false;
-}
-
-static void DrawPostFxShowcaseWindow(bool* open) {
-    if (!open || !*open) return;
-
-    ImGui::SetNextWindowSize(ImVec2(380.0f, 0.0f), ImGuiCond_FirstUseEver);
-    if (!ImGui::Begin("PostFX Showcase", open, ImGuiWindowFlags_AlwaysAutoResize)) {
-        ImGui::End();
-        return;
-    }
-
-    static PostFXParams s_fx;
-    static bool s_synced = false;
-    if (!s_synced) {
-        PostProcess_GetEffects(s_fx);
-        s_synced = true;
-    }
-
-    auto applyFx = [&]() { PostProcess_SetEffects(s_fx); };
-
-    ImGui::TextWrapped(
-        "Live stackable post-process over the game viewport. "
-        "Strength 0 = off for each effect.");
-    ImGui::Separator();
-
-    if (ImGui::SliderFloat("RGB Shift", &s_fx.rgbShift, 0.0f, 0.04f, "%.4f"))
-        applyFx();
-    if (ImGui::SliderFloat("Mosaic Blocks", &s_fx.mosaicBlocks, 0.0f, 80.0f, "%.0f"))
-        applyFx();
-    if (ImGui::SliderFloat("Posterize", &s_fx.posterize, 0.0f, 32.0f, "%.0f"))
-        applyFx();
-    if (ImGui::SliderFloat("Noise", &s_fx.noise, 0.0f, 1.0f, "%.3f"))
-        applyFx();
-    if (ImGui::SliderFloat("Grayscale", &s_fx.grayscale, 0.0f, 1.0f, "%.3f"))
-        applyFx();
-    if (ImGui::SliderFloat("Contrast (1.0 = neutral)", &s_fx.contrast, 0.0f, 2.0f, "%.2f"))
-        applyFx();
-    if (ImGui::SliderFloat("Vignette", &s_fx.vignette, 0.0f, 1.0f, "%.3f"))
-        applyFx();
-    if (ImGui::SliderFloat("Scanline", &s_fx.scanline, 0.0f, 1.0f, "%.3f"))
-        applyFx();
-    if (ImGui::SliderFloat("Flicker", &s_fx.flicker, 0.0f, 1.0f, "%.3f"))
-        applyFx();
-
-    ImGui::Separator();
-    ImGui::Text("Bloom (Bright Glow)");
-    if (ImGui::SliderFloat("Bloom Intensity", &s_fx.bloomIntensity, 0.0f, 2.5f, "%.2f"))
-        applyFx();
-    if (ImGui::SliderFloat("Bloom Threshold", &s_fx.bloomThreshold, 0.0f, 1.5f, "%.2f"))
-        applyFx();
-    if (ImGui::SliderFloat("Bloom Spread", &s_fx.bloomSpread, 0.1f, 4.0f, "%.2f"))
-        applyFx();
-
-    ImGui::Spacing();
-    if (ImGui::Button("Off")) {
-        s_fx = PostFXParams{};
-        applyFx();
-    }
-    ImGui::SameLine();
-    if (ImGui::Button("Bloom Only")) {
-        s_fx = PostFXParams{};
-        s_fx.bloomIntensity = 0.8f;
-        s_fx.bloomThreshold = 0.7f;
-        s_fx.bloomSpread = 1.2f;
-        applyFx();
-    }
-    ImGui::SameLine();
-    if (ImGui::Button("Dreamy Bloom")) {
-        s_fx = PostFXParams{};
-        s_fx.bloomIntensity = 1.5f;
-        s_fx.bloomThreshold = 0.5f;
-        s_fx.bloomSpread = 2.2f;
-        s_fx.contrast = 1.1f;
-        applyFx();
-    }
-
-    ImGui::Spacing();
-    if (ImGui::Button("Backrooms VHS")) {
-        s_fx = PostFXParams{};
-        s_fx.noise = 0.12f;
-        s_fx.vignette = 0.55f;
-        s_fx.scanline = 0.25f;
-        s_fx.contrast = 1.15f;
-        s_fx.rgbShift = 0.0015f;
-        s_fx.flicker = 0.08f;
-        applyFx();
-    }
-    ImGui::SameLine();
-    if (ImGui::Button("Emo")) {
-        s_fx = PostFXParams{};
-        s_fx.grayscale = 1.0f;
-        s_fx.contrast = 1.4f;
-        s_fx.noise = 0.15f;
-        s_fx.posterize = 8.0f;
-        applyFx();
-    }
-
-    ImGui::Spacing();
-    if (ImGui::Button("Preset: Mild RGB")) {
-        s_fx = PostFXParams{};
-        s_fx.rgbShift = 0.008f;
-        applyFx();
-    }
-    ImGui::SameLine();
-    if (ImGui::Button("Preset: Mosaic")) {
-        s_fx = PostFXParams{};
-        s_fx.mosaicBlocks = 40.0f;
-        applyFx();
-    }
-    if (ImGui::Button("Preset: Combined")) {
-        s_fx = PostFXParams{};
-        s_fx.rgbShift = 0.01f;
-        s_fx.mosaicBlocks = 32.0f;
-        applyFx();
-    }
-    ImGui::SameLine();
-    if (ImGui::Button("Preset: Neon Glow")) {
-        s_fx = PostFXParams{};
-        s_fx.bloomIntensity = 1.2f;
-        s_fx.bloomThreshold = 0.6f;
-        s_fx.bloomSpread = 1.5f;
-        s_fx.rgbShift = 0.003f;
-        s_fx.vignette = 0.35f;
-        applyFx();
-    }
-
-    ImGui::Separator();
-    ImGui::Text("Bursts (temporary RGB punch)");
-    if (ImGui::Button("GOAL Burst (0.012 / 0.45s)"))
-        PostProcess_TriggerBurst(0.012f, 0.45f);
-    ImGui::SameLine();
-    if (ImGui::Button("Strong Burst (0.025 / 0.6s)"))
-        PostProcess_TriggerBurst(0.025f, 0.6f);
-
-    ImGui::Spacing();
-    ImGui::TextDisabled("Hotkeys: F9 = GOAL burst, F10 = toggle mosaic");
-
-    ImGui::End();
-}
-
-static void DrawShortcutHintsWindow(bool* open) {
-    if (!open || !*open) return;
-
-    ImGui::SetNextWindowSize(ImVec2(420.0f, 0.0f), ImGuiCond_FirstUseEver);
-    if (!ImGui::Begin("Shortcut Hints", open)) {
-        ImGui::End();
-        return;
-    }
-
-    auto row = [](const char* keys, const char* desc) {
-        ImGui::TableNextRow();
-        ImGui::TableSetColumnIndex(0);
-        ImGui::TextUnformatted(keys);
-        ImGui::TableSetColumnIndex(1);
-        ImGui::TextWrapped("%s", desc);
-    };
-
-    if (ImGui::BeginTable("##ShortcutHints", 2,
-            ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_RowBg |
-            ImGuiTableFlags_SizingStretchProp)) {
-        ImGui::TableSetupColumn("Key", ImGuiTableColumnFlags_WidthFixed, 140.0f);
-        ImGui::TableSetupColumn("Action", ImGuiTableColumnFlags_WidthStretch);
-
-        ImGui::TableNextRow();
-        ImGui::TableSetColumnIndex(0);
-        ImGui::TextDisabled("Editor");
-        ImGui::TableSetColumnIndex(1);
-        ImGui::TextDisabled("");
-
-        row("F2", "Play in viewport / stop");
-        row("F3", "Play fullscreen / stop");
-        row("F6", "Toggle third-person cursor");
-        row("F8", "Toggle job-system debug window");
-        row("F", "Focus selected object in scene view");
-        row("Ctrl+S", "Save scene");
-        row("Ctrl+Shift+S", "Save project");
-        row("Ctrl+Z / Ctrl+Y", "Undo / redo");
-
-        ImGui::TableNextRow();
-        ImGui::TableSetColumnIndex(0);
-        ImGui::TextDisabled("Play / Runtime");
-        ImGui::TableSetColumnIndex(1);
-        ImGui::TextDisabled("");
-
-        row("F7", "Cycle time scale (1.0 ?? 0.5 ?? 0.25 ?? freeze)");
-        row("F11", "Toggle collision visualizer");
-        row("F12", "Step one frame while frozen");
-        row("F9", "PostFX GOAL RGB burst");
-        row("F10", "Toggle PostFX mosaic showcase");
-
-        ImGui::EndTable();
-    }
-
-    ImGui::End();
-}
-
-static void DrawRenderingSettingsWindow(bool* open) {
-    if (!open || !*open) return;
-
-    ImGui::SetNextWindowSize(ImVec2(400.0f, 0.0f), ImGuiCond_FirstUseEver);
-    if (!ImGui::Begin("Rendering Settings", open, ImGuiWindowFlags_AlwaysAutoResize))
-        return;
-
-    ImGui::BeginDisabled(EngineGUI_IsPlaying());
-    bool scene2D=SceneLoader_Is2D();
-    if(ImGui::Checkbox("2D Scene",&scene2D)) {
-        SceneLoader_SetExecutionMode(scene2D,!scene2D);
-        EngineGUI_MarkSceneDirty();
-    }
-    if(!scene2D) {
-        bool physics3D=SceneLoader_Uses3DPhysics();
-        if(ImGui::Checkbox("3D Physics",&physics3D)) {
-            SceneLoader_SetExecutionMode(false,physics3D); EngineGUI_MarkSceneDirty();
-        }
-    } else {
-        bool physics2D=SceneLoader_Uses2DPhysics();
-        if(ImGui::Checkbox("2D Physics (Box2D)",&physics2D)) {
-            SceneLoader_SetExecutionMode(true,false,physics2D); EngineGUI_MarkSceneDirty();
-        }
-        ImGui::TextDisabled("Sprite rendering; 3D physics and effects disabled.");
-    }
-    ImGui::EndDisabled();
-    RenderSettingsData& rs = RenderSettings_Get();
-    static char cubemapBuf[256] = {};
-    static std::string syncedCubemapPath;
-
-    if (rs.skyboxCubemapPath != syncedCubemapPath) {
-        syncedCubemapPath = rs.skyboxCubemapPath;
-        strncpy_s(cubemapBuf, rs.skyboxCubemapPath.c_str(), sizeof(cubemapBuf) - 1);
-    }
-
-    ImGui::Text("Environment");
-    ImGui::Separator();
-    if (ImGui::Checkbox("Skybox", &rs.skyboxEnabled))
-        RenderSettings_ReloadSkybox();
-
-    ImGui::Text("Cubemap / panorama PNG");
-    ImGui::SetNextItemWidth(-1);
-    if (ImGui::InputText("##SkyboxCubemap", cubemapBuf, sizeof(cubemapBuf),
-        ImGuiInputTextFlags_EnterReturnsTrue)) {
-        rs.skyboxCubemapPath = cubemapBuf;
-        syncedCubemapPath = rs.skyboxCubemapPath;
-        RenderSettings_ReloadSkybox();
-        EngineGUI_MarkSceneDirty();
-    }
-    {
-        const char* skyExts[] = { ".dds", ".png" };
-        std::string droppedPath;
-        if (AcceptAssetPathDrop(skyExts, IM_ARRAYSIZE(skyExts), droppedPath) &&
-            EngineGUI_ApplySkyboxCubemapPath(droppedPath)) {
-            syncedCubemapPath = rs.skyboxCubemapPath;
-            strncpy_s(cubemapBuf, rs.skyboxCubemapPath.c_str(), sizeof(cubemapBuf) - 1);
-        }
-    }
-    if (panorama::IsEquirectSkyPath(rs.skyboxCubemapPath)) {
-        ImGui::DragFloat("Vertical FOV", &rs.skyboxVerticalFov, 0.5f, 0.0f, 180.0f, "%.1f deg (0=auto)");
-        if (ImGui::IsItemDeactivatedAfterEdit()) {
-            if (!(rs.skyboxVerticalFov > 0.0f))
-                rs.skyboxVerticalFov = 0.0f;
-            else if (rs.skyboxVerticalFov > 180.0f)
-                rs.skyboxVerticalFov = 180.0f;
-            RenderSettings_ReloadSkybox();
-            EngineGUI_MarkSceneDirty();
-        }
-        ImGui::TextDisabled("0 = 360*height/width, centered on the horizon. Width is always 360 deg.");
-        const panorama::Prep& prep = panorama::CurrentPrep();
-        if (!prep.isPanorama || !panorama::SameRomPath(prep.sourceRom, rs.skyboxCubemapPath)) {
-            ImGui::TextDisabled("Equirectangular PNG cooks to a DDS cubemap on reload.");
-        } else if (!prep.ok) {
-            ImGui::TextColored(ImVec4(1.0f, 0.45f, 0.35f, 1.0f), "Panorama failed");
-            ImGui::TextWrapped("%s", prep.error.c_str());
-        } else if (!prep.iblReady) {
-            ImGui::TextColored(ImVec4(1.0f, 0.45f, 0.35f, 1.0f), "IBL not matching sky");
-            if (!prep.error.empty())
-                ImGui::TextWrapped("%s", prep.error.c_str());
-        } else {
-            ImGui::TextDisabled("IBL baked from this panorama. BRDF LUT is unchanged.");
-        }
-    }
-
-    ImGui::ColorEdit4("Tint", &rs.skyboxTint.x);
-    ImGui::DragFloat("Exposure", &rs.skyboxExposure, 0.05f, 0.1f, 5.0f);
-    ImGui::DragFloat("Rotation Y", &rs.skyboxRotationYDeg, 1.0f, -180.0f, 180.0f);
-    if (ImGui::Checkbox("IBL", &rs.iblEnabled))
-        RenderSettings_ReloadSkybox();
-    ImGui::DragFloat("IBL Intensity", &rs.iblIntensity, 0.05f, 0.0f, 5.0f);
-    ImGui::ColorEdit4("Clear Color", &rs.clearColor.x);
-
-    ImGui::Text("Default Shader");
-    {
-        const int variantCount = Shader3DVariantCount();
-        const Shader3DVariant currentVariant = Shader3DVariantFromId(rs.defaultShader);
-        const std::string preview = ShaderVariantPreviewLabel(currentVariant);
-        ImGui::SetNextItemWidth(-1);
-        if (ImGui::BeginCombo("##DefaultShader", preview.c_str())) {
-            for (int i = 0; i < variantCount; ++i) {
-                const Shader3DVariant v = Shader3DVariantByIndex(i);
-                if (!Shader3DVariantIsUserVisible(v))
-                    continue;
-                const bool selected = (v == currentVariant);
-                if (ImGui::Selectable(Shader3DVariantLabel(v), selected))
-                    rs.defaultShader = Shader3DVariantId(v);
-                if (selected)
-                    ImGui::SetItemDefaultFocus();
-            }
-            ImGui::EndCombo();
-        }
-        ImGui::TextDisabled(
-            "PBR (Cook-Torrance): assign via this Default Shader or a VisualComponent Shader override. "
-            "Tune Material Roughness (0.1 vs 0.8) and Metallic (0 vs 1); compare side-by-side with Toon. "
-            "Open rom/scene/scene_pbr_showcase.json for a ready grid.");
-    }
-
-    ImGui::Spacing();
-    ImGui::Text("Shadows");
-    ImGui::Separator();
-    {
-        const char* preview = RenderSettings_ShadowQualityLabel(rs.shadowQuality);
-        ImGui::SetNextItemWidth(-1);
-        if (ImGui::BeginCombo("##ShadowQuality", preview)) {
-            const ShadowQuality options[] = {
-                ShadowQuality::Low,
-                ShadowQuality::Medium,
-                ShadowQuality::High
-            };
-            for (ShadowQuality q : options) {
-                const bool selected = (q == rs.shadowQuality);
-                if (ImGui::Selectable(RenderSettings_ShadowQualityLabel(q), selected)) {
-                    if (rs.shadowQuality != q) {
-                        rs.shadowQuality = q;
-                        RenderSettings_ApplyShadowQuality();
-                    }
-                }
-                if (selected)
-                    ImGui::SetItemDefaultFocus();
-            }
-            ImGui::EndCombo();
-        }
-        const ShadowQualityPreset preset = RenderSettings_GetShadowPreset();
-        ImGui::TextDisabled("%u px  |  %d cascades  |  range %.0f",
-            preset.mapSize, preset.cascadeCount, preset.maxDistance);
-    }
-
-    ImGui::Spacing();
-    ImGui::Text("Culling");
-    ImGui::Separator();
-    ImGui::Checkbox("Frustum Culling (3D)", &rs.frustumCullingEnabled);
-    {
-        const FrustumCullStats cull = FrustumCull_GetLastStats();
-        ImGui::TextDisabled("frustum  considered %d  |  culled %d  |  drawn %d",
-            cull.considered, cull.culled, cull.drawn);
-        ImGui::TextDisabled("Main camera pass only.");
-    }
-    ImGui::Checkbox("Shadow Cascade Culling", &rs.shadowCascadeCullingEnabled);
-    {
-        const ShadowCascadeCullStats sc = ShadowCascadeCull_GetLastStats();
-        ImGui::TextDisabled("shadow   considered %d  |  culled %d  |  drawn %d",
-            sc.considered, sc.culled, sc.drawn);
-        const int cascades = ShadowCascadeCull_GetLastCascadeCount();
-        for (int i = 0; i < cascades; ++i) {
-            const ShadowCascadeCullStats cs = ShadowCascadeCull_GetLastCascadeStats(i);
-            ImGui::TextDisabled("  cascade %d  c:%d x:%d d:%d",
-                i, cs.considered, cs.culled, cs.drawn);
-        }
-        ImGui::TextDisabled("Per-cascade light ortho; open near toward light.");
-    }
-    ImGui::Checkbox("Sprite Culling (2D)", &rs.spriteCullingEnabled);
-    {
-        const SpriteCullStats sc = SpriteCull_GetLastStats();
-        ImGui::TextDisabled("sprite   considered %d  |  culled %d  |  drawn %d",
-            sc.considered, sc.culled, sc.drawn);
-        ImGui::TextDisabled("Ortho view-rect; render submit only.");
-    }
-
-    ImGui::Spacing();
-    ImGui::Text("Fog");
-    ImGui::Separator();
-    ImGui::Checkbox("Height Fog", &rs.fogEnabled);
-    ImGui::ColorEdit3("Fog Color", &rs.fogColor.x);
-    ImGui::DragFloat("Density", &rs.fogDensity, 0.001f, 0.0f, 1.0f, "%.4f");
-    ImGui::DragFloat("Start", &rs.fogStart, 0.5f, 0.0f, 500.0f);
-    ImGui::DragFloat("Height", &rs.fogHeight, 0.1f, -50.0f, 200.0f);
-    ImGui::DragFloat("Height Falloff", &rs.fogHeightFalloff, 0.01f, 0.0f, 5.0f, "%.3f");
-
-    ImGui::Spacing();
-    ImGui::TextDisabled(
-        "A DDS cubemap loads directly. A PNG panorama (width = 360 deg; height <= width/2) cooks into rom/skybox/cache/. Drag a .png/.dds from the Asset Browser onto the path field, or right-click Set as > Skybox.");
-    ImGui::End();
-}
-
-static void DrawPropertiesEmptyState() {
-    ImGui::TextDisabled("No object selected");
-    ImGui::Spacing();
-    ImGui::TextWrapped("Use GameObject menu to create objects or UI elements.");
-    ImGui::Spacing();
-    ImGui::TextWrapped("Use the Asset Browser below to browse rom/ assets.");
-    ImGui::Spacing();
-    ImGui::TextWrapped("Use Window > Rendering Settings for skybox, shadows, and render defaults.");
-}
-
-static void ApplyProjectSessionState() {
+void ApplyProjectSessionState() {
     auto& project = ProjectManager::Instance();
     if (!project.IsOpen())
         return;
@@ -1439,7 +758,7 @@ static void ApplyProjectSessionState() {
     g_scriptFeedbackRevision = ScriptFactory::Instance().GetLastReloadFeedback().revision;
 }
 
-static bool SwitchToOpenedProject() {
+bool SwitchToOpenedProject() {
     if (!ProjectManager::Instance().IsOpen())
         return false;
 
@@ -1461,7 +780,7 @@ static bool SwitchToOpenedProject() {
     return true;
 }
 
-static void RequestOpenTestbed() {
+void RequestOpenTestbed() {
     const std::string path = ProjectManager::Instance().ResolveInRepoTestbedPath();
     if (path.empty()) {
         MessageBoxA(GetWindowHandle(),
@@ -1472,7 +791,7 @@ static void RequestOpenTestbed() {
     RequestOpenProject(path);
 }
 
-static void RequestOpenProject(const std::string& rootPath) {
+void RequestOpenProject(const std::string& rootPath) {
     if (rootPath.empty())
         return;
 
@@ -1493,7 +812,7 @@ static void RequestOpenProject(const std::string& rootPath) {
     SwitchToOpenedProject();
 }
 
-static void CloseOpenedProject() {
+void CloseOpenedProject() {
     ResetSceneHotLoad();
     if (!ProjectManager::Instance().IsOpen())
         return;
@@ -1516,7 +835,7 @@ static void CloseOpenedProject() {
     g_projectStatusMessage.clear();
 }
 
-static void RequestCloseProject() {
+void RequestCloseProject() {
     if (!ProjectManager::Instance().IsOpen())
         return;
 
@@ -1531,18 +850,18 @@ static void RequestCloseProject() {
     CloseOpenedProject();
 }
 
-static void BeginOpenProjectFlow() {
+void BeginOpenProjectFlow() {
     std::string folder;
     if (!ProjectManager::PickFolder(GetWindowHandle(), L"Open Project", &folder))
         return;
     RequestOpenProject(folder);
 }
 
-static void SetBuildDestBuffer(const std::string& path) {
+void SetBuildDestBuffer(const std::string& path) {
     strncpy_s(g_buildDest, path.c_str(), _TRUNCATE);
 }
 
-static void OpenBuildPreflight() {
+void OpenBuildPreflight() {
     auto& project = ProjectManager::Instance();
     if (!project.IsOpen())
         return;
@@ -1554,7 +873,7 @@ static void OpenBuildPreflight() {
     g_showBuildPreflight = true;
 }
 
-static void RequestBuildCurrentProject() {
+void RequestBuildCurrentProject() {
     if (!ProjectManager::Instance().IsOpen() || PlayablePackage::IsBuildRunning())
         return;
 
@@ -1566,7 +885,7 @@ static void RequestBuildCurrentProject() {
     OpenBuildPreflight();
 }
 
-static void BeginNewProjectFlow() {
+void BeginNewProjectFlow() {
     std::string folder;
     if (!ProjectManager::PickFolder(GetWindowHandle(), L"Select Parent Folder for New Project",
                                     &folder)) {
@@ -1577,7 +896,7 @@ static void BeginNewProjectFlow() {
     g_showNewProjectPopup = true;
 }
 
-static void SaveProject() {
+void SaveProject() {
     auto& project = ProjectManager::Instance();
     if (!project.IsOpen()) {
         MessageBoxA(GetWindowHandle(), "No project is open.", "Save Project",
@@ -1609,7 +928,7 @@ static void SaveProject() {
     g_projectStatusMessage = "Project saved.";
 }
 
-static void ConsumePendingFolderPick() {
+void ConsumePendingFolderPick() {
     // Run Win32 folder dialogs after ImGui finishes the frame (avoids menu reentrancy).
     if (g_pendingFolderPick == PendingFolderPickAction::None)
         return;
@@ -1628,956 +947,8 @@ static void ConsumePendingFolderPick() {
     }
 }
 
-static ID3D11ShaderResourceView* GetIvyLogoSrv() {
-    static ID3D11ShaderResourceView* s_srv = nullptr;
-    static bool s_attempted = false;
-    if (!s_attempted) {
-        s_attempted = true;
-        ID3D11Device* device = GetDevice();
-        if (device) {
-            ID3D11Resource* tex = nullptr;
-            const std::wstring logo = content_path::ReadableWideCurrent(L"rom/branding/ivy_logo.png");
-            if (FAILED(DirectX::CreateWICTextureFromFile(
-                    device, logo.empty() ? L"rom/branding/ivy_logo.png" : logo.c_str(), &tex, &s_srv))) {
-                s_srv = nullptr;
-            }
-            if (tex)
-                tex->Release();
-        }
-    }
-    return s_srv;
-}
 
-static void DrawEngineStartScreen() {
-    ImGuiViewport* viewport = ImGui::GetMainViewport();
-    ImGui::SetNextWindowPos(viewport->Pos);
-    ImGui::SetNextWindowSize(viewport->Size);
-    const auto& theme = editor_theme::GetSemanticColors();
-    ImGui::PushStyleColor(ImGuiCol_WindowBg, theme.windowBg);
-    ImGui::Begin("##EngineStartScreen", nullptr,
-                 ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
-                 ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar |
-                 ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoNav);
-    ImGui::PopStyleColor();
-
-    const ImVec2 cardSize(480.0f, 520.0f);
-    const ImVec2 cardPos(
-        viewport->Pos.x + (viewport->Size.x - cardSize.x) * 0.5f,
-        viewport->Pos.y + (viewport->Size.y - cardSize.y) * 0.5f);
-    ImGui::SetCursorScreenPos(cardPos);
-
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(36.0f, 30.0f));
-    ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 4.0f);
-    ImGui::PushStyleColor(ImGuiCol_Text, theme.text);
-    ImGui::BeginChild("##StartCard", cardSize, ImGuiChildFlags_Borders);
-
-    if (ID3D11ShaderResourceView* logoSrv = GetIvyLogoSrv()) {
-        const float logoSize = 160.0f;
-        const float avail = ImGui::GetContentRegionAvail().x;
-        if (logoSize < avail)
-            ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (avail - logoSize) * 0.5f);
-        ImGui::Image(ImTextureRef((ImTextureID)(intptr_t)logoSrv), ImVec2(logoSize, logoSize));
-        ImGui::Dummy(ImVec2(0.0f, 12.0f));
-    }
-
-    {
-        const char* title = "Ivy Engine";
-        const float titleW = ImGui::CalcTextSize(title).x;
-        const float avail = ImGui::GetContentRegionAvail().x;
-        if (titleW < avail)
-            ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (avail - titleW) * 0.5f);
-        ImGui::TextUnformatted(title);
-    }
-    ImGui::PushStyleColor(ImGuiCol_Text, theme.textMuted);
-    {
-        const char* subtitle = "Custom D3D11 game engine";
-        const float subW = ImGui::CalcTextSize(subtitle).x;
-        const float avail = ImGui::GetContentRegionAvail().x;
-        if (subW < avail)
-            ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (avail - subW) * 0.5f);
-        ImGui::TextUnformatted(subtitle);
-    }
-    ImGui::PopStyleColor();
-    ImGui::Dummy(ImVec2(0.0f, 16.0f));
-
-    const float btnW = ImGui::GetContentRegionAvail().x;
-    const float btnH = 44.0f;
-    ImGui::PushStyleColor(ImGuiCol_Button, theme.success);
-    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, theme.successHovered);
-    ImGui::PushStyleColor(ImGuiCol_ButtonActive, theme.successActive);
-    if (ImGui::Button("Open Project...", ImVec2(btnW, btnH)))
-        g_pendingFolderPick = PendingFolderPickAction::OpenProject;
-    ImGui::PopStyleColor(3);
-    if (!ProjectManager::Instance().ResolveInRepoTestbedPath().empty()) {
-        ImGui::Dummy(ImVec2(0.0f, 8.0f));
-        if (ImGui::Button("Open Testbed", ImVec2(btnW, btnH)))
-            RequestOpenTestbed();
-    }
-
-    ImGui::Dummy(ImVec2(0.0f, 8.0f));
-    if (ImGui::Button("New Project...", ImVec2(btnW, btnH)))
-        g_pendingFolderPick = PendingFolderPickAction::NewProject;
-
-    ImGui::Dummy(ImVec2(0.0f, 18.0f));
-    ImGui::TextUnformatted("Recent projects");
-    ImGui::Separator();
-    ImGui::Dummy(ImVec2(0.0f, 4.0f));
-
-    const auto& recent = ProjectManager::Instance().GetRecentProjects();
-    if (recent.empty()) {
-        ImGui::PushStyleColor(ImGuiCol_Text, theme.textMuted);
-        ImGui::TextUnformatted("(No recent projects)");
-        ImGui::PopStyleColor();
-    }
-    else {
-        const size_t count = (std::min)(recent.size(), size_t{5});
-        for (size_t i = 0; i < count; ++i) {
-            const std::string& path = recent[i];
-            const std::string leaf = PathToUtf8(PathFromUtf8(path).filename());
-            const std::string label = leaf.empty() ? path : leaf;
-            ImGui::PushID(static_cast<int>(i));
-            if (ImGui::SmallButton(label.c_str()))
-                RequestOpenProject(path);
-            if (ImGui::IsItemHovered())
-                ImGui::SetTooltip("%s", path.c_str());
-            ImGui::PopID();
-        }
-    }
-
-    ImGui::EndChild();
-    ImGui::PopStyleColor();
-    ImGui::PopStyleVar(2);
-
-    ImGui::End();
-}
-
-static void DrawEditorMenuBar() {
-    const bool canMutate = !g_isPlaying && !IsSceneLoadBusy();
-    if (ImGui::BeginMenu("File")) {
-        if (ImGui::MenuItem("New Project...", nullptr, false, canMutate))
-            g_pendingFolderPick = PendingFolderPickAction::NewProject;
-        if (ImGui::MenuItem("Open Project...", nullptr, false, canMutate))
-            g_pendingFolderPick = PendingFolderPickAction::OpenProject;
-        if (ImGui::MenuItem("Open Testbed", nullptr, false,
-                            canMutate && !ProjectManager::Instance().ResolveInRepoTestbedPath().empty()))
-            RequestOpenTestbed();
-        if (ImGui::MenuItem("Close Project", nullptr, false,
-                            canMutate && ProjectManager::Instance().IsOpen()))
-            RequestCloseProject();
-        if (ImGui::MenuItem("Save Project", "Ctrl+Shift+S", false, canMutate && ProjectManager::Instance().IsOpen()))
-            SaveProject();
-
-        if (ImGui::BeginMenu("Recent Projects")) {
-            const auto& recent = ProjectManager::Instance().GetRecentProjects();
-            if (recent.empty()) {
-                ImGui::MenuItem("(empty)", nullptr, false, false);
-            }
-            else {
-                for (size_t i = 0; i < recent.size(); ++i) {
-                    const std::string& path = recent[i];
-                    const bool isCurrent =
-                        ProjectManager::Instance().IsOpen() &&
-                        path == ProjectManager::Instance().GetRootPath();
-                    char label[512];
-                    snprintf(label, sizeof(label), "%zu  %s", i + 1, path.c_str());
-                    if (ImGui::MenuItem(label, nullptr, isCurrent, canMutate && !isCurrent))
-                        RequestOpenProject(path);
-                }
-            }
-            ImGui::EndMenu();
-        }
-
-        ImGui::Separator();
-        {
-            const bool canBuild = canMutate && ProjectManager::Instance().IsOpen() &&
-                                  !PlayablePackage::IsBuildRunning();
-            if (ImGui::MenuItem("Build Current Project...", nullptr, false, canBuild))
-                RequestBuildCurrentProject();
-        }
-
-        ImGui::Separator();
-        if (ImGui::MenuItem("Save Scene", "Ctrl+S", false, canMutate))
-            SaveScene();
-        if (ImGui::MenuItem("New Scene...", nullptr, false, canMutate))
-            g_showNewScenePopup = true;
-        ImGui::Separator();
-        if (ImGui::MenuItem("Clear Scene...", nullptr, false, canMutate))
-            ImGui::OpenPopup("ClearSceneConfirm");
-        ImGui::EndMenu();
-    }
-
-    if (ImGui::BeginMenu("Edit")) {
-        const bool canEdit = !g_isPlaying && !EngineGUI_IsSceneAssetPreloadActive();
-        auto& undoStack = EditorUndoStack::Instance();
-        const std::string undoDesc = undoStack.TopUndoDescribe();
-        const std::string redoDesc = undoStack.TopRedoDescribe();
-        char undoLabel[256];
-        char redoLabel[256];
-        if (undoDesc.empty())
-            snprintf(undoLabel, sizeof(undoLabel), "Undo");
-        else
-            snprintf(undoLabel, sizeof(undoLabel), "Undo %s", undoDesc.c_str());
-        if (redoDesc.empty())
-            snprintf(redoLabel, sizeof(redoLabel), "Redo");
-        else
-            snprintf(redoLabel, sizeof(redoLabel), "Redo %s", redoDesc.c_str());
-
-        if (ImGui::MenuItem(undoLabel, "Ctrl+Z", false, canEdit && undoStack.CanUndo())) {
-            if (EditorUndo_Undo()) {
-                EngineGUI_MarkSceneDirty();
-                SyncSceneRuntime();
-            }
-        }
-        if (ImGui::MenuItem(redoLabel, "Ctrl+Y", false, canEdit && undoStack.CanRedo())) {
-            if (EditorUndo_Redo()) {
-                EngineGUI_MarkSceneDirty();
-                SyncSceneRuntime();
-            }
-        }
-        ImGui::EndMenu();
-    }
-
-    if (ImGui::BeginMenu("GameObject")) {
-        if (g_isPlaying)
-            ImGui::BeginDisabled(true);
-        if (ImGui::MenuItem("Create Empty"))
-            SpawnRootGameObject(CreateEmptyGameObject());
-        if (ImGui::BeginMenu("3D Object")) {
-            for (const PrimitiveCreateSpec& spec : kDefaultPrimitives) {
-                if (ImGui::MenuItem(spec.menuLabel))
-                    SpawnRootGameObject(CreatePrimitiveGameObject(spec));
-            }
-            ImGui::EndMenu();
-        }
-        if (ImGui::BeginMenu("Camera")) {
-            if (ImGui::MenuItem("Camera")) SpawnRootGameObject(CreateCameraObject());
-            if (ImGui::MenuItem("Debug Camera")) {
-                SpawnRootGameObject(CreateCameraObject(true));
-                if(g_selNode) {
-                    EngineGUI_SetCameraMode(CameraMode::SceneCamera);
-                    EngineGUI_SetActiveCameraNodeName(g_selNode->GetName());
-                }
-            }
-            ImGui::EndMenu();
-        }
-        if (ImGui::BeginMenu("Light")) {
-            if (ImGui::MenuItem("Directional Light"))
-                SpawnRootGameObject(CreateDirectionalLightObject());
-            if (ImGui::MenuItem("Point Light"))
-                SpawnRootGameObject(CreatePointLightObject());
-            if (ImGui::MenuItem("Spot Light"))
-                SpawnRootGameObject(CreateSpotLightObject());
-            ImGui::EndMenu();
-        }
-        if (ImGui::BeginMenu("UI")) {
-            if (ImGui::MenuItem("Button")) {
-                g_selUiElement = EngineGUIUI::CreateUiElement(EngineGUIUI::UiCreateType::Button);
-                g_selNode = nullptr;
-                if (g_selUiElement) {
-                    EditorUndo_PushUiCreate(g_selUiElement);
-                    EngineGUI_MarkSceneDirty();
-                }
-            }
-            if (ImGui::MenuItem("Text")) {
-                g_selUiElement = EngineGUIUI::CreateUiElement(EngineGUIUI::UiCreateType::Text);
-                g_selNode = nullptr;
-                if (g_selUiElement) {
-                    EditorUndo_PushUiCreate(g_selUiElement);
-                    EngineGUI_MarkSceneDirty();
-                }
-            }
-            if (ImGui::MenuItem("Sprite")) {
-                g_selUiElement = EngineGUIUI::CreateUiElement(EngineGUIUI::UiCreateType::Sprite);
-                g_selNode = nullptr;
-                if (g_selUiElement) {
-                    EditorUndo_PushUiCreate(g_selUiElement);
-                    EngineGUI_MarkSceneDirty();
-                }
-            }
-            if (ImGui::MenuItem("Bar")) {
-                g_selUiElement = EngineGUIUI::CreateUiElement(EngineGUIUI::UiCreateType::Bar);
-                g_selNode = nullptr;
-                if (g_selUiElement) {
-                    EditorUndo_PushUiCreate(g_selUiElement);
-                    EngineGUI_MarkSceneDirty();
-                }
-            }
-            ImGui::EndMenu();
-        }
-        if (g_isPlaying)
-            ImGui::EndDisabled();
-        ImGui::EndMenu();
-    }
-
-    if (ImGui::BeginMenu("Window")) {
-        if (ImGui::MenuItem("Rendering Settings", nullptr, g_showRenderingSettings))
-            g_showRenderingSettings = !g_showRenderingSettings;
-        if (ImGui::MenuItem("PostFX Showcase", nullptr, g_showPostFxShowcase))
-            g_showPostFxShowcase = !g_showPostFxShowcase;
-        ImGui::EndMenu();
-    }
-
-    if (ImGui::BeginMenu("Project Settings")) {
-        if (g_isPlaying)
-            ImGui::BeginDisabled(true);
-        if (ImGui::MenuItem("Default Scene..."))
-            g_showDefaultScenePopup = true;
-        if (ImGui::MenuItem("Gravity...", nullptr, false, ProjectManager::Instance().IsOpen()))
-            g_showGravityPopup = true;
-        if (ImGui::MenuItem("Audio...", nullptr, false, ProjectManager::Instance().IsOpen()))
-            g_showAudioPopup = true;
-        if (g_isPlaying)
-            ImGui::EndDisabled();
-        ImGui::EndMenu();
-    }
-
-    if (ImGui::BeginMenu("Engine Settings")) {
-        if (ImGui::MenuItem("Show FPS When Playing", nullptr, PlayFpsOverlay::IsEnabled())) {
-            PlayFpsOverlay::SetEnabled(!PlayFpsOverlay::IsEnabled());
-            SaveUiPrefs();
-        }
-        if (ImGui::BeginMenu("UI Scale")) {
-            for (int percent : kUiZoomPercents) {
-                char label[16];
-                snprintf(label, sizeof(label), "%d%%", percent);
-                if (ImGui::MenuItem(label, nullptr, g_uiZoomPercent == percent)) {
-                    ApplyUiZoom(percent);
-                    SaveUiPrefs();
-                    ProjectManager::Instance().SetEditorUiZoomPercent(percent);
-                }
-            }
-            ImGui::EndMenu();
-        }
-        if (ImGui::BeginMenu("UI Style")) {
-            for (int i = 0; i < static_cast<int>(editor_theme::StylePreset::Count); ++i) {
-                const auto preset = static_cast<editor_theme::StylePreset>(i);
-                const char* name = editor_theme::StylePresetName(preset);
-                if (ImGui::MenuItem(name, nullptr, g_uiStylePreset == preset)) {
-                    ApplyEditorTheme(preset, g_uiColorScheme);
-                    ApplyUiZoom(g_uiZoomPercent);
-                    SaveUiPrefs();
-                    ProjectManager::Instance().SetEditorUiStylePreset(name);
-                }
-            }
-            ImGui::EndMenu();
-        }
-        if (ImGui::BeginMenu("Color Scheme")) {
-            for (int i = 0; i < static_cast<int>(editor_theme::ColorScheme::Count); ++i) {
-                const auto scheme = static_cast<editor_theme::ColorScheme>(i);
-                const char* name = editor_theme::ColorSchemeName(scheme);
-                if (ImGui::MenuItem(name, nullptr, g_uiColorScheme == scheme)) {
-                    ApplyEditorTheme(g_uiStylePreset, scheme);
-                    ApplyUiZoom(g_uiZoomPercent);
-                    SaveUiPrefs();
-                    ProjectManager::Instance().SetEditorUiColorScheme(name);
-                }
-            }
-            ImGui::EndMenu();
-        }
-        if (ImGui::MenuItem("Shortcut Hints...", nullptr, g_showShortcutHints))
-            g_showShortcutHints = !g_showShortcutHints;
-        ImGui::EndMenu();
-    }
-}
-
-static void ExecutePendingEditorAction() {
-    const PendingEditorAction action = g_pendingEditorAction;
-    const std::string payload = g_pendingEditorSceneFile;
-    const std::string projectPath = g_pendingProjectPath;
-    const std::string createParent = g_pendingCreateProjectParent;
-    const std::string createName = g_pendingCreateProjectName;
-
-    g_pendingEditorAction = PendingEditorAction::None;
-    g_pendingEditorSceneFile.clear();
-    g_pendingProjectPath.clear();
-    g_pendingCreateProjectParent.clear();
-    g_pendingCreateProjectName.clear();
-    g_showUnsavedChangesPopup = false;
-    ImGui::CloseCurrentPopup();
-
-    switch (action) {
-    case PendingEditorAction::LoadScene:
-        if (!payload.empty())
-            EngineGUI_LoadFromFileCore(payload.c_str());
-        break;
-
-    case PendingEditorAction::NewScene:
-        if (!payload.empty()) {
-            SceneLoader_ClearSceneNodes();
-            g_selNode = nullptr;
-            g_selUiElement = nullptr;
-            SceneLoader_CopySceneFileName(payload);
-            SaveScene();
-        }
-        break;
-
-    case PendingEditorAction::OpenProject:
-        if (!projectPath.empty()) {
-            std::string error;
-            if (!ProjectManager::Instance().OpenProject(projectPath, &error)) {
-                MessageBoxA(GetWindowHandle(),
-                            error.empty() ? "Failed to open project." : error.c_str(),
-                            "Open Project", MB_OK | MB_ICONERROR);
-            }
-            else {
-                SwitchToOpenedProject();
-            }
-        }
-        break;
-
-    case PendingEditorAction::CreateProject:
-        if (!createParent.empty()) {
-            std::string error;
-            if (!ProjectManager::Instance().CreateProject(createParent, createName, &error,g_newProject2D)) {
-                MessageBoxA(GetWindowHandle(),
-                            error.empty() ? "Failed to create project." : error.c_str(),
-                            "New Project", MB_OK | MB_ICONERROR);
-            }
-            else {
-                SwitchToOpenedProject();
-            }
-        }
-        break;
-
-    case PendingEditorAction::CloseProject:
-        CloseOpenedProject();
-        break;
-
-    case PendingEditorAction::Exit:
-        PostQuitMessage(0);
-        break;
-
-    case PendingEditorAction::None:
-    default:
-        break;
-    }
-}
-
-static void DrawEditorPopups() {
-    ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-    if (ImGui::BeginPopupModal("ClearSceneConfirm", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
-        ImGui::Text("Clear all objects from the scene?");
-        ImGui::TextDisabled("This cannot be undone.");
-        ImGui::Separator();
-        if (ImGui::Button("Clear", ImVec2(120, 0))) {
-            ClearScene();
-            ImGui::CloseCurrentPopup();
-        }
-        ImGui::SameLine();
-        if (ImGui::Button("Cancel", ImVec2(120, 0)))
-            ImGui::CloseCurrentPopup();
-        ImGui::EndPopup();
-    }
-
-    if (g_showNewScenePopup)
-        ImGui::OpenPopup("NewScenePopup");
-    ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-    if (ImGui::BeginPopupModal("NewScenePopup", &g_showNewScenePopup, ImGuiWindowFlags_AlwaysAutoResize)) {
-        ImGui::Text("New Scene Name");
-        ImGui::SetNextItemWidth(260.0f);
-        ImGui::InputText("##NewSceneNameModal", g_newSceneName, IM_ARRAYSIZE(g_newSceneName));
-        ImGui::Separator();
-        if (ImGui::Button("Create", ImVec2(120, 0))) {
-            if (EngineGUI_IsSceneDirty()) {
-                const std::string sceneFile = NormalizeSceneFileName(g_newSceneName);
-                if (!sceneFile.empty()) {
-                    g_pendingEditorAction = PendingEditorAction::NewScene;
-                    g_pendingEditorSceneFile = sceneFile;
-                    g_showUnsavedChangesPopup = true;
-                }
-            }
-            else {
-                NewScene();
-            }
-            g_showNewScenePopup = false;
-            ImGui::CloseCurrentPopup();
-        }
-        ImGui::SameLine();
-        if (ImGui::Button("Cancel", ImVec2(120, 0))) {
-            g_showNewScenePopup = false;
-            ImGui::CloseCurrentPopup();
-        }
-        ImGui::EndPopup();
-    }
-
-    if (g_showNewProjectPopup)
-        ImGui::OpenPopup("NewProjectPopup");
-    ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-    if (ImGui::BeginPopupModal("NewProjectPopup", &g_showNewProjectPopup, ImGuiWindowFlags_AlwaysAutoResize)) {
-        ImGui::Checkbox("2D Project",&g_newProject2D);
-        ImGui::Text("New Project Name");
-        ImGui::SetNextItemWidth(280.0f);
-        ImGui::InputText("##NewProjectNameModal", g_newProjectName, IM_ARRAYSIZE(g_newProjectName));
-        ImGui::TextDisabled("%s", g_newProjectParentDir.c_str());
-        ImGui::Separator();
-        if (ImGui::Button("Create", ImVec2(120, 0))) {
-            const std::string name = TrimString(g_newProjectName);
-            if (EngineGUI_IsSceneDirty()) {
-                g_pendingEditorAction = PendingEditorAction::CreateProject;
-                g_pendingCreateProjectParent = g_newProjectParentDir;
-                g_pendingCreateProjectName = name;
-                g_showUnsavedChangesPopup = true;
-            }
-            else {
-                std::string error;
-                if (!ProjectManager::Instance().CreateProject(g_newProjectParentDir, name, &error,g_newProject2D)) {
-                    MessageBoxA(GetWindowHandle(),
-                                error.empty() ? "Failed to create project." : error.c_str(),
-                                "New Project", MB_OK | MB_ICONERROR);
-                }
-                else {
-                    SwitchToOpenedProject();
-                }
-            }
-            g_showNewProjectPopup = false;
-            ImGui::CloseCurrentPopup();
-        }
-        ImGui::SameLine();
-        if (ImGui::Button("Cancel", ImVec2(120, 0))) {
-            g_showNewProjectPopup = false;
-            ImGui::CloseCurrentPopup();
-        }
-        ImGui::EndPopup();
-    }
-
-    if (g_showAddTagPopup)
-        ImGui::OpenPopup("AddTagPopup");
-    ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-    if (ImGui::BeginPopupModal("AddTagPopup", &g_showAddTagPopup, ImGuiWindowFlags_AlwaysAutoResize)) {
-        static bool s_addTagFailed = false;
-        ImGui::Text("New Tag Name");
-        ImGui::SetNextItemWidth(260.0f);
-        const bool enterPressed = ImGui::InputText("##NewTagNameModal", g_newTagName,
-            IM_ARRAYSIZE(g_newTagName), ImGuiInputTextFlags_EnterReturnsTrue);
-        if (ImGui::IsItemEdited())
-            s_addTagFailed = false;
-        if (s_addTagFailed)
-            ImGui::TextColored(ImVec4(1.0f, 0.4f, 0.4f, 1.0f), "Name is empty or already exists.");
-        ImGui::Separator();
-
-        auto tryAddTag = [&]() {
-            TagRegistry& tags = TagRegistry::Instance();
-            const int newId = tags.AddTag(g_newTagName);
-            if (newId < 0) {
-                s_addTagFailed = true;
-                return false;
-            }
-            tags.SaveToFile();
-            if (g_selNode) {
-                const int oldTag = g_selNode->GetTagId();
-                g_selNode->SetTag(newId);
-                EditorUndo_PushTag(g_selNode, oldTag, newId);
-                EngineGUI_MarkSceneDirty();
-            }
-            s_addTagFailed = false;
-            g_showAddTagPopup = false;
-            ImGui::CloseCurrentPopup();
-            return true;
-        };
-
-        if (ImGui::Button("Create", ImVec2(120, 0)) || enterPressed)
-            tryAddTag();
-        ImGui::SameLine();
-        if (ImGui::Button("Cancel", ImVec2(120, 0))) {
-            s_addTagFailed = false;
-            g_showAddTagPopup = false;
-            ImGui::CloseCurrentPopup();
-        }
-        ImGui::EndPopup();
-    }
-
-    if (g_showDeleteTagPopup)
-        ImGui::OpenPopup("DeleteTagPopup");
-    ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-    if (ImGui::BeginPopupModal("DeleteTagPopup", &g_showDeleteTagPopup, ImGuiWindowFlags_AlwaysAutoResize)) {
-        TagRegistry& tags = TagRegistry::Instance();
-        const char* tagName = tags.IsValid(g_pendingDeleteTagId)
-            ? tags.GetName(g_pendingDeleteTagId)
-            : "(invalid)";
-        ImGui::Text("Delete tag \"%s\"?", tagName);
-        ImGui::TextWrapped(
-            "Nodes using this tag will be set to NONE. "
-            "Higher custom tag ids will be remapped.");
-        ImGui::Separator();
-
-        if (ImGui::Button("Delete", ImVec2(120, 0))) {
-            if (tags.CanRemove(g_pendingDeleteTagId)) {
-                const int deletedId = g_pendingDeleteTagId;
-                RemapSceneTagsAfterDelete(deletedId);
-                tags.RemoveTag(deletedId);
-                tags.SaveToFile();
-                EngineGUI_MarkSceneDirty();
-            }
-            g_pendingDeleteTagId = -1;
-            g_showDeleteTagPopup = false;
-            ImGui::CloseCurrentPopup();
-        }
-        ImGui::SameLine();
-        if (ImGui::Button("Cancel", ImVec2(120, 0))) {
-            g_pendingDeleteTagId = -1;
-            g_showDeleteTagPopup = false;
-            ImGui::CloseCurrentPopup();
-        }
-        ImGui::EndPopup();
-    }
-
-    if (g_showDefaultScenePopup)
-        ImGui::OpenPopup("DefaultScenePopup");
-    ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-    if (ImGui::BeginPopupModal("DefaultScenePopup", &g_showDefaultScenePopup, ImGuiWindowFlags_AlwaysAutoResize)) {
-        if (!SceneLoader_IsSceneAssetsScanned())
-            SceneLoader_RefreshSceneAssets();
-
-        ImGui::Text("Default Scene");
-        ImGui::TextDisabled("Stored in project.json (defaultScene)");
-        ImGui::TextDisabled("Current: %s", SceneLoader_GetDefaultSceneDisplayName().c_str());
-        ImGui::Separator();
-
-        const int assetCount = SceneLoader_GetSceneAssetCount();
-        if (assetCount == 0) {
-            ImGui::TextDisabled("No scenes found");
-        }
-        else {
-            ImGui::BeginChild("##DefaultSceneList", ImVec2(320, 240), true);
-            for (int i = 0; i < assetCount; ++i) {
-                std::string displayName, fileName;
-                SceneLoader_TryGetSceneAsset(i, nullptr, &displayName, &fileName);
-                const bool selected = (fileName == SceneLoader_GetDefaultSceneFileName());
-                const std::string label = std::string(ICON_FA_MAP) + " " + displayName;
-                if (ImGui::Selectable(label.c_str(), selected)) {
-                    SceneLoader_SetDefaultSceneFileName(fileName, true);
-                    ProjectManager::Instance().SetDefaultScene(fileName);
-                    // Persist immediately (same pattern as GravityPopup); otherwise
-                    // project.json keeps the old defaultScene and wins on next open.
-                    if (ProjectManager::Instance().IsOpen())
-                        ProjectManager::Instance().SaveProjectFile(nullptr);
-                }
-                if (selected)
-                    ImGui::SetItemDefaultFocus();
-            }
-            ImGui::EndChild();
-        }
-
-        ImGui::Separator();
-        if (ImGui::Button("Close", ImVec2(120, 0))) {
-            g_showDefaultScenePopup = false;
-            ImGui::CloseCurrentPopup();
-        }
-        ImGui::EndPopup();
-    }
-
-
-    if (g_showGravityPopup)
-        ImGui::OpenPopup("GravityPopup");
-    ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-    const bool gravityPopupWasOpen = g_showGravityPopup;
-    if (ImGui::BeginPopupModal("GravityPopup", &g_showGravityPopup, ImGuiWindowFlags_AlwaysAutoResize)) {
-        ImGui::Text("Project Gravity");
-        ImGui::TextDisabled("Stored in project.json (physics.gravity)");
-        ImGui::Separator();
-
-        float gravity = ProjectManager::Instance().GetPhysicsGravity();
-        ImGui::SetNextItemWidth(160.0f);
-        if (ImGui::DragFloat("m/s^2", &gravity, 0.05f, 0.1f, 100.0f, "%.2f"))
-            ProjectManager::Instance().SetPhysicsGravity(gravity);
-        if (ImGui::IsItemDeactivatedAfterEdit()) {
-            ProjectManager::Instance().SetPhysicsGravity(gravity);
-            ProjectManager::Instance().SaveProjectFile(nullptr);
-        }
-
-        ImGui::Separator();
-        if (ImGui::Button("Close", ImVec2(120, 0))) {
-            ProjectManager::Instance().SetPhysicsGravity(gravity);
-            ProjectManager::Instance().SaveProjectFile(nullptr);
-            g_showGravityPopup = false;
-            ImGui::CloseCurrentPopup();
-        }
-        ImGui::EndPopup();
-    }
-    if (gravityPopupWasOpen && !g_showGravityPopup)
-        ProjectManager::Instance().SaveProjectFile(nullptr);
-
-    if (g_showAudioPopup)
-        ImGui::OpenPopup("AudioPopup");
-    ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-    const bool audioPopupWasOpen = g_showAudioPopup;
-    if (ImGui::BeginPopupModal("AudioPopup", &g_showAudioPopup, ImGuiWindowFlags_AlwaysAutoResize)) {
-        ImGui::Text("Project Audio");
-        ImGui::TextDisabled("Stored in project.json (audio.*)");
-        ImGui::Separator();
-
-        auto& audio = AudioManager::Instance();
-        float master = audio.GetMasterVolume();
-        float bgm = audio.GetBGMVolume();
-        float sfx = audio.GetSFXVolume();
-        float voice = audio.GetVoiceVolume();
-        auto saveBuses = [&]() {
-            ProjectManager::Instance().SetAudioBuses(
-                audio.GetMasterVolume(), audio.GetBGMVolume(),
-                audio.GetSFXVolume(), audio.GetVoiceVolume());
-            ProjectManager::Instance().SaveProjectFile(nullptr);
-        };
-        ImGui::SetNextItemWidth(200.0f);
-        if (ImGui::SliderFloat("Master", &master, 0.0f, 1.0f, "%.2f")) {
-            audio.SetMasterVolume(master);
-            ProjectManager::Instance().SetAudioBuses(master, bgm, sfx, voice);
-        }
-        if (ImGui::IsItemDeactivatedAfterEdit()) saveBuses();
-        ImGui::SetNextItemWidth(200.0f);
-        if (ImGui::SliderFloat("BGM", &bgm, 0.0f, 1.0f, "%.2f")) {
-            audio.SetBGMVolume(bgm);
-            ProjectManager::Instance().SetAudioBuses(master, bgm, sfx, voice);
-        }
-        if (ImGui::IsItemDeactivatedAfterEdit()) saveBuses();
-        ImGui::SetNextItemWidth(200.0f);
-        if (ImGui::SliderFloat("SFX", &sfx, 0.0f, 1.0f, "%.2f")) {
-            audio.SetSFXVolume(sfx);
-            ProjectManager::Instance().SetAudioBuses(master, bgm, sfx, voice);
-        }
-        if (ImGui::IsItemDeactivatedAfterEdit()) saveBuses();
-        ImGui::SetNextItemWidth(200.0f);
-        if (ImGui::SliderFloat("Voice", &voice, 0.0f, 1.0f, "%.2f")) {
-            audio.SetVoiceVolume(voice);
-            ProjectManager::Instance().SetAudioBuses(master, bgm, sfx, voice);
-        }
-        if (ImGui::IsItemDeactivatedAfterEdit()) saveBuses();
-
-        ImGui::Separator();
-        ImGui::Text("UI Click Sound");
-        ImGui::TextDisabled("WAV played when a UI button activates");
-        char clickBuf[256];
-        strncpy_s(clickBuf, ProjectManager::Instance().GetAudioSettings().uiClickSound.c_str(),
-            sizeof(clickBuf) - 1);
-        clickBuf[sizeof(clickBuf) - 1] = '\0';
-        ImGui::SetNextItemWidth(280.0f);
-        if (ImGui::InputText("##UiClickSound", clickBuf, sizeof(clickBuf)))
-            ProjectManager::Instance().SetUiClickSound(clickBuf);
-        if (ImGui::IsItemDeactivatedAfterEdit())
-            ProjectManager::Instance().SaveProjectFile(nullptr);
-        {
-            const char* wavExts[] = { ".wav" };
-            std::string droppedPath;
-            if (AcceptAssetPathDrop(wavExts, IM_ARRAYSIZE(wavExts), droppedPath)) {
-                ProjectManager::Instance().SetUiClickSound(droppedPath);
-                ProjectManager::Instance().SaveProjectFile(nullptr);
-            }
-        }
-
-        ImGui::Separator();
-        if (ImGui::Button("Close", ImVec2(120, 0))) {
-            ProjectManager::Instance().SetAudioBuses(
-                audio.GetMasterVolume(), audio.GetBGMVolume(),
-                audio.GetSFXVolume(), audio.GetVoiceVolume());
-            ProjectManager::Instance().SaveProjectFile(nullptr);
-            g_showAudioPopup = false;
-            ImGui::CloseCurrentPopup();
-        }
-        ImGui::EndPopup();
-    }
-    if (audioPopupWasOpen && !g_showAudioPopup)
-        ProjectManager::Instance().SaveProjectFile(nullptr);
-
-    if (g_sceneReloadConflict && EngineGUI_IsSceneDirty() && !g_isPlaying && !IsSceneLoadBusy()
-        && !ImGui::GetTopMostPopupModal() && !g_showUnsavedChangesPopup)
-        ImGui::OpenPopup("SceneJsonChangedPopup");
-    if (ImGui::BeginPopupModal("SceneJsonChangedPopup", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
-        if (!g_sceneReloadConflict || g_sceneReloadConflict->path != SceneLoader_GetCurrentScenePath()) {
-            g_sceneReloadConflict.reset();
-            ImGui::CloseCurrentPopup();
-        } else {
-            ImGui::TextUnformatted("The scene JSON changed outside the Editor.");
-            ImGui::TextUnformatted("The Editor has unsaved changes.");
-            if (ImGui::Button("Load disk version (discard Editor changes)")) {
-                ResolveSceneReloadConflict(true);
-                ImGui::CloseCurrentPopup();
-            }
-            ImGui::SameLine();
-            if (ImGui::Button("Keep Editor changes")) {
-                ResolveSceneReloadConflict(false);
-                ImGui::CloseCurrentPopup();
-            }
-        }
-        ImGui::EndPopup();
-    }
-
-    if (g_showUnsavedChangesPopup)
-        ImGui::OpenPopup("UnsavedChangesPopup");
-    ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-    if (ImGui::BeginPopupModal("UnsavedChangesPopup", &g_showUnsavedChangesPopup, ImGuiWindowFlags_AlwaysAutoResize)) {
-        ImGui::Text("You have unsaved changes.");
-        ImGui::TextDisabled("Save before continuing?");
-        ImGui::Separator();
-
-        if (ImGui::Button("Save", ImVec2(120, 0))) {
-            std::string leavingSceneFile;
-            {
-                const std::string& currentScenePath = SceneLoader_GetCurrentScenePath();
-                if (!currentScenePath.empty()) {
-                    leavingSceneFile = NormalizeSceneFileName(
-                        PathToUtf8(PathFromUtf8(currentScenePath).filename()));
-                }
-            }
-            if (leavingSceneFile.empty())
-                leavingSceneFile = NormalizeSceneFileName(SceneLoader_GetSaveFileName());
-
-            if (!leavingSceneFile.empty())
-                SaveSceneToFile(leavingSceneFile);
-            ExecutePendingEditorAction();
-        }
-        ImGui::SameLine();
-
-        if (ImGui::Button("Don't Save", ImVec2(120, 0))) {
-            EngineGUI_ClearSceneDirty();
-            ExecutePendingEditorAction();
-        }
-        ImGui::SameLine();
-
-        if (ImGui::Button("Cancel", ImVec2(120, 0))) {
-            g_pendingEditorAction = PendingEditorAction::None;
-            g_pendingEditorSceneFile.clear();
-            g_pendingProjectPath.clear();
-            g_pendingCreateProjectParent.clear();
-            g_pendingCreateProjectName.clear();
-            g_showUnsavedChangesPopup = false;
-            ImGui::CloseCurrentPopup();
-        }
-
-        ImGui::EndPopup();
-    }
-
-    if (g_showBuildUnsavedPopup)
-        ImGui::OpenPopup("BuildUnsavedPopup");
-    ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-    if (ImGui::BeginPopupModal("BuildUnsavedPopup", &g_showBuildUnsavedPopup, ImGuiWindowFlags_AlwaysAutoResize)) {
-        ImGui::Text("Build %s?", ProjectManager::Instance().GetName().c_str());
-        ImGui::Text("You have unsaved scene changes.");
-        ImGui::TextDisabled("Save the scene before building a playable package.");
-        ImGui::Separator();
-        if (ImGui::Button("Save", ImVec2(120, 0))) {
-            SaveScene();
-            if (EngineGUI_IsSceneDirty()) {
-                MessageBoxA(GetWindowHandle(),
-                            "Could not save the scene. Save it from File first, then build.",
-                            "Build Current Project", MB_OK | MB_ICONWARNING);
-            }
-            else {
-                g_showBuildUnsavedPopup = false;
-                ImGui::CloseCurrentPopup();
-                OpenBuildPreflight();
-            }
-        }
-        ImGui::SameLine();
-        if (ImGui::Button("Cancel", ImVec2(120, 0))) {
-            g_showBuildUnsavedPopup = false;
-            ImGui::CloseCurrentPopup();
-        }
-        ImGui::EndPopup();
-    }
-
-    if (g_showBuildPreflight)
-        ImGui::OpenPopup("BuildPreflightPopup");
-    ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-    if (ImGui::BeginPopupModal("BuildPreflightPopup", &g_showBuildPreflight, ImGuiWindowFlags_AlwaysAutoResize)) {
-        ImGui::Text("Build %s?", ProjectManager::Instance().GetName().c_str());
-        ImGui::TextDisabled("%s", ProjectManager::Instance().GetRootPath().c_str());
-        ImGui::Separator();
-
-        ImGui::SetNextItemWidth(420.0f);
-        ImGui::InputText("Output folder", g_buildDest, IM_ARRAYSIZE(g_buildDest));
-        ImGui::SameLine();
-        if (ImGui::Button("Browse..."))
-            g_pendingFolderPick = PendingFolderPickAction::BuildOutput;
-
-        const char* configs[] = { "Debug", "Release" };
-        ImGui::SetNextItemWidth(160.0f);
-        ImGui::Combo("Configuration", &g_buildConfigIndex, configs, IM_ARRAYSIZE(configs));
-        ImGui::TextDisabled("Play FPS overlay follows Engine Settings > Show FPS When Playing in both configurations.");
-
-        const std::string destReason = PlayablePackage::DestinationRefusalReason(
-            ProjectManager::Instance().GetRootPath(), g_buildDest);
-        if (!destReason.empty())
-            ImGui::TextColored(ImVec4(0.95f, 0.45f, 0.35f, 1.0f), "%s", destReason.c_str());
-
-        ImGui::Separator();
-        const bool canStart = destReason.empty() && !PlayablePackage::IsBuildRunning();
-        if (!canStart)
-            ImGui::BeginDisabled();
-        if (ImGui::Button("Build", ImVec2(120, 0))) {
-            PlayablePackage::Prefs prefs;
-            prefs.destination = g_buildDest;
-            prefs.configuration = (g_buildConfigIndex == 1)
-                ? PlayablePackage::Configuration::Release
-                : PlayablePackage::Configuration::Debug;
-            PlayablePackage::SavePrefs(ProjectManager::Instance().GetRootPath(), prefs);
-
-            PlayablePackage::Request request;
-            request.contentRoot = ProjectManager::Instance().GetRootPath();
-            request.destination = g_buildDest;
-            request.gameName = ProjectManager::Instance().GetName();
-            request.configuration = prefs.configuration;
-            if (PlayablePackage::StartBuild(request)) {
-                g_showBuildPreflight = false;
-                ImGui::CloseCurrentPopup();
-                g_showBuildLog = true;
-            }
-        }
-        if (!canStart)
-            ImGui::EndDisabled();
-        ImGui::SameLine();
-        if (ImGui::Button("Cancel", ImVec2(120, 0))) {
-            g_showBuildPreflight = false;
-            ImGui::CloseCurrentPopup();
-        }
-        ImGui::EndPopup();
-    }
-
-    if (g_showBuildLog)
-        ImGui::OpenPopup("BuildLogPopup");
-    ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-    {
-        const bool buildDone = PlayablePackage::IsBuildFinished();
-        ImGuiWindowFlags logFlags = ImGuiWindowFlags_AlwaysAutoResize;
-        bool* logOpen = buildDone ? &g_showBuildLog : nullptr;
-        if (ImGui::BeginPopupModal("BuildLogPopup", logOpen, logFlags)) {
-            if (!buildDone) {
-                const std::string buildHeader =
-                    "Building " + ProjectManager::Instance().GetName() + " ? Ivy Engine";
-                const bool pushedLabel = editor_theme::PushLabelFont();
-                ImGui::SeparatorText(buildHeader.c_str());
-                if (pushedLabel)
-                    editor_theme::PopLabelFont();
-            }
-            else if (PlayablePackage::LastBuildSucceeded())
-                ImGui::Text("Build succeeded.");
-            else
-                ImGui::Text("Build failed.");
-
-            std::string log;
-            PlayablePackage::CopyLog(&log);
-            ImGui::BeginChild("##BuildLogText", ImVec2(640, 280), true);
-            ImGui::TextUnformatted(log.empty() ? "(no output yet)" : log.c_str());
-            if (!buildDone)
-                ImGui::SetScrollHereY(1.0f);
-            ImGui::EndChild();
-
-            if (buildDone) {
-                const std::string result = PlayablePackage::LastBuildResultMessage();
-                if (!result.empty())
-                    ImGui::TextWrapped("%s", result.c_str());
-                if (ImGui::Button("OK", ImVec2(120, 0))) {
-                    g_showBuildLog = false;
-                    ImGui::CloseCurrentPopup();
-                }
-            }
-            else {
-                ImGui::TextDisabled("This window stays open until MSBuild finishes.");
-            }
-            ImGui::EndPopup();
-        }
-    }
-}
-
-static void SaveSceneToFile(const std::string& sceneFile) {
+void SaveSceneToFile(const std::string& sceneFile) {
     if (sceneFile.empty()) return;
 
     const std::string normalized = NormalizeSceneFileName(sceneFile);
@@ -2595,14 +966,14 @@ static void SaveSceneToFile(const std::string& sceneFile) {
     }
 }
 
-static void SaveScene() {
+void SaveScene() {
     const std::string sceneFile = NormalizeSceneFileName(SceneLoader_GetSaveFileName());
     if (sceneFile.empty()) return;
 
     SaveSceneToFile(sceneFile);
 }
 
-static void NewScene() {
+void NewScene() {
     const std::string sceneFile = NormalizeSceneFileName(g_newSceneName);
     if (sceneFile.empty()) return;
 
@@ -2704,7 +1075,7 @@ bool EngineGUI_IsDebugCameraPlayInputActive() {
     return g_isPlaying && DebugCamera_IsEnabled();
 }
 
-static void StartPlay(PlayMode mode = PlayMode::Viewport) {
+void StartPlay(PlayMode mode) {
     if (g_sceneReloadConflict) return;
     if (g_sceneAssetPreloader.IsActive() || g_sceneLoadPending) {
         g_playWhenPreloadDone = true;
@@ -2890,7 +1261,7 @@ bool EngineGUI_IsSceneAssetPreloadActive() {
     return g_sceneAssetPreloader.IsActive() || g_sceneLoadPending;
 }
 
-static bool IsSceneLoadBusy() {
+bool IsSceneLoadBusy() {
     return g_sceneAssetPreloader.IsActive() || g_sceneLoadPending;
 }
 
@@ -3917,101 +2288,6 @@ static bool UndoableReorderNode(GameObject* node, bool (*moveFn)(GameObject*)) {
     return true;
 }
 
-static void DrawSceneNodeHierarchy(GameObject* node, GameObject* rootOwner) {
-    if (!node) return;
-
-    ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow
-        | ImGuiTreeNodeFlags_SpanAvailWidth;
-    if (node->GetChildren().empty())
-        flags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
-    if (g_selNode == node)
-        flags |= ImGuiTreeNodeFlags_Selected;
-
-    bool nodeOpen = ImGui::TreeNodeEx(
-        reinterpret_cast<void*>(node), flags, "%s", node->GetName().c_str());
-
-    if (!g_isPlaying && ImGui::IsItemClicked(ImGuiMouseButton_Left))
-    {
-        g_selNode = node;
-        g_selUiElement = nullptr;
-    }
-
-    if (!g_isPlaying && ImGui::BeginPopupContextItem()) {
-        if (ImGui::MenuItem("Create Empty Child"))
-            SpawnChildGameObject(node);
-        if (ImGui::MenuItem("Duplicate"))
-            SpawnDuplicate(node);
-        ImGui::Separator();
-        if (ImGui::MenuItem("Delete"))
-            DeleteGameObject(node);
-        ImGui::EndPopup();
-    }
-
-    // Drag source
-    if (!g_isPlaying && ImGui::BeginDragDropSource(ImGuiDragDropFlags_None)) {
-        GameObject* ptr = node;
-        ImGui::SetDragDropPayload("HIERARCHY_GO", &ptr, sizeof(ptr));
-        ImGui::Text("Move: %s", node->GetName().c_str());
-        ImGui::EndDragDropSource();
-    }
-
-    // Drop target
-    if (!g_isPlaying && ImGui::BeginDragDropTarget()) {
-        if (const ImGuiPayload* pl = ImGui::AcceptDragDropPayload("HIERARCHY_GO")) {
-            GameObject* dragged = *static_cast<GameObject**>(pl->Data);
-            if (dragged && dragged != node) {
-                GameObject* oldParent = dragged->GetParent();
-                int oldIndex = -1;
-                if (oldParent) {
-                    const auto& ch = oldParent->GetChildren();
-                    for (int i = 0; i < (int)ch.size(); ++i)
-                        if (ch[i].get() == dragged) { oldIndex = i; break; }
-                } else {
-                    for (int i = 0; i < (int)g_sceneNodes.size(); ++i)
-                        if (g_sceneNodes[i].get() == dragged) { oldIndex = i; break; }
-                }
-                GameObject* dragParent = dragged->GetParent();
-                if (dragParent) {
-                    dragParent->ReparentChild(dragged, *node);
-                }
-                else {
-                    auto it = std::find_if(g_sceneNodes.begin(), g_sceneNodes.end(),
-                        [dragged](const std::unique_ptr<GameObject>& p) { return p.get() == dragged; });
-                    if (it != g_sceneNodes.end()) {
-                        std::unique_ptr<GameObject> owned = std::move(*it);
-                        g_sceneNodes.erase(it);
-                        owned->SetParent(node);
-                        node->AddChild(std::move(owned));
-                    }
-                }
-                const int newIndex = (int)node->GetChildren().size() - 1;
-                EditorUndo_PushReparent(dragged, oldParent, oldIndex, node, newIndex);
-                EngineGUI_MarkSceneDirty();
-                SyncSceneRuntime();
-                if (g_selNode == dragged) g_selNode = nullptr;
-            }
-        }
-        if (const ImGuiPayload* pl = ImGui::AcceptDragDropPayload("ASSET_PREFAB")) {
-            std::string path(static_cast<const char*>(pl->Data));
-            auto prefabNode = PrefabSerializer::LoadFromFile(path);
-            if (prefabNode) {
-                GameObject* raw = prefabNode.get();
-                node->AddChild(std::move(prefabNode));
-                const int idx = (int)node->GetChildren().size() - 1;
-                EditorUndo_PushCreate(raw, node, idx);
-                EngineGUI_MarkSceneDirty();
-                SyncSceneRuntime();
-            }
-        }
-        ImGui::EndDragDropTarget();
-    }
-
-    if (nodeOpen && !node->GetChildren().empty()) {
-        for (auto& child : node->GetChildren())
-            DrawSceneNodeHierarchy(child.get(), rootOwner);
-        ImGui::TreePop();
-    }
-}
 
 struct MeshLocalBounds {
     DirectX::XMFLOAT3 center = { 0.0f, 0.0f, 0.0f };
@@ -4079,7 +2355,7 @@ static bool ComputeMeshLocalBounds(GameObject* node, MeshLocalBounds& out) {
     return true;
 }
 
-static bool AutoFitColliderToMesh(GameObject* node, ColliderComponent* cc) {
+bool AutoFitColliderToMesh(GameObject* node, ColliderComponent* cc) {
     MeshLocalBounds bounds;
     if (!cc || !ComputeMeshLocalBounds(node, bounds))
         return false;
@@ -4130,35 +2406,6 @@ void EngineGUI_OnBackbufferResized() {
     ImGui_ImplDX11_CreateDeviceObjects();
 }
 
-static void DrawReloadLight(const char* id, const char* name, ReloadLightState state,
-    const ReloadLight& light, const std::string& detail) {
-    // Size from the current (toolbar-local) frame height so lights track font zoom.
-    const float size = IM_TRUNC(ImGui::GetFrameHeight() * 0.65f + 0.5f);
-    const float glowR = IM_TRUNC(size * 0.40f + 0.5f);
-    const float coreR = IM_TRUNC(size * 0.22f + 0.5f);
-    const ImVec2 origin = ImGui::GetCursorScreenPos();
-    ImGui::InvisibleButton(id, ImVec2(size, size));
-    const bool bright = state == ReloadLightState::Watching && ImGui::GetTime() < light.brightUntil;
-    ImU32 color;
-    const char* status;
-    switch (state) {
-    case ReloadLightState::Paused: color = IM_COL32(110, 115, 125, 255); status = "Paused / inactive"; break;
-    case ReloadLightState::Pending: color = IM_COL32(245, 190, 55, 255); status = "Waiting / processing"; break;
-    case ReloadLightState::Failed: color = IM_COL32(235, 75, 75, 255); status = "Reload failed"; break;
-    default: color = bright ? IM_COL32(135, 255, 165, 255) : IM_COL32(60, 165, 95, 255);
-        status = bright ? "Reload succeeded" : "Watching"; break;
-    }
-    const ImVec2 center(IM_TRUNC(origin.x + size * 0.5f), IM_TRUNC(origin.y + size * 0.5f));
-    if (bright) ImGui::GetWindowDrawList()->AddCircleFilled(center, glowR, IM_COL32(90, 255, 140, 65));
-    ImGui::GetWindowDrawList()->AddCircleFilled(center, coreR, color);
-    if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort)) {
-        ImGui::BeginTooltip();
-        ImGui::Text("%s: %s", name, status);
-        if (state == ReloadLightState::Paused) ImGui::TextUnformatted("Hot-load requires an open project.");
-        ImGui::TextUnformatted(detail.c_str());
-        ImGui::EndTooltip();
-    }
-}
 
 void EngineGUI_Draw() {
     const bool playVisuals=EngineGUI_PreferPlayVisuals();
@@ -4273,1576 +2520,12 @@ void EngineGUI_Draw() {
     DrawPostFxShowcaseWindow(&g_showPostFxShowcase);
     DrawShortcutHintsWindow(&g_showShortcutHints);
 
-    // --- Toolbar ---
-    const float toolbarH = EditorToolbarHeight();
-    ImGui::SetNextWindowPos(ImVec2(0, menuBarHeight));
-    ImGui::SetNextWindowSize(ImVec2(screenW, toolbarH));
-    PushToolbarChromeStyle();
-    ImGui::Begin("##Toolbar", nullptr,
-        ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize |
-        ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar);
-    {
-        const float iconSz = ToolbarIconSize();
-        const float lightSize = IM_TRUNC(iconSz * 0.65f + 0.5f);
-        const float lightGap = ImGui::GetStyle().ItemSpacing.x;
-        const float lightsX = ImGui::GetWindowContentRegionMax().x - lightSize * 3 - lightGap * 2;
-        const float lightsY = ImGui::GetCursorPosY() + (ImGui::GetFrameHeight() - lightSize) * 0.5f;
-        const auto toolbarPos = ImGui::GetWindowPos();
-        const auto contentMin = ImGui::GetWindowContentRegionMin();
-        ImGui::PushClipRect(ImVec2(contentMin.x + toolbarPos.x, contentMin.y + toolbarPos.y),
-            ImVec2(toolbarPos.x + lightsX - lightGap, toolbarPos.y + ImGui::GetWindowContentRegionMax().y), true);
-        const auto& theme = editor_theme::GetSemanticColors();
-        if (playVisuals) {
-            ImGui::PushStyleColor(ImGuiCol_Button, theme.danger);
-            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, theme.dangerHovered);
-            ImGui::PushStyleColor(ImGuiCol_ButtonActive, theme.dangerActive);
-            if (ToolbarIconButton(ICON_FA_STOP, "Stop (F2 / F3)")) {
-                ReturnToStart();
-            }
-            ImGui::PopStyleColor(3);
-        }
-        else {
-            ImGui::PushStyleColor(ImGuiCol_Button, theme.accent);
-            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, theme.accentHovered);
-            ImGui::PushStyleColor(ImGuiCol_ButtonActive, theme.accentActive);
-            if (ToolbarIconButton(ICON_FA_PLAY, "Play in Viewport (F2)")) {
-                StartPlay(PlayMode::Viewport);
-            }
-            ImGui::SameLine(0.0f, 2.0f);
-            const float caretW = IM_TRUNC(iconSz * 0.60f + 0.5f);
-            const bool openPlayMenu = editor_icon_button::IconButtonTooltip(
-                ICON_FA_CARET_DOWN "##PlayMenuBtn", "Play Mode", ImVec2(caretW, iconSz));
-            if (openPlayMenu)
-                ImGui::OpenPopup("PlayModeDropdownMenu");
+    DrawEditorToolbar(playVisuals, sceneLoadBusy, screenW, menuBarHeight);
+    DrawEditorHierarchyPanel(playVisuals, leftWidth, centerTop, centerH);
+    DrawEditorInspectorPanel(playVisuals, screenW, rightWidth, centerTop, centerH);
+    DrawEditorAssetPanel(playVisuals, sceneLoadBusy, screenW, screenH, bottomHeight);
 
-            if (ImGui::BeginPopup("PlayModeDropdownMenu")) {
-                if (ImGui::MenuItem("Play in Viewport", "F2")) {
-                    StartPlay(PlayMode::Viewport);
-                }
-                if (ImGui::MenuItem("Play Fullscreen", "F3")) {
-                    StartPlay(PlayMode::Fullscreen);
-                }
-                ImGui::EndPopup();
-            }
-            ImGui::PopStyleColor(3);
-        }
 
-        ImGui::SameLine();
-        {
-            const bool canSave = !playVisuals && !sceneLoadBusy;
-            if (!canSave)
-                ImGui::BeginDisabled();
-            if (ToolbarIconButton(ICON_FA_FLOPPY_DISK, "Save Scene (Ctrl+S)"))
-                SaveScene();
-            if (!canSave)
-                ImGui::EndDisabled();
-        }
-
-        ImGui::SameLine();
-        {
-            const bool canEditUndo = !playVisuals && !sceneLoadBusy;
-            if (!canEditUndo || !EditorUndoStack::Instance().CanUndo())
-                ImGui::BeginDisabled();
-            const bool undoPressed = ToolbarIconButton(ICON_FA_ROTATE_LEFT, "Undo (Ctrl+Z)");
-            if (!canEditUndo || !EditorUndoStack::Instance().CanUndo())
-                ImGui::EndDisabled();
-            if (undoPressed) {
-                if (EditorUndo_Undo()) {
-                    EngineGUI_MarkSceneDirty();
-                    SyncSceneRuntime();
-                }
-            }
-            ImGui::SameLine();
-            if (!canEditUndo || !EditorUndoStack::Instance().CanRedo())
-                ImGui::BeginDisabled();
-            const bool redoPressed = ToolbarIconButton(ICON_FA_ROTATE_RIGHT, "Redo (Ctrl+Y)");
-            if (!canEditUndo || !EditorUndoStack::Instance().CanRedo())
-                ImGui::EndDisabled();
-            if (redoPressed) {
-                if (EditorUndo_Redo()) {
-                    EngineGUI_MarkSceneDirty();
-                    SyncSceneRuntime();
-                }
-            }
-        }
-
-        ImGui::SameLine();
-        if (ToolbarIconButton(ICON_FA_ARROWS_ROTATE, "Reload Scripts"))
-            SceneLoader_ScanScriptDllsForChanges(true);
-
-        if (!playVisuals) {
-            ImGui::SameLine();
-            ImGui::PushStyleColor(ImGuiCol_Button, theme.danger);
-            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, theme.dangerHovered);
-            ImGui::PushStyleColor(ImGuiCol_ButtonActive, theme.dangerActive);
-            if (ToolbarIconButton(ICON_FA_BACKWARD_STEP, "Return to Start")) ReturnToStart();
-            ImGui::PopStyleColor(3);
-
-            ImGui::SameLine();
-            const bool highlightUiOverlay = g_showUiOverlay;
-            if (highlightUiOverlay)
-                ImGui::PushStyleColor(ImGuiCol_Button, theme.toggleOn);
-            const bool overlayToggled = ToolbarIconButton(
-                highlightUiOverlay ? ICON_FA_EYE : ICON_FA_EYE_SLASH,
-                highlightUiOverlay ? "Hide UI Overlay" : "Show UI Overlay");
-            if (overlayToggled)
-                g_showUiOverlay = !g_showUiOverlay;
-            if (highlightUiOverlay)
-                ImGui::PopStyleColor();
-
-            ImGui::SameLine();
-            const bool highlightGrid = Grid_IsVisible();
-            if (highlightGrid)
-                ImGui::PushStyleColor(ImGuiCol_Button, theme.toggleOn);
-            const bool gridToggled = ToolbarIconButton(
-                highlightGrid ? ICON_FA_BORDER_ALL : ICON_FA_BORDER_NONE,
-                highlightGrid ? "Hide Grid" : "Show Grid");
-            if (gridToggled)
-                Grid_SetVisible(!highlightGrid);
-            if (highlightGrid)
-                ImGui::PopStyleColor();
-
-            ImGui::SameLine();
-            if (ToolbarIconToggle(ICON_FA_CUBE, g_editMode == EditorEditMode::Scene3D,
-                    "Scene Edit Mode"))
-                EngineGUI_SetEditMode(EditorEditMode::Scene3D);
-            ImGui::SameLine();
-            if (ToolbarIconToggle(ICON_FA_LAYER_GROUP, g_editMode == EditorEditMode::UI,
-                    "UI Edit Mode"))
-                EngineGUI_SetEditMode(EditorEditMode::UI);
-
-            ImGui::SameLine();
-            bool view2D = DebugCamera_Is2DView();
-            ImGui::BeginDisabled(playVisuals);
-            if (ImGui::Checkbox("2D View", &view2D))
-                DebugCamera_Set2DView(view2D);
-            ImGui::EndDisabled();
-            ImGui::SameLine();
-            TransformGizmo::DrawToolbarControls();
-
-            ImGui::SameLine();
-            // Camera selector
-            {
-                std::vector<std::string> camNames;
-                std::function<void(GameObject*)> collectCams = [&](GameObject* node) {
-                    if (!node || !node->IsActive()) return;
-                    if (auto* camera = node->GetComponent<CameraComponent>();
-                        camera && camera->enabled && node->GetComponent<engine::Transform>())
-                        camNames.push_back(node->GetName());
-                    for (const auto& child : node->GetChildren())
-                        collectCams(child.get());
-                };
-                for (const auto& node : g_sceneNodes)
-                    collectCams(node.get());
-
-                if (g_activeCameraNode.empty() && camNames.size() == 1)
-                    g_activeCameraNode = camNames[0];
-
-                const bool validSelection = g_cameraMode == CameraMode::SceneCamera
-                    && std::count(camNames.begin(),camNames.end(),g_activeCameraNode)==1;
-                const std::string currentLabel = validSelection ? g_activeCameraNode
-                    : camNames.empty() ? "No enabled game camera" : "Select game camera";
-
-                ImGui::AlignTextToFramePadding();
-                ImGui::TextUnformatted("Camera:");
-                ImGui::SameLine();
-                const float comboPad =
-                    ImGui::GetFrameHeight() + ImGui::GetStyle().FramePadding.x * 2.0f;
-                float comboW = ImGui::CalcTextSize(currentLabel.c_str()).x + comboPad;
-                comboW = ImMax(comboW,
-                    ImGui::CalcTextSize("No enabled game camera").x + comboPad);
-                comboW = ImMax(comboW,
-                    ImGui::CalcTextSize("Select game camera").x + comboPad);
-                ImGui::SetNextItemWidth(IM_TRUNC(comboW + 0.5f));
-                if (ImGui::BeginCombo("##Camera", currentLabel.c_str())) {
-                    for (const auto& name : camNames) {
-                        bool sel = (g_cameraMode == CameraMode::SceneCamera && g_activeCameraNode == name);
-                        if (ImGui::Selectable(name.c_str(), sel)) {
-                            g_cameraMode = CameraMode::SceneCamera;
-                            g_activeCameraNode = name;
-                            EngineGUI_MarkSceneDirty();
-                        }
-                    }
-                    ImGui::EndCombo();
-                }
-            }
-        }
-        ImGui::PopClipRect();
-        ImGui::SetCursorPos(ImVec2(IM_TRUNC(lightsX + 0.5f), IM_TRUNC(lightsY + 0.5f)));
-        const bool projectOpen = ProjectManager::Instance().IsOpen();
-        DrawReloadLight("##SceneReloadLight", "Scene JSON",
-            GetReloadLightState(projectOpen && !SceneLoader_GetCurrentScenePath().empty(), false,
-                sceneLoadBusy || g_sceneReloadConflict.has_value() || g_sceneFileMonitor.HasPendingChange(), g_sceneReloadLight),
-            g_sceneReloadLight, g_sceneReloadStatus);
-        ImGui::SameLine(0.0f, lightGap);
-        DrawReloadLight("##ContentReloadLight", "Content",
-            GetReloadLightState(projectOpen, false, g_contentMonitor.Pending() || !g_contentChanges.empty() || g_contentSceneReload,
-                g_contentReloadLight), g_contentReloadLight, g_contentReloadStatus);
-        ImGui::SameLine(0.0f, lightGap);
-        DrawReloadLight("##ScriptReloadLight", "Script DLL",
-            GetReloadLightState(projectOpen, false, ScriptFactory::Instance().PendingReloadCount() != 0, g_scriptReloadLight),
-            g_scriptReloadLight, g_scriptReloadStatus);
-    }
-    ImGui::End();
-    PopToolbarChromeStyle();
-
-    // --- Scene Hierarchy (left) ---
-    ImGui::SetNextWindowPos(ImVec2(0, centerTop));
-    ImGui::SetNextWindowSize(ImVec2(leftWidth, centerH));
-    ImGui::Begin("Scene Hierarchy", nullptr,
-        ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
-    {
-        if (playVisuals)
-            ImGui::BeginDisabled(true);
-
-        if (ImGui::CollapsingHeader("Game Objects", ImGuiTreeNodeFlags_DefaultOpen)) {
-            for (auto& rootNode : g_sceneNodes)
-                if (rootNode) DrawSceneNodeHierarchy(rootNode.get(), rootNode.get());
-
-            // Root drop zone
-            ImGui::Selectable("##RootDropZone", false,
-                ImGuiSelectableFlags_AllowOverlap, ImVec2(-1, 6));
-            if (!playVisuals && ImGui::BeginDragDropTarget()) {
-                if (const ImGuiPayload* pl = ImGui::AcceptDragDropPayload("HIERARCHY_GO")) {
-                    GameObject* dragged = *static_cast<GameObject**>(pl->Data);
-                    if (dragged && dragged->GetParent()) {
-                        GameObject* oldParent = dragged->GetParent();
-                        int oldIndex = -1;
-                        auto& siblings = oldParent->GetChildren();
-                        for (int i = 0; i < (int)siblings.size(); ++i)
-                            if (siblings[i].get() == dragged) { oldIndex = i; break; }
-                        auto it = std::find_if(siblings.begin(), siblings.end(),
-                            [dragged](const std::unique_ptr<GameObject>& c) { return c.get() == dragged; });
-                        if (it != siblings.end()) {
-                            std::unique_ptr<GameObject> owned = std::move(*it);
-                            siblings.erase(it);
-                            owned->SetParent(nullptr);
-                            g_sceneNodes.push_back(std::move(owned));
-                            const int newIndex = (int)g_sceneNodes.size() - 1;
-                            EditorUndo_PushReparent(dragged, oldParent, oldIndex, nullptr, newIndex);
-                            EngineGUI_MarkSceneDirty();
-                            SyncSceneRuntime();
-                        }
-                    }
-                }
-                if (const ImGuiPayload* pl = ImGui::AcceptDragDropPayload("ASSET_PREFAB")) {
-                    std::string path(static_cast<const char*>(pl->Data));
-                    auto prefabNode = PrefabSerializer::LoadFromFile(path);
-                    if (prefabNode) {
-                        GameObject* raw = prefabNode.get();
-                        g_sceneNodes.push_back(std::move(prefabNode));
-                        EditorUndo_PushCreate(raw, nullptr, (int)g_sceneNodes.size() - 1);
-                        EngineGUI_MarkSceneDirty();
-                        SyncSceneRuntime();
-                    }
-                }
-                ImGui::EndDragDropTarget();
-            }
-
-            g_sceneNodes.erase(
-                std::remove_if(g_sceneNodes.begin(), g_sceneNodes.end(),
-                    [](const std::unique_ptr<GameObject>& n) { return !n; }),
-                g_sceneNodes.end());
-        }
-
-        if (ImGui::CollapsingHeader("Canvas Elements", ImGuiTreeNodeFlags_DefaultOpen)) {
-            EngineGUIUI::DrawCanvasElementHierarchy(g_selUiElement, g_selNode);
-        }
-
-        if (playVisuals)
-            ImGui::EndDisabled();
-    }
-    ImGui::End();
-
-    // --- Properties (right) ---
-    ImGui::SetNextWindowPos(ImVec2(screenW - rightWidth, centerTop));
-    ImGui::SetNextWindowSize(ImVec2(rightWidth, centerH));
-    ImGui::Begin("Properties", nullptr,
-        ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
-    {
-        if (playVisuals)
-            ImGui::BeginDisabled(true);
-
-        if (g_selNode) {
-            bool runtimeDirty = false;
-            static GameObject* s_lastSelNode = nullptr;
-            static char nodeNameBuf[128] = {};
-            if (g_selNode != s_lastSelNode) {
-                EditorUndo_DiscardComponentEdit();
-                s_lastSelNode = g_selNode;
-                strncpy_s(nodeNameBuf, g_selNode->GetName().c_str(), sizeof(nodeNameBuf) - 1);
-            }
-
-            // Do not auto-add Visual on select/inspect — that marked scenes dirty
-            // without a user edit. Add via the component combo instead.
-            VisualComponent* vc = g_selNode->GetComponent<VisualComponent>();
-
-            ImGui::Text("Node: %s", g_selNode->GetName().c_str());
-            ImGui::Separator();
-            ImGui::SetNextItemWidth(-1);
-            if (ImGui::InputText("##NodeName", nodeNameBuf, sizeof(nodeNameBuf),
-                ImGuiInputTextFlags_EnterReturnsTrue)) {
-                const std::string oldName = g_selNode->GetName();
-                const std::string newName(nodeNameBuf);
-                g_selNode->SetName(newName);
-                EditorUndo_PushRename(g_selNode, oldName, newName);
-                EngineGUI_MarkSceneDirty();
-            }
-            if (!ImGui::IsItemActive())
-                strncpy_s(nodeNameBuf, g_selNode->GetName().c_str(), sizeof(nodeNameBuf) - 1);
-            ImGui::Spacing();
-
-            ImGui::Text("Hierarchy Order");
-            if (ImGui::Button("Back", ImVec2(70, 0)))
-            {
-                if (UndoableReorderNode(g_selNode, MoveNodeToBack))
-                    runtimeDirty = true;
-            }
-            ImGui::SameLine();
-            if (ImGui::Button("Down", ImVec2(70, 0)))
-            {
-                if (UndoableReorderNode(g_selNode, [](GameObject* n) {
-                    return MoveNodeOrder(n, -1);
-                }))
-                    runtimeDirty = true;
-            }
-            ImGui::SameLine();
-            if (ImGui::Button("Up", ImVec2(70, 0)))
-            {
-                if (UndoableReorderNode(g_selNode, [](GameObject* n) {
-                    return MoveNodeOrder(n, 1);
-                }))
-                    runtimeDirty = true;
-            }
-            ImGui::SameLine();
-            if (ImGui::Button("Top", ImVec2(70, 0)))
-            {
-                if (UndoableReorderNode(g_selNode, MoveNodeToFront))
-                    runtimeDirty = true;
-            }
-            ImGui::TextDisabled("Later items draw later; UI later items appear on top.");
-            ImGui::Spacing();
-
-            // Transform
-            if (engine::Transform* t = g_selNode->GetComponent<engine::Transform>()) {
-                ImGui::Text("Transform");
-                ImGui::Separator();
-                EditorUndo_BeginComponentEdit(g_selNode, "SceneTransform");
-                const float xformBefore[9] = {
-                    t->localPosition.x, t->localPosition.y, t->localPosition.z,
-                    t->localRotation.x, t->localRotation.y, t->localRotation.z,
-                    t->localScale.x, t->localScale.y, t->localScale.z
-                };
-                bool xformEdited = false;
-                ImGui::Text("Position");
-                ImGui::Text("X:"); ImGui::SameLine(40);
-                xformEdited |= ImGui::DragFloat("##NPX", &t->localPosition.x, 0.1f);
-                xformEdited |= ScrollValue(&t->localPosition.x);
-                ImGui::Text("Y:"); ImGui::SameLine(40);
-                xformEdited |= ImGui::DragFloat("##NPY", &t->localPosition.y, 0.1f);
-                xformEdited |= ScrollValue(&t->localPosition.y);
-                ImGui::Text("Z:"); ImGui::SameLine(40);
-                xformEdited |= ImGui::DragFloat("##NPZ", &t->localPosition.z, 0.1f);
-                xformEdited |= ScrollValue(&t->localPosition.z);
-                ImGui::Spacing();
-                ImGui::Text("Rotation");
-                ImGui::Text("X:"); ImGui::SameLine(40);
-                xformEdited |= ImGui::DragFloat("##NRX", &t->localRotation.x, 1.0f);
-                xformEdited |= ScrollValue(&t->localRotation.x, 1.0f);
-                ImGui::Text("Y:"); ImGui::SameLine(40);
-                xformEdited |= ImGui::DragFloat("##NRY", &t->localRotation.y, 1.0f);
-                xformEdited |= ScrollValue(&t->localRotation.y, 1.0f);
-                ImGui::Text("Z:"); ImGui::SameLine(40);
-                xformEdited |= ImGui::DragFloat("##NRZ", &t->localRotation.z, 1.0f);
-                xformEdited |= ScrollValue(&t->localRotation.z, 1.0f);
-                ImGui::Spacing();
-                ImGui::Text("Scale");
-                ImGui::Text("X:"); ImGui::SameLine(40);
-                xformEdited |= ImGui::DragFloat("##NSX", &t->localScale.x, 0.1f, 0.001f, 1000.0f);
-                xformEdited |= ScrollValue(&t->localScale.x);
-                ImGui::Text("Y:"); ImGui::SameLine(40);
-                xformEdited |= ImGui::DragFloat("##NSY", &t->localScale.y, 0.1f, 0.001f, 1000.0f);
-                xformEdited |= ScrollValue(&t->localScale.y);
-                ImGui::Text("Z:"); ImGui::SameLine(40);
-                xformEdited |= ImGui::DragFloat("##NSZ", &t->localScale.z, 0.1f, 0.001f, 1000.0f);
-                xformEdited |= ScrollValue(&t->localScale.z);
-                ImGui::Spacing();
-                const float xformAfter[9] = {
-                    t->localPosition.x, t->localPosition.y, t->localPosition.z,
-                    t->localRotation.x, t->localRotation.y, t->localRotation.z,
-                    t->localScale.x, t->localScale.y, t->localScale.z
-                };
-                if (xformEdited && JsonFloat_TransformChanged(xformBefore, xformAfter))
-                    runtimeDirty = true;
-                else if (xformEdited && !JsonFloat_TransformChanged(xformBefore, xformAfter)) {
-                    // DragFloat/Scroll reported a change that does not survive 3dp — keep bits.
-                    t->localPosition = { xformBefore[0], xformBefore[1], xformBefore[2] };
-                    t->localRotation = { xformBefore[3], xformBefore[4], xformBefore[5] };
-                    t->localScale    = { xformBefore[6], xformBefore[7], xformBefore[8] };
-                }
-                g_selNode->SyncLegacyTransformFromComponents();
-                EditorUndo_EndComponentEdit(g_selNode, "SceneTransform");
-            }
-
-            ImGui::Text("Scroll Sensitivity");
-            ImGui::SliderFloat("##Sens", &g_scrollSensitivity, 0.1f, 5.0f, "%.1f");
-            ImGui::Separator();
-
-            ImGui::Text("Tag");
-            {
-                TagRegistry& tags = TagRegistry::Instance();
-                int currentTag = g_selNode->GetTagId();
-                if (!tags.IsValid(currentTag))
-                    currentTag = static_cast<int>(Tag::TAG_NONE);
-
-                ImGui::SameLine(80);
-                ImGui::SetNextItemWidth(-1);
-                const char* preview = tags.GetName(currentTag);
-                if (ImGui::BeginCombo("##Tag", preview, ImGuiComboFlags_HeightLarge)) {
-                    const float removeW = ImGui::GetFrameHeight();
-                    const float spacing = ImGui::GetStyle().ItemInnerSpacing.x;
-                    const int noneId = static_cast<int>(Tag::TAG_NONE);
-
-                    for (int i = 0; i < tags.GetCount(); ++i) {
-                        ImGui::PushID(i);
-                        const bool selected = (i == currentTag);
-                        const bool showRemove = (i != noneId);
-                        const bool canRemove = tags.CanRemove(i);
-                        const char* name = tags.GetName(i);
-
-                        if (showRemove) {
-                            const float labelW =
-                                ImGui::GetContentRegionAvail().x - removeW - spacing;
-                            if (ImGui::Selectable(name, selected, 0,
-                                    ImVec2((labelW > 1.0f) ? labelW : 1.0f, 0.0f))) {
-                                const int oldTag = g_selNode->GetTagId();
-                                g_selNode->SetTag(i);
-                                EditorUndo_PushTag(g_selNode, oldTag, i);
-                                runtimeDirty = true;
-                            }
-                            if (selected)
-                                ImGui::SetItemDefaultFocus();
-
-                            ImGui::SameLine(0.0f, spacing);
-                            if (!canRemove)
-                                ImGui::BeginDisabled();
-                            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
-                            ImGui::PushStyleColor(ImGuiCol_ButtonHovered,
-                                ImVec4(0.85f, 0.25f, 0.25f, 0.55f));
-                            ImGui::PushStyleColor(ImGuiCol_ButtonActive,
-                                ImVec4(0.9f, 0.2f, 0.2f, 0.75f));
-                            if (ImGui::Button(ICON_FA_XMARK "##RemoveTag",
-                                    ImVec2(removeW, removeW))) {
-                                g_pendingDeleteTagId = i;
-                                g_showDeleteTagPopup = true;
-                                ImGui::CloseCurrentPopup();
-                            }
-                            ImGui::PopStyleColor(3);
-                            if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled |
-                                    ImGuiHoveredFlags_DelayShort)) {
-                                ImGui::SetTooltip(canRemove
-                                    ? "Delete tag"
-                                    : "Built-in tags cannot be deleted");
-                            }
-                            if (!canRemove)
-                                ImGui::EndDisabled();
-                        }
-                        else {
-                            if (ImGui::Selectable(name, selected)) {
-                                const int oldTag = g_selNode->GetTagId();
-                                g_selNode->SetTag(i);
-                                EditorUndo_PushTag(g_selNode, oldTag, i);
-                                runtimeDirty = true;
-                            }
-                            if (selected)
-                                ImGui::SetItemDefaultFocus();
-                        }
-                        ImGui::PopID();
-                    }
-
-                    ImGui::Separator();
-                    if (ImGui::Selectable(ICON_FA_PLUS "  Add New")) {
-                        g_newTagName[0] = '\0';
-                        g_showAddTagPopup = true;
-                        ImGui::CloseCurrentPopup();
-                    }
-                    ImGui::EndCombo();
-                }
-            }
-            ImGui::Spacing();
-
-            if (vc) {
-            ImGui::Separator();
-            ImGui::Text("Visual");
-            EditorUndo_BeginComponentEdit(g_selNode, "visual");
-
-            ImGui::Text("Mesh");
-            {
-                const auto& defs = ModelAssetCache::Instance().GetObjectDefinitions();
-                int currentIdx = -1;
-                for (int i = 0; i < (int)defs.size(); ++i) {
-                    if (defs[i].assetPath == vc->modelPath) {
-                        currentIdx = i;
-                        break;
-                    }
-                }
-                const char* preview = vc->modelPath.empty()
-                    ? "(None)"
-                    : (currentIdx >= 0 ? defs[currentIdx].displayName.c_str() : vc->modelPath.c_str());
-                ImGui::SetNextItemWidth(-1);
-                if (ImGui::BeginCombo("##Mesh", preview)) {
-                    for (int i = 0; i < (int)defs.size(); ++i) {
-                        const bool selected = (i == currentIdx);
-                        if (!selected &&
-                            ModelAssetCache::IsHiddenPrimitiveAlias(defs[i].assetPath))
-                            continue;
-                        if (ImGui::Selectable(defs[i].displayName.c_str(), selected)) {
-                            if (vc->modelPath != defs[i].assetPath) {
-                                vc->modelPath = defs[i].assetPath;
-                                runtimeDirty = true;
-                            }
-                        }
-                        if (selected)
-                            ImGui::SetItemDefaultFocus();
-                    }
-                    ImGui::EndCombo();
-                }
-                {
-                    const char* modelExts[] = { ".fbx", ".obj", ".gltf", ".glb" };
-                    std::string droppedPath;
-                    if (AcceptAssetPathDrop(modelExts, IM_ARRAYSIZE(modelExts), droppedPath)) {
-                        if (vc->modelPath != droppedPath) {
-                            vc->modelPath = droppedPath;
-                            runtimeDirty = true;
-                        }
-                    }
-                }
-                if (currentIdx < 0 && !vc->modelPath.empty())
-                    ImGui::TextDisabled("Custom / missing asset: %s", vc->modelPath.c_str());
-            }
-
-            bool animate = vc->playAnimation;
-            if (ImGui::Checkbox("Animate", &animate)) {
-                vc->playAnimation = animate;
-                runtimeDirty = true;
-            }
-
-            ImGui::Text("Shader");
-            {
-                const int variantCount = Shader3DVariantCount();
-                const bool useSceneDefault = vc->shaderOverride.empty();
-                const Shader3DVariant currentVariant = useSceneDefault
-                    ? RenderSettings_GetDefaultShader()
-                    : Shader3DVariantFromId(vc->shaderOverride);
-                const std::string preview = useSceneDefault
-                    ? "Use Scene Default"
-                    : ShaderVariantPreviewLabel(currentVariant);
-                ImGui::SetNextItemWidth(-1);
-                if (ImGui::BeginCombo("##ObjectShader", preview.c_str())) {
-                    if (ImGui::Selectable("Use Scene Default", useSceneDefault)) {
-                        vc->shaderOverride.clear();
-                        runtimeDirty = true;
-                    }
-                    for (int i = 0; i < variantCount; ++i) {
-                        const Shader3DVariant v = Shader3DVariantByIndex(i);
-                        if (!Shader3DVariantIsUserVisible(v))
-                            continue;
-                        const bool selected = !useSceneDefault
-                            && (Shader3DVariantId(v) == vc->shaderOverride);
-                        if (ImGui::Selectable(Shader3DVariantLabel(v), selected)) {
-                            vc->shaderOverride = Shader3DVariantId(v);
-                            if (v == Shader3DVariant::SurfaceFX)
-                                vc->hasSurfaceFx = true;
-                            runtimeDirty = true;
-                        }
-                    }
-                    ImGui::EndCombo();
-                }
-                if (!useSceneDefault) {
-                    ImGui::TextDisabled("Scene default: %s",
-                        Shader3DVariantLabel(RenderSettings_GetDefaultShader()));
-                }
-
-                if (currentVariant == Shader3DVariant::SurfaceFX) {
-                    vc->hasSurfaceFx = true;
-                    ImGui::Separator();
-                    ImGui::Text("Surface FX");
-
-                    char texBuf[256];
-                    strncpy_s(texBuf, vc->surfaceFxTexturePath.c_str(), sizeof(texBuf) - 1);
-                    texBuf[sizeof(texBuf) - 1] = '\0';
-                    ImGui::Text("Detail Texture");
-                    if (ImGui::InputText("##SfxTex", texBuf, sizeof(texBuf))) {
-                        vc->surfaceFxTexturePath = texBuf;
-                        runtimeDirty = true;
-                    }
-                    {
-                        const char* texExts[] = { ".png", ".jpg", ".jpeg", ".tga", ".bmp", ".dds" };
-                        std::string droppedPath;
-                        if (AcceptAssetPathDrop(texExts, IM_ARRAYSIZE(texExts), droppedPath)) {
-                            vc->surfaceFxTexturePath = droppedPath;
-                            runtimeDirty = true;
-                        }
-                    }
-
-                    if (ImGui::ColorEdit4("Color 1", &vc->surfaceFx.Color1.x))
-                        runtimeDirty = true;
-                    if (ImGui::ColorEdit4("Color 2", &vc->surfaceFx.Color2.x))
-                        runtimeDirty = true;
-                    if (ImGui::DragFloat2("Scroll Speed 1", &vc->surfaceFx.ScrollSpeed1.x, 0.001f))
-                        runtimeDirty = true;
-                    if (ImGui::DragFloat2("Scroll Speed 2", &vc->surfaceFx.ScrollSpeed2.x, 0.001f))
-                        runtimeDirty = true;
-                    if (ImGui::DragFloat("UV Scale", &vc->surfaceFx.UvScale, 0.001f, 0.001f, 10.0f))
-                        runtimeDirty = true;
-                    if (ImGui::DragFloat("Fresnel Power", &vc->surfaceFx.FresnelPower, 0.05f, 0.1f, 16.0f))
-                        runtimeDirty = true;
-                    if (ImGui::DragFloat("Emission Strength", &vc->surfaceFx.EmissionStrength, 0.01f, 0.0f, 5.0f))
-                        runtimeDirty = true;
-                    if (ImGui::DragFloat("Gradient Start", &vc->surfaceFx.GradientStart, 0.01f, 0.0f, 1.0f))
-                        runtimeDirty = true;
-                    if (ImGui::DragFloat("Gradient End", &vc->surfaceFx.GradientEnd, 0.01f, 0.0f, 1.0f))
-                        runtimeDirty = true;
-                    if (ImGui::DragFloat("Edge Fade Start", &vc->surfaceFx.EdgeFadeStart, 0.01f, 0.0f, 1.0f))
-                        runtimeDirty = true;
-                    if (ImGui::DragFloat("Edge Fade End", &vc->surfaceFx.EdgeFadeEnd, 0.01f, 0.0f, 1.0f))
-                        runtimeDirty = true;
-                    ImGui::TextDisabled("Detail texture scrolls; not Material normal map.");
-                }
-            }
-            EditorUndo_EndComponentEdit(g_selNode, "visual");
-            }
-
-            ImGui::Spacing();
-
-            if (DirectionalLightComponent* dl = g_selNode->GetComponent<DirectionalLightComponent>()) {
-                ImGui::Separator();
-                ImGui::Text("Directional Light");
-                EditorUndo_BeginComponentEdit(g_selNode, "DirectionalLight");
-                if (ImGui::Checkbox("Enabled", &dl->enabled))
-                    runtimeDirty = true;
-                if (ImGui::ColorEdit3("Color", &dl->color.x))
-                    runtimeDirty = true;
-                if (ImGui::DragFloat("Intensity", &dl->intensity, 0.05f, 0.0f, 10.0f))
-                    runtimeDirty = true;
-                if (ImGui::ColorEdit3("Specular", &dl->specColor.x))
-                    runtimeDirty = true;
-                if (ImGui::DragFloat("Spec Power", &dl->specPower, 1.0f, 1.0f, 256.0f))
-                    runtimeDirty = true;
-                if (ImGui::Checkbox("Cast Shadows", &dl->castShadows))
-                    runtimeDirty = true;
-
-                if (const engine::Transform* t = g_selNode->GetComponent<engine::Transform>()) {
-                    const DirectX::XMFLOAT3 dir = DirectionalLightComponent::ComputeDirectionWS(t);
-                    ImGui::Text("Direction: (%.2f, %.2f, %.2f)", dir.x, dir.y, dir.z);
-                    ImGui::TextDisabled("Rotate Transform to aim light (+Z forward).");
-                }
-                ImGui::TextDisabled("Shader: Directional (Pixel) on Visual component.");
-                EditorUndo_EndComponentEdit(g_selNode, "DirectionalLight");
-                ImGui::Spacing();
-            }
-
-            if (CameraComponent* cam = g_selNode->GetComponent<CameraComponent>()) {
-                ImGui::Separator();
-                ImGui::Text("Camera");
-                EditorUndo_BeginComponentEdit(g_selNode, "Camera");
-                if (ImGui::Checkbox("Enabled", &cam->enabled))
-                    runtimeDirty = true;
-                if (ImGui::Checkbox("Editor Camera Controls on Play", &cam->debugFly)) runtimeDirty = true;
-                if (ImGui::Checkbox("Orthographic", &cam->orthographic))
-                    runtimeDirty = true;
-                if (cam->orthographic) {
-                    if (ImGui::DragFloat("View Height", &cam->orthographicHeight, 0.1f, 0.01f, 100000.0f))
-                        runtimeDirty = true;
-                }
-                else if (ImGui::DragFloat("FOV", &cam->fov, 0.5f, 1.0f, 179.0f))
-                    runtimeDirty = true;
-                if (ImGui::DragFloat("Near Clip", &cam->nearClip, 0.01f, 0.01f, 100.0f))
-                    runtimeDirty = true;
-                if (ImGui::DragFloat("Far Clip", &cam->farClip, 1.0f, 1.0f, 100000.0f))
-                    runtimeDirty = true;
-                if (const engine::Transform* t = g_selNode->GetComponent<engine::Transform>()) {
-                    const DirectX::XMFLOAT3 fwd = CameraComponent::ComputeForwardWS(t);
-                    const DirectX::XMFLOAT3 up = CameraComponent::ComputeUpWS(t);
-                    const DirectX::XMFLOAT3 right = CameraComponent::ComputeRightWS(t);
-                    ImGui::Text("Forward: (%.2f, %.2f, %.2f)", fwd.x, fwd.y, fwd.z);
-                    ImGui::Text("Up:      (%.2f, %.2f, %.2f)", up.x, up.y, up.z);
-                    ImGui::Text("Right:   (%.2f, %.2f, %.2f)", right.x, right.y, right.z);
-                    ImGui::TextDisabled("Wire: blue=fwd green=up red=right. Aim with Transform (+Z).");
-                    ImGui::TextDisabled("View uses world-up bank (no upside-down past 90 pitch).");
-                }
-                EditorUndo_EndComponentEdit(g_selNode, "Camera");
-                ImGui::Spacing();
-            }
-
-            if (PointLightComponent* pl = g_selNode->GetComponent<PointLightComponent>()) {
-                ImGui::Separator();
-                ImGui::Text("Point Light");
-                EditorUndo_BeginComponentEdit(g_selNode, "PointLight");
-                if (ImGui::Checkbox("Enabled", &pl->enabled)) runtimeDirty = true;
-                if (ImGui::ColorEdit3("Color", &pl->color.x)) runtimeDirty = true;
-                if (ImGui::DragFloat("Intensity", &pl->intensity, 0.05f, 0.0f, 10.0f)) runtimeDirty = true;
-                if (ImGui::ColorEdit3("Specular", &pl->specColor.x)) runtimeDirty = true;
-                if (ImGui::DragFloat("Spec Power", &pl->specPower, 1.0f, 1.0f, 256.0f)) runtimeDirty = true;
-                if (ImGui::DragFloat("Range", &pl->range, 0.1f, 0.1f, 100.0f)) runtimeDirty = true;
-                ImGui::Text("Attenuation (kc, kl, kq)");
-                if (ImGui::DragFloat3("##PtAtten", &pl->attenuation.x, 0.01f, 0.0f, 10.0f)) runtimeDirty = true;
-                ImGui::TextDisabled("Shader: Point (Pixel) on Visual component.");
-                EditorUndo_EndComponentEdit(g_selNode, "PointLight");
-                ImGui::Spacing();
-            }
-
-            if (SpotLightComponent* sl = g_selNode->GetComponent<SpotLightComponent>()) {
-                ImGui::Separator();
-                ImGui::Text("Spot Light");
-                EditorUndo_BeginComponentEdit(g_selNode, "SpotLight");
-                if (ImGui::Checkbox("Enabled", &sl->enabled)) runtimeDirty = true;
-                if (ImGui::ColorEdit3("Color", &sl->color.x)) runtimeDirty = true;
-                if (ImGui::DragFloat("Intensity", &sl->intensity, 0.05f, 0.0f, 10.0f)) runtimeDirty = true;
-                if (ImGui::ColorEdit3("Specular", &sl->specColor.x)) runtimeDirty = true;
-                if (ImGui::DragFloat("Spec Power", &sl->specPower, 1.0f, 1.0f, 256.0f)) runtimeDirty = true;
-                if (ImGui::DragFloat("Range", &sl->range, 0.1f, 0.1f, 100.0f)) runtimeDirty = true;
-                if (ImGui::DragFloat("Inner Angle", &sl->innerAngleDeg, 0.5f, 0.0f, 89.0f)) runtimeDirty = true;
-                if (ImGui::DragFloat("Outer Angle", &sl->outerAngleDeg, 0.5f, 0.0f, 89.0f)) runtimeDirty = true;
-                if (ImGui::Checkbox("Cast Shadows", &sl->castShadows)) runtimeDirty = true;
-                ImGui::Text("Attenuation (kc, kl, kq)");
-                if (ImGui::DragFloat3("##SpAtten", &sl->attenuation.x, 0.01f, 0.0f, 10.0f)) runtimeDirty = true;
-                if (const engine::Transform* t = g_selNode->GetComponent<engine::Transform>()) {
-                    const DirectX::XMFLOAT3 shine = LightGizmo::GetShineDirectionWS(t);
-                    ImGui::Text("Direction: (%.2f, %.2f, %.2f)", shine.x, shine.y, shine.z);
-                    ImGui::TextDisabled("Rotate Transform to aim spot (+Z forward).");
-                }
-                ImGui::TextDisabled("Shader: Spot (Pixel) on Visual component.");
-                EditorUndo_EndComponentEdit(g_selNode, "SpotLight");
-                ImGui::Spacing();
-            }
-
-            if (ColliderComponent* cc = FindColliderComponent(g_selNode)) {
-                ImGui::Separator();
-                const char* colliderTypeName=cc->GetTypeName();
-                const char* colliderLabels[]={"Collider (Legacy)","Box Collider","Sphere Collider","Capsule Collider","Mesh Collider","Cylinder Collider"};
-                const int colliderIndex=static_cast<int>(cc->colliderType);
-                ImGui::TextUnformatted(colliderIndex>=0&&colliderIndex<IM_ARRAYSIZE(colliderLabels)?colliderLabels[colliderIndex]:"Collider (Legacy)");
-                EditorUndo_BeginComponentEdit(g_selNode, colliderTypeName);
-                auto noteColliderEdit = [&](bool edited) {
-                    if (edited)
-                        runtimeDirty = true;
-                };
-                if (cc->colliderType != ColliderType::NONE) {
-                    ImGui::Text("Center");
-                    ImGui::Text("X:"); ImGui::SameLine(40);
-                    noteColliderEdit(ImGui::DragFloat("##CCX", &cc->colliderCenter.x, 0.1f));
-                    noteColliderEdit(ScrollValue(&cc->colliderCenter.x));
-                    ImGui::Text("Y:"); ImGui::SameLine(40);
-                    noteColliderEdit(ImGui::DragFloat("##CCY", &cc->colliderCenter.y, 0.1f));
-                    noteColliderEdit(ScrollValue(&cc->colliderCenter.y));
-                    ImGui::Text("Z:"); ImGui::SameLine(40);
-                    noteColliderEdit(ImGui::DragFloat("##CCZ", &cc->colliderCenter.z, 0.1f));
-                    noteColliderEdit(ScrollValue(&cc->colliderCenter.z));
-                }
-                if (cc->colliderType == ColliderType::BOX) {
-                    ImGui::Text("Half Extents");
-                    ImGui::Text("X:"); ImGui::SameLine(40);
-                    noteColliderEdit(ImGui::DragFloat("##HEX", &cc->halfExtents.x, 0.1f));
-                    ImGui::Text("Y:"); ImGui::SameLine(40);
-                    noteColliderEdit(ImGui::DragFloat("##HEY", &cc->halfExtents.y, 0.1f));
-                    ImGui::Text("Z:"); ImGui::SameLine(40);
-                    noteColliderEdit(ImGui::DragFloat("##HEZ", &cc->halfExtents.z, 0.1f));
-                }
-                else if (cc->colliderType == ColliderType::SPHERE) {
-                    ImGui::Text("Radius:"); ImGui::SameLine(80);
-                    noteColliderEdit(ImGui::DragFloat("##Rad", &cc->radius, 0.1f));
-                }
-                else if (cc->colliderType == ColliderType::CAPSULE) {
-                    ImGui::Text("Radius:"); ImGui::SameLine(80);
-                    noteColliderEdit(ImGui::DragFloat("##CRad", &cc->radius, 0.1f));
-                    ImGui::Text("Height:"); ImGui::SameLine(80);
-                    noteColliderEdit(ImGui::DragFloat("##CHei", &cc->height, 0.1f));
-                }
-                else if (cc->colliderType == ColliderType::CYLINDER) {
-                    ImGui::Text("Radius:"); ImGui::SameLine(80);
-                    noteColliderEdit(ImGui::DragFloat("##CyRad", &cc->radius, 0.1f));
-                    ImGui::Text("Height:"); ImGui::SameLine(80);
-                    noteColliderEdit(ImGui::DragFloat("##CyHei", &cc->height, 0.1f));
-                }
-                else if (cc->colliderType == ColliderType::MESH) {
-                    ImGui::Text("Size Padding:"); ImGui::SameLine(100);
-                    noteColliderEdit(ImGui::DragFloat("##MSP", &cc->meshSizePadding, 0.01f, 0.0f, 10.0f));
-                }
-                if (cc->colliderType == ColliderType::BOX
-                    || cc->colliderType == ColliderType::SPHERE
-                    || cc->colliderType == ColliderType::CAPSULE
-                    || cc->colliderType == ColliderType::CYLINDER) {
-                    static GameObject* s_autoFitFailNode = nullptr;
-                    if (ImGui::Button("Auto-Fit")) {
-                        if (AutoFitColliderToMesh(g_selNode, cc)) {
-                            s_autoFitFailNode = nullptr;
-                            runtimeDirty = true;
-                            ImGui::MarkItemEdited(ImGui::GetItemID());
-                        } else {
-                            s_autoFitFailNode = g_selNode;
-                        }
-                    }
-                    if (s_autoFitFailNode == g_selNode)
-                        ImGui::TextDisabled("Auto-Fit: no usable mesh vertices.");
-                }
-                if (ImGui::Checkbox("Show Debug Collider", &cc->showDebugCollider)) {
-                    g_selNode->m_debugCollider = cc->showDebugCollider;
-                    runtimeDirty = true;
-                }
-                if (ImGui::Checkbox("Is Trigger", &cc->isTrigger)) {
-                    runtimeDirty = true;
-                }
-                {
-                    ImGui::Text("Physics Material");
-                    char matBuf[256];
-                    strncpy_s(matBuf, cc->physicsMaterial.c_str(), sizeof(matBuf) - 1);
-                    matBuf[sizeof(matBuf) - 1] = '\0';
-                    ImGui::SameLine(140);
-                    if (ImGui::InputText("##PhysMat", matBuf, sizeof(matBuf))) {
-                        cc->physicsMaterial = matBuf;
-                        runtimeDirty = true;
-                    }
-                    const char* physMatExts[] = { ".physmat" };
-                    std::string droppedPath;
-                    if (AcceptAssetPathDrop(physMatExts, IM_ARRAYSIZE(physMatExts), droppedPath)) {
-                        cc->physicsMaterial = droppedPath;
-                        runtimeDirty = true;
-                    }
-                    if (!cc->physicsMaterial.empty()) {
-                        ImGui::SameLine();
-                        if (ImGui::Button("Clear##PhysMat")) {
-                            cc->physicsMaterial.clear();
-                            runtimeDirty = true;
-                        }
-                    }
-                    if (Collider* col = g_selNode->GetCollider()) {
-                        const ContactSurface& surface = col->GetContactSurface();
-                        if (surface.assigned) {
-                            ImGui::TextDisabled(
-                                "Static %.3f  Dynamic %.3f  Restitution %.3f",
-                                surface.staticFriction, surface.dynamicFriction, surface.restitution);
-                        } else if (!cc->physicsMaterial.empty()) {
-                            ImGui::TextDisabled("Not loaded; using rigidbody friction/restitution.");
-                        }
-                    }
-                }
-                EditorUndo_EndComponentEdit(g_selNode, colliderTypeName);
-                if (ImGui::Button("Remove Collider")) {
-                    EditorUndo_PushRemoveComponent(g_selNode, colliderTypeName);
-                    RemoveColliderComponent(g_selNode);
-                    runtimeDirty = true;
-                }
-                ImGui::Spacing();
-            }
-
-            if (RigidbodyComponent* rbc = g_selNode->GetComponent<RigidbodyComponent>()) {
-                ImGui::Separator();
-                ImGui::Text("Rigidbody");
-                EditorUndo_BeginComponentEdit(g_selNode, "Rigidbody");
-                Rigidbody& rb = rbc->Body();
-
-                bool useGravity = rb.UseGravity();
-                if (ImGui::Checkbox("Use Gravity", &useGravity)) {
-                    rb.SetUseGravity(useGravity);
-                    runtimeDirty = true;
-                }
-
-                bool isKinematic = rb.IsKinematic();
-                if (ImGui::Checkbox("Is Kinematic", &isKinematic)) {
-                    rb.SetIsKinematic(isKinematic);
-                    runtimeDirty = true;
-                }
-
-                float mass = rb.GetMass();
-                if (ImGui::DragFloat("Mass", &mass, 0.05f, 0.001f, 1000.0f)) {
-                    rb.SetMass(mass);
-                    runtimeDirty = true;
-                }
-
-                float drag = rb.GetDrag();
-                if (ImGui::DragFloat("Drag", &drag, 0.01f, 0.0f, 50.0f)) {
-                    rb.SetDrag(drag);
-                    runtimeDirty = true;
-                }
-
-                float angularDrag = rb.GetAngularDrag();
-                if (ImGui::DragFloat("Angular Drag", &angularDrag, 0.01f, 0.0f, 50.0f)) {
-                    rb.SetAngularDrag(angularDrag);
-                    runtimeDirty = true;
-                }
-
-                float restitution = rb.GetRestitution();
-                if (ImGui::DragFloat("Restitution", &restitution, 0.01f, 0.0f, 2.0f)) {
-                    rb.SetRestitution(restitution);
-                    runtimeDirty = true;
-                }
-
-                float friction = rb.GetFriction();
-                if (ImGui::DragFloat("Friction", &friction, 0.01f, 0.0f, 10.0f)) {
-                    rb.SetFriction(friction);
-                    runtimeDirty = true;
-                }
-
-                EditorUndo_EndComponentEdit(g_selNode, "Rigidbody");
-                if (ImGui::Button("Remove Rigidbody")) {
-                    EditorUndo_PushRemoveComponent(g_selNode, "Rigidbody");
-                    g_selNode->RemoveComponent<RigidbodyComponent>();
-                    runtimeDirty = true;
-                }
-                ImGui::Spacing();
-            }
-
-            // Material property editor
-            if (MaterialComponent* mc = g_selNode->GetComponent<MaterialComponent>()) {
-                ImGui::Separator();
-                ImGui::Text("Material");
-                EditorUndo_BeginComponentEdit(g_selNode, "Material");
-
-                if (ImGui::ColorEdit3("Color", &mc->color.x))
-                    runtimeDirty = true;
-                if (ImGui::DragFloat("Roughness", &mc->roughness, 0.01f, 0.0f, 1.0f))
-                    runtimeDirty = true;
-                if (ImGui::DragFloat("Metallic", &mc->metallic, 0.01f, 0.0f, 1.0f))
-                    runtimeDirty = true;
-
-                char nbuf[256];
-                strncpy_s(nbuf, mc->normalMapPath.c_str(), sizeof(nbuf) - 1);
-                nbuf[sizeof(nbuf) - 1] = '\0';
-                ImGui::Text("Normal Map");
-                if (ImGui::InputText("##MatNormal", nbuf, sizeof(nbuf))) {
-                    mc->normalMapPath = nbuf;
-                    runtimeDirty = true;
-                }
-                {
-                    const char* texExts[] = { ".png", ".jpg", ".jpeg", ".tga", ".bmp", ".dds" };
-                    std::string droppedPath;
-                    if (AcceptAssetPathDrop(texExts, IM_ARRAYSIZE(texExts), droppedPath)) {
-                        mc->normalMapPath = droppedPath;
-                        runtimeDirty = true;
-                    }
-                }
-                if (ImGui::DragFloat("Normal Strength", &mc->normalStrength, 0.05f, 0.0f, 4.0f))
-                    runtimeDirty = true;
-
-                // Toon fields (useful when shader is "toon"; harmless otherwise)
-                {
-                    VisualComponent* vc = g_selNode->GetComponent<VisualComponent>();
-                    const bool isToon = vc && (
-                        vc->shaderOverride == "toon"
-                        || (vc->shaderOverride.empty()
-                            && RenderSettings_GetDefaultShader() == Shader3DVariant::Toon));
-                    if (isToon || ImGui::TreeNode("Toon / Outline")) {
-                        if (isToon)
-                            ImGui::TextDisabled("Toon / Outline");
-                        if (ImGui::DragFloat("Shade Steps", &mc->shadeSteps, 0.1f, 1.0f, 8.0f))
-                            runtimeDirty = true;
-                        if (ImGui::DragFloat("Shade Smoothness", &mc->shadeSmoothness, 0.005f, 0.0f, 0.5f))
-                            runtimeDirty = true;
-                        if (ImGui::DragFloat("Spec Threshold", &mc->specularThreshold, 0.01f, 0.0f, 1.0f))
-                            runtimeDirty = true;
-                        if (ImGui::DragFloat("Rim Strength", &mc->rimStrength, 0.01f, 0.0f, 2.0f))
-                            runtimeDirty = true;
-                        if (ImGui::ColorEdit3("Shadow Tint", &mc->shadowTint.x))
-                            runtimeDirty = true;
-                        if (ImGui::DragFloat("Outline Width", &mc->outlineWidth, 0.0005f, 0.0f, 0.05f, "%.4f"))
-                            runtimeDirty = true;
-                        if (ImGui::ColorEdit4("Outline Color", &mc->outlineColor.x))
-                            runtimeDirty = true;
-
-                        char rbuf[256];
-                        strncpy_s(rbuf, mc->rampTexturePath.c_str(), sizeof(rbuf) - 1);
-                        rbuf[sizeof(rbuf) - 1] = '\0';
-                        ImGui::Text("Ramp Texture (optional)");
-                        if (ImGui::InputText("##MatRamp", rbuf, sizeof(rbuf))) {
-                            mc->rampTexturePath = rbuf;
-                            runtimeDirty = true;
-                        }
-                        {
-                            const char* texExts[] = { ".png", ".jpg", ".jpeg", ".tga", ".bmp", ".dds" };
-                            std::string droppedPath;
-                            if (AcceptAssetPathDrop(texExts, IM_ARRAYSIZE(texExts), droppedPath)) {
-                                mc->rampTexturePath = droppedPath;
-                                runtimeDirty = true;
-                            }
-                        }
-                        if (!isToon)
-                            ImGui::TreePop();
-                    }
-                }
-
-                EditorUndo_EndComponentEdit(g_selNode, "Material");
-                if (ImGui::Button("Remove Material")) {
-                    EditorUndo_PushRemoveComponent(g_selNode, "Material");
-                    g_selNode->RemoveComponent<MaterialComponent>();
-                    runtimeDirty = true;
-                }
-                ImGui::Spacing();
-            }
-
-            // Effect property editor
-            if (EffectComponent* ec = g_selNode->GetComponent<EffectComponent>()) {
-                ImGui::Separator();
-                ImGui::Text("Effect");
-                EditorUndo_BeginComponentEdit(g_selNode, "Effect");
-
-                std::string path = ec->effectPath;
-                char buf[256];
-                strncpy_s(buf, path.c_str(), sizeof(buf) - 1);
-                buf[sizeof(buf) - 1] = '\0';
-                ImGui::Text("Path"); ImGui::SameLine(60);
-                if (ImGui::InputText("##EffPath", buf, sizeof(buf))) {
-                    ec->SetEffectPath(buf);
-                    runtimeDirty = true;
-                }
-                {
-                    const char* effectExts[] = { ".efk", ".efkefc" };
-                    std::string droppedPath;
-                    if (AcceptAssetPathDrop(effectExts, IM_ARRAYSIZE(effectExts), droppedPath)) {
-                        ec->SetEffectPath(droppedPath.c_str());
-                        runtimeDirty = true;
-                    }
-                }
-
-                if (ImGui::Checkbox("Auto Play", &ec->autoPlay)) {
-                    runtimeDirty = true;
-                }
-
-                if (ImGui::Checkbox("Auto Destroy", &ec->autoDestroy)) {
-                    runtimeDirty = true;
-                }
-
-                ImGui::Text("Speed"); ImGui::SameLine(60);
-                if (ImGui::SliderFloat("##EffSpeed", &ec->speed, 0.0f, 5.0f)) {
-                    runtimeDirty = true;
-                }
-
-                if (ImGui::Button("Play")) {
-                    ec->Play();
-                }
-                ImGui::SameLine();
-                if (ImGui::Button("Stop")) {
-                    ec->Stop();
-                }
-
-                EditorUndo_EndComponentEdit(g_selNode, "Effect");
-                if (ImGui::Button("Remove Effect")) {
-                    EditorUndo_PushRemoveComponent(g_selNode, "Effect");
-                    g_selNode->RemoveComponent<EffectComponent>();
-                    runtimeDirty = true;
-                }
-                ImGui::Spacing();
-            }
-
-            if (AudioComponent* ac = g_selNode->GetComponent<AudioComponent>()) {
-                ImGui::Separator();
-                ImGui::Text("Audio");
-                EditorUndo_BeginComponentEdit(g_selNode, "Audio");
-
-                std::string path = ac->clipPath;
-                char buf[256];
-                strncpy_s(buf, path.c_str(), sizeof(buf) - 1);
-                buf[sizeof(buf) - 1] = '\0';
-                ImGui::Text("Clip"); ImGui::SameLine(80);
-                if (ImGui::InputText("##AudioClip", buf, sizeof(buf))) {
-                    ac->SetClipPath(buf);
-                    runtimeDirty = true;
-                }
-                {
-                    const char* wavExts[] = { ".wav" };
-                    std::string droppedPath;
-                    if (AcceptAssetPathDrop(wavExts, IM_ARRAYSIZE(wavExts), droppedPath)) {
-                        ac->SetClipPath(droppedPath);
-                        runtimeDirty = true;
-                    }
-                }
-
-                const char* busPreview = "SFX";
-                if (ac->bus == AudioType::BGM) busPreview = "BGM";
-                else if (ac->bus == AudioType::VOICE) busPreview = "Voice";
-                ImGui::Text("Bus"); ImGui::SameLine(80);
-                if (ImGui::BeginCombo("##AudioBus", busPreview)) {
-                    if (ImGui::Selectable("BGM", ac->bus == AudioType::BGM)) {
-                        ac->bus = AudioType::BGM;
-                        runtimeDirty = true;
-                    }
-                    if (ImGui::Selectable("SFX", ac->bus == AudioType::SFX)) {
-                        ac->bus = AudioType::SFX;
-                        runtimeDirty = true;
-                    }
-                    if (ImGui::Selectable("Voice", ac->bus == AudioType::VOICE)) {
-                        ac->bus = AudioType::VOICE;
-                        runtimeDirty = true;
-                    }
-                    ImGui::EndCombo();
-                }
-
-                ImGui::Text("Volume"); ImGui::SameLine(80);
-                if (ImGui::SliderFloat("##AudioVol", &ac->volume, 0.0f, 1.0f, "%.2f")) {
-                    ac->ApplyLiveSettings();
-                    runtimeDirty = true;
-                }
-
-                if (ImGui::Checkbox("Loop", &ac->loop))
-                    runtimeDirty = true;
-                if (ImGui::Checkbox("Play On Awake", &ac->autoPlay))
-                    runtimeDirty = true;
-                if (ImGui::Checkbox("3D", &ac->spatial))
-                    runtimeDirty = true;
-                if (ac->spatial) {
-                    ImGui::Text("Range"); ImGui::SameLine(80);
-                    if (ImGui::DragFloat("##AudioRange", &ac->distanceScale, 0.5f, 0.1f, 500.0f, "%.1f")) {
-                        ac->ApplyLiveSettings();
-                        runtimeDirty = true;
-                    }
-                }
-
-                if (ImGui::Button("Play##Audio"))
-                    ac->Play();
-                ImGui::SameLine();
-                if (ImGui::Button("Stop##Audio"))
-                    ac->Stop();
-
-                EditorUndo_EndComponentEdit(g_selNode, "Audio");
-                if (ImGui::Button("Remove Audio")) {
-                    EditorUndo_PushRemoveComponent(g_selNode, "Audio");
-                    g_selNode->RemoveComponent<AudioComponent>();
-                    runtimeDirty = true;
-                }
-                ImGui::Spacing();
-            }
-
-            if (AudioListenerComponent* alc = g_selNode->GetComponent<AudioListenerComponent>()) {
-                (void)alc;
-                ImGui::Separator();
-                ImGui::Text("AudioListener");
-                ImGui::TextDisabled("3D ear. Active camera's listener is used.");
-                if (ImGui::Button("Remove AudioListener")) {
-                    EditorUndo_PushRemoveComponent(g_selNode, "AudioListener");
-                    g_selNode->RemoveComponent<AudioListenerComponent>();
-                    runtimeDirty = true;
-                }
-                ImGui::Spacing();
-            }
-
-            // Script property editor
-            if (ScriptComponent* sc = g_selNode->GetComponent<ScriptComponent>()) {
-                Script* script = sc->GetScript();
-                ImGui::Separator();
-                ImGui::TextColored(ImVec4(0.3f, 0.8f, 1.0f, 1.0f),
-                    "Script: %s", sc->GetScriptClass().c_str());
-                if (script) {
-                    EditorUndo_BeginComponentEdit(g_selNode, "Script");
-                    nlohmann::json props = sc->GetEditableProperties();
-                    if (props.is_object() && !props.empty()) {
-                        bool changed = false;
-                        for (auto& [key, val] : props.items()) {
-                            if (DrawScriptPropertyField(g_selNode, key, val))
-                                changed = true;
-                        }
-                        if (changed) {
-                            sc->ApplyProperties(props);
-                            runtimeDirty = true;
-                        }
-                    }
-                    else {
-                        ImGui::TextDisabled("(no editable properties)");
-                    }
-                    EditorUndo_EndComponentEdit(g_selNode, "Script");
-                }
-                else {
-                    ImGui::TextDisabled("(script not loaded)");
-                }
-                if (ImGui::Button("Remove Script")) {
-                    EditorUndo_PushRemoveComponent(g_selNode, "Script");
-                    g_selNode->RemoveComponent<ScriptComponent>();
-                    runtimeDirty = true;
-                }
-                ImGui::Spacing();
-            }
-
-            // 2D physics settings are authored before Play; runtime owns the bodies.
-            if (auto* body = g_selNode->GetComponent<Rigidbody2DComponent>()) {
-                ImGui::Separator();
-                ImGui::TextUnformatted("Rigidbody 2D");
-                ImGui::PushID("Rigidbody2D");
-                ImGui::BeginDisabled(EngineGUI_IsPlaying());
-                EditorUndo_BeginComponentEdit(g_selNode, "Rigidbody2D");
-                ImGui::PushItemWidth(-1);
-                ImGui::TextUnformatted("Body Type");
-                int type = static_cast<int>(body->bodyType);
-                if (ImGui::Combo("##Type", &type, "Static\0Dynamic\0Kinematic\0")) {
-                    body->bodyType = static_cast<BodyType2D>(type);
-                    runtimeDirty = true;
-                }
-                auto number = [&](const char* label, float* value, float minimum, float maximum) {
-                    ImGui::TextUnformatted(label);
-                    std::string id = std::string("##") + label;
-                    if (ImGui::DragFloat(id.c_str(), value, 0.01f, minimum, maximum)) runtimeDirty = true;
-                };
-                number("Mass", &body->mass, 0.001f, 100000.0f);
-                number("Gravity Scale", &body->gravityScale, -100.0f, 100.0f);
-                number("Linear Damping", &body->linearDamping, 0.0f, 100.0f);
-                ImGui::TextUnformatted("Initial Velocity (XY)");
-                if (ImGui::DragFloat2("##Velocity", &body->initialVelocity.x, 0.01f)) runtimeDirty = true;
-                if (ImGui::Checkbox("Fixed Rotation", &body->fixedRotation)) runtimeDirty = true;
-                if (ImGui::Checkbox("Continuous Collision", &body->bullet)) runtimeDirty = true;
-                ImGui::PopItemWidth();
-                ImGui::TextWrapped("Dynamic and kinematic bodies must be root objects with uniform positive XY scale. Edit physics settings before Play.");
-                EditorUndo_EndComponentEdit(g_selNode, "Rigidbody2D");
-                if (ImGui::Button("Remove Rigidbody 2D")) {
-                    EditorUndo_PushRemoveComponent(g_selNode, "Rigidbody2D");
-                    g_selNode->RemoveComponent<Rigidbody2DComponent>();
-                    runtimeDirty = true;
-                }
-                ImGui::EndDisabled();
-                ImGui::PopID();
-            }
-            if (auto* collider = g_selNode->GetComponent<Collider2DComponent>()) {
-                ImGui::Separator();
-                ImGui::TextUnformatted("Collider 2D");
-                ImGui::PushID("Collider2D");
-                EditorUndo_BeginComponentEdit(g_selNode, "Collider2D");
-                if (ImGui::Checkbox("Show Debug Collider", &collider->showDebugCollider)) runtimeDirty = true;
-                EditorUndo_EndComponentEdit(g_selNode, "Collider2D");
-                ImGui::BeginDisabled(EngineGUI_IsPlaying());
-                EditorUndo_BeginComponentEdit(g_selNode, "Collider2D");
-                ImGui::PushItemWidth(-1);
-                if (ImGui::Checkbox("Enabled", &collider->enabled)) runtimeDirty = true;
-                ImGui::TextUnformatted("Shape");
-                int shape = static_cast<int>(collider->shape);
-                if (ImGui::Combo("##Shape", &shape, "Box\0Circle\0")) {
-                    collider->shape = static_cast<Shape2D>(shape);
-                    runtimeDirty = true;
-                }
-                if (collider->shape == Shape2D::Box) {
-                    ImGui::TextUnformatted("Size (XY)");
-                    if (ImGui::DragFloat2("##Size", &collider->size.x, 0.01f, 0.001f, 100000.0f)) runtimeDirty = true;
-                } else {
-                    ImGui::TextUnformatted("Radius");
-                    if (ImGui::DragFloat("##Radius", &collider->radius, 0.01f, 0.001f, 100000.0f)) runtimeDirty = true;
-                }
-                ImGui::TextUnformatted("Offset (XY)");
-                if (ImGui::DragFloat2("##Offset", &collider->offset.x, 0.01f)) runtimeDirty = true;
-                if (ImGui::Checkbox("Trigger", &collider->isTrigger)) runtimeDirty = true;
-                ImGui::TextUnformatted("Friction");
-                if (ImGui::DragFloat("##Friction", &collider->friction, 0.01f, 0.0f, 1.0f)) runtimeDirty = true;
-                ImGui::TextUnformatted("Restitution");
-                if (ImGui::DragFloat("##Restitution", &collider->restitution, 0.01f, 0.0f, 1.0f)) runtimeDirty = true;
-                ImGui::TextUnformatted("Category Bits (hex)");
-                if (ImGui::InputScalar("##Category", ImGuiDataType_U32, &collider->categoryBits, nullptr, nullptr, "%08X", ImGuiInputTextFlags_CharsHexadecimal)) runtimeDirty = true;
-                ImGui::TextUnformatted("Mask Bits (hex)");
-                if (ImGui::InputScalar("##Mask", ImGuiDataType_U32, &collider->maskBits, nullptr, nullptr, "%08X", ImGuiInputTextFlags_CharsHexadecimal)) runtimeDirty = true;
-                ImGui::PopItemWidth();
-                ImGui::TextWrapped("Box size and circle radius use local world units. Use uniform positive XY scale; settings are locked during Play.");
-                EditorUndo_EndComponentEdit(g_selNode, "Collider2D");
-                if (ImGui::Button("Remove Collider 2D")) {
-                    EditorUndo_PushRemoveComponent(g_selNode, "Collider2D");
-                    g_selNode->RemoveComponent<Collider2DComponent>();
-                    runtimeDirty = true;
-                }
-                ImGui::EndDisabled();
-                ImGui::PopID();
-            }
-
-            if (SpriteRendererComponent* sprite = g_selNode->GetComponent<SpriteRendererComponent>()) {
-                ImGui::Separator();
-                ImGui::Text("Sprite Renderer");
-                ImGui::PushID("SpriteRenderer");
-                EditorUndo_BeginComponentEdit(g_selNode, "SpriteRenderer");
-                char textureBuf[1024];
-                strncpy_s(textureBuf, sprite->texturePath.c_str(), _TRUNCATE);
-                if (ImGui::InputText("Texture", textureBuf, sizeof(textureBuf))) {
-                    sprite->texturePath = textureBuf;
-                    runtimeDirty = true;
-                }
-                const char* extensions[] = { ".png", ".jpg", ".jpeg", ".bmp" };
-                std::string droppedPath;
-                if (AcceptAssetPathDrop(extensions, IM_ARRAYSIZE(extensions), droppedPath)) {
-                    sprite->texturePath = droppedPath;
-                    runtimeDirty = true;
-                }
-                if (ImGui::DragFloat("Pixels Per Unit", &sprite->pixelsPerUnit, 1.0f, 0.01f, 100000.0f))
-                    runtimeDirty = true;
-                if (ImGui::DragFloat4("Source Rect", &sprite->sourceRect.x, 1.0f, 0.0f, 100000.0f))
-                    runtimeDirty = true;
-                ImGui::TextDisabled("Source rect: x, y, width, height in pixels. Zero size uses full texture.");
-                if(DrawPivotPreset("Pivot",sprite->pivot,sprite)) runtimeDirty=true;
-                if (ImGui::ColorEdit4("Tint", &sprite->tint.x)) runtimeDirty = true;
-                if (ImGui::Checkbox("Flip X", &sprite->flipX)) runtimeDirty = true;
-                if (ImGui::Checkbox("Flip Y", &sprite->flipY)) runtimeDirty = true;
-                if (ImGui::InputInt("Sorting Layer", &sprite->sortingLayer)) runtimeDirty = true;
-                if (ImGui::InputInt("Order In Layer", &sprite->orderInLayer)) runtimeDirty = true;
-                EditorUndo_EndComponentEdit(g_selNode, "SpriteRenderer");
-                if (ImGui::Button("Remove Sprite Renderer")) {
-                    EditorUndo_PushRemoveComponent(g_selNode, "SpriteRenderer");
-                    g_selNode->RemoveComponent<SpriteRendererComponent>();
-                    runtimeDirty = true;
-                }
-                ImGui::PopID();
-                ImGui::Spacing();
-            }
-
-            if (auto* animator = g_selNode->GetComponent<SpriteAnimatorComponent>()) {
-                ImGui::Separator();
-                ImGui::Text("Sprite Animator");
-                ImGui::PushID("SpriteAnimator");
-                EditorUndo_BeginComponentEdit(g_selNode, "SpriteAnimator");
-                bool changed = false;
-                char defaultName[256];
-                strncpy_s(defaultName, animator->defaultClip.c_str(), _TRUNCATE);
-                if (ImGui::InputText("Default Clip", defaultName, sizeof(defaultName))) {
-                    animator->defaultClip = defaultName;
-                    changed = true;
-                }
-                changed |= ImGui::Checkbox("Auto Play", &animator->autoPlay);
-                static char newClipName[256] = "idle";
-                ImGui::InputText("New Clip Name", newClipName, sizeof(newClipName));
-                if (ImGui::Button("Add Clip") && newClipName[0]) {
-                    changed |= animator->clips.emplace(newClipName, SpriteAnimationClip{}).second;
-                }
-                static char metadataPath[1024] = "";
-                static char importName[256] = "idle";
-                static bool importFailed = false;
-                ImGui::InputText("Sheet Metadata JSON", metadataPath, sizeof(metadataPath));
-                const char* jsonExtensions[] = { ".json" };
-                std::string metadataDrop;
-                if (AcceptAssetPathDrop(jsonExtensions, IM_ARRAYSIZE(jsonExtensions), metadataDrop))
-                    strncpy_s(metadataPath, metadataDrop.c_str(), _TRUNCATE);
-                ImGui::InputText("Import Clip Name", importName, sizeof(importName));
-                if (ImGui::Button("Import Sheet")) {
-                    const bool imported = animator->ImportSheet(metadataPath, importName);
-                    importFailed = !imported;
-                    changed |= imported;
-                }
-                if (importFailed) ImGui::TextDisabled("Import failed. Check metadata path and frame rectangles.");
-                for (auto it = animator->clips.begin(); it != animator->clips.end();) {
-                    ImGui::PushID(it->first.c_str());
-                    bool removeClip = false;
-                    if (ImGui::TreeNode("Clip", "%s", it->first.c_str())) {
-                        auto& clip = it->second;
-                        char texture[1024];
-                        strncpy_s(texture, clip.texture.c_str(), _TRUNCATE);
-                        if (ImGui::InputText("Texture", texture, sizeof(texture))) {
-                            clip.texture = texture;
-                            changed = true;
-                        }
-                        const char* extensions[] = { ".png", ".jpg", ".jpeg", ".bmp" };
-                        std::string droppedPath;
-                        if (AcceptAssetPathDrop(extensions, IM_ARRAYSIZE(extensions), droppedPath)) {
-                            clip.texture = droppedPath;
-                            changed = true;
-                        }
-                        float fps = static_cast<float>(clip.fps);
-                        if (ImGui::DragFloat("FPS", &fps, 0.1f, 0.01f, 1000.0f)) {
-                            clip.fps = (std::max)(0.01f, fps);
-                            changed = true;
-                        }
-                        changed |= ImGui::Checkbox("Loop", &clip.loop);
-                        for (size_t i = 0; i < clip.frames.size();) {
-                            ImGui::PushID(static_cast<int>(i));
-                            auto& frame = clip.frames[i];
-                            float rect[] = {frame.x, frame.y, frame.w, frame.h};
-                            if (ImGui::DragFloat4("Frame XYWH", rect, 1.0f, 0.0f, 100000.0f)) {
-                                frame = {rect[0], rect[1], (std::max)(1.0f, rect[2]), (std::max)(1.0f, rect[3])};
-                                changed = true;
-                            }
-                            const bool removeFrame = ImGui::Button("Remove Frame");
-                            ImGui::PopID();
-                            if (removeFrame) {
-                                clip.frames.erase(clip.frames.begin() + i);
-                                changed = true;
-                            } else ++i;
-                        }
-                        if (ImGui::Button("Add Frame")) {
-                            clip.frames.push_back(SpriteAnimationFrame{});
-                            changed = true;
-                        }
-                        removeClip = ImGui::Button("Remove Clip");
-                        ImGui::TreePop();
-                    }
-                    ImGui::PopID();
-                    if (removeClip) {
-                        if (animator->defaultClip == it->first) animator->defaultClip.clear();
-                        it = animator->clips.erase(it);
-                        changed = true;
-                    } else ++it;
-                }
-                if (changed) {
-                    animator->OnReset();
-                    runtimeDirty = true;
-                }
-                EditorUndo_EndComponentEdit(g_selNode, "SpriteAnimator");
-                if (ImGui::Button("Remove Sprite Animator")) {
-                    EditorUndo_PushRemoveComponent(g_selNode, "SpriteAnimator");
-                    g_selNode->RemoveComponent<SpriteAnimatorComponent>();
-                    runtimeDirty = true;
-                }
-                ImGui::PopID();
-                ImGui::Spacing();
-            }
-
-            if (BillboardComponent* bbc = g_selNode->GetComponent<BillboardComponent>()) {
-                ImGui::Separator();
-                ImGui::Text("Billboard");
-                EditorUndo_BeginComponentEdit(g_selNode, "Billboard");
-
-                char texBuf[256];
-                strncpy_s(texBuf, bbc->texturePath.c_str(), sizeof(texBuf) - 1);
-                texBuf[sizeof(texBuf) - 1] = '\0';
-                ImGui::Text("Texture");
-                if (ImGui::InputText("##BillboardTex", texBuf, sizeof(texBuf))) {
-                    bbc->texturePath = texBuf;
-                    bbc->InvalidateTextureCache();
-                    runtimeDirty = true;
-                }
-                {
-                    const char* texExts[] = { ".png", ".jpg", ".jpeg", ".tga", ".bmp", ".dds" };
-                    std::string droppedPath;
-                    if (AcceptAssetPathDrop(texExts, IM_ARRAYSIZE(texExts), droppedPath)) {
-                        bbc->texturePath = droppedPath;
-                        bbc->InvalidateTextureCache();
-                        runtimeDirty = true;
-                    }
-                }
-                if (ImGui::DragFloat("Size X", &bbc->sizeX, 0.05f, 0.01f, 1000.0f))
-                    runtimeDirty = true;
-                if (ImGui::DragFloat("Size Y", &bbc->sizeY, 0.05f, 0.01f, 1000.0f))
-                    runtimeDirty = true;
-                if (ImGui::ColorEdit4("Color##Billboard", &bbc->color.x))
-                    runtimeDirty = true;
-                if (ImGui::DragFloat("Rotation##Billboard", &bbc->rotation, 0.5f))
-                    runtimeDirty = true;
-                if (ImGui::Checkbox("Ground Aligned", &bbc->groundAligned))
-                    runtimeDirty = true;
-                if (ImGui::Checkbox("Enabled##Billboard", &bbc->enabled))
-                    runtimeDirty = true;
-
-                EditorUndo_EndComponentEdit(g_selNode, "Billboard");
-                if (ImGui::Button("Remove Billboard")) {
-                    EditorUndo_PushRemoveComponent(g_selNode, "Billboard");
-                    g_selNode->RemoveComponent<BillboardComponent>();
-                    runtimeDirty = true;
-                }
-                ImGui::Spacing();
-            }
-
-            ImGui::Separator();
-            ImGui::Text("Components:");
-            for (const auto& kv : g_selNode->GetComponents())
-                ImGui::BulletText("%s", kv.second->GetTypeName());
-            ImGui::SetNextItemWidth(-1);
-            if (ImGui::BeginCombo("##AddComponent", "Add Component...", ImGuiComboFlags_HeightLarge)) {
-                static ImGuiTextFilter componentFilter;
-                const bool opening=ImGui::IsWindowAppearing();
-                if(opening) {componentFilter.Clear();ImGui::SetKeyboardFocusHere();}
-                componentFilter.Draw("##ComponentSearch", -1);
-                ImGui::Separator();
-                int availableCount=0;
-                auto option=[&](const char* label,const char* typeName,bool available,auto create) {
-                    if(!available||!componentFilter.PassFilter(label))return;
-                    ++availableCount;
-                    if(ImGui::Selectable(label)) {
-                        create();
-                        EditorUndo_PushAddComponent(g_selNode,typeName);
-                        runtimeDirty=true;
-                        ImGui::CloseCurrentPopup();
-                    }
-                };
-                option("Transform","SceneTransform",!g_selNode->GetComponent<engine::Transform>(),[&] {g_selNode->AddComponent<engine::Transform>();});
-                option("Visual","visual",!g_selNode->GetComponent<VisualComponent>(),[&] {g_selNode->AddComponent<VisualComponent>();});
-                option("Sprite Renderer","SpriteRenderer",!g_selNode->GetComponent<SpriteRendererComponent>(),[&] {g_selNode->AddComponent<SpriteRendererComponent>();});
-                option("Sprite Animator","SpriteAnimator",!g_selNode->GetComponent<SpriteAnimatorComponent>(),[&] {g_selNode->AddComponent<SpriteAnimatorComponent>();});
-                option("Billboard","Billboard",!g_selNode->GetComponent<BillboardComponent>(),[&] {g_selNode->AddComponent<BillboardComponent>();});
-                option("Material","Material",!g_selNode->GetComponent<MaterialComponent>(),[&] {g_selNode->AddComponent<MaterialComponent>();});
-                option("Camera","Camera",!g_selNode->GetComponent<CameraComponent>(),[&] {g_selNode->AddComponent<CameraComponent>();});
-                option("Directional Light","DirectionalLight",!g_selNode->GetComponent<DirectionalLightComponent>(),[&] {g_selNode->AddComponent<DirectionalLightComponent>();});
-                option("Point Light","PointLight",!g_selNode->GetComponent<PointLightComponent>(),[&] {g_selNode->AddComponent<PointLightComponent>();});
-                option("Spot Light","SpotLight",!g_selNode->GetComponent<SpotLightComponent>(),[&] {g_selNode->AddComponent<SpotLightComponent>();});
-                option("Rigidbody 3D","Rigidbody",!g_selNode->GetComponent<RigidbodyComponent>(),[&] {g_selNode->AddComponent<RigidbodyComponent>();});
-                option("Rigidbody 2D","Rigidbody2D",!g_selNode->GetComponent<Rigidbody2DComponent>(),[&] {g_selNode->AddComponent<Rigidbody2DComponent>();});
-                option("Script","Script",!g_selNode->GetComponent<ScriptComponent>(),[&] {g_selNode->AddComponent<ScriptComponent>();});
-                option("Effect","Effect",!g_selNode->GetComponent<EffectComponent>(),[&] {g_selNode->AddComponent<EffectComponent>();});
-                option("Audio","Audio",!g_selNode->GetComponent<AudioComponent>(),[&] {g_selNode->AddComponent<AudioComponent>();});
-                option("Audio Listener","AudioListener",!g_selNode->GetComponent<AudioListenerComponent>(),[&] {g_selNode->AddComponent<AudioListenerComponent>();});
-                const auto* currentCollider=FindColliderComponent(g_selNode);
-                const bool canAdd3D=!currentCollider||currentCollider->colliderType==ColliderType::NONE;
-                auto removeEmptyCollider=[&] {if(currentCollider)RemoveColliderComponent(g_selNode);};
-                option("Box Collider 3D","BoxCollider",canAdd3D,[&] {removeEmptyCollider();g_selNode->AddComponent<BoxColliderComponent>();});
-                option("Sphere Collider 3D","SphereCollider",canAdd3D,[&] {removeEmptyCollider();g_selNode->AddComponent<SphereColliderComponent>();});
-                option("Capsule Collider 3D","CapsuleCollider",canAdd3D,[&] {removeEmptyCollider();g_selNode->AddComponent<CapsuleColliderComponent>();});
-                option("Cylinder Collider 3D","CylinderCollider",canAdd3D,[&] {removeEmptyCollider();g_selNode->AddComponent<CylinderColliderComponent>();});
-                option("Mesh Collider 3D","MeshCollider",canAdd3D,[&] {removeEmptyCollider();g_selNode->AddComponent<MeshColliderComponent>();});
-                option("Box Collider 2D","Collider2D",!g_selNode->GetComponent<Collider2DComponent>(),[&] {g_selNode->AddComponent<Collider2DComponent>()->shape=Shape2D::Box;});
-                option("Circle Collider 2D","Collider2D",!g_selNode->GetComponent<Collider2DComponent>(),[&] {g_selNode->AddComponent<Collider2DComponent>()->shape=Shape2D::Circle;});
-                if(!availableCount)ImGui::TextDisabled("No matching components available.");
-                ImGui::EndCombo();
-            }
-            ImGui::Spacing();
-
-            if (runtimeDirty) {
-                EngineGUI_MarkSceneDirty();
-                SyncSceneRuntime();
-            }
-
-            // Save as prefab
-            ImGui::Separator();
-            if (ImGui::Button("Save as Prefab", ImVec2(-1, 0))) {
-                if (!fs::exists(PREFAB_DIR)) fs::create_directories(PREFAB_DIR);
-                std::string prefabName = g_selNode->GetName();
-                for (char& c : prefabName)
-                    if (c == ' ' || c == '/' || c == '\\') c = '_';
-                PrefabSerializer::SaveToFile(*g_selNode, PREFAB_DIR + prefabName + ".json");
-            }
-
-            ImGui::Separator();
-            if (ImGui::Button("Delete Node", ImVec2(-1, 30))) {
-                EditorUndo_DiscardComponentEdit();
-                s_lastSelNode = nullptr;
-                DeleteGameObject(g_selNode);
-            }
-        }
-        else if (g_selUiElement) {
-            EditorUndo_BeginUiEdit(g_selUiElement);
-            EngineGUIUI::DrawCanvasElementProperties(g_selUiElement);
-            if (g_selUiElement)
-                EditorUndo_EndUiEdit(g_selUiElement);
-        }
-        else {
-            DrawPropertiesEmptyState();
-        }
-
-        if (playVisuals)
-            ImGui::EndDisabled();
-    }
-    ImGui::End();
-
-    // --- Asset Browser (bottom) ---
-    ImGui::SetNextWindowPos(ImVec2(0, screenH - bottomHeight));
-    ImGui::SetNextWindowSize(ImVec2(screenW, bottomHeight));
-    ImGui::Begin("Asset Browser", nullptr,
-        ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
-    {
-        if (sceneLoadBusy || playVisuals)
-            ImGui::BeginDisabled(true);
-        if (GameObject* spawned = MapEditor::ProjectBrowserPanel(g_sceneNodes)) {
-            if (!sceneLoadBusy && !playVisuals) {
-                g_selNode = spawned;
-                g_selUiElement = nullptr;
-                const int idx = [&]() {
-                    for (int i = 0; i < (int)g_sceneNodes.size(); ++i)
-                        if (g_sceneNodes[i].get() == spawned) return i;
-                    return (int)g_sceneNodes.size() - 1;
-                }();
-                EditorUndo_PushCreate(spawned, nullptr, idx);
-                EngineGUI_MarkSceneDirty();
-                SyncSceneRuntime();
-            }
-        }
-        if (sceneLoadBusy || playVisuals)
-            ImGui::EndDisabled();
-    }
-    ImGui::End();
 
     // Custom viewport target does not add an ImGui window over the scene.
     float dropX,dropY,dropW,dropH;
