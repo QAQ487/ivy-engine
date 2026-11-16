@@ -596,11 +596,11 @@ static std::string NormalizeSceneFileName(const std::string& sceneName) {
         if (c == '\\') c = '/';
     }
 
-    fs::path path(trimmed);
+    fs::path path = PathFromUtf8(trimmed);
     if (path.extension().empty())
         path += ".json";
 
-    return path.generic_string();
+    return PathToUtf8(path);
 }
 
 bool EngineGUI_IsSceneGraphObject(GameObject* obj) {
@@ -846,7 +846,7 @@ static bool ScrollValue(float* value, float baseSpeed = 1.0f) {
 
 static std::string LowerAssetExtension(const char* path) {
     if (!path) return "";
-    std::string ext = fs::path(path).extension().string();
+    std::string ext = PathToUtf8(PathFromUtf8(path).extension());
     std::transform(ext.begin(), ext.end(), ext.begin(),
         [](unsigned char c) {
             return static_cast<char>(std::tolower(c));
@@ -1642,7 +1642,7 @@ static void DrawEngineStartScreen() {
         const size_t count = (std::min)(recent.size(), size_t{5});
         for (size_t i = 0; i < count; ++i) {
             const std::string& path = recent[i];
-            const std::string leaf = fs::path(path).filename().string();
+            const std::string leaf = PathToUtf8(PathFromUtf8(path).filename());
             const std::string label = leaf.empty() ? path : leaf;
             ImGui::PushID(static_cast<int>(i));
             if (ImGui::SmallButton(label.c_str()))
@@ -2297,7 +2297,7 @@ static void DrawEditorPopups() {
                 const std::string& currentScenePath = SceneLoader_GetCurrentScenePath();
                 if (!currentScenePath.empty()) {
                     leavingSceneFile = NormalizeSceneFileName(
-                        fs::path(currentScenePath).filename().string());
+                        PathToUtf8(PathFromUtf8(currentScenePath).filename()));
                 }
             }
             if (leavingSceneFile.empty())
@@ -2464,11 +2464,11 @@ static void SaveSceneToFile(const std::string& sceneFile) {
     if (normalized.empty()) return;
 
     if (!fs::exists(SCENE_DIR)) fs::create_directories(SCENE_DIR);
-    const fs::path scenePath = fs::path(SCENE_DIR) / normalized;
+    const fs::path scenePath = fs::path(SCENE_DIR) / PathFromUtf8(normalized);
     if (scenePath.has_parent_path())
         fs::create_directories(scenePath.parent_path());
 
-    if (EngineGUI_SaveToFile(scenePath.string().c_str())) {
+    if (EngineGUI_SaveToFile(PathToUtf8(scenePath).c_str())) {
         SceneLoader_CopySceneFileName(normalized);
         SceneLoader_RefreshSceneAssets();
         EngineGUI_ClearSceneDirty();
@@ -2811,7 +2811,7 @@ void EngineGUI_Initialize(HWND hwnd, ID3D11Device* device,
         const fs::path iconFile = content_path::ReadableFileCurrent("rom/font/fa-solid-900.ttf");
         const std::string iconPath = iconFile.empty()
             ? std::string("rom/font/fa-solid-900.ttf")
-            : iconFile.string();
+            : PathToUtf8(iconFile);
         if (!io.Fonts->AddFontFromFileTTF(
                 iconPath.c_str(), 13.0f, &iconsConfig, iconRanges)) {
             std::fprintf(stderr,
@@ -5732,7 +5732,7 @@ void EngineGUI_Draw() {
         && ImGui::BeginDragDropTargetViewport(ImGui::GetMainViewport(),&dropRect)) {
         if(const auto* payload=ImGui::AcceptDragDropPayload("ASSET_PATH")) {
             const std::string path=static_cast<const char*>(payload->Data);
-            std::string ext=fs::path(path).extension().string();
+            std::string ext=PathToUtf8(PathFromUtf8(path).extension());
             std::transform(ext.begin(),ext.end(),ext.begin(),[](unsigned char c){return char(std::tolower(c));});
             if(ext==".png" || ext==".jpg" || ext==".jpeg" || ext==".bmp") {
                 const auto mouse=ImGui::GetIO().MousePos;
@@ -5741,7 +5741,7 @@ void EngineGUI_Draw() {
                     const float dz=DirectX::XMVectorGetZ(direction);
                     const float distance=std::fabs(dz)>1e-6f?-DirectX::XMVectorGetZ(origin)/dz:-1;
                     if(distance>=0) {
-                        auto node=std::make_unique<GameObject>(fs::path(path).stem().string());
+                        auto node=std::make_unique<GameObject>(PathToUtf8(PathFromUtf8(path).stem()));
                         auto* transform=node->AddComponent<engine::Transform>();
                         DirectX::XMStoreFloat3(&transform->localPosition,DirectX::XMVectorMultiplyAdd(direction,DirectX::XMVectorReplicate(distance),origin));
                         node->AddComponent<SpriteRendererComponent>()->texturePath=path;

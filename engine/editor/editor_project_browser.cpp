@@ -16,6 +16,7 @@
 #include "engine/ecs/prefab_serializer.h"
 #include "engine/scene/scene_loader.h"
 #include "engine/core/engine_gui.h"
+#include "engine/core/utf8_path.h"
 #include "engine/rendering/environment/skybox_asset_path.h"
 
 #include "libraries/nlohmann/json.hpp"
@@ -63,7 +64,7 @@ static std::unique_ptr<GameObject> CreateModelGameObject(
     const std::string& assetPath, const std::string& displayName)
 {
     const std::string leafName = displayName.empty()
-        ? fs::path(assetPath).stem().string()
+        ? PathToUtf8(PathFromUtf8(assetPath).stem())
         : displayName;
     auto node = std::make_unique<GameObject>(leafName);
     node->AddComponent<engine::Transform>();
@@ -224,9 +225,9 @@ static void OpenRenameModal(const std::string& relPath, const std::string& name,
         FillNameBuffer(name);
     }
     else {
-        fs::path path(name);
-        s_modal.originalExt = path.extension().string();
-        FillNameBuffer(path.stem().string());
+        const fs::path path = PathFromUtf8(name);
+        s_modal.originalExt = PathToUtf8(path.extension());
+        FillNameBuffer(PathToUtf8(path.stem()));
     }
 }
 
@@ -487,7 +488,7 @@ static void HandleAssetItemActivation(
         }
         else if (entry.kind == ProjectAssetIndex::Kind::Scene) {
             SceneLoader_CopySceneFileName(
-                fs::path(entry.relativePath).filename().string());
+                PathToUtf8(PathFromUtf8(entry.relativePath).filename()));
         }
     }
     if (doubleClicked && entry.kind == ProjectAssetIndex::Kind::Scene)

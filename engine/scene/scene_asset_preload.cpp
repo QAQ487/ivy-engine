@@ -42,8 +42,7 @@ std::string NormalizePathKey(std::string path) {
 std::string FilenameLabel(const std::string& path) {
 	if (path.empty())
 		return "?";
-	const std::filesystem::path p(path);
-	const std::string name = p.filename().string();
+	const std::string name = PathToUtf8(PathFromUtf8(path).filename());
 	return name.empty() ? path : name;
 }
 
@@ -313,11 +312,11 @@ std::vector<SceneAssetPreloadTask> SceneAssetPreload_BuildTaskListFromSceneFiles
 			continue;
 
 		const fs::path path = entry.path();
-		if (ToLowerAscii(path.extension().string()) != ".json")
+		if (ToLowerAscii(PathToUtf8(path.extension())) != ".json")
 			continue;
 
 		json root;
-		if (!TryReadJsonFile(path.string(), root))
+		if (!TryReadJsonFile(PathToUtf8(path), root))
 			continue;
 		if (!root.is_object())
 			continue;

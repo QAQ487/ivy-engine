@@ -15,6 +15,10 @@ cl /nologo /EHsc /std:c++20 /utf-8 /DNOMINMAX /I. tests\utf8_path_test.cpp /Fo:t
 if errorlevel 1 exit /b 1
 tools\phase6-test-build\utf8_path_test.exe
 if errorlevel 1 exit /b 1
+cl /nologo /EHsc /std:c++20 /utf-8 /DNOMINMAX /I. tests\utf8_path_windows_check.cpp /Fo:tools\phase6-test-build\ /Fe:tools\phase6-test-build\utf8_path_windows_check.exe
+if errorlevel 1 exit /b 1
+tools\phase6-test-build\utf8_path_windows_check.exe
+if errorlevel 1 exit /b 1
 cl /nologo /EHsc /std:c++20 /utf-8 /DNOMINMAX /I. tools\content_monitor_check.cpp /Fo:tools\phase6-test-build\ /Fe:tools\phase6-test-build\content_monitor_check.exe
 if errorlevel 1 exit /b 1
 tools\phase6-test-build\content_monitor_check.exe

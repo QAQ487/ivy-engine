@@ -863,7 +863,7 @@ std::string SceneLoader_GetDefaultSceneDisplayName() {
         if (asset.fileName == g_defaultSceneFileName)
             return asset.displayName;
     }
-    return fs::path(g_defaultSceneFileName).stem().generic_string();
+    return PathToUtf8(PathFromUtf8(g_defaultSceneFileName).stem());
 }
 
 const std::string& SceneLoader_GetDefaultSceneFileName() {
