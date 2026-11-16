@@ -21,6 +21,9 @@ public:
         bool assetBrowserListView = false;
         // Grid tile width in pixels (clamped on set). Default matches legacy 100px tiles.
         int assetBrowserTileSize = 100;
+        // Dear ImGui theme axes (names validated on load; unknown → Trellis / Ivy).
+        std::string uiStylePreset = "Trellis";
+        std::string uiColorScheme = "Ivy";
     };
 
     struct PhysicsSettings {
@@ -70,6 +73,10 @@ public:
     void SetDefaultScene(const std::string& fileName);
     void SetEditorUiZoomPercent(int percent);
     int GetEditorUiZoomPercent() const { return m_data.editor.uiZoomPercent; }
+    void SetEditorUiStylePreset(const std::string& name);
+    const std::string& GetEditorUiStylePreset() const { return m_data.editor.uiStylePreset; }
+    void SetEditorUiColorScheme(const std::string& name);
+    const std::string& GetEditorUiColorScheme() const { return m_data.editor.uiColorScheme; }
     void SetAssetBrowserListView(bool listView);
     bool GetAssetBrowserListView() const { return m_data.editor.assetBrowserListView; }
     void SetAssetBrowserTileSize(int tileSize);
