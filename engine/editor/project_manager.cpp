@@ -384,6 +384,8 @@ ProjectManager::ProjectData ProjectManager::MakeDefaultData(const std::string& r
     data.editor.uiZoomPercent = 100;
     data.editor.assetBrowserListView = false;
     data.editor.assetBrowserTileSize = 100;
+    data.editor.uiStylePreset = "Trellis";
+    data.editor.uiColorScheme = "Ivy";
     data.physics.gravity = GRAVITY;
 
     try {
@@ -395,6 +397,8 @@ ProjectManager::ProjectData ProjectManager::MakeDefaultData(const std::string& r
             data.editor.assetBrowserListView = j.value("assetBrowserListView", false);
             data.editor.assetBrowserTileSize = ClampAssetBrowserTileSize(
                 j.value("assetBrowserTileSize", 100));
+            data.editor.uiStylePreset = j.value("uiStylePreset", std::string("Trellis"));
+            data.editor.uiColorScheme = j.value("uiColorScheme", std::string("Ivy"));
         }
     }
     catch (...) {
@@ -423,12 +427,18 @@ bool ProjectManager::LoadProjectFile(const std::string& rootPath, ProjectData* o
         out->editor.uiZoomPercent = 100;
         out->editor.assetBrowserListView = false;
         out->editor.assetBrowserTileSize = 100;
+        out->editor.uiStylePreset = "Trellis";
+        out->editor.uiColorScheme = "Ivy";
         if (j.contains("editor") && j["editor"].is_object()) {
             out->editor.uiZoomPercent = j["editor"].value("uiZoomPercent", 100);
             out->editor.assetBrowserListView =
                 j["editor"].value("assetBrowserListView", false);
             out->editor.assetBrowserTileSize = ClampAssetBrowserTileSize(
                 j["editor"].value("assetBrowserTileSize", 100));
+            out->editor.uiStylePreset =
+                j["editor"].value("uiStylePreset", std::string("Trellis"));
+            out->editor.uiColorScheme =
+                j["editor"].value("uiColorScheme", std::string("Ivy"));
         }
         out->physics.gravity = GRAVITY;
         if (j.contains("physics") && j["physics"].is_object())
@@ -486,6 +496,8 @@ bool ProjectManager::WriteProjectFile(const std::string& rootPath, const Project
         j["editor"]["assetBrowserListView"] = data.editor.assetBrowserListView;
         j["editor"]["assetBrowserTileSize"] =
             ClampAssetBrowserTileSize(data.editor.assetBrowserTileSize);
+        j["editor"]["uiStylePreset"] = data.editor.uiStylePreset;
+        j["editor"]["uiColorScheme"] = data.editor.uiColorScheme;
         j["physics"] = json::object();
         j["physics"]["gravity"] = data.physics.gravity;
         j["audio"] = json::object();
@@ -730,6 +742,15 @@ void ProjectManager::SetDefaultScene(const std::string& fileName) {
 
 void ProjectManager::SetEditorUiZoomPercent(int percent) {
     m_data.editor.uiZoomPercent = percent;
+}
+
+void ProjectManager::SetEditorUiStylePreset(const std::string& name) {
+    // Canonical names come from editor_theme::StylePresetName; empty → default.
+    m_data.editor.uiStylePreset = name.empty() ? "Trellis" : name;
+}
+
+void ProjectManager::SetEditorUiColorScheme(const std::string& name) {
+    m_data.editor.uiColorScheme = name.empty() ? "Ivy" : name;
 }
 
 int ProjectManager::ClampAssetBrowserTileSize(int tileSize) {

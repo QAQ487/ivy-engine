@@ -74,6 +74,8 @@
 #include "engine/ecs/prefab_serializer.h"
 #include "engine/ecs/component_factory.h"
 #include "engine/editor/editor_project_browser.h"
+#include "engine/editor/editor_icon_button.h"
+#include "engine/editor/editor_theme.h"
 #include "engine/editor/editor_ui_panel.h"
 #include "engine/editor/project_asset_index.h"
 #include "engine/core/content_path.h"
@@ -225,7 +227,13 @@ static char g_buildDest[1024] = {};
 static int g_buildConfigIndex = 0;
 static EditorEditMode g_editMode = EditorEditMode::Scene3D;
 
-static constexpr float kToolbarHeight = 36.0f;
+// Toolbar chrome uses compact local padding (see PushToolbarChromeStyle) so
+// FontSizeBase 15.5/16 + theme FramePadding no longer clip in a fixed 36px row.
+static constexpr float kToolbarWindowPadX = 6.0f;
+static constexpr float kToolbarWindowPadY = 4.0f;
+static constexpr float kToolbarFramePadX = 6.0f;
+static constexpr float kToolbarFramePadY = 4.0f;
+static constexpr float kToolbarItemSpacingX = 4.0f;
 static constexpr float kLeftPanelWidth = 300.0f;
 static constexpr float kRightPanelWidth = 350.0f;
 static constexpr float kBottomPanelMinHeight = 340.0f;
@@ -243,6 +251,8 @@ static int g_uiZoomPercent = 100;
 static float g_uiZoom = 1.0f;
 static ImGuiStyle g_baseStyle{};
 static bool g_baseStyleCaptured = false;
+static editor_theme::StylePreset g_uiStylePreset = editor_theme::StylePreset::Trellis;
+static editor_theme::ColorScheme g_uiColorScheme = editor_theme::ColorScheme::Ivy;
 
 static float Ui(float px) { return px * g_uiZoom; }
 
@@ -251,6 +261,40 @@ static bool IsValidUiZoomPercent(int percent) {
         if (p == percent) return true;
     }
     return false;
+}
+
+static void CaptureBaseStyleFromCurrent() {
+    g_baseStyle = ImGui::GetStyle();
+    g_baseStyle.FontScaleMain = 1.0f;
+    g_baseStyleCaptured = true;
+}
+
+static void ApplyEditorTheme(editor_theme::StylePreset preset,
+                             editor_theme::ColorScheme scheme) {
+    g_uiStylePreset = editor_theme::ClampStylePreset(static_cast<int>(preset));
+    g_uiColorScheme = editor_theme::ClampColorScheme(static_cast<int>(scheme));
+    if (!g_imguiInitialized)
+        return;
+    editor_theme::Apply(ImGui::GetStyle(), g_uiStylePreset, g_uiColorScheme);
+    CaptureBaseStyleFromCurrent();
+}
+
+static void ApplyUiZoom(int percent) {
+    if (!IsValidUiZoomPercent(percent))
+        percent = 100;
+    g_uiZoomPercent = percent;
+    g_uiZoom = static_cast<float>(percent) / 100.0f;
+
+    if (!g_imguiInitialized) return;
+
+    ImGuiStyle& style = ImGui::GetStyle();
+    if (!g_baseStyleCaptured) {
+        CaptureBaseStyleFromCurrent();
+    }
+    style = g_baseStyle;
+    style.ScaleAllSizes(g_uiZoom);
+    // ImGui 1.92 dynamic atlas re-rasterizes from FontScaleMain — keep crisp.
+    style.FontScaleMain = g_uiZoom;
 }
 
 static void SaveUiPrefs() {
@@ -273,6 +317,8 @@ static void SaveUiPrefs() {
         if (!j.is_object())
             j = json::object();
         j["uiZoomPercent"] = g_uiZoomPercent;
+        j["uiStylePreset"] = editor_theme::StylePresetName(g_uiStylePreset);
+        j["uiColorScheme"] = editor_theme::ColorSchemeName(g_uiColorScheme);
         PlayFpsOverlay::WritePrefs(j);
         if (ProjectManager::Instance().IsOpen()) {
             j["assetBrowserListView"] = ProjectManager::Instance().GetAssetBrowserListView();
@@ -290,6 +336,8 @@ static void LoadUiPrefs() {
     PlayFpsOverlay::SetEnabled(false);
     g_uiZoomPercent = 100;
     g_uiZoom = 1.0f;
+    g_uiStylePreset = editor_theme::StylePreset::Trellis;
+    g_uiColorScheme = editor_theme::ColorScheme::Ivy;
     try {
         std::ifstream file(content_path::ReadableFileCurrent(kUiPrefsPath));
         if (!file.is_open()) return;
@@ -301,6 +349,10 @@ static void LoadUiPrefs() {
             g_uiZoomPercent = percent;
             g_uiZoom = static_cast<float>(percent) / 100.0f;
         }
+        g_uiStylePreset = editor_theme::ParseStylePreset(
+            j.value("uiStylePreset", std::string(editor_theme::kDefaultPresetName)).c_str());
+        g_uiColorScheme = editor_theme::ParseColorScheme(
+            j.value("uiColorScheme", std::string(editor_theme::kDefaultSchemeName)).c_str());
         // Asset Browser prefs are applied when a project is open / panel syncs.
         if (ProjectManager::Instance().IsOpen()) {
             ProjectManager::Instance().SetAssetBrowserListView(
@@ -311,24 +363,6 @@ static void LoadUiPrefs() {
     }
     catch (...) {
     }
-}
-
-static void ApplyUiZoom(int percent) {
-    if (!IsValidUiZoomPercent(percent))
-        percent = 100;
-    g_uiZoomPercent = percent;
-    g_uiZoom = static_cast<float>(percent) / 100.0f;
-
-    if (!g_imguiInitialized) return;
-
-    ImGuiStyle& style = ImGui::GetStyle();
-    if (!g_baseStyleCaptured) {
-        g_baseStyle = style;
-        g_baseStyleCaptured = true;
-    }
-    style = g_baseStyle;
-    style.ScaleAllSizes(g_uiZoom);
-    style.FontScaleMain = g_uiZoom;
 }
 
 static std::string ShaderVariantPreviewLabel(Shader3DVariant v) {
@@ -572,12 +606,46 @@ static void RemapSceneTagsAfterDelete(int deletedId) {
         RemapNodeTagsAfterDelete(root.get(), deletedId);
 }
 
+static ImVec2 ToolbarWindowPadding()
+{
+    return ImVec2(Ui(kToolbarWindowPadX), Ui(kToolbarWindowPadY));
+}
+
+static ImVec2 ToolbarFramePadding()
+{
+    return ImVec2(Ui(kToolbarFramePadX), Ui(kToolbarFramePadY));
+}
+
+static void PushToolbarChromeStyle()
+{
+    const ImVec2 windowPad = ToolbarWindowPadding();
+    const ImVec2 framePad = ToolbarFramePadding();
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, windowPad);
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, framePad);
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing,
+        ImVec2(Ui(kToolbarItemSpacingX), framePad.y));
+}
+
+static void PopToolbarChromeStyle()
+{
+    ImGui::PopStyleVar(3);
+}
+
+// Square icon hit-target sized from the (toolbar-local) frame height.
+static float ToolbarIconSize()
+{
+    return IM_TRUNC(ImGui::GetFrameHeight() + 0.5f);
+}
+
 static bool ToolbarIconButton(const char* icon, const char* tooltip)
 {
-    const bool pressed = ImGui::Button(icon, ImVec2(Ui(28.0f), 0.0f));
-    if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort))
-        ImGui::SetTooltip("%s", tooltip);
-    return pressed;
+    return editor_icon_button::IconButtonTooltip(icon, tooltip, ImVec2(ToolbarIconSize(), 0.0f));
+}
+
+static bool ToolbarIconToggle(const char* icon, bool active, const char* tooltip)
+{
+    return editor_icon_button::IconToggleTooltip(
+        icon, active, tooltip, ImVec2(ToolbarIconSize(), 0.0f));
 }
 
 static std::string TrimString(const std::string& value) {
@@ -655,8 +723,18 @@ static float EditorMenuBarHeight() {
     return g_imguiInitialized ? ImGui::GetFrameHeight() : 22.0f;
 }
 
+// Must match PushToolbarChromeStyle padding: frame + window pad on both sides.
+static float EditorToolbarHeight() {
+    if (!g_imguiInitialized)
+        return 36.0f;
+    const ImVec2 windowPad = ToolbarWindowPadding();
+    const ImVec2 framePad = ToolbarFramePadding();
+    const float frameH = ImGui::GetFontSize() + framePad.y * 2.0f;
+    return IM_TRUNC(frameH + windowPad.y * 2.0f + 0.5f);
+}
+
 static float EditorTopChrome() {
-    return EditorMenuBarHeight() + Ui(kToolbarHeight);
+    return EditorMenuBarHeight() + EditorToolbarHeight();
 }
 
 static EditorLayoutMetrics ComputeEditorLayout(float screenW, float screenH) {
@@ -1328,6 +1406,16 @@ static void ApplyProjectSessionState() {
 
     PlayFpsOverlay::LoadFromFile();
 
+    {
+        const auto preset = editor_theme::ParseStylePreset(
+            project.GetEditorUiStylePreset().c_str());
+        const auto scheme = editor_theme::ParseColorScheme(
+            project.GetEditorUiColorScheme().c_str());
+        // Persist canonical names so invalid prefs do not round-trip.
+        project.SetEditorUiStylePreset(editor_theme::StylePresetName(preset));
+        project.SetEditorUiColorScheme(editor_theme::ColorSchemeName(scheme));
+        ApplyEditorTheme(preset, scheme);
+    }
     const int zoom = project.GetEditorUiZoomPercent();
     if (IsValidUiZoomPercent(zoom))
         ApplyUiZoom(zoom);
@@ -1505,6 +1593,8 @@ static void SaveProject() {
 
     project.SetDefaultScene(SceneLoader_GetDefaultSceneFileName());
     project.SetEditorUiZoomPercent(g_uiZoomPercent);
+    project.SetEditorUiStylePreset(editor_theme::StylePresetName(g_uiStylePreset));
+    project.SetEditorUiColorScheme(editor_theme::ColorSchemeName(g_uiColorScheme));
     SaveUiPrefs();
 
     std::string error;
@@ -1562,7 +1652,8 @@ static void DrawEngineStartScreen() {
     ImGuiViewport* viewport = ImGui::GetMainViewport();
     ImGui::SetNextWindowPos(viewport->Pos);
     ImGui::SetNextWindowSize(viewport->Size);
-    ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.06f, 0.07f, 0.09f, 1.0f));
+    const auto& theme = editor_theme::GetSemanticColors();
+    ImGui::PushStyleColor(ImGuiCol_WindowBg, theme.windowBg);
     ImGui::Begin("##EngineStartScreen", nullptr,
                  ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
                  ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar |
@@ -1577,7 +1668,7 @@ static void DrawEngineStartScreen() {
 
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(36.0f, 30.0f));
     ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 4.0f);
-    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.92f, 0.93f, 0.95f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_Text, theme.text);
     ImGui::BeginChild("##StartCard", cardSize, ImGuiChildFlags_Borders);
 
     if (ID3D11ShaderResourceView* logoSrv = GetIvyLogoSrv()) {
@@ -1597,7 +1688,7 @@ static void DrawEngineStartScreen() {
             ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (avail - titleW) * 0.5f);
         ImGui::TextUnformatted(title);
     }
-    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.55f, 0.58f, 0.64f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_Text, theme.textMuted);
     {
         const char* subtitle = "Custom D3D11 game engine";
         const float subW = ImGui::CalcTextSize(subtitle).x;
@@ -1611,9 +1702,9 @@ static void DrawEngineStartScreen() {
 
     const float btnW = ImGui::GetContentRegionAvail().x;
     const float btnH = 44.0f;
-    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.18f, 0.55f, 0.32f, 1.0f));
-    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.22f, 0.65f, 0.38f, 1.0f));
-    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.14f, 0.45f, 0.26f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_Button, theme.success);
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, theme.successHovered);
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, theme.successActive);
     if (ImGui::Button("Open Project...", ImVec2(btnW, btnH)))
         g_pendingFolderPick = PendingFolderPickAction::OpenProject;
     ImGui::PopStyleColor(3);
@@ -1634,7 +1725,7 @@ static void DrawEngineStartScreen() {
 
     const auto& recent = ProjectManager::Instance().GetRecentProjects();
     if (recent.empty()) {
-        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.50f, 0.52f, 0.56f, 1.0f));
+        ImGui::PushStyleColor(ImGuiCol_Text, theme.textMuted);
         ImGui::TextUnformatted("(No recent projects)");
         ImGui::PopStyleColor();
     }
@@ -1853,6 +1944,32 @@ static void DrawEditorMenuBar() {
                     ApplyUiZoom(percent);
                     SaveUiPrefs();
                     ProjectManager::Instance().SetEditorUiZoomPercent(percent);
+                }
+            }
+            ImGui::EndMenu();
+        }
+        if (ImGui::BeginMenu("UI Style")) {
+            for (int i = 0; i < static_cast<int>(editor_theme::StylePreset::Count); ++i) {
+                const auto preset = static_cast<editor_theme::StylePreset>(i);
+                const char* name = editor_theme::StylePresetName(preset);
+                if (ImGui::MenuItem(name, nullptr, g_uiStylePreset == preset)) {
+                    ApplyEditorTheme(preset, g_uiColorScheme);
+                    ApplyUiZoom(g_uiZoomPercent);
+                    SaveUiPrefs();
+                    ProjectManager::Instance().SetEditorUiStylePreset(name);
+                }
+            }
+            ImGui::EndMenu();
+        }
+        if (ImGui::BeginMenu("Color Scheme")) {
+            for (int i = 0; i < static_cast<int>(editor_theme::ColorScheme::Count); ++i) {
+                const auto scheme = static_cast<editor_theme::ColorScheme>(i);
+                const char* name = editor_theme::ColorSchemeName(scheme);
+                if (ImGui::MenuItem(name, nullptr, g_uiColorScheme == scheme)) {
+                    ApplyEditorTheme(g_uiStylePreset, scheme);
+                    ApplyUiZoom(g_uiZoomPercent);
+                    SaveUiPrefs();
+                    ProjectManager::Instance().SetEditorUiColorScheme(name);
                 }
             }
             ImGui::EndMenu();
@@ -2425,7 +2542,10 @@ static void DrawEditorPopups() {
             if (!buildDone) {
                 const std::string buildHeader =
                     "Building " + ProjectManager::Instance().GetName() + " ? Ivy Engine";
+                const bool pushedLabel = editor_theme::PushLabelFont();
                 ImGui::SeparatorText(buildHeader.c_str());
+                if (pushedLabel)
+                    editor_theme::PopLabelFont();
             }
             else if (PlayablePackage::LastBuildSucceeded())
                 ImGui::Text("Build succeeded.");
@@ -2802,40 +2922,27 @@ void EngineGUI_Initialize(HWND hwnd, ID3D11Device* device,
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
-    io.Fonts->AddFontDefault();
-    {
-        ImFontConfig iconsConfig;
-        iconsConfig.MergeMode = true;
-        iconsConfig.GlyphMinAdvanceX = 13.0f;
-        static const ImWchar iconRanges[] = { ICON_MIN_FA, ICON_MAX_FA, 0 };
-        const fs::path iconFile = content_path::ReadableFileCurrent("rom/font/fa-solid-900.ttf");
-        const std::string iconPath = iconFile.empty()
-            ? std::string("rom/font/fa-solid-900.ttf")
-            : PathToUtf8(iconFile);
-        if (!io.Fonts->AddFontFromFileTTF(
-                iconPath.c_str(), 13.0f, &iconsConfig, iconRanges)) {
-            std::fprintf(stderr,
-                "Warning: failed to load icon font rom/font/fa-solid-900.ttf\n");
-        }
-    }
+    editor_theme::LoadFonts(io, nullptr);
 
     ImGui_ImplWin32_EnableDpiAwareness();
     ImGui_ImplWin32_Init(hwnd);
     ImGui_ImplDX11_Init(device, context);
-    ImGui::StyleColorsDark();
     g_imguiInitialized = true;
 
     LoadUiPrefs();
     if (ProjectManager::Instance().IsOpen()) {
+        g_uiStylePreset = editor_theme::ParseStylePreset(
+            ProjectManager::Instance().GetEditorUiStylePreset().c_str());
+        g_uiColorScheme = editor_theme::ParseColorScheme(
+            ProjectManager::Instance().GetEditorUiColorScheme().c_str());
         const int zoom = ProjectManager::Instance().GetEditorUiZoomPercent();
-        if (IsValidUiZoomPercent(zoom))
-            ApplyUiZoom(zoom);
-        else
-            ApplyUiZoom(g_uiZoomPercent);
+        if (IsValidUiZoomPercent(zoom)) {
+            g_uiZoomPercent = zoom;
+            g_uiZoom = static_cast<float>(zoom) / 100.0f;
+        }
     }
-    else {
-        ApplyUiZoom(g_uiZoomPercent);
-    }
+    ApplyEditorTheme(g_uiStylePreset, g_uiColorScheme);
+    ApplyUiZoom(g_uiZoomPercent);
 
     ProjectManager::Instance().UpdateWindowTitle(hwnd);
     DebugCamera_SetEnabled(g_enabled);
@@ -4025,8 +4132,11 @@ void EngineGUI_OnBackbufferResized() {
 
 static void DrawReloadLight(const char* id, const char* name, ReloadLightState state,
     const ReloadLight& light, const std::string& detail) {
-    const float size = Ui(18.0f);
-    const auto origin = ImGui::GetCursorScreenPos();
+    // Size from the current (toolbar-local) frame height so lights track font zoom.
+    const float size = IM_TRUNC(ImGui::GetFrameHeight() * 0.65f + 0.5f);
+    const float glowR = IM_TRUNC(size * 0.40f + 0.5f);
+    const float coreR = IM_TRUNC(size * 0.22f + 0.5f);
+    const ImVec2 origin = ImGui::GetCursorScreenPos();
     ImGui::InvisibleButton(id, ImVec2(size, size));
     const bool bright = state == ReloadLightState::Watching && ImGui::GetTime() < light.brightUntil;
     ImU32 color;
@@ -4038,9 +4148,9 @@ static void DrawReloadLight(const char* id, const char* name, ReloadLightState s
     default: color = bright ? IM_COL32(135, 255, 165, 255) : IM_COL32(60, 165, 95, 255);
         status = bright ? "Reload succeeded" : "Watching"; break;
     }
-    const ImVec2 center(origin.x + size * 0.5f, origin.y + size * 0.5f);
-    if (bright) ImGui::GetWindowDrawList()->AddCircleFilled(center, Ui(7.0f), IM_COL32(90, 255, 140, 65));
-    ImGui::GetWindowDrawList()->AddCircleFilled(center, Ui(4.0f), color);
+    const ImVec2 center(IM_TRUNC(origin.x + size * 0.5f), IM_TRUNC(origin.y + size * 0.5f));
+    if (bright) ImGui::GetWindowDrawList()->AddCircleFilled(center, glowR, IM_COL32(90, 255, 140, 65));
+    ImGui::GetWindowDrawList()->AddCircleFilled(center, coreR, color);
     if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort)) {
         ImGui::BeginTooltip();
         ImGui::Text("%s: %s", name, status);
@@ -4164,40 +4274,44 @@ void EngineGUI_Draw() {
     DrawShortcutHintsWindow(&g_showShortcutHints);
 
     // --- Toolbar ---
+    const float toolbarH = EditorToolbarHeight();
     ImGui::SetNextWindowPos(ImVec2(0, menuBarHeight));
-    ImGui::SetNextWindowSize(ImVec2(screenW, Ui(kToolbarHeight)));
+    ImGui::SetNextWindowSize(ImVec2(screenW, toolbarH));
+    PushToolbarChromeStyle();
     ImGui::Begin("##Toolbar", nullptr,
         ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize |
         ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar);
     {
-        const float lightSize = Ui(18.0f);
-        const float lightGap = Ui(4.0f);
+        const float iconSz = ToolbarIconSize();
+        const float lightSize = IM_TRUNC(iconSz * 0.65f + 0.5f);
+        const float lightGap = ImGui::GetStyle().ItemSpacing.x;
         const float lightsX = ImGui::GetWindowContentRegionMax().x - lightSize * 3 - lightGap * 2;
         const float lightsY = ImGui::GetCursorPosY() + (ImGui::GetFrameHeight() - lightSize) * 0.5f;
         const auto toolbarPos = ImGui::GetWindowPos();
         const auto contentMin = ImGui::GetWindowContentRegionMin();
         ImGui::PushClipRect(ImVec2(contentMin.x + toolbarPos.x, contentMin.y + toolbarPos.y),
-            ImVec2(toolbarPos.x + lightsX - Ui(4.0f), toolbarPos.y + ImGui::GetWindowContentRegionMax().y), true);
+            ImVec2(toolbarPos.x + lightsX - lightGap, toolbarPos.y + ImGui::GetWindowContentRegionMax().y), true);
+        const auto& theme = editor_theme::GetSemanticColors();
         if (playVisuals) {
-            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.55f, 0.20f, 0.20f, 1.0f));
-            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.70f, 0.30f, 0.30f, 1.0f));
-            ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.40f, 0.15f, 0.15f, 1.0f));
+            ImGui::PushStyleColor(ImGuiCol_Button, theme.danger);
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, theme.dangerHovered);
+            ImGui::PushStyleColor(ImGuiCol_ButtonActive, theme.dangerActive);
             if (ToolbarIconButton(ICON_FA_STOP, "Stop (F2 / F3)")) {
                 ReturnToStart();
             }
             ImGui::PopStyleColor(3);
         }
         else {
-            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.20f, 0.40f, 0.70f, 1.0f));
-            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.30f, 0.55f, 0.85f, 1.0f));
-            ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.15f, 0.30f, 0.55f, 1.0f));
+            ImGui::PushStyleColor(ImGuiCol_Button, theme.accent);
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, theme.accentHovered);
+            ImGui::PushStyleColor(ImGuiCol_ButtonActive, theme.accentActive);
             if (ToolbarIconButton(ICON_FA_PLAY, "Play in Viewport (F2)")) {
                 StartPlay(PlayMode::Viewport);
             }
-            ImGui::SameLine(0.0f, Ui(2.0f));
-            const bool openPlayMenu = ImGui::Button(ICON_FA_CARET_DOWN "##PlayMenuBtn", ImVec2(Ui(16.0f), 0.0f));
-            if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort))
-                ImGui::SetTooltip("Play Mode");
+            ImGui::SameLine(0.0f, 2.0f);
+            const float caretW = IM_TRUNC(iconSz * 0.60f + 0.5f);
+            const bool openPlayMenu = editor_icon_button::IconButtonTooltip(
+                ICON_FA_CARET_DOWN "##PlayMenuBtn", "Play Mode", ImVec2(caretW, iconSz));
             if (openPlayMenu)
                 ImGui::OpenPopup("PlayModeDropdownMenu");
 
@@ -4253,23 +4367,21 @@ void EngineGUI_Draw() {
         }
 
         ImGui::SameLine();
-        if (ImGui::Button(ICON_FA_ARROWS_ROTATE, ImVec2(Ui(28.0f), 0.0f)))
+        if (ToolbarIconButton(ICON_FA_ARROWS_ROTATE, "Reload Scripts"))
             SceneLoader_ScanScriptDllsForChanges(true);
-        if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort))
-            ImGui::SetTooltip("Reload Scripts");
 
         if (!playVisuals) {
             ImGui::SameLine();
-            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.55f, 0.20f, 0.20f, 1.0f));
-            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.70f, 0.30f, 0.30f, 1.0f));
-            ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.40f, 0.15f, 0.15f, 1.0f));
+            ImGui::PushStyleColor(ImGuiCol_Button, theme.danger);
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, theme.dangerHovered);
+            ImGui::PushStyleColor(ImGuiCol_ButtonActive, theme.dangerActive);
             if (ToolbarIconButton(ICON_FA_BACKWARD_STEP, "Return to Start")) ReturnToStart();
             ImGui::PopStyleColor(3);
 
             ImGui::SameLine();
             const bool highlightUiOverlay = g_showUiOverlay;
             if (highlightUiOverlay)
-                ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.20f, 0.55f, 0.55f, 1.0f));
+                ImGui::PushStyleColor(ImGuiCol_Button, theme.toggleOn);
             const bool overlayToggled = ToolbarIconButton(
                 highlightUiOverlay ? ICON_FA_EYE : ICON_FA_EYE_SLASH,
                 highlightUiOverlay ? "Hide UI Overlay" : "Show UI Overlay");
@@ -4281,7 +4393,7 @@ void EngineGUI_Draw() {
             ImGui::SameLine();
             const bool highlightGrid = Grid_IsVisible();
             if (highlightGrid)
-                ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.20f, 0.55f, 0.55f, 1.0f));
+                ImGui::PushStyleColor(ImGuiCol_Button, theme.toggleOn);
             const bool gridToggled = ToolbarIconButton(
                 highlightGrid ? ICON_FA_BORDER_ALL : ICON_FA_BORDER_NONE,
                 highlightGrid ? "Hide Grid" : "Show Grid");
@@ -4291,21 +4403,21 @@ void EngineGUI_Draw() {
                 ImGui::PopStyleColor();
 
             ImGui::SameLine();
-            if (ImGui::RadioButton(ICON_FA_CUBE, g_editMode == EditorEditMode::Scene3D))
+            if (ToolbarIconToggle(ICON_FA_CUBE, g_editMode == EditorEditMode::Scene3D,
+                    "Scene Edit Mode"))
                 EngineGUI_SetEditMode(EditorEditMode::Scene3D);
-            if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort))
-                ImGui::SetTooltip("Scene Edit Mode");
             ImGui::SameLine();
-            if (ImGui::RadioButton(ICON_FA_LAYER_GROUP, g_editMode == EditorEditMode::UI))
+            if (ToolbarIconToggle(ICON_FA_LAYER_GROUP, g_editMode == EditorEditMode::UI,
+                    "UI Edit Mode"))
                 EngineGUI_SetEditMode(EditorEditMode::UI);
-            if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort))
-                ImGui::SetTooltip("UI Edit Mode");
 
             ImGui::SameLine();
-            bool view2D=DebugCamera_Is2DView();
+            bool view2D = DebugCamera_Is2DView();
             ImGui::BeginDisabled(playVisuals);
-            if(ImGui::Checkbox("2D View",&view2D)) DebugCamera_Set2DView(view2D);
-            ImGui::EndDisabled(); ImGui::SameLine();
+            if (ImGui::Checkbox("2D View", &view2D))
+                DebugCamera_Set2DView(view2D);
+            ImGui::EndDisabled();
+            ImGui::SameLine();
             TransformGizmo::DrawToolbarControls();
 
             ImGui::SameLine();
@@ -4331,9 +4443,17 @@ void EngineGUI_Draw() {
                 const std::string currentLabel = validSelection ? g_activeCameraNode
                     : camNames.empty() ? "No enabled game camera" : "Select game camera";
 
-                ImGui::Text("Camera:");
+                ImGui::AlignTextToFramePadding();
+                ImGui::TextUnformatted("Camera:");
                 ImGui::SameLine();
-                ImGui::SetNextItemWidth(160.0f);
+                const float comboPad =
+                    ImGui::GetFrameHeight() + ImGui::GetStyle().FramePadding.x * 2.0f;
+                float comboW = ImGui::CalcTextSize(currentLabel.c_str()).x + comboPad;
+                comboW = ImMax(comboW,
+                    ImGui::CalcTextSize("No enabled game camera").x + comboPad);
+                comboW = ImMax(comboW,
+                    ImGui::CalcTextSize("Select game camera").x + comboPad);
+                ImGui::SetNextItemWidth(IM_TRUNC(comboW + 0.5f));
                 if (ImGui::BeginCombo("##Camera", currentLabel.c_str())) {
                     for (const auto& name : camNames) {
                         bool sel = (g_cameraMode == CameraMode::SceneCamera && g_activeCameraNode == name);
@@ -4348,7 +4468,7 @@ void EngineGUI_Draw() {
             }
         }
         ImGui::PopClipRect();
-        ImGui::SetCursorPos(ImVec2(lightsX, lightsY));
+        ImGui::SetCursorPos(ImVec2(IM_TRUNC(lightsX + 0.5f), IM_TRUNC(lightsY + 0.5f)));
         const bool projectOpen = ProjectManager::Instance().IsOpen();
         DrawReloadLight("##SceneReloadLight", "Scene JSON",
             GetReloadLightState(projectOpen && !SceneLoader_GetCurrentScenePath().empty(), false,
@@ -4364,6 +4484,7 @@ void EngineGUI_Draw() {
             g_scriptReloadLight, g_scriptReloadStatus);
     }
     ImGui::End();
+    PopToolbarChromeStyle();
 
     // --- Scene Hierarchy (left) ---
     ImGui::SetNextWindowPos(ImVec2(0, centerTop));

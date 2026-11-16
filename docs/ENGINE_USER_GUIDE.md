@@ -218,7 +218,7 @@ The editor can drive different camera behaviors (third-person, scene camera node
 ### Saving work
 
 - **Save Scene** (Ctrl+S) — writes the current scene JSON under `rom/scene/`.
-- **Save Project** (Ctrl+Shift+S) — saves the scene **and** writes `project.json` (last opened scene, default scene, UI zoom, Asset Browser view mode / tile size). Unsaved scene changes still warn before load/exit/project switch. Asset Browser view prefs also update `rom/editor/ui_prefs.json` immediately when changed.
+- **Save Project** (Ctrl+Shift+S) — saves the scene **and** writes `project.json` (last opened scene, default scene, UI zoom / style preset / color scheme, Asset Browser view mode / tile size). Unsaved scene changes still warn before load/exit/project switch. Asset Browser and theme prefs also update `rom/editor/ui_prefs.json` immediately when changed.
 
 ---
 
@@ -237,7 +237,7 @@ The editor can drive different camera behaviors (third-person, scene camera node
 | `rom/effect/` | Effekseer effect files |
 | `resources/shader/` | Built shader binaries (from `shaders/`). Projects still refer to them as `rom/shader/`; the loader falls back here when the project has no copy |
 | `rom/font/` | Font-related assets if used |
-| `rom/editor/` | Editor UI prefs (e.g. zoom) for this project |
+| `rom/editor/` | Editor UI prefs (zoom, style preset, color scheme) for this project |
 
 Paths in JSON are usually relative to the working directory, like:
 
@@ -967,7 +967,9 @@ The editor calls `SetCurrentDirectory` on that folder so relative paths like `ro
   "lastOpenedScene": "scene_main.json",
   "defaultScene": "scene_main.json",
   "editor": {
-    "uiZoomPercent": 100
+    "uiZoomPercent": 100,
+    "uiStylePreset": "Trellis",
+    "uiColorScheme": "Ivy"
   },
   "physics": {
     "gravity": 9.81
@@ -988,6 +990,8 @@ The editor calls `SetCurrentDirectory` on that folder so relative paths like `ro
 | `lastOpenedScene` | Scene file restored when the project opens |
 | `defaultScene` | Play / runtime default (also written to `rom/scene/default_scene.txt`) |
 | `editor.uiZoomPercent` | ImGui UI scale (100 / 125 / 150 / 175 / 200) |
+| `editor.uiStylePreset` | ImGui style preset: `Trellis` (default) or `Hollow Soft` (Engine Settings → UI Style) |
+| `editor.uiColorScheme` | ImGui color scheme: `Ivy` (default), `Ivy Dark`, `Classic Dark`, `Neutral Gray`, or `Light` (Engine Settings → Color Scheme) |
 | `physics.gravity` | World gravity applied in play and runtime builds |
 | `audio.masterVolume` / `bgmVolume` / `sfxVolume` / `voiceVolume` | Bus levels (editor + runtime) |
 | `audio.uiClickSound` | WAV played when a UIButton activates (persists across scene loads) |

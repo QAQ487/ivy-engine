@@ -6,6 +6,7 @@
 #include "engine/core/engine_gui.h"
 #include "engine/ecs/game_object.h"
 #include "engine/ecs/transform.h"
+#include "engine/editor/editor_icon_button.h"
 #include "engine/editor/editor_undo.h"
 #include "engine/scene/json_float.h"
 #include "camera.h"
@@ -263,38 +264,33 @@ bool IsInteracting() {
 }
 
 void DrawToolbarControls() {
-    if (ImGui::RadioButton(ICON_FA_ARROWS_UP_DOWN_LEFT_RIGHT, g_operation == ImGuizmo::TRANSLATE)) {
+    if (editor_icon_button::IconToggleTooltip(ICON_FA_ARROWS_UP_DOWN_LEFT_RIGHT,
+            g_operation == ImGuizmo::TRANSLATE, "Move (W)")) {
         g_visible = true;
         g_operation = ImGuizmo::TRANSLATE;
     }
-    if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort))
-        ImGui::SetTooltip("Move (W)");
     ImGui::SameLine();
-    if (ImGui::RadioButton(ICON_FA_ROTATE, g_operation == ImGuizmo::ROTATE)) {
+    if (editor_icon_button::IconToggleTooltip(ICON_FA_ROTATE,
+            g_operation == ImGuizmo::ROTATE, "Rotate (E)")) {
         g_visible = true;
         g_operation = ImGuizmo::ROTATE;
     }
-    if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort))
-        ImGui::SetTooltip("Rotate (E)");
     ImGui::SameLine();
-    if (ImGui::RadioButton(ICON_FA_UP_DOWN_LEFT_RIGHT, g_operation == ImGuizmo::SCALE)) {
+    if (editor_icon_button::IconToggleTooltip(ICON_FA_UP_DOWN_LEFT_RIGHT,
+            g_operation == ImGuizmo::SCALE, "Scale (R)")) {
         g_visible = true;
         g_operation = ImGuizmo::SCALE;
     }
-    if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort))
-        ImGui::SetTooltip("Scale (R)");
 
     if (g_operation != ImGuizmo::SCALE) {
         ImGui::SameLine();
-        if (ImGui::RadioButton(ICON_FA_LOCATION_DOT, g_mode == ImGuizmo::LOCAL))
+        if (editor_icon_button::IconToggleTooltip(
+                ICON_FA_LOCATION_DOT, g_mode == ImGuizmo::LOCAL, "Local space"))
             g_mode = ImGuizmo::LOCAL;
-        if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort))
-            ImGui::SetTooltip("Local space");
         ImGui::SameLine();
-        if (ImGui::RadioButton(ICON_FA_GLOBE, g_mode == ImGuizmo::WORLD))
+        if (editor_icon_button::IconToggleTooltip(
+                ICON_FA_GLOBE, g_mode == ImGuizmo::WORLD, "World space"))
             g_mode = ImGuizmo::WORLD;
-        if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort))
-            ImGui::SetTooltip("World space");
     }
 }
 
