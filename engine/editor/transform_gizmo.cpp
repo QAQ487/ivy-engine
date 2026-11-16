@@ -6,6 +6,7 @@
 #include "engine/core/engine_gui.h"
 #include "engine/ecs/game_object.h"
 #include "engine/ecs/transform.h"
+#include "engine/editor/editor_docking.h"
 #include "engine/editor/editor_icon_button.h"
 #include "engine/editor/editor_undo.h"
 #include "engine/scene/json_float.h"
@@ -242,13 +243,14 @@ static void ApplyMatrixToTransform(engine::Transform* transform, GameObject* own
 }
 
 static bool IsMouseInGameViewport() {
-    float vx, vy, vw, vh;
-    EngineGUI_GetGameViewportRect(vx, vy, vw, vh);
-    if (vw <= 0.0f || vh <= 0.0f) return false;
+    if (!EditorDocking_HasCentralNode())
+        return false;
+    const EditorClientRect c = EditorDocking_GetGameViewportClientRect();
+    if (c.w <= 0.0f || c.h <= 0.0f) return false;
 
     const ImVec2 mouse = ImGui::GetIO().MousePos;
-    return mouse.x >= vx && mouse.x < (vx + vw)
-        && mouse.y >= vy && mouse.y < (vy + vh);
+    return mouse.x >= c.x && mouse.x < (c.x + c.w)
+        && mouse.y >= c.y && mouse.y < (c.y + c.h);
 }
 
 } // namespace
@@ -330,17 +332,19 @@ void Draw(GameObject* selected) {
     engine::Transform* transform = selected->GetComponent<engine::Transform>();
     if (!transform) return;
 
-    float vx, vy, vw, vh;
-    EngineGUI_GetGameViewportRect(vx, vy, vw, vh);
-    if (vw <= 0.0f || vh <= 0.0f) return;
+    if (!EditorDocking_HasCentralNode())
+        return;
+    const EditorClientRect c = EditorDocking_GetGameViewportClientRect();
+    if (c.w <= 0.0f || c.h <= 0.0f) return;
 
     ImGuizmo::SetDrawlist(ImGui::GetBackgroundDrawList());
-    ImGuizmo::SetRect(vx, vy, vw, vh);
+    ImGuizmo::SetRect(c.x, c.y, c.w, c.h);
     ImGuizmo::SetOrthographic(GetCamera().orthographic);
-    ImGuizmo::Enable(!ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow));
+    // PassthruCentralNode: WantCaptureMouse is false over the empty central node.
+    ImGuizmo::Enable(!EditorDocking_WantCaptureMouseForGame());
 
     float view[16], proj[16], matrix[16];
-    BuildCameraMatrices(GetCamera(), vw, vh, view, proj);
+    BuildCameraMatrices(GetCamera(), c.w, c.h, view, proj);
 
     if (g_mode == ImGuizmo::WORLD) {
         XMFLOAT3 wPos, wRot, wScale;

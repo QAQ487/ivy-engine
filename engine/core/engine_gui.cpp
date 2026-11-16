@@ -21,6 +21,8 @@
 #include "engine_gui_internal.h"
 #include "engine/editor/editor_gui_internal.h"
 #include "engine/editor/editor_layout.h"
+#include "engine/editor/editor_docking.h"
+#include "engine/editor/editor_docking_math.h"
 #include "engine/scene/scene_loader.h"
 #include "engine/scene/json_float.h"
 #include "engine/scene/scene_asset_preload.h"
@@ -767,6 +769,7 @@ bool SwitchToOpenedProject() {
 
     ResetSceneHotLoad();
     ApplyProjectSessionState();
+    EditorDocking_OnProjectOpened(ProjectManager::Instance().GetRootPath());
 
     std::string scenePath = ProjectManager::Instance().ResolveSceneToLoad();
     if (scenePath.empty())
@@ -830,6 +833,7 @@ void CloseOpenedProject() {
     SyncSceneRuntime();
 
     SceneLoader_UnloadScriptDlls();
+    EditorDocking_OnProjectClosed();
     ProjectManager::Instance().CloseProject();
     ProjectManager::Instance().UpdateWindowTitle(GetWindowHandle());
     g_projectStatusMessage.clear();
@@ -1293,6 +1297,7 @@ void EngineGUI_Initialize(HWND hwnd, ID3D11Device* device,
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
+    EditorDocking_ConfigureImGuiIO();
     editor_theme::LoadFonts(io, nullptr);
 
     ImGui_ImplWin32_EnableDpiAwareness();
@@ -1311,6 +1316,7 @@ void EngineGUI_Initialize(HWND hwnd, ID3D11Device* device,
             g_uiZoomPercent = zoom;
             g_uiZoom = static_cast<float>(zoom) / 100.0f;
         }
+        EditorDocking_OnProjectOpened(ProjectManager::Instance().GetRootPath());
     }
     ApplyEditorTheme(g_uiStylePreset, g_uiColorScheme);
     ApplyUiZoom(g_uiZoomPercent);
@@ -1337,6 +1343,8 @@ void EngineGUI_Finalize() {
     SceneLoader_UnloadScriptDlls();
 
     if (g_imguiInitialized) {
+        EditorDocking_OnProjectClosed();
+        EditorDocking_BeginFrame(); // apply deferred save before DestroyContext
         ImGui_ImplDX11_Shutdown();
         ImGui_ImplWin32_Shutdown();
         ImGui::DestroyContext();
@@ -1389,20 +1397,43 @@ bool EngineGUI_IsUiEditMode() { return g_editMode == EditorEditMode::UI; }
 void EngineGUI_GetGameViewportRect(float& x, float& y, float& width, float& height) {
     const float screenW = GetBackBufferWidth();
     const float screenH = GetBackBufferHeight();
+    const float clientW = GetClientWidth();
+    const float clientH = GetClientHeight();
 
-    if (g_playMode == PlayMode::Fullscreen || !g_enabled) {
+    // Shipped runtime (!g_enabled and not F3): full backbuffer.
+    // Editor edit + F2 use the dock central node; F3 uses the full client area.
+    // In all editor cases the game rect is the largest centered 16:9 fit.
+    if (!g_enabled && g_playMode != PlayMode::Fullscreen) {
         x = 0.0f;
         y = 0.0f;
-        width = screenW;
-        height = screenH;
+        width = (std::max)(1.0f, screenW);
+        height = (std::max)(1.0f, screenH);
         return;
     }
 
-    const EditorLayoutMetrics layout = ComputeEditorLayout(screenW, screenH);
-    x = layout.viewportX;
-    y = layout.viewportY;
-    width = layout.viewportW;
-    height = layout.viewportH;
+    EditorClientRect bounds{};
+    if (g_playMode == PlayMode::Fullscreen) {
+        bounds.x = 0.0f;
+        bounds.y = 0.0f;
+        bounds.w = (std::max)(1.0f, clientW);
+        bounds.h = (std::max)(1.0f, clientH);
+    } else if (EditorDocking_HasCentralNode()) {
+        bounds = EditorDocking_GetCentralNodeClientRect();
+    } else {
+        const EditorLayoutMetrics layout = ComputeEditorLayout(clientW, clientH);
+        bounds.x = layout.viewportX;
+        bounds.y = layout.viewportY;
+        bounds.w = layout.viewportW;
+        bounds.h = layout.viewportH;
+    }
+
+    const EditorClientRect fitted = FitEditor16x9Viewport(bounds);
+    const EditorBackbufferRect bb = ClientRectToBackbuffer(
+        fitted, clientW, clientH, screenW, screenH);
+    x = bb.x;
+    y = bb.y;
+    width = bb.w;
+    height = bb.h;
 }
 
 bool EngineGUI_MouseToViewportLocal(float& x, float& y) {
@@ -2116,7 +2147,7 @@ void EngineGUI_Update(double elapsed_time) {
         s_prevLDown = lDown;
         bool altHeld = Keyboard_IsKeyDown(KK_LEFTALT) || Keyboard_IsKeyDown(KK_RIGHTALT);
 
-        if (clicked && !ImGui::GetIO().WantCaptureMouse
+        if (clicked && !EditorDocking_WantCaptureMouseForGame()
             && !TransformGizmo::IsInteracting()
             && !UiGizmo::IsInteracting()
             && !CameraOrientationGizmo::IsInteracting()
@@ -2455,6 +2486,7 @@ void EngineGUI_Draw() {
         io.DisplayFramebufferScale = ImVec2(1.0f, 1.0f);
     }
     ImGui::NewFrame();
+    EditorDocking_BeginFrame();
 
     // No project open: product start screen only (folder-pick still runs after render).
     if (!ProjectManager::Instance().IsOpen()) {
@@ -2463,6 +2495,7 @@ void EngineGUI_Draw() {
         DrawEditorPopups();
         ImGui::Render();
         ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+        EditorDocking_FlushIniIfNeeded();
         if (ImGui::GetIO().WantCaptureMouse)
             Mouse_ClearWheel();
         ConsumePendingFolderPick();
@@ -2472,14 +2505,7 @@ void EngineGUI_Draw() {
     TransformGizmo::BeginFrame();
 
     const float screenW = io.DisplaySize.x;
-    const float screenH = io.DisplaySize.y;
     const float menuBarHeight = EditorMenuBarHeight();
-    const EditorLayoutMetrics layout = ComputeEditorLayout(screenW, screenH);
-    const float leftWidth = layout.leftWidth;
-    const float rightWidth = layout.rightWidth;
-    const float bottomHeight = layout.bottomHeight;
-    const float centerTop = layout.topChrome;
-    const float centerH = layout.sidePanelH;
 
     const bool sceneLoadBusy = IsSceneLoadBusy();
     const bool preloadActive = g_sceneAssetPreloader.IsActive();
@@ -2521,18 +2547,22 @@ void EngineGUI_Draw() {
     DrawShortcutHintsWindow(&g_showShortcutHints);
 
     DrawEditorToolbar(playVisuals, sceneLoadBusy, screenW, menuBarHeight);
-    DrawEditorHierarchyPanel(playVisuals, leftWidth, centerTop, centerH);
-    DrawEditorInspectorPanel(playVisuals, screenW, rightWidth, centerTop, centerH);
-    DrawEditorAssetPanel(playVisuals, sceneLoadBusy, screenW, screenH, bottomHeight);
+    EditorDocking_DrawHost();
 
+    auto& panels = EditorDocking_PanelVisibility();
+    DrawEditorHierarchyPanel(playVisuals, &panels.hierarchy);
+    DrawEditorInspectorPanel(playVisuals, &panels.properties);
+    DrawEditorAssetPanel(playVisuals, sceneLoadBusy, &panels.assetBrowser);
 
+    EditorDocking_DrawLetterboxBars();
 
-    // Custom viewport target does not add an ImGui window over the scene.
-    float dropX,dropY,dropW,dropH;
-    EngineGUI_GetGameViewportRect(dropX,dropY,dropW,dropH);
-    const ImRect dropRect(ImVec2(dropX,dropY),ImVec2(dropX+dropW,dropY+dropH));
+    // Drop / overlays use the 16:9 game rect (ImGui client), not the full node.
+    const EditorClientRect gameView = EditorDocking_GetGameViewportClientRect();
+    const ImRect dropRect(
+        ImVec2(gameView.x, gameView.y),
+        ImVec2(gameView.x + gameView.w, gameView.y + gameView.h));
     if(!sceneLoadBusy && !playVisuals && g_editMode==EditorEditMode::Scene3D
-        && !ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow)
+        && !EditorDocking_WantCaptureMouseForGame()
         && ImGui::BeginDragDropTargetViewport(ImGui::GetMainViewport(),&dropRect)) {
         if(const auto* payload=ImGui::AcceptDragDropPayload("ASSET_PATH")) {
             const std::string path=static_cast<const char*>(payload->Data);
@@ -2540,8 +2570,10 @@ void EngineGUI_Draw() {
             std::transform(ext.begin(),ext.end(),ext.begin(),[](unsigned char c){return char(std::tolower(c));});
             if(ext==".png" || ext==".jpg" || ext==".jpeg" || ext==".bmp") {
                 const auto mouse=ImGui::GetIO().MousePos;
+                float bbX = mouse.x, bbY = mouse.y;
+                Renderer_ClientToBackbuffer(mouse.x, mouse.y, bbX, bbY);
                 DirectX::XMVECTOR origin,direction;
-                if(BuildPickRay(int(mouse.x),int(mouse.y),origin,direction)) {
+                if(BuildPickRay(int(bbX),int(bbY),origin,direction)) {
                     const float dz=DirectX::XMVectorGetZ(direction);
                     const float distance=std::fabs(dz)>1e-6f?-DirectX::XMVectorGetZ(origin)/dz:-1;
                     if(distance>=0) {
@@ -2556,8 +2588,11 @@ void EngineGUI_Draw() {
         }
         ImGui::EndDragDropTarget();
     }
-    float gizmoX,gizmoY,gizmoW,gizmoH;
-    EngineGUI_GetGameViewportRect(gizmoX,gizmoY,gizmoW,gizmoH);
+    // Grid overlay is drawn in ImGui client space (16:9 game rect).
+    const float gizmoX = gameView.x;
+    const float gizmoY = gameView.y;
+    const float gizmoW = gameView.w;
+    const float gizmoH = gameView.h;
     auto* gizmoLayer=ImGui::GetBackgroundDrawList();
     gizmoLayer->PushClipRect(ImVec2(gizmoX,gizmoY),ImVec2(gizmoX+gizmoW,gizmoY+gizmoH),true);
     if(!playVisuals && DebugCamera_Is2DView() && Grid_IsVisible() && gizmoH>0) {
@@ -2654,6 +2689,8 @@ void EngineGUI_Draw() {
 
     ImGui::Render();
     ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+
+    EditorDocking_FlushIniIfNeeded();
 
     if (ImGui::GetIO().WantCaptureMouse)
         Mouse_ClearWheel();

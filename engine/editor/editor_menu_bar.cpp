@@ -199,10 +199,18 @@ void DrawEditorMenuBar() {
     }
 
     if (ImGui::BeginMenu("Window")) {
+        auto& panels = EditorDocking_PanelVisibility();
+        ImGui::MenuItem(kEditorHierarchyWindowTitle, nullptr, &panels.hierarchy);
+        ImGui::MenuItem(kEditorPropertiesWindowTitle, nullptr, &panels.properties);
+        ImGui::MenuItem(kEditorAssetBrowserWindowTitle, nullptr, &panels.assetBrowser);
+        ImGui::Separator();
         if (ImGui::MenuItem("Rendering Settings", nullptr, g_showRenderingSettings))
             g_showRenderingSettings = !g_showRenderingSettings;
         if (ImGui::MenuItem("PostFX Showcase", nullptr, g_showPostFxShowcase))
             g_showPostFxShowcase = !g_showPostFxShowcase;
+        ImGui::Separator();
+        if (ImGui::MenuItem("Reset Layout"))
+            EditorDocking_RequestResetLayout();
         ImGui::EndMenu();
     }
 

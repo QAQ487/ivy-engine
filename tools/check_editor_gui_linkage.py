@@ -28,6 +28,7 @@ ROOT = Path(__file__).resolve().parents[1]
 PHASE1_TUS = [
     ROOT / "engine/core/engine_gui.cpp",
     ROOT / "engine/editor/editor_layout.cpp",
+    ROOT / "engine/editor/editor_docking.cpp",
     ROOT / "engine/editor/editor_toolbar.cpp",
     ROOT / "engine/editor/editor_hierarchy_panel.cpp",
     ROOT / "engine/editor/editor_inspector_panel.cpp",
@@ -41,6 +42,7 @@ PHASE1_TUS = [
 HEADERS = [
     ROOT / "engine/editor/editor_gui_internal.h",
     ROOT / "engine/editor/editor_layout.h",
+    ROOT / "engine/editor/editor_docking.h",
 ]
 
 # Symbol pattern -> providing header basename (caught in Terry's MSVC Debug log).
@@ -48,6 +50,7 @@ SYMBOL_HEADER_REQUIREMENTS = [
     (r"\bIM_TRUNC\b", "imgui_internal.h"),
     (r"\bImMax\b", "imgui_internal.h"),
     (r"\bGetTopMostPopupModal\b", "imgui_internal.h"),
+    (r"\bDockBuilder", "imgui_internal.h"),
     (r"\bICON_FA_", "icons_font_awesome.h"),
     (r"\bpanorama::", "panorama_sky.h"),
     (r"\bPlayablePackage::", "playable_package_builder.h"),
@@ -60,6 +63,8 @@ SYMBOL_HEADER_REQUIREMENTS = [
     (r"\bMoveNodeToFront\b", "editor_gui_internal.h"),
     (r"\bUndoableReorderNode\b", "editor_gui_internal.h"),
     (r"\bResolveSceneReloadConflict\b", "editor_gui_internal.h"),
+    (r"\bEditorDocking_", "editor_docking.h"),
+    (r"\bkEditorHierarchyWindowTitle\b", "editor_docking.h"),
 ]
 
 

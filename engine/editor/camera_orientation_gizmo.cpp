@@ -7,6 +7,7 @@
 #include "camera.h"
 #include "debug_camera.h"
 #include "engine/core/engine_gui.h"
+#include "engine/editor/editor_docking.h"
 #include "engine/input/mouse.h"
 #include "imgui/imgui.h"
 
@@ -61,14 +62,15 @@ struct ProjectedAxis {
 bool GetGizmoCenter(float& outX, float& outY) {
     if (EngineGUI_IsPlaying() || !EngineGUI_IsEnabled() || EngineGUI_IsUiEditMode())
         return false;
-
-    float vx = 0.0f, vy = 0.0f, vw = 0.0f, vh = 0.0f;
-    EngineGUI_GetGameViewportRect(vx, vy, vw, vh);
-    if (vw < 120.0f || vh < 120.0f)
+    if (!EditorDocking_HasCentralNode())
         return false;
 
-    outX = vx + vw - kMargin - kGizmoRadius;
-    outY = vy + kMargin + kGizmoRadius;
+    const EditorClientRect c = EditorDocking_GetGameViewportClientRect();
+    if (c.w < 120.0f || c.h < 120.0f)
+        return false;
+
+    outX = c.x + c.w - kMargin - kGizmoRadius;
+    outY = c.y + kMargin + kGizmoRadius;
     return true;
 }
 
@@ -78,15 +80,14 @@ namespace CameraOrientationGizmo {
 
 bool IsInteracting() {
     if(DebugCamera_Is2DView()) return false;
-    if(ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow)) return false;
+    if(EditorDocking_WantCaptureMouseForGame()) return false;
     float cx = 0.0f, cy = 0.0f;
     if (!GetGizmoCenter(cx, cy))
         return false;
 
-    int mx = 0, my = 0;
-    Mouse_GetPosition(mx, my);
-    const float dx = static_cast<float>(mx) - cx;
-    const float dy = static_cast<float>(my) - cy;
+    const ImVec2 mouse = ImGui::GetIO().MousePos;
+    const float dx = mouse.x - cx;
+    const float dy = mouse.y - cy;
     return (dx * dx + dy * dy) <= (kGizmoRadius + 4.0f) * (kGizmoRadius + 4.0f);
 }
 
@@ -126,7 +127,7 @@ void Draw() {
         const float dist = sqrtf(dx * dx + dy * dy);
         const float hitRadius = kAxes[i].isPositive ? 11.5f : 8.5f;
 
-        if (!ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow) && dist <= hitRadius) {
+        if (!EditorDocking_WantCaptureMouseForGame() && dist <= hitRadius) {
             // Prioritize endpoints closer to viewer in depth
             if (proj[i].depthZ < bestDepth) {
                 bestDepth = proj[i].depthZ;
@@ -139,7 +140,7 @@ void Draw() {
     const float centerDy = mouse.y - centerY;
     const bool isOverDisk = (centerDx * centerDx + centerDy * centerDy) <= (kGizmoRadius * kGizmoRadius);
 
-    if (!ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow) && (isOverDisk || hoveredIndex >= 0)) {
+    if (!EditorDocking_WantCaptureMouseForGame() && (isOverDisk || hoveredIndex >= 0)) {
         ImGui::GetIO().WantCaptureMouse = true;
     }
 

@@ -1,0 +1,10 @@
+Dear ImGui 1.92.5 (docking branch)
+Upstream: https://github.com/ocornut/imgui
+Tag:      v1.92.5-docking
+Commit:   3912b3d9a9c1b3f17431aebafd86d2f40ee6e59c
+
+Vendored: core (imgui*.cpp/.h), backends (imgui_impl_win32, imgui_impl_dx11), imstb_*.
+Local Ivy deltas (intentionally kept):
+- imconfig.h: IMGUI_DEFINE_MATH_OPERATORS enabled
+- icons_font_awesome.h: Ivy-added (not upstream)
+Multi-viewports: ConfigFlags_ViewportsEnable remains off in the engine.

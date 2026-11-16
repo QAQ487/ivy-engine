@@ -3,13 +3,16 @@
 
 #include "editor_gui_common_includes.h"
 
-void DrawEditorAssetPanel(bool playVisuals, bool sceneLoadBusy, float screenW, float screenH, float bottomHeight)
+void DrawEditorAssetPanel(bool playVisuals, bool sceneLoadBusy, bool* open)
 {
-    // --- Asset Browser (bottom) ---
-    ImGui::SetNextWindowPos(ImVec2(0, screenH - bottomHeight));
-    ImGui::SetNextWindowSize(ImVec2(screenW, bottomHeight));
-    ImGui::Begin("Asset Browser", nullptr,
-        ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
+    if (open && !*open)
+        return;
+
+    // --- Asset Browser (dockable) ---
+    if (!ImGui::Begin(kEditorAssetBrowserWindowTitle, open)) {
+        ImGui::End();
+        return;
+    }
     {
         if (sceneLoadBusy || playVisuals)
             ImGui::BeginDisabled(true);

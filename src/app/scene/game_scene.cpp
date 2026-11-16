@@ -553,6 +553,20 @@ void GameScene::Update(double elapsed_time) {
 void GameScene::Draw() {
 	float vx, vy, vw, vh;
 	EngineGUI_GetGameViewportRect(vx, vy, vw, vh);
+#ifndef GAME_RUNTIME
+	// F3 fullscreen play has no ImGui chrome to paint letterbox bars — clear the
+	// full backbuffer to black so 16:9 gutters stay black (not clearColor).
+	if (EngineGUI_GetPlayMode() == PlayMode::Fullscreen) {
+		Renderer_BindBackBuffer();
+		ID3D11RenderTargetView* target = nullptr;
+		GetDeviceContext()->OMGetRenderTargets(1, &target, nullptr);
+		if (target) {
+			const float black[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
+			GetDeviceContext()->ClearRenderTargetView(target, black);
+			target->Release();
+		}
+	}
+#endif
 	SetRenderViewport(vx, vy, vw, vh);
 
 #ifndef GAME_RUNTIME
