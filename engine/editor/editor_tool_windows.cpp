@@ -204,13 +204,7 @@ void DrawShortcutHintsWindow(bool* open) {
     ImGui::End();
 }
 
-void DrawRenderingSettingsWindow(bool* open) {
-    if (!open || !*open) return;
-
-    ImGui::SetNextWindowSize(ImVec2(400.0f, 0.0f), ImGuiCond_FirstUseEver);
-    if (!ImGui::Begin("Rendering Settings", open, ImGuiWindowFlags_AlwaysAutoResize))
-        return;
-
+void DrawRenderingSettingsBody() {
     ImGui::BeginDisabled(EngineGUI_IsPlaying());
     bool scene2D=SceneLoader_Is2D();
     if(ImGui::Checkbox("2D Scene",&scene2D)) {
@@ -395,6 +389,5 @@ void DrawRenderingSettingsWindow(bool* open) {
     ImGui::Spacing();
     ImGui::TextDisabled(
         "A DDS cubemap loads directly. A PNG panorama (width = 360 deg; height <= width/2) cooks into rom/skybox/cache/. Drag a .png/.dds from the Asset Browser onto the path field, or right-click Set as > Skybox.");
-    ImGui::End();
 }
 

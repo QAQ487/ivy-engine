@@ -99,7 +99,7 @@ void DrawPropertiesEmptyState() {
     ImGui::Spacing();
     ImGui::TextWrapped("Use the Asset Browser below to browse rom/ assets.");
     ImGui::Spacing();
-    ImGui::TextWrapped("Use Window > Rendering Settings for skybox, shadows, and render defaults.");
+    ImGui::TextWrapped("Use Edit > Project Settings > Rendering for skybox, shadows, and render defaults.");
 }
 
 

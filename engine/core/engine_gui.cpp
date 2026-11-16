@@ -206,16 +206,12 @@ std::string g_activeCameraNode;
 float g_scrollSensitivity = 1.0f;
 char  g_newSceneName[128] = "new_scene";
 char  g_newTagName[64] = "";
-bool  g_showRenderingSettings = false;
 bool  g_showPostFxShowcase = false;
 bool  g_showShortcutHints = false;
 bool  g_showNewScenePopup = false;
 bool  g_showAddTagPopup = false;
 bool  g_showDeleteTagPopup = false;
 int   g_pendingDeleteTagId = -1;
-bool  g_showDefaultScenePopup = false;
-bool  g_showGravityPopup = false;
-bool  g_showAudioPopup = false;
 bool  g_showUiOverlay = true;
 bool g_newProject2D=false;
 bool  g_showNewProjectPopup = false;
@@ -2542,7 +2538,8 @@ void EngineGUI_Draw() {
     }
 
     DrawEditorPopups();
-    DrawRenderingSettingsWindow(&g_showRenderingSettings);
+    DrawProjectSettingsWindow();
+    DrawPreferencesWindow();
     DrawPostFxShowcaseWindow(&g_showPostFxShowcase);
     DrawShortcutHintsWindow(&g_showShortcutHints);
 

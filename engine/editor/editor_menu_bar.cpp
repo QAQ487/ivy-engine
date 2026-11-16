@@ -42,7 +42,16 @@ static std::unique_ptr<GameObject> CreatePrimitiveGameObject(const PrimitiveCrea
 
 void DrawEditorMenuBar() {
     const bool canMutate = !g_isPlaying && !IsSceneLoadBusy();
+    const bool playVisuals = g_isPlaying || g_holdPlayVisuals;
     if (ImGui::BeginMenu("File")) {
+        if (ImGui::MenuItem("New Scene...", nullptr, false, canMutate))
+            g_showNewScenePopup = true;
+        if (ImGui::MenuItem("Save Scene", "Ctrl+S", false, canMutate))
+            SaveScene();
+        if (ImGui::MenuItem("Clear Scene...", nullptr, false, canMutate))
+            ImGui::OpenPopup("ClearSceneConfirm");
+
+        ImGui::Separator();
         if (ImGui::MenuItem("New Project...", nullptr, false, canMutate))
             g_pendingFolderPick = PendingFolderPickAction::NewProject;
         if (ImGui::MenuItem("Open Project...", nullptr, false, canMutate))
@@ -50,12 +59,6 @@ void DrawEditorMenuBar() {
         if (ImGui::MenuItem("Open Testbed", nullptr, false,
                             canMutate && !ProjectManager::Instance().ResolveInRepoTestbedPath().empty()))
             RequestOpenTestbed();
-        if (ImGui::MenuItem("Close Project", nullptr, false,
-                            canMutate && ProjectManager::Instance().IsOpen()))
-            RequestCloseProject();
-        if (ImGui::MenuItem("Save Project", "Ctrl+Shift+S", false, canMutate && ProjectManager::Instance().IsOpen()))
-            SaveProject();
-
         if (ImGui::BeginMenu("Recent Projects")) {
             const auto& recent = ProjectManager::Instance().GetRecentProjects();
             if (recent.empty()) {
@@ -75,6 +78,11 @@ void DrawEditorMenuBar() {
             }
             ImGui::EndMenu();
         }
+        if (ImGui::MenuItem("Close Project", nullptr, false,
+                            canMutate && ProjectManager::Instance().IsOpen()))
+            RequestCloseProject();
+        if (ImGui::MenuItem("Save Project", "Ctrl+Shift+S", false, canMutate && ProjectManager::Instance().IsOpen()))
+            SaveProject();
 
         ImGui::Separator();
         {
@@ -85,13 +93,10 @@ void DrawEditorMenuBar() {
         }
 
         ImGui::Separator();
-        if (ImGui::MenuItem("Save Scene", "Ctrl+S", false, canMutate))
-            SaveScene();
-        if (ImGui::MenuItem("New Scene...", nullptr, false, canMutate))
-            g_showNewScenePopup = true;
-        ImGui::Separator();
-        if (ImGui::MenuItem("Clear Scene...", nullptr, false, canMutate))
-            ImGui::OpenPopup("ClearSceneConfirm");
+        if (ImGui::MenuItem("Exit")) {
+            if (HWND hwnd = GetWindowHandle())
+                PostMessageW(hwnd, WM_CLOSE, 0, 0);
+        }
         ImGui::EndMenu();
     }
 
@@ -123,6 +128,11 @@ void DrawEditorMenuBar() {
                 SyncSceneRuntime();
             }
         }
+        ImGui::Separator();
+        if (ImGui::MenuItem("Project Settings..."))
+            EditorSettings_OpenProjectSettings();
+        if (ImGui::MenuItem("Preferences..."))
+            EditorSettings_OpenPreferences();
         ImGui::EndMenu();
     }
 
@@ -198,81 +208,48 @@ void DrawEditorMenuBar() {
         ImGui::EndMenu();
     }
 
+    if (ImGui::BeginMenu("View")) {
+        if (playVisuals)
+            ImGui::BeginDisabled();
+        if (ImGui::MenuItem("Show Grid", nullptr, Grid_IsVisible()))
+            Grid_SetVisible(!Grid_IsVisible());
+        if (ImGui::MenuItem("Show Gizmos", nullptr, TransformGizmo::IsVisible()))
+            TransformGizmo::SetVisible(!TransformGizmo::IsVisible());
+        if (ImGui::MenuItem("Show UI Overlay", nullptr, g_showUiOverlay))
+            g_showUiOverlay = !g_showUiOverlay;
+        {
+            bool view2D = DebugCamera_Is2DView();
+            if (ImGui::MenuItem("2D View", nullptr, view2D))
+                DebugCamera_Set2DView(!view2D);
+        }
+        if (playVisuals)
+            ImGui::EndDisabled();
+
+        ImGui::Separator();
+        if (ImGui::MenuItem("Show FPS When Playing", nullptr, PlayFpsOverlay::IsEnabled())) {
+            PlayFpsOverlay::SetEnabled(!PlayFpsOverlay::IsEnabled());
+            SaveUiPrefs();
+        }
+        if (ImGui::MenuItem("Collision Visualizer", "F11", DebugSystem::CollisionVizEnabled()))
+            DebugSystem::ToggleCollisionViz();
+        ImGui::EndMenu();
+    }
+
     if (ImGui::BeginMenu("Window")) {
         auto& panels = EditorDocking_PanelVisibility();
         ImGui::MenuItem(kEditorHierarchyWindowTitle, nullptr, &panels.hierarchy);
         ImGui::MenuItem(kEditorPropertiesWindowTitle, nullptr, &panels.properties);
         ImGui::MenuItem(kEditorAssetBrowserWindowTitle, nullptr, &panels.assetBrowser);
         ImGui::Separator();
-        if (ImGui::MenuItem("Rendering Settings", nullptr, g_showRenderingSettings))
-            g_showRenderingSettings = !g_showRenderingSettings;
+        ImGui::MenuItem("Project Settings", nullptr, &EditorSettings_ProjectWindowOpen());
+        ImGui::MenuItem("Preferences", nullptr, &EditorSettings_PreferencesWindowOpen());
         if (ImGui::MenuItem("PostFX Showcase", nullptr, g_showPostFxShowcase))
             g_showPostFxShowcase = !g_showPostFxShowcase;
+        if (ImGui::MenuItem("Shortcut Hints...", nullptr, g_showShortcutHints))
+            g_showShortcutHints = !g_showShortcutHints;
         ImGui::Separator();
         if (ImGui::MenuItem("Reset Layout"))
             EditorDocking_RequestResetLayout();
-        ImGui::EndMenu();
-    }
-
-    if (ImGui::BeginMenu("Project Settings")) {
-        if (g_isPlaying)
-            ImGui::BeginDisabled(true);
-        if (ImGui::MenuItem("Default Scene..."))
-            g_showDefaultScenePopup = true;
-        if (ImGui::MenuItem("Gravity...", nullptr, false, ProjectManager::Instance().IsOpen()))
-            g_showGravityPopup = true;
-        if (ImGui::MenuItem("Audio...", nullptr, false, ProjectManager::Instance().IsOpen()))
-            g_showAudioPopup = true;
-        if (g_isPlaying)
-            ImGui::EndDisabled();
-        ImGui::EndMenu();
-    }
-
-    if (ImGui::BeginMenu("Engine Settings")) {
-        if (ImGui::MenuItem("Show FPS When Playing", nullptr, PlayFpsOverlay::IsEnabled())) {
-            PlayFpsOverlay::SetEnabled(!PlayFpsOverlay::IsEnabled());
-            SaveUiPrefs();
-        }
-        if (ImGui::BeginMenu("UI Scale")) {
-            for (int percent : kUiZoomPercents) {
-                char label[16];
-                snprintf(label, sizeof(label), "%d%%", percent);
-                if (ImGui::MenuItem(label, nullptr, g_uiZoomPercent == percent)) {
-                    ApplyUiZoom(percent);
-                    SaveUiPrefs();
-                    ProjectManager::Instance().SetEditorUiZoomPercent(percent);
-                }
-            }
-            ImGui::EndMenu();
-        }
-        if (ImGui::BeginMenu("UI Style")) {
-            for (int i = 0; i < static_cast<int>(editor_theme::StylePreset::Count); ++i) {
-                const auto preset = static_cast<editor_theme::StylePreset>(i);
-                const char* name = editor_theme::StylePresetName(preset);
-                if (ImGui::MenuItem(name, nullptr, g_uiStylePreset == preset)) {
-                    ApplyEditorTheme(preset, g_uiColorScheme);
-                    ApplyUiZoom(g_uiZoomPercent);
-                    SaveUiPrefs();
-                    ProjectManager::Instance().SetEditorUiStylePreset(name);
-                }
-            }
-            ImGui::EndMenu();
-        }
-        if (ImGui::BeginMenu("Color Scheme")) {
-            for (int i = 0; i < static_cast<int>(editor_theme::ColorScheme::Count); ++i) {
-                const auto scheme = static_cast<editor_theme::ColorScheme>(i);
-                const char* name = editor_theme::ColorSchemeName(scheme);
-                if (ImGui::MenuItem(name, nullptr, g_uiColorScheme == scheme)) {
-                    ApplyEditorTheme(g_uiStylePreset, scheme);
-                    ApplyUiZoom(g_uiZoomPercent);
-                    SaveUiPrefs();
-                    ProjectManager::Instance().SetEditorUiColorScheme(name);
-                }
-            }
-            ImGui::EndMenu();
-        }
-        if (ImGui::MenuItem("Shortcut Hints...", nullptr, g_showShortcutHints))
-            g_showShortcutHints = !g_showShortcutHints;
         ImGui::EndMenu();
     }
 }
