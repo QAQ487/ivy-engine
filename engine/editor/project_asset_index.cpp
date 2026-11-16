@@ -4,6 +4,7 @@
 #include "project_asset_index.h"
 
 #include "engine/core/content_path.h"
+#include "engine/core/utf8_path.h"
 #include "engine/ecs/model_asset_cache.h"
 
 #include <algorithm>
@@ -42,7 +43,7 @@ namespace {
             return true;
 
         if (StartsWithPath(relativePath, "scene")) {
-            const std::string leaf = ToLowerString(fs::path(relativePath).filename().string());
+            const std::string leaf = ToLowerString(PathToUtf8(PathFromUtf8(relativePath).filename()));
             if (leaf.size() >= 13 && leaf.compare(0, 13, "default_scene") == 0)
                 return true;
         }
@@ -112,8 +113,8 @@ ProjectAssetIndex& ProjectAssetIndex::Instance() {
 }
 
 ProjectAssetIndex::Kind ProjectAssetIndex::ClassifyFile(const std::string& relativePath) {
-    const fs::path path(relativePath);
-    const std::string ext = ToLowerString(path.extension().string());
+    const fs::path path = PathFromUtf8(relativePath);
+    const std::string ext = ToLowerString(PathToUtf8(path.extension()));
     if (ext == ".physmat")
         return Kind::PhysicsMaterial;
     if (ext == ".efk" || ext == ".efkefc")
@@ -156,7 +157,7 @@ void ProjectAssetIndex::RebuildFolderTree() {
         const fs::path rel = content_path::LexicalChildPath(entry.path(), kProjectRoot);
         if (rel.empty()) continue;
 
-        const std::string relStr = rel.generic_string();
+        const std::string relStr = PathToUtf8(rel);
         if (StartsWithPath(relStr, "shader")) {
             it.disable_recursion_pending();
             continue;
@@ -177,7 +178,7 @@ void ProjectAssetIndex::RebuildFolderTree() {
             const fs::path rel = content_path::LexicalChildPath(entry.path(), kScriptRoot);
             if (rel.empty()) continue;
 
-            const std::string relStr = std::string(kScriptsFolder) + "/" + rel.generic_string();
+            const std::string relStr = std::string(kScriptsFolder) + "/" + PathToUtf8(rel);
             AddFolderPath(m_folderTree, relStr);
         }
     }
@@ -196,7 +197,7 @@ void ProjectAssetIndex::Refresh() {
 
             const fs::path rel = content_path::LexicalChildPath(entry.path(), kProjectRoot);
             if (rel.empty()) continue;
-            const std::string relStr = rel.generic_string();
+            const std::string relStr = PathToUtf8(rel);
 
             if (entry.is_directory(ec) && StartsWithPath(relStr, "shader")) {
                 it.disable_recursion_pending();
@@ -207,9 +208,9 @@ void ProjectAssetIndex::Refresh() {
                 continue;
 
             ProjectEntry fileEntry;
-            fileEntry.name = entry.path().filename().string();
+            fileEntry.name = PathToUtf8(entry.path().filename());
             fileEntry.relativePath = relStr;
-            fileEntry.assetPath = (kProjectRoot / rel).generic_string();
+            fileEntry.assetPath = PathToUtf8(kProjectRoot / rel);
             fileEntry.kind = ClassifyFile(relStr);
 
             std::string parentFolder;
@@ -226,16 +227,16 @@ void ProjectAssetIndex::Refresh() {
             if (ec) break;
             const fs::directory_entry& entry = *it;
             if (!entry.is_regular_file(ec)) continue;
-            if (ToLowerString(entry.path().extension().string()) != ".cpp") continue;
+            if (ToLowerString(PathToUtf8(entry.path().extension())) != ".cpp") continue;
 
             const fs::path rel = content_path::LexicalChildPath(entry.path(), kScriptRoot);
             if (rel.empty()) continue;
 
-            const std::string relStr = std::string(kScriptsFolder) + "/" + rel.generic_string();
+            const std::string relStr = std::string(kScriptsFolder) + "/" + PathToUtf8(rel);
             ProjectEntry fileEntry;
-            fileEntry.name = entry.path().filename().string();
+            fileEntry.name = PathToUtf8(entry.path().filename());
             fileEntry.relativePath = relStr;
-            fileEntry.assetPath = (kScriptRoot / rel).generic_string();
+            fileEntry.assetPath = PathToUtf8(kScriptRoot / rel);
             fileEntry.kind = ClassifyFile(relStr);
 
             std::string parentFolder = kScriptsFolder;

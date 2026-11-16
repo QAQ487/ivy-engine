@@ -6,6 +6,7 @@
 
 #include "engine/rendering/environment/equirect_cubemap.h"
 #include "engine/core/content_path.h"
+#include "engine/core/utf8_path.h"
 #include "engine/debug_draw/debug_ofstream.h"
 #include "engine/scene/render_settings.h"
 
@@ -253,7 +254,7 @@ bool CookProjectPanoramas(const std::filesystem::path& projectRoot,
         for (std::filesystem::recursive_directory_iterator it(rom, ec), end; it != end; it.increment(ec)) {
             if (ec || !it->is_regular_file(ec))
                 continue;
-            std::string ext = it->path().extension().string();
+            std::string ext = PathToUtf8(it->path().extension());
             std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) {
                 return static_cast<char>(std::tolower(c));
             });

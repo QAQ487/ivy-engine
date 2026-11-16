@@ -10,6 +10,7 @@
 #include "editor_prefab_panel.h"
 
 #include "imgui/imgui.h"
+#include "engine/core/utf8_path.h"
 #include "engine/ecs/prefab_serializer.h"
 #include "engine/ecs/game_object.h"
 #include <filesystem>
@@ -33,7 +34,7 @@ GameObject* PrefabPanel(
         std::error_code ec;
         for (const auto& entry : fs::directory_iterator(prefabFolder, ec)) {
             if (entry.is_regular_file() && entry.path().extension() == ".json")
-                s_paths.push_back(entry.path().string());
+                s_paths.push_back(PathToUtf8(entry.path()));
         }
     };
 
@@ -54,7 +55,7 @@ GameObject* PrefabPanel(
 
     for (int i = 0; i < static_cast<int>(s_paths.size()); i++) {
         const std::string& path = s_paths[i];
-        std::string stem = fs::path(path).stem().string();
+        std::string stem = PathToUtf8(PathFromUtf8(path).stem());
         ImGui::PushID(i);
 
         if (ImGui::Button(stem.c_str(), ImVec2(120, 80))) {

@@ -6,6 +6,7 @@
 #include "audio_manager.h"
 #include "engine/ecs/game_object.h"
 #include "engine/debug_draw/debug_drawer.h"
+#include "engine/core/utf8_path.h"
 #include "libraries/nlohmann/json.hpp"
 #include <algorithm>
 #include <cmath>
@@ -1127,12 +1128,12 @@ void AudioManager::TryLoadBusVolumesFromNearbyProject() {
 bool AudioManager::IsContentLoaded(const std::string& path) const {
     if (path.empty()) return false;
     std::error_code ec;
-    const auto key = std::filesystem::absolute(path, ec).lexically_normal().wstring();
+    const auto key = std::filesystem::absolute(PathFromUtf8(path), ec).lexically_normal().wstring();
     if (ec) return false;
     auto matches = [&](const Playback& source) {
         if (source.contentPath.empty()) return false;
         std::error_code inner;
-        const auto cached = std::filesystem::absolute(source.contentPath, inner).lexically_normal().wstring();
+        const auto cached = std::filesystem::absolute(PathFromUtf8(source.contentPath), inner).lexically_normal().wstring();
         return !inner && _wcsicmp(cached.c_str(), key.c_str()) == 0;
     };
     for (const auto& entry : m_loadedAudio) {
@@ -1150,10 +1151,14 @@ bool AudioManager::IsContentLoaded(const std::string& path) const {
 bool AudioManager::ReloadContent(const std::string& path) {
     Playback candidate{};
     if (!LoadWav(path, &candidate)) return false;
-    const auto key = std::filesystem::absolute(path).lexically_normal().wstring();
+    std::error_code ec;
+    const auto key = std::filesystem::absolute(PathFromUtf8(path), ec).lexically_normal().wstring();
+    if (ec) return false;
     auto matches = [&](const Playback& source) {
         if (source.contentPath.empty()) return false;
-        return _wcsicmp(std::filesystem::absolute(source.contentPath).lexically_normal().c_str(), key.c_str()) == 0;
+        std::error_code inner;
+        const auto cached = std::filesystem::absolute(PathFromUtf8(source.contentPath), inner).lexically_normal().wstring();
+        return !inner && _wcsicmp(cached.c_str(), key.c_str()) == 0;
     };
     for (auto it = m_sources.begin(); it != m_sources.end();) {
         if (matches(*it->second)) { DestroyPlaybackVoice(it->second.get()); it = m_sources.erase(it); }

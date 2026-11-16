@@ -20,10 +20,9 @@
   - Mesh 唔再用 box 嘅外接球，亦唔用 capsule 嘅三粒取樣球去近似圓柱。每隻三角形係零厚度凸形，對實心有限圓柱（平頂蓋）做 GJK/EPA，所以頂蓋唔會鼓出。非均勻 mesh scale 用現有 world matrix 把三角形變去世界空間，圓柱維持圓形。Broadphase 仍係圓柱外接球。Resolve 沿用 mesh 最多 4 個法線簇、`StabilizeFloorContactNormal`，slope `0.001`，而且會把接觸點交俾 `ResolveContact`。動態 mesh 對 kinematic 圓柱都會解（其他 mesh 配對仍然跳過 kinematic）。
   - 限制：只保證凸形。凹 mesh 係逐三角形，唔係實心體積。零或負 radius／half-height 當無碰撞。接觸斑係線或圓盤時，witness 可以係斑入面任意一點。GJK/EPA 有數值誤差。
   - 驗收場景：`testbed/rom/scene/scene_regression_3d.json`（紅色落體要停低）同 `testbed/rom/scene/scene_cylinder_pairs.json`（盒／mesh／圓柱、X／Z 90°、地面盒、疊柱）。Editor：File → Open Testbed，再打開場景。Linux `tests/cylinder_pair_test.cpp`（`g++ -std=c++20`）已覆蓋分離、軸對齊重疊、旋轉、頂蓋、側面、非法尺寸同法線對稱。Terry 喺 PR #8 接受咗 Windows runtime，所以呢項剔走。
-- [ ] **Content reload 紅燈：刪除未被引用嘅資產**（code fix 已入；等 Windows editor 驗收）
+- [x] **Content reload 紅燈：刪除未被引用嘅資產**（Terry 喺 2026-11-13 喺 Windows editor 驗收三個刪檔 case：未引用、已引用、已載入）
   - `content_reload::DecideRemovedContentAction`（`engine/editor/content_removal_policy.h`）：`rom/` 刪檔若唔喺目前 scene JSON，亦唔喺 texture／cubemap／`ModelUtil`／`ModelAssetCache`／audio cache，Content 燈維持 Watching，並寫 `content_hot_reload.log`。被引用或已載入仍然 `Failure` 同保留資源。新增未引用檔繼續 skip（共用 `SceneJsonReferencesRomPath`）。
   - Linux：`tests/content_removal_policy_test.cpp`（`g++ -std=c++17 -I.`）。見 `docs/EDITOR_CONTENT_HOT_RELOAD.md`。
-  - 剩餘：Windows editor 三個刪檔 case——未引用未載入 → Watching；場景引用 → Failed；已載入但唔喺 scene → Failed（資源保留）。
 - [ ] **Box friction torque（可選，只有想箱子傾側先做）**
   - `collider.cpp` 的 `ResolveContact` 對 box 把摩擦衝量嘅力臂設成 0，箱子只留線性摩擦，避免喺邊緣滾動；球體仍有角向摩擦。呢個係現有設計，唔係空 stub。
   - 驗收（若開做）：box 可以因摩擦傾側，同時唔好無故原地打轉；球體滾動無回歸。
@@ -108,9 +107,8 @@ PBR 球場已由引擎待辦移除：倉庫只有 PBR shader 同 `testbed/rom/sc
 
 ## 最近同步留下嘅驗證事項
 
-- [ ] **ImGuizmo／ImGui AddPolyline 參數順序**（code fix 已入；等 Windows editor 目視驗收）
+- [x] **ImGuizmo／ImGui AddPolyline 參數順序**（Terry 喺 2026-11-13 喺 Windows editor 目視驗收：旋轉環 2px、旋轉扇形邊閉合、平移平面不變）
   - `libraries/imguizmo/ImGuizmo.cpp` 三個 `AddPolyline` 已改返 ImGui 1.92.5 簽名 `(flags, thickness)`。Linux：`python3 tools/check_imguizmo_addpolyline_order.py`。MSVC 仍保留 PR #7 對 `ImGuizmo.cpp` 嘅 C4244 suppression。
-  - 剩餘：Windows editor 目視——旋轉環厚度 = `RotationLineThickness`（預設 2）；拖旋轉扇形邊閉合；平移平面外觀不變。
 - [x] **PR #5 資產清理**：被刪嘅 `.ua/`、`rom/effects/`、`rom/skybox/001/`、`rom/model/character/YBot_white.fbx`、`rom/model/object/{tree,Wall,Cone_Yellow}.fbx`、`external_template/`、已刪 sample script，scene／prefab JSON 冇殘留引用。玩家模型其後喺 `testbed/rom/model/player/Y Bot_white.fbx`。`rom/effects/` 只剩 hot-reload 路徑前綴。當時 `samples/scenes` 的 2D 場景引用 `rom/texture/sprite_demo/`，呢批 PNG 唔喺 repo、亦唔係 PR #5 刪走。之後 testbed 用細 placeholder PNG 補咗四張圖（`adventurer_walk`、`test_sheet`、`hp_fill`、`hp_frame`），場景已移去 `testbed/rom/scene/`。
 - [x] **In-repo testbed**：`testbed/` 係 Debug editor 喺冇最近專案可開時會打開嘅 content project。`samples/scenes` 已移入 `testbed/rom/scene/`。引擎預設其後搬去 repo 根 `resources/`，用 `rom/<rest>` → `resources/<rest>` fallback，唔再做 NTFS junction。Testbed 專用模型同 sprite placeholder 喺 `testbed/rom/`。Linux：`tools/content_path_check.cpp`、`python3 tools/check_testbed_assets.py`、`python3 tools/check_engine_resource_paths.py`。Windows editor 實測未在呢次做。
 - [ ] **PR #7 視覺 regression**：Terry 確認合併前 Windows build 已成功。仍然開住嘅只係畫面：lighting、CSM、post-process、gizmo。Linux 不能代替呢次目視；ImGuizmo 線條見上一項。
@@ -126,10 +124,9 @@ PBR 球場已由引擎待辦移除：倉庫只有 PBR shader 同 `testbed/rom/sc
 
 ## 建議優先次序
 
-1. ImGuizmo 參數順序同 PR #7 視覺檢查（lighting、CSM、post-process、gizmo）一齊喺 Windows 做。
-2. Content reload 紅燈（刪未引用資產）。
-3. 重做 Properties Panel／Inspector（先有 UI 草案；現有編輯同 Undo 要保住）。
-4. AI 套件：Waypoint → Perception → BT／Blackboard → EQS。NavMesh 繼續暫緩。
+1. PR #7 視覺檢查（lighting、CSM、post-process、gizmo）喺 Windows 做（ImGuizmo AddPolyline 已驗收）。
+2. 重做 Properties Panel／Inspector（先有 UI 草案；現有編輯同 Undo 要保住）。
+3. AI 套件：Waypoint → Perception → BT／Blackboard → EQS。NavMesh 繼續暫緩。
 
 Box friction torque 同 World-space UI 未排入上面次序：前者只有想箱子傾側先做；後者驗收仍待設計。Culling 主線（3D frustum／shadow cascade／2D sprite）已入 master；距離／occlusion／tilemap／billboard／particle 未排入。
 

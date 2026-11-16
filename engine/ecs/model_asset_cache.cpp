@@ -4,6 +4,7 @@
 #include "model_asset_cache.h"
 #include "string_utils.h"
 #include "engine/core/content_path.h"
+#include "engine/core/utf8_path.h"
 
 #include <algorithm>
 #include <cctype>
@@ -33,7 +34,7 @@ namespace {
     }
 
     std::string StemKey(const std::string& path) {
-        return ToLowerString(fs::path(path).stem().string());
+        return ToLowerString(PathToUtf8(PathFromUtf8(path).stem()));
     }
 
     const ModelAssetCache::ObjectDef* FindObjectDef(
@@ -148,7 +149,7 @@ void ModelAssetCache::RefreshAssetDirectory() {
         if (!entry.is_regular_file(ec)) continue;
 
         fs::path path = entry.path();
-        if (ToLowerString(path.extension().string()) != ".fbx") continue;
+        if (ToLowerString(PathToUtf8(path.extension())) != ".fbx") continue;
 
         fs::path relativePath = content_path::LexicalChildPath(path, kModelAssetRoot);
         if (relativePath.empty())
@@ -156,11 +157,11 @@ void ModelAssetCache::RefreshAssetDirectory() {
         const fs::path projectPath = kModelAssetRoot / relativePath;
 
         ObjectDef def;
-        def.assetPath = projectPath.generic_string();
+        def.assetPath = PathToUtf8(projectPath);
         def.modelPath = projectPath.wstring();
         def.lowerName = NormalizeAssetKey(def.assetPath);
         relativePath.replace_extension();
-        def.displayName = relativePath.generic_string();
+        def.displayName = PathToUtf8(relativePath);
 
         m_objectDefs.push_back(std::move(def));
     }
@@ -188,7 +189,7 @@ void ModelAssetCache::RebuildFolderTree() {
         const fs::path rel = content_path::LexicalChildPath(entry.path(), kModelAssetRoot);
         if (rel.empty()) continue;
 
-        const std::string relStr = rel.generic_string();
+        const std::string relStr = PathToUtf8(rel);
         ModelFolderNode* current = &m_folderTree;
         std::string pathSoFar;
         size_t start = 0;

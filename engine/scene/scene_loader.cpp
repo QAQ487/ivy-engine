@@ -15,6 +15,7 @@
 #include "scene_json_validation.h"
 #include "engine/scene/json_float.h"
 #include "engine/core/content_path.h"
+#include "engine/core/utf8_path.h"
 
 #include "engine/scene/render_settings.h"
 #include "engine/ecs/component_factory.h"
@@ -332,18 +333,18 @@ void SceneLoader_RefreshSceneAssets() {
         if (!entry.is_regular_file(ec)) continue;
 
         fs::path path = entry.path();
-        if (ToLowerString(path.extension().string()) != ".json") continue;
+        if (ToLowerString(PathToUtf8(path.extension())) != ".json") continue;
 
         SceneAssetEntry asset;
-        asset.path = path.string();
+        asset.path = PathToUtf8(path);
 
         fs::path relativePath = content_path::LexicalChildPath(path, SCENE_DIR);
         if (relativePath.empty())
             relativePath = path.filename();
 
-        asset.fileName = relativePath.generic_string();
+        asset.fileName = PathToUtf8(relativePath);
         relativePath.replace_extension();
-        asset.displayName = relativePath.generic_string();
+        asset.displayName = PathToUtf8(relativePath);
         asset.sortName = ToLowerString(asset.displayName);
         g_sceneAssets.push_back(asset);
     }
@@ -686,10 +687,10 @@ void SceneLoader_ApplyPrepared(std::shared_ptr<PreparedScene> prepared, bool pre
     for (auto& node : g_sceneNodes) node->AttachPreparedComponents();
     SceneCanvas_ApplyPrepared(std::move(prepared->canvas), prepared->canvasJson);
     ApplySceneSettings(*prepared, preserveEditorView);
-    const fs::path scenePath(prepared->path);
+    const fs::path scenePath = PathFromUtf8(prepared->path);
     const auto relativePath = content_path::LexicalChildPath(scenePath, SCENE_DIR);
-    SceneLoader_CopySceneFileName(!relativePath.empty() ? relativePath.generic_string()
-                                                        : scenePath.filename().generic_string());
+    SceneLoader_CopySceneFileName(!relativePath.empty() ? PathToUtf8(relativePath)
+                                                        : PathToUtf8(scenePath.filename()));
     g_currentScenePath = prepared->path;
     g_currentSceneContent = std::move(prepared->content);
     ++g_contentRevision;
@@ -736,7 +737,8 @@ bool SceneLoader_SaveToFile(const char* filename) {
     file.close();
     if (!file) return false;
     std::error_code ec;
-    if (!g_currentScenePath.empty() && fs::equivalent(dest, g_currentScenePath, ec) && !ec) {
+    if (!g_currentScenePath.empty() &&
+        fs::equivalent(dest, PathFromUtf8(g_currentScenePath), ec) && !ec) {
         g_currentSceneContent = content;
         ++g_contentRevision;
     }
@@ -861,7 +863,7 @@ std::string SceneLoader_GetDefaultSceneDisplayName() {
         if (asset.fileName == g_defaultSceneFileName)
             return asset.displayName;
     }
-    return fs::path(g_defaultSceneFileName).stem().generic_string();
+    return PathToUtf8(PathFromUtf8(g_defaultSceneFileName).stem());
 }
 
 const std::string& SceneLoader_GetDefaultSceneFileName() {

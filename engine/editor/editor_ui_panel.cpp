@@ -3,6 +3,7 @@
 
 #include "editor_ui_panel.h"
 #include "engine/core/engine_gui.h"
+#include "engine/core/utf8_path.h"
 #include "engine/editor/editor_undo.h"
 #include "engine/editor/pivot_presets.h"
 
@@ -30,7 +31,7 @@ static const char* kFontExts[] = { ".ttf", ".otf", ".png" };
 
 std::string LowerAssetExtension(const char* path) {
     if (!path) return "";
-    std::string ext = fs::path(path).extension().string();
+    std::string ext = PathToUtf8(PathFromUtf8(path).extension());
     std::transform(ext.begin(), ext.end(), ext.begin(),
         [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
     return ext;

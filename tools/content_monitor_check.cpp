@@ -61,7 +61,17 @@ int main(int argc, char** argv) {
         if (!batch.empty()) { detected = true; break; }
         std::this_thread::sleep_for(std::chrono::milliseconds(25));
     }
-    assert(detected); // Native notification catches same-stamp replacement without an audit wait.
+    assert(detected); // Native notification catches same-stamp overwrite without an audit wait.
+    // CJK filenames (Explorer " - 複製" copy suffix and a short name) must scan via UTF-8.
+    const std::string copyLeaf = "hp_fill - \xE8\xA4\x87\xE8\xA3\xBD.png";
+    const std::string testLeaf = "\xE6\xB8\xAC\xE8\xA9\xA6.png";
+    const std::string copyRel = "texture/" + copyLeaf;
+    const std::string testRel = "texture/" + testLeaf;
+    { std::ofstream(root / PathFromUtf8(copyRel)) << "cjk-copy"; }
+    { std::ofstream(root / PathFromUtf8(testRel)) << "cjk-test"; }
+    const auto cjk = ContentFileMonitor::Scan(root);
+    assert(cjk.count(copyRel) == 1 && cjk.count(testRel) == 1);
+    assert(PathToUtf8(PathFromUtf8(copyRel).filename()) == copyLeaf);
     const auto second = root / "second-project";
     std::filesystem::create_directories(second);
     { std::ofstream(second / "new.json") << "{}"; }
@@ -70,10 +80,12 @@ int main(int argc, char** argv) {
     assert(live.Error().empty() && !live.Pending());
     // All removal targets below are fixtures below the unique temporary test root.
     std::filesystem::remove(second / "new.json"); std::filesystem::remove(second);
+    std::filesystem::remove(root / PathFromUtf8(copyRel));
+    std::filesystem::remove(root / PathFromUtf8(testRel));
     std::filesystem::remove(root / "texture/nested/a.png");
     std::filesystem::remove(root / "texture/nested");
     std::filesystem::remove(root / "texture/save.tmp"); std::filesystem::remove(root / "texture");
     std::filesystem::remove(root / "shader/a.hlsl"); std::filesystem::remove(root / "shader");
     std::filesystem::remove(root);
-    std::cout << "PASS: content debounce, batching, additions, renames, deletions, same-stamp overwrite, 20 updates\n";
+    std::cout << "PASS: content debounce, batching, additions, renames, deletions, same-stamp overwrite, CJK names, 20 updates\n";
 }

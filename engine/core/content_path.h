@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "engine/core/utf8_path.h"
+
 #include <cctype>
 #include <filesystem>
 #include <string>
@@ -84,13 +86,13 @@ inline std::filesystem::path ResolveRomForRead(std::string_view path, const RomR
     if (!IsSafeRomPath(path, &normalized))
         return {};
     const std::filesystem::path projectFile =
-        (roots.projectRoot / std::filesystem::path(normalized)).lexically_normal();
+        (roots.projectRoot / PathFromUtf8(normalized)).lexically_normal();
     std::error_code ec;
     if (std::filesystem::is_regular_file(projectFile, ec))
         return projectFile;
     ec.clear();
     const std::filesystem::path resourceFile =
-        (roots.resourcesRoot / std::filesystem::path(normalized.substr(4))).lexically_normal();
+        (roots.resourcesRoot / PathFromUtf8(normalized.substr(4))).lexically_normal();
     if (std::filesystem::is_regular_file(resourceFile, ec))
         return resourceFile;
     return {};
@@ -101,7 +103,7 @@ inline std::filesystem::path ResolveRomForWrite(std::string_view path, const Rom
     std::string normalized;
     if (!IsSafeRomPath(path, &normalized) || roots.projectRoot.empty())
         return {};
-    return (roots.projectRoot / std::filesystem::path(normalized)).lexically_normal();
+    return (roots.projectRoot / PathFromUtf8(normalized)).lexically_normal();
 }
 
 // True when the string is rom-shaped, including unsafe rom paths that must not be opened.
@@ -121,13 +123,13 @@ inline bool IsRomShapedPath(std::string_view path) {
 inline std::filesystem::path ReadableFile(std::string_view path, const RomRoots& roots) {
     if (IsRomShapedPath(path))
         return ResolveRomForRead(path, roots);
-    return std::filesystem::path(std::string(path));
+    return PathFromUtf8(path);
 }
 
 inline std::filesystem::path WritableFile(std::string_view path, const RomRoots& roots) {
     if (IsRomShapedPath(path))
         return ResolveRomForWrite(path, roots);
-    return std::filesystem::path(std::string(path));
+    return PathFromUtf8(path);
 }
 
 // Process cwd plus <exe-dir>/resources. Defined in content_path.cpp.
