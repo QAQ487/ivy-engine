@@ -258,6 +258,9 @@
     <ClInclude Include="engine\editor\editor_docking_math.h">
       <Filter>engine\editor</Filter>
     </ClInclude>
+    <ClInclude Include="engine\editor\editor_settings_categories.h">
+      <Filter>engine\editor</Filter>
+    </ClInclude>
     <ClInclude Include="engine\editor\editor_gui_internal.h">
       <Filter>engine\editor</Filter>
     </ClInclude>
@@ -711,6 +714,9 @@
       <Filter>engine\editor</Filter>
     </ClCompile>
     <ClCompile Include="engine\editor\editor_tool_windows.cpp">
+      <Filter>engine\editor</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\editor\editor_settings_windows.cpp">
       <Filter>engine\editor</Filter>
     </ClCompile>
     <ClCompile Include="engine\editor\light_gizmo.cpp">

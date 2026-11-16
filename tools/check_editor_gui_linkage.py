@@ -37,12 +37,14 @@ PHASE1_TUS = [
     ROOT / "engine/editor/editor_popups.cpp",
     ROOT / "engine/editor/editor_start_screen.cpp",
     ROOT / "engine/editor/editor_tool_windows.cpp",
+    ROOT / "engine/editor/editor_settings_windows.cpp",
 ]
 
 HEADERS = [
     ROOT / "engine/editor/editor_gui_internal.h",
     ROOT / "engine/editor/editor_layout.h",
     ROOT / "engine/editor/editor_docking.h",
+    ROOT / "engine/editor/editor_settings_categories.h",
 ]
 
 # Symbol pattern -> providing header basename (caught in Terry's MSVC Debug log).

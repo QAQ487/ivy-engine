@@ -938,7 +938,7 @@ static void DrawWorld(void) {
 		}
 	}
 
-	// Play FPS text follows Engine Settings in Debug and Release.
+	// Play FPS text follows View > Show FPS When Playing in Debug and Release.
 	if (PlayFpsOverlay::ShouldDraw(EngineGUI_IsPlaying())) {
 		float viewportX, viewportY, viewportWidth, viewportHeight;
 		EngineGUI_GetGameViewportRect(viewportX, viewportY, viewportWidth, viewportHeight);

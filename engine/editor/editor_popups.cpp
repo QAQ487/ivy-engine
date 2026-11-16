@@ -77,6 +77,142 @@ static void ExecutePendingEditorAction() {
     }
 }
 
+void DrawProjectGravitySettings() {
+    ImGui::Text("Project Gravity");
+    ImGui::TextDisabled("Stored in project.json (physics.gravity)");
+    ImGui::Separator();
+
+    float gravity = ProjectManager::Instance().GetPhysicsGravity();
+    ImGui::SetNextItemWidth(160.0f);
+    if (ImGui::DragFloat("m/s^2", &gravity, 0.05f, 0.1f, 100.0f, "%.2f"))
+        ProjectManager::Instance().SetPhysicsGravity(gravity);
+    if (ImGui::IsItemDeactivatedAfterEdit()) {
+        ProjectManager::Instance().SetPhysicsGravity(gravity);
+        ProjectManager::Instance().SaveProjectFile(nullptr);
+    }
+}
+
+void DrawProjectAudioSettings() {
+    ImGui::Text("Project Audio");
+    ImGui::TextDisabled("Stored in project.json (audio.*)");
+    ImGui::Separator();
+
+    auto& audio = AudioManager::Instance();
+    float master = audio.GetMasterVolume();
+    float bgm = audio.GetBGMVolume();
+    float sfx = audio.GetSFXVolume();
+    float voice = audio.GetVoiceVolume();
+    auto saveBuses = [&]() {
+        ProjectManager::Instance().SetAudioBuses(
+            audio.GetMasterVolume(), audio.GetBGMVolume(),
+            audio.GetSFXVolume(), audio.GetVoiceVolume());
+        ProjectManager::Instance().SaveProjectFile(nullptr);
+    };
+    ImGui::SetNextItemWidth(200.0f);
+    if (ImGui::SliderFloat("Master", &master, 0.0f, 1.0f, "%.2f")) {
+        audio.SetMasterVolume(master);
+        ProjectManager::Instance().SetAudioBuses(master, bgm, sfx, voice);
+    }
+    if (ImGui::IsItemDeactivatedAfterEdit()) saveBuses();
+    ImGui::SetNextItemWidth(200.0f);
+    if (ImGui::SliderFloat("BGM", &bgm, 0.0f, 1.0f, "%.2f")) {
+        audio.SetBGMVolume(bgm);
+        ProjectManager::Instance().SetAudioBuses(master, bgm, sfx, voice);
+    }
+    if (ImGui::IsItemDeactivatedAfterEdit()) saveBuses();
+    ImGui::SetNextItemWidth(200.0f);
+    if (ImGui::SliderFloat("SFX", &sfx, 0.0f, 1.0f, "%.2f")) {
+        audio.SetSFXVolume(sfx);
+        ProjectManager::Instance().SetAudioBuses(master, bgm, sfx, voice);
+    }
+    if (ImGui::IsItemDeactivatedAfterEdit()) saveBuses();
+    ImGui::SetNextItemWidth(200.0f);
+    if (ImGui::SliderFloat("Voice", &voice, 0.0f, 1.0f, "%.2f")) {
+        audio.SetVoiceVolume(voice);
+        ProjectManager::Instance().SetAudioBuses(master, bgm, sfx, voice);
+    }
+    if (ImGui::IsItemDeactivatedAfterEdit()) saveBuses();
+
+    ImGui::Separator();
+    ImGui::Text("UI Click Sound");
+    ImGui::TextDisabled("WAV played when a UI button activates");
+    char clickBuf[256];
+    strncpy_s(clickBuf, ProjectManager::Instance().GetAudioSettings().uiClickSound.c_str(),
+        sizeof(clickBuf) - 1);
+    clickBuf[sizeof(clickBuf) - 1] = '\0';
+    ImGui::SetNextItemWidth(280.0f);
+    if (ImGui::InputText("##UiClickSound", clickBuf, sizeof(clickBuf)))
+        ProjectManager::Instance().SetUiClickSound(clickBuf);
+    if (ImGui::IsItemDeactivatedAfterEdit())
+        ProjectManager::Instance().SaveProjectFile(nullptr);
+    {
+        const char* wavExts[] = { ".wav" };
+        std::string droppedPath;
+        if (AcceptAssetPathDrop(wavExts, IM_ARRAYSIZE(wavExts), droppedPath)) {
+            ProjectManager::Instance().SetUiClickSound(droppedPath);
+            ProjectManager::Instance().SaveProjectFile(nullptr);
+        }
+    }
+}
+
+void DrawProjectDefaultSceneSettings() {
+    if (!SceneLoader_IsSceneAssetsScanned())
+        SceneLoader_RefreshSceneAssets();
+
+    ImGui::Text("Default Scene");
+    ImGui::TextDisabled("Stored in project.json (defaultScene)");
+    ImGui::TextDisabled("Current: %s", SceneLoader_GetDefaultSceneDisplayName().c_str());
+    ImGui::Separator();
+
+    const int assetCount = SceneLoader_GetSceneAssetCount();
+    if (assetCount == 0) {
+        ImGui::TextDisabled("No scenes found");
+    }
+    else {
+        ImGui::BeginChild("##DefaultSceneList", ImVec2(0.0f, 240.0f), ImGuiChildFlags_Borders);
+        for (int i = 0; i < assetCount; ++i) {
+            std::string displayName, fileName;
+            SceneLoader_TryGetSceneAsset(i, nullptr, &displayName, &fileName);
+            const bool selected = (fileName == SceneLoader_GetDefaultSceneFileName());
+            const std::string label = std::string(ICON_FA_MAP) + " " + displayName;
+            if (ImGui::Selectable(label.c_str(), selected)) {
+                SceneLoader_SetDefaultSceneFileName(fileName, true);
+                ProjectManager::Instance().SetDefaultScene(fileName);
+                // Persist immediately (same pattern as the old Gravity popup); otherwise
+                // project.json keeps the old defaultScene and wins on next open.
+                if (ProjectManager::Instance().IsOpen())
+                    ProjectManager::Instance().SaveProjectFile(nullptr);
+            }
+            if (selected)
+                ImGui::SetItemDefaultFocus();
+        }
+        ImGui::EndChild();
+    }
+}
+
+bool DrawPlayablePackageConfigFields() {
+    bool edited = false;
+    ImGui::SetNextItemWidth(420.0f);
+    ImGui::InputText("Output folder", g_buildDest, IM_ARRAYSIZE(g_buildDest));
+    if (ImGui::IsItemDeactivatedAfterEdit())
+        edited = true;
+    ImGui::SameLine();
+    if (ImGui::Button("Browse..."))
+        g_pendingFolderPick = PendingFolderPickAction::BuildOutput;
+
+    const char* configs[] = { "Debug", "Release" };
+    ImGui::SetNextItemWidth(160.0f);
+    if (ImGui::Combo("Configuration", &g_buildConfigIndex, configs, IM_ARRAYSIZE(configs)))
+        edited = true;
+    ImGui::TextDisabled("Play FPS overlay follows View > Show FPS When Playing in both configurations.");
+
+    const std::string destReason = PlayablePackage::DestinationRefusalReason(
+        ProjectManager::Instance().GetRootPath(), g_buildDest);
+    if (!destReason.empty())
+        ImGui::TextColored(ImVec4(0.95f, 0.45f, 0.35f, 1.0f), "%s", destReason.c_str());
+    return edited;
+}
+
 void DrawEditorPopups() {
     ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
     if (ImGui::BeginPopupModal("ClearSceneConfirm", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
@@ -245,162 +381,6 @@ void DrawEditorPopups() {
         ImGui::EndPopup();
     }
 
-    if (g_showDefaultScenePopup)
-        ImGui::OpenPopup("DefaultScenePopup");
-    ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-    if (ImGui::BeginPopupModal("DefaultScenePopup", &g_showDefaultScenePopup, ImGuiWindowFlags_AlwaysAutoResize)) {
-        if (!SceneLoader_IsSceneAssetsScanned())
-            SceneLoader_RefreshSceneAssets();
-
-        ImGui::Text("Default Scene");
-        ImGui::TextDisabled("Stored in project.json (defaultScene)");
-        ImGui::TextDisabled("Current: %s", SceneLoader_GetDefaultSceneDisplayName().c_str());
-        ImGui::Separator();
-
-        const int assetCount = SceneLoader_GetSceneAssetCount();
-        if (assetCount == 0) {
-            ImGui::TextDisabled("No scenes found");
-        }
-        else {
-            ImGui::BeginChild("##DefaultSceneList", ImVec2(320, 240), true);
-            for (int i = 0; i < assetCount; ++i) {
-                std::string displayName, fileName;
-                SceneLoader_TryGetSceneAsset(i, nullptr, &displayName, &fileName);
-                const bool selected = (fileName == SceneLoader_GetDefaultSceneFileName());
-                const std::string label = std::string(ICON_FA_MAP) + " " + displayName;
-                if (ImGui::Selectable(label.c_str(), selected)) {
-                    SceneLoader_SetDefaultSceneFileName(fileName, true);
-                    ProjectManager::Instance().SetDefaultScene(fileName);
-                    // Persist immediately (same pattern as GravityPopup); otherwise
-                    // project.json keeps the old defaultScene and wins on next open.
-                    if (ProjectManager::Instance().IsOpen())
-                        ProjectManager::Instance().SaveProjectFile(nullptr);
-                }
-                if (selected)
-                    ImGui::SetItemDefaultFocus();
-            }
-            ImGui::EndChild();
-        }
-
-        ImGui::Separator();
-        if (ImGui::Button("Close", ImVec2(120, 0))) {
-            g_showDefaultScenePopup = false;
-            ImGui::CloseCurrentPopup();
-        }
-        ImGui::EndPopup();
-    }
-
-
-    if (g_showGravityPopup)
-        ImGui::OpenPopup("GravityPopup");
-    ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-    const bool gravityPopupWasOpen = g_showGravityPopup;
-    if (ImGui::BeginPopupModal("GravityPopup", &g_showGravityPopup, ImGuiWindowFlags_AlwaysAutoResize)) {
-        ImGui::Text("Project Gravity");
-        ImGui::TextDisabled("Stored in project.json (physics.gravity)");
-        ImGui::Separator();
-
-        float gravity = ProjectManager::Instance().GetPhysicsGravity();
-        ImGui::SetNextItemWidth(160.0f);
-        if (ImGui::DragFloat("m/s^2", &gravity, 0.05f, 0.1f, 100.0f, "%.2f"))
-            ProjectManager::Instance().SetPhysicsGravity(gravity);
-        if (ImGui::IsItemDeactivatedAfterEdit()) {
-            ProjectManager::Instance().SetPhysicsGravity(gravity);
-            ProjectManager::Instance().SaveProjectFile(nullptr);
-        }
-
-        ImGui::Separator();
-        if (ImGui::Button("Close", ImVec2(120, 0))) {
-            ProjectManager::Instance().SetPhysicsGravity(gravity);
-            ProjectManager::Instance().SaveProjectFile(nullptr);
-            g_showGravityPopup = false;
-            ImGui::CloseCurrentPopup();
-        }
-        ImGui::EndPopup();
-    }
-    if (gravityPopupWasOpen && !g_showGravityPopup)
-        ProjectManager::Instance().SaveProjectFile(nullptr);
-
-    if (g_showAudioPopup)
-        ImGui::OpenPopup("AudioPopup");
-    ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-    const bool audioPopupWasOpen = g_showAudioPopup;
-    if (ImGui::BeginPopupModal("AudioPopup", &g_showAudioPopup, ImGuiWindowFlags_AlwaysAutoResize)) {
-        ImGui::Text("Project Audio");
-        ImGui::TextDisabled("Stored in project.json (audio.*)");
-        ImGui::Separator();
-
-        auto& audio = AudioManager::Instance();
-        float master = audio.GetMasterVolume();
-        float bgm = audio.GetBGMVolume();
-        float sfx = audio.GetSFXVolume();
-        float voice = audio.GetVoiceVolume();
-        auto saveBuses = [&]() {
-            ProjectManager::Instance().SetAudioBuses(
-                audio.GetMasterVolume(), audio.GetBGMVolume(),
-                audio.GetSFXVolume(), audio.GetVoiceVolume());
-            ProjectManager::Instance().SaveProjectFile(nullptr);
-        };
-        ImGui::SetNextItemWidth(200.0f);
-        if (ImGui::SliderFloat("Master", &master, 0.0f, 1.0f, "%.2f")) {
-            audio.SetMasterVolume(master);
-            ProjectManager::Instance().SetAudioBuses(master, bgm, sfx, voice);
-        }
-        if (ImGui::IsItemDeactivatedAfterEdit()) saveBuses();
-        ImGui::SetNextItemWidth(200.0f);
-        if (ImGui::SliderFloat("BGM", &bgm, 0.0f, 1.0f, "%.2f")) {
-            audio.SetBGMVolume(bgm);
-            ProjectManager::Instance().SetAudioBuses(master, bgm, sfx, voice);
-        }
-        if (ImGui::IsItemDeactivatedAfterEdit()) saveBuses();
-        ImGui::SetNextItemWidth(200.0f);
-        if (ImGui::SliderFloat("SFX", &sfx, 0.0f, 1.0f, "%.2f")) {
-            audio.SetSFXVolume(sfx);
-            ProjectManager::Instance().SetAudioBuses(master, bgm, sfx, voice);
-        }
-        if (ImGui::IsItemDeactivatedAfterEdit()) saveBuses();
-        ImGui::SetNextItemWidth(200.0f);
-        if (ImGui::SliderFloat("Voice", &voice, 0.0f, 1.0f, "%.2f")) {
-            audio.SetVoiceVolume(voice);
-            ProjectManager::Instance().SetAudioBuses(master, bgm, sfx, voice);
-        }
-        if (ImGui::IsItemDeactivatedAfterEdit()) saveBuses();
-
-        ImGui::Separator();
-        ImGui::Text("UI Click Sound");
-        ImGui::TextDisabled("WAV played when a UI button activates");
-        char clickBuf[256];
-        strncpy_s(clickBuf, ProjectManager::Instance().GetAudioSettings().uiClickSound.c_str(),
-            sizeof(clickBuf) - 1);
-        clickBuf[sizeof(clickBuf) - 1] = '\0';
-        ImGui::SetNextItemWidth(280.0f);
-        if (ImGui::InputText("##UiClickSound", clickBuf, sizeof(clickBuf)))
-            ProjectManager::Instance().SetUiClickSound(clickBuf);
-        if (ImGui::IsItemDeactivatedAfterEdit())
-            ProjectManager::Instance().SaveProjectFile(nullptr);
-        {
-            const char* wavExts[] = { ".wav" };
-            std::string droppedPath;
-            if (AcceptAssetPathDrop(wavExts, IM_ARRAYSIZE(wavExts), droppedPath)) {
-                ProjectManager::Instance().SetUiClickSound(droppedPath);
-                ProjectManager::Instance().SaveProjectFile(nullptr);
-            }
-        }
-
-        ImGui::Separator();
-        if (ImGui::Button("Close", ImVec2(120, 0))) {
-            ProjectManager::Instance().SetAudioBuses(
-                audio.GetMasterVolume(), audio.GetBGMVolume(),
-                audio.GetSFXVolume(), audio.GetVoiceVolume());
-            ProjectManager::Instance().SaveProjectFile(nullptr);
-            g_showAudioPopup = false;
-            ImGui::CloseCurrentPopup();
-        }
-        ImGui::EndPopup();
-    }
-    if (audioPopupWasOpen && !g_showAudioPopup)
-        ProjectManager::Instance().SaveProjectFile(nullptr);
-
     if (g_sceneReloadConflict && EngineGUI_IsSceneDirty() && !g_isPlaying && !IsSceneLoadBusy()
         && !ImGui::GetTopMostPopupModal() && !g_showUnsavedChangesPopup)
         ImGui::OpenPopup("SceneJsonChangedPopup");
@@ -506,21 +486,10 @@ void DrawEditorPopups() {
         ImGui::TextDisabled("%s", ProjectManager::Instance().GetRootPath().c_str());
         ImGui::Separator();
 
-        ImGui::SetNextItemWidth(420.0f);
-        ImGui::InputText("Output folder", g_buildDest, IM_ARRAYSIZE(g_buildDest));
-        ImGui::SameLine();
-        if (ImGui::Button("Browse..."))
-            g_pendingFolderPick = PendingFolderPickAction::BuildOutput;
-
-        const char* configs[] = { "Debug", "Release" };
-        ImGui::SetNextItemWidth(160.0f);
-        ImGui::Combo("Configuration", &g_buildConfigIndex, configs, IM_ARRAYSIZE(configs));
-        ImGui::TextDisabled("Play FPS overlay follows Engine Settings > Show FPS When Playing in both configurations.");
+        DrawPlayablePackageConfigFields();
 
         const std::string destReason = PlayablePackage::DestinationRefusalReason(
             ProjectManager::Instance().GetRootPath(), g_buildDest);
-        if (!destReason.empty())
-            ImGui::TextColored(ImVec4(0.95f, 0.45f, 0.35f, 1.0f), "%s", destReason.c_str());
 
         ImGui::Separator();
         const bool canStart = destReason.empty() && !PlayablePackage::IsBuildRunning();
