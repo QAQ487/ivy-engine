@@ -4,6 +4,7 @@
 //
 // Prefer: ./tools/run_editor_theme_check.sh
 
+#include "engine/editor/editor_icon_button.h"
 #include "engine/editor/editor_theme.h"
 
 #include "imgui/imgui.h"
@@ -137,6 +138,42 @@ static void TestImGuiColCoverage() {
     Expect(sem.windowBg.x < 0.1f && sem.windowBg.y < 0.15f, "Ivy canopy dark");
 }
 
+static void TestCenteredGlyphDrawPos() {
+    float x = 0.0f, y = 0.0f;
+
+    // Symmetric glyph in a 20x20 button → draw at origin that places ink dead center.
+    // Ink 4..12 in both axes (w=h=8). Center at 10 → draw = 10 - 8 = 2 after offset.
+    editor_icon_button::CenteredGlyphDrawPos(
+        0, 0, 20, 20, 4, 4, 12, 12, 1.0f, &x, &y);
+    Expect(x == 2.0f && y == 2.0f, "symmetric center");
+
+    // Asymmetric FA-like bearings: more empty below (Y0=-2, Y1=10 → h=12) in 24px button.
+    editor_icon_button::CenteredGlyphDrawPos(
+        0, 0, 24, 24, 1, -2, 15, 10, 1.0f, &x, &y);
+    // ink_h=12; top pad=(24-12)/2=6; draw_y = 6 - (-2) = 8
+    Expect(y == 8.0f, "asymmetric vertical center");
+    // ink_w=14; left pad=(24-14)/2=5; draw_x = 5 - 1 = 4
+    Expect(x == 4.0f, "asymmetric horizontal center");
+
+    // Narrow caret button 12x24 with glyph 2..10 x 8..16.
+    editor_icon_button::CenteredGlyphDrawPos(
+        0, 0, 12, 24, 2, 8, 10, 16, 1.0f, &x, &y);
+    // ink 8x8; pad_x=(12-8)/2=2 → x=2-2=0; pad_y=(24-8)/2=8 → y=8-8=0
+    Expect(x == 0.0f && y == 0.0f, "narrow caret button center");
+
+    // Truncation toward zero (positive coords).
+    editor_icon_button::CenteredGlyphDrawPos(
+        0.4f, 0.4f, 20.4f, 20.4f, 0, 0, 8, 8, 1.0f, &x, &y);
+    // ink 8; pad=(20-8)/2=6; draw=0.4+6=6.4 → trunc 6
+    Expect(x == 6.0f && y == 6.0f, "truncates toward zero");
+
+    // Scale factor 2: glyph box in baked space, scaled to display.
+    editor_icon_button::CenteredGlyphDrawPos(
+        0, 0, 40, 40, 2, 2, 6, 6, 2.0f, &x, &y);
+    // ink 8x8; pad=(40-8)/2=16; draw=16-4=12
+    Expect(x == 12.0f && y == 12.0f, "scaled glyph center");
+}
+
 static void TestToolbarChromeFitsFont() {
     // Mirrors engine_gui EditorToolbarHeight compact chrome (padY=4 at 100%).
     // Old fixed Ui(36) could not fit Trellis/HollowSoft theme WindowPadding+FramePadding.
@@ -173,6 +210,7 @@ int main() {
     TestClamp();
     TestNames();
     TestImGuiColCoverage();
+    TestCenteredGlyphDrawPos();
     TestToolbarChromeFitsFont();
 
     if (g_failed != 0) {

@@ -545,11 +545,10 @@ bool LoadFonts(ImGuiIO& io, Fonts* out, float bodySize, float monoSize)
         ImFontConfig faCfg;
         faCfg.MergeMode = true;
         faCfg.PixelSnapH = true;
-        // Natural advances center better inside square toolbar buttons than a
-        // forced bodySize cell (which left-aligns the glyph in CalcTextSize).
+        // Natural advances: toolbar buttons center via glyph ink boxes
+        // (editor_icon_button); menus/Asset Browser keep ImGui text layout.
+        // No GlyphOffset — per-glyph ink centering replaces a global Y nudge.
         faCfg.GlyphMinAdvanceX = 0.0f;
-        // Optical vertical center vs IBM Plex Sans JP metrics.
-        faCfg.GlyphOffset = ImVec2(0.0f, 1.0f);
         faCfg.OversampleH = 2;
         faCfg.OversampleV = 2;
         static const ImWchar faRanges[] = { (ImWchar)ICON_MIN_FA, (ImWchar)ICON_MAX_FA, 0 };

@@ -6,6 +6,7 @@
 #include "engine/core/engine_gui.h"
 #include "engine/ecs/game_object.h"
 #include "engine/ecs/transform.h"
+#include "engine/editor/editor_icon_button.h"
 #include "engine/editor/editor_undo.h"
 #include "engine/scene/json_float.h"
 #include "camera.h"
@@ -262,39 +263,20 @@ bool IsInteracting() {
     return ImGuizmo::IsOver() || ImGuizmo::IsUsing();
 }
 
-namespace {
-
-bool ToolbarIconToggle(const char* icon, bool active, const char* tooltip)
-{
-    const float sz = static_cast<float>(static_cast<int>(ImGui::GetFrameHeight() + 0.5f));
-    if (active) {
-        ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive));
-        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive));
-    }
-    const bool pressed = ImGui::Button(icon, ImVec2(sz, sz));
-    if (active)
-        ImGui::PopStyleColor(2);
-    if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort))
-        ImGui::SetTooltip("%s", tooltip);
-    return pressed;
-}
-
-} // namespace
-
 void DrawToolbarControls() {
-    if (ToolbarIconToggle(ICON_FA_ARROWS_UP_DOWN_LEFT_RIGHT,
+    if (editor_icon_button::IconToggleTooltip(ICON_FA_ARROWS_UP_DOWN_LEFT_RIGHT,
             g_operation == ImGuizmo::TRANSLATE, "Move (W)")) {
         g_visible = true;
         g_operation = ImGuizmo::TRANSLATE;
     }
     ImGui::SameLine();
-    if (ToolbarIconToggle(ICON_FA_ROTATE,
+    if (editor_icon_button::IconToggleTooltip(ICON_FA_ROTATE,
             g_operation == ImGuizmo::ROTATE, "Rotate (E)")) {
         g_visible = true;
         g_operation = ImGuizmo::ROTATE;
     }
     ImGui::SameLine();
-    if (ToolbarIconToggle(ICON_FA_UP_DOWN_LEFT_RIGHT,
+    if (editor_icon_button::IconToggleTooltip(ICON_FA_UP_DOWN_LEFT_RIGHT,
             g_operation == ImGuizmo::SCALE, "Scale (R)")) {
         g_visible = true;
         g_operation = ImGuizmo::SCALE;
@@ -302,10 +284,12 @@ void DrawToolbarControls() {
 
     if (g_operation != ImGuizmo::SCALE) {
         ImGui::SameLine();
-        if (ToolbarIconToggle(ICON_FA_LOCATION_DOT, g_mode == ImGuizmo::LOCAL, "Local space"))
+        if (editor_icon_button::IconToggleTooltip(
+                ICON_FA_LOCATION_DOT, g_mode == ImGuizmo::LOCAL, "Local space"))
             g_mode = ImGuizmo::LOCAL;
         ImGui::SameLine();
-        if (ToolbarIconToggle(ICON_FA_GLOBE, g_mode == ImGuizmo::WORLD, "World space"))
+        if (editor_icon_button::IconToggleTooltip(
+                ICON_FA_GLOBE, g_mode == ImGuizmo::WORLD, "World space"))
             g_mode = ImGuizmo::WORLD;
     }
 }

@@ -237,6 +237,9 @@
     <ClInclude Include="engine\editor\editor_theme.h">
       <Filter>engine\editor</Filter>
     </ClInclude>
+    <ClInclude Include="engine\editor\editor_icon_button.h">
+      <Filter>engine\editor</Filter>
+    </ClInclude>
     <ClInclude Include="engine\editor\project_asset_ops.h">
       <Filter>engine\editor</Filter>
     </ClInclude>
@@ -651,6 +654,9 @@
       <Filter>engine\editor</Filter>
     </ClCompile>
     <ClCompile Include="engine\editor\editor_theme.cpp">
+      <Filter>engine\editor</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\editor\editor_icon_button.cpp">
       <Filter>engine\editor</Filter>
     </ClCompile>
     <ClCompile Include="engine\editor\project_asset_ops.cpp">

@@ -74,6 +74,7 @@
 #include "engine/ecs/prefab_serializer.h"
 #include "engine/ecs/component_factory.h"
 #include "engine/editor/editor_project_browser.h"
+#include "engine/editor/editor_icon_button.h"
 #include "engine/editor/editor_theme.h"
 #include "engine/editor/editor_ui_panel.h"
 #include "engine/editor/project_asset_index.h"
@@ -638,23 +639,13 @@ static float ToolbarIconSize()
 
 static bool ToolbarIconButton(const char* icon, const char* tooltip)
 {
-    const float sz = ToolbarIconSize();
-    const bool pressed = ImGui::Button(icon, ImVec2(sz, sz));
-    if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort))
-        ImGui::SetTooltip("%s", tooltip);
-    return pressed;
+    return editor_icon_button::IconButtonTooltip(icon, tooltip, ImVec2(ToolbarIconSize(), 0.0f));
 }
 
 static bool ToolbarIconToggle(const char* icon, bool active, const char* tooltip)
 {
-    if (active) {
-        ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive));
-        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive));
-    }
-    const bool pressed = ToolbarIconButton(icon, tooltip);
-    if (active)
-        ImGui::PopStyleColor(2);
-    return pressed;
+    return editor_icon_button::IconToggleTooltip(
+        icon, active, tooltip, ImVec2(ToolbarIconSize(), 0.0f));
 }
 
 static std::string TrimString(const std::string& value) {
@@ -4318,11 +4309,9 @@ void EngineGUI_Draw() {
                 StartPlay(PlayMode::Viewport);
             }
             ImGui::SameLine(0.0f, 2.0f);
-            const float caretW = IM_TRUNC(iconSz * 0.55f + 0.5f);
-            const bool openPlayMenu = ImGui::Button(ICON_FA_CARET_DOWN "##PlayMenuBtn",
-                ImVec2(caretW, iconSz));
-            if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort))
-                ImGui::SetTooltip("Play Mode");
+            const float caretW = IM_TRUNC(iconSz * 0.60f + 0.5f);
+            const bool openPlayMenu = editor_icon_button::IconButtonTooltip(
+                ICON_FA_CARET_DOWN "##PlayMenuBtn", "Play Mode", ImVec2(caretW, iconSz));
             if (openPlayMenu)
                 ImGui::OpenPopup("PlayModeDropdownMenu");
 
