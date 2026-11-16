@@ -486,7 +486,7 @@ static void QueueSceneHotLoad(SceneFileMonitor::Version version) {
     EngineGUI_QueueSceneLoad(version.path.c_str());
     g_pendingSceneHotLoad = std::move(version);
 }
-static void ResolveSceneReloadConflict(bool loadDisk) {
+void ResolveSceneReloadConflict(bool loadDisk) {
     if (!g_sceneReloadConflict) return;
     if (loadDisk) QueueSceneHotLoad(std::move(*g_sceneReloadConflict));
     else {
@@ -2240,14 +2240,14 @@ static bool MoveNodeInList(std::vector<std::unique_ptr<GameObject>>& nodes,
     return true;
 }
 
-static bool MoveNodeOrder(GameObject* node, int offset) {
+bool MoveNodeOrder(GameObject* node, int offset) {
     if (!node) return false;
     if (GameObject* parent = node->GetParent())
         return MoveNodeInList(parent->GetChildren(), node, offset);
     return MoveNodeInList(g_sceneNodes, node, offset);
 }
 
-static bool MoveNodeToBack(GameObject* node) {
+bool MoveNodeToBack(GameObject* node) {
     if (!node) return false;
     const int distance = static_cast<int>((node->GetParent()
         ? node->GetParent()->GetChildren().size()
@@ -2255,7 +2255,7 @@ static bool MoveNodeToBack(GameObject* node) {
     return MoveNodeOrder(node, -distance);
 }
 
-static bool MoveNodeToFront(GameObject* node) {
+bool MoveNodeToFront(GameObject* node) {
     if (!node) return false;
     const int distance = static_cast<int>((node->GetParent()
         ? node->GetParent()->GetChildren().size()
@@ -2276,7 +2276,7 @@ static int GetNodeSiblingIndexLocal(GameObject* node) {
     return -1;
 }
 
-static bool UndoableReorderNode(GameObject* node, bool (*moveFn)(GameObject*)) {
+bool UndoableReorderNode(GameObject* node, bool (*moveFn)(GameObject*)) {
     if (!node || !moveFn) return false;
     GameObject* parent = node->GetParent();
     const int oldIndex = GetNodeSiblingIndexLocal(node);

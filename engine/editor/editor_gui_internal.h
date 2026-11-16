@@ -15,7 +15,6 @@
 #include "engine/scene/scene_file_monitor.h"
 #include "imgui/imgui.h"
 
-#include <atomic>
 #include <memory>
 #include <optional>
 #include <string>
@@ -60,7 +59,6 @@ struct PrimitiveCreateSpec {
 
 extern bool g_enabled;
 extern bool g_isPlaying;
-extern std::atomic<bool> g_exitGameRequested;
 extern PlayMode g_playMode;
 extern PlayMode g_pendingPlayMode;
 extern bool g_holdPlayVisuals;
@@ -171,6 +169,13 @@ void SaveUiPrefs();
 void LoadUiPrefs();
 
 bool AutoFitColliderToMesh(GameObject* node, ColliderComponent* cc);
+
+void ResolveSceneReloadConflict(bool loadDisk);
+
+bool MoveNodeOrder(GameObject* node, int offset);
+bool MoveNodeToBack(GameObject* node);
+bool MoveNodeToFront(GameObject* node);
+bool UndoableReorderNode(GameObject* node, bool (*moveFn)(GameObject*));
 
 ReloadLightState GetReloadLightState(bool active, bool paused, bool pending, const ReloadLight& light);
 
