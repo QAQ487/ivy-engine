@@ -1,58 +1,7 @@
 // editor_inspector_panel.cpp
 // Extracted from engine/core/engine_gui.cpp (phase-1 editor UI split; behaviour-preserving).
 
-#include "editor_gui_internal.h"
-#include "engine/editor/pivot_presets.h"
-
-#include "engine/core/engine_gui.h"
-#include "engine/core/utf8_path.h"
-#include "engine/ecs/game_object.h"
-#include "engine/ecs/transform.h"
-#include "engine/ecs/tag_registry.h"
-#include "engine/ecs/visual_component.h"
-#include "engine/ecs/billboard_component.h"
-#include "engine/ecs/sprite_renderer_component.h"
-#include "engine/ecs/sprite_animator_component.h"
-#include "engine/ecs/material_component.h"
-#include "engine/ecs/rigidbody_component.h"
-#include "engine/ecs/physics2d_components.h"
-#include "engine/ecs/directional_light_component.h"
-#include "engine/ecs/point_light_component.h"
-#include "engine/ecs/spot_light_component.h"
-#include "engine/ecs/camera_component.h"
-#include "engine/ecs/collider_component_access.h"
-#include "engine/ecs/effect_component.h"
-#include "engine/ecs/audio_component.h"
-#include "engine/ecs/audio_listener_component.h"
-#include "engine/ecs/prefab_serializer.h"
-#include "engine/ecs/component_factory.h"
-#include "engine/editor/editor_undo.h"
-#include "engine/editor/editor_ui_panel.h"
-#include "engine/editor/light_gizmo.h"
-#include "engine/editor/camera_gizmo.h"
-#include "engine/physics/collider/collider.h"
-#include "engine/physics/core/physics_system.h"
-#include "engine/rendering/d3d11/shader.h"
-#include "engine/rendering/model/model.h"
-#include "engine/scene/scene_loader.h"
-#include "engine/scene/scene_runtime.h"
-#include "engine/scene/json_float.h"
-#include "engine/scripting/script_component.h"
-#include "engine/scripting/Script.h"
-#include "engine/ui/ui_element.h"
-#include "libraries/nlohmann/json.hpp"
-#include "imgui/imgui.h"
-#include "imgui/imgui_internal.h"
-
-#include <algorithm>
-#include <cctype>
-#include <cmath>
-#include <cstdio>
-#include <cstring>
-#include <filesystem>
-#include <string>
-#include <vector>
-
+#include "editor_gui_common_includes.h"
 namespace fs = std::filesystem;
 using json = nlohmann::json;
 

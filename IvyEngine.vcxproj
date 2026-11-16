@@ -309,6 +309,7 @@ exit /b 0</Command>
     <ClInclude Include="engine\editor\editor_undo.h" />
     <ClInclude Include="engine\editor\editor_layout.h" />
     <ClInclude Include="engine\editor\editor_gui_internal.h" />
+    <ClInclude Include="engine\editor\editor_gui_common_includes.h" />
     <ClInclude Include="engine\ecs\prefab_serializer.h" />
     <ClInclude Include="engine\scene\scene_node.h" />
     <ClInclude Include="engine\ecs\transform.h" />

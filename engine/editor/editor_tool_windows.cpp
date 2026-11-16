@@ -1,20 +1,7 @@
 // editor_tool_windows.cpp
 // Extracted from engine/core/engine_gui.cpp (phase-1 editor UI split; behaviour-preserving).
 
-#include "editor_gui_internal.h"
-
-#include "engine/core/engine_gui.h"
-#include "engine/scene/scene_loader.h"
-#include "engine/scene/render_settings.h"
-#include "engine/rendering/d3d11/shader.h"
-#include "engine/rendering/d3d11/post_process.h"
-#include "engine/rendering/culling/frustum_cull.h"
-#include "engine/rendering/culling/shadow_cascade_cull.h"
-#include "engine/rendering/culling/sprite_cull.h"
-#include "engine/rendering/environment/skybox_asset_path.h"
-#include "imgui/imgui.h"
-
-#include <string>
+#include "editor_gui_common_includes.h"
 
 std::string ShaderVariantPreviewLabel(Shader3DVariant v) {
     const char* label = Shader3DVariantLabel(v);

@@ -8,6 +8,8 @@ catches the MSVC-class failures that are visible from source alone:
 2. Header function declarations whose only definition is `static` (or missing).
 3. `static` functions defined in one phase-1 TU but called from another.
 4. Duplicate non-static function definitions across phase-1 TUs (LNK2005).
+5. Known MSVC-break symbols (IM_TRUNC, ICON_FA_*, panorama::, …) used without
+   including the header that provides them (via direct or common includes).
 
 Exit 0 on clean; exit 1 and print findings otherwise.
 
@@ -39,6 +41,25 @@ PHASE1_TUS = [
 HEADERS = [
     ROOT / "engine/editor/editor_gui_internal.h",
     ROOT / "engine/editor/editor_layout.h",
+]
+
+# Symbol pattern -> providing header basename (caught in Terry's MSVC Debug log).
+SYMBOL_HEADER_REQUIREMENTS = [
+    (r"\bIM_TRUNC\b", "imgui_internal.h"),
+    (r"\bImMax\b", "imgui_internal.h"),
+    (r"\bGetTopMostPopupModal\b", "imgui_internal.h"),
+    (r"\bICON_FA_", "icons_font_awesome.h"),
+    (r"\bpanorama::", "panorama_sky.h"),
+    (r"\bPlayablePackage::", "playable_package_builder.h"),
+    (r"\bModelAssetCache\b", "model_asset_cache.h"),
+    (r"\bRenderSettings_Get", "render_settings.h"),
+    (r"\bNormalizeSceneFileName\b", "editor_gui_internal.h"),
+    (r"\bTrimString\b", "editor_gui_internal.h"),
+    (r"\bMoveNodeOrder\b", "editor_gui_internal.h"),
+    (r"\bMoveNodeToBack\b", "editor_gui_internal.h"),
+    (r"\bMoveNodeToFront\b", "editor_gui_internal.h"),
+    (r"\bUndoableReorderNode\b", "editor_gui_internal.h"),
+    (r"\bResolveSceneReloadConflict\b", "editor_gui_internal.h"),
 ]
 
 
@@ -202,6 +223,42 @@ def main() -> int:
             )
             findings.append(f"DUP_NONSTATIC_FN {name}: {detail}")
 
+    # 5) known symbols require their providing headers (direct or via common includes)
+    def included_basenames(path: Path, depth: int = 0, seen: set[Path] | None = None) -> set[str]:
+        if seen is None:
+            seen = set()
+        text = read(path)
+        bases: set[str] = set()
+        for m in re.finditer(r'#include\s+"([^"]+)"', text):
+            inc = m.group(1)
+            bases.add(Path(inc).name)
+            candidates = [
+                path.parent / inc,
+                ROOT / inc,
+                ROOT / "engine/editor" / Path(inc).name,
+                ROOT / "engine/editor" / inc,
+            ]
+            for candidate in candidates:
+                resolved = candidate.resolve() if candidate.exists() else None
+                if resolved and resolved not in seen and depth < 4:
+                    seen.add(resolved)
+                    bases |= included_basenames(candidate, depth + 1, seen)
+        return bases
+
+    for path in PHASE1_TUS:
+        if path.name == "engine_gui.cpp":
+            continue
+        if not path.exists():
+            continue
+        text = texts[path]
+        bases = included_basenames(path)
+        for pattern, header_name in SYMBOL_HEADER_REQUIREMENTS:
+            if re.search(pattern, text) and header_name not in bases:
+                findings.append(
+                    f"MISSING_HEADER {path.relative_to(ROOT)} uses /{pattern}/ "
+                    f"but does not include {header_name}"
+                )
+
     if findings:
         print(f"FAIL: {len(findings)} editor GUI linkage finding(s)")
         for item in findings:
@@ -211,7 +268,7 @@ def main() -> int:
     print(
         "PASS: editor GUI linkage check "
         f"({len(extern_vars)} extern vars, {len(func_decls)} decls, "
-        f"{len(texts)} TUs)"
+        f"{len(texts)} TUs, symbol-header rules={len(SYMBOL_HEADER_REQUIREMENTS)})"
     )
     return 0
 

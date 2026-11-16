@@ -1,29 +1,7 @@
 // editor_toolbar.cpp
 // Extracted from engine/core/engine_gui.cpp (phase-1 editor UI split; behaviour-preserving).
 
-#include "editor_gui_internal.h"
-
-#include "engine/core/engine_gui.h"
-#include "engine/core/engine_gui_internal.h"
-#include "engine/ecs/camera_component.h"
-#include "engine/ecs/game_object.h"
-#include "engine/ecs/transform.h"
-#include "engine/editor/editor_icon_button.h"
-#include "engine/editor/editor_theme.h"
-#include "engine/editor/editor_undo.h"
-#include "engine/editor/project_manager.h"
-#include "engine/editor/transform_gizmo.h"
-#include "engine/scene/scene_loader.h"
-#include "engine/scripting/script_factory.h"
-#include "debug_camera.h"
-#include "grid.h"
-#include "imgui/imgui.h"
-#include "imgui/icons_font_awesome.h"
-
-#include <algorithm>
-#include <functional>
-#include <string>
-#include <vector>
+#include "editor_gui_common_includes.h"
 
 ReloadLightState GetReloadLightState(bool active, bool paused, bool pending, const ReloadLight& light) {
     if (!active || paused) return ReloadLightState::Paused;

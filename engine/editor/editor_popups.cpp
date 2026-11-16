@@ -1,30 +1,7 @@
 // editor_popups.cpp
 // Extracted from engine/core/engine_gui.cpp (phase-1 editor UI split; behaviour-preserving).
 
-#include "editor_gui_internal.h"
-
-#include "engine/core/engine_gui.h"
-#include "engine/core/engine_gui_internal.h"
-#include "engine/core/content_path.h"
-#include "engine/core/utf8_path.h"
-#include "engine/audio/audio_manager.h"
-#include "engine/ecs/game_object.h"
-#include "engine/ecs/tag_registry.h"
-#include "engine/editor/editor_theme.h"
-#include "engine/editor/editor_undo.h"
-#include "engine/editor/playable_package_builder.h"
-#include "engine/editor/project_manager.h"
-#include "engine/physics/core/physics_system.h"
-#include "engine/scene/scene_loader.h"
-#include "engine/scene/scene_file_monitor.h"
-#include "imgui/imgui.h"
-
-#include <Windows.h>
-#include <cstdio>
-#include <filesystem>
-#include <string>
-#include <vector>
-
+#include "editor_gui_common_includes.h"
 namespace fs = std::filesystem;
 
 static void ExecutePendingEditorAction() {

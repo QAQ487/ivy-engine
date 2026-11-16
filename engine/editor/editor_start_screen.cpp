@@ -1,20 +1,7 @@
 // editor_start_screen.cpp
 // Extracted from engine/core/engine_gui.cpp (phase-1 editor UI split; behaviour-preserving).
 
-#include "editor_gui_internal.h"
-
-#include "engine/editor/editor_theme.h"
-#include "engine/editor/project_manager.h"
-#include "engine/rendering/d3d11/renderer.h"
-#include "engine/rendering/sprite/texture.h"
-#include "engine/core/content_path.h"
-#include "engine/core/utf8_path.h"
-#include "WICTextureLoader11.h"
-#include "imgui/imgui.h"
-#include "imgui/icons_font_awesome.h"
-
-#include <d3d11.h>
-#include <string>
+#include "editor_gui_common_includes.h"
 
 static ID3D11ShaderResourceView* GetIvyLogoSrv() {
     static ID3D11ShaderResourceView* s_srv = nullptr;

@@ -1,12 +1,7 @@
 // editor_layout.cpp
 // Extracted from engine/core/engine_gui.cpp (phase-1 editor UI split; behaviour-preserving).
 
-#include "editor_layout.h"
-#include "editor_gui_internal.h"
-
-#include "imgui/imgui.h"
-
-#include <algorithm>
+#include "editor_gui_common_includes.h"
 
 // Toolbar chrome uses compact local padding (see PushToolbarChromeStyle) so
 // FontSizeBase 15.5/16 + theme FramePadding no longer clip in a fixed 36px row.

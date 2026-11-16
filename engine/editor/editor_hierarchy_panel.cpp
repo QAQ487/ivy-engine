@@ -1,20 +1,7 @@
 // editor_hierarchy_panel.cpp
 // Extracted from engine/core/engine_gui.cpp (phase-1 editor UI split; behaviour-preserving).
 
-#include "editor_gui_internal.h"
-
-#include "engine/core/engine_gui.h"
-#include "engine/ecs/game_object.h"
-#include "engine/ecs/prefab_serializer.h"
-#include "engine/editor/editor_ui_panel.h"
-#include "engine/editor/editor_undo.h"
-#include "engine/scene/scene_loader.h"
-#include "imgui/imgui.h"
-
-#include <algorithm>
-#include <memory>
-#include <string>
-#include <vector>
+#include "editor_gui_common_includes.h"
 
 void DrawSceneNodeHierarchy(GameObject* node, GameObject* rootOwner) {
     if (!node) return;

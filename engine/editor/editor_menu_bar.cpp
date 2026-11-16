@@ -1,32 +1,7 @@
 // editor_menu_bar.cpp
 // Extracted from engine/core/engine_gui.cpp (phase-1 editor UI split; behaviour-preserving).
 
-#include "editor_gui_internal.h"
-
-#include "engine/core/engine_gui.h"
-#include "engine/core/play_fps_overlay.h"
-#include "engine/core/job_system.h"
-#include "engine/core/debug_system.h"
-#include "engine/core/content_path.h"
-#include "engine/ecs/game_object.h"
-#include "engine/ecs/camera_component.h"
-#include "engine/ecs/collider_component_access.h"
-#include "engine/ecs/visual_component.h"
-#include "engine/ecs/transform.h"
-#include "engine/editor/editor_theme.h"
-#include "engine/editor/editor_undo.h"
-#include "engine/editor/editor_ui_panel.h"
-#include "engine/editor/project_manager.h"
-#include "engine/physics/collider/collider.h"
-#include "engine/scene/scene_loader.h"
-#include "engine/scripting/script_factory.h"
-#include "debug_camera.h"
-#include "imgui/imgui.h"
-#include "imgui/icons_font_awesome.h"
-
-#include <cstdio>
-#include <memory>
-#include <string>
+#include "editor_gui_common_includes.h"
 
 static std::unique_ptr<GameObject> CreateModelGameObject(
     const std::string& modelName, const std::string& displayName)

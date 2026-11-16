@@ -147,6 +147,9 @@ void SetBuildDestBuffer(const std::string& path);
 void RemapNodeTagsAfterDelete(GameObject* node, int deletedId);
 void RemapSceneTagsAfterDelete(int deletedId);
 
+std::string TrimString(const std::string& value);
+std::string NormalizeSceneFileName(const std::string& sceneName);
+
 std::unique_ptr<GameObject> CreateEmptyGameObject();
 std::unique_ptr<GameObject> CreateDirectionalLightObject();
 std::unique_ptr<GameObject> CreatePointLightObject();

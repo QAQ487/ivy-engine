@@ -255,6 +255,9 @@
     <ClInclude Include="engine\editor\editor_gui_internal.h">
       <Filter>engine\editor</Filter>
     </ClInclude>
+    <ClInclude Include="engine\editor\editor_gui_common_includes.h">
+      <Filter>engine\editor</Filter>
+    </ClInclude>
     <ClInclude Include="engine\editor\light_gizmo.h">
       <Filter>engine\editor</Filter>
     </ClInclude>

@@ -1,16 +1,7 @@
 // editor_asset_panel.cpp
 // Extracted from engine/core/engine_gui.cpp (phase-1 editor UI split; behaviour-preserving).
 
-#include "editor_gui_internal.h"
-
-#include "engine/core/engine_gui.h"
-#include "engine/ecs/game_object.h"
-#include "engine/editor/editor_project_browser.h"
-#include "engine/editor/editor_undo.h"
-#include "engine/scene/scene_loader.h"
-#include "imgui/imgui.h"
-
-#include <memory>
+#include "editor_gui_common_includes.h"
 
 void DrawEditorAssetPanel(bool playVisuals, bool sceneLoadBusy, float screenW, float screenH, float bottomHeight)
 {
