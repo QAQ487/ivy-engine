@@ -90,6 +90,31 @@ Palette MakeIvyPalette()
     return p;
 }
 
+// Darker Ivy: same accent/text tokens, deepened surfaces/frames/borders.
+Palette MakeIvyDarkPalette()
+{
+    Palette p;
+    p.canopy  = Rgb(10, 18, 15);     // #0A120F  (window / title / menu ground)
+    p.hollow  = Rgb(18, 28, 24);     // #121C18  (panels; step above canopy)
+    p.lumen   = Rgb(230, 239, 232);  // #E6EFE8  (unchanged — contrast on darkest bg)
+    p.moss    = Rgb(138, 156, 148);  // #8A9C94  (muted; still legible on canopy)
+    p.fern    = Rgb(159, 208, 176);  // #9FD0B0
+    p.trellis = Rgb(110, 136, 126);  // #6E887E  (slightly dimmer lines)
+    // trellis mixed into dark canopy (same 34% / 40% recipe as Ivy)
+    p.line = ImVec4(
+        (0.34f * 110 + 0.66f * 10) / 255.0f,
+        (0.34f * 136 + 0.66f * 18) / 255.0f,
+        (0.34f * 126 + 0.66f * 15) / 255.0f,
+        1.0f);
+    p.line2 = ImVec4(
+        (0.40f * 110 + 0.60f * 10) / 255.0f,
+        (0.40f * 136 + 0.60f * 18) / 255.0f,
+        (0.40f * 126 + 0.60f * 15) / 255.0f,
+        1.0f);
+    p.danger = Rgb(201, 123, 114); // #C97B72
+    return p;
+}
+
 Palette MakeNeutralGrayPalette()
 {
     Palette p;
@@ -384,6 +409,7 @@ const char* ColorSchemeName(ColorScheme scheme)
     case ColorScheme::ClassicDark: return "Classic Dark";
     case ColorScheme::NeutralGray: return "Neutral Gray";
     case ColorScheme::Light: return "Light";
+    case ColorScheme::IvyDark: return "Ivy Dark";
     default: return kDefaultSchemeName;
     }
 }
@@ -406,6 +432,9 @@ ColorScheme ParseColorScheme(const char* name)
         return ColorScheme::Ivy;
     if (EqualsCi(name, "Ivy"))
         return ColorScheme::Ivy;
+    if (EqualsCi(name, "Ivy Dark") || EqualsCi(name, "IvyDark") ||
+        EqualsCi(name, "ivy_dark"))
+        return ColorScheme::IvyDark;
     if (EqualsCi(name, "Classic Dark") || EqualsCi(name, "ClassicDark") ||
         EqualsCi(name, "classic_dark"))
         return ColorScheme::ClassicDark;
@@ -461,6 +490,9 @@ void ApplyColors(ImGuiStyle& style, StylePreset preset, ColorScheme scheme)
     case ColorScheme::Light:
         palette = MakeLightPalette();
         light = true;
+        break;
+    case ColorScheme::IvyDark:
+        palette = MakeIvyDarkPalette();
         break;
     case ColorScheme::Ivy:
     default:

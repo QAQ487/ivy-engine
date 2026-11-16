@@ -42,7 +42,7 @@
   - Toolbar 有 Grid/List 同 tile size；view mode／tile size 寫入 `project.json` → `editor` 同 `rom/editor/ui_prefs.json`。
   - Linux：`tests/asset_browser_text_test.cpp`（`g++ -std=c++17 -I.`）。Windows 要目視長檔名、list 拖放／右鍵 Skybox、設定重開後保留。
 - [ ] **Editor ImGui theme（style preset × color scheme）**（source 已做；等 Windows editor 目視驗收）
-  - `engine/editor/editor_theme.h/.cpp`：獨立兩軸——style preset（Trellis 預設／Hollow Soft）同 color scheme（Ivy 預設／Classic Dark／Neutral Gray／Light）。Play／Stop／start screen 等改用 semantic colors。
+  - `engine/editor/editor_theme.h/.cpp`：獨立兩軸——style preset（Trellis 預設／Hollow Soft）同 color scheme（Ivy 預設／Ivy Dark／Classic Dark／Neutral Gray／Light）。Play／Stop／start screen 等改用 semantic colors。
   - Fonts：IBM Plex Sans JP（body＋CJK）同 IBM Plex Mono（Trellis labels），Font Awesome merge；`resources/font/`＋OFL；經 `content_path`（project `rom/font/` → `resources/font/`）。ImGui 1.92 dynamic atlas；UI zoom 用 `FontScaleMain` 重 rasterize。
   - Engine Settings 選 preset／scheme；寫入 `rom/editor/ui_prefs.json` 同 `project.json` → `editor`；非法值回退 Trellis＋Ivy。
   - Linux：`./tools/run_editor_theme_check.sh`。Windows 要目視每組 preset×scheme、zoom 清晰度、Asset Browser CJK 檔名、Play／Stop 色。

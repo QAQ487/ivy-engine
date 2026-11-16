@@ -9,6 +9,7 @@
 
 #include "imgui/imgui.h"
 
+#include <cmath>
 #include <cstdio>
 #include <cstring>
 #include <string>
@@ -52,8 +53,12 @@ static void TestParsePreset() {
 
 static void TestParseScheme() {
     using editor_theme::ColorScheme;
+    Expect(static_cast<int>(ColorScheme::Count) == 5, "scheme count == 5");
     Expect(editor_theme::ParseColorScheme("Ivy") == ColorScheme::Ivy, "Ivy");
     Expect(editor_theme::ParseColorScheme("ivy") == ColorScheme::Ivy, "ivy ci");
+    Expect(editor_theme::ParseColorScheme("Ivy Dark") == ColorScheme::IvyDark, "Ivy Dark");
+    Expect(editor_theme::ParseColorScheme("IvyDark") == ColorScheme::IvyDark, "IvyDark");
+    Expect(editor_theme::ParseColorScheme("ivy_dark") == ColorScheme::IvyDark, "ivy_dark");
     Expect(editor_theme::ParseColorScheme("Classic Dark") == ColorScheme::ClassicDark,
            "Classic Dark");
     Expect(editor_theme::ParseColorScheme("classic_dark") == ColorScheme::ClassicDark,
@@ -82,6 +87,10 @@ static void TestClamp() {
            "clamp scheme high");
     Expect(editor_theme::ClampColorScheme(2) == editor_theme::ColorScheme::NeutralGray,
            "clamp scheme mid");
+    Expect(editor_theme::ClampColorScheme(
+               static_cast<int>(editor_theme::ColorScheme::IvyDark)) ==
+               editor_theme::ColorScheme::IvyDark,
+           "clamp Ivy Dark");
 }
 
 static void TestNames() {
@@ -97,6 +106,21 @@ static void TestNames() {
                 "Neutral Gray", "scheme name Neutral Gray");
     ExpectEqStr(editor_theme::ColorSchemeName(editor_theme::ColorScheme::Light),
                 "Light", "scheme name Light");
+    ExpectEqStr(editor_theme::ColorSchemeName(editor_theme::ColorScheme::IvyDark),
+                "Ivy Dark", "scheme name Ivy Dark");
+}
+
+static void TestSchemePersistenceRoundTrip() {
+    for (int i = 0; i < static_cast<int>(editor_theme::ColorScheme::Count); ++i) {
+        const auto scheme = static_cast<editor_theme::ColorScheme>(i);
+        const char* name = editor_theme::ColorSchemeName(scheme);
+        char msg[96];
+        std::snprintf(msg, sizeof(msg), "round-trip scheme %d (%s)", i, name);
+        Expect(editor_theme::ParseColorScheme(name) == scheme, msg);
+    }
+    // Invalid persisted strings still fall back to Ivy (default).
+    Expect(editor_theme::ParseColorScheme("not-a-scheme") == editor_theme::ColorScheme::Ivy,
+           "invalid persist → Ivy");
 }
 
 static void TestImGuiColCoverage() {
@@ -136,6 +160,73 @@ static void TestImGuiColCoverage() {
     Expect(sem.text.w > 0.5f, "semantic text");
     // Ivy canopy ≈ #0F1A16
     Expect(sem.windowBg.x < 0.1f && sem.windowBg.y < 0.15f, "Ivy canopy dark");
+}
+
+static float SrgbToLinear(float u) {
+    return (u <= 0.04045f) ? (u / 12.92f)
+                           : std::pow((u + 0.055f) / 1.055f, 2.4f);
+}
+
+static float RelativeLuminance(const ImVec4& c) {
+    return 0.2126f * SrgbToLinear(c.x) +
+           0.7152f * SrgbToLinear(c.y) +
+           0.0722f * SrgbToLinear(c.z);
+}
+
+static float ContrastRatio(const ImVec4& a, const ImVec4& b) {
+    const float l1 = RelativeLuminance(a);
+    const float l2 = RelativeLuminance(b);
+    const float hi = (l1 > l2) ? l1 : l2;
+    const float lo = (l1 > l2) ? l2 : l1;
+    return (hi + 0.05f) / (lo + 0.05f);
+}
+
+static float MeanRgb(const ImVec4& c) {
+    return (c.x + c.y + c.z) / 3.0f;
+}
+
+static void TestIvyDarkDarkerThanIvy() {
+    ImGuiStyle ivy;
+    ImGuiStyle ivyDark;
+    editor_theme::ApplyColors(
+        ivy, editor_theme::StylePreset::Trellis, editor_theme::ColorScheme::Ivy);
+    editor_theme::ApplyColors(
+        ivyDark, editor_theme::StylePreset::Trellis, editor_theme::ColorScheme::IvyDark);
+
+    Expect(MeanRgb(ivyDark.Colors[ImGuiCol_WindowBg]) <
+               MeanRgb(ivy.Colors[ImGuiCol_WindowBg]),
+           "Ivy Dark WindowBg darker than Ivy");
+    Expect(MeanRgb(ivyDark.Colors[ImGuiCol_TitleBg]) <
+               MeanRgb(ivy.Colors[ImGuiCol_TitleBg]),
+           "Ivy Dark TitleBg darker than Ivy");
+    Expect(MeanRgb(ivyDark.Colors[ImGuiCol_MenuBarBg]) <
+               MeanRgb(ivy.Colors[ImGuiCol_MenuBarBg]),
+           "Ivy Dark MenuBarBg darker than Ivy");
+    Expect(MeanRgb(ivyDark.Colors[ImGuiCol_FrameBg]) <
+               MeanRgb(ivy.Colors[ImGuiCol_FrameBg]),
+           "Ivy Dark FrameBg darker than Ivy");
+
+    // Lumen-on-canopy contrast should stay WCAG AA-ish for normal text (>= 4.5).
+    const float textContrast = ContrastRatio(
+        ivyDark.Colors[ImGuiCol_Text], ivyDark.Colors[ImGuiCol_WindowBg]);
+    Expect(textContrast >= 4.5f, "Ivy Dark text contrast >= 4.5");
+
+    const float mutedContrast = ContrastRatio(
+        ivyDark.Colors[ImGuiCol_TextDisabled], ivyDark.Colors[ImGuiCol_WindowBg]);
+    Expect(mutedContrast >= 2.5f, "Ivy Dark muted text still legible");
+
+    // Hover/active distinguishable from base button.
+    Expect(MeanRgb(ivyDark.Colors[ImGuiCol_ButtonHovered]) !=
+               MeanRgb(ivyDark.Colors[ImGuiCol_Button]),
+           "Ivy Dark ButtonHovered != Button");
+    Expect(MeanRgb(ivyDark.Colors[ImGuiCol_ButtonActive]) !=
+               MeanRgb(ivyDark.Colors[ImGuiCol_Button]),
+           "Ivy Dark ButtonActive != Button");
+
+    // Same fern accent family as Ivy.
+    const auto& darkSem = editor_theme::GetSemanticColors();
+    Expect(darkSem.accent.x > 0.5f && darkSem.accent.y > 0.7f,
+           "Ivy Dark keeps fern accent");
 }
 
 static void TestCenteredGlyphDrawPos() {
@@ -209,7 +300,9 @@ int main() {
     TestParseScheme();
     TestClamp();
     TestNames();
+    TestSchemePersistenceRoundTrip();
     TestImGuiColCoverage();
+    TestIvyDarkDarkerThanIvy();
     TestCenteredGlyphDrawPos();
     TestToolbarChromeFitsFont();
 

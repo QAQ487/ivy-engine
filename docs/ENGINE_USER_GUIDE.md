@@ -991,7 +991,7 @@ The editor calls `SetCurrentDirectory` on that folder so relative paths like `ro
 | `defaultScene` | Play / runtime default (also written to `rom/scene/default_scene.txt`) |
 | `editor.uiZoomPercent` | ImGui UI scale (100 / 125 / 150 / 175 / 200) |
 | `editor.uiStylePreset` | ImGui style preset: `Trellis` (default) or `Hollow Soft` (Engine Settings → UI Style) |
-| `editor.uiColorScheme` | ImGui color scheme: `Ivy` (default), `Classic Dark`, `Neutral Gray`, or `Light` (Engine Settings → Color Scheme) |
+| `editor.uiColorScheme` | ImGui color scheme: `Ivy` (default), `Ivy Dark`, `Classic Dark`, `Neutral Gray`, or `Light` (Engine Settings → Color Scheme) |
 | `physics.gravity` | World gravity applied in play and runtime builds |
 | `audio.masterVolume` / `bgmVolume` / `sfxVolume` / `voiceVolume` | Bus levels (editor + runtime) |
 | `audio.uiClickSound` | WAV played when a UIButton activates (persists across scene loads) |
