@@ -114,6 +114,13 @@ BOOL CloseHandle(HANDLE h);
 void Sleep(DWORD ms);
 void OutputDebugStringA(LPCSTR msg);
 
+#ifndef CP_UTF8
+#define CP_UTF8 65001
+#endif
+// Minimal stub for hal::DebugWriteW on Linux offline checks.
+int WideCharToMultiByte(UINT codePage, DWORD flags, LPCWSTR wide, int wideCount,
+    LPSTR out, int outBytes, LPCSTR defaultChar, BOOL* usedDefaultChar);
+
 HANDLE CreateEventW(void* attrs, BOOL manual, BOOL initial, LPCWSTR name);
 BOOL SetEvent(HANDLE h);
 DWORD WaitForSingleObject(HANDLE h, DWORD ms);

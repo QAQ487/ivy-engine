@@ -10,7 +10,7 @@
 #ifndef DEBUG_OSTREAM_H
 #define DEBUG_OSTREAM_H
 
-#include <Windows.h>
+#include <windows.h>
 #include <mutex>
 #include <sstream>
 #include <string>
@@ -81,33 +81,49 @@ namespace hal {
 		DebugWriteA(utf8.c_str());
 	}
 
+	// Per-thread accumulation for dout. Lifetime is tied to the thread (not to
+	// the global debugbuf object), so ~debugbuf never touches a destroyed TLS
+	// string. Flushing here also emits a worker's last un-endl'd line at exit.
+	struct DebugTlsBuffer {
+		std::string text;
+		~DebugTlsBuffer()
+		{
+			if (!text.empty()) {
+				DebugWriteA(text.c_str());
+				text.clear();
+			}
+		}
+	};
+
+	inline DebugTlsBuffer& DoutTls()
+	{
+		thread_local DebugTlsBuffer buf;
+		return buf;
+	}
+
 	// Streambuf with thread_local storage so concurrent `dout <<` from worker
 	// threads do not race a shared string buffer. Flush still goes through DebugWriteA.
+	// Note: the global `dout` ostream's format state (width/fill/flags) is shared
+	// across threads — prefer DebugWriteA from workers when formatting matters.
 	class debugbuf : public std::streambuf {
 	protected:
-		static std::string& TlsBuf()
-		{
-			thread_local std::string s;
-			return s;
-		}
-
 		int_type overflow(int_type ch) override
 		{
 			if (!traits_type::eq_int_type(ch, traits_type::eof()))
-				TlsBuf().push_back(traits_type::to_char_type(ch));
+				DoutTls().text.push_back(traits_type::to_char_type(ch));
 			return traits_type::not_eof(ch);
 		}
 
 		std::streamsize xsputn(const char* s, std::streamsize count) override
 		{
 			if (s && count > 0)
-				TlsBuf().append(s, static_cast<size_t>(count));
+				DoutTls().text.append(s, static_cast<size_t>(count));
 			return count;
 		}
 
 		int sync() override
 		{
-			std::string& buf = TlsBuf();
+			std::string& buf = DoutTls().text;
 			if (!buf.empty()) {
 				DebugWriteA(buf.c_str());
 				buf.clear();
@@ -116,7 +132,9 @@ namespace hal {
 		}
 
 	public:
-		~debugbuf() override { sync(); }
+		// Do not sync() here: at global dout destruction the main thread's
+		// thread_local buffer may already be destroyed (use-after-free).
+		~debugbuf() override = default;
 	};
 
 	class debug_ostream : public std::basic_ostream<char, std::char_traits<char>> {

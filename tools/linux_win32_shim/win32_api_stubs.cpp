@@ -79,6 +79,60 @@ void Sleep(DWORD ms) {
 }
 void OutputDebugStringA(LPCSTR) {}
 
+int WideCharToMultiByte(UINT codePage, DWORD, LPCWSTR wide, int wideCount,
+    LPSTR out, int outBytes, LPCSTR, BOOL*)
+{
+    if (codePage != CP_UTF8 || !wide)
+        return 0;
+    // wideCount < 0 → null-terminated; otherwise character count (no forced NUL).
+    size_t srcLen = 0;
+    if (wideCount < 0) {
+        while (wide[srcLen] != 0)
+            ++srcLen;
+    } else {
+        srcLen = static_cast<size_t>(wideCount);
+    }
+
+    // Measure UTF-8 bytes (excluding a trailing NUL we add for -1 queries).
+    size_t utf8Len = 0;
+    for (size_t i = 0; i < srcLen; ++i) {
+        const unsigned int cp = static_cast<unsigned int>(wide[i]);
+        if (cp <= 0x7Fu) utf8Len += 1;
+        else if (cp <= 0x7FFu) utf8Len += 2;
+        else if (cp <= 0xFFFFu) utf8Len += 3;
+        else utf8Len += 4;
+    }
+    const bool wantNul = (wideCount < 0);
+    const size_t need = utf8Len + (wantNul ? 1 : 0);
+    if (!out || outBytes == 0)
+        return static_cast<int>(need);
+    if (static_cast<size_t>(outBytes) < need)
+        return 0;
+
+    size_t o = 0;
+    for (size_t i = 0; i < srcLen; ++i) {
+        unsigned int cp = static_cast<unsigned int>(wide[i]);
+        if (cp <= 0x7Fu) {
+            out[o++] = static_cast<char>(cp);
+        } else if (cp <= 0x7FFu) {
+            out[o++] = static_cast<char>(0xC0u | (cp >> 6));
+            out[o++] = static_cast<char>(0x80u | (cp & 0x3Fu));
+        } else if (cp <= 0xFFFFu) {
+            out[o++] = static_cast<char>(0xE0u | (cp >> 12));
+            out[o++] = static_cast<char>(0x80u | ((cp >> 6) & 0x3Fu));
+            out[o++] = static_cast<char>(0x80u | (cp & 0x3Fu));
+        } else {
+            out[o++] = static_cast<char>(0xF0u | (cp >> 18));
+            out[o++] = static_cast<char>(0x80u | ((cp >> 12) & 0x3Fu));
+            out[o++] = static_cast<char>(0x80u | ((cp >> 6) & 0x3Fu));
+            out[o++] = static_cast<char>(0x80u | (cp & 0x3Fu));
+        }
+    }
+    if (wantNul)
+        out[o] = '\0';
+    return static_cast<int>(need);
+}
+
 HANDLE CreateEventW(void*, BOOL, BOOL, LPCWSTR) {
     return reinterpret_cast<HANDLE>(intptr_t{3});
 }
