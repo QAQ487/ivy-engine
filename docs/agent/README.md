@@ -10,7 +10,7 @@ A content project is a folder with:
 - `rom/` — scenes, models, textures, tags, prefs
 - `game/scripts/` — gameplay C++ scripts (DLL)
 
-Starter: `external_content_template/`. In-repo exercise project: `testbed/`. Full detail: [`../CONTENT_PROJECT.md`](../CONTENT_PROJECT.md).
+Starter: `external_content_template/`. In-repo exercise project: `testbed/`. Full detail: engine `docs/ENGINE_USER_GUIDE.md` §21 (External content projects).
 
 ## Asset resolution (`rom/` vs `resources/`)
 
@@ -40,4 +40,4 @@ JSON field names and ordinary file paths stay in normal backticks (no `api:` / `
 | [`api/camera.md`](api/camera.md) | Scene / third-person / first-person cameras |
 | [`api/assets.md`](api/assets.md) | Textures, prefab instantiate/destroy, content paths |
 
-Also (engine repo docs, not always exported): `docs/RUNTIME_TEST_BRIDGE.md`, `docs/CONTENT_PROJECT.md`. Bridge scenario schema: [`../schemas/runtime_bridge_scenario.v1.schema.json`](../schemas/runtime_bridge_scenario.v1.schema.json) (`export_agent_docs.py` rewrites this link to `schemas/` under `docs/ivy-engine/`).
+Also (engine repo docs, not always exported): `docs/RUNTIME_TEST_BRIDGE.md`, `docs/ENGINE_USER_GUIDE.md`, `AGENTS.md`. Bridge scenario schema: [`../schemas/runtime_bridge_scenario.v1.schema.json`](../schemas/runtime_bridge_scenario.v1.schema.json) (`export_agent_docs.py` rewrites this link to `schemas/` under `docs/ivy-engine/`).

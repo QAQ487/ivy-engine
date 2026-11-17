@@ -1,13 +1,11 @@
 # Ivy Engine — User Guide
 
-A practical guide for humans: how to open the project, build scenes, attach components, write scripts, and ship a playable build.
+A practical guide for humans: how to open the project, build scenes, attach components, write scripts, and ship a playable build. This is the one hand-written doc for people; AI agents read [`AGENTS.md`](../AGENTS.md) instead.
 
-The repo ships a **minimal sample pack** (menu + playground) instead of a full game. Use those scenes as a starting point.
+The repo ships a **minimal sample pack** (the in-repo `testbed/` project) instead of a full game. Use those scenes as a starting point.
 
 If you need every function signature, use [`ENGINE_API_REFERENCE.md`](ENGINE_API_REFERENCE.md).  
-If you need JSON schemas and source maps for tools/agents, use [`ENGINE_MANUAL.md`](ENGINE_MANUAL.md).  
-For a content-only external repo, see [`CONTENT_PROJECT.md`](CONTENT_PROJECT.md).  
-AI agents in a separate game repo: start with [`docs/agent/README.md`](agent/README.md) (export with `tools/export_agent_docs.py`).
+AI agents in a separate game repo: give them [`docs/agent/`](agent/README.md) (export with `tools/export_agent_docs.py`).
 
 ---
 
@@ -33,6 +31,7 @@ AI agents in a separate game repo: start with [`docs/agent/README.md`](agent/REA
 18. [Common recipes](#18-common-recipes)
 19. [Troubleshooting](#19-troubleshooting)
 20. [Projects (New / Open / Save)](#20-projects-new--open--save)
+21. [External content projects](#21-external-content-projects)
 
 ---
 
@@ -55,13 +54,13 @@ You do not write a new engine every time you make a game. You:
 
 ### The three Visual Studio projects
 
-| Project | What it is |
-|---------|------------|
-| **IvyEngine** | Editor + development app. This is what you run day to day. |
-| **GameScripts** | Your game logic DLL. Rebuild this when you change scripts. |
-| **IvyEngineRuntime** | Player build without editor UI (`GAME_RUNTIME`). |
+| Project | Where | What it is |
+|---------|-------|------------|
+| **IvyEngine** | `IvyEngine.sln` | Editor + development app. This is what you run day to day. |
+| **IvyEngineRuntime** | `IvyEngine.sln` | Player build without editor UI (`GAME_RUNTIME`). |
+| **GameScripts** | Your content project's `<Name>.sln` | Your game logic DLL. Rebuild this when you change scripts. |
 
-Open `IvyEngine.sln` in Visual Studio 2022 (x64 Debug or Release).
+Open `IvyEngine.sln` in Visual Studio 2026 (toolset `v145`, x64 Debug or Release).
 
 ---
 
@@ -69,17 +68,17 @@ Open `IvyEngine.sln` in Visual Studio 2022 (x64 Debug or Release).
 
 ### Prerequisites
 
-- Visual Studio 2022 with C++ desktop workload
+- Visual Studio 2026 with the C++ desktop workload (the projects use toolset `v145` and C++20)
 - Windows 10/11 x64
-- This repository checked out with `libraries/` present (FBX, Effekseer, ImGui, etc.)
+- This repository checked out with `libraries/` present (FBX, Effekseer, ImGui, Box2D, etc.)
 
 ### Build and run
 
 1. Open `IvyEngine.sln`.
 2. Set configuration to **Debug | x64** (or Release | x64).
-3. Build **IvyEngine** (shaders compile as part of the project).
-4. Build **GameScripts**.
-5. Set **IvyEngine** as the startup project and run it (F5).
+3. Build **IvyEngine** (shaders compile as part of the build).
+4. Set **IvyEngine** as the startup project and run it (F5).
+5. When you have a content project with scripts, build its **GameScripts** from that project's own `.sln` (see [§21](#21-external-content-projects)).
 
 You should get a window (design size **1920×1080**). The editor opens a **content project** (folder with `rom/` and `project.json`). Startup prefers:
 
@@ -87,25 +86,33 @@ You should get a window (design size **1920×1080**). The editor opens a **conte
 2. Otherwise, a **Debug** build opens the in-repo [`testbed/`](../testbed) project. Release does not. The build output folder also contains `rom/` and is not auto-opened.
 3. The scene comes from that project's `project.json` → `lastOpenedScene` (fallback: `defaultScene` / `rom/scene/default_scene.txt`)
 
-`testbed/project.json` points at `scene_sample_menu.json`. Change **File → Save Project** or **Project Settings → Default Scene** to update defaults. See [§20 Projects](#20-projects-new--open--save) and [`CONTENT_PROJECT.md`](CONTENT_PROJECT.md).
+`testbed/project.json` points at `scene_sample_menu.json`. Use **File → Save Project** or **Edit → Project Settings → Scenes** to change defaults. See [§20 Projects](#20-projects-new--open--save).
 
 ### Try the sample pack
 
 1. Run **IvyEngine**. If a recent external project opens instead, use **File → Open Testbed**. With no recent project, a Debug build opens `testbed/` on its own.
-2. The startup scene is the sample menu inside `testbed/rom/scene/`.
-3. Click **Play** to load `scene_sample_playground.json` from that same folder.
-4. Move with **WASD** / left stick. A blue box spins via `SampleSpinScript` when that script DLL is loaded.
-5. Press **F3** again to stop Play mode in the editor.
+2. The startup scene is the sample menu inside `testbed/rom/scene/`. Other scenes there cover PBR, panorama sky, 2D sprites, 2D physics and a top-down 2D sample.
+3. Press **F2** (or the toolbar Play button) and click **Play** in the menu to load `scene_sample_playground.json`.
+4. Move with **WASD** / left stick. The testbed has no `GameScripts` of its own: script-driven behavior (for example the spinning box from `SampleSpinScript`) only runs when a script DLL that contains those classes is loaded. Reference scripts live in `samples/scripts/`.
+5. Press **F2** again to stop Play mode.
 
-### First keys to remember
+### Keys to remember
 
 | Key | Action |
 |-----|--------|
-| **F2** | Show / hide the ImGui editor |
-| **F3** | Play / stop (also toolbar Play button) |
+| **F2** | Play / stop inside the editor viewport (editor panels stay visible) |
+| **F3** | Play / stop fullscreen (16:9 letterboxed in the whole window) |
 | **F1** | Toggle debug camera (Maya-style orbit / fly) |
+| **F6** | Show / hide the mouse cursor while playing |
+| **F7** | Cycle time scale |
+| **F8** | Job-system debug overlay |
+| **F9** / **F10** | PostFX showcase: RGB burst / mosaic toggle |
+| **F11** | Collision visualizer (3D and 2D colliders) |
+| **F12** | Step one frame |
+| **Ctrl+S** / **Ctrl+Shift+S** | Save Scene / Save Project |
+| **Ctrl+Z** / **Ctrl+Y** | Undo / Redo |
 
-When the editor is visible, the status line reminds you: *F2 toggle GUI | F3 play/stop*.
+F1 and F6–F12 are editor-build debug keys; a shipped game never sees them.
 
 ---
 
@@ -150,7 +157,7 @@ Components are small data + behavior packs attached to an object. Important ones
 | `SceneTransform` | Local position, rotation (degrees), scale |
 | `visual` | FBX/OBJ model, animations, shader |
 | `Material` | Color, roughness, metallic, toon params |
-| `Collider` | Box / sphere / capsule / cylinder / mesh |
+| `BoxCollider` / `SphereCollider` / `CapsuleCollider` / `CylinderCollider` / `MeshCollider` | 3D collision shape (one per object) |
 | `Rigidbody` | Gravity, mass, drag, kinematic flag (JSON-authored physics body) |
 | `Script` | Your C++ class by name (`scriptClass`) |
 | `Billboard` | Always-facing sprite in 3D |
@@ -159,6 +166,7 @@ Components are small data + behavior packs attached to an object. Important ones
 | `Audio` | Play one WAV clip on this node (bus, loop, spatial 3D) |
 | `AudioListener` | Mark this node as the 3D ear (usually on the active camera) |
 | `DirectionalLight` / `PointLight` / `SpotLight` | Lights |
+| `SpriteRenderer` / `SpriteAnimator` / `Rigidbody2D` / `Collider2D` | 2D sprites, sprite animation, 2D physics |
 
 Names are **case-sensitive**. Use exactly these strings in JSON.
 
@@ -183,24 +191,38 @@ On Play, the engine creates your class, deserializes properties, then calls:
 | Mode | What happens |
 |------|----------------|
 | **Edit** | Place objects, tweak properties, save scenes. Scripts usually idle. |
-| **Play (F3)** | Scene runs with physics, scripts, cameras. Stop restores edit state. |
+| **Play (F2 / F3)** | Scene runs with physics, scripts, cameras. Stop restores edit state. |
 | **IvyEngineRuntime** | No editor panels; loads default scene and plays. |
 
 ---
 
 ## 4. Editor tour
 
-Press **F2** to open the editor UI.
+The editor UI is always visible in Edit mode. Panels dock around a central game viewport.
 
 Typical panels and workflows:
 
-1. **Scene hierarchy** — select objects, expand children.
-2. **Inspector / properties** — edit transform, components, script fields, and **tags** (pick / add / delete custom).
+1. **Hierarchy** — select objects, expand children, drag to reparent, drop prefabs.
+2. **Properties** — edit transform, components, script fields, and **tags** (pick / add / delete custom). **Add Component** is a searchable list that hides components the object already has.
 3. **Asset Browser (project / prefab browser)** — indexes the open project’s `rom/` and `game/scripts/`. Folder tree + breadcrumb navigate; **Refresh** and **Search** filter the current folder. **Grid / List** toggles the right-hand view; in Grid, a **Tile** size slider (64–160) scales icons. Grid names wrap up to two lines and ellipsize when still too long; hover shows the full file name and `rom/`-relative path; the status line at the bottom shows the selected asset’s name and path. List view is one row per asset (icon + full name, single-line ellipsis only if the panel is narrower than the name). Drag-drop (`ASSET_PATH` / `ASSET_PREFAB`), double-click, and right-click menus (including **Set as > Skybox** for eligible cubemaps) work in both views. View mode and tile size are stored in `project.json` → `editor` and `rom/editor/ui_prefs.json`.
-4. **Viewport** — 3D game view in the docking central node (fixed **16:9** letterbox/pillarbox; see below); transform gizmo and selection wireframe.
-5. **Play toolbar** — Play / Stop (F2 viewport / F3 fullscreen).
-6. **UI edit mode** — switch edit mode to place canvas elements on screen.
-7. **File menu** — New / Open / Save Project, Recent Projects, Save Scene, New Scene.
+4. **Console** — engine log output (`dout` / debug writes) in a dockable panel, with selection and copy.
+5. **Viewport** — game view in the docking central node (fixed **16:9** letterbox/pillarbox; see below); transform gizmo and selection wireframe.
+6. **Toolbar** — Play / Stop (F2 viewport / F3 fullscreen), edit mode, and three reload lights on the right: **Scene JSON**, **Content**, **Script DLL** (see [Hot reload](#hot-reload)).
+7. **UI edit mode** — switch edit mode to place canvas elements on screen.
+
+### Menus
+
+| Menu | Contents |
+|------|----------|
+| **File** | New Scene, Save Scene, Clear Scene · New / Open Project, Open Testbed, Recent Projects, Close Project, Save Project · Build Current Project · Exit |
+| **Edit** | Undo / Redo · **Project Settings…** · **Preferences…** |
+| **GameObject** | Create Empty, 3D Object (primitives), Camera / Debug Camera, Light (Directional / Point / Spot), UI (Button / Text / Sprite / Bar) |
+| **View** | Show Grid, Show Gizmos, Show UI Overlay, 2D View, Show FPS When Playing, Collision Visualizer (F11) |
+| **Window** | Hierarchy, Properties, Asset Browser, Console, Project Settings, Preferences, PostFX Showcase, Reset Layout |
+
+**Project Settings** (saved with the project) has pages **Rendering** (skybox, fog, shadows, culling, 2D scene / physics toggles), **Physics** (gravity), **Audio** (bus volumes, UI click sound), **Scenes** (default scene) and **Build** (playable package output folder and configuration).
+
+**Preferences** (per project, saved immediately to `rom/editor/ui_prefs.json`) has **Appearance**: UI Scale (100–200 %, multiplied once by the monitor DPI), UI Style (`Trellis` / `Hollow Soft`) and Color Scheme (`Ivy`, `Ivy Dark`, `Classic Dark`, `Neutral Gray`, `Light`).
 
 ### Viewport aspect ratio
 
@@ -208,7 +230,7 @@ The editor game viewport is the largest centered **16:9** rectangle inside the I
 
 Play mode uses the same 16:9 contract (F2 inside the central node; F3 letterboxed in the full window). Cameras, shadows, picking, gizmos, and UI hit-testing use that rectangle’s width÷height. The shipped runtime (non-editor) still uses the full backbuffer.
 
-Layout (Hierarchy / Properties / Asset Browser) persists per content project at `rom/editor/imgui_layout.ini`. Use **Window → Reset Layout** to restore the default left/right/bottom arrangement.
+The dock layout persists per content project at `rom/editor/imgui_layout.ini`. **Window → Reset Layout** restores the default: Hierarchy left, Properties right, Asset Browser and Console tabbed at the bottom (Asset Browser in front).
 
 ### Camera modes in the editor
 
@@ -220,7 +242,7 @@ The editor can drive different camera behaviors (third-person, scene camera node
 ### Saving work
 
 - **Save Scene** (Ctrl+S) — writes the current scene JSON under `rom/scene/`.
-- **Save Project** (Ctrl+Shift+S) — saves the scene **and** writes `project.json` (last opened scene, default scene, UI zoom / style preset / color scheme, Asset Browser view mode / tile size). Unsaved scene changes still warn before load/exit/project switch. Asset Browser and theme prefs also update `rom/editor/ui_prefs.json` immediately when changed.
+- **Save Project** (Ctrl+Shift+S) — saves the scene **and** writes `project.json` (last opened scene, default scene, UI scale / style preset / color scheme, Asset Browser view mode / tile size). Unsaved scene changes still warn before load/exit/project switch. Asset Browser and appearance prefs also update `rom/editor/ui_prefs.json` immediately when changed.
 
 ---
 
@@ -237,16 +259,18 @@ The editor can drive different camera behaviors (third-person, scene camera node
 | `rom/texture/` | Albedo, UI, fonts, sky DDS, etc. |
 | `rom/audio/` | WAV (and similar) for BGM / SFX |
 | `rom/effect/` | Effekseer effect files |
-| `resources/shader/` | Built shader binaries (from `shaders/`). Projects still refer to them as `rom/shader/`; the loader falls back here when the project has no copy |
 | `rom/font/` | Font-related assets if used |
-| `rom/editor/` | Editor UI prefs (zoom, style preset, color scheme) for this project |
+| `rom/editor/` | Editor dock layout and UI prefs for this project (generated) |
+| `rom/skybox/cache/` | Cooked panorama skyboxes / IBL (generated; do not edit) |
 
-Paths in JSON are usually relative to the working directory, like:
+Paths in JSON are relative to the project root, like:
 
 ```text
 rom/model/object/Box_Green.fbx
 rom/texture/UI/title/Main menu_bg.png
 ```
+
+**Engine defaults** — shaders, editor and UI fonts, branding, primitive models, the default skybox and IBL — live in the engine repo's `resources/` folder (copied beside the exe). When a `rom/<path>` file does not exist in your project, the engine reads `resources/<path>` instead. So `rom/shader/...` or `rom/font/...` work without copying anything; put a file at the same `rom/` path in your project to override a default. The engine **never writes** into `resources/`: scenes, prefs, tags and new assets always go to your project's `rom/`.
 
 Keep assets inside `rom/` so editor, runtime, and deploy layouts stay consistent.
 
@@ -289,7 +313,7 @@ A scene is a JSON document roughly like:
 2. Place it from the prefab browser, **or** paste a node into `nodes` with a `prefabAssetPath`.
 3. Adjust transform in the inspector.
 4. Save the scene.
-5. Press **F3** to test.
+5. Press **F2** (viewport) or **F3** (fullscreen) to test.
 
 ### Minimal hand-authored node
 
@@ -348,20 +372,11 @@ ScriptApi_Visual_PlayClip(visual, "Run");
 
 Optional PBR / toon tuning on top of the mesh: color, roughness, metallic, normal map, ramp, outline width, rim, etc. Prefer scene default shader for global look; use Material or `visual.shader` for per-object exceptions.
 
-### Collision — `Collider`
+### Collision — `BoxCollider`, `SphereCollider`, `CapsuleCollider`, `CylinderCollider`, `MeshCollider`
 
-Declarative collider for the object. Types (integer `colliderType`):
+Each shape is its own component and only shows that shape's fields (box half extents, radius, height, mesh padding, center offset, trigger). An object can have **one** 3D collider. Enable **Show Debug Collider** (or press **F11** for all colliders) while tuning.
 
-| Value | Shape |
-|------:|-------|
-| 0 | None |
-| 1 | Box (`halfExtents`) |
-| 2 | Sphere (`radius`) |
-| 3 | Capsule (`radius`, `height`) |
-| 4 | Mesh (from model, optional padding) |
-| 5 | Cylinder (`radius`, `height`) |
-
-Enable `showDebugCollider` while tuning.
+Older scenes may still contain a generic `Collider` with an integer `colliderType` (0 none, 1 box, 2 sphere, 3 capsule, 4 mesh, 5 cylinder). It still loads; saving the scene rewrites it as the matching shape component. Engine builds older than this change cannot read the new names.
 
 ### Gameplay — `Script`
 
@@ -378,7 +393,15 @@ Enable `showDebugCollider` while tuning.
 
 ### 2D — `SpriteRenderer`, `SpriteAnimator`, `Rigidbody2D`, `Collider2D`
 
-JSON type names are case-sensitive (same registry as 3D). Use with scene `settings.renderPath` `"2d"` / `physicsMode` `"2d"` when authoring top-down or orthographic 2D scenes. Shape colliders also register as `BoxCollider`, `SphereCollider`, `CapsuleCollider`, `CylinderCollider`, `MeshCollider`.
+2D games use the same content project, scenes, scripts, UI, audio and packaging as 3D.
+
+1. Turn on **2D Scene** in Project Settings → Rendering (`settings.renderPath: "2d"`). The 2D path skips models, shadows, sky, 3D particles, Effekseer and PostFX. Optionally turn on **2D Physics** (`physicsMode: "2d"`, Box2D).
+2. Add a **Camera** with **Orthographic** on and a View Height (e.g. 10), placed at Z = -10 looking down +Z with zero rotation. Select it as the Play scene camera.
+3. Add **Sprite Renderer** to objects: texture path, source rect, pivot (from bottom-left), Pixels Per Unit (world size = source pixels ÷ PPU), tint, flip, Sorting Layer then Order In Layer.
+4. **Sprite Animator**: named clips with per-frame XYWH, FPS, loop, default clip, auto play. **Sheet Metadata JSON** imports `image` + `frames[].x/y/w/h`. Animation only advances in Play; Stop restores the authored state.
+5. **Rigidbody2D** (Static / Dynamic / Kinematic, gravity scale defaults to 0 for top-down) + **Collider2D** (Box / Circle, trigger, category / mask bits). Move dynamic bodies by velocity, kinematic bodies with `MovePosition`. Movable bodies must be root objects with uniform XY scale; scale and shape cannot change during Play.
+
+Editor helpers: **View → 2D View** (orthographic XY editing; middle-drag or Alt+LMB pan, wheel zoom, **F** frames the selection), XY-locked 2D gizmo, rectangle picking that respects sorting, drag a PNG/JPG/BMP from the Asset Browser into the viewport to create a sprite at Z = 0, and **New Project → 2D Project** for a starter scene. Sample scenes: `testbed/rom/scene/scene_sprite_2d.json`, `scene_physics_2d.json`, `scene_topdown_2d.json`.
 
 ### Lights
 
@@ -459,8 +482,8 @@ Author once as a prefab → place many instances in scenes → override only wha
 
 ```text
 game/scripts/
-  sample/          # SamplePlayerScript, SampleSpinScript
   GameScripts/GameScripts.vcxproj
+  <your folders>/  # e.g. player/, enemies/ — copy from samples/scripts/ to start
 ```
 
 Add your `.h` / `.cpp` under `game/scripts/` (any folder), add them to the **GameScripts** project, then rebuild that project.
@@ -480,7 +503,7 @@ public:
 };
 ```
 
-(See also shipped samples: `SamplePlayerScript`, `SampleSpinScript` in `game/scripts/sample/`.)
+(See also the reference scripts in the engine's `samples/scripts/`: `SamplePlayerScript`, `SampleSpinScript`, `SampleTriggerLogScript`, `SampleCheckpointScript`, `SamplePhysics2DPlayerScript`. Copy them into your project's `game/scripts/` to use them.)
 
 **Source**
 
@@ -564,9 +587,9 @@ Do **not** link scripts against the full editor. The host table is the supported
 
 For canvas elements, inherit `UICanvasScript` and register with `REGISTER_UI_SCRIPT(MyUiScript)`. Attach via the UI element’s script class field in the canvas JSON / UI editor.
 
-### Hot reload
+### Script reload
 
-With the editor running, rebuild **GameScripts**. The engine watches the DLL, queues a reload, and recreates script instances. Keep `OnCreate` / `OnDestroy` balanced so reloads do not leak resources.
+With the editor running, rebuild **GameScripts**. The engine watches the DLL, queues a reload, and recreates script instances. Keep `OnCreate` / `OnDestroy` balanced so reloads do not leak resources. See [§17 Hot reload](#hot-reload) for scenes and assets.
 
 ---
 
@@ -601,7 +624,7 @@ Project gravity defaults come from `project.json` → `physics.gravity` (Project
 
 ### Colliders
 
-Prefer the **Collider** component in the editor. For runtime boxes from scripts:
+Prefer a shape collider component (`BoxCollider`, …) in the editor. For runtime boxes from scripts:
 
 ```cpp
 ScriptApi_CreateBoxCollider(self, { 1, 1, 1 }, { 0, 0.5f, 0 });
@@ -664,18 +687,18 @@ ScriptApi_SetActiveCameraNodeName("CutsceneCam");
 
 ### Scene render settings
 
-Edit `settings.render` in the scene JSON (or via editor if exposed):
+Edit these in **Edit → Project Settings → Rendering** (saved into the current scene's `settings.render`), or directly in the scene JSON:
 
 - Skybox on/off, cubemap path, tint, exposure, Y rotation
-- `skyboxCubemap` may be a DDS cubemap or one equirectangular PNG. Width is full 360°. Exactly 2:1 (180° vertical) keeps the previous face rule (`height/2` power of two). Shorter images (height ≤ width/2) are placed by vertical coverage `360*height/width` centered on the horizon with edge-row clamp; optional `skyboxVerticalFov` (degrees, clamped to (0,180], `0` = auto) overrides that. Height > width/2, unloadable, or unsafe paths fail with a clear log line in `content_hot_reload.log` and a **Panorama failed** notice in Rendering Settings (not a silent clear-color sky). Face size for non-2:1 is the largest power of two ≤ `width/4` (max 8192×4096 / face 2048). Drag a `.png` / `.dds` from the Asset Browser onto the path field, or right-click the asset → **Set as > Skybox**. A PNG is cooked once into `rom/skybox/cache/` (FOV is part of the stamp). The image center is +Z, the top is toward +Y, and u increases toward +X.
-- IBL for a PNG sky is rebaked (irradiance + prefilter). `brdf_lut.png` stays the shared LUT. If the bake cannot run, Rendering Settings shows **IBL not matching sky** instead of keeping the previous environment quietly.
+- `skyboxCubemap` may be a DDS cubemap or one equirectangular PNG. Width is full 360°. Exactly 2:1 (180° vertical) keeps the previous face rule (`height/2` power of two). Shorter images (height ≤ width/2) are placed by vertical coverage `360*height/width` centered on the horizon with edge-row clamp; optional `skyboxVerticalFov` (degrees, clamped to (0,180], `0` = auto) overrides that. Height > width/2, unloadable, or unsafe paths fail with a clear log line in `content_hot_reload.log` and a **Panorama failed** notice in the Rendering page (not a silent clear-color sky). Face size for non-2:1 is the largest power of two ≤ `width/4` (max 8192×4096 / face 2048). Drag a `.png` / `.dds` from the Asset Browser onto the path field, or right-click the asset → **Set as > Skybox**. A PNG is cooked once into `rom/skybox/cache/` (FOV is part of the stamp). The image center is +Z, the top is toward +Y, and u increases toward +X.
+- IBL for a PNG sky is rebaked (irradiance + prefilter). `brdf_lut.png` stays the shared LUT. If the bake cannot run, the Rendering page shows **IBL not matching sky** instead of keeping the previous environment quietly.
 - Clear color
 - Default shader for objects without override
 - Shadow quality (Low / Medium / High)
 - Height fog parameters
-- `frustumCullingEnabled` (default `true`) — skip 3D mesh draws fully outside the **main** camera frustum. Does not gate shadow depth passes. Toggle off in Rendering Settings for A/B. Counters (considered / culled / drawn) show in Rendering Settings, the play FPS overlay, and collision-viz debug text.
-- `shadowCascadeCullingEnabled` (default `true`) — per cascade, skip shadow casters whose world AABB is outside that cascade's light-space ortho volume. Near plane is open toward the light (casters between light and cascade still cast). Off-screen casters that still project into a cascade keep their shadows. Counters: frame totals + per-cascade in Rendering Settings; frame totals on FPS / collision-viz overlays and bridge `perf.shadowCull`.
-- `spriteCullingEnabled` (default `true`) — skip 2D sprite draws whose world AABB (size, pivot, rotation, scale) is fully outside the orthographic camera view rect, with a small margin against edge popping. Does not affect animation, physics, or scripts. Screen-space UI is untouched. Perspective cameras leave sprites unculled. Counters (considered / culled / drawn) show in Rendering Settings, FPS overlay `2CULL`, collision-viz, and bridge `perf.spriteCull`.
+- `frustumCullingEnabled` (default `true`) — skip 3D mesh draws fully outside the **main** camera frustum. Does not gate shadow depth passes. Toggle off in the Rendering page for A/B. Counters (considered / culled / drawn) show in the Rendering page, the play FPS overlay, and collision-viz debug text.
+- `shadowCascadeCullingEnabled` (default `true`) — per cascade, skip shadow casters whose world AABB is outside that cascade's light-space ortho volume. Near plane is open toward the light (casters between light and cascade still cast). Off-screen casters that still project into a cascade keep their shadows. Counters: frame totals + per-cascade in the Rendering page; frame totals on FPS / collision-viz overlays and bridge `perf.shadowCull`.
+- `spriteCullingEnabled` (default `true`) — skip 2D sprite draws whose world AABB (size, pivot, rotation, scale) is fully outside the orthographic camera view rect, with a small margin against edge popping. Does not affect animation, physics, or scripts. Screen-space UI is untouched. Perspective cameras leave sprites unculled. Counters (considered / culled / drawn) show in the Rendering page, FPS overlay `2CULL`, collision-viz, and bridge `perf.spriteCull`.
 
 Reload skybox after changing the cubemap path (`RenderSettings_ReloadSkybox` / editor path). Manual check scene: `testbed/rom/scene/scene_panorama_sky.json`.
 
@@ -738,6 +761,20 @@ Buttons can request another scene file (and optionally auto-play). Register cust
 
 In the editor, switch to **UI** edit mode to select and drag canvas elements with the UI gizmo instead of the 3D transform gizmo.
 
+### Anchor, Position and Pivot
+
+UI Sprite, Button, Bar, Text and world Sprites share a **Pivot** dropdown: Center, Top Left, Top Center, Top Right, Middle Left, Middle Right, Bottom Left, Bottom Center, Bottom Right, Custom.
+
+- **Anchor** — the reference point on the canvas.
+- **Position** — offset of the pivot from the anchor (UI coordinates: X right, Y down).
+- **Pivot** — the element's own origin, using the same convention as world sprites: bottom-left `(0,0)`, top-left `(0,1)`, center `(0.5,0.5)`.
+
+Example: Anchor = Center, Position = (0,0), Pivot = Center centers the element. Switching Pivot to Top Left puts the element's top-left corner at the canvas center; Position is kept, so the element moves relative to its origin.
+
+The UI gizmo's move arrows sit on the pivot; scale handles sit on the bounding-box corners and compensate Position while dragging. Rotated UI Sprites rotate around the pivot; resize them with Width / Height in Properties. For Text, the pivot applies to the whole text block (including multi-line height) and replaces the old Alignment option. A Bar's pivot uses the bar body; its label can still show above it.
+
+Compatibility: scenes saved without a `pivot` field keep their original layout and text alignment. Only an explicitly set pivot (`pivot: {x, y}` in the element data) uses the new layout. Undo / Redo and scene saving work as usual.
+
 ---
 
 ## 14. Audio
@@ -762,7 +799,7 @@ Attach an **Audio** component for a clip on a node:
 - `spatial`: when true, position follows the node's transform for 3D attenuation
 - Put **AudioListener** on the active camera (or player) so spatial clips pan correctly
 
-Project-wide bus volumes and the UI click sound live in `project.json` → `audio` (see §20). Runtime and editor both apply those values at boot.
+Project-wide bus volumes and the UI click sound live in `project.json` → `audio` (see [§20](#20-projects-new--open--save)). Runtime and editor both apply those values at boot.
 
 ### AudioManager (scripts and one-offs)
 
@@ -859,21 +896,47 @@ Controller_SetVibration(0.5f, 0.5f, 0);
 
 1. Edit scene / prefab / script.
 2. Rebuild **GameScripts** if C++ changed.
-3. **F3** Play to test.
-4. **F3** Stop, tweak, repeat.
+3. **F2** / **F3** Play to test.
+4. Press the same key to Stop, tweak, repeat.
 5. Save scenes when happy.
+
+### Hot reload
+
+While the editor is open, most content changes apply without restarting. The three lights on the right of the toolbar show the state of each watcher — hover a light for details:
+
+| Light | Watches |
+|-------|---------|
+| **Scene JSON** | The currently loaded scene file |
+| **Content** | Everything under the project's `rom/` |
+| **Script DLL** | `GameScripts.dll` |
+
+Colors: **green** watching (briefly brighter after a successful reload), **amber** waiting / processing, **red** a reload failed, **grey** paused or inactive.
+
+- **Scripts** — rebuild **GameScripts**; the editor notices the new DLL, queues a reload and recreates script instances. Keep `OnCreate` / `OnDestroy` balanced so reloads do not leak. The editor never compiles source files itself.
+- **Scene JSON edited outside the editor** — checked about every 0.5 s and applied once the file has been stable for 0.3 s. Your own saves and identical content are ignored. Changes wait while Play is running and apply after Stop. If you have unsaved edits, a dialog asks: **Load disk version (discard Editor changes)** or **Keep Editor changes**. The editor camera and edit mode are kept; selection and Undo history are cleared. Invalid JSON keeps the current scene and turns the light red until the file changes again.
+- **Textures, fonts, cubemaps** — replaced in place, even during Play. A panorama PNG used as `skyboxCubemap` is re-cooked into `rom/skybox/cache/`.
+- **Models, prefabs, UI data, materials, audio, effects** — the scene is rebuilt from disk. In Play, the current scene restarts in the same viewport / fullscreen mode, so gameplay state resets. Broken files keep the previous scene.
+- **Deleting a file** that the scene still uses (or that is still loaded) keeps the loaded copy alive and turns **Content** red (`Content removed; existing resources retained`). References are not rewritten for you. Deleting an unused file is just logged.
+- **Not hot-reloaded:** files under the engine's `resources/` (restart the editor), shaders, engine code, and the standalone runtime (it never watches files).
+
+Logs: `content_hot_reload.log` (project root, trimmed at 1 MiB) and `editor_scene_loading.log`. File names with non-ASCII characters (e.g. `hp_fill - 複製.png`) are supported.
 
 ### Default scene for Runtime
 
-Runtime still boots from `rom/scene/default_scene.txt` next to the exe (file name of the scene JSON). In the editor, **Project Settings → Default Scene** and **Save Project** keep that file aligned with `project.json` → `defaultScene`.
+The runtime boots from `rom/scene/default_scene.txt` (the scene JSON file name). In the editor, **Edit → Project Settings → Scenes** and **Save Project** keep that file aligned with `project.json` → `defaultScene`.
 
-### Shipping with IvyEngineRuntime
+### Shipping a playable package
 
-1. Build **IvyEngineRuntime** and **GameScripts** (Release | x64 recommended).
-2. Ensure `rom/` and `game/scripts/bin/GameScripts.dll` sit next to the exe as your deploy layout expects.
-3. For external content repos, follow [`CONTENT_PROJECT.md`](CONTENT_PROJECT.md) and `deploy\deploy.bat` — or create a project in the editor (**File → New Project**) which scaffolds a similar layout. Prefer **File → Build Current Project** for a playable package named `<GameName>.exe`.
+**File → Build Current Project** (output folder and configuration in Project Settings → Build) is the recommended path. It:
 
-Runtime builds skip the ImGui editor; players never see F2 panels.
+1. Builds **IvyEngineRuntime** and your project's **GameScripts**.
+2. Copies the runtime host renamed to `<GameName>.exe`, plus `libfbxsdk.dll`, `project.json`, your `rom/`, and `game/scripts/bin/GameScripts.dll` into the chosen folder.
+3. Adds the built shaders and engine branding, and any engine defaults from `resources/` that your content names but does not contain (`rom/skybox/MySkybox.dds` only when used).
+4. Cooks panorama PNG skyboxes into `rom/skybox/cache/` so the package contains the DDS.
+
+The package reads gravity and audio bus volumes from its `project.json`. Players never see the editor or the debug hotkeys. Release | x64 is recommended; the runtime is statically linked, so no VC++ redistributable is needed.
+
+Without the editor, an external content project can run `deploy\deploy.bat` instead (see [§21](#21-external-content-projects)).
 
 ---
 
@@ -882,7 +945,7 @@ Runtime builds skip the ImGui editor; players never see F2 panels.
 ### “I want a spinning prop”
 
 1. Place mesh with `visual` + `SceneTransform`.
-2. Add `SpinScript` (section 9).
+2. Add `SpinScript` ([§9](#9-writing-gameplay-scripts)).
 3. Play.
 
 ### “I want an enemy I can place many times”
@@ -921,15 +984,17 @@ Use Effekseer via Effect component / `EffectObject::SpawnW`, or a short-lived pa
 |---------|-----------------|
 | Blank / wrong startup | `project.json` last/default scene, `rom/scene/default_scene.txt`, and that the JSON exists |
 | Wrong project / missing assets | **File → Open Project** on the folder that contains `rom/`; cwd must be that project root |
-| New project missing fonts/UI | New projects copy `rom/texture` (and shaders/fonts) from the editor; recreate if an older scaffold is empty |
+| Missing shaders / fonts / branding | These come from the engine `resources/` beside the exe (not copied into projects). Check the exe folder has `resources/`, and that your project does not shadow the path with a broken file |
 | Script never runs | `REGISTER_SCRIPT`, matching `scriptClass`, GameScripts built, Play mode on |
 | Model missing | Path under `rom/`, FBX SDK DLL beside exe, case of path |
-| Collider wrong | Type/radius/center; enable `showDebugCollider`; mesh needs model |
+| Collider wrong | Shape fields / center; enable Show Debug Collider or F11; mesh collider needs a model |
 | Tag missing / wrong id | `rom/tags.json`; custom tags only after builtins; remapping after delete |
-| No hot reload | Rebuild GameScripts; editor must be the host that loaded the DLL |
+| No hot reload | Check the toolbar lights and `content_hot_reload.log`; rebuild GameScripts; the editor must be the host that loaded the DLL; `resources/` changes need a restart |
 | UI wrong scale | Design for 1920×1080 anchors; check letterboxed viewport vs full window |
 | 3D audio silent / crash | Listener/emitter GameObject still alive; call Stop before destroy |
-| Shadows ugly | Raise shadow quality in render settings; check light direction |
+| Shadows ugly | Raise shadow quality in Project Settings → Rendering; check light direction |
+| Panels lost / layout broken | **Window → Reset Layout** |
+| Editor text too small / large | **Edit → Preferences → Appearance → UI Scale** |
 
 ### Transform gotcha
 
@@ -944,7 +1009,7 @@ A **content project** is a folder the editor opens as the working root:
 ```text
 MyGame/
   project.json
-  rom/          # scenes, assets, tags, shaders, …
+  rom/          # scenes, assets, tags, …
   game/scripts/ # optional GameScripts sources
 ```
 
@@ -991,18 +1056,61 @@ The editor calls `SetCurrentDirectory` on that folder so relative paths like `ro
 | `name` | Shown in the window title |
 | `lastOpenedScene` | Scene file restored when the project opens |
 | `defaultScene` | Play / runtime default (also written to `rom/scene/default_scene.txt`) |
-| `editor.uiZoomPercent` | ImGui UI scale (100 / 125 / 150 / 175 / 200) |
-| `editor.uiStylePreset` | ImGui style preset: `Trellis` (default) or `Hollow Soft` (Engine Settings → UI Style) |
-| `editor.uiColorScheme` | ImGui color scheme: `Ivy` (default), `Ivy Dark`, `Classic Dark`, `Neutral Gray`, or `Light` (Engine Settings → Color Scheme) |
+| `editor.uiZoomPercent` | UI Scale percent (100 / 125 / 150 / 175 / 200; Preferences → Appearance), multiplied by monitor DPI |
+| `editor.uiStylePreset` | ImGui style preset: `Trellis` (default) or `Hollow Soft` (Preferences → Appearance) |
+| `editor.uiColorScheme` | ImGui color scheme: `Ivy` (default), `Ivy Dark`, `Classic Dark`, `Neutral Gray`, or `Light` (Preferences → Appearance) |
 | `physics.gravity` | World gravity applied in play and runtime builds |
 | `audio.masterVolume` / `bgmVolume` / `sfxVolume` / `voiceVolume` | Bus levels (editor + runtime) |
 | `audio.uiClickSound` | WAV played when a UIButton activates (persists across scene loads) |
 
 ### Sample vs your game
 
-- **Debug IvyEngine** opens [`testbed/`](../testbed) when no recent project loads. Sample scenes are `testbed/rom/scene/`. Models, fonts, textures, shaders, and the skybox stay in the engine `rom/` and are linked when the project opens, not copied.
-- The engine repo root is not a content project. It has `resources/` (read-only defaults) and `testbed/` (the sample content project). `IvyEngineRuntime` from the engine output folder opens `testbed/` when there is no `rom/scene` beside the exe.
-- **File → New Project** creates a separate game folder anywhere on disk. Scripts can still target the engine via `IvyEngine.props` (same idea as [`CONTENT_PROJECT.md`](CONTENT_PROJECT.md)). An existing external project in Recent Projects is opened instead of the testbed.
+- **Debug IvyEngine** opens [`testbed/`](../testbed) when no recent project loads. Sample scenes are in `testbed/rom/scene/`; engine defaults come from `resources/` and are not copied in.
+- The engine repo root is not a content project. It has `resources/` (read-only defaults) and `testbed/` (the sample content project). `IvyEngineRuntime` started from the engine output folder opens `testbed/` when there is no `rom/scene` beside the exe.
+- `testbed/` has no `GameScripts` project, so **Build Current Project** and `deploy.bat` are for your own content project, not for the testbed.
+- **File → New Project** creates a separate game folder anywhere on disk (see [§21](#21-external-content-projects)). An existing external project in Recent Projects opens instead of the testbed.
+
+---
+
+## 21. External content projects
+
+Keep each game in its own folder (usually its own git repo). `external_content_template/` in the engine repo is the starter; **File → New Project** creates the same layout for you.
+
+### What the content project owns
+
+- `project.json` — editor session, default scene, gravity, audio
+- `<ProjectName>.sln` — **GameScripts only**; open this to build scripts
+- `build_scripts.bat` — optional MSBuild helper
+- `IvyEngine.props` — `EngineRoot` path to your engine checkout
+- `rom/` — assets, `rom/scene/*.json`, `rom/tags.json`
+- `game/scripts/` — your script sources and `GameScripts/GameScripts.vcxproj`
+- `deploy/deploy.bat` — editor-free packaging
+
+The engine repo keeps the editor and runtime exes, engine sources and libraries, the shader pipeline (`shaders/` → `resources/shader/*.cso`), and the read-only defaults in `resources/`.
+
+### Setup
+
+1. Use **File → New Project** (tick **2D Project** for a 2D starter), **or** copy `external_content_template/` to a new folder.
+2. If you copied the template, set `EngineRoot` in `IvyEngine.props` to your engine repo path.
+3. Build **IvyEngineRuntime** in the engine repo first.
+4. Put scripts under `game/scripts/` (any sub-folder) and add them to `GameScripts.vcxproj`.
+5. Put assets under `rom/`. The starter scene is `rom/scene/scene_main.json`.
+6. Open `<ProjectName>.sln` (or run `build_scripts.bat`) and build **GameScripts | x64**. Post-build copies `GameScripts.dll` to the project's `game/scripts/bin/` **and** to the engine output's `game/scripts/bin/`, so the editor and runtime beside the engine exe load it.
+7. Open the folder with **File → Open Project** in IvyEngine.
+8. Package with **File → Build Current Project**, or run `deploy\deploy.bat Debug` / `Release` and launch `deploy\IvyEngineRuntime.exe`.
+
+### Startup scene
+
+| Context | Source of truth |
+|---------|-----------------|
+| Editor | `project.json` → `lastOpenedScene`, then `defaultScene` |
+| Runtime / package | `rom/scene/default_scene.txt` (kept in sync by Save Project) |
+
+### `deploy.bat` layout
+
+- `deploy/IvyEngineRuntime.exe` (the editor build names it `<GameName>.exe` instead) and `deploy/libfbxsdk.dll`
+- `deploy/rom/**` — your files, plus built `.cso` shaders, branding, and engine defaults your content names but does not already have. `deploy.bat` copies `rom/` as-is and does not cook panorama skies; a missing cache is baked by the runtime on first load.
+- `deploy/game/scripts/bin/GameScripts.dll`
 
 ---
 
@@ -1012,9 +1120,10 @@ The editor calls `SetCurrentDirectory` on that folder so relative paths like `ro
 |----------|-----------------|
 | **This guide** | Learning workflows |
 | [`ENGINE_API_REFERENCE.md`](ENGINE_API_REFERENCE.md) | Looking up a specific function |
-| [`ENGINE_MANUAL.md`](ENGINE_MANUAL.md) | JSON field names, registration rules, agent/source map |
-| [`CONTENT_PROJECT.md`](CONTENT_PROJECT.md) | Splitting game content into another repo / deploy |
-| `rom/prefabs/`, `rom/scene/` | Real examples to copy |
-| `game/scripts/` | Real gameplay patterns |
+| [`RUNTIME_TEST_BRIDGE.md`](RUNTIME_TEST_BRIDGE.md) | Driving a Debug build from automated tests |
+| [`adr/`](adr/) | Why a design decision was made |
+| [`TODO.md`](TODO.md) | Engine backlog |
+| [`AGENTS.md`](../AGENTS.md) | Rules and schemas for AI agents working on the engine |
+| `testbed/rom/scene/`, `samples/scripts/` | Real examples to copy |
 
 Happy building.
