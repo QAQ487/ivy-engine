@@ -38,6 +38,7 @@ PHASE1_TUS = [
     ROOT / "engine/editor/editor_start_screen.cpp",
     ROOT / "engine/editor/editor_tool_windows.cpp",
     ROOT / "engine/editor/editor_settings_windows.cpp",
+    ROOT / "engine/editor/editor_console.cpp",
 ]
 
 HEADERS = [
@@ -45,6 +46,8 @@ HEADERS = [
     ROOT / "engine/editor/editor_layout.h",
     ROOT / "engine/editor/editor_docking.h",
     ROOT / "engine/editor/editor_settings_categories.h",
+    ROOT / "engine/editor/editor_console.h",
+    ROOT / "engine/editor/editor_ui_scale_math.h",
 ]
 
 # Symbol pattern -> providing header basename (caught in Terry's MSVC Debug log).
@@ -67,6 +70,9 @@ SYMBOL_HEADER_REQUIREMENTS = [
     (r"\bResolveSceneReloadConflict\b", "editor_gui_internal.h"),
     (r"\bEditorDocking_", "editor_docking.h"),
     (r"\bkEditorHierarchyWindowTitle\b", "editor_docking.h"),
+    (r"\bkEditorConsoleWindowTitle\b", "editor_docking.h"),
+    (r"\bEditorConsole_", "editor_console.h"),
+    (r"\bComputeEffectiveUiScale\b", "editor_ui_scale_math.h"),
 ]
 
 

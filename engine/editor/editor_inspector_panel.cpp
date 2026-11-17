@@ -147,13 +147,13 @@ void DrawEditorInspectorPanel(bool playVisuals, bool* open)
             ImGui::Spacing();
 
             ImGui::Text("Hierarchy Order");
-            if (ImGui::Button("Back", ImVec2(70, 0)))
+            if (ImGui::Button("Back", ImVec2(Ui(70.0f), 0)))
             {
                 if (UndoableReorderNode(g_selNode, MoveNodeToBack))
                     runtimeDirty = true;
             }
             ImGui::SameLine();
-            if (ImGui::Button("Down", ImVec2(70, 0)))
+            if (ImGui::Button("Down", ImVec2(Ui(70.0f), 0)))
             {
                 if (UndoableReorderNode(g_selNode, [](GameObject* n) {
                     return MoveNodeOrder(n, -1);
@@ -161,7 +161,7 @@ void DrawEditorInspectorPanel(bool playVisuals, bool* open)
                     runtimeDirty = true;
             }
             ImGui::SameLine();
-            if (ImGui::Button("Up", ImVec2(70, 0)))
+            if (ImGui::Button("Up", ImVec2(Ui(70.0f), 0)))
             {
                 if (UndoableReorderNode(g_selNode, [](GameObject* n) {
                     return MoveNodeOrder(n, 1);
@@ -169,7 +169,7 @@ void DrawEditorInspectorPanel(bool playVisuals, bool* open)
                     runtimeDirty = true;
             }
             ImGui::SameLine();
-            if (ImGui::Button("Top", ImVec2(70, 0)))
+            if (ImGui::Button("Top", ImVec2(Ui(70.0f), 0)))
             {
                 if (UndoableReorderNode(g_selNode, MoveNodeToFront))
                     runtimeDirty = true;

@@ -1,4 +1,5 @@
 #include "engine/ecs/sprite_animator_component.h"
+#include "engine/debug_draw/debug_ofstream.h"
 /**===========================================================================
  File   : scene_asset_preload.cpp
  Brief  : BuildTaskList (+ JSON scene scan) + time-budgeted SceneAssetPreloader.
@@ -160,7 +161,7 @@ bool TryReadJsonFile(const std::string& path, json& outRoot) {
 		outRoot = json::parse(content);
 	}
 	catch (const json::parse_error&) {
-		OutputDebugStringA(("[SceneAssetPreload] bad json: " + path + "\n").c_str());
+		hal::DebugWriteA(("[SceneAssetPreload] bad json: " + path + "\n").c_str());
 		return false;
 	}
 	return true;
@@ -218,7 +219,7 @@ void CollectVisualFromJson(const json& visual,
 		return;
 
 	if (!IsProjectRelativeRomPath(modelPath)) {
-		OutputDebugStringA(("[SceneAssetPreload] skip non-rom model path: "
+		hal::DebugWriteA(("[SceneAssetPreload] skip non-rom model path: "
 			+ modelPath + "\n").c_str());
 		return;
 	}
@@ -233,7 +234,7 @@ void CollectVisualFromJson(const json& visual,
 			if (clipName.empty() || animPath.empty())
 				continue;
 			if (!IsProjectRelativeRomPath(animPath)) {
-				OutputDebugStringA(("[SceneAssetPreload] skip non-rom anim path: "
+				hal::DebugWriteA(("[SceneAssetPreload] skip non-rom anim path: "
 					+ animPath + "\n").c_str());
 				continue;
 			}
@@ -412,26 +413,26 @@ bool SceneAssetPreloader::RunOneStep() {
     if (step.kind == Step::Kind::Texture) {
         const auto path = PathFromUtf8(step.texturePath).wstring();
         if (TextureLoadQuiet(path.c_str(), true) < 0)
-            OutputDebugStringA(("[SceneAssetPreload] texture load failed: "
+            hal::DebugWriteA(("[SceneAssetPreload] texture load failed: "
                 + step.texturePath + "\n").c_str());
     }
     else if (step.kind == Step::Kind::Model) {
 		Model3D* model = ModelAssetCache::Instance().GetModel(step.modelPath);
 		if (!model) {
-			OutputDebugStringA(("[SceneAssetPreload] GetModel failed: "
+			hal::DebugWriteA(("[SceneAssetPreload] GetModel failed: "
 				+ step.modelPath + "\n").c_str());
 		}
 	}
 	else {
 		Model3D* shared = ModelAssetCache::Instance().GetModel(step.modelPath);
 		if (!shared) {
-			OutputDebugStringA(("[SceneAssetPreload] EnsureAnimation skipped (no model): "
+			hal::DebugWriteA(("[SceneAssetPreload] EnsureAnimation skipped (no model): "
 				+ step.modelPath + " / " + step.animPath + "\n").c_str());
 		}
 		else {
 			shared->EnsureAnimation(step.clipName, step.animPath.c_str());
 			if (!shared->HasAnimation(step.clipName)) {
-				OutputDebugStringA(("[SceneAssetPreload] EnsureAnimation failed: "
+				hal::DebugWriteA(("[SceneAssetPreload] EnsureAnimation failed: "
 					+ step.clipName + " -> " + step.animPath + "\n").c_str());
 			}
 		}

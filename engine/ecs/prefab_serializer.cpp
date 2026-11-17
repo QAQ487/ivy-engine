@@ -19,6 +19,7 @@
 #include <Windows.h>
 
 #include "libraries/nlohmann/json.hpp"
+#include "engine/debug_draw/debug_ofstream.h"
 
 using json = nlohmann::json;
 
@@ -75,7 +76,7 @@ static std::unique_ptr<GameObject> DeserializeNode(const json& j, bool strict = 
             const std::string& typeName = it.key();
             auto comp = ComponentFactory::Instance().Create(typeName);
             if (!comp) {
-                OutputDebugStringA(("[PrefabSerializer] Unknown component: "
+                hal::DebugWriteA(("[PrefabSerializer] Unknown component: "
                                     + typeName + "\n").c_str());
                 continue;
             }
@@ -132,7 +133,7 @@ bool PrefabSerializer::SaveToFile(const GameObject& root,
     std::filesystem::create_directories(dest.parent_path(), ec);
     std::ofstream f(dest);
     if (!f.is_open()) {
-        OutputDebugStringA(("[PrefabSerializer] Cannot open for write: "
+        hal::DebugWriteA(("[PrefabSerializer] Cannot open for write: "
                             + filePath + "\n").c_str());
         return false;
     }
@@ -151,16 +152,16 @@ std::unique_ptr<GameObject> PrefabSerializer::Deserialize(
         json root = json::parse(jsonStr);
         const json* nodeJson = FindPrefabNodeJson(root);
         if (!nodeJson) {
-            OutputDebugStringA("[PrefabSerializer] No prefab node found.\n");
+            hal::DebugWriteA("[PrefabSerializer] No prefab node found.\n");
             return nullptr;
         }
         return DeserializeNode(*nodeJson);
     } catch (const nlohmann::json::parse_error& e) {
-        OutputDebugStringA(("[PrefabSerializer] Parse error: "
+        hal::DebugWriteA(("[PrefabSerializer] Parse error: "
                             + std::string(e.what()) + "\n").c_str());
         return nullptr;
     } catch (...) {
-        OutputDebugStringA("[PrefabSerializer] Unknown error.\n");
+        hal::DebugWriteA("[PrefabSerializer] Unknown error.\n");
         return nullptr;
     }
 }
@@ -170,7 +171,7 @@ std::unique_ptr<GameObject> PrefabSerializer::LoadFromFile(
 {
     std::ifstream f(content_path::ReadableFileCurrent(filePath));
     if (!f.is_open()) {
-        OutputDebugStringA(("[PrefabSerializer] Cannot open: " + filePath + "\n").c_str());
+        hal::DebugWriteA(("[PrefabSerializer] Cannot open: " + filePath + "\n").c_str());
         return nullptr;
     }
     std::ostringstream ss;

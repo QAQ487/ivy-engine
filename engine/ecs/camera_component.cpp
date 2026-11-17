@@ -6,6 +6,7 @@
 #include "camera.h"
 #include "libraries/nlohmann/json.hpp"
 #include <Windows.h>
+#include "engine/debug_draw/debug_ofstream.h"
 
 using namespace DirectX;
 
@@ -100,6 +101,6 @@ void CameraComponent::Deserialize(const std::string& jsonStr) {
         nearClip = j.value("nearClip", 0.5f);
         farClip = j.value("farClip", 1000.0f);
     } catch (...) {
-        OutputDebugStringA("[CameraComponent] Deserialize: JSON parse error.\n");
+        hal::DebugWriteA("[CameraComponent] Deserialize: JSON parse error.\n");
     }
 }

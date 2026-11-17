@@ -231,6 +231,7 @@ EditorEditMode g_editMode = EditorEditMode::Scene3D;
 
 int g_uiZoomPercent = 100;
 float g_uiZoom = 1.0f;
+float g_uiDpiScale = 1.0f;
 ImGuiStyle g_baseStyle{};
 bool g_baseStyleCaptured = false;
 editor_theme::StylePreset g_uiStylePreset = editor_theme::StylePreset::Trellis;
@@ -244,10 +245,49 @@ bool IsValidUiZoomPercent(int percent) {
     return false;
 }
 
+float QueryEditorDpiScale() {
+    if (!g_imguiInitialized)
+        return 1.0f;
+    if (const ImGuiViewport* vp = ImGui::GetMainViewport()) {
+        if (vp->DpiScale > 0.0f && std::isfinite(vp->DpiScale))
+            return NormalizeDpiScale(vp->DpiScale);
+    }
+    // Fallback when viewport DPI is not yet populated.
+    if (HWND hwnd = GetWindowHandle()) {
+        const float dpi = ImGui_ImplWin32_GetDpiScaleForHwnd(hwnd);
+        return NormalizeDpiScale(dpi);
+    }
+    return 1.0f;
+}
+
 void CaptureBaseStyleFromCurrent() {
     g_baseStyle = ImGui::GetStyle();
+    // Base must stay unscaled so repeated ApplyUiZoom never compounds.
     g_baseStyle.FontScaleMain = 1.0f;
+    g_baseStyle.FontScaleDpi = 1.0f;
     g_baseStyleCaptured = true;
+}
+
+void ApplyEditorUiScaleFromBase() {
+    if (!g_imguiInitialized)
+        return;
+    if (!g_baseStyleCaptured)
+        CaptureBaseStyleFromCurrent();
+
+    g_uiDpiScale = QueryEditorDpiScale();
+    // Single effective scale = user UI Scale × monitor DPI (never compounded).
+    g_uiZoom = ComputeEffectiveUiScale(g_uiZoomPercent, g_uiDpiScale);
+
+    ImGuiStyle& style = ImGui::GetStyle();
+    style = g_baseStyle;
+    style.ScaleAllSizes(g_uiZoom);
+    // ImGui 1.92 dynamic atlas re-rasterizes from FontScaleMain — keep crisp.
+    // DPI is folded into g_uiZoom; keep FontScaleDpi at 1 to avoid double-count.
+    style.FontScaleMain = g_uiZoom;
+    style.FontScaleDpi = 1.0f;
+    // Keep the mouse cursor visible/usable at 50%/75% UI scale.
+    if (style.MouseCursorScale < 0.75f)
+        style.MouseCursorScale = 0.75f;
 }
 
 void ApplyEditorTheme(editor_theme::StylePreset preset,
@@ -256,26 +296,28 @@ void ApplyEditorTheme(editor_theme::StylePreset preset,
     g_uiColorScheme = editor_theme::ClampColorScheme(static_cast<int>(scheme));
     if (!g_imguiInitialized)
         return;
+    // Reset to unscaled theme geometry+colors, then apply effective scale once.
     editor_theme::Apply(ImGui::GetStyle(), g_uiStylePreset, g_uiColorScheme);
     CaptureBaseStyleFromCurrent();
+    ApplyEditorUiScaleFromBase();
 }
 
 void ApplyUiZoom(int percent) {
+    // Discrete radio list is authoritative; unknown values fall back to 100%.
     if (!IsValidUiZoomPercent(percent))
         percent = 100;
     g_uiZoomPercent = percent;
-    g_uiZoom = static_cast<float>(percent) / 100.0f;
+    if (!g_imguiInitialized) {
+        g_uiZoom = ComputeEffectiveUiScale(percent, 1.0f);
+        return;
+    }
 
-    if (!g_imguiInitialized) return;
-
-    ImGuiStyle& style = ImGui::GetStyle();
+    // Scale from the last unscaled theme base (never from an already-scaled style).
     if (!g_baseStyleCaptured) {
+        editor_theme::Apply(ImGui::GetStyle(), g_uiStylePreset, g_uiColorScheme);
         CaptureBaseStyleFromCurrent();
     }
-    style = g_baseStyle;
-    style.ScaleAllSizes(g_uiZoom);
-    // ImGui 1.92 dynamic atlas re-rasterizes from FontScaleMain — keep crisp.
-    style.FontScaleMain = g_uiZoom;
+    ApplyEditorUiScaleFromBase();
 }
 
 void SaveUiPrefs() {
@@ -301,6 +343,7 @@ void SaveUiPrefs() {
         j["uiStylePreset"] = editor_theme::StylePresetName(g_uiStylePreset);
         j["uiColorScheme"] = editor_theme::ColorSchemeName(g_uiColorScheme);
         PlayFpsOverlay::WritePrefs(j);
+        EditorConsole_WritePrefs(j);
         if (ProjectManager::Instance().IsOpen()) {
             j["assetBrowserListView"] = ProjectManager::Instance().GetAssetBrowserListView();
             j["assetBrowserTileSize"] = ProjectManager::Instance().GetAssetBrowserTileSize();
@@ -325,10 +368,11 @@ void LoadUiPrefs() {
         json j;
         file >> j;
         PlayFpsOverlay::LoadPrefs(j);
+        EditorConsole_LoadPrefs(j);
         const int percent = j.value("uiZoomPercent", 100);
         if (IsValidUiZoomPercent(percent)) {
             g_uiZoomPercent = percent;
-            g_uiZoom = static_cast<float>(percent) / 100.0f;
+            g_uiZoom = ComputeEffectiveUiScale(percent, 1.0f);
         }
         g_uiStylePreset = editor_theme::ParseStylePreset(
             j.value("uiStylePreset", std::string(editor_theme::kDefaultPresetName)).c_str());
@@ -1098,6 +1142,7 @@ void StartPlay(PlayMode mode) {
     g_playMode = mode;
     g_pendingPlayMode = mode;
     g_holdPlayVisuals = false;
+    EditorConsole_OnPlayStarted();
     const bool isViewportPlay = (mode == PlayMode::Viewport);
     g_enabled = isViewportPlay;
     if (ShouldUseDebugCameraDuringPlay()) {
@@ -1270,6 +1315,9 @@ bool IsSceneLoadBusy() {
 void EngineGUI_Initialize(HWND hwnd, ID3D11Device* device,
     ID3D11DeviceContext* context)
 {
+    // Install early so Bootstrap / script-load diagnostics reach the Console.
+    EditorConsole_InstallLogHook();
+
     ProjectManager::Instance().BootstrapAtStartup();
 
     ModelAssetCache::Instance().RefreshAssetDirectory();
@@ -1308,14 +1356,11 @@ void EngineGUI_Initialize(HWND hwnd, ID3D11Device* device,
         g_uiColorScheme = editor_theme::ParseColorScheme(
             ProjectManager::Instance().GetEditorUiColorScheme().c_str());
         const int zoom = ProjectManager::Instance().GetEditorUiZoomPercent();
-        if (IsValidUiZoomPercent(zoom)) {
+        if (IsValidUiZoomPercent(zoom))
             g_uiZoomPercent = zoom;
-            g_uiZoom = static_cast<float>(zoom) / 100.0f;
-        }
         EditorDocking_OnProjectOpened(ProjectManager::Instance().GetRootPath());
     }
-    ApplyEditorTheme(g_uiStylePreset, g_uiColorScheme);
-    ApplyUiZoom(g_uiZoomPercent);
+    ApplyEditorTheme(g_uiStylePreset, g_uiColorScheme); // includes scale apply
 
     ProjectManager::Instance().UpdateWindowTitle(hwnd);
     DebugCamera_SetEnabled(g_enabled);
@@ -1337,6 +1382,9 @@ void EngineGUI_Finalize() {
     g_enabled = true;
 
     SceneLoader_UnloadScriptDlls();
+
+    // Hook is installed before ImGui init — always clear it.
+    EditorConsole_RemoveLogHook();
 
     if (g_imguiInitialized) {
         EditorDocking_OnProjectClosed();
@@ -2481,6 +2529,12 @@ void EngineGUI_Draw() {
     else {
         io.DisplayFramebufferScale = ImVec2(1.0f, 1.0f);
     }
+    // Re-apply effective scale before NewFrame when moving across DPI monitors.
+    {
+        const float dpi = QueryEditorDpiScale();
+        if (std::fabs(dpi - g_uiDpiScale) > 0.001f && g_baseStyleCaptured)
+            ApplyEditorUiScaleFromBase();
+    }
     ImGui::NewFrame();
     EditorDocking_BeginFrame();
 
@@ -2550,6 +2604,8 @@ void EngineGUI_Draw() {
     DrawEditorHierarchyPanel(playVisuals, &panels.hierarchy);
     DrawEditorInspectorPanel(playVisuals, &panels.properties);
     DrawEditorAssetPanel(playVisuals, sceneLoadBusy, &panels.assetBrowser);
+    DrawEditorConsolePanel(&panels.console);
+    EditorDocking_FocusDefaultBottomTabIfNeeded();
 
     EditorDocking_DrawLetterboxBars();
 

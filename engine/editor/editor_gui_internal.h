@@ -10,6 +10,8 @@
 #include "engine/editor/editor_layout.h"
 #include "engine/editor/editor_docking.h"
 #include "engine/editor/editor_theme.h"
+#include "engine/editor/editor_ui_scale_math.h"
+#include "engine/editor/editor_console.h"
 #include "engine/editor/content_file_monitor.h"
 #include "engine/physics/collider/collider.h"
 #include "engine/rendering/d3d11/shader.h"
@@ -92,8 +94,9 @@ extern int g_buildConfigIndex;
 extern EditorEditMode g_editMode;
 
 extern int g_uiZoomPercent;
-extern float g_uiZoom;
-extern ImGuiStyle g_baseStyle;
+extern float g_uiZoom;          // effective scale = user percent × DPI (for Ui() / layout)
+extern float g_uiDpiScale;      // last monitor DPI factor folded into g_uiZoom
+extern ImGuiStyle g_baseStyle;  // unscaled theme geometry+colors
 extern bool g_baseStyleCaptured;
 extern editor_theme::StylePreset g_uiStylePreset;
 extern editor_theme::ColorScheme g_uiColorScheme;
@@ -119,7 +122,9 @@ extern std::string g_sceneReloadStatus;
 extern std::string g_scriptReloadStatus;
 
 inline constexpr const char* kUiPrefsPath = PlayFpsOverlay::kPrefsPath;
-inline constexpr int kUiZoomPercents[] = { 100, 125, 150, 175, 200 };
+inline constexpr int kUiZoomPercents[] = {
+    50, 75, 100, 125, 150, 175, 200, 250, 300
+};
 
 // --- Cross-TU helpers still defined in engine_gui.cpp ---
 
@@ -210,6 +215,10 @@ void DrawSceneNodeHierarchy(GameObject* node, GameObject* rootOwner);
 void DrawEditorHierarchyPanel(bool playVisuals, bool* open);
 void DrawEditorInspectorPanel(bool playVisuals, bool* open);
 void DrawEditorAssetPanel(bool playVisuals, bool sceneLoadBusy, bool* open);
+// DrawEditorConsolePanel declared in editor_console.h
+
+float QueryEditorDpiScale();
+void ApplyEditorUiScaleFromBase(); // scale g_baseStyle → GetStyle() using user×DPI
 
 void PushToolbarChromeStyle();
 void PopToolbarChromeStyle();

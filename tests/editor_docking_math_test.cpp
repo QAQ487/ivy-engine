@@ -55,6 +55,53 @@ static void TestSplitRatiosStayInRange()
     Expect(tiny.bottom >= 0.10f, "tiny host bottom floored");
 }
 
+static void TestDefaultSplitRatiosMatchPreDockingLayout()
+{
+    // Pre-docking pixel sizes 300 / 350 / max(340, 0.34*H) at 100% UI, but
+    // Unity split order: Right → Down → Left (Inspector full height).
+    // Host below ~58px chrome on 1080p → H=1022.
+    constexpr float kHostW = 1920.0f;
+    constexpr float kHostH = 1022.0f;
+    const EditorDockSplitRatios r = ComputeDefaultDockSplitRatios(kHostW, kHostH, 1.0f);
+
+    // right = 350/1920; bottom = max(340,0.34*1022)/1022; left = 300/(1920-350)
+    ExpectNear(r.right, 350.0f / kHostW, 0.001f, "right ratio 350/1920 (full height)");
+    const float bottomPx = (std::max)(340.0f, kHostH * 0.34f);
+    ExpectNear(r.bottom, bottomPx / kHostH, 0.001f, "bottom ratio ~34%");
+    ExpectNear(r.left, 300.0f / (kHostW - 350.0f), 0.001f, "left ratio 300/afterRight");
+    Expect(kEditorDefaultBottomTabCount == 2, "bottom has Console+Asset Browser tabs");
+}
+
+static void TestCentralRectFallbackDoesNotHideGameView()
+{
+    const EditorClientRect zero{};
+    const EditorClientRect tiny{10.0f, 10.0f, 8.0f, 8.0f}; // below mins
+    const EditorClientRect good{300.0f, 80.0f, 1200.0f, 600.0f};
+
+    // Empty / zero capture, no previous → not usable (do not letterbox full host).
+    EditorCentralRectResolve r = ResolveCentralNodeClientRect(true, zero, false, {});
+    Expect(!r.usable, "zero capture without previous → not usable");
+    Expect(r.rect.w == 0.0f && r.rect.h == 0.0f, "zero capture clears rect");
+
+    r = ResolveCentralNodeClientRect(false, {}, false, {});
+    Expect(!r.usable, "missing capture without previous → not usable");
+
+    r = ResolveCentralNodeClientRect(true, tiny, false, {});
+    Expect(!r.usable, "tiny capture without previous → not usable");
+
+    // Empty capture keeps last good rect so game view stays visible.
+    r = ResolveCentralNodeClientRect(true, zero, true, good);
+    Expect(r.usable, "zero capture keeps previous usable");
+    ExpectNear(r.rect.x, good.x, 0.01f, "previous x");
+    ExpectNear(r.rect.w, good.w, 0.01f, "previous w");
+
+    // Good capture wins over previous.
+    const EditorClientRect newer{310.0f, 90.0f, 1100.0f, 580.0f};
+    r = ResolveCentralNodeClientRect(true, newer, true, good);
+    Expect(r.usable, "good capture usable");
+    ExpectNear(r.rect.x, newer.x, 0.01f, "newer x");
+}
+
 static void TestIniPathResolution()
 {
     Expect(ResolveEditorImGuiLayoutIniPath("").empty(), "empty root → empty path");
@@ -174,6 +221,8 @@ int main()
 {
     TestDefaultPanelSizesMatchLegacyLook();
     TestSplitRatiosStayInRange();
+    TestDefaultSplitRatiosMatchPreDockingLayout();
+    TestCentralRectFallbackDoesNotHideGameView();
     TestIniPathResolution();
     TestClientToBackbuffer();
     TestUsableViewport();

@@ -13,6 +13,7 @@
 
 #include <Windows.h>
 #include <string>
+#include "engine/debug_draw/debug_ofstream.h"
 
 using json = nlohmann::json;
 
@@ -102,7 +103,7 @@ void EffectComponent::Deserialize(const std::string& jsonStr) {
         m_effectId = -1;
         m_hasAutoPlayed = false;
     } catch (...) {
-        OutputDebugStringA("[EffectComponent] Deserialize failed.\n");
+        hal::DebugWriteA("[EffectComponent] Deserialize failed.\n");
     }
 }
 
@@ -197,7 +198,7 @@ bool EffectComponent::LoadEffect() {
 
     m_effectId = EffectSystem::LoadCached(widePath.c_str());
     if (m_effectId < 0) {
-        OutputDebugStringA(("[EffectComponent] Failed to load effect: "
+        hal::DebugWriteA(("[EffectComponent] Failed to load effect: "
             + effectPath + "\n").c_str());
         return false;
     }

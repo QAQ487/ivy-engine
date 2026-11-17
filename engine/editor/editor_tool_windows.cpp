@@ -13,7 +13,7 @@ std::string ShaderVariantPreviewLabel(Shader3DVariant v) {
 void DrawPostFxShowcaseWindow(bool* open) {
     if (!open || !*open) return;
 
-    ImGui::SetNextWindowSize(ImVec2(380.0f, 0.0f), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(Ui(380.0f), 0.0f), ImGuiCond_FirstUseEver);
     if (!ImGui::Begin("PostFX Showcase", open, ImGuiWindowFlags_AlwaysAutoResize)) {
         ImGui::End();
         return;
@@ -151,7 +151,7 @@ void DrawPostFxShowcaseWindow(bool* open) {
 void DrawShortcutHintsWindow(bool* open) {
     if (!open || !*open) return;
 
-    ImGui::SetNextWindowSize(ImVec2(420.0f, 0.0f), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(Ui(420.0f), 0.0f), ImGuiCond_FirstUseEver);
     if (!ImGui::Begin("Shortcut Hints", open)) {
         ImGui::End();
         return;

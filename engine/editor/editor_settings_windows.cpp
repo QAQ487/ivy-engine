@@ -140,8 +140,7 @@ void DrawPreferencesAppearancePage()
         char label[64];
         snprintf(label, sizeof(label), "%s##style", name);
         if (ImGui::RadioButton(label, g_uiStylePreset == preset)) {
-            ApplyEditorTheme(preset, g_uiColorScheme);
-            ApplyUiZoom(g_uiZoomPercent);
+            ApplyEditorTheme(preset, g_uiColorScheme); // reapplies effective scale
             SaveUiPrefs();
             ProjectManager::Instance().SetEditorUiStylePreset(name);
         }
@@ -156,8 +155,7 @@ void DrawPreferencesAppearancePage()
         char label[64];
         snprintf(label, sizeof(label), "%s##scheme", name);
         if (ImGui::RadioButton(label, g_uiColorScheme == scheme)) {
-            ApplyEditorTheme(g_uiStylePreset, scheme);
-            ApplyUiZoom(g_uiZoomPercent);
+            ApplyEditorTheme(g_uiStylePreset, scheme); // reapplies effective scale
             SaveUiPrefs();
             ProjectManager::Instance().SetEditorUiColorScheme(name);
         }
@@ -165,6 +163,7 @@ void DrawPreferencesAppearancePage()
 
     ImGui::Spacing();
     ImGui::TextDisabled("Editor fonts are fixed: IBM Plex Sans JP, IBM Plex Mono, and Font Awesome.");
+    ImGui::TextDisabled("Effective scale = UI Scale × monitor DPI (applied once; no compounding).");
     ImGui::TextDisabled("UI scale, style, and color scheme are saved to rom/editor/ui_prefs.json.");
     ImGui::TextDisabled("Save Project also copies them into project.json.");
 }
@@ -195,7 +194,7 @@ void DrawCategoryColumn(EditorSettingsWindow window, int* categoryIndex)
 bool BeginSettingsWindow(const char* title, bool* open, bool* focus)
 {
     const ImGuiViewport* viewport = ImGui::GetMainViewport();
-    ImGui::SetNextWindowSize(ImVec2(760.0f, 520.0f), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(Ui(760.0f), Ui(520.0f)), ImGuiCond_FirstUseEver);
     if (viewport)
         ImGui::SetNextWindowPos(viewport->GetCenter(), ImGuiCond_FirstUseEver, ImVec2(0.5f, 0.5f));
     if (focus && *focus) {

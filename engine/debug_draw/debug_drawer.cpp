@@ -10,6 +10,7 @@
 
 #include "debug_drawer.h"
 #include <cmath>
+#include "engine/debug_draw/debug_ofstream.h"
 
 VERTEX_3D DebugDrawer::m_boxVerts[8] = {
 	{{-0.5f, -0.5f, -0.5f}, {0,1,0}, {0,1,0,1}, {0,0}},
@@ -66,7 +67,7 @@ bool DebugDrawer::Initialize() {
 	vbData.pSysMem = m_boxVerts;
 	HRESULT hr = GetDevice()->CreateBuffer(&vbDesc, &vbData, &m_boxVB);
 	if (FAILED(hr)) {
-		OutputDebugStringA("Failed to create box vertex buffer\n");
+		hal::DebugWriteA("Failed to create box vertex buffer\n");
 		return false;
 	}
 
@@ -78,7 +79,7 @@ bool DebugDrawer::Initialize() {
 	ibData.pSysMem = m_boxIndices;
 	hr = GetDevice()->CreateBuffer(&ibDesc, &ibData, &m_boxIB);
 	if (FAILED(hr)) {
-		OutputDebugStringA("Failed to create box index buffer\n");
+		hal::DebugWriteA("Failed to create box index buffer\n");
 		m_boxVB->Release();
 		m_boxVB = nullptr;
 		return false;
@@ -137,14 +138,14 @@ bool DebugDrawer::Initialize() {
 	// for (int i = 0; i < vertIndex; ++i) {
 	//     sprintf_s(log, "Sphere vert[%d]: Pos=(%.2f, %.2f, %.2f)\n",
 	//         i, m_sphereVerts[i].Position.x, m_sphereVerts[i].Position.y, m_sphereVerts[i].Position.z);
-	//     OutputDebugStringA(log);
+	//     hal::DebugWriteA(log);
 	// }
 
 	vbDesc.ByteWidth = sizeof(m_sphereVerts);
 	vbData.pSysMem = m_sphereVerts;
 	hr = GetDevice()->CreateBuffer(&vbDesc, &vbData, &m_sphereVB);
 	if (FAILED(hr)) {
-		OutputDebugStringA("Failed to create sphere vertex buffer\n");
+		hal::DebugWriteA("Failed to create sphere vertex buffer\n");
 		Release();
 		return false;
 	}
@@ -153,7 +154,7 @@ bool DebugDrawer::Initialize() {
 	ibData.pSysMem = m_sphereIndices;
 	hr = GetDevice()->CreateBuffer(&ibDesc, &ibData, &m_sphereIB);
 	if (FAILED(hr)) {
-		OutputDebugStringA("Failed to create sphere index buffer\n");
+		hal::DebugWriteA("Failed to create sphere index buffer\n");
 		Release();
 		return false;
 	}
@@ -187,14 +188,14 @@ bool DebugDrawer::Initialize() {
 	// for (int i = 0; i < vertIndex; ++i) {
 	//     sprintf_s(log, "Capsule vert[%d]: Pos=(%.2f, %.2f, %.2f)\n",
 	//         i, m_capsuleVerts[i].Position.x, m_capsuleVerts[i].Position.y, m_capsuleVerts[i].Position.z);
-	//     OutputDebugStringA(log);
+	//     hal::DebugWriteA(log);
 	// }
 
 	vbDesc.ByteWidth = sizeof(m_capsuleVerts);
 	vbData.pSysMem = m_capsuleVerts;
 	hr = GetDevice()->CreateBuffer(&vbDesc, &vbData, &m_capsuleVB);
 	if (FAILED(hr)) {
-		OutputDebugStringA("Failed to create capsule vertex buffer\n");
+		hal::DebugWriteA("Failed to create capsule vertex buffer\n");
 		Release();
 		return false;
 	}
@@ -203,7 +204,7 @@ bool DebugDrawer::Initialize() {
 	ibData.pSysMem = m_capsuleIndices;
 	hr = GetDevice()->CreateBuffer(&ibDesc, &ibData, &m_capsuleIB);
 	if (FAILED(hr)) {
-		OutputDebugStringA("Failed to create capsule index buffer\n");
+		hal::DebugWriteA("Failed to create capsule index buffer\n");
 		Release();
 		return false;
 	}
@@ -225,14 +226,14 @@ bool DebugDrawer::Initialize() {
 	ID3D11Texture2D* tex;
 	hr = GetDevice()->CreateTexture2D(&texDesc, &texData, &tex);
 	if (FAILED(hr)) {
-		OutputDebugStringA("Failed to create debug texture\n");
+		hal::DebugWriteA("Failed to create debug texture\n");
 		Release();
 		return false;
 	}
 	hr = GetDevice()->CreateShaderResourceView(tex, nullptr, &m_debugTexture);
 	tex->Release();
 	if (FAILED(hr)) {
-		OutputDebugStringA("Failed to create debug texture SRV\n");
+		hal::DebugWriteA("Failed to create debug texture SRV\n");
 		Release();
 		return false;
 	}
@@ -240,7 +241,7 @@ bool DebugDrawer::Initialize() {
 	// Log initialization summary
 	// sprintf_s(log, "DebugDrawer::Initialize: Sphere vertices=%d, indices=%d, Capsule vertices=%d, indices=%d\n",
 	//     60, 120, 8, 8);
-	// OutputDebugStringA(log);
+	// hal::DebugWriteA(log);
 
 	// Depth stencil state with depth testing disabled (for deferred debug overlays)
 	D3D11_DEPTH_STENCIL_DESC noDepthDesc = {};
@@ -250,7 +251,7 @@ bool DebugDrawer::Initialize() {
 	noDepthDesc.StencilEnable  = FALSE;
 	hr = GetDevice()->CreateDepthStencilState(&noDepthDesc, &m_depthNoTest);
 	if (FAILED(hr)) {
-		OutputDebugStringA("Failed to create no-depth stencil state\n");
+		hal::DebugWriteA("Failed to create no-depth stencil state\n");
 		Release();
 		return false;
 	}
@@ -274,7 +275,7 @@ void DebugDrawer::Release() {
 
 void DebugDrawer::DrawBox(const DirectX::XMFLOAT3& position, const DirectX::XMFLOAT3& center, const DirectX::XMFLOAT3& size, const DirectX::XMFLOAT3& rotation, const DirectX::XMFLOAT4& color) {
 	if (!m_boxVB || !m_boxIB) {
-		OutputDebugStringA("DrawBox: Vertex or index buffer null\n");
+		hal::DebugWriteA("DrawBox: Vertex or index buffer null\n");
 		return;
 	}
 
@@ -350,12 +351,12 @@ void DebugDrawer::DrawBox(const DirectX::XMFLOAT3& position, const DirectX::XMFL
 	// sprintf_s(log, "DrawBox: Pos=(%.2f, %.2f, %.2f), Center=(%.2f, %.2f, %.2f), Size=(%.2f, %.2f, %.2f), Rot=(%.2f, %.2f, %.2f)\n",
 	//     position.x, position.y, position.z, center.x, center.y, center.z, size.x, size.y, size.z,
 	//     rotation.x, rotation.y, rotation.z);
-	// OutputDebugStringA(log);
+	// hal::DebugWriteA(log);
 }
 
 void DebugDrawer::DrawSphere(const DirectX::XMFLOAT3& position, const DirectX::XMFLOAT3& center, float radius, const DirectX::XMFLOAT3& rotation, const DirectX::XMFLOAT4& color, bool enableDepth) {
 	if (!m_sphereVB || !m_sphereIB) {
-		OutputDebugStringA("DrawSphere: Vertex or index buffer null\n");
+		hal::DebugWriteA("DrawSphere: Vertex or index buffer null\n");
 		return;
 	}
 
@@ -438,12 +439,12 @@ void DebugDrawer::DrawSphere(const DirectX::XMFLOAT3& position, const DirectX::X
 	//     center.x, center.y, center.z,
 	//     radius, rotation.x, rotation.y, rotation.z
 	// );
-	// OutputDebugStringA(log);
+	// hal::DebugWriteA(log);
 }
 
 void DebugDrawer::DrawCapsule(const DirectX::XMFLOAT3& position, const DirectX::XMFLOAT3& center, float radius, float height, const DirectX::XMFLOAT3& rotation, const DirectX::XMFLOAT4& color) {
 	if (!m_sphereVB || !m_sphereIB || !m_capsuleVB || !m_capsuleIB) {
-		OutputDebugStringA("DrawCapsule: Vertex or index buffer null\n");
+		hal::DebugWriteA("DrawCapsule: Vertex or index buffer null\n");
 		return;
 	}
 

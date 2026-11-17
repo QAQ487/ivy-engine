@@ -5,6 +5,7 @@
 #include "engine/editor/light_gizmo.h"
 #include "libraries/nlohmann/json.hpp"
 #include <Windows.h>
+#include "engine/debug_draw/debug_ofstream.h"
 
 DirectX::XMFLOAT3 DirectionalLightComponent::ComputeDirectionWS(const engine::Transform* transform) {
     return LightGizmo::GetShineDirectionWS(transform);
@@ -40,6 +41,6 @@ void DirectionalLightComponent::Deserialize(const std::string& jsonStr) {
             specColor.z = j["specColor"][2].get<float>();
         }
     } catch (...) {
-        OutputDebugStringA("[DirectionalLightComponent] Deserialize: JSON parse error.\n");
+        hal::DebugWriteA("[DirectionalLightComponent] Deserialize: JSON parse error.\n");
     }
 }

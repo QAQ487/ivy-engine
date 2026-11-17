@@ -240,6 +240,7 @@ void DrawEditorMenuBar() {
         ImGui::MenuItem(kEditorHierarchyWindowTitle, nullptr, &panels.hierarchy);
         ImGui::MenuItem(kEditorPropertiesWindowTitle, nullptr, &panels.properties);
         ImGui::MenuItem(kEditorAssetBrowserWindowTitle, nullptr, &panels.assetBrowser);
+        ImGui::MenuItem(kEditorConsoleWindowTitle, nullptr, &panels.console);
         ImGui::Separator();
         ImGui::MenuItem("Project Settings", nullptr, &EditorSettings_ProjectWindowOpen());
         ImGui::MenuItem("Preferences", nullptr, &EditorSettings_PreferencesWindowOpen());

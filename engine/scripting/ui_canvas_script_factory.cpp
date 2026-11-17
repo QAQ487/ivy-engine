@@ -4,6 +4,7 @@
 #include "ui_canvas_script_factory.h"
 
 #include <algorithm>
+#include "engine/debug_draw/debug_ofstream.h"
 
 namespace {
     std::vector<std::string>* g_enumeratedUiScripts = nullptr;
@@ -30,7 +31,7 @@ UICanvasScriptFactory::ScriptPtr UICanvasScriptFactory::Create(const std::string
 
     std::string msg = "[UICanvasScriptFactory] No script registered for class name: "
         + name + "\n";
-    OutputDebugStringA(msg.c_str());
+    hal::DebugWriteA(msg.c_str());
     return ScriptPtr(nullptr, [](UICanvasScript*) {});
 }
 

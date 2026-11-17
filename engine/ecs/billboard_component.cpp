@@ -12,6 +12,7 @@
 #include "engine/rendering/sprite/texture.h"
 #include "libraries/nlohmann/json.hpp"
 #include <Windows.h>
+#include "engine/debug_draw/debug_ofstream.h"
 
 ID3D11ShaderResourceView* BillboardComponent::GetTextureSRV() {
     if (m_textureId >= 0) return TextureGetSRV(m_textureId);
@@ -62,7 +63,7 @@ void BillboardComponent::Deserialize(const std::string& jsonStr) {
             color.w = c.value("a", 1.0f);
         }
     } catch (...) {
-        OutputDebugStringA("[BillboardComponent] Deserialize: JSON parse error.\n");
+        hal::DebugWriteA("[BillboardComponent] Deserialize: JSON parse error.\n");
     }
 }
 

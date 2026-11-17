@@ -8,6 +8,7 @@
 #include "libraries/nlohmann/json.hpp"
 
 #include <Windows.h>
+#include "engine/debug_draw/debug_ofstream.h"
 
 using json = nlohmann::json;
 
@@ -45,6 +46,6 @@ void RigidbodyComponent::Deserialize(const std::string& jsonStr) {
         m_body.ClearAllVelocity();
         m_body.ClearAllForces();
     } catch (...) {
-        OutputDebugStringA("[RigidbodyComponent] Deserialize failed.\n");
+        hal::DebugWriteA("[RigidbodyComponent] Deserialize failed.\n");
     }
 }

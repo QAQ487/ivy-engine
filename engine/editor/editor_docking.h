@@ -10,11 +10,13 @@
 inline constexpr const char* kEditorHierarchyWindowTitle = "Scene Hierarchy";
 inline constexpr const char* kEditorPropertiesWindowTitle = "Properties";
 inline constexpr const char* kEditorAssetBrowserWindowTitle = "Asset Browser";
+inline constexpr const char* kEditorConsoleWindowTitle = "Console";
 
 struct EditorPanelVisibility {
     bool hierarchy = true;
     bool properties = true;
     bool assetBrowser = true;
+    bool console = true;
 };
 
 // Call once after CreateContext: DockingEnable, IniFilename=nullptr (no cwd imgui.ini).
@@ -30,6 +32,10 @@ void EditorDocking_RequestResetLayout();
 
 // Host dockspace below menu+toolbar. Captures central-node client rect.
 void EditorDocking_DrawHost();
+
+// After docked panels Begin/End: select Asset Browser as the front bottom tab
+// when a default/reset layout just ran (TabBar NextSelectedTabId; Console stays behind).
+void EditorDocking_FocusDefaultBottomTabIfNeeded();
 
 // Last captured central node in ImGui client coordinates (after DrawHost).
 const EditorClientRect& EditorDocking_GetCentralNodeClientRect();

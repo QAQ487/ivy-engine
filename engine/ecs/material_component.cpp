@@ -10,6 +10,7 @@
 
 #include <Windows.h>
 #include <algorithm>
+#include "engine/debug_draw/debug_ofstream.h"
 
 namespace {
 
@@ -144,6 +145,6 @@ void MaterialComponent::Deserialize(const std::string& jsonStr) {
         ReleaseNormalMap();
         ReleaseRampTexture();
     } catch (...) {
-        OutputDebugStringA("[MaterialComponent] Deserialize: JSON parse error.\n");
+        hal::DebugWriteA("[MaterialComponent] Deserialize: JSON parse error.\n");
     }
 }

@@ -6,6 +6,7 @@
 #include <Windows.h>
 #include <algorithm>
 #include <cmath>
+#include "engine/debug_draw/debug_ofstream.h"
 using json=nlohmann::json;
 
 std::string ColliderComponent::Serialize() const {
@@ -53,7 +54,7 @@ void ColliderComponent::Deserialize(const std::string& jsonStr) {
         isTrigger = j.value("isTrigger", false);
         physicsMaterial = j.value("physicsMaterial", "");
     } catch (...) {
-        OutputDebugStringA("[ColliderComponent] Deserialize failed.\n");
+        hal::DebugWriteA("[ColliderComponent] Deserialize failed.\n");
     }
     const int type=static_cast<int>(colliderType);
     if(type<0||type>static_cast<int>(ColliderType::CYLINDER))colliderType=ColliderType::NONE;

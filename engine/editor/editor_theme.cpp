@@ -9,6 +9,7 @@
 #include "imgui/icons_font_awesome.h"
 
 #include <cctype>
+#include <cmath>
 #include <cstdio>
 #include <cstring>
 #include <filesystem>
@@ -303,6 +304,9 @@ void PaintSharedFromPalette(ImGuiStyle& s, const Palette& p)
     c[ImGuiCol_DragDropTargetBg] = A(p.fern, 0.12f);
     c[ImGuiCol_UnsavedMarker] = p.fern;
     c[ImGuiCol_BorderShadow] = ImVec4(0, 0, 0, 0);
+    // Docking overlays (ImGui docking branch); match accent / empty central node.
+    c[ImGuiCol_DockingPreview] = A(p.fern, 0.70f);
+    c[ImGuiCol_DockingEmptyBg] = p.canopy;
 }
 
 void PaintTrellisColors(ImGuiStyle& style, const Palette& p)
@@ -380,14 +384,17 @@ void PaintHollowSoftColors(ImGuiStyle& style, const Palette& p)
 
 void EnsureAllColorsWritten(ImGuiStyle& style)
 {
-    // Touch every slot so unit tests can detect incomplete schemes.
-    // Transparent entries above are intentional; unset slots would keep a sentinel.
-    ImVec4* c = style.Colors;
+    // Repair non-finite colour slots only. Do NOT treat the unit-test coverage
+    // sentinel as unset — painters must write every ImGuiCol_ (incl. docking)
+    // or ColorsFullyAssigned will fail.
+    ImGuiStyle filled{};
+    ImGui::StyleColorsDark(&filled);
     for (int i = 0; i < ImGuiCol_COUNT; ++i) {
-        // Force a read-modify so optimized builds still keep the write intent
-        // visible to ColorsFullyAssigned (values already set by painters).
-        c[i].w = c[i].w;
-        (void)c[i];
+        const ImVec4& c = style.Colors[i];
+        const bool nonFinite = !std::isfinite(c.x) || !std::isfinite(c.y) ||
+                               !std::isfinite(c.z) || !std::isfinite(c.w);
+        if (nonFinite)
+            style.Colors[i] = filled.Colors[i];
     }
 }
 
@@ -474,8 +481,12 @@ void ApplyColors(ImGuiStyle& style, StylePreset preset, ColorScheme scheme)
 
     if (scheme == ColorScheme::ClassicDark) {
         ImGui::StyleColorsDark(&style);
-        // Classic Dark keeps StyleColorsDark hues; still assign DragDropTargetBg.
+        // Classic Dark keeps StyleColorsDark hues; still assign DragDropTargetBg
+        // and reaffirm docking colors (StyleColorsDark sets them; keep explicit).
         style.Colors[ImGuiCol_DragDropTargetBg] = ImVec4(0, 0, 0, 0);
+        style.Colors[ImGuiCol_DockingPreview] =
+            style.Colors[ImGuiCol_HeaderActive] * ImVec4(1.0f, 1.0f, 1.0f, 0.7f);
+        style.Colors[ImGuiCol_DockingEmptyBg] = ImVec4(0.20f, 0.20f, 0.20f, 1.00f);
         FillSemanticsClassicDark(g_semantics);
         EnsureAllColorsWritten(style);
         return;

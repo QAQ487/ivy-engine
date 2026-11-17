@@ -30,6 +30,7 @@
 #include "camera.h"
 #include "engine/rendering/d3d11/shader.h"
 #include "engine/rendering/lighting/shadow.h"
+#include "engine/debug_draw/debug_ofstream.h"
 
 using namespace DirectX;
 using namespace fbxsdk;
@@ -941,7 +942,7 @@ bool Model3D::LoadFBXInternal(const wchar_t* fbxPath, bool reportErrors) {
 				"[Model3D] gpuSkin meshes=%zu bones=%zu slots=%zu verts=%zu eligible=%d conflict=%d\n",
 				m_skinBake.size(), m_skinBones.size(), gpuSlots,
 				m_verticesCPU.size(), m_gpuSkinEligible ? 1 : 0, m_gpuBindConflict ? 1 : 0);
-			OutputDebugStringA(msg);
+			hal::DebugWriteA(msg);
 		}
 		if (m_gpuSkinEligible) {
 			m_vbDynamic = false;
@@ -2087,7 +2088,7 @@ void Model3D::AddAnimation(const std::string& animName, const char* fileName)
 		msg += "' from '";
 		msg += path_utf8;
 		msg += "'\n";
-		OutputDebugStringA(msg.c_str());
+		hal::DebugWriteA(msg.c_str());
 		importer->Destroy();
 		return; // Handle Error
 	}

@@ -4,6 +4,7 @@
 #include "point_light_component.h"
 #include "libraries/nlohmann/json.hpp"
 #include <Windows.h>
+#include "engine/debug_draw/debug_ofstream.h"
 
 std::string PointLightComponent::Serialize() const {
     nlohmann::json j;
@@ -41,6 +42,6 @@ void PointLightComponent::Deserialize(const std::string& jsonStr) {
             attenuation.z = j["attenuation"][2].get<float>();
         }
     } catch (...) {
-        OutputDebugStringA("[PointLightComponent] Deserialize: JSON parse error.\n");
+        hal::DebugWriteA("[PointLightComponent] Deserialize: JSON parse error.\n");
     }
 }

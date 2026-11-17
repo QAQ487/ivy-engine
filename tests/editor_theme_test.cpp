@@ -85,8 +85,11 @@ static void TestClamp() {
            "clamp scheme low");
     Expect(editor_theme::ClampColorScheme(99) == editor_theme::ColorScheme::Ivy,
            "clamp scheme high");
-    Expect(editor_theme::ClampColorScheme(4) == editor_theme::ColorScheme::NeutralGray,
-           "clamp scheme mid");
+    // Ivy=0, IvyDark=1, ClassicDark=2, NeutralGray=3, Light=4
+    Expect(editor_theme::ClampColorScheme(3) == editor_theme::ColorScheme::NeutralGray,
+           "clamp scheme NeutralGray");
+    Expect(editor_theme::ClampColorScheme(4) == editor_theme::ColorScheme::Light,
+           "clamp scheme Light");
     Expect(editor_theme::ClampColorScheme(
                static_cast<int>(editor_theme::ColorScheme::IvyDark)) ==
                editor_theme::ColorScheme::IvyDark,
