@@ -58,7 +58,11 @@ void SaveIniToActivePath()
 void ApplyDefaultDockLayout(ImGuiID dockspaceId, ImVec2 hostSize, float uiZoom)
 {
     ImGui::DockBuilderRemoveNode(dockspaceId);
-    ImGui::DockBuilderAddNode(dockspaceId, ImGuiDockNodeFlags_DockSpace);
+    // DockSpace + Passthru on create so KeepAlive DockSpace inside AddNode carries
+    // passthrough SharedFlags before the per-frame DockSpace call.
+    ImGui::DockBuilderAddNode(
+        dockspaceId,
+        ImGuiDockNodeFlags_DockSpace | ImGuiDockNodeFlags_PassthruCentralNode);
     ImGui::DockBuilderSetNodeSize(dockspaceId, hostSize);
 
     const EditorDockSplitRatios ratios =
@@ -68,18 +72,22 @@ void ApplyDefaultDockLayout(ImGuiID dockspaceId, ImVec2 hostSize, float uiZoom)
     ImGuiID dockLeft = 0;
     ImGuiID dockRight = 0;
     ImGuiID dockBottom = 0;
-    dockMain = ImGui::DockBuilderSplitNode(
-        dockMain, ImGuiDir_Left, ratios.left, &dockLeft, &dockMain);
-    dockMain = ImGui::DockBuilderSplitNode(
+    // Unity-style: Right (full height) → Down (spans left+center) → Left (upper only).
+    // IMPORTANT: DockBuilderSplitNode returns the at-dir id. The remaining node is
+    // written through out_id_at_opposite_dir. Assigning the return value back onto
+    // dockMain overwrote the remaining id with the at-dir id, so later docks targeted
+    // the wrong leaves and Hierarchy/Properties landed on the central node — filling
+    // it and disabling the PassthruCentralNode hole (game viewport hidden).
+    ImGui::DockBuilderSplitNode(
         dockMain, ImGuiDir_Right, ratios.right, &dockRight, &dockMain);
-    dockMain = ImGui::DockBuilderSplitNode(
+    ImGui::DockBuilderSplitNode(
         dockMain, ImGuiDir_Down, ratios.bottom, &dockBottom, &dockMain);
+    ImGui::DockBuilderSplitNode(
+        dockMain, ImGuiDir_Left, ratios.left, &dockLeft, &dockMain);
 
-    // Left / right / bottom / central (passthru) — same slots as pre-docking layout.
     ImGui::DockBuilderDockWindow(kEditorHierarchyWindowTitle, dockLeft);
     ImGui::DockBuilderDockWindow(kEditorPropertiesWindowTitle, dockRight);
-    // Bottom node tabs: dock Console first, Asset Browser last so ImGui selects
-    // Asset Browser as the visible tab (Tabs.back / last docked).
+    // Bottom tabs: Console first, Asset Browser last → Asset Browser selected.
     ImGui::DockBuilderDockWindow(kEditorConsoleWindowTitle, dockBottom);
     ImGui::DockBuilderDockWindow(kEditorAssetBrowserWindowTitle, dockBottom);
     ImGui::DockBuilderFinish(dockspaceId);
@@ -88,27 +96,32 @@ void ApplyDefaultDockLayout(ImGuiID dockspaceId, ImVec2 hostSize, float uiZoom)
     g_panelVisibility.properties = true;
     g_panelVisibility.assetBrowser = true;
     g_panelVisibility.console = true;
-    // Focus after panels Begin so SelectedTabId sticks on Reset Layout / first open.
+    // After panels Begin, select Asset Browser tab (no SetWindowFocus — that is
+    // unnecessary once DockBuilder order is correct and can fight dock focus).
     g_focusAssetBrowserTab = true;
 }
 
 void CaptureCentralNode(ImGuiID dockspaceId)
 {
-    g_hasCentral = false;
-    g_centralClient = {};
+    const EditorClientRect previous = g_centralClient;
+    const bool hadPrevious = g_hasCentral;
+
+    EditorClientRect captured{};
+    bool capturedOk = false;
     if (ImGuiDockNode* node = ImGui::DockBuilderGetCentralNode(dockspaceId)) {
-        g_centralClient.x = node->Pos.x;
-        g_centralClient.y = node->Pos.y;
-        g_centralClient.w = node->Size.x;
-        g_centralClient.h = node->Size.y;
-        g_hasCentral = IsUsableViewportRect(g_centralClient);
-        if (!g_hasCentral && node->Size.x > 1.0f && node->Size.y > 1.0f) {
-            // Allow slightly small rects (resize mid-drag) without treating as missing.
-            g_hasCentral = node->Size.x >= 1.0f && node->Size.y >= 1.0f;
-            if (g_centralClient.w < 1.0f) g_centralClient.w = 1.0f;
-            if (g_centralClient.h < 1.0f) g_centralClient.h = 1.0f;
-        }
+        // Central must stay empty for PassthruCentralNode hole; if windows were
+        // wrongly docked here the hole closes and WindowBg hides the game.
+        captured.x = node->Pos.x;
+        captured.y = node->Pos.y;
+        captured.w = node->Size.x;
+        captured.h = node->Size.y;
+        capturedOk = true;
     }
+
+    const EditorCentralRectResolve resolved =
+        ResolveCentralNodeClientRect(capturedOk, captured, hadPrevious, previous);
+    g_centralClient = resolved.rect;
+    g_hasCentral = resolved.usable;
 }
 
 } // namespace
@@ -229,15 +242,10 @@ void EditorDocking_DrawHost()
     ImGui::DockSpace(dockspaceId, ImVec2(0.0f, 0.0f), dockFlags);
     CaptureCentralNode(dockspaceId);
     ImGui::End();
-
-    // Fallback capture if central node missing (first frame / minimized).
-    if (!g_hasCentral) {
-        g_centralClient.x = hostPos.x;
-        g_centralClient.y = hostPos.y;
-        g_centralClient.w = (std::max)(kEditorDockViewportMinWidth, hostSize.x);
-        g_centralClient.h = (std::max)(kEditorDockViewportMinHeight, hostSize.y);
-        g_hasCentral = true;
-    }
+    // No full-host fallback: inventing a host-sized "central" makes letterbox bars
+    // cover the dockspace and hides the game. ResolveCentralNodeClientRect keeps the
+    // last good rect, or leaves g_hasCentral false so EngineGUI_GetGameViewportRect
+    // uses ComputeEditorLayout instead.
 }
 
 const EditorClientRect& EditorDocking_GetCentralNodeClientRect()
@@ -298,8 +306,12 @@ void EditorDocking_FocusDefaultBottomTabIfNeeded()
     if (!g_focusAssetBrowserTab)
         return;
     g_focusAssetBrowserTab = false;
-    // Bring Asset Browser to the front of the bottom tab bar; Console stays docked.
-    ImGui::SetWindowFocus(kEditorAssetBrowserWindowTitle);
+    // Select Asset Browser on the bottom tab bar without FocusWindow (avoids
+    // fighting dock focus routes). Console stays docked behind it.
+    if (ImGuiWindow* w = ImGui::FindWindowByName(kEditorAssetBrowserWindowTitle)) {
+        if (w->DockNode && w->DockNode->TabBar)
+            w->DockNode->TabBar->NextSelectedTabId = w->TabId;
+    }
 }
 
 bool EditorDocking_WantCaptureMouseForGame()

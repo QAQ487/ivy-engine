@@ -17,11 +17,16 @@ struct EditorDefaultPanelSizes {
 };
 
 struct EditorDockSplitRatios {
-    // DockBuilderSplitNode size_ratio_for_node_at_dir values, applied in order:
-    // Left off root, then Right off remaining, then Down off remaining.
-    float left = 0.0f;
+    // DockBuilderSplitNode size_ratio_for_node_at_dir values for Unity-style
+    // default layout, applied in order:
+    //   1) Right off root (Inspector full height)
+    //   2) Down off remaining (bottom spans Hierarchy + viewport)
+    //   3) Left off top remainder (Hierarchy above bottom only)
+    // Never assign DockBuilderSplitNode's return value back onto the remaining
+    // node id — the return is the at-dir node; the opposite out-param is remaining.
     float right = 0.0f;
     float bottom = 0.0f;
+    float left = 0.0f;
 };
 
 struct EditorClientRect {
@@ -38,11 +43,11 @@ struct EditorBackbufferRect {
     float h = 0.0f;
 };
 
-// Default dock arrangement (pre-docking engine_gui / editor_layout constants):
-//   left  = Scene Hierarchy (kEditorDockLeftPanelWidth)
-//   right = Properties      (kEditorDockRightPanelWidth)
-//   bottom tabs = Console then Asset Browser (Asset Browser selected / front)
-//   central = passthrough 16:9 game viewport (not a docked window)
+// Default dock arrangement (Unity-style; pixel sizes from pre-docking layout):
+//   right  = Properties / Inspector (full dockspace height)
+//   bottom = Asset Browser (front) + Console (behind), spanning left edge → Inspector
+//   left   = Scene Hierarchy (upper area only, above bottom)
+//   central = passthrough 16:9 game viewport (upper-middle; not a docked window)
 // Other tools (Project Settings, Preferences, PostFX, Shortcut Hints) stay
 // floating / FirstUseEver and are NOT part of the default DockBuilder layout.
 inline constexpr float kEditorDockLeftPanelWidth = 300.0f;
@@ -148,6 +153,13 @@ inline EditorDefaultPanelSizes ComputeDefaultPanelSizes(
     return s;
 }
 
+inline bool IsUsableViewportRect(const EditorClientRect& r)
+{
+    return r.w >= kEditorDockViewportMinWidth && r.h >= kEditorDockViewportMinHeight
+        && std::isfinite(r.x) && std::isfinite(r.y)
+        && std::isfinite(r.w) && std::isfinite(r.h);
+}
+
 inline EditorDockSplitRatios ComputeDefaultDockSplitRatios(
     float hostW, float hostH, float uiZoom)
 {
@@ -155,14 +167,44 @@ inline EditorDockSplitRatios ComputeDefaultDockSplitRatios(
     EditorDockSplitRatios r;
     const float w = (std::max)(1.0f, hostW);
     const float h = (std::max)(1.0f, hostH);
-    r.left = (std::min)(0.45f, sizes.leftWidth / w);
-    const float afterLeft = (std::max)(1.0f, w * (1.0f - r.left));
-    r.right = (std::min)(0.45f, sizes.rightWidth / afterLeft);
+    // Unity order: Right (full height) → Down (remaining width) → Left (top remainder).
+    r.right = (std::min)(0.45f, sizes.rightWidth / w);
+    const float afterRight = (std::max)(1.0f, w * (1.0f - r.right));
     r.bottom = (std::min)(0.60f, sizes.bottomHeight / h);
-    if (r.left < 0.05f) r.left = 0.05f;
+    r.left = (std::min)(0.45f, sizes.leftWidth / afterRight);
     if (r.right < 0.05f) r.right = 0.05f;
     if (r.bottom < 0.10f) r.bottom = 0.10f;
+    if (r.left < 0.05f) r.left = 0.05f;
     return r;
+}
+
+// After DockBuilder reset, CaptureCentralNode may briefly see a null/zero rect.
+// Never invent a full-host "central" for letterboxing — that paints black bars over
+// panels and can hide the game. Prefer the last good rect; otherwise report missing.
+struct EditorCentralRectResolve {
+    EditorClientRect rect{};
+    bool usable = false;
+};
+
+inline EditorCentralRectResolve ResolveCentralNodeClientRect(
+    bool capturedOk, const EditorClientRect& captured,
+    bool hadPrevious, const EditorClientRect& previous)
+{
+    EditorCentralRectResolve out{};
+    if (capturedOk && IsUsableViewportRect(captured)) {
+        out.rect = captured;
+        out.usable = true;
+        return out;
+    }
+    if (hadPrevious && IsUsableViewportRect(previous)) {
+        out.rect = previous;
+        out.usable = true;
+        return out;
+    }
+    // Empty / zero / below mins: not usable — caller must not letterbox over host.
+    out.rect = {};
+    out.usable = false;
+    return out;
 }
 
 // Relative path under a content project root (UTF-8, generic separators).
@@ -197,11 +239,4 @@ inline EditorBackbufferRect ClientRectToBackbuffer(
     if (!std::isfinite(out.x)) out.x = 0.0f;
     if (!std::isfinite(out.y)) out.y = 0.0f;
     return out;
-}
-
-inline bool IsUsableViewportRect(const EditorClientRect& r)
-{
-    return r.w >= kEditorDockViewportMinWidth && r.h >= kEditorDockViewportMinHeight
-        && std::isfinite(r.x) && std::isfinite(r.y)
-        && std::isfinite(r.w) && std::isfinite(r.h);
 }

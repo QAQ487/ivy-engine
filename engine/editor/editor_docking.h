@@ -34,7 +34,7 @@ void EditorDocking_RequestResetLayout();
 void EditorDocking_DrawHost();
 
 // After docked panels Begin/End: select Asset Browser as the front bottom tab
-// when a default/reset layout just ran (Console stays docked behind it).
+// when a default/reset layout just ran (TabBar NextSelectedTabId; Console stays behind).
 void EditorDocking_FocusDefaultBottomTabIfNeeded();
 
 // Last captured central node in ImGui client coordinates (after DrawHost).
