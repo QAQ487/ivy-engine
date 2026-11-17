@@ -2605,6 +2605,7 @@ void EngineGUI_Draw() {
     DrawEditorInspectorPanel(playVisuals, &panels.properties);
     DrawEditorAssetPanel(playVisuals, sceneLoadBusy, &panels.assetBrowser);
     DrawEditorConsolePanel(&panels.console);
+    EditorDocking_FocusDefaultBottomTabIfNeeded();
 
     EditorDocking_DrawLetterboxBars();
 

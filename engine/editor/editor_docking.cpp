@@ -15,6 +15,7 @@ EditorClientRect g_centralClient{};
 bool g_hasCentral = false;
 bool g_resetLayoutRequested = false;
 bool g_forceDefaultLayout = false;
+bool g_focusAssetBrowserTab = false;
 std::string g_activeIniPathUtf8;
 std::string g_pendingOpenRootUtf8;
 bool g_pendingClose = false;
@@ -74,17 +75,21 @@ void ApplyDefaultDockLayout(ImGuiID dockspaceId, ImVec2 hostSize, float uiZoom)
     dockMain = ImGui::DockBuilderSplitNode(
         dockMain, ImGuiDir_Down, ratios.bottom, &dockBottom, &dockMain);
 
+    // Left / right / bottom / central (passthru) — same slots as pre-docking layout.
     ImGui::DockBuilderDockWindow(kEditorHierarchyWindowTitle, dockLeft);
     ImGui::DockBuilderDockWindow(kEditorPropertiesWindowTitle, dockRight);
-    ImGui::DockBuilderDockWindow(kEditorAssetBrowserWindowTitle, dockBottom);
-    // Tab with Asset Browser at the bottom (same dock node).
+    // Bottom node tabs: dock Console first, Asset Browser last so ImGui selects
+    // Asset Browser as the visible tab (Tabs.back / last docked).
     ImGui::DockBuilderDockWindow(kEditorConsoleWindowTitle, dockBottom);
+    ImGui::DockBuilderDockWindow(kEditorAssetBrowserWindowTitle, dockBottom);
     ImGui::DockBuilderFinish(dockspaceId);
 
     g_panelVisibility.hierarchy = true;
     g_panelVisibility.properties = true;
     g_panelVisibility.assetBrowser = true;
     g_panelVisibility.console = true;
+    // Focus after panels Begin so SelectedTabId sticks on Reset Layout / first open.
+    g_focusAssetBrowserTab = true;
 }
 
 void CaptureCentralNode(ImGuiID dockspaceId)
@@ -286,6 +291,15 @@ void EditorDocking_DrawLetterboxBars()
 EditorPanelVisibility& EditorDocking_PanelVisibility()
 {
     return g_panelVisibility;
+}
+
+void EditorDocking_FocusDefaultBottomTabIfNeeded()
+{
+    if (!g_focusAssetBrowserTab)
+        return;
+    g_focusAssetBrowserTab = false;
+    // Bring Asset Browser to the front of the bottom tab bar; Console stays docked.
+    ImGui::SetWindowFocus(kEditorAssetBrowserWindowTitle);
 }
 
 bool EditorDocking_WantCaptureMouseForGame()

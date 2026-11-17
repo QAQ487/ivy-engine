@@ -33,6 +33,10 @@ void EditorDocking_RequestResetLayout();
 // Host dockspace below menu+toolbar. Captures central-node client rect.
 void EditorDocking_DrawHost();
 
+// After docked panels Begin/End: select Asset Browser as the front bottom tab
+// when a default/reset layout just ran (Console stays docked behind it).
+void EditorDocking_FocusDefaultBottomTabIfNeeded();
+
 // Last captured central node in ImGui client coordinates (after DrawHost).
 const EditorClientRect& EditorDocking_GetCentralNodeClientRect();
 bool EditorDocking_HasCentralNode();

@@ -38,12 +38,21 @@ struct EditorBackbufferRect {
     float h = 0.0f;
 };
 
+// Default dock arrangement (pre-docking engine_gui / editor_layout constants):
+//   left  = Scene Hierarchy (kEditorDockLeftPanelWidth)
+//   right = Properties      (kEditorDockRightPanelWidth)
+//   bottom tabs = Console then Asset Browser (Asset Browser selected / front)
+//   central = passthrough 16:9 game viewport (not a docked window)
+// Other tools (Project Settings, Preferences, PostFX, Shortcut Hints) stay
+// floating / FirstUseEver and are NOT part of the default DockBuilder layout.
 inline constexpr float kEditorDockLeftPanelWidth = 300.0f;
 inline constexpr float kEditorDockRightPanelWidth = 350.0f;
 inline constexpr float kEditorDockBottomPanelMinHeight = 340.0f;
 inline constexpr float kEditorDockBottomPanelScreenFraction = 0.34f;
 inline constexpr float kEditorDockViewportMinHeight = 120.0f;
 inline constexpr float kEditorDockViewportMinWidth = 64.0f;
+// Bottom tab dock order for DockBuilderDockWindow: earlier = behind, last = selected.
+inline constexpr int kEditorDefaultBottomTabCount = 2;
 // Editor / F2 / F3 game view is locked to 16:9 (letterbox or pillarbox inside bounds).
 inline constexpr float kEditorViewportAspectW = 16.0f;
 inline constexpr float kEditorViewportAspectH = 9.0f;

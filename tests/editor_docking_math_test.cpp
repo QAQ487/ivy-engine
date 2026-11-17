@@ -55,6 +55,22 @@ static void TestSplitRatiosStayInRange()
     Expect(tiny.bottom >= 0.10f, "tiny host bottom floored");
 }
 
+static void TestDefaultSplitRatiosMatchPreDockingLayout()
+{
+    // Pre-docking editor_layout used 300 / 350 / max(340, 0.34*H) at 100% UI.
+    // Host below ~58px chrome on 1080p → H=1022 (same as legacy test host).
+    constexpr float kHostW = 1920.0f;
+    constexpr float kHostH = 1022.0f;
+    const EditorDockSplitRatios r = ComputeDefaultDockSplitRatios(kHostW, kHostH, 1.0f);
+
+    // left = 300/1920; right = 350/(1920-300); bottom = max(340, 0.34*1022)/1022
+    ExpectNear(r.left, 300.0f / kHostW, 0.001f, "left ratio 300/1920");
+    ExpectNear(r.right, 350.0f / (kHostW - 300.0f), 0.001f, "right ratio 350/afterLeft");
+    const float bottomPx = (std::max)(340.0f, kHostH * 0.34f);
+    ExpectNear(r.bottom, bottomPx / kHostH, 0.001f, "bottom ratio ~34%");
+    Expect(kEditorDefaultBottomTabCount == 2, "bottom has Console+Asset Browser tabs");
+}
+
 static void TestIniPathResolution()
 {
     Expect(ResolveEditorImGuiLayoutIniPath("").empty(), "empty root → empty path");
@@ -174,6 +190,7 @@ int main()
 {
     TestDefaultPanelSizesMatchLegacyLook();
     TestSplitRatiosStayInRange();
+    TestDefaultSplitRatiosMatchPreDockingLayout();
     TestIniPathResolution();
     TestClientToBackbuffer();
     TestUsableViewport();
