@@ -310,6 +310,9 @@ exit /b 0</Command>
     <ClInclude Include="engine\editor\editor_layout.h" />
     <ClInclude Include="engine\editor\editor_docking.h" />
     <ClInclude Include="engine\editor\editor_docking_math.h" />
+    <ClInclude Include="engine\editor\editor_ui_scale_math.h" />
+    <ClInclude Include="engine\editor\editor_console_log.h" />
+    <ClInclude Include="engine\editor\editor_console.h" />
     <ClInclude Include="engine\editor\editor_settings_categories.h" />
     <ClInclude Include="engine\editor\editor_gui_internal.h" />
     <ClInclude Include="engine\editor\editor_gui_common_includes.h" />
@@ -479,6 +482,7 @@ exit /b 0</Command>
     <ClCompile Include="engine\editor\editor_start_screen.cpp" />
     <ClCompile Include="engine\editor\editor_tool_windows.cpp" />
     <ClCompile Include="engine\editor\editor_settings_windows.cpp" />
+    <ClCompile Include="engine\editor\editor_console.cpp" />
     <ClCompile Include="engine\ecs\prefab_serializer.cpp" />
     <ClCompile Include="engine\ecs\transform.cpp" />
     <ClCompile Include="engine\scripting\script_factory.cpp" />

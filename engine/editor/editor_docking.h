@@ -10,11 +10,13 @@
 inline constexpr const char* kEditorHierarchyWindowTitle = "Scene Hierarchy";
 inline constexpr const char* kEditorPropertiesWindowTitle = "Properties";
 inline constexpr const char* kEditorAssetBrowserWindowTitle = "Asset Browser";
+inline constexpr const char* kEditorConsoleWindowTitle = "Console";
 
 struct EditorPanelVisibility {
     bool hierarchy = true;
     bool properties = true;
     bool assetBrowser = true;
+    bool console = true;
 };
 
 // Call once after CreateContext: DockingEnable, IniFilename=nullptr (no cwd imgui.ini).

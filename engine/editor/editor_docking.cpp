@@ -77,11 +77,14 @@ void ApplyDefaultDockLayout(ImGuiID dockspaceId, ImVec2 hostSize, float uiZoom)
     ImGui::DockBuilderDockWindow(kEditorHierarchyWindowTitle, dockLeft);
     ImGui::DockBuilderDockWindow(kEditorPropertiesWindowTitle, dockRight);
     ImGui::DockBuilderDockWindow(kEditorAssetBrowserWindowTitle, dockBottom);
+    // Tab with Asset Browser at the bottom (same dock node).
+    ImGui::DockBuilderDockWindow(kEditorConsoleWindowTitle, dockBottom);
     ImGui::DockBuilderFinish(dockspaceId);
 
     g_panelVisibility.hierarchy = true;
     g_panelVisibility.properties = true;
     g_panelVisibility.assetBrowser = true;
+    g_panelVisibility.console = true;
 }
 
 void CaptureCentralNode(ImGuiID dockspaceId)

@@ -219,12 +219,12 @@ void DrawEditorPopups() {
         ImGui::Text("Clear all objects from the scene?");
         ImGui::TextDisabled("This cannot be undone.");
         ImGui::Separator();
-        if (ImGui::Button("Clear", ImVec2(120, 0))) {
+        if (ImGui::Button("Clear", ImVec2(Ui(120.0f), 0))) {
             ClearScene();
             ImGui::CloseCurrentPopup();
         }
         ImGui::SameLine();
-        if (ImGui::Button("Cancel", ImVec2(120, 0)))
+        if (ImGui::Button("Cancel", ImVec2(Ui(120.0f), 0)))
             ImGui::CloseCurrentPopup();
         ImGui::EndPopup();
     }
@@ -237,7 +237,7 @@ void DrawEditorPopups() {
         ImGui::SetNextItemWidth(260.0f);
         ImGui::InputText("##NewSceneNameModal", g_newSceneName, IM_ARRAYSIZE(g_newSceneName));
         ImGui::Separator();
-        if (ImGui::Button("Create", ImVec2(120, 0))) {
+        if (ImGui::Button("Create", ImVec2(Ui(120.0f), 0))) {
             if (EngineGUI_IsSceneDirty()) {
                 const std::string sceneFile = NormalizeSceneFileName(g_newSceneName);
                 if (!sceneFile.empty()) {
@@ -253,7 +253,7 @@ void DrawEditorPopups() {
             ImGui::CloseCurrentPopup();
         }
         ImGui::SameLine();
-        if (ImGui::Button("Cancel", ImVec2(120, 0))) {
+        if (ImGui::Button("Cancel", ImVec2(Ui(120.0f), 0))) {
             g_showNewScenePopup = false;
             ImGui::CloseCurrentPopup();
         }
@@ -270,7 +270,7 @@ void DrawEditorPopups() {
         ImGui::InputText("##NewProjectNameModal", g_newProjectName, IM_ARRAYSIZE(g_newProjectName));
         ImGui::TextDisabled("%s", g_newProjectParentDir.c_str());
         ImGui::Separator();
-        if (ImGui::Button("Create", ImVec2(120, 0))) {
+        if (ImGui::Button("Create", ImVec2(Ui(120.0f), 0))) {
             const std::string name = TrimString(g_newProjectName);
             if (EngineGUI_IsSceneDirty()) {
                 g_pendingEditorAction = PendingEditorAction::CreateProject;
@@ -293,7 +293,7 @@ void DrawEditorPopups() {
             ImGui::CloseCurrentPopup();
         }
         ImGui::SameLine();
-        if (ImGui::Button("Cancel", ImVec2(120, 0))) {
+        if (ImGui::Button("Cancel", ImVec2(Ui(120.0f), 0))) {
             g_showNewProjectPopup = false;
             ImGui::CloseCurrentPopup();
         }
@@ -335,10 +335,10 @@ void DrawEditorPopups() {
             return true;
         };
 
-        if (ImGui::Button("Create", ImVec2(120, 0)) || enterPressed)
+        if (ImGui::Button("Create", ImVec2(Ui(120.0f), 0)) || enterPressed)
             tryAddTag();
         ImGui::SameLine();
-        if (ImGui::Button("Cancel", ImVec2(120, 0))) {
+        if (ImGui::Button("Cancel", ImVec2(Ui(120.0f), 0))) {
             s_addTagFailed = false;
             g_showAddTagPopup = false;
             ImGui::CloseCurrentPopup();
@@ -360,7 +360,7 @@ void DrawEditorPopups() {
             "Higher custom tag ids will be remapped.");
         ImGui::Separator();
 
-        if (ImGui::Button("Delete", ImVec2(120, 0))) {
+        if (ImGui::Button("Delete", ImVec2(Ui(120.0f), 0))) {
             if (tags.CanRemove(g_pendingDeleteTagId)) {
                 const int deletedId = g_pendingDeleteTagId;
                 RemapSceneTagsAfterDelete(deletedId);
@@ -373,7 +373,7 @@ void DrawEditorPopups() {
             ImGui::CloseCurrentPopup();
         }
         ImGui::SameLine();
-        if (ImGui::Button("Cancel", ImVec2(120, 0))) {
+        if (ImGui::Button("Cancel", ImVec2(Ui(120.0f), 0))) {
             g_pendingDeleteTagId = -1;
             g_showDeleteTagPopup = false;
             ImGui::CloseCurrentPopup();
@@ -412,7 +412,7 @@ void DrawEditorPopups() {
         ImGui::TextDisabled("Save before continuing?");
         ImGui::Separator();
 
-        if (ImGui::Button("Save", ImVec2(120, 0))) {
+        if (ImGui::Button("Save", ImVec2(Ui(120.0f), 0))) {
             std::string leavingSceneFile;
             {
                 const std::string& currentScenePath = SceneLoader_GetCurrentScenePath();
@@ -430,13 +430,13 @@ void DrawEditorPopups() {
         }
         ImGui::SameLine();
 
-        if (ImGui::Button("Don't Save", ImVec2(120, 0))) {
+        if (ImGui::Button("Don't Save", ImVec2(Ui(120.0f), 0))) {
             EngineGUI_ClearSceneDirty();
             ExecutePendingEditorAction();
         }
         ImGui::SameLine();
 
-        if (ImGui::Button("Cancel", ImVec2(120, 0))) {
+        if (ImGui::Button("Cancel", ImVec2(Ui(120.0f), 0))) {
             g_pendingEditorAction = PendingEditorAction::None;
             g_pendingEditorSceneFile.clear();
             g_pendingProjectPath.clear();
@@ -457,7 +457,7 @@ void DrawEditorPopups() {
         ImGui::Text("You have unsaved scene changes.");
         ImGui::TextDisabled("Save the scene before building a playable package.");
         ImGui::Separator();
-        if (ImGui::Button("Save", ImVec2(120, 0))) {
+        if (ImGui::Button("Save", ImVec2(Ui(120.0f), 0))) {
             SaveScene();
             if (EngineGUI_IsSceneDirty()) {
                 MessageBoxA(GetWindowHandle(),
@@ -471,7 +471,7 @@ void DrawEditorPopups() {
             }
         }
         ImGui::SameLine();
-        if (ImGui::Button("Cancel", ImVec2(120, 0))) {
+        if (ImGui::Button("Cancel", ImVec2(Ui(120.0f), 0))) {
             g_showBuildUnsavedPopup = false;
             ImGui::CloseCurrentPopup();
         }
@@ -495,7 +495,7 @@ void DrawEditorPopups() {
         const bool canStart = destReason.empty() && !PlayablePackage::IsBuildRunning();
         if (!canStart)
             ImGui::BeginDisabled();
-        if (ImGui::Button("Build", ImVec2(120, 0))) {
+        if (ImGui::Button("Build", ImVec2(Ui(120.0f), 0))) {
             PlayablePackage::Prefs prefs;
             prefs.destination = g_buildDest;
             prefs.configuration = (g_buildConfigIndex == 1)
@@ -517,7 +517,7 @@ void DrawEditorPopups() {
         if (!canStart)
             ImGui::EndDisabled();
         ImGui::SameLine();
-        if (ImGui::Button("Cancel", ImVec2(120, 0))) {
+        if (ImGui::Button("Cancel", ImVec2(Ui(120.0f), 0))) {
             g_showBuildPreflight = false;
             ImGui::CloseCurrentPopup();
         }
@@ -547,7 +547,7 @@ void DrawEditorPopups() {
 
             std::string log;
             PlayablePackage::CopyLog(&log);
-            ImGui::BeginChild("##BuildLogText", ImVec2(640, 280), true);
+            ImGui::BeginChild("##BuildLogText", ImVec2(Ui(640.0f), Ui(280.0f)), true);
             ImGui::TextUnformatted(log.empty() ? "(no output yet)" : log.c_str());
             if (!buildDone)
                 ImGui::SetScrollHereY(1.0f);
@@ -557,7 +557,7 @@ void DrawEditorPopups() {
                 const std::string result = PlayablePackage::LastBuildResultMessage();
                 if (!result.empty())
                     ImGui::TextWrapped("%s", result.c_str());
-                if (ImGui::Button("OK", ImVec2(120, 0))) {
+                if (ImGui::Button("OK", ImVec2(Ui(120.0f), 0))) {
                     g_showBuildLog = false;
                     ImGui::CloseCurrentPopup();
                 }

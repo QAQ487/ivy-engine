@@ -41,7 +41,7 @@ void DrawEngineStartScreen() {
         viewport->Pos.y + (viewport->Size.y - cardSize.y) * 0.5f);
     ImGui::SetCursorScreenPos(cardPos);
 
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(36.0f, 30.0f));
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(Ui(36.0f), Ui(30.0f)));
     ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 4.0f);
     ImGui::PushStyleColor(ImGuiCol_Text, theme.text);
     ImGui::BeginChild("##StartCard", cardSize, ImGuiChildFlags_Borders);
