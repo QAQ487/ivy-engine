@@ -5,6 +5,7 @@
 #include "libraries/nlohmann/json.hpp"
 #include <cmath>
 #include <Windows.h>
+#include "engine/debug_draw/debug_ofstream.h"
 
 std::string SpotLightComponent::Serialize() const {
     nlohmann::json j;
@@ -48,6 +49,6 @@ void SpotLightComponent::Deserialize(const std::string& jsonStr) {
             attenuation.z = j["attenuation"][2].get<float>();
         }
     } catch (...) {
-        OutputDebugStringA("[SpotLightComponent] Deserialize: JSON parse error.\n");
+        hal::DebugWriteA("[SpotLightComponent] Deserialize: JSON parse error.\n");
     }
 }

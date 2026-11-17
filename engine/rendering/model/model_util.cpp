@@ -24,6 +24,7 @@
 #include <fbxsdk.h>
 #include "engine/rendering/d3d11/renderer.h"
 #include <filesystem>
+#include "engine/debug_draw/debug_ofstream.h"
 
 #pragma comment(lib, "windowscodecs.lib")
 
@@ -417,7 +418,7 @@ bool FindFirstDiffuseFileTexture(FbxNode* node, DiffuseTexInfo& out) {
 		char log[512];
 		sprintf_s(log, "[FBX] FileTexture: rel='%s' abs='%s' uvset='%s' scale=(%.3f,%.3f) offs=(%.3f,%.3f)\n",
 			rel ? rel : "", abs ? abs : "", uvName ? uvName : "", (double) sc[0], (double) sc[1], (double) tr[0], (double) tr[1]);
-		OutputDebugStringA(log);
+		hal::DebugWriteA(log);
 #endif
 		return true;
 	};

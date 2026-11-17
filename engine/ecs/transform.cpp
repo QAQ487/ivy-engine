@@ -14,6 +14,7 @@
 #include "libraries/nlohmann/json.hpp"
 
 #include <cmath>
+#include "engine/debug_draw/debug_ofstream.h"
 
 using namespace DirectX;
 using json = nlohmann::json;
@@ -157,7 +158,7 @@ void Transform::Deserialize(const std::string& jsonStr) {
         localScale.z    = j.value("scaleZ", 1.0f);
         SnapshotStartState();
     } catch (...) {
-        OutputDebugStringA("[engine::Transform] Deserialize: JSON parse error.\n");
+        hal::DebugWriteA("[engine::Transform] Deserialize: JSON parse error.\n");
     }
 }
 

@@ -18,6 +18,7 @@
 #include <locale>
 #include <sstream>
 #include <vector>
+#include "engine/debug_draw/debug_ofstream.h"
 
 #pragma comment(lib, "shell32")
 
@@ -141,7 +142,7 @@ bool RecyclePath(const fs::path& absPath, std::string& error) {
     std::ostringstream msg;
     msg << "[ProjectAssetOps] SHFileOperationW recycle failed (" << result
         << "), falling back to permanent delete: " << Utf8FromPath(absPath) << "\n";
-    OutputDebugStringA(msg.str().c_str());
+    hal::DebugWriteA(msg.str().c_str());
     error = "Recycle Bin delete failed; permanently deleted instead.";
     return false;
 }

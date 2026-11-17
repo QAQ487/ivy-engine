@@ -10,6 +10,7 @@
 #include "engine/input/controller.h"
 #include "engine/input/keyboard.h"
 #include "engine/input/mouse.h"
+#include "engine/debug_draw/debug_ofstream.h"
 float GetBackBufferWidth();
 float GetBackBufferHeight();
 #if defined(IVY_RUNTIME_TEST_BRIDGE_AVAILABLE)
@@ -1719,7 +1720,7 @@ bool Bridge::StartFromEnvironment() {
     try { p->worker=std::thread([ptr=p.get()] {
         try { ptr->Run(); }
         catch (const std::exception&) {
-            OutputDebugStringA("RuntimeTestBridge: worker failed; disconnecting endpoint.\n");
+            hal::DebugWriteA("RuntimeTestBridge: worker failed; disconnecting endpoint.\n");
             { std::lock_guard lock(ptr->mutex); ptr->protocol.CancelKeyboard(); ptr->protocol.CancelMouse(); ptr->protocol.CancelController(); }
             DisconnectNamedPipe(ptr->pipe);
             SetEvent(ptr->stop);

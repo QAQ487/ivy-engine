@@ -10,6 +10,7 @@
 #include "libraries/nlohmann/json.hpp"
 
 #include <Windows.h>
+#include "engine/debug_draw/debug_ofstream.h"
 
 using json = nlohmann::json;
 
@@ -88,7 +89,7 @@ void AudioComponent::Deserialize(const std::string& jsonStr) {
         m_hasAutoPlayed = false;
     }
     catch (...) {
-        OutputDebugStringA("[AudioComponent] Deserialize failed.\n");
+        hal::DebugWriteA("[AudioComponent] Deserialize failed.\n");
     }
 }
 

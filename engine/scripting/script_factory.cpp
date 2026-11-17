@@ -9,6 +9,7 @@
 #include "ui_canvas_script_factory.h"
 #include <algorithm>
 #include <Windows.h>
+#include "engine/debug_draw/debug_ofstream.h"
 
 namespace {
     std::vector<std::string>* g_enumeratedScripts = nullptr;
@@ -48,7 +49,7 @@ ScriptFactory::ScriptPtr ScriptFactory::Create(const std::string& name) const {
     if (it != m_creators.end()) return it->second();
     std::string msg = "[ScriptFactory] No script registered for class name: "
                       + name + "\n";
-    OutputDebugStringA(msg.c_str());
+    hal::DebugWriteA(msg.c_str());
     return ScriptPtr(nullptr, [](Script*) {});
 }
 
@@ -82,13 +83,13 @@ nlohmann::json ScriptFactory::SerializeScriptProperties(
         try {
             return nlohmann::json::parse(buffer.data());
         } catch (...) {
-            OutputDebugStringA(("[ScriptFactory] Script Serialize returned invalid JSON: "
+            hal::DebugWriteA(("[ScriptFactory] Script Serialize returned invalid JSON: "
                 + name + "\n").c_str());
             return nlohmann::json::object();
         }
     }
 
-    OutputDebugStringA(("[ScriptFactory] Script properties exceed "
+    hal::DebugWriteA(("[ScriptFactory] Script properties exceed "
         + std::to_string(kMaxBufferSize) + " bytes, giving up: " + name + "\n").c_str());
     return nlohmann::json::object();
 }
@@ -127,14 +128,14 @@ bool ScriptFactory::LoadScriptDll(const std::string& name,
         Sleep(50);
     }
     if (!copied) {
-        OutputDebugStringA(("[ScriptFactory] " + GetLastErrorText("CopyFileA")
+        hal::DebugWriteA(("[ScriptFactory] " + GetLastErrorText("CopyFileA")
             + ": " + dllPath + "\n").c_str());
         return false;
     }
 
     HMODULE h = LoadLibraryA(tempPath.c_str());
     if (!h) {
-        OutputDebugStringA(("[ScriptFactory] " + GetLastErrorText("LoadLibraryA")
+        hal::DebugWriteA(("[ScriptFactory] " + GetLastErrorText("LoadLibraryA")
             + ": " + tempPath + "\n").c_str());
         DeleteFileA(tempPath.c_str());
         return false;
@@ -145,7 +146,7 @@ bool ScriptFactory::LoadScriptDll(const std::string& name,
     if (!fn) {
         FreeLibrary(h);
         DeleteFileA(tempPath.c_str());
-        OutputDebugStringA(("[ScriptFactory] No CreateScript export: " + dllPath + "\n").c_str());
+        hal::DebugWriteA(("[ScriptFactory] No CreateScript export: " + dllPath + "\n").c_str());
         return false;
     }
 
@@ -154,7 +155,7 @@ bool ScriptFactory::LoadScriptDll(const std::string& name,
     if (!destroyFn) {
         FreeLibrary(h);
         DeleteFileA(tempPath.c_str());
-        OutputDebugStringA(("[ScriptFactory] No DestroyScript export: " + dllPath + "\n").c_str());
+        hal::DebugWriteA(("[ScriptFactory] No DestroyScript export: " + dllPath + "\n").c_str());
         return false;
     }
 
@@ -165,7 +166,7 @@ bool ScriptFactory::LoadScriptDll(const std::string& name,
     if (!serializeFn || !deserializeFn) {
         FreeLibrary(h);
         DeleteFileA(tempPath.c_str());
-        OutputDebugStringA(("[ScriptFactory] Missing script property exports: "
+        hal::DebugWriteA(("[ScriptFactory] Missing script property exports: "
             + dllPath + "\n").c_str());
         return false;
     }
@@ -209,7 +210,7 @@ bool ScriptFactory::LoadScriptDll(const std::string& name,
         });
         if (loadedScripts)
             loadedScripts->push_back(scriptName);
-        OutputDebugStringA(("[ScriptFactory] Loaded: " + scriptName + "\n").c_str());
+        hal::DebugWriteA(("[ScriptFactory] Loaded: " + scriptName + "\n").c_str());
     }
 
     // Pass the same shared_ptr<DllEntry> that pins this module alive for
@@ -312,7 +313,7 @@ void ScriptFactory::RequestReload(const std::string& name,
         if (p.name == name) { p.path = path; p.observed = std::chrono::steady_clock::now(); return; }
     }
     m_pendingReloads.push_back({ name, path });
-    OutputDebugStringA(("[ScriptFactory] Queued reload: " + name
+    hal::DebugWriteA(("[ScriptFactory] Queued reload: " + name
         + " -> " + path + "\n").c_str());
 }
 

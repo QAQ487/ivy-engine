@@ -1,4 +1,5 @@
 #include "engine/scene/scene_loader.h"
+#include "engine/debug_draw/debug_ofstream.h"
 /*****************************************************
  * File: engine/components/visual_component.cpp
  * Project: d3d11_engine
@@ -333,6 +334,6 @@ void VisualComponent::Deserialize(const std::string& jsonStr) {
         m_triedAnimClips.clear();
         m_animInstance.reset();
     } catch (...) {
-        OutputDebugStringA("[VisualComponent] Deserialize: JSON parse error.\n");
+        hal::DebugWriteA("[VisualComponent] Deserialize: JSON parse error.\n");
     }
 }

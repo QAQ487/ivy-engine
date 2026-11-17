@@ -13,6 +13,7 @@
 #include <Windows.h>
 #include <mutex>
 #include <sstream>
+#include <string>
 
 namespace hal {
 	// Optional sink for editor console / tests. Called after OutputDebugStringA.
@@ -50,6 +51,7 @@ namespace hal {
 	}
 
 	// OutputDebugStringA + active hook (canonical path for capturable logs).
+	// Prefer this over raw OutputDebugStringA so the editor Console can capture.
 	inline void DebugWriteA(const char* text)
 	{
 		if (text && *text)
@@ -66,18 +68,55 @@ namespace hal {
 			hook(text, user);
 	}
 
-	class debugbuf : public std::basic_stringbuf<char, std::char_traits<char>> {
-	public:
-		virtual ~debugbuf() {
-			sync();
+	// Wide → UTF-8 then DebugWriteA (capturable). Prefer DebugWriteA when possible.
+	inline void DebugWriteW(const wchar_t* text)
+	{
+		if (!text || !*text)
+			return;
+		const int bytes = WideCharToMultiByte(CP_UTF8, 0, text, -1, nullptr, 0, nullptr, nullptr);
+		if (bytes <= 1)
+			return;
+		std::string utf8(static_cast<size_t>(bytes - 1), '\0');
+		WideCharToMultiByte(CP_UTF8, 0, text, -1, utf8.data(), bytes, nullptr, nullptr);
+		DebugWriteA(utf8.c_str());
+	}
+
+	// Streambuf with thread_local storage so concurrent `dout <<` from worker
+	// threads do not race a shared string buffer. Flush still goes through DebugWriteA.
+	class debugbuf : public std::streambuf {
+	protected:
+		static std::string& TlsBuf()
+		{
+			thread_local std::string s;
+			return s;
 		}
 
-	protected:
-		int sync() {
-			DebugWriteA(str().c_str());
-			str(std::basic_string<char>());
+		int_type overflow(int_type ch) override
+		{
+			if (!traits_type::eq_int_type(ch, traits_type::eof()))
+				TlsBuf().push_back(traits_type::to_char_type(ch));
+			return traits_type::not_eof(ch);
+		}
+
+		std::streamsize xsputn(const char* s, std::streamsize count) override
+		{
+			if (s && count > 0)
+				TlsBuf().append(s, static_cast<size_t>(count));
+			return count;
+		}
+
+		int sync() override
+		{
+			std::string& buf = TlsBuf();
+			if (!buf.empty()) {
+				DebugWriteA(buf.c_str());
+				buf.clear();
+			}
 			return 0;
 		}
+
+	public:
+		~debugbuf() override { sync(); }
 	};
 
 	class debug_ostream : public std::basic_ostream<char, std::char_traits<char>> {

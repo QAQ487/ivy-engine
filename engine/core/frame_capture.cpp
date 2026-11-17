@@ -13,6 +13,7 @@
 #include <mutex>
 #include <string>
 #include <wrl/client.h>
+#include "engine/debug_draw/debug_ofstream.h"
 
 #pragma comment(lib, "Psapi.lib")
 
@@ -103,7 +104,7 @@ void Report() {
     const std::filesystem::path output(path);
     if (output.has_parent_path()) std::filesystem::create_directories(output.parent_path(), error);
     std::ofstream file(output);
-    if (!file) { OutputDebugStringA("FrameCapture: cannot write capture JSON.\n"); reported = true; return; }
+    if (!file) { hal::DebugWriteA("FrameCapture: cannot write capture JSON.\n"); reported = true; return; }
     PROCESS_MEMORY_COUNTERS_EX memory{};
     memory.cb = sizeof(memory);
     const bool memoryValid = GetProcessMemoryInfo(GetCurrentProcess(),

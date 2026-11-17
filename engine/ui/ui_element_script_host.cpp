@@ -5,6 +5,7 @@
 #include "ui_element.h"
 #include "engine/core/engine_gui.h"
 #include <Windows.h>
+#include "engine/debug_draw/debug_ofstream.h"
 
 void UIElementScriptHost::SetScriptClass(const std::string& scriptClass) {
     if (m_scriptClass == scriptClass)
@@ -59,7 +60,7 @@ void UIElementScriptHost::CreateScript() {
     if (!m_script) {
         std::string msg = "[UIElementScriptHost] No UI script registered for scriptClass: "
             + m_scriptClass + "\n";
-        OutputDebugStringA(msg.c_str());
+        hal::DebugWriteA(msg.c_str());
         return;
     }
 

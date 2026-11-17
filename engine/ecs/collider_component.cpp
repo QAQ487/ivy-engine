@@ -9,6 +9,7 @@
 #include "visual_component.h"
 
 #include <Windows.h>
+#include "engine/debug_draw/debug_ofstream.h"
 
 
 void ColliderComponent::ClearFromOwner() {
@@ -53,7 +54,7 @@ void ColliderComponent::ApplyToOwner() {
         if (model)
             owner->CreateMeshCollider(*model, colliderCenter, meshSizePadding);
         else
-            OutputDebugStringA("[ColliderComponent] Mesh collider skipped: no model.\n");
+            hal::DebugWriteA("[ColliderComponent] Mesh collider skipped: no model.\n");
         break;
     default:
         break;
@@ -64,7 +65,7 @@ void ColliderComponent::ApplyToOwner() {
         ContactSurface surface;
         if (!physicsMaterial.empty() &&
             !PhysicsMaterial_LoadFromFile(physicsMaterial, surface)) {
-            OutputDebugStringA(
+            hal::DebugWriteA(
                 "[ColliderComponent] Physics material load failed; using rigidbody contact fallback.\n");
         }
         owner->m_collider->SetContactSurface(surface);

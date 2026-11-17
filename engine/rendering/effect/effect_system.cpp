@@ -18,6 +18,7 @@
 #include "engine/rendering/d3d11/renderer.h" // GetDevice/GetDeviceContext, GetBackBufferWidth/Height
 #include "engine/core/content_path.h"
 #include "camera.h"   // GetCamera()
+#include "engine/debug_draw/debug_ofstream.h"
 
 using namespace DirectX;
 
@@ -170,27 +171,27 @@ namespace EffectSystem {
     }
     int LoadCached(const wchar_t* path) {
         if (path == nullptr || *path == L'\0') {
-            OutputDebugStringW(L"[EffectSystem] LoadCached invalid path.\n");
+            hal::DebugWriteW(L"[EffectSystem] LoadCached invalid path.\n");
             return -1;
         }
 
         std::wstring key(path);
         auto it = g_effectCache.find(key);
         if (it != g_effectCache.end()) {
-            OutputDebugStringW((L"[EffectSystem] LoadCached hit: id="
+            hal::DebugWriteW((L"[EffectSystem] LoadCached hit: id="
                 + std::to_wstring(it->second) + L" path=" + key + L"\n").c_str());
             return it->second;
         }
 
-        OutputDebugStringW((L"[EffectSystem] LoadCached miss: " + key + L"\n").c_str());
+        hal::DebugWriteW((L"[EffectSystem] LoadCached miss: " + key + L"\n").c_str());
 
         int id = LoadW(path);
         if (id >= 0) {
             g_effectCache[key] = id;
-            OutputDebugStringW((L"[EffectSystem] LoadCached stored: id="
+            hal::DebugWriteW((L"[EffectSystem] LoadCached stored: id="
                 + std::to_wstring(id) + L" path=" + key + L"\n").c_str());
         } else {
-            OutputDebugStringW((L"[EffectSystem] LoadCached failed: " + key + L"\n").c_str());
+            hal::DebugWriteW((L"[EffectSystem] LoadCached failed: " + key + L"\n").c_str());
         }
         return id;
     }

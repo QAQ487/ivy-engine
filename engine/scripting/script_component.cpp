@@ -9,6 +9,7 @@
 #include "../scripting/script_factory.h"
 #include "engine/core/engine_gui.h"
 #include <Windows.h>
+#include "engine/debug_draw/debug_ofstream.h"
 
 // ── Lifecycle forwarding ──────────────────────────────────────────────────────
 
@@ -94,7 +95,7 @@ void ScriptComponent::Deserialize(const std::string& jsonStr) {
         m_scriptProperties = j.contains("properties") ? j["properties"] : nlohmann::json{};
         CreateScript();
     } catch (...) {
-        OutputDebugStringA("[ScriptComponent] Deserialize: JSON parse error.\n");
+        hal::DebugWriteA("[ScriptComponent] Deserialize: JSON parse error.\n");
     }
 }
 
@@ -109,7 +110,7 @@ void ScriptComponent::CreateScript() {
     if (!m_script) {
         std::string msg = "[ScriptComponent] No script registered for scriptClass: "
                           + m_scriptClass + "\n";
-        OutputDebugStringA(msg.c_str());
+        hal::DebugWriteA(msg.c_str());
         return;
     }
 
