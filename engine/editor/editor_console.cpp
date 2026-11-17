@@ -148,7 +148,10 @@ void DrawEditorConsolePanel(bool* open)
     if (ImGui::Button("Clear"))
         EditorConsole_Clear();
     ImGui::SameLine();
-    const std::vector<EditorConsoleEntry> entries = g_buffer.Snapshot(g_filter);
+    const auto entriesPtr = g_buffer.Snapshot(g_filter);
+    static const std::vector<EditorConsoleEntry> kEmptyEntries;
+    const std::vector<EditorConsoleEntry>& entries =
+        entriesPtr ? *entriesPtr : kEmptyEntries;
     const int selectedIndex = IndexOfSelected(entries);
     if (selectedIndex < 0)
         g_selectedId = 0;

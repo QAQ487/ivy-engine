@@ -88,6 +88,24 @@ static void TestMultilineSplitAndCap()
     Expect(buf.Size() == 3, "push splits lines");
 }
 
+static void TestUtf8CapDoesNotSplitCjk()
+{
+    // "專" is E5 B0 88 (3 bytes). Fill so maxBytes lands mid-character.
+    const char kChar[] = "\xE5\xB0\x88"; // 專
+    std::string text;
+    while (text.size() + 3 < 20)
+        text.append(kChar);
+    text.append(kChar); // ensure we exceed
+    CapConsoleEntryText(text, 20);
+    Expect(text.size() % 3 == 0, "CJK cap on char boundary");
+    Expect(text.size() <= 20, "CJK cap <= max");
+    // Last three bytes must form a complete character (not a continuation alone).
+    if (!text.empty()) {
+        const unsigned char lead = static_cast<unsigned char>(text[text.size() - 3]);
+        Expect((lead & 0xF0u) == 0xE0u, "last CJK char intact");
+    }
+}
+
 static void TestStableIdsAndSnapshotCache()
 {
     EditorConsoleBuffer buf(3);
@@ -103,7 +121,8 @@ static void TestStableIdsAndSnapshotCache()
     const std::uint64_t gen1 = buf.Generation();
     auto snap2 = buf.Snapshot(f);
     Expect(buf.Generation() == gen1, "cache does not bump generation");
-    Expect(snap1.size() == snap2.size() && snap1[0].id == snap2[0].id, "cache stable");
+    Expect(snap1 && snap2 && snap1.get() == snap2.get(), "shared_ptr cache hit");
+    Expect(snap1->size() == 2 && (*snap1)[0].id == all[0].id, "cache contents");
 
     buf.Push("c", EditorConsoleLevel::Info, 3);
     buf.Push("d", EditorConsoleLevel::Info, 4); // drops a
@@ -125,7 +144,7 @@ static void TestSnapshotFilter()
     f.showWarning = false;
     f.search = "keep";
     auto snap = buf.Snapshot(f);
-    Expect(snap.size() == 1 && snap[0].text == "keep me", "filtered snapshot");
+    Expect(snap && snap->size() == 1 && (*snap)[0].text == "keep me", "filtered snapshot");
 }
 
 static void TestThreadSafePush()
@@ -152,7 +171,7 @@ static void TestCjkSearch()
     buf.Push(kCjk, EditorConsoleLevel::Info, 1);
     EditorConsoleFilter f{};
     f.search = "\xE5\xB0\x88\xE6\xA1\x88";
-    Expect(buf.Snapshot(f).size() == 1, "CJK substring match");
+    Expect(buf.Snapshot(f) && buf.Snapshot(f)->size() == 1, "CJK substring match");
 }
 
 int main()
@@ -161,6 +180,7 @@ int main()
     TestFilter();
     TestRingAndCollapse();
     TestMultilineSplitAndCap();
+    TestUtf8CapDoesNotSplitCjk();
     TestStableIdsAndSnapshotCache();
     TestSnapshotFilter();
     TestThreadSafePush();

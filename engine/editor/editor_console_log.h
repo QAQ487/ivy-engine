@@ -9,6 +9,7 @@
 #include <cstring>
 #include <ctime>
 #include <deque>
+#include <memory>
 #include <mutex>
 #include <string>
 #include <string_view>
@@ -130,10 +131,16 @@ inline bool ConsoleEntryPassesFilter(const EditorConsoleEntry& e, const EditorCo
     return false;
 }
 
-inline void CapConsoleEntryText(std::string& text)
+// Truncate to maxBytes without splitting a UTF-8 multi-byte character.
+inline void CapConsoleEntryText(std::string& text, size_t maxBytes = kEditorConsoleEntryMaxBytes)
 {
-    if (text.size() > kEditorConsoleEntryMaxBytes)
-        text.resize(kEditorConsoleEntryMaxBytes);
+    if (text.size() <= maxBytes)
+        return;
+    size_t cut = maxBytes;
+    // Back up while on a UTF-8 continuation byte (10xxxxxx).
+    while (cut > 0 && (static_cast<unsigned char>(text[cut]) & 0xC0u) == 0x80u)
+        --cut;
+    text.resize(cut);
 }
 
 // Split on '\n', trim CR, drop empties, cap each piece. Pure helper for tests.
@@ -220,23 +227,26 @@ public:
         return m_entries.size();
     }
 
-    // Cached filtered snapshot (stable order, oldest first).
-    std::vector<EditorConsoleEntry> Snapshot(const EditorConsoleFilter& filter) const
+    // Cached filtered snapshot (stable order, oldest first). Shared so unchanged
+    // frames do not deep-copy thousands of strings.
+    std::shared_ptr<const std::vector<EditorConsoleEntry>> Snapshot(
+        const EditorConsoleFilter& filter) const
     {
         std::lock_guard<std::mutex> lock(m_mutex);
         if (m_cacheValid && m_cacheGeneration == m_generation &&
-            ConsoleFilterEqual(m_cacheFilter, filter))
+            ConsoleFilterEqual(m_cacheFilter, filter) && m_cachedSnapshot)
             return m_cachedSnapshot;
 
-        m_cachedSnapshot.clear();
-        m_cachedSnapshot.reserve(m_entries.size());
+        auto built = std::make_shared<std::vector<EditorConsoleEntry>>();
+        built->reserve(m_entries.size());
         for (const auto& e : m_entries) {
             if (ConsoleEntryPassesFilter(e, filter))
-                m_cachedSnapshot.push_back(e);
+                built->push_back(e);
         }
         m_cacheFilter = filter;
         m_cacheGeneration = m_generation;
         m_cacheValid = true;
+        m_cachedSnapshot = built;
         return m_cachedSnapshot;
     }
 
@@ -251,7 +261,7 @@ private:
     {
         ++m_generation;
         m_cacheValid = false;
-        m_cachedSnapshot.clear();
+        m_cachedSnapshot.reset();
     }
 
     void PushLineLocked(const std::string& line, EditorConsoleLevel level,
@@ -288,7 +298,7 @@ private:
     mutable bool m_cacheValid = false;
     mutable std::uint64_t m_cacheGeneration = 0;
     mutable EditorConsoleFilter m_cacheFilter{};
-    mutable std::vector<EditorConsoleEntry> m_cachedSnapshot;
+    mutable std::shared_ptr<const std::vector<EditorConsoleEntry>> m_cachedSnapshot;
 };
 
 inline std::string FormatConsoleEntryLine(const EditorConsoleEntry& e)

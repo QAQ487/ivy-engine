@@ -1383,10 +1383,12 @@ void EngineGUI_Finalize() {
 
     SceneLoader_UnloadScriptDlls();
 
+    // Hook is installed before ImGui init — always clear it.
+    EditorConsole_RemoveLogHook();
+
     if (g_imguiInitialized) {
         EditorDocking_OnProjectClosed();
         EditorDocking_BeginFrame(); // apply deferred save before DestroyContext
-        EditorConsole_RemoveLogHook();
         ImGui_ImplDX11_Shutdown();
         ImGui_ImplWin32_Shutdown();
         ImGui::DestroyContext();
