@@ -26,6 +26,11 @@ def _write(path: pathlib.Path, text: str) -> None:
     path.write_text(text, encoding="utf-8")
 
 
+def _ensure_parent(path: pathlib.Path) -> pathlib.Path:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    return path
+
+
 class ExportAgentDocsTests(unittest.TestCase):
     def setUp(self) -> None:
         self._tmpdir = tempfile.TemporaryDirectory()
@@ -41,6 +46,10 @@ class ExportAgentDocsTests(unittest.TestCase):
         _write(
             self.engine / "docs" / "schemas" / "runtime_bridge_scenario.v1.schema.json",
             '{"$schema":"https://json-schema.org/draft/2020-12/schema"}\n',
+        )
+        shutil.copy2(
+            REPO_ROOT / export.MANAGED_SECTION_REL,
+            _ensure_parent(self.engine / export.MANAGED_SECTION_REL),
         )
         (self.engine / ".git").mkdir()
 
@@ -117,6 +126,8 @@ class ExportAgentDocsTests(unittest.TestCase):
         self.assertIn(export.BEGIN_MARKER, first_agents)
         self.assertIn(export.END_MARKER, first_agents)
         self.assertIn("docs/ivy-engine/README.md", first_agents)
+        self.assertIn("### Engine boundary", first_agents)
+        self.assertIn("docs/engine-requests.md", first_agents)
         self.assertIn(export.BEGIN_MARKER, first_claude)
         self.assertEqual(first_agents.count(export.BEGIN_MARKER), 1)
 
@@ -177,6 +188,18 @@ class ExportCliSmoke(unittest.TestCase):
         )
         self.assertEqual(proc.returncode, 0, proc.stderr)
         self.assertIn("--game-repo", proc.stdout)
+
+
+class ManagedSectionTests(unittest.TestCase):
+    def test_missing_section_text_raises(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            with self.assertRaises(export.ExportError):
+                export.managed_block(pathlib.Path(tmp))
+
+    def test_block_wraps_shared_text_in_markers(self) -> None:
+        block = export.managed_block(REPO_ROOT)
+        self.assertTrue(block.startswith(export.BEGIN_MARKER + "\n## Ivy Engine (exported docs)"))
+        self.assertTrue(block.endswith(export.END_MARKER + "\n"))
 
 
 if __name__ == "__main__":

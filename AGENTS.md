@@ -67,7 +67,7 @@ Linux-runnable checks (use what matches the change; none of these is a Windows p
 | Content paths / hot reload | `tools/run_utf8_path_check.sh`, `tools/run_content_removal_policy_check.sh`, `g++ -std=c++17 -I. tools/content_path_check.cpp -o /tmp/cpc && /tmp/cpc` |
 | Asset layout | `python3 tools/check_testbed_assets.py`, `python3 tools/check_engine_resource_paths.py`, `python3 tools/check_runtime_host_assets.py` |
 | Test bridge (offline protocol) | `tools/run_runtime_bridge_offline_linux.sh` |
-| Agent doc pack | `python3 tools/agent_docs_check.py`, `python3 -m unittest tools/agent_docs_check_test.py tools/export_agent_docs_check.py` |
+| Agent doc pack | `python3 tools/agent_docs_check.py`, `python3 -m unittest tools/agent_docs_check_test.py tools/export_agent_docs_check.py`, `tools/run_agent_docs_export_check.sh` (New Project export; diffs C++ vs Python output) |
 | Other unit tests | `tests/*_test.cpp` (single-file `g++ -std=c++20 -I.` builds; see each file header) |
 
 Windows-only harnesses: `tools/run_*.cmd`, `tools/run_*.ps1` (2D regression, collider components, content reload, scene hot-load, play-scene switch, bridge acceptance).
@@ -119,6 +119,8 @@ A content project is a directory with `rom/` and usually `project.json`; the edi
 | `audio.uiClickSound` | UIButton click WAV |
 
 Other per-project editor state: `rom/editor/imgui_layout.ini` (dock layout), `rom/editor/ui_prefs.json`, `rom/tags.json`. Recent list: `%AppData%/GameEngine/recent_projects.json`.
+
+**New Project agent docs:** `CreateProject` calls `agent_docs::ExportToContentProject` (`engine/editor/agent_docs_export.h`) to copy `docs/agent/` + `docs/schemas/` into `<project>/docs/ivy-engine/`, write `ENGINE_COMMIT`, and upsert the managed section (text: `tools/agent_docs_managed_section.md`, including the engine-boundary rules) into the project's `AGENTS.md` / `CLAUDE.md`. Failure only logs a warning. `tools/export_agent_docs.py` does the same for re-exports and also prunes stale files — keep the two in sync (`tools/run_agent_docs_export_check.sh` diffs them).
 
 **Packaging** (ADR 0002): File → Build Current Project MSBuilds the runtime host + the project's GameScripts, then assembles `<GameName>.exe`, `libfbxsdk.dll`, `project.json`, `rom/`, `game/scripts/bin/GameScripts.dll`; overlays built `.cso` + branding, adds referenced engine defaults, and cooks equirect `skyboxCubemap` PNGs into `rom/skybox/cache/`. `deploy.bat` does the same copy without cooking and keeps the `IvyEngineRuntime.exe` name.
 
@@ -219,6 +221,7 @@ There are two hand-written docs: this file (agents) and `docs/ENGINE_USER_GUIDE.
 | Component types or JSON fields, scene/prefab schema | Component table here, user guide component section, `docs/agent/scene-prefab.md` |
 | `ScriptRuntimeApi` / `ScriptApi_*` | `docs/agent/api/*.md` (`api:`/`mod:` markers must pass `tools/agent_docs_check.py`), version note here |
 | Any public header | Regenerate `docs/ENGINE_API_REFERENCE.md` (`python3 tools/extract_api_headers.py`) |
+| Game-repo agent rules (engine boundary) | `tools/agent_docs_managed_section.md` (used by both the Python export and New Project) |
 | Test bridge protocol / verbs | `docs/RUNTIME_TEST_BRIDGE.md`, `docs/agent/testing-bridge.md`, schema in `docs/schemas/` |
 | A significant, hard-to-reverse decision | New ADR in `docs/adr/` |
 | Backlog items | `docs/TODO.md` |

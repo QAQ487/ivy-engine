@@ -298,6 +298,7 @@ exit /b 0</Command>
     <ClInclude Include="engine\ecs\component_factory.h" />
     <ClInclude Include="engine\editor\editor_prefab_panel.h" />
     <ClInclude Include="engine\editor\project_asset_index.h" />
+    <ClInclude Include="engine\editor\agent_docs_export.h" />
     <ClInclude Include="engine\editor\project_manager.h" />
     <ClInclude Include="engine\editor\playable_package_builder.h" />
     <ClInclude Include="engine\editor\editor_project_browser.h" />
@@ -463,6 +464,7 @@ exit /b 0</Command>
     <ClCompile Include="engine\ecs\component_factory.cpp" />
     <ClCompile Include="engine\editor\editor_prefab_panel.cpp" />
     <ClCompile Include="engine\editor\project_asset_index.cpp" />
+    <ClCompile Include="engine\editor\agent_docs_export.cpp" />
     <ClCompile Include="engine\editor\project_manager.cpp" />
     <ClCompile Include="engine\editor\playable_package_builder.cpp" />
     <ClCompile Include="engine\editor\editor_project_browser.cpp" />

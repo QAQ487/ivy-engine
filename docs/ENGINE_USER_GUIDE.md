@@ -1019,7 +1019,7 @@ The editor calls `SetCurrentDirectory` on that folder so relative paths like `ro
 
 | Command | What it does |
 |---------|----------------|
-| **New Project…** | Pick a parent folder, enter a name → scaffolds `rom/`, blank `scene_main.json`, optional scripts template, plus `<Name>.sln` + `build_scripts.bat`. Engine shaders, fonts, branding, primitives, and IBL stay in `resources/` and are used when the project does not override that `rom/` path |
+| **New Project…** | Pick a parent folder, enter a name → scaffolds `rom/`, blank `scene_main.json`, optional scripts template, `<Name>.sln` + `build_scripts.bat`, and AI-agent docs (`docs/ivy-engine/`, `AGENTS.md`, `CLAUDE.md`; see [§21](#ai-agents-in-the-game-repo)). Engine shaders, fonts, branding, primitives, and IBL stay in `resources/` and are used when the project does not override that `rom/` path |
 | **Open Project…** | Pick any folder that contains `rom/` (creates `project.json` if missing), including the in-repo `testbed/` |
 | **Open Testbed** | Open `<engine repo>/testbed` when that folder exists. Shown in Debug and Release. Use this when a recent external project is already open |
 | **Save Project** (Ctrl+Shift+S) | Saves the current scene + writes `project.json` (and syncs `default_scene.txt`) |
@@ -1085,6 +1085,7 @@ Keep each game in its own folder (usually its own git repo). `external_content_t
 - `rom/` — assets, `rom/scene/*.json`, `rom/tags.json`
 - `game/scripts/` — your script sources and `GameScripts/GameScripts.vcxproj`
 - `deploy/deploy.bat` — editor-free packaging
+- `docs/ivy-engine/`, `AGENTS.md`, `CLAUDE.md` — docs for AI coding agents (see below)
 
 The engine repo keeps the editor and runtime exes, engine sources and libraries, the shader pipeline (`shaders/` → `resources/shader/*.cso`), and the read-only defaults in `resources/`.
 
@@ -1098,6 +1099,21 @@ The engine repo keeps the editor and runtime exes, engine sources and libraries,
 6. Open `<ProjectName>.sln` (or run `build_scripts.bat`) and build **GameScripts | x64**. Post-build copies `GameScripts.dll` to the project's `game/scripts/bin/` **and** to the engine output's `game/scripts/bin/`, so the editor and runtime beside the engine exe load it.
 7. Open the folder with **File → Open Project** in IvyEngine.
 8. Package with **File → Build Current Project**, or run `deploy\deploy.bat Debug` / `Release` and launch `deploy\IvyEngineRuntime.exe`.
+
+### AI agents in the game repo
+
+New Project prepares the game repo so an AI coding agent can build the game **without reading or changing the engine**:
+
+- `docs/ivy-engine/` — the engine's game-facing docs (scripting, scene/prefab JSON, per-system APIs, build, test bridge, bridge scenario schema) and `ENGINE_COMMIT`, the engine version they describe.
+- `AGENTS.md` and `CLAUDE.md` — a managed section between `<!-- ivy-engine-docs:begin -->` and `<!-- ivy-engine-docs:end -->` that points the agent at those docs and sets the **engine boundary**: treat the engine as frozen and read-only, never read or edit the `EngineRoot` source, use only documented APIs, and log anything missing in `docs/engine-requests.md` instead of working around the engine.
+
+Write your own game rules **outside** the markers; they are never touched. After the engine changes, refresh the docs (this also removes stale files) from the engine repo:
+
+```bash
+python3 tools/export_agent_docs.py --game-repo /path/to/MyGame
+```
+
+For a project created another way (copied template, older project), run the same command once. The script still needs the engine checkout on disk to build `GameScripts`; the agent just does not need to open it.
 
 ### Startup scene
 

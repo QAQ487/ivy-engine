@@ -3,6 +3,7 @@
 
 #include "project_manager.h"
 
+#include "engine/editor/agent_docs_export.h"
 #include "engine/audio/audio_manager.h"
 #include "engine/core/content_path.h"
 #include "engine/debug_draw/debug_ofstream.h"
@@ -674,6 +675,12 @@ bool ProjectManager::ScaffoldNewProjectTree(const std::string& rootPath,
         const fs::path deploySrc = templateRoot / "deploy";
         if (fs::exists(deploySrc, ec))
             CopyDirectoryRecursive(deploySrc, root / "deploy", nullptr);
+
+        // Game-agent docs (docs/ivy-engine/) + AGENTS.md / CLAUDE.md with engine-boundary
+        // rules. A failure here must not block project creation.
+        std::string docsError;
+        if (!agent_docs::ExportToContentProject(engineRoot, root, &docsError))
+            hal::dout << "New Project: agent docs export skipped: " << docsError << std::endl;
     }
     else {
         fs::create_directories(root / "game" / "scripts" / "GameScripts", ec);

@@ -222,6 +222,9 @@
     <ClInclude Include="engine\editor\project_asset_index.h">
       <Filter>engine\editor</Filter>
     </ClInclude>
+    <ClInclude Include="engine\editor\agent_docs_export.h">
+      <Filter>engine\editor</Filter>
+    </ClInclude>
     <ClInclude Include="engine\editor\project_manager.h">
       <Filter>engine\editor</Filter>
     </ClInclude>
@@ -669,6 +672,9 @@
       <Filter>engine\editor</Filter>
     </ClCompile>
     <ClCompile Include="engine\editor\project_asset_index.cpp">
+      <Filter>engine\editor</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\editor\agent_docs_export.cpp">
       <Filter>engine\editor</Filter>
     </ClCompile>
     <ClCompile Include="engine\editor\project_manager.cpp">
