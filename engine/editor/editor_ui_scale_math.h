@@ -8,6 +8,8 @@
 inline constexpr int kEditorUiScalePercentMin = 50;
 inline constexpr int kEditorUiScalePercentMax = 300;
 inline constexpr int kEditorUiScalePercentDefault = 100;
+inline constexpr float kEditorUiScaleEffectiveMin = 0.5f;
+inline constexpr float kEditorUiScaleEffectiveMax = 4.0f;
 
 // Clamp a free-form percent into the supported range. Non-finite → default.
 inline int ClampUiScalePercent(int percent)
@@ -32,13 +34,21 @@ inline float NormalizeDpiScale(float dpiScale)
     return dpiScale;
 }
 
-// Effective style/font scale = (user percent / 100) × DPI.
+// Effective style/font scale = (user percent / 100) × DPI, clamped to
+// [kEditorUiScaleEffectiveMin, kEditorUiScaleEffectiveMax] (e.g. 300%×2x → 4x).
 // Always derived from unscaled inputs — never multiply a previously scaled value.
 inline float ComputeEffectiveUiScale(int userPercent, float dpiScale)
 {
     const int percent = ClampUiScalePercent(userPercent);
     const float dpi = NormalizeDpiScale(dpiScale);
-    return (static_cast<float>(percent) / 100.0f) * dpi;
+    float effective = (static_cast<float>(percent) / 100.0f) * dpi;
+    if (!std::isfinite(effective))
+        effective = 1.0f;
+    if (effective < kEditorUiScaleEffectiveMin)
+        effective = kEditorUiScaleEffectiveMin;
+    if (effective > kEditorUiScaleEffectiveMax)
+        effective = kEditorUiScaleEffectiveMax;
+    return effective;
 }
 
 // True when re-applying with the same inputs yields the same effective scale

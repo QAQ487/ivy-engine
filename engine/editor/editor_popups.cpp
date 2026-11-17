@@ -83,7 +83,7 @@ void DrawProjectGravitySettings() {
     ImGui::Separator();
 
     float gravity = ProjectManager::Instance().GetPhysicsGravity();
-    ImGui::SetNextItemWidth(160.0f);
+    ImGui::SetNextItemWidth(Ui(160.0f));
     if (ImGui::DragFloat("m/s^2", &gravity, 0.05f, 0.1f, 100.0f, "%.2f"))
         ProjectManager::Instance().SetPhysicsGravity(gravity);
     if (ImGui::IsItemDeactivatedAfterEdit()) {
@@ -108,25 +108,25 @@ void DrawProjectAudioSettings() {
             audio.GetSFXVolume(), audio.GetVoiceVolume());
         ProjectManager::Instance().SaveProjectFile(nullptr);
     };
-    ImGui::SetNextItemWidth(200.0f);
+    ImGui::SetNextItemWidth(Ui(200.0f));
     if (ImGui::SliderFloat("Master", &master, 0.0f, 1.0f, "%.2f")) {
         audio.SetMasterVolume(master);
         ProjectManager::Instance().SetAudioBuses(master, bgm, sfx, voice);
     }
     if (ImGui::IsItemDeactivatedAfterEdit()) saveBuses();
-    ImGui::SetNextItemWidth(200.0f);
+    ImGui::SetNextItemWidth(Ui(200.0f));
     if (ImGui::SliderFloat("BGM", &bgm, 0.0f, 1.0f, "%.2f")) {
         audio.SetBGMVolume(bgm);
         ProjectManager::Instance().SetAudioBuses(master, bgm, sfx, voice);
     }
     if (ImGui::IsItemDeactivatedAfterEdit()) saveBuses();
-    ImGui::SetNextItemWidth(200.0f);
+    ImGui::SetNextItemWidth(Ui(200.0f));
     if (ImGui::SliderFloat("SFX", &sfx, 0.0f, 1.0f, "%.2f")) {
         audio.SetSFXVolume(sfx);
         ProjectManager::Instance().SetAudioBuses(master, bgm, sfx, voice);
     }
     if (ImGui::IsItemDeactivatedAfterEdit()) saveBuses();
-    ImGui::SetNextItemWidth(200.0f);
+    ImGui::SetNextItemWidth(Ui(200.0f));
     if (ImGui::SliderFloat("Voice", &voice, 0.0f, 1.0f, "%.2f")) {
         audio.SetVoiceVolume(voice);
         ProjectManager::Instance().SetAudioBuses(master, bgm, sfx, voice);
@@ -140,7 +140,7 @@ void DrawProjectAudioSettings() {
     strncpy_s(clickBuf, ProjectManager::Instance().GetAudioSettings().uiClickSound.c_str(),
         sizeof(clickBuf) - 1);
     clickBuf[sizeof(clickBuf) - 1] = '\0';
-    ImGui::SetNextItemWidth(280.0f);
+    ImGui::SetNextItemWidth(Ui(280.0f));
     if (ImGui::InputText("##UiClickSound", clickBuf, sizeof(clickBuf)))
         ProjectManager::Instance().SetUiClickSound(clickBuf);
     if (ImGui::IsItemDeactivatedAfterEdit())
@@ -192,7 +192,7 @@ void DrawProjectDefaultSceneSettings() {
 
 bool DrawPlayablePackageConfigFields() {
     bool edited = false;
-    ImGui::SetNextItemWidth(420.0f);
+    ImGui::SetNextItemWidth(Ui(420.0f));
     ImGui::InputText("Output folder", g_buildDest, IM_ARRAYSIZE(g_buildDest));
     if (ImGui::IsItemDeactivatedAfterEdit())
         edited = true;
@@ -201,7 +201,7 @@ bool DrawPlayablePackageConfigFields() {
         g_pendingFolderPick = PendingFolderPickAction::BuildOutput;
 
     const char* configs[] = { "Debug", "Release" };
-    ImGui::SetNextItemWidth(160.0f);
+    ImGui::SetNextItemWidth(Ui(160.0f));
     if (ImGui::Combo("Configuration", &g_buildConfigIndex, configs, IM_ARRAYSIZE(configs)))
         edited = true;
     ImGui::TextDisabled("Play FPS overlay follows View > Show FPS When Playing in both configurations.");
@@ -234,7 +234,7 @@ void DrawEditorPopups() {
     ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
     if (ImGui::BeginPopupModal("NewScenePopup", &g_showNewScenePopup, ImGuiWindowFlags_AlwaysAutoResize)) {
         ImGui::Text("New Scene Name");
-        ImGui::SetNextItemWidth(260.0f);
+        ImGui::SetNextItemWidth(Ui(260.0f));
         ImGui::InputText("##NewSceneNameModal", g_newSceneName, IM_ARRAYSIZE(g_newSceneName));
         ImGui::Separator();
         if (ImGui::Button("Create", ImVec2(Ui(120.0f), 0))) {
@@ -266,7 +266,7 @@ void DrawEditorPopups() {
     if (ImGui::BeginPopupModal("NewProjectPopup", &g_showNewProjectPopup, ImGuiWindowFlags_AlwaysAutoResize)) {
         ImGui::Checkbox("2D Project",&g_newProject2D);
         ImGui::Text("New Project Name");
-        ImGui::SetNextItemWidth(280.0f);
+        ImGui::SetNextItemWidth(Ui(280.0f));
         ImGui::InputText("##NewProjectNameModal", g_newProjectName, IM_ARRAYSIZE(g_newProjectName));
         ImGui::TextDisabled("%s", g_newProjectParentDir.c_str());
         ImGui::Separator();
@@ -306,7 +306,7 @@ void DrawEditorPopups() {
     if (ImGui::BeginPopupModal("AddTagPopup", &g_showAddTagPopup, ImGuiWindowFlags_AlwaysAutoResize)) {
         static bool s_addTagFailed = false;
         ImGui::Text("New Tag Name");
-        ImGui::SetNextItemWidth(260.0f);
+        ImGui::SetNextItemWidth(Ui(260.0f));
         const bool enterPressed = ImGui::InputText("##NewTagNameModal", g_newTagName,
             IM_ARRAYSIZE(g_newTagName), ImGuiInputTextFlags_EnterReturnsTrue);
         if (ImGui::IsItemEdited())

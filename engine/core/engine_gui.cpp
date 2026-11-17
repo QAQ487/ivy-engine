@@ -285,6 +285,9 @@ void ApplyEditorUiScaleFromBase() {
     // DPI is folded into g_uiZoom; keep FontScaleDpi at 1 to avoid double-count.
     style.FontScaleMain = g_uiZoom;
     style.FontScaleDpi = 1.0f;
+    // Keep the mouse cursor visible/usable at 50%/75% UI scale.
+    if (style.MouseCursorScale < 0.75f)
+        style.MouseCursorScale = 0.75f;
 }
 
 void ApplyEditorTheme(editor_theme::StylePreset preset,
@@ -1312,6 +1315,9 @@ bool IsSceneLoadBusy() {
 void EngineGUI_Initialize(HWND hwnd, ID3D11Device* device,
     ID3D11DeviceContext* context)
 {
+    // Install early so Bootstrap / script-load diagnostics reach the Console.
+    EditorConsole_InstallLogHook();
+
     ProjectManager::Instance().BootstrapAtStartup();
 
     ModelAssetCache::Instance().RefreshAssetDirectory();
@@ -1350,13 +1356,10 @@ void EngineGUI_Initialize(HWND hwnd, ID3D11Device* device,
         g_uiColorScheme = editor_theme::ParseColorScheme(
             ProjectManager::Instance().GetEditorUiColorScheme().c_str());
         const int zoom = ProjectManager::Instance().GetEditorUiZoomPercent();
-        if (IsValidUiZoomPercent(zoom)) {
+        if (IsValidUiZoomPercent(zoom))
             g_uiZoomPercent = zoom;
-            g_uiZoom = static_cast<float>(zoom) / 100.0f;
-        }
         EditorDocking_OnProjectOpened(ProjectManager::Instance().GetRootPath());
     }
-    EditorConsole_InstallLogHook();
     ApplyEditorTheme(g_uiStylePreset, g_uiColorScheme); // includes scale apply
 
     ProjectManager::Instance().UpdateWindowTitle(hwnd);
@@ -2524,14 +2527,14 @@ void EngineGUI_Draw() {
     else {
         io.DisplayFramebufferScale = ImVec2(1.0f, 1.0f);
     }
-    ImGui::NewFrame();
-    EditorDocking_BeginFrame();
-    // Re-apply effective scale when the window moves across DPI monitors.
+    // Re-apply effective scale before NewFrame when moving across DPI monitors.
     {
         const float dpi = QueryEditorDpiScale();
         if (std::fabs(dpi - g_uiDpiScale) > 0.001f && g_baseStyleCaptured)
             ApplyEditorUiScaleFromBase();
     }
+    ImGui::NewFrame();
+    EditorDocking_BeginFrame();
 
     // No project open: product start screen only (folder-pick still runs after render).
     if (!ProjectManager::Instance().IsOpen()) {

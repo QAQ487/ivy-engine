@@ -56,6 +56,11 @@ static void TestEffectiveScale()
     ExpectNear(ComputeEffectiveUiScale(100, 1.5f), 1.5f, 0.0001f, "100% @1.5x dpi");
     ExpectNear(ComputeEffectiveUiScale(200, 1.5f), 3.0f, 0.0001f, "200% @1.5x dpi");
     ExpectNear(ComputeEffectiveUiScale(150, 2.0f), 3.0f, 0.0001f, "150% @2x dpi");
+    // Product clamp: 300% × 2.0 would be 6x → capped at 4.0.
+    ExpectNear(ComputeEffectiveUiScale(300, 2.0f), kEditorUiScaleEffectiveMax, 0.0001f,
+               "300% @2x capped");
+    ExpectNear(ComputeEffectiveUiScale(200, 2.5f), kEditorUiScaleEffectiveMax, 0.0001f,
+               "200% @2.5x capped");
     // Invalid percent still clamps before combining.
     ExpectNear(ComputeEffectiveUiScale(10, 1.0f), 0.5f, 0.0001f, "invalid low clamps");
     ExpectNear(ComputeEffectiveUiScale(999, 1.0f), 3.0f, 0.0001f, "invalid high clamps");

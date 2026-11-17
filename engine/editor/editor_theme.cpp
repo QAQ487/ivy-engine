@@ -9,6 +9,7 @@
 #include "imgui/icons_font_awesome.h"
 
 #include <cctype>
+#include <cmath>
 #include <cstdio>
 #include <cstring>
 #include <filesystem>
@@ -383,14 +384,21 @@ void PaintHollowSoftColors(ImGuiStyle& style, const Palette& p)
 
 void EnsureAllColorsWritten(ImGuiStyle& style)
 {
-    // Painters must assign every ImGuiCol_ slot (including docking). This helper
-    // is a last-resort fill for any still-matching default-constructed zero that
-    // slipped through — it does not replace explicit palette writes above.
-    ImVec4* c = style.Colors;
+    // Safety net: fill any ImGuiCol_ still unset from a complete StyleColorsDark
+    // base (includes docking). "Unset" = coverage-test sentinel or non-finite.
+    // Intentional transparent writes (0,0,0,0) are left alone.
+    ImGuiStyle filled{};
+    ImGui::StyleColorsDark(&filled);
+    constexpr ImVec4 kUnsetSentinel(0.111f, 0.222f, 0.333f, 0.444f);
     for (int i = 0; i < ImGuiCol_COUNT; ++i) {
-        // No-op placeholder kept for call-site clarity; coverage is enforced by
-        // ColorsFullyAssigned against a non-zero sentinel in unit tests.
-        (void)c[i];
+        const ImVec4& c = style.Colors[i];
+        const bool nonFinite = !std::isfinite(c.x) || !std::isfinite(c.y) ||
+                               !std::isfinite(c.z) || !std::isfinite(c.w);
+        const bool isUnset =
+            c.x == kUnsetSentinel.x && c.y == kUnsetSentinel.y &&
+            c.z == kUnsetSentinel.z && c.w == kUnsetSentinel.w;
+        if (nonFinite || isUnset)
+            style.Colors[i] = filled.Colors[i];
     }
 }
 
