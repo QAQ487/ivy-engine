@@ -7,10 +7,14 @@
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
+#include <ctime>
+#include <deque>
 #include <mutex>
 #include <string>
 #include <string_view>
 #include <vector>
+
+inline constexpr size_t kEditorConsoleEntryMaxBytes = 4096;
 
 enum class EditorConsoleLevel : int {
     Info = 0,
@@ -19,6 +23,7 @@ enum class EditorConsoleLevel : int {
 };
 
 struct EditorConsoleEntry {
+    std::uint64_t id = 0;
     EditorConsoleLevel level = EditorConsoleLevel::Info;
     std::int64_t timestampMs = 0;
     std::string text;
@@ -32,34 +37,54 @@ struct EditorConsoleFilter {
     std::string search; // case-insensitive substring; empty = match all
 };
 
+inline bool ConsoleFilterEqual(const EditorConsoleFilter& a, const EditorConsoleFilter& b)
+{
+    return a.showInfo == b.showInfo && a.showWarning == b.showWarning &&
+           a.showError == b.showError && a.search == b.search;
+}
+
+// Word-boundary-ish match so "0 errors" / "failover" are not tagged ERR.
+inline bool HasLevelKeyword(std::string_view text, const char* needle)
+{
+    if (!needle || !*needle)
+        return false;
+    const size_t n = std::strlen(needle);
+    if (text.size() < n)
+        return false;
+    auto lower = [](unsigned char c) -> char {
+        return static_cast<char>(std::tolower(c));
+    };
+    auto isWord = [](unsigned char c) -> bool {
+        return std::isalnum(c) != 0 || c == '_';
+    };
+    for (size_t i = 0; i + n <= text.size(); ++i) {
+        bool ok = true;
+        for (size_t j = 0; j < n; ++j) {
+            if (lower(static_cast<unsigned char>(text[i + j])) !=
+                lower(static_cast<unsigned char>(needle[j]))) {
+                ok = false;
+                break;
+            }
+        }
+        if (!ok)
+            continue;
+        const bool leftOk = (i == 0) || !isWord(static_cast<unsigned char>(text[i - 1]));
+        const bool rightOk = (i + n >= text.size()) ||
+            !isWord(static_cast<unsigned char>(text[i + n]));
+        if (leftOk && rightOk)
+            return true;
+    }
+    return false;
+}
+
 // Heuristic level from message text (cheap; unknown → Info).
 inline EditorConsoleLevel InferConsoleLevel(std::string_view text)
 {
-    auto has = [&](const char* needle) -> bool {
-        if (!needle || !*needle)
-            return false;
-        const size_t n = std::strlen(needle);
-        if (text.size() < n)
-            return false;
-        for (size_t i = 0; i + n <= text.size(); ++i) {
-            bool ok = true;
-            for (size_t j = 0; j < n; ++j) {
-                const char a = static_cast<char>(std::tolower(static_cast<unsigned char>(text[i + j])));
-                const char b = static_cast<char>(std::tolower(static_cast<unsigned char>(needle[j])));
-                if (a != b) {
-                    ok = false;
-                    break;
-                }
-            }
-            if (ok)
-                return true;
-        }
-        return false;
-    };
-
-    if (has("error") || has("fail") || has("fatal") || has("exception"))
+    if (HasLevelKeyword(text, "error") || HasLevelKeyword(text, "failed") ||
+        HasLevelKeyword(text, "failure") || HasLevelKeyword(text, "fatal") ||
+        HasLevelKeyword(text, "exception") || HasLevelKeyword(text, "fail"))
         return EditorConsoleLevel::Error;
-    if (has("warning") || has("warn"))
+    if (HasLevelKeyword(text, "warning") || HasLevelKeyword(text, "warn"))
         return EditorConsoleLevel::Warning;
     return EditorConsoleLevel::Info;
 }
@@ -80,7 +105,6 @@ inline bool ConsoleEntryPassesFilter(const EditorConsoleEntry& e, const EditorCo
     if (f.search.empty())
         return true;
 
-    // Case-insensitive substring search (UTF-8 safe for ASCII needles; CJK search is exact-byte).
     auto asciiLower = [](unsigned char c) -> char {
         return static_cast<char>(std::tolower(c));
     };
@@ -93,7 +117,6 @@ inline bool ConsoleEntryPassesFilter(const EditorConsoleEntry& e, const EditorCo
         for (size_t j = 0; j < needle.size(); ++j) {
             const unsigned char a = static_cast<unsigned char>(hay[i + j]);
             const unsigned char b = static_cast<unsigned char>(needle[j]);
-            // Only fold ASCII; multi-byte UTF-8 (CJK) compared as-is.
             const char ca = (a < 128) ? asciiLower(a) : static_cast<char>(a);
             const char cb = (b < 128) ? asciiLower(b) : static_cast<char>(b);
             if (ca != cb) {
@@ -107,13 +130,42 @@ inline bool ConsoleEntryPassesFilter(const EditorConsoleEntry& e, const EditorCo
     return false;
 }
 
-// Bounded ring of entries. Push is thread-safe; snapshot for UI is a mutexed copy.
+inline void CapConsoleEntryText(std::string& text)
+{
+    if (text.size() > kEditorConsoleEntryMaxBytes)
+        text.resize(kEditorConsoleEntryMaxBytes);
+}
+
+// Split on '\n', trim CR, drop empties, cap each piece. Pure helper for tests.
+inline std::vector<std::string> SplitConsoleLogLines(std::string_view text)
+{
+    std::vector<std::string> lines;
+    size_t start = 0;
+    while (start <= text.size()) {
+        size_t end = text.find('\n', start);
+        if (end == std::string_view::npos)
+            end = text.size();
+        std::string_view piece = text.substr(start, end - start);
+        while (!piece.empty() && piece.back() == '\r')
+            piece.remove_suffix(1);
+        if (!piece.empty()) {
+            std::string s(piece);
+            CapConsoleEntryText(s);
+            lines.push_back(std::move(s));
+        }
+        if (end == text.size())
+            break;
+        start = end + 1;
+    }
+    return lines;
+}
+
+// Bounded deque ring. Push is thread-safe; Snapshot caches by generation+filter.
 class EditorConsoleBuffer {
 public:
     explicit EditorConsoleBuffer(size_t capacity = 2000)
         : m_capacity(capacity < 1 ? 1 : capacity)
     {
-        m_entries.reserve(m_capacity);
     }
 
     void SetCapacity(size_t capacity)
@@ -121,7 +173,8 @@ public:
         std::lock_guard<std::mutex> lock(m_mutex);
         m_capacity = capacity < 1 ? 1 : capacity;
         while (m_entries.size() > m_capacity)
-            m_entries.erase(m_entries.begin());
+            m_entries.pop_front();
+        InvalidateCacheLocked();
     }
 
     size_t Capacity() const { return m_capacity; }
@@ -130,40 +183,29 @@ public:
     {
         std::lock_guard<std::mutex> lock(m_mutex);
         m_entries.clear();
-        ++m_generation;
+        InvalidateCacheLocked();
     }
 
     void Push(std::string_view text, EditorConsoleLevel level, std::int64_t timestampMs)
     {
-        // Trim trailing CR/LF only.
-        while (!text.empty() && (text.back() == '\n' || text.back() == '\r'))
-            text.remove_suffix(1);
-        if (text.empty())
+        const std::vector<std::string> lines = SplitConsoleLogLines(text);
+        if (lines.empty())
             return;
 
         std::lock_guard<std::mutex> lock(m_mutex);
-        if (!m_entries.empty() && m_entries.back().text == text &&
-            m_entries.back().level == level) {
-            m_entries.back().repeatCount += 1;
-            m_entries.back().timestampMs = timestampMs;
-            ++m_generation;
-            return;
-        }
-
-        EditorConsoleEntry e;
-        e.level = level;
-        e.timestampMs = timestampMs;
-        e.text.assign(text.data(), text.size());
-        e.repeatCount = 1;
-        m_entries.push_back(std::move(e));
-        while (m_entries.size() > m_capacity)
-            m_entries.erase(m_entries.begin());
-        ++m_generation;
+        for (const std::string& line : lines)
+            PushLineLocked(line, level, timestampMs);
     }
 
     void PushAutoLevel(std::string_view text, std::int64_t timestampMs)
     {
-        Push(text, InferConsoleLevel(text), timestampMs);
+        const std::vector<std::string> lines = SplitConsoleLogLines(text);
+        if (lines.empty())
+            return;
+
+        std::lock_guard<std::mutex> lock(m_mutex);
+        for (const std::string& line : lines)
+            PushLineLocked(line, InferConsoleLevel(line), timestampMs);
     }
 
     std::uint64_t Generation() const
@@ -178,43 +220,90 @@ public:
         return m_entries.size();
     }
 
-    // Copy entries that pass the filter (stable order, oldest first).
+    // Cached filtered snapshot (stable order, oldest first).
     std::vector<EditorConsoleEntry> Snapshot(const EditorConsoleFilter& filter) const
     {
         std::lock_guard<std::mutex> lock(m_mutex);
-        std::vector<EditorConsoleEntry> out;
-        out.reserve(m_entries.size());
+        if (m_cacheValid && m_cacheGeneration == m_generation &&
+            ConsoleFilterEqual(m_cacheFilter, filter))
+            return m_cachedSnapshot;
+
+        m_cachedSnapshot.clear();
+        m_cachedSnapshot.reserve(m_entries.size());
         for (const auto& e : m_entries) {
             if (ConsoleEntryPassesFilter(e, filter))
-                out.push_back(e);
+                m_cachedSnapshot.push_back(e);
         }
-        return out;
+        m_cacheFilter = filter;
+        m_cacheGeneration = m_generation;
+        m_cacheValid = true;
+        return m_cachedSnapshot;
     }
 
-    // All entries (for Copy all).
     std::vector<EditorConsoleEntry> SnapshotAll() const
     {
         std::lock_guard<std::mutex> lock(m_mutex);
-        return m_entries;
+        return std::vector<EditorConsoleEntry>(m_entries.begin(), m_entries.end());
     }
 
 private:
+    void InvalidateCacheLocked()
+    {
+        ++m_generation;
+        m_cacheValid = false;
+        m_cachedSnapshot.clear();
+    }
+
+    void PushLineLocked(const std::string& line, EditorConsoleLevel level,
+                        std::int64_t timestampMs)
+    {
+        if (line.empty())
+            return;
+        if (!m_entries.empty() && m_entries.back().text == line &&
+            m_entries.back().level == level) {
+            m_entries.back().repeatCount += 1;
+            m_entries.back().timestampMs = timestampMs;
+            InvalidateCacheLocked();
+            return;
+        }
+
+        EditorConsoleEntry e;
+        e.id = ++m_nextId;
+        e.level = level;
+        e.timestampMs = timestampMs;
+        e.text = line;
+        e.repeatCount = 1;
+        m_entries.push_back(std::move(e));
+        while (m_entries.size() > m_capacity)
+            m_entries.pop_front();
+        InvalidateCacheLocked();
+    }
+
     mutable std::mutex m_mutex;
     size_t m_capacity = 2000;
-    std::vector<EditorConsoleEntry> m_entries;
+    std::deque<EditorConsoleEntry> m_entries;
     std::uint64_t m_generation = 0;
+    std::uint64_t m_nextId = 0;
+
+    mutable bool m_cacheValid = false;
+    mutable std::uint64_t m_cacheGeneration = 0;
+    mutable EditorConsoleFilter m_cacheFilter{};
+    mutable std::vector<EditorConsoleEntry> m_cachedSnapshot;
 };
 
 inline std::string FormatConsoleEntryLine(const EditorConsoleEntry& e)
 {
     char timeBuf[32];
-    const std::int64_t ms = e.timestampMs;
-    const std::int64_t sec = ms / 1000;
-    const int millis = static_cast<int>(ms % 1000);
-    const int s = static_cast<int>(sec % 60);
-    const int m = static_cast<int>((sec / 60) % 60);
-    const int h = static_cast<int>((sec / 3600) % 24);
-    std::snprintf(timeBuf, sizeof(timeBuf), "%02d:%02d:%02d.%03d", h, m, s, millis);
+    const std::time_t sec = static_cast<std::time_t>(e.timestampMs / 1000);
+    const int millis = static_cast<int>(e.timestampMs % 1000);
+    std::tm local{};
+#if defined(_WIN32)
+    localtime_s(&local, &sec);
+#else
+    localtime_r(&sec, &local);
+#endif
+    std::snprintf(timeBuf, sizeof(timeBuf), "%02d:%02d:%02d.%03d",
+                  local.tm_hour, local.tm_min, local.tm_sec, millis);
 
     const char* levelTag = "INF";
     switch (e.level) {

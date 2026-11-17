@@ -28,13 +28,20 @@ static void TestInferLevel()
     Expect(InferConsoleLevel("Error: boom") == EditorConsoleLevel::Error, "error");
     Expect(InferConsoleLevel("FAIL: assert") == EditorConsoleLevel::Error, "fail");
     Expect(InferConsoleLevel("fatal crash") == EditorConsoleLevel::Error, "fatal");
+    // Tightened heuristics: do not treat substring hits inside other words.
+    Expect(InferConsoleLevel("0 errors fixed") == EditorConsoleLevel::Info,
+           "0 errors → info (plural not keyword)");
+    Expect(InferConsoleLevel("failover path") == EditorConsoleLevel::Info,
+           "failover → info");
+    Expect(InferConsoleLevel("failed to load") == EditorConsoleLevel::Error,
+           "failed → error");
 }
 
 static void TestFilter()
 {
-    EditorConsoleEntry info{EditorConsoleLevel::Info, 0, "alpha", 1};
-    EditorConsoleEntry warn{EditorConsoleLevel::Warning, 0, "beta", 1};
-    EditorConsoleEntry err{EditorConsoleLevel::Error, 0, "gamma", 1};
+    EditorConsoleEntry info{1, EditorConsoleLevel::Info, 0, "alpha", 1};
+    EditorConsoleEntry warn{2, EditorConsoleLevel::Warning, 0, "beta", 1};
+    EditorConsoleEntry err{3, EditorConsoleLevel::Error, 0, "gamma", 1};
 
     EditorConsoleFilter f{};
     Expect(ConsoleEntryPassesFilter(info, f), "default shows info");
@@ -63,6 +70,50 @@ static void TestRingAndCollapse()
     Expect(buf.Size() == 4, "capacity 4");
     snap = buf.SnapshotAll();
     Expect(snap.front().text == "b", "oldest dropped");
+}
+
+static void TestMultilineSplitAndCap()
+{
+    auto lines = SplitConsoleLogLines("one\ntwo\r\n\nthree");
+    Expect(lines.size() == 3, "split 3 non-empty lines");
+    Expect(lines[0] == "one" && lines[1] == "two" && lines[2] == "three", "split text");
+
+    std::string huge(kEditorConsoleEntryMaxBytes + 100, 'x');
+    lines = SplitConsoleLogLines(huge);
+    Expect(lines.size() == 1, "single capped line");
+    Expect(lines[0].size() == kEditorConsoleEntryMaxBytes, "cap 4KB");
+
+    EditorConsoleBuffer buf;
+    buf.Push("l1\nl2\nl3", EditorConsoleLevel::Info, 1);
+    Expect(buf.Size() == 3, "push splits lines");
+}
+
+static void TestStableIdsAndSnapshotCache()
+{
+    EditorConsoleBuffer buf(3);
+    buf.Push("a", EditorConsoleLevel::Info, 1);
+    buf.Push("b", EditorConsoleLevel::Info, 2);
+    auto all = buf.SnapshotAll();
+    Expect(all.size() == 2, "two entries");
+    const std::uint64_t idB = all[1].id;
+    Expect(idB > all[0].id, "ids increase");
+
+    EditorConsoleFilter f{};
+    auto snap1 = buf.Snapshot(f);
+    const std::uint64_t gen1 = buf.Generation();
+    auto snap2 = buf.Snapshot(f);
+    Expect(buf.Generation() == gen1, "cache does not bump generation");
+    Expect(snap1.size() == snap2.size() && snap1[0].id == snap2[0].id, "cache stable");
+
+    buf.Push("c", EditorConsoleLevel::Info, 3);
+    buf.Push("d", EditorConsoleLevel::Info, 4); // drops a
+    all = buf.SnapshotAll();
+    Expect(all.size() == 3 && all.front().text == "b", "ring drop front");
+    bool foundB = false;
+    for (const auto& e : all) {
+        if (e.id == idB) foundB = true;
+    }
+    Expect(foundB, "selection id survives ring drop");
 }
 
 static void TestSnapshotFilter()
@@ -97,7 +148,6 @@ static void TestThreadSafePush()
 static void TestCjkSearch()
 {
     EditorConsoleBuffer buf;
-    // "專案" UTF-8
     const char kCjk[] = "\xE5\xB0\x88\xE6\xA1\x88 loaded";
     buf.Push(kCjk, EditorConsoleLevel::Info, 1);
     EditorConsoleFilter f{};
@@ -110,6 +160,8 @@ int main()
     TestInferLevel();
     TestFilter();
     TestRingAndCollapse();
+    TestMultilineSplitAndCap();
+    TestStableIdsAndSnapshotCache();
     TestSnapshotFilter();
     TestThreadSafePush();
     TestCjkSearch();

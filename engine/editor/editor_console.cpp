@@ -13,8 +13,9 @@ namespace {
 EditorConsoleBuffer g_buffer(2000);
 EditorConsoleFilter g_filter{};
 bool g_clearOnPlay = false;
-bool g_autoScroll = true;
-int g_selectedIndex = -1; // index into filtered snapshot; -1 = none
+bool g_autoScrollEnabled = true;  // user checkbox
+bool g_autoScrollPaused = false;  // true while scrolled away from bottom
+std::uint64_t g_selectedId = 0;   // 0 = none
 
 std::int64_t NowMs()
 {
@@ -42,10 +43,22 @@ ImVec4 LevelColor(EditorConsoleLevel level)
     }
 }
 
-void CopyEntriesToClipboard(const std::vector<EditorConsoleEntry>& entries, int selected)
+int IndexOfSelected(const std::vector<EditorConsoleEntry>& entries)
+{
+    if (g_selectedId == 0)
+        return -1;
+    for (int i = 0; i < static_cast<int>(entries.size()); ++i) {
+        if (entries[static_cast<size_t>(i)].id == g_selectedId)
+            return i;
+    }
+    return -1;
+}
+
+void CopyEntriesToClipboard(const std::vector<EditorConsoleEntry>& entries)
 {
     std::string blob;
-    if (selected >= 0 && selected < static_cast<int>(entries.size())) {
+    const int selected = IndexOfSelected(entries);
+    if (selected >= 0) {
         blob = FormatConsoleEntryLine(entries[static_cast<size_t>(selected)]);
     }
     else {
@@ -56,6 +69,17 @@ void CopyEntriesToClipboard(const std::vector<EditorConsoleEntry>& entries, int 
         }
     }
     ImGui::SetClipboardText(blob.c_str());
+}
+
+void DockConsoleFirstUseEver()
+{
+    // Existing projects' imgui_layout.ini has no Console entry — dock into the
+    // Asset Browser node on first use so it does not open floating.
+    if (ImGuiWindow* asset = ImGui::FindWindowByName(kEditorAssetBrowserWindowTitle)) {
+        if (asset->DockId != 0)
+            ImGui::SetNextWindowDockID(asset->DockId, ImGuiCond_FirstUseEver);
+    }
+    ImGui::SetNextWindowSize(ImVec2(Ui(640.0f), Ui(280.0f)), ImGuiCond_FirstUseEver);
 }
 
 } // namespace
@@ -77,7 +101,7 @@ void EditorConsole_RemoveLogHook()
 void EditorConsole_Clear()
 {
     g_buffer.Clear();
-    g_selectedIndex = -1;
+    g_selectedId = 0;
 }
 
 void EditorConsole_OnPlayStarted()
@@ -115,22 +139,26 @@ void DrawEditorConsolePanel(bool* open)
     if (open && !*open)
         return;
 
-    if (!ImGui::Begin(kEditorConsoleWindowTitle, open)) { // from editor_docking.h via common includes
+    DockConsoleFirstUseEver();
+    if (!ImGui::Begin(kEditorConsoleWindowTitle, open)) {
         ImGui::End();
         return;
     }
 
-    // --- Toolbar ---
     if (ImGui::Button("Clear"))
         EditorConsole_Clear();
     ImGui::SameLine();
-    const bool copySelected = g_selectedIndex >= 0;
-    if (ImGui::Button(copySelected ? "Copy Selected" : "Copy All")) {
-        auto snap = g_buffer.Snapshot(g_filter);
-        CopyEntriesToClipboard(snap, g_selectedIndex);
-    }
+    const std::vector<EditorConsoleEntry> entries = g_buffer.Snapshot(g_filter);
+    const int selectedIndex = IndexOfSelected(entries);
+    if (selectedIndex < 0)
+        g_selectedId = 0;
+    if (ImGui::Button(selectedIndex >= 0 ? "Copy Selected" : "Copy All"))
+        CopyEntriesToClipboard(entries);
     ImGui::SameLine();
-    ImGui::Checkbox("Auto-scroll", &g_autoScroll);
+    if (ImGui::Checkbox("Auto-scroll", &g_autoScrollEnabled)) {
+        if (g_autoScrollEnabled)
+            g_autoScrollPaused = false;
+    }
     ImGui::SameLine();
     if (ImGui::Checkbox("Clear on Play", &g_clearOnPlay))
         SaveUiPrefs();
@@ -154,10 +182,6 @@ void DrawEditorConsolePanel(bool* open)
 
     ImGui::Separator();
 
-    const std::vector<EditorConsoleEntry> entries = g_buffer.Snapshot(g_filter);
-    if (g_selectedIndex >= static_cast<int>(entries.size()))
-        g_selectedIndex = -1;
-
     const float footer = ImGui::GetFrameHeightWithSpacing();
     if (ImGui::BeginChild("##ConsoleLog", ImVec2(0.0f, -footer), ImGuiChildFlags_Borders,
                           ImGuiWindowFlags_HorizontalScrollbar)) {
@@ -167,11 +191,11 @@ void DrawEditorConsolePanel(bool* open)
             for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; ++i) {
                 const EditorConsoleEntry& e = entries[static_cast<size_t>(i)];
                 const std::string line = FormatConsoleEntryLine(e);
-                ImGui::PushID(i);
+                ImGui::PushID(static_cast<int>(e.id));
                 ImGui::PushStyleColor(ImGuiCol_Text, LevelColor(e.level));
-                const bool selected = (i == g_selectedIndex);
+                const bool selected = (e.id == g_selectedId);
                 if (ImGui::Selectable(line.c_str(), selected, ImGuiSelectableFlags_AllowDoubleClick)) {
-                    g_selectedIndex = i;
+                    g_selectedId = e.id;
                     if (ImGui::IsMouseDoubleClicked(0))
                         ImGui::SetClipboardText(line.c_str());
                 }
@@ -180,15 +204,14 @@ void DrawEditorConsolePanel(bool* open)
             }
         }
 
-        // Auto-scroll pauses when the user scrolls up; resumes at the bottom.
         if (ImGui::GetScrollMaxY() > 0.0f) {
             const float fromBottom = ImGui::GetScrollMaxY() - ImGui::GetScrollY();
             if (fromBottom > Ui(24.0f))
-                g_autoScroll = false;
+                g_autoScrollPaused = true;
             else if (fromBottom <= 1.0f)
-                g_autoScroll = true;
+                g_autoScrollPaused = false;
         }
-        if (g_autoScroll)
+        if (g_autoScrollEnabled && !g_autoScrollPaused)
             ImGui::SetScrollHereY(1.0f);
     }
     ImGui::EndChild();
