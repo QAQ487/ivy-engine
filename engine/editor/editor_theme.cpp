@@ -384,20 +384,16 @@ void PaintHollowSoftColors(ImGuiStyle& style, const Palette& p)
 
 void EnsureAllColorsWritten(ImGuiStyle& style)
 {
-    // Safety net: fill any ImGuiCol_ still unset from a complete StyleColorsDark
-    // base (includes docking). "Unset" = coverage-test sentinel or non-finite.
-    // Intentional transparent writes (0,0,0,0) are left alone.
+    // Repair non-finite colour slots only. Do NOT treat the unit-test coverage
+    // sentinel as unset — painters must write every ImGuiCol_ (incl. docking)
+    // or ColorsFullyAssigned will fail.
     ImGuiStyle filled{};
     ImGui::StyleColorsDark(&filled);
-    constexpr ImVec4 kUnsetSentinel(0.111f, 0.222f, 0.333f, 0.444f);
     for (int i = 0; i < ImGuiCol_COUNT; ++i) {
         const ImVec4& c = style.Colors[i];
         const bool nonFinite = !std::isfinite(c.x) || !std::isfinite(c.y) ||
                                !std::isfinite(c.z) || !std::isfinite(c.w);
-        const bool isUnset =
-            c.x == kUnsetSentinel.x && c.y == kUnsetSentinel.y &&
-            c.z == kUnsetSentinel.z && c.w == kUnsetSentinel.w;
-        if (nonFinite || isUnset)
+        if (nonFinite)
             style.Colors[i] = filled.Colors[i];
     }
 }
