@@ -9,7 +9,7 @@
 - [ ] **重做 Properties Panel／Inspector**
   - 先盤點 component/property 編輯、序列化、Undo/Redo、選取流程，提出 UI 草案同明確 scope，再實作。
   - 目標：分區／欄位清晰、編輯穩定，保留現有功能。
-  - 現況：`engine/core/engine_gui.cpp` 的 `"Properties"` 已有 Transform、Tag、Visual、Light、Camera、Collider、Rigidbody、Material、Effect、Audio 同 script properties；Undo 已接 `editor_undo.cpp`。呢項係 UI 重做，唔係由零寫 inspector。
+  - 現況：`engine/editor/editor_inspector_panel.cpp` 的 `"Properties"` 已有 Transform、Tag、Visual、Light、Camera、Collider、Rigidbody、Material、Effect、Audio 同 script properties；Undo 已接 `editor_undo.cpp`。呢項係 UI 重做，唔係由零寫 inspector。
   - 驗收：常用欄位編輯／保存／重載正常；Undo/Redo 有效；新增／移除 component、資產選擇無回歸。
 - [ ] **World-space UI 編輯器支援**
   - 可以建立、擺位同編輯 world-space UI；與 screen-space canvas 分開。
@@ -22,7 +22,7 @@
   - 驗收場景：`testbed/rom/scene/scene_regression_3d.json`（紅色落體要停低）同 `testbed/rom/scene/scene_cylinder_pairs.json`（盒／mesh／圓柱、X／Z 90°、地面盒、疊柱）。Editor：File → Open Testbed，再打開場景。Linux `tests/cylinder_pair_test.cpp`（`g++ -std=c++20`）已覆蓋分離、軸對齊重疊、旋轉、頂蓋、側面、非法尺寸同法線對稱。Terry 喺 PR #8 接受咗 Windows runtime，所以呢項剔走。
 - [x] **Content reload 紅燈：刪除未被引用嘅資產**（Terry 喺 2026-11-13 喺 Windows editor 驗收三個刪檔 case：未引用、已引用、已載入）
   - `content_reload::DecideRemovedContentAction`（`engine/editor/content_removal_policy.h`）：`rom/` 刪檔若唔喺目前 scene JSON，亦唔喺 texture／cubemap／`ModelUtil`／`ModelAssetCache`／audio cache，Content 燈維持 Watching，並寫 `content_hot_reload.log`。被引用或已載入仍然 `Failure` 同保留資源。新增未引用檔繼續 skip（共用 `SceneJsonReferencesRomPath`）。
-  - Linux：`tests/content_removal_policy_test.cpp`（`g++ -std=c++17 -I.`）。見 `docs/EDITOR_CONTENT_HOT_RELOAD.md`。
+  - Linux：`tests/content_removal_policy_test.cpp`（`g++ -std=c++17 -I.`）。見 `docs/ENGINE_USER_GUIDE.md` §17「Hot reload」同 `AGENTS.md`「Hot reload internals」。
 - [ ] **Box friction torque（可選，只有想箱子傾側先做）**
   - `collider.cpp` 的 `ResolveContact` 對 box 把摩擦衝量嘅力臂設成 0，箱子只留線性摩擦，避免喺邊緣滾動；球體仍有角向摩擦。呢個係現有設計，唔係空 stub。
   - 驗收（若開做）：box 可以因摩擦傾側，同時唔好無故原地打轉；球體滾動無回歸。
@@ -104,7 +104,7 @@
 
 - [x] **Trigger 系統**：Enter／Exit 已有。`1499a44`；`Collider::m_isTrigger`、`physics_system.cpp` 的 `DiffAndDispatchTriggerEvents`、script `OnTriggerEnter`／`OnTriggerExit`、Properties checkbox。`OnTriggerStay` 未實作；只有需要 Stay 先另開一項，唔好再掛「還債」。
 - [x] **Prefab drag-drop Undo**：hierarchy 同 root drop zone 接受 `ASSET_PREFAB` 後呼叫 `EditorUndo_PushCreate`（`engine/core/engine_gui.cpp`）；`CreateObjectCommand::Undo` 會刪走個節點（`engine/editor/editor_undo.cpp`）。
-- [x] **deploy.bat executable 命名**：bat 仍複製 `IvyEngineRuntime.exe`（`external_content_template/deploy/deploy.bat`）。Editor package 用 `SanitizeGameExeStem` 寫成 `<GameName>.exe`（`engine/editor/playable_package_builder.cpp`）。兩邊嘅分別已寫喺 `docs/CONTENT_PROJECT.md`。若要 bat 都輸出遊戲名，先另開窄項。
+- [x] **deploy.bat executable 命名**：bat 仍複製 `IvyEngineRuntime.exe`（`external_content_template/deploy/deploy.bat`）。Editor package 用 `SanitizeGameExeStem` 寫成 `<GameName>.exe`（`engine/editor/playable_package_builder.cpp`）。兩邊嘅分別已寫喺 `docs/ENGINE_USER_GUIDE.md` §17／§21。若要 bat 都輸出遊戲名，先另開窄項。
 - [x] **Asset cache LRU／refcount**：`ModelAssetCache` 係 process-lifetime `std::map`（`engine/ecs/model_asset_cache.h`），同 README 寫法一致。冇 LRU、冇 refcount，亦冇「曾經做完再拆走」嘅 commit。有記憶體數字先重開。
 - [x] **Mesh collider recursion crash**：`915dce7` 停止 Box／mesh／cylinder 互相呼叫直到 stack overflow。當時改為無碰撞並 log。接觸已喺 source 實作，Windows runtime 未驗收，見上面「Cylinder pair collision」。唔好再當未還原嘅舊故障。
 

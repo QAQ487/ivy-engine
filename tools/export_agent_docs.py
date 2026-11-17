@@ -11,13 +11,9 @@ from dataclasses import dataclass
 
 BEGIN_MARKER = "<!-- ivy-engine-docs:begin -->"
 END_MARKER = "<!-- ivy-engine-docs:end -->"
-MANAGED_SECTION = f"""{BEGIN_MARKER}
-## Ivy Engine (exported docs)
-
-Game agents: read engine APIs and layout from `docs/ivy-engine/README.md` (docs only; do not require engine source in this repo).
-Re-export from the engine with `tools/export_agent_docs.py --game-repo <this-repo>`.
-{END_MARKER}
-"""
+# Body of the managed AGENTS.md / CLAUDE.md section (incl. engine-boundary rules).
+# Shared with the editor's File > New Project export (engine/editor/agent_docs_export.cpp).
+MANAGED_SECTION_REL = pathlib.Path("tools") / "agent_docs_managed_section.md"
 
 ENGINE_MARKERS = ("IvyEngine.sln", "engine/scripting/Script.h")
 
@@ -66,12 +62,15 @@ def validate_game_repo(game_repo: pathlib.Path, engine_root: pathlib.Path) -> pa
     return resolved
 
 
-def _managed_block() -> str:
-    return MANAGED_SECTION.strip() + "\n"
+def managed_block(engine_root: pathlib.Path) -> str:
+    src = engine_root / MANAGED_SECTION_REL
+    if not src.is_file():
+        raise ExportError(f"Missing managed section text at {src}")
+    body = src.read_text(encoding="utf-8").replace("\r\n", "\n").strip()
+    return f"{BEGIN_MARKER}\n{body}\n{END_MARKER}\n"
 
 
-def upsert_managed_section(path: pathlib.Path, dry_run: bool, actions: list[str]) -> None:
-    block = _managed_block()
+def upsert_managed_section(path: pathlib.Path, block: str, dry_run: bool, actions: list[str]) -> None:
     original = path.read_text(encoding="utf-8") if path.is_file() else ""
     if BEGIN_MARKER in original and END_MARKER in original:
         before, rest = original.split(BEGIN_MARKER, 1)
@@ -152,6 +151,7 @@ def export_docs(
 
     dest_root = game / "docs" / "ivy-engine"
     actions: list[str] = []
+    block = managed_block(engine_root)
     commit = git_commit_hash(engine_root)
 
     # Plan destination files for stale cleanup.
@@ -193,7 +193,7 @@ def export_docs(
     _remove_stale(dest_root, keep, dry_run=False, actions=actions)
 
     for name in ("AGENTS.md", "CLAUDE.md"):
-        upsert_managed_section(game / name, dry_run=False, actions=actions)
+        upsert_managed_section(game / name, block, dry_run=False, actions=actions)
 
     return ExportResult(dry_run=False, actions=actions)
 

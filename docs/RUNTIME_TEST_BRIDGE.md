@@ -2,7 +2,7 @@
 
 Debug-only named-pipe harness for Ivy Engine’s playable **GAME_RUNTIME** build and (Phase 7) the **Editor** while driving Play mode. It lets a local client drive keyboard, mouse, and controller test input and read bounded observations (including a controller consumer probe). It is **not** shipping gameplay input and is compiled out of Release builds.
 
-Cantonese summary: [`RUNTIME_TEST_BRIDGE.zh-TW.md`](RUNTIME_TEST_BRIDGE.zh-TW.md). This page is the canonical operations guide (including controller injection and `controller_probe` after PR #3).
+This page is the canonical operations guide (including controller injection and `controller_probe`). A condensed version for game-repo agents lives in [`agent/testing-bridge.md`](agent/testing-bridge.md).
 
 ## Build gate
 
@@ -80,7 +80,7 @@ Additive identity fields: `host` (`"runtime"` | `"editor"`). Editor also reports
 | `apply_impulse` | Apply a linear `impulse` array to a dynamic body; optional world-space `point` uses force-at-position. Error `not_dynamic` / `unknown_object`. |
 | `apply_torque_impulse` | Apply `torqueImpulse` array to a dynamic body. |
 | `capture` | Queued PNG under `IVY_RUNTIME_TEST_OUTPUT_DIR`. Crops to the **game viewport** (`EngineGUI_GetGameViewportRect`) so Editor captures exclude ImGui chrome; Runtime / fullscreen Play remain full-frame. Status reports `basename` (e.g. `capture-<runId>-<requestId>.png`) and, when completed, absolute `path`. Stock helpers: `resolve_capture_path(basename)` / `Client.capture_output_path(capture_status)`. |
-| `events` | Bounded checkpoint event ring (see existing event docs in zh-TW notes) |
+| `events` | Bounded checkpoint event ring (offline check: `tools/runtime_bridge_events_check.cpp`) |
 | `controller` | One-at-a-time controller inject (below) |
 | `controller_probe` | Read-only consumer-trace snapshot (below) |
 | `set_setting` | Whitelisted render toggles: `frustumCullingEnabled`, `shadowCascadeCullingEnabled`, `spriteCullingEnabled` (JSON bool `value`). Works on Runtime and Editor (Edit or Play). Queued; `status.editorOp` reports completion. |

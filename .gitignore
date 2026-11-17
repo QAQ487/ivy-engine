@@ -414,3 +414,6 @@ resources/**/*.exe
 # Cooked panorama cubemaps and IBL. Regenerated from the PNG; do not commit.
 /testbed/rom/skybox/cache/
 
+
+# Generated intermediate for docs/ENGINE_API_REFERENCE.md (tools/extract_api_headers.py).
+/docs/_api_extract.md

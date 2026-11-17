@@ -36,16 +36,16 @@ The engine and game content are fully decoupled:
 
 ### Build
 
-- Visual Studio 2022, Windows SDK, C++17
+- Visual Studio 2026 (toolset `v145`), Windows SDK, C++20
 - Open `IvyEngine.sln` → `IvyEngine` (editor) / `IvyEngineRuntime` (deploy host)
 - Runtime builds are statically linked (`/MT`) — the deployed exe has no VC++ redist dependency
 
 ### Docs
 
-- [Content Project guide](docs/CONTENT_PROJECT.md) — external games, and the in-repo `testbed/` used by the Debug editor
-- [Agent docs pack](docs/agent/README.md) — concise docs for AI agents in a separate game repo (`tools/export_agent_docs.py`)
-- [Engine manual](docs/ENGINE_MANUAL.md) · [API reference](docs/ENGINE_API_REFERENCE.md) · [User guide](docs/ENGINE_USER_GUIDE.md)
-- [Runtime test bridge](docs/RUNTIME_TEST_BRIDGE.md) — Debug named-pipe harness for Runtime and Editor Play mode · [zh summary](docs/RUNTIME_TEST_BRIDGE.zh-TW.md)
+- **Humans:** [User guide](docs/ENGINE_USER_GUIDE.md) — editor, scenes, scripts, 2D, hot reload, packaging, external content projects
+- **AI agents (this repo):** [AGENTS.md](AGENTS.md) — rules, vocabulary, schemas, source map, checks
+- **AI agents (game repo):** [Agent docs pack](docs/agent/README.md) — exported with `tools/export_agent_docs.py`
+- [API reference](docs/ENGINE_API_REFERENCE.md) (generated) · [Runtime test bridge](docs/RUNTIME_TEST_BRIDGE.md) — Debug named-pipe harness for Runtime and Editor Play mode
 - [Architecture overview](docs/diagrams/ivy-engine-architecture.html) · [架構圖（粵）](docs/diagrams/ivy-engine-architecture.zh-HK.html)
 - [Architecture decisions](docs/adr/)
 - [Engine to-do](docs/TODO.md) — recorded engine backlog
@@ -77,15 +77,15 @@ The engine and game content are fully decoupled:
 
 ### ビルド
 
-- Visual Studio 2022、Windows SDK、C++17
+- Visual Studio 2026（ツールセット `v145`）、Windows SDK、C++20
 - `IvyEngine.sln` を開く → `IvyEngine`（エディタ）/ `IvyEngineRuntime`（デプロイホスト）
 - ランタイムはスタティックリンク（`/MT`）— 配布 exe は VC++ 再頒布パッケージ不要
 
 ### ドキュメント
 
-- [コンテンツプロジェクトガイド](docs/CONTENT_PROJECT.md) — 外部ゲームと、Debug エディタが開くリポジトリ内 `testbed/`
-- [エンジンマニュアル](docs/ENGINE_MANUAL.md) · [API リファレンス](docs/ENGINE_API_REFERENCE.md) · [ユーザーガイド](docs/ENGINE_USER_GUIDE.md)
-- [Runtime test bridge](docs/RUNTIME_TEST_BRIDGE.md) — Debug runtime 専用の named-pipe ハーネス（コントローラ注入＋consumer probe） · [zh summary](docs/RUNTIME_TEST_BRIDGE.zh-TW.md)
+- **人間向け:** [ユーザーガイド](docs/ENGINE_USER_GUIDE.md)（英語）— エディタ、シーン、スクリプト、2D、ホットリロード、パッケージ、外部コンテンツプロジェクト
+- **AI エージェント向け:** [AGENTS.md](AGENTS.md)（このリポジトリ）· [Agent docs pack](docs/agent/README.md)（ゲームリポジトリ用）
+- [API リファレンス](docs/ENGINE_API_REFERENCE.md)（自動生成）· [Runtime test bridge](docs/RUNTIME_TEST_BRIDGE.md) — Debug 専用の named-pipe ハーネス
 - [Architecture overview](docs/diagrams/ivy-engine-architecture.html) · [架構圖（粵）](docs/diagrams/ivy-engine-architecture.zh-HK.html)
 
 ---

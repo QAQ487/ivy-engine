@@ -11,7 +11,7 @@ Open `IvyEngine.sln`. Project files set `<PlatformToolset>v145</PlatformToolset>
 | `IvyEngine` | `IvyEngine.exe` | ImGui Editor |
 | `IvyEngineRuntime` | `IvyEngineRuntime.exe` | Editor-less Runtime (`GAME_RUNTIME` define on x64 configs) |
 
-Prefer **x64** Debug/Release. Content projects build `GameScripts` separately (engine `docs/CONTENT_PROJECT.md`).
+Prefer **x64** Debug/Release. Content projects build `GameScripts` separately (engine `docs/ENGINE_USER_GUIDE.md` §21).
 
 ## Debug vs Release (from `.vcxproj`)
 
