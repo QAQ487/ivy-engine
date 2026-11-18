@@ -344,6 +344,7 @@ exit /b 0</Command>
     <ClInclude Include="src\app\camera\debug_camera.h" />
     <ClInclude Include="libraries\directxtex\DirectXTex.h" />
     <ClInclude Include="engine\audio\audio_manager.h" />
+    <ClInclude Include="engine\audio\wav_parse.h" />
     <ClInclude Include="engine\rendering\billboard\billboard.h" />
     <ClInclude Include="engine\rendering\particle\particle_system.h" />
     <ClInclude Include="src\app\scene\game_scene_script_hooks.h" />

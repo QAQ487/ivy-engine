@@ -90,6 +90,9 @@
     <ClInclude Include="engine\audio\audio_manager.h">
       <Filter>engine\audio</Filter>
     </ClInclude>
+    <ClInclude Include="engine\audio\wav_parse.h">
+      <Filter>engine\audio</Filter>
+    </ClInclude>
     <ClInclude Include="engine\core\easing.h">
       <Filter>engine\core</Filter>
     </ClInclude>
