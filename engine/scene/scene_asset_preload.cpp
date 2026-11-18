@@ -118,6 +118,8 @@ void CollectVisual(GameObject* node,
 
 	if (VisualComponent* vc = node->GetComponent<VisualComponent>()) {
 		MergeVisualPaths(vc->modelPath, vc->animationPaths, outTasks, modelIndex);
+		for (const auto& lod : vc->lods)
+			MergeVisualPaths(lod.modelPath, {}, outTasks, modelIndex);
 	}
 
     if(auto* animator=node->GetComponent<SpriteAnimatorComponent>())
@@ -243,6 +245,23 @@ void CollectVisualFromJson(const json& visual,
 	}
 
 	MergeVisualPaths(modelPath, animationPaths, outTasks, modelIndex);
+
+	// LOD meshes: preload so the first near/far switch does not hitch.
+	if (visual.contains("lods") && visual["lods"].is_array()) {
+		for (const auto& lod : visual["lods"]) {
+			if (!lod.is_object() || !lod.contains("model") || !lod["model"].is_string())
+				continue;
+			const std::string lodPath = lod["model"].get<std::string>();
+			if (lodPath.empty())
+				continue;
+			if (!IsProjectRelativeRomPath(lodPath)) {
+				hal::DebugWriteA(("[SceneAssetPreload] skip non-rom lod path: "
+					+ lodPath + "\n").c_str());
+				continue;
+			}
+			MergeVisualPaths(lodPath, {}, outTasks, modelIndex);
+		}
+	}
 }
 
 void WalkJsonNode(const json& node,
