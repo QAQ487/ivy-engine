@@ -363,7 +363,7 @@ Always attach this for scene objects you place in the editor.
 | `lods` | Optional list of `{model, maxDistance}`. Level 0 is `model`; each row switches to that mesh at its camera distance (Play / runtime only) |
 | `cullDistance` | Do not draw beyond this camera distance (`0` = never) |
 
-**LOD:** in the Inspector's Visual section use **Add LOD** and drag an FBX/OBJ onto each row; rows stay sorted by distance. Shadows use the same level as the camera pass, levels are ignored while **Animate** is on, and a missing LOD mesh falls back to the base mesh. Keep LOD meshes at the same pivot and scale as the base mesh. Turn **Mesh LOD (3D)** off in Rendering for A/B. Open `scene_lod.json` in the testbed to try it (same sphere at three facet counts; the meshes come from `tools/gen_lod_test_meshes.py`).
+**LOD:** in the Inspector's Visual section use **Add LOD** and drag an FBX/OBJ onto each row; rows stay sorted by distance. Shadows use the same level as the camera pass, levels are ignored while **Animate** is on, and a missing LOD mesh falls back to the base mesh. Keep LOD meshes at the same pivot and scale as the base mesh. Turn **Mesh LOD (3D)** off in Rendering for A/B. Open `scene_lod.json` in the testbed to try it: a walkable pine and boulder field (meshes from `tools/gen_lod_test_assets.py`) with a side-by-side gallery of the three levels in front of the spawn. Walking needs `SamplePlayerScript`, which is only compiled into the Debug runtime host.
 
 From scripts, play a clip with:
 
