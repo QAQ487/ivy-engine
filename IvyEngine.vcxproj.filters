@@ -1265,5 +1265,7 @@
   <ItemGroup>
     <ClInclude Include="samples\scripts\SamplePlayerScript.h" />
     <ClCompile Include="samples\scripts\SamplePlayerScript.cpp" />
+    <ClInclude Include="samples\scripts\SampleParticleEmitterScript.h" />
+    <ClCompile Include="samples\scripts\SampleParticleEmitterScript.cpp" />
   </ItemGroup>
 </Project>
