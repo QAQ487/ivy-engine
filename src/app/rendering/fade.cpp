@@ -11,8 +11,11 @@
 #include "engine/rendering/sprite/texture.h"
 #include "engine/rendering/sprite/sprite.h"
 #include "scene_manager.h"
+#include <vector>
 
 static FADE fade;
+// Same 32x32 size the old fade.png had, so Sprite_Draw UV math is unchanged.
+static constexpr int kFadeTextureSize = 32;
 // Whether to switch scene when fade-out completes
 static bool s_doSceneTransition = false;
 // Next scene (set on switch)
@@ -25,7 +28,9 @@ void Fade_Initialize() {
 	fade.mode = MODE_FADE_NONE;
 	fade.use = false;
 	fade.color = { 0.0f, 0.0f, 0.0f, 1.0f };
-	fade.texture_id = TextureLoad(L"rom/texture/fade.png", false);
+	// Solid white fill, tinted by fade.color. Generated, so no texture file ships with the engine.
+	static const std::vector<unsigned char> whitePixels(static_cast<size_t>(kFadeTextureSize) * kFadeTextureSize * 4, 255);
+	fade.texture_id = TextureCreateFromRGBA(L"__engine_fade_white", whitePixels.data(), kFadeTextureSize, kFadeTextureSize);
 	s_doSceneTransition = false;
 	s_nextScene = nullptr;
 }

@@ -47,9 +47,8 @@ int main() {
     Expect(!ShouldCookRomTexture("skybox/cache/sky.png"), "skybox cache stays png");
     Expect(!ShouldCookRomTexture("shader/x.png"), "shader dir stays png");
     Expect(!ShouldCookRomTexture("editor/icon.png"), "editor state stays png");
-    Expect(!ShouldCookRomTexture("texture/fade.png"), "host fade texture stays png");
-    Expect(!ShouldCookRomTexture("Texture/Fade.PNG"), "host fade texture, any case");
-    Expect(!ShouldCookRomTexture("texture/consolab_ascii_512.png"), "debug text atlas stays png");
+    Expect(!ShouldCookRomTexture("texture/consolab_ascii_512.png"), "a project's bitmap font atlas stays png");
+    Expect(!ShouldCookRomTexture("Texture/Consolab_ASCII_512.PNG"), "bitmap font atlas, any case");
     Expect(ShouldCookRomTexture("texture/fonts_hero.png"), "dir match is exact, not prefix");
     Expect(!ShouldCookRomTexture(""), "empty path");
 

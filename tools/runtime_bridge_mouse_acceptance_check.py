@@ -211,7 +211,7 @@ class MouseAcceptancePureValidationTests(unittest.TestCase):
         self.assertIn("rom/model/object/Box_Brown.fbx", paths)
         self.assertIn("rom/model/object/Box_Blue.fbx", paths)
         self.assertIn("rom/skybox/MySkybox.dds", paths)
-        self.assertIn("rom/texture/consolab_ascii_512.png", paths)
+        self.assertIn("rom/font/LemonSlice.ttf", paths)
 
     def test_stage_fixture_copies_player_models_and_fails_on_missing(self):
         with tempfile.TemporaryDirectory() as td:
@@ -225,8 +225,8 @@ class MouseAcceptancePureValidationTests(unittest.TestCase):
             # Simulate OutDir that already has resources/ but not testbed player FBX.
             (exe_dir / "resources" / "skybox").mkdir(parents=True)
             (exe_dir / "resources" / "skybox" / "MySkybox.dds").write_bytes(b"DDS")
-            (exe_dir / "resources" / "texture").mkdir(parents=True)
-            (exe_dir / "resources" / "texture" / "consolab_ascii_512.png").write_bytes(b"PNG")
+            (exe_dir / "resources" / "font").mkdir(parents=True)
+            (exe_dir / "resources" / "font" / "LemonSlice.ttf").write_bytes(b"TTF")
 
             staged_exe, package = runner.stage_fixture_package(exe, out_dir, runner.DEFAULT_FIXTURE)
             self.assertEqual(staged_exe, package / exe.name)
@@ -243,7 +243,7 @@ class MouseAcceptancePureValidationTests(unittest.TestCase):
 
             # Skybox/texture may stay on the resources/ fallback without a rom/ copy.
             self.assertTrue(runner.fixture_asset_readable(package, "rom/skybox/MySkybox.dds"))
-            self.assertTrue(runner.fixture_asset_readable(package, "rom/texture/consolab_ascii_512.png"))
+            self.assertTrue(runner.fixture_asset_readable(package, "rom/font/LemonSlice.ttf"))
 
             broken = {
                 "nodes": [{"components": {"visual": {"model": "rom/model/player/Missing.fbx"}}}],

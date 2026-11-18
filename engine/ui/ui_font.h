@@ -27,6 +27,8 @@ struct UIFont {
 };
 
 const UIFont* UIFont_Get(const wchar_t* ttfPath);
+// Debug text font (IBM Plex Mono, compiled into the exe). Null when it cannot be baked.
+const UIFont* UIFont_GetBuiltinMono();
 void UIFont_ClearCache();
 bool UIFont_IsTrueTypePath(const wchar_t* path);
 bool UIFont_IsTrueTypePath(const std::string& path);

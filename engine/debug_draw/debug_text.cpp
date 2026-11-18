@@ -8,9 +8,10 @@
 
  ===========================================================================**/
 #include "debug_text.h"
-#include "engine/core/content_path.h"
+#include <algorithm>
+#include "engine/ui/ui_font.h"
+#include "engine/rendering/sprite/texture.h"
 #include "engine/core/frame_capture.h"
-#include "WICTextureLoader11.h"
 using namespace DirectX;
 #include <D3Dcompiler.h>
 using namespace Microsoft::WRL;
@@ -20,7 +21,6 @@ using namespace Microsoft::WRL;
 
 namespace hal
 {
-	std::unordered_map<std::wstring, std::tuple<ID3D11Resource*, ID3D11ShaderResourceView*>> DebugText::m_TextureMap;
 	ComPtr<ID3D11BlendState> DebugText::m_pBlendState;
 	ComPtr<ID3D11DepthStencilState> DebugText::m_pDepthStencilState;
 	ComPtr<ID3D11RasterizerState> DebugText::m_pRasterizerState;
@@ -31,40 +31,25 @@ namespace hal
 	ComPtr<ID3D11PixelShader> DebugText::m_pPixelShader;
 	ComPtr<ID3D11SamplerState> DebugText::m_pSamplerState;
 
-	DebugText::DebugText(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, const wchar_t* pFontTextureFileName, UINT screenWidth, UINT screenHeight, float offsetX, float offsetY, ULONG maxLine, ULONG maxCharactersPerLine, float lineSpacing, float characterSpacing)
-		: m_pDevice(pDevice), m_pContext(pContext), m_FileName(pFontTextureFileName), m_OffsetX(offsetX), m_OffsetY(offsetY), m_MaxLine(maxLine), m_MaxCharactersPerLine(maxCharactersPerLine), m_LineSpacing(lineSpacing), m_CharacterSpacing(characterSpacing)
+	DebugText::DebugText(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, UINT screenWidth, UINT screenHeight, float offsetX, float offsetY, ULONG maxLine, ULONG maxCharactersPerLine, float lineSpacing, float characterSpacing)
+		: m_pDevice(pDevice), m_pContext(pContext), m_OffsetX(offsetX), m_OffsetY(offsetY), m_MaxLine(maxLine), m_MaxCharactersPerLine(maxCharactersPerLine), m_LineSpacing(lineSpacing), m_CharacterSpacing(characterSpacing)
 	{
-		auto it = m_TextureMap.find(pFontTextureFileName);
-
-		if (it != m_TextureMap.end()) {
-			m_pTexture = std::get<0>(it->second);
-			m_pTextureView = std::get<1>(it->second);
-			m_pTexture->AddRef();
-			m_pTextureView->AddRef();
-		}
-		else {
-			// rom/<rest> -> project rom, then <exe-dir>/resources/<rest> (TextureLoad pattern).
-			const std::wstring resolved = content_path::ReadableWideCurrent(pFontTextureFileName);
-			const wchar_t* openPath = resolved.empty() ? pFontTextureFileName : resolved.c_str();
-			if (FAILED(CreateWICTextureFromFile(pDevice, openPath, &m_pTexture, &m_pTextureView))) {
-				MessageBoxW(nullptr, L"Failed to load font texture.", pFontTextureFileName, MB_OK | MB_ICONERROR);
-				return;
-			}
-
-			m_TextureMap[pFontTextureFileName] = std::make_tuple(m_pTexture, m_pTextureView);
-		}
-
-		D3D11_TEXTURE2D_DESC texture2d_desc;
-		((ID3D11Texture2D*)m_pTexture)->GetDesc(&texture2d_desc);
-		m_TextureWidth = texture2d_desc.Width;
-		m_TextureHeight = texture2d_desc.Height;
+		m_pFont = UIFont_GetBuiltinMono();
 
 		if (!m_LineSpacing) {
-			m_LineSpacing = m_TextureHeight / 16.0f; // One cell height in a 16x16 glyph atlas
+			m_LineSpacing = 16.0f;
 		}
 
 		if (!m_CharacterSpacing) {
-			m_CharacterSpacing = m_TextureWidth / 16.0f; // One cell width in a 16x16 glyph atlas
+			m_CharacterSpacing = 9.0f;
+		}
+
+		if (m_pFont) {
+			// Fit the font into the cell: never taller than a line, never wider than a column.
+			m_CellAdvance = m_pFont->glyphs['0' - ' '].xadvance;
+			const float byHeight = m_pFont->lineHeight > 0.0f ? m_LineSpacing / m_pFont->lineHeight : 1.0f;
+			const float byWidth = m_CellAdvance > 0.0f ? m_CharacterSpacing / m_CellAdvance : 1.0f;
+			m_GlyphScale = (std::min)(byHeight, byWidth);
 		}
 
 		m_TextLines.emplace_back();
@@ -192,10 +177,10 @@ namespace hal
 		if( !m_pSamplerState) {
 			// Create sampler state
 			D3D11_SAMPLER_DESC sampler_desc = {};
-			sampler_desc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
-			sampler_desc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
-			sampler_desc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
-			sampler_desc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+			sampler_desc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR; // TTF glyphs are scaled, so smooth them
+			sampler_desc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+			sampler_desc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+			sampler_desc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
 			sampler_desc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
 			sampler_desc.MinLOD = 0.0f;
 			sampler_desc.MaxLOD = D3D11_FLOAT32_MAX;
@@ -203,18 +188,7 @@ namespace hal
 		}
 	}
 
-	DebugText::~DebugText()
-	{
-		// Release texture / texture view
-		if (m_pTextureView) {
-			m_pTexture->Release();
-			if(!m_pTextureView->Release()) {
-				auto it = m_TextureMap.find(m_FileName);
-				if (it != m_TextureMap.end())
-					m_TextureMap.erase(it);
-			}
-		}
-	}
+	DebugText::~DebugText() = default;
 
 	void DebugText::SetText(const char* pText, XMFLOAT4 color)
 	{		
@@ -275,6 +249,11 @@ namespace hal
 			return; // Nothing to draw
 		}
 
+		ID3D11ShaderResourceView* atlasView = m_pFont ? TextureGetSRV(m_pFont->textureId) : nullptr;
+		if (!atlasView) {
+			return; // Built-in font missing: draw nothing rather than garbage
+		}
+
 		if (!m_pVertexBuffer || m_CharacterCount > m_BufferSourceCharacterCount) {
 			createBuffer(m_CharacterCount);
 		}
@@ -294,8 +273,11 @@ namespace hal
 		// Fill vertex/index data
 		UINT lineCount = 0;
 		WORD characterCount = 0;
-		const float glyphWidth = m_CharacterSpacing;
-		const float glyphHeight = m_LineSpacing;
+		const float atlasW = static_cast<float>(m_pFont->atlasWidth);
+		const float atlasH = static_cast<float>(m_pFont->atlasHeight);
+		const float cellPadX = (m_CharacterSpacing - m_CellAdvance * m_GlyphScale) * 0.5f;
+		const float cellPadY = (m_LineSpacing - m_pFont->lineHeight * m_GlyphScale) * 0.5f;
+		const float baseline = cellPadY + m_pFont->ascent * m_GlyphScale;
 
 		for (const auto& strings : m_TextLines) {
 
@@ -305,29 +287,32 @@ namespace hal
 
 				for (const auto& code : string.characters) {
 
-					int index = code - ' ';
+					const int index = code - ' ';
+					const UIGlyph* glyph = (index > 0 && index < 95) ? &m_pFont->glyphs[index] : nullptr;
 
-					if (index) {
-						float u0 = (index % 16) / 16.0f;
-						float v0 = (index / 16) / 16.0f;
-						float u1 = (index % 16 + 1) / 16.0f;
-						float v1 = (index / 16 + 1) / 16.0f;
-						float x = m_OffsetX + columnCount * m_CharacterSpacing;
-						float y = m_OffsetY + lineCount * m_LineSpacing;
+					if (glyph && glyph->srcW > 0 && glyph->srcH > 0) {
+						const float u0 = glyph->srcX / atlasW;
+						const float v0 = glyph->srcY / atlasH;
+						const float u1 = (glyph->srcX + glyph->srcW) / atlasW;
+						const float v1 = (glyph->srcY + glyph->srcH) / atlasH;
+						const float x = m_OffsetX + columnCount * m_CharacterSpacing + cellPadX + glyph->xoff * m_GlyphScale;
+						const float y = m_OffsetY + lineCount * m_LineSpacing + baseline + glyph->yoff * m_GlyphScale;
+						const float w = glyph->srcW * m_GlyphScale;
+						const float h = glyph->srcH * m_GlyphScale;
 
 						v[0].position = { x, y, 1.0f };
 						v[0].color = string.color;
 						v[0].texcoord = { u0, v0 };
 
-						v[1].position = { x + glyphWidth, y, 1.0f };
+						v[1].position = { x + w, y, 1.0f };
 						v[1].color = string.color;
 						v[1].texcoord = { u1, v0 };
 
-						v[2].position = { x, y + glyphHeight, 1.0f };
+						v[2].position = { x, y + h, 1.0f };
 						v[2].color = string.color;
 						v[2].texcoord = { u0, v1 };
 
-						v[3].position = { x + glyphWidth, y + glyphHeight, 1.0f };
+						v[3].position = { x + w, y + h, 1.0f };
 						v[3].color = string.color;
 						v[3].texcoord = { u1, v1 };
 
@@ -355,6 +340,10 @@ namespace hal
 		m_pContext->Unmap(m_pVertexBuffer.Get(), 0);
 		m_pContext->Unmap(m_pIndexBuffer.Get(), 0);
 
+		if (characterCount == 0) {
+			return; // Only blanks
+		}
+
 		// Bind vertex buffer to the pipeline
 		UINT stride = sizeof(Vertex);
 		UINT offset = 0;
@@ -374,7 +363,7 @@ namespace hal
 
 		// Bind pixel shader, texture, and sampler to the pipeline
 		m_pContext->PSSetShader(m_pPixelShader.Get(), nullptr, 0);
-		m_pContext->PSSetShaderResources(0, 1, &m_pTextureView);
+		m_pContext->PSSetShaderResources(0, 1, &atlasView);
 		m_pContext->PSSetSamplers(0, 1, m_pSamplerState.GetAddressOf());
 
 		ComPtr<ID3D11BlendState> pPreviousBlendState; // Previous blend state
@@ -403,7 +392,7 @@ namespace hal
 
 		// Draw polygons
 		FrameCapture_RecordTextDraw();
-        m_pContext->DrawIndexed(m_CharacterCount * 6, 0, 0);
+        m_pContext->DrawIndexed(characterCount * 6, 0, 0);
 
 		// Restore blend, depth-stencil, and rasterizer states
 		m_pContext->OMSetBlendState(pPreviousBlendState.Get(), previous_blend_factor, 0xffffffff);

@@ -8,6 +8,7 @@ that fallback (CreateWICTextureFromFile does not on its own).
 """
 
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -16,8 +17,6 @@ RESOURCES = REPO / "resources"
 
 # Keep in sync with tools/materialize_engine_defaults.py HOST_ROM_PATHS.
 HOST_ROM_PATHS = (
-    "rom/texture/fade.png",
-    "rom/texture/consolab_ascii_512.png",
     "rom/font/LemonSlice.ttf",
 )
 
@@ -59,14 +58,17 @@ def main():
                 f"in Debug and Release (found {len(matches)})"
             )
 
+    # Debug text and the fade fill need no shipped files: the font is compiled in.
     debug_text = DEBUG_TEXT.read_text(encoding="utf-8", errors="replace")
-    if "ReadableWideCurrent" not in debug_text:
-        errors.append(
-            "engine/debug_draw/debug_text.cpp must resolve font texture via "
-            "content_path::ReadableWideCurrent (resources fallback)"
-        )
-    if "CreateWICTextureFromFile" not in debug_text:
-        errors.append("engine/debug_draw/debug_text.cpp missing CreateWICTextureFromFile")
+    if "UIFont_GetBuiltinMono" not in debug_text:
+        errors.append("engine/debug_draw/debug_text.cpp must use UIFont_GetBuiltinMono (built-in font)")
+    if "consolab" in debug_text.lower():
+        errors.append("engine/debug_draw/debug_text.cpp must not name the retired bitmap atlas")
+    embed = subprocess.run(
+        [sys.executable, str(REPO / "tools" / "embed_builtin_assets.py"), "--check"],
+        capture_output=True, text=True)
+    if embed.returncode != 0:
+        errors.append(embed.stderr.strip() or "engine/core/builtin_assets_data.h is stale")
 
     if errors:
         print("FAIL: runtime host asset coverage:", file=sys.stderr)
@@ -76,7 +78,7 @@ def main():
 
     print(
         f"PASS: {len(HOST_ROM_PATHS)} host assets in resources/, "
-        f"vcxproj OutDir mirror, DebugText uses content_path fallback"
+        f"vcxproj OutDir mirror, DebugText uses the built-in font"
     )
     return 0
 

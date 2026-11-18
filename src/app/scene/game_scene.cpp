@@ -176,7 +176,6 @@ void DrawBootLoadingScreen(float progress01, const std::string& label) {
 		pos += 3;
 	}
 	hal::DebugText dbg(device, ctx,
-		L"rom/texture/consolab_ascii_512.png",
 		static_cast<UINT>(screenW), static_cast<UINT>(screenH),
 		0.0f, 0.0f,
 		0, 0,

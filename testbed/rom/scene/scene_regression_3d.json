@@ -15,7 +15,7 @@
                     "charHeight": 32.0,
                     "charWidth": 32.0,
                     "charsPerRow": 16,
-                    "texture": "rom/texture/consolab_ascii_512.png"
+                    "texture": "rom/font/LemonSlice.ttf"
                 },
                 "fontSize": 1.0,
                 "name": "Hint1",
@@ -41,7 +41,7 @@
                     "charHeight": 32.0,
                     "charWidth": 32.0,
                     "charsPerRow": 16,
-                    "texture": "rom/texture/consolab_ascii_512.png"
+                    "texture": "rom/font/LemonSlice.ttf"
                 },
                 "fontSize": 1.0,
                 "name": "Hint2",
@@ -67,7 +67,7 @@
                     "charHeight": 32.0,
                     "charWidth": 32.0,
                     "charsPerRow": 16,
-                    "texture": "rom/texture/consolab_ascii_512.png"
+                    "texture": "rom/font/LemonSlice.ttf"
                 },
                 "fontSize": 1.0,
                 "name": "Hint3",

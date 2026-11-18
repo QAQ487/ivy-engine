@@ -372,8 +372,6 @@ bool CopyResourceIfMissing(const fs::path& resources, const fs::path& destRom,
 bool MaterializeReferencedDefaults(const fs::path& resources, const fs::path& destRom,
                                    std::string* errorOut) {
     static const char* kHostRomPaths[] = {
-        "rom/texture/fade.png",
-        "rom/texture/consolab_ascii_512.png",
         "rom/font/LemonSlice.ttf",
     };
     std::vector<std::string> refs(std::begin(kHostRomPaths), std::end(kHostRomPaths));
@@ -426,6 +424,11 @@ bool AssemblePackage(const Request& request, const fs::path& engineRoot,
         return false;
     if (!CopyOneFile(engineRoot / "libraries" / "box2d" / "LICENSE",
                      dest / "licenses" / "Box2D.txt", errorOut))
+        return false;
+    // The debug text font is compiled into the exe (engine/core/builtin_assets.h); OFL
+    // asks for its license to travel with it.
+    if (!CopyOneFile(engineRoot / "resources" / "font" / "OFL-IBMPlexMono.txt",
+                     dest / "licenses" / "IBMPlexMono-OFL.txt", errorOut))
         return false;
     if (!CopyOneFile(content / ProjectManager::kProjectFileName,
                      dest / ProjectManager::kProjectFileName, errorOut))

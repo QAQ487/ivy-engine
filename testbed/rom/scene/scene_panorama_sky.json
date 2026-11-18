@@ -142,7 +142,7 @@
                 "characterSpacing": 16.0,
                 "color": { "r": 1.0, "g": 1.0, "b": 1.0, "a": 1.0 },
                 "font": {
-                    "texture": "rom/texture/consolab_ascii_512.png",
+                    "texture": "rom/font/LemonSlice.ttf",
                     "charWidth": 32.0,
                     "charHeight": 32.0,
                     "charsPerRow": 16

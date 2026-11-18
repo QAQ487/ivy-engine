@@ -237,6 +237,15 @@
     <ClInclude Include="engine\core\texture_cook_policy.h">
       <Filter>engine\core</Filter>
     </ClInclude>
+    <ClInclude Include="engine\core\builtin_assets.h">
+      <Filter>engine\core</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\core\builtin_assets_data.h">
+      <Filter>engine\core</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\core\legacy_asset_alias.h">
+      <Filter>engine\core</Filter>
+    </ClInclude>
     <ClInclude Include="engine\editor\editor_project_browser.h">
       <Filter>engine\editor</Filter>
     </ClInclude>

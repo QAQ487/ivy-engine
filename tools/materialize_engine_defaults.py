@@ -5,7 +5,7 @@ Project files already in the destination win. Shaders and branding are
 overlaid by the caller. This script adds:
 
 - host files the runtime opens even when no scene names them
-  (fade, debug font atlas, UI font)
+  (the default UI font; the fade fill and debug text font are built into the exe)
 - every safe rom/ path named in the destination's text files, when that
   file exists under resources/ and is not already in the package
 
@@ -17,8 +17,6 @@ import sys
 from pathlib import Path
 
 HOST_ROM_PATHS = (
-    "rom/texture/fade.png",
-    "rom/texture/consolab_ascii_512.png",
     "rom/font/LemonSlice.ttf",
 )
 TEXT_SUFFIXES = {".json", ".txt", ".prefab", ".physmat", ".mtl", ".obj", ".md"}

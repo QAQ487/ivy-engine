@@ -56,7 +56,7 @@ inline bool IsCookableExtension(const std::basic_string<Char>& ext) {
            detail::ExtensionEquals(ext, ".jpeg") || detail::ExtensionEquals(ext, ".bmp");
 }
 
-// "rom/tex/a.PNG" -> "rom/tex/a.dds". Empty when the path is not a cookable image
+// "tex/a.PNG" -> "tex/a.dds" (any directory prefix is kept). Empty when the path is not a cookable image
 // (including a path that is already .dds), so callers never loop on the fallback.
 template <class Char>
 inline std::basic_string<Char> DdsSiblingPath(const std::basic_string<Char>& path) {
@@ -72,9 +72,9 @@ inline std::basic_string<Char> DdsSiblingPath(const std::basic_string<Char>& pat
 }
 
 // `romRelative` is the path below rom/ with '/' separators (e.g. "texture/a.png").
-// Engine-owned folders and the host boot textures stay as source images: shaders,
-// fonts, branding, skybox inputs/cache and editor state are not game textures, and
-// the host / debug text loaders read their PNGs directly.
+// Engine-owned folders stay as source images: shaders, fonts, branding, skybox
+// inputs/cache and editor state are not game textures. A project's own copy of the
+// retired bitmap font atlas also stays lossless; text atlases suffer under BC7.
 inline bool ShouldCookRomTexture(std::string_view romRelative) {
     const std::string path(romRelative);
     if (path.empty() || DdsSiblingPath(path).empty())
@@ -90,7 +90,7 @@ inline bool ShouldCookRomTexture(std::string_view romRelative) {
         }
     }
 
-    static const char* kExcludedFiles[] = {"texture/fade.png", "texture/consolab_ascii_512.png"};
+    static const char* kExcludedFiles[] = {"texture/consolab_ascii_512.png"};
     std::string lower;
     lower.reserve(path.size());
     for (unsigned char c : path)

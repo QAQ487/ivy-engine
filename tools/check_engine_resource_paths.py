@@ -32,6 +32,9 @@ OPTIONAL_PREFIXES = (
 OPTIONAL_EXACT = {
     "rom/tags.json",  # project tag list; built-in names already load
     "rom/texture/white.png",  # generated only if branding is missing
+    # Retired bitmap font atlas. Old content may still name it; legacy_asset_alias.h reads it as
+    # the default UI font. No such file ships.
+    "rom/texture/consolab_ascii_512.png",
     "rom/skip_boot_preload",
     "rom/idle.png",
     "rom/walk.png",

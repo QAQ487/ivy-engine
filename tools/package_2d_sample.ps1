@@ -37,6 +37,7 @@ if ($LASTEXITCODE -ne 0) { throw 'Failed to materialize referenced engine defaul
 $licenseDestination = Join-Path $destinationPath 'licenses'
 New-Item -ItemType Directory -Path $licenseDestination -Force | Out-Null
 Copy-Item -LiteralPath (Join-Path $engineRoot 'libraries/box2d/LICENSE') -Destination (Join-Path $licenseDestination 'Box2D.txt') -Force
+Copy-Item -LiteralPath (Join-Path $engineRoot 'resources/font/OFL-IBMPlexMono.txt') -Destination (Join-Path $licenseDestination 'IBMPlexMono-OFL.txt') -Force
 $scriptDestination = Join-Path $destinationPath 'game/scripts/bin'
 New-Item -ItemType Directory -Path $scriptDestination -Force | Out-Null
 Copy-Item -LiteralPath (Join-Path $contentPath 'game/scripts/bin/GameScripts.dll') -Destination $scriptDestination -Force
