@@ -227,4 +227,9 @@ There are two hand-written docs: this file (agents) and `docs/ENGINE_USER_GUIDE.
 | Backlog items | `docs/TODO.md` |
 | Build toolchain / repo layout / feature highlights | `README.md` + this file |
 
+## Cloud & Git Branch Naming Rules
+- In cloud environments, if the current branch was auto-created with a random suffix (e.g., `claude/task-name-a8f9b`), rename it locally to a clean, meaningful name before pushing: `git branch -m <type>/<short-kebab-case-description>` (allowed types: `feat`, `fix`, `refactor`, `chore`, `docs`).
+- Never push branches containing random hashes or IDs unless explicitly restricted by environment permissions.
+- Keep all branch names and Git commit messages strictly in English.
+
 Delivery evidence (what was verified, on which platform) belongs in the PR description, not in docs.
