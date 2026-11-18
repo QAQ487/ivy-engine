@@ -1,7 +1,7 @@
 # Ivy Engine — Complete Ability & API Reference
 
 Exhaustive catalog of **Ivy Engine** capabilities and public functions,
-scanned from every header under `engine/` and `src/app/` (165 headers; regenerate to refresh).
+scanned from every header under `engine/` and `src/app/` (170 headers; regenerate to refresh).
 
 **Learning how to use the engine?** Start with [`ENGINE_USER_GUIDE.md`](ENGINE_USER_GUIDE.md) (humans).  
 For JSON schemas, source map, and change rules, see [`AGENTS.md`](../AGENTS.md) (AI agents).
@@ -324,6 +324,11 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `void Setup3DEmitter(Playback* source, const DirectX::XMFLOAT3& position, float distanceScale);`
 - `bool SubmitAndStart(Playback* source, bool loop);`
 
+### `engine/core/builtin_assets.h`
+**Types:** Asset, TextureEntry
+- `inline bool FindTexture(const std::basic_string<Char>& romPath, Asset* out) { return detail::Lookup(romPath, &TextureEntries, out);`
+- `inline bool FindFont(const std::basic_string<Char>& romPath, Asset* out) { return detail::Lookup(romPath, &FontEntries, out);`
+
 ### `engine/core/content_path.h`
 **Types:** RomRoots
 - `inline std::filesystem::path ReadableFile(std::string_view path, const RomRoots& roots) { if (IsRomShapedPath(path)) return ResolveRomForRead(path, roots);`
@@ -499,6 +504,9 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `void JobSystem_ToggleDebugWindow();`
 - `void JobSystem_DebugDraw();`
 
+### `engine/core/legacy_asset_alias.h`
+- `inline bool IsLegacyFontPath(const std::string& path) { return detail::SamePath(path, kLegacyFontAtlas) || detail::SamePath(path, kLegacyLemonSlice);`
+
 ### `engine/core/play_fps_overlay.h`
 - `inline bool IsEnabled() { return enabled.load(std::memory_order_relaxed);`
 - `inline void SetEnabled(bool value) { enabled.store(value, std::memory_order_relaxed);`
@@ -528,6 +536,12 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `float SystemTimer_GetElapsedTime(void);`
 - `bool SystemTimer_IsStoped(void);`
 - `void LimitThreadAffinityToCurrentProc(void);`
+
+### `engine/core/texture_cook_policy.h`
+- `inline std::size_t ExtensionPos(const std::basic_string<Char>& path) { const std::size_t slash = path.find_last_of(std::basic_string<Char>{Char('/'), Char('\\')});`
+- `inline bool IsCookableExtension(const std::basic_string<Char>& ext) { return detail::ExtensionEquals(ext, ".png") || detail::ExtensionEquals(ext, ".jpg") || detail::ExtensionEquals(ext, ".jpeg") || detail::ExtensionEquals(ext, ".bmp");`
+- `template <class Char> inline std::basic_string<Char> DdsSiblingPath(const std::basic_string<Char>& path) { const std::size_t dot = detail::ExtensionPos(path);`
+- `inline bool ShouldCookRomTexture(std::string_view romRelative) { const std::string path(romRelative);`
 
 ### `engine/core/utf8_path.h`
 - `inline std::filesystem::path PathFromUtf8(std::string_view utf8) { #if defined(__cpp_lib_char8_t) return std::filesystem::path( std::u8string(reinterpret_cast<const char8_t*>(utf8.data()), utf8.size()));`
@@ -564,7 +578,7 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `public: debug_ostream() : std::basic_ostream<char, std::char_traits<char>>(new debugbuf()) {} ~debug_ostream() { delete rdbuf();`
 
 ### `engine/debug_draw/debug_text.h`
-**Types:** DebugText, StringBlock, Line, Vertex
+**Types:** UIFont, DebugText, StringBlock, Line, Vertex
 - `void SetText(const char* pText, DirectX::XMFLOAT4 color);`
 - `void Draw();`
 - `void Clear();`
@@ -1164,6 +1178,12 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `void DrawSpot(DebugDrawer& drawer, const engine::Transform* transform, float range, float outerAngleDeg, float innerAngleDeg, const DirectX::XMFLOAT4& color);`
 - `void DrawSceneLights(const std::vector<std::unique_ptr<GameObject>>& roots, DebugDrawer& drawer);`
 
+### `engine/editor/package_assets.h`
+**Types:** Options, Result
+- `Result ComputeReferencedAssets(const Options& options);`
+- `std::string ExtractStrings(const std::string& bytes);`
+- `std::vector<std::string> CollectRomTokens(const std::string& text, bool strictStart = true);`
+
 ### `engine/editor/playable_package_builder.h`
 **Types:** Prefs, Request
 **Enums:** Configuration
@@ -1206,7 +1226,7 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `static bool IsValidLeafName(const std::string& name, std::string& error);`
 
 ### `engine/editor/project_manager.h`
-**Types:** HWND__, ProjectManager, EditorSettings, PhysicsSettings, AudioSettings, ProjectData
+**Types:** HWND__, ProjectManager, EditorSettings, PhysicsSettings, AudioSettings, BuildSettings, ProjectData
 - `static ProjectManager& Instance();`
 - `bool BootstrapAtStartup();`
 - `bool OpenProject(const std::string& rootPath, std::string* errorOut = nullptr);`
@@ -1241,6 +1261,10 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `static std::string RecentListPath();`
 - `static std::string Utf8FromWide(const std::wstring& wide);`
 - `static std::wstring WideFromUtf8(const std::string& utf8);`
+
+### `engine/editor/texture_cook.h`
+**Types:** Stats
+- `bool CookPackageTextures(const std::filesystem::path& packageRom, const std::function<void(const std::string&)>& log, Stats* stats, std::string* error);`
 
 ### `engine/editor/transform_gizmo.h`
 **Types:** GameObject
@@ -2449,6 +2473,7 @@ Vendor header `WICTextureLoader11.h` is omitted.
 ### `engine/ui/ui_font.h`
 **Types:** UIGlyph, UIFont
 - `const UIFont* UIFont_Get(const wchar_t* ttfPath);`
+- `const UIFont* UIFont_GetBuiltinMono();`
 - `void UIFont_ClearCache();`
 - `bool UIFont_IsTrueTypePath(const wchar_t* path);`
 - `bool UIFont_IsTrueTypePath(const std::string& path);`
