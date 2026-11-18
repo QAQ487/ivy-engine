@@ -170,14 +170,14 @@
 ### 正確性／穩定性
 
 - [ ] **3D 掉幀變慢鏡**：`src/app/main.cpp` `Update()` 對 3D 場景每幀傳固定 `1/60 × timeScale`（2D 用實際 `elapsed_time`＋Box2D 累加器）。物理逐幀結果穩定可重現，`rigidbody.cpp` 嘅 1/30 上限實際唔會觸發；但遊戲時間跟幀數走，30 FPS 時物理、script、動畫全部半速。修法係掉幀時一幀跑多個 sim step（要設上限），但要處理兩樣：`KeyLogger_IsTrigger` 每幀只更新一次，多 step 會令 script 見到同一下按鍵兩次；test bridge 依賴「一幀 = 一個固定 step」。改之前要決定 2D／3D 時間模型係咪統一。
-- [ ] **主循環食盡一粒 CPU**（source 已做；等 Windows 驗收）：`main.cpp` 主循環未夠 1/60 s 時用 `PeekMessage` 空轉，冇 sleep／wait（只有 resize 時 `Sleep(1)`）。寫死 60 FPS 封頂，高刷新率芒冇得用。
+- [x] **主循環食盡一粒 CPU**（PR #47；Terry 喺 Windows 驗收：同一場景 CPU `master` 9% → 5%，FPS 60）：`main.cpp` 主循環未夠 1/60 s 時用 `PeekMessage` 空轉，冇 sleep／wait（只有 resize 時 `Sleep(1)`）。寫死 60 FPS 封頂，高刷新率芒冇得用。
   - 已做：未到 frame 時用 `MsgWaitForMultipleObjects` 等（有視窗訊息即醒），`timeBeginPeriod(1)`，只空轉最後 2 ms（`engine/core/frame_pacing.h`，Linux：`tests/frame_pacing_test.cpp`）。60 FPS 封頂同 3D 固定 1/60 step 冇改。
   - 未做：vsync 選項、高刷新率（要先解決 3D 時間模型）。
-- [ ] **Swap chain／device lost**（source 已做；等 Windows 驗收）：`renderer.cpp` 用舊式 `BufferCount = 1`（非 flip model），`Present(0, 0)` 冇 vsync 選項，亦冇處理 `DXGI_ERROR_DEVICE_REMOVED`／`DEVICE_RESET`；換驅動或 GPU TDR 後會靜靜雞黑畫面。最少要 log 原因同乾淨退出。
+- [x] **Swap chain／device lost**（PR #47；Terry 喺 Windows 驗收畫面冇退步、Alt+Enter 唔再響；device lost 路徑未實測）：`renderer.cpp` 用舊式 `BufferCount = 1`（非 flip model），`Present(0, 0)` 冇 vsync 選項，亦冇處理 `DXGI_ERROR_DEVICE_REMOVED`／`DEVICE_RESET`；換驅動或 GPU TDR 後會靜靜雞黑畫面。最少要 log 原因同乾淨退出。
   - 已做：flip model（`FLIP_DISCARD`，2 buffers；建立失敗退返舊 blit model），`Present()` 之後重新綁 back buffer；`DEVICE_REMOVED`／`DEVICE_RESET` 會 log `GetDeviceRemovedReason`，主循環彈訊息框後退出（`engine/rendering/d3d11/device_lost.h`，Linux：`tests/device_lost_test.cpp`）。`Initialize` 而家會檢查 `InitRenderer` 結果，失敗就彈訊息框退出（之前無視結果繼續行）。
   - 未做：重建 device（全部 GPU 資源係全域靜態，要大改）；device lost 時 editor 未保存嘅改動會冇咗。
-- [ ] **`WAVE_FORMAT_EXTENSIBLE` WAV**：`LoadWav` 只複製 fmt chunk 頭 18 bytes 入 `WAVEFORMATEX`，但 `cbSize` 仍然係 22，`CreateSourceVoice` 可能讀超出 struct。PR #46 之前已經存在。
-- [ ] **`tools/check_2d_sample.py` 過時**：仍要求 `rom/skybox/ibl/brdf_lut.png` 係真實檔案，但呢個資產已經係 `builtin:`。修好先加入 CI。
+- [x] **`WAVE_FORMAT_EXTENSIBLE` WAV**（source 已做；等 Windows 驗收）：`LoadWav` 之前只複製 fmt chunk 頭 18 bytes 入 `WAVEFORMATEX`，但 `cbSize` 仍然係 22，`CreateSourceVoice` 會讀超出 struct。而家 `Playback::format` 係 64 bytes union，按 `wav_parse::PlanFormatCopy` 複製 `18 + cbSize` bytes（EXTENSIBLE 40、MS ADPCM 50）；PCM／float 只複製 16 bytes 兼 `cbSize = 0`；`cbSize` 超出 fmt chunk 或 storage 就拒絕載入並 log。Linux：`tests/wav_parse_test.cpp`。
+- [x] **`tools/check_2d_sample.py` 過時**：而家跟 `ResolveRomForRead` 一樣接受 `resources/` fallback（`irradiance.dds` 等），亦接受 `BUILTIN_ROM_PATHS` 舊寫法；冇參數時檢查 `testbed/`，已加入 `tools/run_linux_checks.sh`。
 
 ### 結構風險
 
