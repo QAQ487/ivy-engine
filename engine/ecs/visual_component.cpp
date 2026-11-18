@@ -14,6 +14,9 @@
 
 #include "libraries/nlohmann/json.hpp"
 
+#include <algorithm>
+#include <cmath>
+
 namespace {
 
 DirectX::XMFLOAT4 ReadFloat4(const nlohmann::json& j, const DirectX::XMFLOAT4& fallback) {
@@ -83,6 +86,14 @@ Model3D* VisualComponent::GetRealModel() const {
     return m_animInstance.get();
 }
 
+Model3D* VisualComponent::GetLodModel(int level) const {
+    if (level > 0 && level <= static_cast<int>(lods.size())) {
+        if (Model3D* lod = GetFromCache(lods[static_cast<size_t>(level - 1)].modelPath))
+            return lod;
+    }
+    return GetRealModel();
+}
+
 void VisualComponent::ReleaseSurfaceFxTexture() {
     if (m_surfaceFxSRV) {
         m_surfaceFxSRV->Release();
@@ -116,6 +127,7 @@ void VisualComponent::OnDetach() {
 }
 
 void VisualComponent::OnReset() {
+    lodLastLevel = -1;
     m_animInstance.reset();
     m_animInstancePath.clear();
     m_animationsLoaded = false;
@@ -263,6 +275,14 @@ std::string VisualComponent::Serialize() const {
         j["animations"] = animationPaths;
     if (!shaderOverride.empty())
         j["shader"] = shaderOverride;
+    if (!lods.empty()) {
+        nlohmann::json arr = nlohmann::json::array();
+        for (const LodLevel& lod : lods)
+            arr.push_back({ {"model", lod.modelPath}, {"maxDistance", lod.maxDistance} });
+        j["lods"] = arr;
+    }
+    if (cullDistance > 0.0f)
+        j["cullDistance"] = cullDistance;
     if (hasSurfaceFx) {
         nlohmann::json sfx;
         if (!surfaceFxTexturePath.empty())
@@ -299,6 +319,31 @@ void VisualComponent::Deserialize(const std::string& jsonStr) {
                 if (val.is_string())
                     animationPaths[key] = val.get<std::string>();
             }
+        }
+
+        lods.clear();
+        lodLastLevel = -1;
+        if (j.contains("lods") && j["lods"].is_array()) {
+            for (const auto& entry : j["lods"]) {
+                if (!entry.is_object() || !entry.contains("model") || !entry["model"].is_string())
+                    continue;
+                LodLevel lod;
+                lod.modelPath = entry["model"].get<std::string>();
+                if (lod.modelPath.empty())
+                    continue;
+                if (entry.contains("maxDistance") && entry["maxDistance"].is_number()) {
+                    const float d = entry["maxDistance"].get<float>();
+                    lod.maxDistance = std::isfinite(d) ? std::max(d, 0.0f) : 0.0f;
+                }
+                lods.push_back(std::move(lod));
+            }
+            std::stable_sort(lods.begin(), lods.end(),
+                [](const LodLevel& a, const LodLevel& b) { return a.maxDistance < b.maxDistance; });
+        }
+        cullDistance = 0.0f;
+        if (j.contains("cullDistance") && j["cullDistance"].is_number()) {
+            const float d = j["cullDistance"].get<float>();
+            cullDistance = std::isfinite(d) ? std::max(d, 0.0f) : 0.0f;
         }
 
         hasSurfaceFx = false;
