@@ -288,46 +288,6 @@ void GameObject::DrawVisual(bool useRealModel) {
             }
 
             if (model) {
-                const XMFLOAT4 prevEmission = model->GetEmission();
-                model->SetEmission(vc->emissionGlow);
-                Shader3DVariant variant = vc->shaderOverride.empty()
-                    ? RenderSettings_GetDefaultShader()
-                    : Shader3DVariantFromId(vc->shaderOverride);
-                model->SetShaderVariant(variant);
-
-                if (variant == Shader3DVariant::SurfaceFX) {
-                    Shader_SetSurfaceFXParams(vc->hasSurfaceFx ? vc->surfaceFx : SURFACE_FX_PARAMS{});
-                    model->SetTextureOverride(vc->GetSurfaceFxSRV());
-                    model->ClearMaterialOverride();
-                } else {
-                    model->SetTextureOverride(nullptr);
-
-                    if (auto* mc = GetComponent<MaterialComponent>()) {
-                        Model3D::MaterialOverride mo;
-                        mo.enabled = true;
-                        mo.color = mc->color;
-                        mo.roughness = mc->roughness;
-                        mo.metallic = mc->metallic;
-                        mo.normalStrength = mc->normalStrength;
-                        mo.normalSRV = mc->GetNormalMapSRV();
-                        mo.shadeSteps = mc->shadeSteps;
-                        mo.shadeSmoothness = mc->shadeSmoothness;
-                        mo.specularThreshold = mc->specularThreshold;
-                        mo.outlineWidth = mc->outlineWidth;
-                        mo.outlineColor = mc->outlineColor;
-                        mo.shadowTint = mc->shadowTint;
-                        mo.rimStrength = mc->rimStrength;
-                        mo.rampSRV = mc->GetRampTextureSRV();
-                        model->SetMaterialOverride(mo);
-                    } else {
-                        model->ClearMaterialOverride();
-                    }
-                }
-
-                model->SetPosition(worldPos);
-                model->SetRotateEulerDeg(worldRot);
-                model->SetScale(worldScale);
-
                 // Main-camera frustum cull and/or per-cascade light-ortho caster cull.
                 // Cascade cull uses open-near so casters between the light and the
                 // cascade volume still cast; camera-frustum culling never gates shadows.
@@ -373,6 +333,46 @@ void GameObject::DrawVisual(bool useRealModel) {
                 }
 
                 if (submitDraw) {
+                    const XMFLOAT4 prevEmission = model->GetEmission();
+                    model->SetEmission(vc->emissionGlow);
+                    Shader3DVariant variant = vc->shaderOverride.empty()
+                        ? RenderSettings_GetDefaultShader()
+                        : Shader3DVariantFromId(vc->shaderOverride);
+                    model->SetShaderVariant(variant);
+
+                    if (variant == Shader3DVariant::SurfaceFX) {
+                        Shader_SetSurfaceFXParams(vc->hasSurfaceFx ? vc->surfaceFx : SURFACE_FX_PARAMS{});
+                        model->SetTextureOverride(vc->GetSurfaceFxSRV());
+                        model->ClearMaterialOverride();
+                    } else {
+                        model->SetTextureOverride(nullptr);
+
+                        if (auto* mc = GetComponent<MaterialComponent>()) {
+                            Model3D::MaterialOverride mo;
+                            mo.enabled = true;
+                            mo.color = mc->color;
+                            mo.roughness = mc->roughness;
+                            mo.metallic = mc->metallic;
+                            mo.normalStrength = mc->normalStrength;
+                            mo.normalSRV = mc->GetNormalMapSRV();
+                            mo.shadeSteps = mc->shadeSteps;
+                            mo.shadeSmoothness = mc->shadeSmoothness;
+                            mo.specularThreshold = mc->specularThreshold;
+                            mo.outlineWidth = mc->outlineWidth;
+                            mo.outlineColor = mc->outlineColor;
+                            mo.shadowTint = mc->shadowTint;
+                            mo.rimStrength = mc->rimStrength;
+                            mo.rampSRV = mc->GetRampTextureSRV();
+                            model->SetMaterialOverride(mo);
+                        } else {
+                            model->ClearMaterialOverride();
+                        }
+                    }
+
+                    model->SetPosition(worldPos);
+                    model->SetRotateEulerDeg(worldRot);
+                    model->SetScale(worldScale);
+
                     if (frustumEnabled && mainPass)
                         FrustumCull_RecordDrawn();
                     if (lodCounting && lodTracked)
@@ -380,10 +380,10 @@ void GameObject::DrawVisual(bool useRealModel) {
                     if (shadowCullEnabled && shadowPass)
                         ShadowCascadeCull_RecordDrawn();
                     model->Draw();
+                    model->SetTextureOverride(nullptr);
+                    model->ClearMaterialOverride();
+                    model->SetEmission(prevEmission);
                 }
-                model->SetTextureOverride(nullptr);
-                model->ClearMaterialOverride();
-                model->SetEmission(prevEmission);
             }
         }
     }

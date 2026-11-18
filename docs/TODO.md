@@ -109,7 +109,7 @@
 
 唔屬於上面 LOD v1 嘅範圍，建議每個主題獨立 PR（每個都要自己嘅 Windows A/B 證據）。順序按效益／風險。
 
-- [ ] **`DrawVisual` 先剔除再設定**：`GameObject::DrawVisual`（`engine/ecs/game_object.cpp`）喺 frustum／cascade／距離剔除判斷**之前**已經做 `SetEmission`／`SetShaderVariant`／`SetMaterialOverride` 同世界姿態解算；主 pass 加每個 cascade 每物件每幀最多行 5 次，被剔除嘅物件照付成本。改動細、風險低。另外冇空間分割，逐個物件 O(N) 遍歷。
+- [x] **`DrawVisual` 先剔除再設定**（source 已做，等 Windows 驗收）：`GameObject::DrawVisual`（`engine/ecs/game_object.cpp`）而家先做距離／frustum／cascade 剔除，確定要畫先做 `SetEmission`／`SetShaderVariant`／`SetMaterialOverride` 同 model 姿態設定；被剔除嘅物件唔再付呢啲成本，亦唔會改 model 嘅 pose／override 狀態。剔除結果同 counters 不變。仍然冇空間分割，逐個物件 O(N) 遍歷。
 - [ ] **離屏／遠距動畫降頻或暫停**：`VisualComponent::Update` 只睇 `playAnimation`，唔睇可見度或距離；`VisualSystem_UploadSkinning` 亦冇可見度判斷，被剔除或 `cullDistance` 外嘅角色仍然每幀 `UpdateAnimation` 同上傳 skin palette。對應 Unity Animator Culling Mode。可重用 `DrawVisual` 嘅可見度結果同 `cullDistance`。
 - [ ] **燈光揀選**：`Lighting::MAX_LIGHTS = 4`，`SceneLightingSyncFromNodes` 按場景遍歷順序攞頭 4 盞然後 `break`，唔睇距離／range／重要性／可見度，多燈場景會用錯燈。
 - [ ] **Billboard／粒子／Effekseer 剔除**：`Billboard::Update` 只做遠到近排序，冇 frustum 或距離剔除；`ParticlePool` 只有 `maxParticles` 上限，冇 per-emitter 剔除或距離縮減；`EffectSystem` 直接 `Manager::Draw`，冇用 Effekseer culling world。
