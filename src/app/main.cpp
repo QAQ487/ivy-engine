@@ -934,7 +934,6 @@ static void DrawWorld(void) {
 			constexpr float kMargin = 8.0f;
 
 			hal::DebugText dbg(GetDevice(), GetDeviceContext(),
-				L"rom/texture/consolab_ascii_512.png",
 				screenW, screenH,
 				0.0f, 0.0f,
 				0, 0,
@@ -987,7 +986,6 @@ static void DrawWorld(void) {
 			const std::string fpsText = ss.str();
 
 			hal::DebugText dt(GetDevice(), GetDeviceContext(),
-				L"rom/texture/consolab_ascii_512.png",
 				screenW, screenH,
 				0.0f, 0.0f,
 				0, 0,

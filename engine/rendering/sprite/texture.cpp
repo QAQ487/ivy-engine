@@ -8,6 +8,9 @@
 #include "texture.h"
 #include "engine/ui/ui_font.h"
 #include "engine/core/content_path.h"
+#include "engine/core/texture_cook_policy.h"
+#include "engine/core/builtin_assets.h"
+#include "engine/core/builtin_paths.h"
 #include <string>
 #include <filesystem>
 #include <cstdio>
@@ -56,9 +59,29 @@ void Texture_Finalize() {
 }
 
 static std::wstring TexturePathKey(const std::filesystem::path& path) {
+    // "builtin:" is not a file path; keep it out of the filesystem calls below.
+    if (builtin_paths::IsBuiltin(path.wstring())) return path.wstring();
     std::error_code ec;
     const auto absolute = std::filesystem::absolute(path, ec);
     return (ec ? path : absolute).lexically_normal().wstring();
+}
+// A packaged game carries the cooked BC7 .dds instead of the source PNG/JPG/BMP
+// (playable package texture cook). Prefer the file the content names; when it is
+// not there, use the .dds with the same name. Otherwise keep the old behaviour.
+static std::wstring ResolveTexturePath(const wchar_t* path) {
+    if (builtin_paths::IsBuiltin(std::wstring(path))) return path;
+    std::wstring primary = content_path::ReadableWideCurrent(path);
+    std::error_code ec;
+    if (!primary.empty() && std::filesystem::is_regular_file(std::filesystem::path(primary), ec))
+        return primary;
+    const std::wstring sibling = texture_cook::DdsSiblingPath(std::wstring(path));
+    if (!sibling.empty()) {
+        const std::wstring dds = content_path::ReadableWideCurrent(sibling.c_str());
+        ec.clear();
+        if (!dds.empty() && std::filesystem::is_regular_file(std::filesystem::path(dds), ec))
+            return dds;
+    }
+    return primary;
 }
 static HRESULT ReadTextureImage(const wchar_t* path, TexMetadata& metadata, ScratchImage& image) {
     const auto ext = std::filesystem::path(path).extension().wstring();
@@ -67,9 +90,28 @@ static HRESULT ReadTextureImage(const wchar_t* path, TexMetadata& metadata, Scra
     return LoadFromWICFile(path, WIC_FLAGS_NONE, &metadata, image);
 }
 
+// Engine textures compiled into the exe (builtin_assets.h) answer to their rom/ path
+// when no file exists there. `requested` is the path the content named, `openPath` the
+// resolved one; a real file always wins.
+static HRESULT ReadTextureOrBuiltin(const wchar_t* requested, const wchar_t* openPath, TexMetadata& metadata, ScratchImage& image) {
+    if (builtin_paths::IsBuiltin(std::wstring(requested))) {
+        // "builtin:" never reads the disk and cannot be overridden by a project file.
+        builtin_assets::Asset asset;
+        if (!builtin_assets::FindTexture(std::wstring(requested), &asset)) return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
+        return LoadFromWICMemory(asset.data, asset.size, WIC_FLAGS_NONE, &metadata, image);
+    }
+    std::error_code ec;
+    if (!std::filesystem::is_regular_file(std::filesystem::path(openPath), ec)) {
+        builtin_assets::Asset asset;
+        if (builtin_assets::FindTexture(std::wstring(requested), &asset))
+            return LoadFromWICMemory(asset.data, asset.size, WIC_FLAGS_NONE, &metadata, image);
+    }
+    return ReadTextureImage(openPath, metadata, image);
+}
+
 static int TextureLoadInternal(const wchar_t* ptr_file_name, bool mipmap, bool reportErrors) {
     if (!ptr_file_name || !ptr_file_name[0] || !g_pDevice) return -1;
-    const std::wstring resolvedName = content_path::ReadableWideCurrent(ptr_file_name);
+    const std::wstring resolvedName = ResolveTexturePath(ptr_file_name);
     const wchar_t* openPath = resolvedName.empty() ? ptr_file_name : resolvedName.c_str();
 	// Return existing ID if this file is already loaded
 	for (int i = 0; i < MAX_TEXTURES; i++) {
@@ -87,7 +129,7 @@ static int TextureLoadInternal(const wchar_t* ptr_file_name, bool mipmap, bool r
 		/* Load texture */
 		TexMetadata metadata;
 		ScratchImage image;
-		HRESULT loadHr = ReadTextureImage(openPath, metadata, image);
+		HRESULT loadHr = ReadTextureOrBuiltin(ptr_file_name, openPath, metadata, image);
 		if (FAILED(loadHr)) {
 			char pathUtf8[MAX_PATH * 3] = {};
 			WideCharToMultiByte(CP_UTF8, 0, ptr_file_name, -1, pathUtf8, sizeof(pathUtf8),
@@ -101,8 +143,8 @@ static int TextureLoadInternal(const wchar_t* ptr_file_name, bool mipmap, bool r
 		g_textures[i].m_width = (unsigned int)metadata.width; // sizet = longlong
 		g_textures[i].m_height = (unsigned int)metadata.height;
 
-		// Generate mipmaps
-		if (mipmap) {
+		// Generate mipmaps (block-compressed images arrive with their mips baked in)
+		if (mipmap && !IsCompressed(metadata.format)) {
 			ScratchImage mipChain;
 			GenerateMipMaps(image.GetImages(), image.GetImageCount(), image.GetMetadata(), TEX_FILTER_DEFAULT, 0, mipChain);
 			// TEX_FILTER_BOX | TEX_FILTER_FORCE_NOW_WIC
@@ -110,8 +152,17 @@ static int TextureLoadInternal(const wchar_t* ptr_file_name, bool mipmap, bool r
 			metadata = image.GetMetadata(); // Refresh metadata
 		}
 
+		// A cooked texture always carries mips; a caller that asked for none (UI, sprites)
+		// gets mip 0 only, so it samples like the source image did.
+		size_t imageCount = image.GetImageCount();
+		if (!mipmap && IsCompressed(metadata.format) && metadata.mipLevels > 1 &&
+			metadata.arraySize == 1 && metadata.dimension == TEX_DIMENSION_TEXTURE2D && !metadata.IsCubemap()) {
+			metadata.mipLevels = 1;
+			imageCount = 1;
+		}
+
 		// Create shader resource view
-		HRESULT hr = CreateShaderResourceView(g_pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_textures[i].m_ptr_Texture);
+		HRESULT hr = CreateShaderResourceView(g_pDevice, image.GetImages(), imageCount, metadata, &g_textures[i].m_ptr_Texture);
 		if (FAILED(hr)) {
 			if (reportErrors) MessageBoxA(nullptr, "Failed to create texture shader resource view.", "Texture Error", MB_OK | MB_ICONERROR);
 			break;
@@ -341,7 +392,7 @@ bool CubemapIsLoaded(const wchar_t* path) {
 
 TextureReloadResult TextureReload(const wchar_t* path) {
     if (!path || !g_pDevice) return TextureReloadResult::Failed;
-    const std::wstring resolvedName = content_path::ReadableWideCurrent(path);
+    const std::wstring resolvedName = ResolveTexturePath(path);
     const wchar_t* openPath = resolvedName.empty() ? path : resolvedName.c_str();
     TexMetadata metadata; ScratchImage image;
     if (FAILED(ReadTextureImage(openPath, metadata, image))) return TextureReloadResult::Failed;
@@ -349,14 +400,19 @@ TextureReloadResult TextureReload(const wchar_t* path) {
     for (auto& slot : g_textures) {
         if (!slot.m_ptr_Texture || _wcsicmp(TexturePathKey(slot.m_filename).c_str(), key.c_str()) != 0) continue;
         HRESULT hr = S_OK;
-        if (slot.mipmap && metadata.mipLevels == 1) {
+        if (slot.mipmap && metadata.mipLevels == 1 && !IsCompressed(metadata.format)) {
             ScratchImage chain;
             hr = GenerateMipMaps(image.GetImages(), image.GetImageCount(), metadata, TEX_FILTER_DEFAULT, 0, chain);
             if (FAILED(hr)) return TextureReloadResult::Failed;
             image = std::move(chain); metadata = image.GetMetadata();
         }
+        size_t imageCount = image.GetImageCount();
+        if (!slot.mipmap && IsCompressed(metadata.format) && metadata.mipLevels > 1 &&
+            metadata.arraySize == 1 && metadata.dimension == TEX_DIMENSION_TEXTURE2D && !metadata.IsCubemap()) {
+            metadata.mipLevels = 1; imageCount = 1;
+        }
         ID3D11ShaderResourceView* replacement = nullptr;
-        if (FAILED(CreateShaderResourceView(g_pDevice, image.GetImages(), image.GetImageCount(), metadata, &replacement))) return TextureReloadResult::Failed;
+        if (FAILED(CreateShaderResourceView(g_pDevice, image.GetImages(), imageCount, metadata, &replacement))) return TextureReloadResult::Failed;
         auto* previous = slot.m_ptr_Texture;
         slot.m_ptr_Texture = replacement; slot.m_width = static_cast<unsigned int>(metadata.width); slot.m_height = static_cast<unsigned int>(metadata.height);
         previous->Release();
@@ -383,5 +439,6 @@ TextureReloadResult CubemapReload(const wchar_t* path) {
 bool TextureValidateFile(const wchar_t* path) {
     if (!path || !path[0]) return false;
     TexMetadata metadata; ScratchImage image;
-    return SUCCEEDED(ReadTextureImage(path, metadata, image));
+    const std::wstring resolved = ResolveTexturePath(path);
+    return SUCCEEDED(ReadTextureOrBuiltin(path, resolved.empty() ? path : resolved.c_str(), metadata, image));
 }

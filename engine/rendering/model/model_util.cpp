@@ -9,6 +9,7 @@
  ===========================================================================**/
 #include "model_util.h"
 #include "engine/core/content_path.h"
+#include "engine/core/texture_cook_policy.h"
 
 #include <Windows.h>
 #include <wincodec.h>   // WIC
@@ -25,6 +26,7 @@
 #include "engine/rendering/d3d11/renderer.h"
 #include <filesystem>
 #include "engine/debug_draw/debug_ofstream.h"
+#include "DirectXTex.h"
 
 #pragma comment(lib, "windowscodecs.lib")
 
@@ -252,9 +254,32 @@ static bool LoadTextureWIC_Internal(const wchar_t* path, ID3D11ShaderResourceVie
 	}
 }
 
+// Cooked package texture: BC7 .dds with baked mips, cached under the path the content named.
+static bool LoadTextureDDS_Internal(const wchar_t* ddsPath, const wchar_t* cacheKey, ID3D11ShaderResourceView** outSRV) {
+	ID3D11Device* dev = GetDevice();
+	if (!dev || !ddsPath || !cacheKey || !outSRV) return false;
+
+	TexMetadata metadata;
+	ScratchImage image;
+	if (FAILED(LoadFromDDSFile(ddsPath, DDS_FLAGS_NONE, &metadata, image))) return false;
+
+	ID3D11ShaderResourceView* srv = nullptr;
+	if (FAILED(CreateShaderResourceView(dev, image.GetImages(), image.GetImageCount(), metadata, &srv)) || !srv)
+		return false;
+
+	srv->AddRef();
+	g_srvCache.emplace(std::wstring(cacheKey), srv);
+	*outSRV = srv;
+	return true;
+}
+
 bool LoadTextureWIC_SRV(const wchar_t* texPath, ID3D11ShaderResourceView** outSRV) {
-	// Load with WIC only (no DirectXTex)
-	return LoadTextureWIC_Internal(texPath, outSRV);
+	// Load with WIC (source image); a playable package carries the cooked .dds instead.
+	if (LoadTextureWIC_Internal(texPath, outSRV)) return true;
+	if (!texPath || !*texPath || !outSRV) return false;
+	const std::wstring dds = texture_cook::DdsSiblingPath(std::wstring(texPath));
+	if (dds.empty()) return false;
+	return LoadTextureDDS_Internal(dds.c_str(), texPath, outSRV);
 }
 
 // Texture: create solid-color 1x1 SRV
