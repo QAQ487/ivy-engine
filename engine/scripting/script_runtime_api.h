@@ -247,6 +247,20 @@ struct ScriptRuntimeApi {
     bool (*renderSettingGetBool)(const char* key, bool* outValue);
     bool (*renderSettingSetNumber)(const char* key, double value);
     bool (*renderSettingGetNumber)(const char* key, double* outValue);
+
+    // v50 - 3D rigidbody on an object's Rigidbody component (false when it has
+    // none or a vector is not finite; force / torque modes are ForceMode values),
+    // scene search and time.
+    bool (*rigidbodyGetVelocity)(GameObject* object, DirectX::XMFLOAT3* outVelocity);
+    bool (*rigidbodySetVelocity)(GameObject* object, DirectX::XMFLOAT3 velocity);
+    bool (*rigidbodyGetAngularVelocity)(GameObject* object, DirectX::XMFLOAT3* outVelocity);
+    bool (*rigidbodySetAngularVelocity)(GameObject* object, DirectX::XMFLOAT3 velocity);
+    bool (*rigidbodyAddForce)(GameObject* object, DirectX::XMFLOAT3 force, int mode);
+    bool (*rigidbodyAddTorque)(GameObject* object, DirectX::XMFLOAT3 torque, int mode);
+    GameObject* (*findGameObjectByName)(const char* name, bool includeInactive);
+    int (*findGameObjectsByTag)(Tag tag, GameObject** out, int capacity, bool includeInactive);
+    float (*getTimeScale)();
+    double (*getRealTimeSeconds)();
 };
 
 const ScriptRuntimeApi* ScriptRuntimeApi_GetHost();
@@ -314,6 +328,34 @@ bool ScriptApi_RenderSettingSetBool(const char* key, bool value);
 bool ScriptApi_RenderSettingGetBool(const char* key, bool& outValue);
 bool ScriptApi_RenderSettingSetNumber(const char* key, double value);
 bool ScriptApi_RenderSettingGetNumber(const char* key, double& outValue);
+
+// 3D rigidbody (v50 host; older hosts return false). Works on an object with a
+// Rigidbody component and never adds one. Kinematic bodies ignore forces.
+// Call from the main thread (scripts that are not Update_IsParallelSafe) when
+// the body belongs to another object.
+bool ScriptApi_RigidbodyGetVelocity(GameObject& object, DirectX::XMFLOAT3& outVelocity);
+bool ScriptApi_RigidbodySetVelocity(GameObject& object, DirectX::XMFLOAT3 velocity);
+bool ScriptApi_RigidbodyGetAngularVelocity(GameObject& object, DirectX::XMFLOAT3& outVelocity);
+bool ScriptApi_RigidbodySetAngularVelocity(GameObject& object, DirectX::XMFLOAT3 velocity);
+bool ScriptApi_RigidbodyAddForce(GameObject& object, DirectX::XMFLOAT3 force,
+                                 ForceMode mode = ForceMode::Force);
+bool ScriptApi_RigidbodyAddTorque(GameObject& object, DirectX::XMFLOAT3 torque,
+                                  ForceMode mode = ForceMode::Force);
+
+// Scene search (v50 host; older hosts return nullptr / 0). Depth-first in scene
+// order over the loaded scene, including runtime-spawned prefabs; objects
+// waiting to be destroyed are skipped. Without includeInactive, an inactive
+// object and its whole subtree are skipped. Name match is exact (case-sensitive).
+GameObject* ScriptApi_FindGameObjectByName(const char* name, bool includeInactive = false);
+// Writes up to capacity matches to out and returns the total number of matches.
+int ScriptApi_FindGameObjectsByTag(Tag tag, GameObject** out, int capacity,
+                                   bool includeInactive = false);
+
+// Time (v50 host; older hosts return 1 / 0). Time scale is the multiplier the
+// engine applies to dt (debug F7 scale and ScriptApi_Debug_PulseTimeScale);
+// real time is wall-clock seconds since the engine started, not scaled.
+float ScriptApi_GetTimeScale();
+double ScriptApi_GetRealTimeSeconds();
 void ScriptApi_CameraSetPosition(DirectX::XMFLOAT3 position);
 void ScriptApi_CameraSetTarget(DirectX::XMFLOAT3 target);
 void ScriptApi_CameraSetUp(DirectX::XMFLOAT3 up);
