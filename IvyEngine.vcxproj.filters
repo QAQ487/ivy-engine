@@ -588,6 +588,9 @@
     <ClInclude Include="engine\scene\render_settings.h">
       <Filter>engine\core</Filter>
     </ClInclude>
+    <ClInclude Include="engine\scene\render_setting_access.h">
+      <Filter>engine\core</Filter>
+    </ClInclude>
     <ClInclude Include="engine\rendering\particle\particle_system.h">
       <Filter>engine\rendering\particleSystem</Filter>
     </ClInclude>

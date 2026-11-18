@@ -87,6 +87,18 @@ void RenderSettings_ResetToDefaults();
 RenderSettingsData& RenderSettings_Get();
 const RenderSettingsData& RenderSettings_GetConst();
 
+// Change / read a runtime-tweakable setting by its JSON-style name (test bridge, scripts).
+// Toggles: frustumCullingEnabled, shadowCascadeCullingEnabled, spriteCullingEnabled,
+// lodEnabled, animCullingEnabled, lightSelectionEnabled, billboardCullingEnabled,
+// effectCullingEnabled, lodDebugLabels. Numbers (clamped like the scene loader): lodBias,
+// cullDistanceScale, shadowDistance, shadowLodOffset, effectCullRadius, and lodForceLevel
+// (-1 = automatic, 0..7 = force that LOD level; a debug option that is never saved into a
+// scene). Unknown keys and non-finite numbers return false and change nothing.
+bool RenderSettings_SetBoolByName(const char* key, bool value);
+bool RenderSettings_GetBoolByName(const char* key, bool* outValue);
+bool RenderSettings_SetNumberByName(const char* key, double value);
+bool RenderSettings_GetNumberByName(const char* key, double* outValue);
+
 RenderSettingsData RenderSettings_ParseJson(const nlohmann::json& renderJson, RenderSettingsData settings = {});
 void RenderSettings_ApplyFromJson(const nlohmann::json& renderJson);
 nlohmann::json RenderSettings_ToJson();

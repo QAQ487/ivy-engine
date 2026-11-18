@@ -392,6 +392,7 @@
     <ClInclude Include="engine\ecs\effect_system_flush.h" />
     <ClInclude Include="engine\ecs\visual_system.h" />
     <ClInclude Include="engine\scene\render_settings.h" />
+    <ClInclude Include="engine\scene\render_setting_access.h" />
     <ClInclude Include="engine\rendering\environment\skybox.h" />
     <ClInclude Include="engine\rendering\environment\ibl.h" />
     <ClInclude Include="engine\rendering\environment\equirect_cubemap.h" />

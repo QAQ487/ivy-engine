@@ -116,6 +116,7 @@ NUMERIC_SETTING_KEYS = (
     "shadowDistance",
     "shadowLodOffset",
     "effectCullRadius",
+    "lodForceLevel",
 )
 
 def build_set_setting_payload(key, value):

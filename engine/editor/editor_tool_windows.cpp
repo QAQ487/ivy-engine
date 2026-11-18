@@ -6,6 +6,7 @@
 #include "engine/rendering/culling/fx_cull.h"
 #include "engine/rendering/culling/cull_settings_math.h"
 #include "engine/rendering/culling/lod_select_math.h"
+#include "engine/rendering/culling/lod_state.h"
 #include "engine/rendering/lighting/lighting.h"
 
 std::string ShaderVariantPreviewLabel(Shader3DVariant v) {
@@ -385,6 +386,17 @@ void DrawRenderingSettingsBody() {
         ImGui::TextDisabled("Ortho view-rect; render submit only.");
     }
     ImGui::Checkbox("Mesh LOD (3D)", &rs.lodEnabled);
+    {
+        int force = Lod_GetForceLevel();
+        if (ImGui::SliderInt("Force LOD Level", &force, -1, lod_select::kMaxForcedLevel,
+                force < 0 ? "Auto" : "L%d"))
+            Lod_SetForceLevel(force);
+        ImGui::TextDisabled("Every LOD mesh uses this level (limited to what it has). Not saved into the scene.");
+        bool showRanges = Lod_GetShowRanges();
+        if (ImGui::Checkbox("Show LOD Ranges (selected)", &showRanges))
+            Lod_SetShowRanges(showRanges);
+        ImGui::TextDisabled("Edit view: wire spheres at the selected object's switch distances (yellow / orange / red = L1 / L2 / L3, cyan = cull distance).");
+    }
     ImGui::Checkbox("LOD Debug Labels", &rs.lodDebugLabels);
     ImGui::TextDisabled("Text above each LOD mesh: level, distance, projected screen height. Play only.");
     ImGui::SliderInt("Shadow LOD Offset", &rs.shadowLodOffset, 0, lod_select::kMaxShadowLodOffset);

@@ -2,7 +2,7 @@
 
 Gameplay scripts are C++ classes that inherit `api:Script` (`engine/scripting/Script.h`) and register by class name for prefab/scene JSON (`"Script": { "scriptClass": "…" }`).
 
-Prefer `ScriptApi_*` wrappers from `engine/scripting/script_runtime_api.h` for host access. The host ABI table is `api:ScriptRuntimeApi`; its `version` field is **48** (constant `kScriptRuntimeApiVersion` in `script_runtime_api.cpp`, not declared in a header — do not use an `api:` marker for it).
+Prefer `ScriptApi_*` wrappers from `engine/scripting/script_runtime_api.h` for host access. The host ABI table is `api:ScriptRuntimeApi`; its `version` field is **49** (constant `kScriptRuntimeApiVersion` in `script_runtime_api.cpp`, not declared in a header — do not use an `api:` marker for it).
 
 ## Lifecycle (`api:Script`)
 

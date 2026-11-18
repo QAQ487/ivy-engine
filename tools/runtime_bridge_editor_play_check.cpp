@@ -30,6 +30,7 @@ int main() {
     check(!IsRuntimeTestBridgeSettingKey("fogEnabled"), "reject non-whitelist key");
     check(IsRuntimeTestBridgeNumericSettingKey("lodBias"), "numeric whitelist lodBias");
     check(IsRuntimeTestBridgeNumericSettingKey("effectCullRadius"), "numeric whitelist effectCullRadius");
+    check(IsRuntimeTestBridgeNumericSettingKey("lodForceLevel"), "numeric whitelist lodForceLevel");
     check(!IsRuntimeTestBridgeNumericSettingKey("lodEnabled"), "bool key is not numeric");
     check(!IsRuntimeTestBridgeSettingKey("lodBias"), "numeric key is not bool");
     {

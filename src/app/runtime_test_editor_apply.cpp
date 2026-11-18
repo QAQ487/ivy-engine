@@ -7,8 +7,6 @@
 #if defined(IVY_RUNTIME_TEST_BRIDGE_AVAILABLE)
 #include "engine/core/engine_gui.h"
 #include "engine/scene/render_settings.h"
-#include "engine/rendering/culling/cull_settings_math.h"
-#include "engine/rendering/culling/lod_select_math.h"
 #if !defined(GAME_RUNTIME)
 #include "engine/core/engine_gui_internal.h"
 #endif
@@ -75,66 +73,15 @@ bool RuntimeTestEditor_Apply(const ivy::testing::EditorOpRequest& op, std::strin
 #endif
     }
     case EditorOpKind::SetSetting: {
-        RenderSettingsData& rs = RenderSettings_Get();
-        if (op.settingIsNumber) {
-            // Same clamps as the scene loader, so a test cannot push a value the
-            // file format would reject.
-            const float v = static_cast<float>(op.settingNumberValue);
-            if (op.settingKey == "lodBias") {
-                rs.lodBias = lod_select::ClampBias(v);
-            } else if (op.settingKey == "cullDistanceScale") {
-                rs.cullDistanceScale = cull_settings::ClampCullDistanceScale(v);
-            } else if (op.settingKey == "shadowDistance") {
-                rs.shadowDistance = cull_settings::ClampShadowDistanceOverride(v);
-            } else if (op.settingKey == "shadowLodOffset") {
-                rs.shadowLodOffset = lod_select::ClampShadowLodOffset(
-                    static_cast<int>(std::lround(op.settingNumberValue)));
-            } else if (op.settingKey == "effectCullRadius") {
-                rs.effectCullRadius = cull_settings::ClampEffectCullRadius(v);
-            } else {
-                errorOut = "unknown_setting";
-                return false;
-            }
-            return true;
+        // Same name table and clamps as scripts and the scene loader (render_setting_access.h).
+        const bool ok = op.settingIsNumber
+            ? RenderSettings_SetNumberByName(op.settingKey.c_str(), op.settingNumberValue)
+            : RenderSettings_SetBoolByName(op.settingKey.c_str(), op.settingBoolValue);
+        if (!ok) {
+            errorOut = "unknown_setting";
+            return false;
         }
-        if (op.settingKey == "frustumCullingEnabled") {
-            rs.frustumCullingEnabled = op.settingBoolValue;
-            return true;
-        }
-        if (op.settingKey == "shadowCascadeCullingEnabled") {
-            rs.shadowCascadeCullingEnabled = op.settingBoolValue;
-            return true;
-        }
-        if (op.settingKey == "spriteCullingEnabled") {
-            rs.spriteCullingEnabled = op.settingBoolValue;
-            return true;
-        }
-        if (op.settingKey == "lodEnabled") {
-            rs.lodEnabled = op.settingBoolValue;
-            return true;
-        }
-        if (op.settingKey == "animCullingEnabled") {
-            rs.animCullingEnabled = op.settingBoolValue;
-            return true;
-        }
-        if (op.settingKey == "lightSelectionEnabled") {
-            rs.lightSelectionEnabled = op.settingBoolValue;
-            return true;
-        }
-        if (op.settingKey == "billboardCullingEnabled") {
-            rs.billboardCullingEnabled = op.settingBoolValue;
-            return true;
-        }
-        if (op.settingKey == "lodDebugLabels") {
-            rs.lodDebugLabels = op.settingBoolValue;
-            return true;
-        }
-        if (op.settingKey == "effectCullingEnabled") {
-            rs.effectCullingEnabled = op.settingBoolValue;
-            return true;
-        }
-        errorOut = "unknown_setting";
-        return false;
+        return true;
     }
     }
     errorOut = "unknown_editor_op";

@@ -3,6 +3,7 @@
 
 #include "lod_state.h"
 
+#include <algorithm>
 #include <cmath>
 
 namespace {
@@ -14,6 +15,8 @@ LodStats g_lastStats{};
 LodDebugLabel g_labels[kLodMaxDebugLabels];
 int g_labelCount = 0;
 uint64_t g_serial = 0;
+int g_forceLevel = -1;
+bool g_showRanges = true;
 AnimCullStats g_animStats{};
 AnimCullStats g_lastAnimStats{};
 }
@@ -53,6 +56,13 @@ void Lod_RecordDrawn(int level) {
 }
 
 LodStats Lod_GetLastStats() { return g_lastStats; }
+
+void Lod_SetForceLevel(int level) {
+    g_forceLevel = std::min(std::max(level, -1), 7);
+}
+int Lod_GetForceLevel() { return g_forceLevel; }
+void Lod_SetShowRanges(bool show) { g_showRanges = show; }
+bool Lod_GetShowRanges() { return g_showRanges; }
 
 void Lod_AddDebugLabel(const LodDebugLabel& label) {
     if (g_labelCount < kLodMaxDebugLabels)

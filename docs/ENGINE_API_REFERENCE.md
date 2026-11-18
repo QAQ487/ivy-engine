@@ -1528,6 +1528,8 @@ Vendor header `WICTextureLoader11.h` is omitted.
 
 ### `engine/rendering/culling/lod_select_math.h`
 - `return std::min(std::max(bias, kMinBias), kMaxBias);`
+- `inline int ClampForcedLevel(int level) { return std::min(std::max(level, -1), kMaxForcedLevel);`
+- `return std::min(f, std::max(count, 0));`
 - `inline int ClampShadowLodOffset(int offset) { return std::min(std::max(offset, 0), kMaxShadowLodOffset);`
 - `return std::min(cameraLevel + ClampShadowLodOffset(offset), std::max(last, cameraLevel));`
 
@@ -1544,6 +1546,10 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `LodStats Lod_GetLastStats();`
 - `void Lod_AddDebugLabel(const LodDebugLabel& label);`
 - `const LodDebugLabel* Lod_GetDebugLabels(int& count);`
+- `void Lod_SetForceLevel(int level);`
+- `int Lod_GetForceLevel();`
+- `void Lod_SetShowRanges(bool show);`
+- `bool Lod_GetShowRanges();`
 - `uint64_t Lod_GetFrameSerial();`
 - `void Lod_RecordAnimUpdated();`
 - `void Lod_RecordAnimSkipped();`
@@ -1967,6 +1973,10 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `void RenderSettings_ResetToDefaults();`
 - `RenderSettingsData& RenderSettings_Get();`
 - `const RenderSettingsData& RenderSettings_GetConst();`
+- `bool RenderSettings_SetBoolByName(const char* key, bool value);`
+- `bool RenderSettings_GetBoolByName(const char* key, bool* outValue);`
+- `bool RenderSettings_SetNumberByName(const char* key, double value);`
+- `bool RenderSettings_GetNumberByName(const char* key, double* outValue);`
 - `RenderSettingsData RenderSettings_ParseJson(const nlohmann::json& renderJson, RenderSettingsData settings = {});`
 - `void RenderSettings_ApplyFromJson(const nlohmann::json& renderJson);`
 - `nlohmann::json RenderSettings_ToJson();`
@@ -2169,6 +2179,10 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `bool ScriptApi_TryGetColliderFootprint(const Collider& collider, DirectX::XMFLOAT3& outCenter, DirectX::XMFLOAT3& outSize);`
 - `void ScriptApi_EngineGUIStopPlay();`
 - `bool ScriptApi_RequestExitGame();`
+- `bool ScriptApi_RenderSettingSetBool(const char* key, bool value);`
+- `bool ScriptApi_RenderSettingGetBool(const char* key, bool& outValue);`
+- `bool ScriptApi_RenderSettingSetNumber(const char* key, double value);`
+- `bool ScriptApi_RenderSettingGetNumber(const char* key, double& outValue);`
 - `void ScriptApi_CameraSetPosition(DirectX::XMFLOAT3 position);`
 - `void ScriptApi_CameraSetTarget(DirectX::XMFLOAT3 target);`
 - `void ScriptApi_CameraSetUp(DirectX::XMFLOAT3 up);`

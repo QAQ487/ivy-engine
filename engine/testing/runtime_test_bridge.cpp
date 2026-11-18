@@ -262,7 +262,8 @@ bool IsRuntimeTestBridgeNumericSettingKey(const std::string& key) {
         || key == "cullDistanceScale"
         || key == "shadowDistance"
         || key == "shadowLodOffset"
-        || key == "effectCullRadius";
+        || key == "effectCullRadius"
+        || key == "lodForceLevel";
 }
 
 bool ParseRuntimeTestBridgeNumericSettingValue(const Json& value, double& outNumber, std::string& err) {

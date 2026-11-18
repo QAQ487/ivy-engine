@@ -402,6 +402,7 @@ exit /b 0</Command>
     <ClInclude Include="engine\scene\scene_loader.h" />
     <ClInclude Include="engine\scene\scene_asset_preload.h" />
     <ClInclude Include="engine\scene\render_settings.h" />
+    <ClInclude Include="engine\scene\render_setting_access.h" />
     <ClInclude Include="engine\rendering\environment\skybox.h" />
     <ClInclude Include="engine\rendering\environment\ibl.h" />
     <ClInclude Include="engine\rendering\environment\equirect_cubemap.h" />

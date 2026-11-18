@@ -290,6 +290,8 @@ void GameObject::DrawVisual(bool useRealModel) {
                     // Hysteresis memory keeps the camera's level; the shadow offset below
                     // only changes which mesh a cascade pass draws.
                     vc->lodLastLevel = lodLevel;
+                    // Debug override replaces the camera level (shadows follow, offset on top).
+                    lodLevel = lod_select::ForcedLevel(lodLevel, Lod_GetForceLevel(), thresholdCount);
                     if (ShadowCascadeCull_IsCascadePassActive()
                         && Shadow::GetRenderingLightIndex() >= 0) {
                         lodLevel = lod_select::ShadowCasterLevel(

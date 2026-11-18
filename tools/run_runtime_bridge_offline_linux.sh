@@ -55,6 +55,9 @@ echo "==> run runtime_bridge_editor_host_compile_check"
 echo "==> Editor host gate sync (grep/static)"
 python3 "$ROOT/tools/runtime_bridge_editor_host_gate_check.py"
 
+echo "==> render setting key tables agree"
+python3 "$ROOT/tools/check_render_setting_keys.py"
+
 echo "==> tools/*.cmd echo redirect check"
 python3 "$ROOT/tools/runtime_bridge_cmd_echo_redirect_check.py"
 

@@ -36,6 +36,14 @@ Script-facing helpers from `api:ScriptRuntimeApi` / `script_runtime_api.h`. Scen
 - `api:ScriptApi_DebugDrawSphereWire` / `api:ScriptApi_DebugDrawLine`
 - Particles: `api:ScriptApi_ParticleCreateEmitter`, `api:ScriptApi_ParticleSetEmitterPosition`, `api:ScriptApi_ParticleSetEmitterEmitting`, `api:ScriptApi_ParticleStopEmitter`, `api:ScriptApi_ParticleDestroyEmitter`, `api:ScriptApi_ParticleSpawnAt`
 
+## Runtime render settings (v49)
+
+Change culling / LOD options of the running scene by name; nothing is written to the scene file, and a host older than v49 simply returns `false`. Numbers are clamped to the same ranges as the scene loader; unknown keys and non-finite numbers return `false` and change nothing.
+
+- `bool ScriptApi_RenderSettingSetBool(const char* key, bool value)` / `bool ScriptApi_RenderSettingGetBool(const char* key, bool& outValue)` — `api:ScriptApi_RenderSettingSetBool` / `api:ScriptApi_RenderSettingGetBool`. Keys: `frustumCullingEnabled`, `shadowCascadeCullingEnabled`, `spriteCullingEnabled`, `lodEnabled`, `animCullingEnabled`, `lightSelectionEnabled`, `billboardCullingEnabled`, `effectCullingEnabled`, `lodDebugLabels`.
+- `bool ScriptApi_RenderSettingSetNumber(const char* key, double value)` / `bool ScriptApi_RenderSettingGetNumber(const char* key, double& outValue)` — `api:ScriptApi_RenderSettingSetNumber` / `api:ScriptApi_RenderSettingGetNumber`. Keys: `lodBias` (0.1–10), `cullDistanceScale` (0.1–10), `shadowDistance` (0 = preset, otherwise 5–1000), `shadowLodOffset` (0–3), `effectCullRadius` (0.5–500), `lodForceLevel` (-1 = automatic, 0–7 forces that LOD level on every LOD mesh, limited to the levels the object has).
+- Typical use: a quality menu that lowers `lodBias` / `cullDistanceScale`, or a debug key that toggles `lodDebugLabels`. The same keys work in the test bridge `set_setting` verb.
+
 ## Viewport / device
 
 - `api:ScriptApi_GetRenderViewportWidth` / `api:ScriptApi_GetRenderViewportHeight`

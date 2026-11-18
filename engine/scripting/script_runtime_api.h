@@ -240,6 +240,13 @@ struct ScriptRuntimeApi {
 
     // v48 - deferred game exit, preserving the v42-v47 prefix.
     void (*requestExitGame)();
+
+    // v49 - runtime render settings by name (see RenderSettings_SetBoolByName for the keys).
+    // Return false for an unknown key or a non-finite number; numbers are clamped.
+    bool (*renderSettingSetBool)(const char* key, bool value);
+    bool (*renderSettingGetBool)(const char* key, bool* outValue);
+    bool (*renderSettingSetNumber)(const char* key, double value);
+    bool (*renderSettingGetNumber)(const char* key, double* outValue);
 };
 
 const ScriptRuntimeApi* ScriptRuntimeApi_GetHost();
@@ -296,6 +303,17 @@ bool ScriptApi_TryGetColliderFootprint(const Collider& collider,
                                        DirectX::XMFLOAT3& outSize);
 void ScriptApi_EngineGUIStopPlay();
 bool ScriptApi_RequestExitGame();
+
+// Runtime render settings (v49 host; older hosts return false). Toggles: frustumCullingEnabled,
+// shadowCascadeCullingEnabled, spriteCullingEnabled, lodEnabled, animCullingEnabled,
+// lightSelectionEnabled, billboardCullingEnabled, effectCullingEnabled, lodDebugLabels.
+// Numbers (clamped like the scene loader): lodBias, cullDistanceScale, shadowDistance,
+// shadowLodOffset, effectCullRadius, lodForceLevel (-1 automatic, 0..7 force a LOD level).
+// Changes apply to the running scene only; they are not written to the scene file.
+bool ScriptApi_RenderSettingSetBool(const char* key, bool value);
+bool ScriptApi_RenderSettingGetBool(const char* key, bool& outValue);
+bool ScriptApi_RenderSettingSetNumber(const char* key, double value);
+bool ScriptApi_RenderSettingGetNumber(const char* key, double& outValue);
 void ScriptApi_CameraSetPosition(DirectX::XMFLOAT3 position);
 void ScriptApi_CameraSetTarget(DirectX::XMFLOAT3 target);
 void ScriptApi_CameraSetUp(DirectX::XMFLOAT3 up);

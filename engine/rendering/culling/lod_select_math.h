@@ -88,6 +88,24 @@ inline float ScreenHeightToDistance(float worldExtent, float tanHalfFov, float s
     return worldExtent / (2.0f * tanHalfFov * screenHeight);
 }
 
+// Debug override: force every LOD-tracked mesh onto one level (-1 = off / automatic).
+// The level is limited to what the object has (`count` thresholds = `count + 1` levels);
+// a culled visual stays culled.
+constexpr int kMaxForcedLevel = 7;
+
+inline int ClampForcedLevel(int level) {
+    return std::min(std::max(level, -1), kMaxForcedLevel);
+}
+
+inline int ForcedLevel(int autoLevel, int forceLevel, int count) {
+    if (autoLevel < 0)
+        return autoLevel;
+    const int f = ClampForcedLevel(forceLevel);
+    if (f < 0)
+        return autoLevel;
+    return std::min(f, std::max(count, 0));
+}
+
 constexpr int kMaxShadowLodOffset = 3;
 
 inline int ClampShadowLodOffset(int offset) {

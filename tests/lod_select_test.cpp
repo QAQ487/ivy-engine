@@ -119,6 +119,16 @@ int main() {
         Expect(SelectLevel(1.0e6f, tn, 2, kNoPrevious, 0.0f, 1.0f, 0.0f) == 1, "never-switch level stays out of reach");
     }
 
+    // Forced level (debug override).
+    Expect(ForcedLevel(2, -1, 3) == 2, "force off keeps the automatic level");
+    Expect(ForcedLevel(0, 2, 3) == 2, "force picks that level");
+    Expect(ForcedLevel(3, 0, 3) == 0, "force 0 overrides a far level");
+    Expect(ForcedLevel(0, 5, 3) == 3, "force is limited to the last level");
+    Expect(ForcedLevel(0, 5, 0) == 0, "no lods -> level 0");
+    Expect(ForcedLevel(kCulled, 2, 3) == kCulled, "culled stays culled");
+    Expect(ForcedLevel(1, -9, 3) == 1, "very negative force means off");
+    Expect(ClampForcedLevel(99) == kMaxForcedLevel, "force clamps high");
+
     // Shadow caster level offset.
     Expect(ShadowCasterLevel(0, 0, 3) == 0, "offset 0 keeps the camera level");
     Expect(ShadowCasterLevel(0, 1, 3) == 1, "offset 1 goes one level lower");

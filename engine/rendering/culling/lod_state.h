@@ -48,6 +48,15 @@ constexpr int kLodMaxDebugLabels = 256;
 void Lod_AddDebugLabel(const LodDebugLabel& label);
 const LodDebugLabel* Lod_GetDebugLabels(int& count);
 
+// Debug options that live outside RenderSettings so they are never saved into a scene and
+// survive scene reloads. forceLevel: -1 = automatic, otherwise every LOD-tracked mesh uses
+// that level (limited to what it has). showRanges: draw the selected object's LOD switch
+// distances as wire spheres in the Edit view.
+void Lod_SetForceLevel(int level);
+int Lod_GetForceLevel();
+void Lod_SetShowRanges(bool show);
+bool Lod_GetShowRanges();
+
 // Frame serial: incremented by every Lod_BeginFrame. Visuals stamp it when the 3D
 // object pass considers / draws them so the next animation update can tell whether
 // they were visible (see anim_cull_math.h). Starts at 0.

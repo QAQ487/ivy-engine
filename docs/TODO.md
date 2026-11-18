@@ -138,15 +138,21 @@
   - 驗收（Windows）：fly 遠離，細 boulder 好早變 LOD1，大 boulder 要遠好多先變，切換距離大約同尺寸成正比（細 boulder 喺 45° FOV 下約 11／22／44 m，×8 嗰欄約 8 倍；實際數字隨相機 FOV 變）；Rendering 面板 `lod L0 / L1 / L2+` 隨距離變；縮窄 FOV 時 LOD 保持得更遠；Inspector 開關模式、改 %、Undo 之外嘅保存重載；舊場景（distance 模式）畫面不變。
   - Debug 標籤：`render.lodDebugLabels`（預設 false；Rendering 面板 `LOD Debug Labels`；bridge `set_setting` 收）。`DrawVisual` 喺主 camera pass 為每個有 LOD／cullDistance 嘅 Visual 記低 `LodDebugLabel`（`lod_state`），`main.cpp` 喺 FPS overlay 之後將 AABB 頂部投影到螢幕，用 `hal::DebugText` 畫 `L<級> <距離>m <螢幕高度%>`（綠／黃／橙／紅 = L0／L1／L2／L3）；最近優先、上限 96 個。`scene_lod_screen_fly.json` 預設開。
   - 未做：以 bounding sphere 而非 AABB 最長邊計大小、per-camera（shadow 專用）螢幕大小、editor 視圖預覽。
-- [ ] **LOD cross-fade／dither**：切換係硬切。
+- [ ] **LOD cross-fade／dither**：切換係硬切。**設計備忘（未實作，Linux 環境冇 HLSL 編譯器同 D3D11，唔能夠驗證）**：每個 pixel shader 變體（standard／toon／rim／PBR／surface_fx／directional／point／spot…）加一個 `LodFade` constant buffer 值（0..1）同 8×8 Bayer／interleaved-gradient dither，`clip(fade - dither)`（淡出）或 `clip(dither - fade)`（淡入）；過渡期間 `DrawVisual` 要用兩個 pass 畫新舊兩級 mesh（新級淡入、舊級淡出），每個 Visual 記 `lodFadeFrom／lodFadeT`，由 `Lod_BeginFrame` 嘅 dt 推進（約 0.25–0.5 s）；shadow pass 唔做 cross-fade（直接用目標級）；distance／screenSize 兩種模式共用。風險：所有 shader 變體都要改且要 Windows 重新編譯，每個物件過渡期間 draw call 翻倍；建議作為獨立 PR，附 Windows 截圖證據。
 - [x] **陰影投影物用較低 LOD**（source 已做，等 Windows 驗收）
   - `render.shadowLodOffset`（預設 0，0–3；Rendering 面板 `Shadow LOD Offset`）：cascade pass 喺 `GameObject::DrawVisual` 用 `lod_select::ShadowCasterLevel(cameraLevel, offset, count)` 揀 mesh——相機級別往低細節方向推 `offset` 級，唔超過最後一級；`cullDistance` 剔除照舊，`animate: true` 嘅 Visual 只有 level 0 所以唔受影響。Hysteresis 記憶仍然記相機級別，唔會被 offset 污染。預設 0 = 行為不變。
   - Linux：`tools/run_lod_check.sh`（`ShadowCasterLevel`、clamp）。驗收場景：`testbed/rom/scene/scene_lod_fly.json` 嘅強制 LOD0 展示排（offset 3 時影子變 LOD3 形狀）。
   - 驗收（Windows）：offset 0 影子同之前一樣；offset 1／2／3 影子逐級變粗但位置唔飄；Rendering 面板 vertices／GPU ms A/B；遠距樹影冇跳變。
-- [ ] **編輯器 LOD 工具**：編輯視圖用 proxy（`DrawVisual(false)`）所以唔行 LOD；冇強制指定某級嘅 debug 選項，冇顯示邊界、距離嘅 gizmo。
-- [ ] **腳本同 bridge 可控性**（bridge 部分已做，等 Windows 驗收；腳本部分未做）
-  - Bridge：`set_setting` 而家除布林外亦收數值 key（`lodBias`、`cullDistanceScale`、`shadowDistance`、`shadowLodOffset`、`effectCullRadius`；JSON number、必須有限；host 按場景載入嘅同一組 clamp 夾住，超範圍唔會報錯）。`tools/runtime_test_client.py` 同 `--value` 一併支援；Linux：`tools/run_runtime_bridge_offline_linux.sh`、`python3 -m unittest tools/runtime_test_client_check.py`。
-  - 未做：`ScriptRuntimeApi` 嘅 LOD／culling／render 設定介面（要 append-only 並 bump 版本，目前仍然係 48）；bridge `perf` 未輸出 anim／fx／light 計數。
+- [x] **編輯器 LOD 工具**（source 已做，等 Windows 驗收）
+  - **強制某級**：Rendering 面板 `Force LOD Level`（Auto／L0–L7），`lod_select::ForcedLevel` 喺 `DrawVisual` 揀完相機級別後覆蓋（受物件實際級數限制；culled 照舊；shadow 跟隨再疊 `shadowLodOffset`）。狀態放喺 `lod_state`（`Lod_SetForceLevel`），**唔會**存入場景，場景重載後保留；bridge／腳本 key `lodForceLevel`（-1–7）。只喺 Play／runtime 有效（Edit 視圖用 proxy mesh，唔行 LOD）。
+  - **距離 gizmo**：Edit 視圖揀中有 LOD／cullDistance 嘅物件時，`DrawSelectionLodRanges`（`engine_gui.cpp`）喺其世界 AABB 中心畫線框球：黃／橙／紅 = 切去 L1／L2／L3，青色 = cull distance；半徑已除以 `lodBias`、乘 `cullDistanceScale`；Screen Size Mode 用編輯器相機 FOV 換算等價距離；`animate` 嘅 Visual 唔畫 LOD 球（同 runtime 一致）。Rendering 面板 `Show LOD Ranges (selected)` 開關（預設開）。
+  - 未做：Edit 視圖直接預覽 LOD mesh、Inspector 內嘅「預覽此級」按鈕、gizmo 拖曳改距離。
+- [x] **腳本同 bridge 可控性**（source 已做，等 Windows 驗收）
+  - 共用名稱表 `engine/scene/render_setting_access.h`（模板，Linux 可測）＋ `RenderSettings_{Set,Get}{Bool,Number}ByName`：toggle key（`frustumCullingEnabled`、`shadowCascadeCullingEnabled`、`spriteCullingEnabled`、`lodEnabled`、`animCullingEnabled`、`lightSelectionEnabled`、`billboardCullingEnabled`、`effectCullingEnabled`、`lodDebugLabels`）同數值 key（`lodBias`、`cullDistanceScale`、`shadowDistance`、`shadowLodOffset`、`effectCullRadius`、`lodForceLevel`），數值用同場景載入一樣嘅 clamp，非有限值同未知 key 返回 false。
+  - Bridge `set_setting` 收布林同數值 key，host 端用同一組函數（`runtime_test_editor_apply.cpp` 已簡化）。
+  - **`ScriptRuntimeApi` v49**（append-only；`kScriptRuntimeApiVersion` 48 → 49，新增 `ScriptRuntimeApi_GetV49`，`GetV48` 變成複製並設 version 48）：`renderSettingSetBool`／`GetBool`／`SetNumber`／`GetNumber` 四個 host 函數，腳本用 `ScriptApi_RenderSettingSetBool` 等 wrapper（先查 `version >= 49`，舊 host 返回 false）。改動只作用於運行中場景，唔寫入場景檔。
+  - Linux：`tools/run_render_setting_check.sh`（名稱表＋clamp，另外 `tools/check_render_setting_keys.py` 核對 bridge／client／access header／`render_settings.h` 四份 key 表一致）、`tools/run_runtime_bridge_offline_linux.sh`、`python3 tools/agent_docs_check.py`。
+  - 未做：bridge `perf` 輸出 anim／fx／light 計數。
 - [ ] **LOD／剔除嘅進階項**（暫緩）：HLOD／impostor、自動減面、per-clip skinned bounds、per-layer／per-tag cull distance。
 - 唔算缺口：texture mip chain 已由 `model_util.cpp` 生成；engine 冇 tilemap 系統；screen-space UI 唔剔除係設計。
 
