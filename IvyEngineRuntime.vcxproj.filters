@@ -4,6 +4,9 @@
     <Filter Include="engine">
       <UniqueIdentifier>{1b56d1eb-3b80-4472-9341-7b428f0e4e7a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="engine\save">
+      <UniqueIdentifier>{facd360b-8714-41e7-aa2e-864693fcf26e}</UniqueIdentifier>
+    </Filter>
     <Filter Include="engine\audio">
       <UniqueIdentifier>{210a5ca0-9969-47d4-b589-04579a4dc8ad}</UniqueIdentifier>
     </Filter>
@@ -315,6 +318,15 @@
     <ClInclude Include="engine\scripting\script_runtime_api.h">
       <Filter>engine\scripting</Filter>
     </ClInclude>
+    <ClInclude Include="engine\save\save_store.h">
+      <Filter>engine\save</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\save\save_system.h">
+      <Filter>engine\save</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\scripting\host_text.h">
+      <Filter>engine\scripting</Filter>
+    </ClInclude>
     <ClInclude Include="engine\scripting\script_abi_layout.h">
       <Filter>engine\scripting</Filter>
     </ClInclude>
@@ -430,6 +442,12 @@
   <ItemGroup>
     <ClCompile Include="engine\audio\audio_manager.cpp">
       <Filter>engine\audio</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\save\save_store.cpp">
+      <Filter>engine\save</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\save\save_system.cpp">
+      <Filter>engine\save</Filter>
     </ClCompile>
     <ClCompile Include="engine\core\easing.cpp">
       <Filter>engine\core</Filter>
@@ -772,6 +790,8 @@
     <ClCompile Include="samples\scripts\SamplePlayerScript.cpp" />
     <ClInclude Include="samples\scripts\SampleParticleEmitterScript.h" />
     <ClCompile Include="samples\scripts\SampleParticleEmitterScript.cpp" />
+    <ClInclude Include="samples\scripts\SampleSaveScript.h" />
+    <ClCompile Include="samples\scripts\SampleSaveScript.cpp" />
     <ClInclude Include="samples\scripts\SampleCheckpointState.h" />
     <ClInclude Include="samples\scripts\SampleCheckpointScript.h" />
     <ClCompile Include="samples\scripts\SampleCheckpointScript.cpp" />
