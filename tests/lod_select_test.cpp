@@ -92,6 +92,33 @@ int main() {
         NormalizeThresholds(nullptr, 3); // must not crash
     }
 
+    // Screen-size thresholds convert to distances.
+    {
+        const float tanHalf = std::tan(0.5f * 60.0f * 0.017453292519943295f); // 60 deg fov
+        // A 2 m object fills 12% of the screen height at 2 / (2 * tan30 * 0.12) m.
+        const float d = ScreenHeightToDistance(2.0f, tanHalf, 0.12f);
+        Expect(std::fabs(d - 2.0f / (2.0f * tanHalf * 0.12f)) < 1e-3f, "distance formula");
+        Expect(std::fabs(2.0f / (2.0f * d * tanHalf) - 0.12f) < 1e-4f, "projected height round trip");
+        Expect(ScreenHeightToDistance(4.0f, tanHalf, 0.12f) > 1.99f * d, "twice the size switches twice as far");
+        Expect(ScreenHeightToDistance(2.0f, tanHalf, 0.06f) > 1.99f * d, "half the screen height switches twice as far");
+        Expect(ScreenHeightToDistance(0.0f, tanHalf, 0.1f) == kNeverSwitch, "no extent never switches");
+        Expect(ScreenHeightToDistance(-1.0f, tanHalf, 0.1f) == kNeverSwitch, "negative extent never switches");
+        Expect(ScreenHeightToDistance(2.0f, 0.0f, 0.1f) == kNeverSwitch, "bad fov never switches");
+        Expect(ScreenHeightToDistance(2.0f, tanHalf, 0.0f) == kNeverSwitch, "screenHeight 0 never switches");
+        Expect(ScreenHeightToDistance(NAN, tanHalf, 0.1f) == kNeverSwitch, "NaN extent never switches");
+        // End to end with the distance selector: descending screen heights give ascending distances.
+        float t[3] = { ScreenHeightToDistance(2.0f, tanHalf, 0.12f),
+                       ScreenHeightToDistance(2.0f, tanHalf, 0.06f),
+                       ScreenHeightToDistance(2.0f, tanHalf, 0.03f) };
+        Expect(t[0] < t[1] && t[1] < t[2], "descending screen heights -> ascending distances");
+        Expect(SelectLevel(t[0] * 0.9f, t, 3, kNoPrevious, 0.0f, 1.0f, 0.0f) == 0, "close -> LOD0");
+        Expect(SelectLevel(t[1] * 1.1f, t, 3, kNoPrevious, 0.0f, 1.0f, 0.0f) == 2, "mid -> LOD2");
+        Expect(SelectLevel(t[2] * 1.1f, t, 3, kNoPrevious, 0.0f, 1.0f, 0.0f) == 3, "far -> LOD3");
+        // A "never" threshold keeps lower levels unreachable.
+        float tn[2] = { t[0], kNeverSwitch };
+        Expect(SelectLevel(1.0e6f, tn, 2, kNoPrevious, 0.0f, 1.0f, 0.0f) == 1, "never-switch level stays out of reach");
+    }
+
     // Shadow caster level offset.
     Expect(ShadowCasterLevel(0, 0, 3) == 0, "offset 0 keeps the camera level");
     Expect(ShadowCasterLevel(0, 1, 3) == 1, "offset 1 goes one level lower");

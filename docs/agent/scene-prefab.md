@@ -110,7 +110,8 @@ Node JSON (recursive), from `prefab_serializer.h`:
 ```
 
 - Level 0 is `model`; `lods[i]` is level `i+1`. Each `maxDistance` is the camera distance at which rendering switches **to** that level (loaded ascending; at most 7 LOD levels). Distance is camera → world-AABB centre of the base mesh, with 5% hysteresis.
-- Shadow passes use the same level as the main camera pass.
+- Optional `"lodMode": "screenSize"` (default `"distance"`): each `lods[i]` then uses `screenHeight` (0–1, fraction of the viewport height) instead of `maxDistance`: the level switches **to** that mesh once the object's projected height falls below it (rows load sorted largest first; `0` = never switches). Projected height = largest side of the base mesh's world AABB / (2 · distance · tan(fov/2)), so the switch distance follows the object's size and the camera's vertical FOV (perspective cameras only; orthographic stays on level 0). Hysteresis, `lodBias` and `cullDistance` behave as in distance mode. Both fields are written on save when set.
+- Shadow passes use the same level as the main camera pass (unless `render.shadowLodOffset` > 0).
 - Ignored while `animate` is `true` (levels > 0 are skipped); `cullDistance` still applies. LOD only applies in Play / runtime, never to `proxy_model` edit view. A missing LOD mesh falls back to level 0.
 - LOD meshes should share the base mesh pivot and scale, or the switch will visibly jump.
 

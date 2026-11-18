@@ -17,12 +17,16 @@ struct LodStats {
 };
 
 // Call at the start of the 3D object pass, before shadow cascade passes.
-void Lod_BeginFrame(const DirectX::XMFLOAT3& cameraPosition);
+// verticalFovDeg feeds screen-size LOD (tan of half the vertical field of view); an
+// invalid value (<= 0 or >= 180) disables screen-size conversion for the frame.
+void Lod_BeginFrame(const DirectX::XMFLOAT3& cameraPosition, float verticalFovDeg = 0.0f);
 void Lod_EndFrame();
 
 // True between Lod_BeginFrame and Lod_EndFrame.
 bool Lod_IsFrameActive();
 const DirectX::XMFLOAT3& Lod_GetCameraPosition();
+// tan(verticalFov / 2) for this frame; 0 when unknown.
+float Lod_GetTanHalfFov();
 
 // Counters are recorded by the main camera pass only (see game_object.cpp).
 void Lod_RecordConsidered();

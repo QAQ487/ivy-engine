@@ -72,6 +72,22 @@ inline int SelectLevel(float distance,
     return level;
 }
 
+// Screen-size LOD: a level switches when the object's projected height drops below
+// `screenHeight` (fraction of the viewport height, 0..1). The projected height of an
+// object with world extent E at distance d is E / (2 d tan(fov/2)), so each threshold
+// converts to a switch distance and the normal distance selection (hysteresis, bias)
+// applies unchanged. Returns kNeverSwitch when the inputs cannot give a distance
+// (no bounds, bad fov, screenHeight <= 0), which keeps the object on its current level.
+constexpr float kNeverSwitch = 1.0e30f;
+
+inline float ScreenHeightToDistance(float worldExtent, float tanHalfFov, float screenHeight) {
+    if (!std::isfinite(worldExtent) || !std::isfinite(tanHalfFov) || !std::isfinite(screenHeight))
+        return kNeverSwitch;
+    if (worldExtent <= 0.0f || tanHalfFov <= 0.0f || screenHeight <= 0.0f)
+        return kNeverSwitch;
+    return worldExtent / (2.0f * tanHalfFov * screenHeight);
+}
+
 constexpr int kMaxShadowLodOffset = 3;
 
 inline int ClampShadowLodOffset(int offset) {

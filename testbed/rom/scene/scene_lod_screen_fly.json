@@ -1,0 +1,1368 @@
+{
+  "version": 4,
+  "settings": {
+    "render": {
+      "clearColor": [
+        0.69,
+        0.77,
+        0.87,
+        1.0
+      ],
+      "defaultShader": "standard",
+      "fogEnabled": false,
+      "shadowQuality": "medium",
+      "skyboxEnabled": false,
+      "lodEnabled": true,
+      "lodBias": 1.0
+    },
+    "debugCamera": {
+      "mode": "fly",
+      "enabledOnPlay": true,
+      "yawDeg": 0.0,
+      "pitchDeg": -3.0,
+      "position": {
+        "x": 0.0,
+        "y": 4.0,
+        "z": -6.0
+      }
+    }
+  },
+  "nodes": [
+    {
+      "name": "Directional Light",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 0.0,
+          "posY": 10.0,
+          "posZ": 0.0,
+          "rotX": 50.0,
+          "rotY": -35.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "DirectionalLight": {
+          "enabled": true,
+          "castShadows": true,
+          "color": [
+            1.0,
+            0.97,
+            0.92
+          ],
+          "intensity": 1.1,
+          "specColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "specPower": 32.0
+        }
+      }
+    },
+    {
+      "name": "Ground",
+      "tag": 2,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 0.0,
+          "posY": -0.5,
+          "posZ": 200.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 200.0,
+          "scaleY": 1.0,
+          "scaleZ": 900.0
+        },
+        "visual": {
+          "model": "rom/model/object/Box_Green.fbx",
+          "shader": "standard"
+        }
+      }
+    },
+    {
+      "name": "Boulder x1 z12",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -36.0,
+          "posY": 0.0,
+          "posZ": 12.0,
+          "rotX": 0.0,
+          "rotY": 30.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "visual": {
+          "model": "rom/model/lod/Boulder_LOD0.fbx",
+          "shader": "standard",
+          "lodMode": "screenSize",
+          "lods": [
+            {
+              "model": "rom/model/lod/Boulder_LOD1.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.12
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD2.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.06
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD3.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.03
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Boulder x1 z24",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -36.0,
+          "posY": 0.0,
+          "posZ": 24.0,
+          "rotX": 0.0,
+          "rotY": 30.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "visual": {
+          "model": "rom/model/lod/Boulder_LOD0.fbx",
+          "shader": "standard",
+          "lodMode": "screenSize",
+          "lods": [
+            {
+              "model": "rom/model/lod/Boulder_LOD1.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.12
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD2.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.06
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD3.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.03
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Boulder x1 z48",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -36.0,
+          "posY": 0.0,
+          "posZ": 48.0,
+          "rotX": 0.0,
+          "rotY": 30.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "visual": {
+          "model": "rom/model/lod/Boulder_LOD0.fbx",
+          "shader": "standard",
+          "lodMode": "screenSize",
+          "lods": [
+            {
+              "model": "rom/model/lod/Boulder_LOD1.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.12
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD2.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.06
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD3.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.03
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Boulder x1 z90",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -36.0,
+          "posY": 0.0,
+          "posZ": 90.0,
+          "rotX": 0.0,
+          "rotY": 30.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "visual": {
+          "model": "rom/model/lod/Boulder_LOD0.fbx",
+          "shader": "standard",
+          "lodMode": "screenSize",
+          "lods": [
+            {
+              "model": "rom/model/lod/Boulder_LOD1.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.12
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD2.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.06
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD3.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.03
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Boulder x1 z140",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -36.0,
+          "posY": 0.0,
+          "posZ": 140.0,
+          "rotX": 0.0,
+          "rotY": 30.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "visual": {
+          "model": "rom/model/lod/Boulder_LOD0.fbx",
+          "shader": "standard",
+          "lodMode": "screenSize",
+          "lods": [
+            {
+              "model": "rom/model/lod/Boulder_LOD1.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.12
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD2.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.06
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD3.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.03
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Boulder x1 z200",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -36.0,
+          "posY": 0.0,
+          "posZ": 200.0,
+          "rotX": 0.0,
+          "rotY": 30.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "visual": {
+          "model": "rom/model/lod/Boulder_LOD0.fbx",
+          "shader": "standard",
+          "lodMode": "screenSize",
+          "lods": [
+            {
+              "model": "rom/model/lod/Boulder_LOD1.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.12
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD2.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.06
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD3.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.03
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Boulder x1 z280",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -36.0,
+          "posY": 0.0,
+          "posZ": 280.0,
+          "rotX": 0.0,
+          "rotY": 30.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "visual": {
+          "model": "rom/model/lod/Boulder_LOD0.fbx",
+          "shader": "standard",
+          "lodMode": "screenSize",
+          "lods": [
+            {
+              "model": "rom/model/lod/Boulder_LOD1.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.12
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD2.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.06
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD3.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.03
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Boulder x1 z380",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -36.0,
+          "posY": 0.0,
+          "posZ": 380.0,
+          "rotX": 0.0,
+          "rotY": 30.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "visual": {
+          "model": "rom/model/lod/Boulder_LOD0.fbx",
+          "shader": "standard",
+          "lodMode": "screenSize",
+          "lods": [
+            {
+              "model": "rom/model/lod/Boulder_LOD1.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.12
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD2.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.06
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD3.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.03
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Boulder x2 z12",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -12.0,
+          "posY": 0.0,
+          "posZ": 12.0,
+          "rotX": 0.0,
+          "rotY": 30.0,
+          "rotZ": 0.0,
+          "scaleX": 2.0,
+          "scaleY": 2.0,
+          "scaleZ": 2.0
+        },
+        "visual": {
+          "model": "rom/model/lod/Boulder_LOD0.fbx",
+          "shader": "standard",
+          "lodMode": "screenSize",
+          "lods": [
+            {
+              "model": "rom/model/lod/Boulder_LOD1.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.12
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD2.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.06
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD3.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.03
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Boulder x2 z24",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -12.0,
+          "posY": 0.0,
+          "posZ": 24.0,
+          "rotX": 0.0,
+          "rotY": 30.0,
+          "rotZ": 0.0,
+          "scaleX": 2.0,
+          "scaleY": 2.0,
+          "scaleZ": 2.0
+        },
+        "visual": {
+          "model": "rom/model/lod/Boulder_LOD0.fbx",
+          "shader": "standard",
+          "lodMode": "screenSize",
+          "lods": [
+            {
+              "model": "rom/model/lod/Boulder_LOD1.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.12
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD2.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.06
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD3.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.03
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Boulder x2 z48",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -12.0,
+          "posY": 0.0,
+          "posZ": 48.0,
+          "rotX": 0.0,
+          "rotY": 30.0,
+          "rotZ": 0.0,
+          "scaleX": 2.0,
+          "scaleY": 2.0,
+          "scaleZ": 2.0
+        },
+        "visual": {
+          "model": "rom/model/lod/Boulder_LOD0.fbx",
+          "shader": "standard",
+          "lodMode": "screenSize",
+          "lods": [
+            {
+              "model": "rom/model/lod/Boulder_LOD1.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.12
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD2.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.06
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD3.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.03
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Boulder x2 z90",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -12.0,
+          "posY": 0.0,
+          "posZ": 90.0,
+          "rotX": 0.0,
+          "rotY": 30.0,
+          "rotZ": 0.0,
+          "scaleX": 2.0,
+          "scaleY": 2.0,
+          "scaleZ": 2.0
+        },
+        "visual": {
+          "model": "rom/model/lod/Boulder_LOD0.fbx",
+          "shader": "standard",
+          "lodMode": "screenSize",
+          "lods": [
+            {
+              "model": "rom/model/lod/Boulder_LOD1.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.12
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD2.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.06
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD3.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.03
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Boulder x2 z140",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -12.0,
+          "posY": 0.0,
+          "posZ": 140.0,
+          "rotX": 0.0,
+          "rotY": 30.0,
+          "rotZ": 0.0,
+          "scaleX": 2.0,
+          "scaleY": 2.0,
+          "scaleZ": 2.0
+        },
+        "visual": {
+          "model": "rom/model/lod/Boulder_LOD0.fbx",
+          "shader": "standard",
+          "lodMode": "screenSize",
+          "lods": [
+            {
+              "model": "rom/model/lod/Boulder_LOD1.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.12
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD2.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.06
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD3.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.03
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Boulder x2 z200",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -12.0,
+          "posY": 0.0,
+          "posZ": 200.0,
+          "rotX": 0.0,
+          "rotY": 30.0,
+          "rotZ": 0.0,
+          "scaleX": 2.0,
+          "scaleY": 2.0,
+          "scaleZ": 2.0
+        },
+        "visual": {
+          "model": "rom/model/lod/Boulder_LOD0.fbx",
+          "shader": "standard",
+          "lodMode": "screenSize",
+          "lods": [
+            {
+              "model": "rom/model/lod/Boulder_LOD1.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.12
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD2.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.06
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD3.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.03
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Boulder x2 z280",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -12.0,
+          "posY": 0.0,
+          "posZ": 280.0,
+          "rotX": 0.0,
+          "rotY": 30.0,
+          "rotZ": 0.0,
+          "scaleX": 2.0,
+          "scaleY": 2.0,
+          "scaleZ": 2.0
+        },
+        "visual": {
+          "model": "rom/model/lod/Boulder_LOD0.fbx",
+          "shader": "standard",
+          "lodMode": "screenSize",
+          "lods": [
+            {
+              "model": "rom/model/lod/Boulder_LOD1.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.12
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD2.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.06
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD3.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.03
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Boulder x2 z380",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -12.0,
+          "posY": 0.0,
+          "posZ": 380.0,
+          "rotX": 0.0,
+          "rotY": 30.0,
+          "rotZ": 0.0,
+          "scaleX": 2.0,
+          "scaleY": 2.0,
+          "scaleZ": 2.0
+        },
+        "visual": {
+          "model": "rom/model/lod/Boulder_LOD0.fbx",
+          "shader": "standard",
+          "lodMode": "screenSize",
+          "lods": [
+            {
+              "model": "rom/model/lod/Boulder_LOD1.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.12
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD2.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.06
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD3.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.03
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Boulder x4 z12",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 12.0,
+          "posY": 0.0,
+          "posZ": 12.0,
+          "rotX": 0.0,
+          "rotY": 30.0,
+          "rotZ": 0.0,
+          "scaleX": 4.0,
+          "scaleY": 4.0,
+          "scaleZ": 4.0
+        },
+        "visual": {
+          "model": "rom/model/lod/Boulder_LOD0.fbx",
+          "shader": "standard",
+          "lodMode": "screenSize",
+          "lods": [
+            {
+              "model": "rom/model/lod/Boulder_LOD1.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.12
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD2.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.06
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD3.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.03
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Boulder x4 z24",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 12.0,
+          "posY": 0.0,
+          "posZ": 24.0,
+          "rotX": 0.0,
+          "rotY": 30.0,
+          "rotZ": 0.0,
+          "scaleX": 4.0,
+          "scaleY": 4.0,
+          "scaleZ": 4.0
+        },
+        "visual": {
+          "model": "rom/model/lod/Boulder_LOD0.fbx",
+          "shader": "standard",
+          "lodMode": "screenSize",
+          "lods": [
+            {
+              "model": "rom/model/lod/Boulder_LOD1.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.12
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD2.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.06
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD3.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.03
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Boulder x4 z48",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 12.0,
+          "posY": 0.0,
+          "posZ": 48.0,
+          "rotX": 0.0,
+          "rotY": 30.0,
+          "rotZ": 0.0,
+          "scaleX": 4.0,
+          "scaleY": 4.0,
+          "scaleZ": 4.0
+        },
+        "visual": {
+          "model": "rom/model/lod/Boulder_LOD0.fbx",
+          "shader": "standard",
+          "lodMode": "screenSize",
+          "lods": [
+            {
+              "model": "rom/model/lod/Boulder_LOD1.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.12
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD2.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.06
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD3.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.03
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Boulder x4 z90",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 12.0,
+          "posY": 0.0,
+          "posZ": 90.0,
+          "rotX": 0.0,
+          "rotY": 30.0,
+          "rotZ": 0.0,
+          "scaleX": 4.0,
+          "scaleY": 4.0,
+          "scaleZ": 4.0
+        },
+        "visual": {
+          "model": "rom/model/lod/Boulder_LOD0.fbx",
+          "shader": "standard",
+          "lodMode": "screenSize",
+          "lods": [
+            {
+              "model": "rom/model/lod/Boulder_LOD1.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.12
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD2.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.06
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD3.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.03
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Boulder x4 z140",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 12.0,
+          "posY": 0.0,
+          "posZ": 140.0,
+          "rotX": 0.0,
+          "rotY": 30.0,
+          "rotZ": 0.0,
+          "scaleX": 4.0,
+          "scaleY": 4.0,
+          "scaleZ": 4.0
+        },
+        "visual": {
+          "model": "rom/model/lod/Boulder_LOD0.fbx",
+          "shader": "standard",
+          "lodMode": "screenSize",
+          "lods": [
+            {
+              "model": "rom/model/lod/Boulder_LOD1.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.12
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD2.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.06
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD3.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.03
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Boulder x4 z200",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 12.0,
+          "posY": 0.0,
+          "posZ": 200.0,
+          "rotX": 0.0,
+          "rotY": 30.0,
+          "rotZ": 0.0,
+          "scaleX": 4.0,
+          "scaleY": 4.0,
+          "scaleZ": 4.0
+        },
+        "visual": {
+          "model": "rom/model/lod/Boulder_LOD0.fbx",
+          "shader": "standard",
+          "lodMode": "screenSize",
+          "lods": [
+            {
+              "model": "rom/model/lod/Boulder_LOD1.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.12
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD2.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.06
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD3.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.03
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Boulder x4 z280",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 12.0,
+          "posY": 0.0,
+          "posZ": 280.0,
+          "rotX": 0.0,
+          "rotY": 30.0,
+          "rotZ": 0.0,
+          "scaleX": 4.0,
+          "scaleY": 4.0,
+          "scaleZ": 4.0
+        },
+        "visual": {
+          "model": "rom/model/lod/Boulder_LOD0.fbx",
+          "shader": "standard",
+          "lodMode": "screenSize",
+          "lods": [
+            {
+              "model": "rom/model/lod/Boulder_LOD1.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.12
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD2.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.06
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD3.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.03
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Boulder x4 z380",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 12.0,
+          "posY": 0.0,
+          "posZ": 380.0,
+          "rotX": 0.0,
+          "rotY": 30.0,
+          "rotZ": 0.0,
+          "scaleX": 4.0,
+          "scaleY": 4.0,
+          "scaleZ": 4.0
+        },
+        "visual": {
+          "model": "rom/model/lod/Boulder_LOD0.fbx",
+          "shader": "standard",
+          "lodMode": "screenSize",
+          "lods": [
+            {
+              "model": "rom/model/lod/Boulder_LOD1.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.12
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD2.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.06
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD3.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.03
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Boulder x8 z12",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 36.0,
+          "posY": 0.0,
+          "posZ": 12.0,
+          "rotX": 0.0,
+          "rotY": 30.0,
+          "rotZ": 0.0,
+          "scaleX": 8.0,
+          "scaleY": 8.0,
+          "scaleZ": 8.0
+        },
+        "visual": {
+          "model": "rom/model/lod/Boulder_LOD0.fbx",
+          "shader": "standard",
+          "lodMode": "screenSize",
+          "lods": [
+            {
+              "model": "rom/model/lod/Boulder_LOD1.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.12
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD2.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.06
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD3.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.03
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Boulder x8 z24",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 36.0,
+          "posY": 0.0,
+          "posZ": 24.0,
+          "rotX": 0.0,
+          "rotY": 30.0,
+          "rotZ": 0.0,
+          "scaleX": 8.0,
+          "scaleY": 8.0,
+          "scaleZ": 8.0
+        },
+        "visual": {
+          "model": "rom/model/lod/Boulder_LOD0.fbx",
+          "shader": "standard",
+          "lodMode": "screenSize",
+          "lods": [
+            {
+              "model": "rom/model/lod/Boulder_LOD1.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.12
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD2.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.06
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD3.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.03
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Boulder x8 z48",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 36.0,
+          "posY": 0.0,
+          "posZ": 48.0,
+          "rotX": 0.0,
+          "rotY": 30.0,
+          "rotZ": 0.0,
+          "scaleX": 8.0,
+          "scaleY": 8.0,
+          "scaleZ": 8.0
+        },
+        "visual": {
+          "model": "rom/model/lod/Boulder_LOD0.fbx",
+          "shader": "standard",
+          "lodMode": "screenSize",
+          "lods": [
+            {
+              "model": "rom/model/lod/Boulder_LOD1.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.12
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD2.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.06
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD3.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.03
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Boulder x8 z90",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 36.0,
+          "posY": 0.0,
+          "posZ": 90.0,
+          "rotX": 0.0,
+          "rotY": 30.0,
+          "rotZ": 0.0,
+          "scaleX": 8.0,
+          "scaleY": 8.0,
+          "scaleZ": 8.0
+        },
+        "visual": {
+          "model": "rom/model/lod/Boulder_LOD0.fbx",
+          "shader": "standard",
+          "lodMode": "screenSize",
+          "lods": [
+            {
+              "model": "rom/model/lod/Boulder_LOD1.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.12
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD2.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.06
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD3.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.03
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Boulder x8 z140",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 36.0,
+          "posY": 0.0,
+          "posZ": 140.0,
+          "rotX": 0.0,
+          "rotY": 30.0,
+          "rotZ": 0.0,
+          "scaleX": 8.0,
+          "scaleY": 8.0,
+          "scaleZ": 8.0
+        },
+        "visual": {
+          "model": "rom/model/lod/Boulder_LOD0.fbx",
+          "shader": "standard",
+          "lodMode": "screenSize",
+          "lods": [
+            {
+              "model": "rom/model/lod/Boulder_LOD1.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.12
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD2.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.06
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD3.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.03
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Boulder x8 z200",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 36.0,
+          "posY": 0.0,
+          "posZ": 200.0,
+          "rotX": 0.0,
+          "rotY": 30.0,
+          "rotZ": 0.0,
+          "scaleX": 8.0,
+          "scaleY": 8.0,
+          "scaleZ": 8.0
+        },
+        "visual": {
+          "model": "rom/model/lod/Boulder_LOD0.fbx",
+          "shader": "standard",
+          "lodMode": "screenSize",
+          "lods": [
+            {
+              "model": "rom/model/lod/Boulder_LOD1.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.12
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD2.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.06
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD3.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.03
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Boulder x8 z280",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 36.0,
+          "posY": 0.0,
+          "posZ": 280.0,
+          "rotX": 0.0,
+          "rotY": 30.0,
+          "rotZ": 0.0,
+          "scaleX": 8.0,
+          "scaleY": 8.0,
+          "scaleZ": 8.0
+        },
+        "visual": {
+          "model": "rom/model/lod/Boulder_LOD0.fbx",
+          "shader": "standard",
+          "lodMode": "screenSize",
+          "lods": [
+            {
+              "model": "rom/model/lod/Boulder_LOD1.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.12
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD2.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.06
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD3.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.03
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Boulder x8 z380",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 36.0,
+          "posY": 0.0,
+          "posZ": 380.0,
+          "rotX": 0.0,
+          "rotY": 30.0,
+          "rotZ": 0.0,
+          "scaleX": 8.0,
+          "scaleY": 8.0,
+          "scaleZ": 8.0
+        },
+        "visual": {
+          "model": "rom/model/lod/Boulder_LOD0.fbx",
+          "shader": "standard",
+          "lodMode": "screenSize",
+          "lods": [
+            {
+              "model": "rom/model/lod/Boulder_LOD1.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.12
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD2.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.06
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD3.fbx",
+              "maxDistance": 0.0,
+              "screenHeight": 0.03
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

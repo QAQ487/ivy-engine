@@ -3,9 +3,12 @@
 
 #include "lod_state.h"
 
+#include <cmath>
+
 namespace {
 bool g_active = false;
 DirectX::XMFLOAT3 g_cameraPos{0.0f, 0.0f, 0.0f};
+float g_tanHalfFov = 0.0f;
 LodStats g_stats{};
 LodStats g_lastStats{};
 uint64_t g_serial = 0;
@@ -13,12 +16,15 @@ AnimCullStats g_animStats{};
 AnimCullStats g_lastAnimStats{};
 }
 
-void Lod_BeginFrame(const DirectX::XMFLOAT3& cameraPosition) {
+void Lod_BeginFrame(const DirectX::XMFLOAT3& cameraPosition, float verticalFovDeg) {
     g_stats = {};
     ++g_serial;
     g_lastAnimStats = g_animStats;
     g_animStats = {};
     g_cameraPos = cameraPosition;
+    g_tanHalfFov = 0.0f;
+    if (verticalFovDeg > 0.0f && verticalFovDeg < 179.0f)
+        g_tanHalfFov = std::tan(DirectX::XMConvertToRadians(verticalFovDeg) * 0.5f);
     g_active = true;
 }
 
@@ -31,6 +37,7 @@ void Lod_EndFrame() {
 
 bool Lod_IsFrameActive() { return g_active; }
 const DirectX::XMFLOAT3& Lod_GetCameraPosition() { return g_cameraPos; }
+float Lod_GetTanHalfFov() { return g_tanHalfFov; }
 
 void Lod_RecordConsidered() { ++g_stats.considered; }
 void Lod_RecordCulledByDistance() { ++g_stats.culledByDistance; }

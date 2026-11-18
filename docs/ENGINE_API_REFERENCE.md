@@ -1533,10 +1533,11 @@ Vendor header `WICTextureLoader11.h` is omitted.
 
 ### `engine/rendering/culling/lod_state.h`
 **Types:** LodStats, AnimCullStats
-- `void Lod_BeginFrame(const DirectX::XMFLOAT3& cameraPosition);`
+- `void Lod_BeginFrame(const DirectX::XMFLOAT3& cameraPosition, float verticalFovDeg = 0.0f);`
 - `void Lod_EndFrame();`
 - `bool Lod_IsFrameActive();`
 - `const DirectX::XMFLOAT3& Lod_GetCameraPosition();`
+- `float Lod_GetTanHalfFov();`
 - `void Lod_RecordConsidered();`
 - `void Lod_RecordCulledByDistance();`
 - `void Lod_RecordDrawn(int level);`

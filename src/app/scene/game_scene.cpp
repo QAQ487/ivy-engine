@@ -682,7 +682,7 @@ void GameScene::Object_Draw() {
 		cp.aspect = aspect;
 		Shadow::UpdateForCamera(cp, RenderSettings_GetShadowPreset().maxDistance);
 		// LOD distances use the main camera for both shadow and camera passes.
-		Lod_BeginFrame(cam.position);
+		Lod_BeginFrame(cam.position, cam.orthographic ? 0.0f : cam.fov);
 	}
 
 	// Cascade depth passes (optional per-cascade light-ortho caster cull).

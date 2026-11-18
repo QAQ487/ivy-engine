@@ -387,6 +387,33 @@ void DrawEditorInspectorPanel(bool playVisuals, bool* open)
                 // distance. Applies in Play / runtime only.
                 const char* lodExts[] = { ".fbx", ".obj", ".gltf", ".glb" };
                 int removeIdx = -1;
+                auto sortLods = [vc]() {
+                    if (vc->lodScreenSize) {
+                        std::stable_sort(vc->lods.begin(), vc->lods.end(),
+                            [](const VisualComponent::LodLevel& a, const VisualComponent::LodLevel& b) {
+                                return a.screenHeight > b.screenHeight; });
+                    } else {
+                        std::stable_sort(vc->lods.begin(), vc->lods.end(),
+                            [](const VisualComponent::LodLevel& a, const VisualComponent::LodLevel& b) {
+                                return a.maxDistance < b.maxDistance; });
+                    }
+                };
+                if (ImGui::Checkbox("Screen Size Mode", &vc->lodScreenSize)) {
+                    if (vc->lodScreenSize) {
+                        // Seed unset rows so switching modes never leaves a level that cannot switch.
+                        float h = 0.25f;
+                        for (VisualComponent::LodLevel& l : vc->lods) {
+                            if (l.screenHeight <= 0.0f) l.screenHeight = h;
+                            h *= 0.5f;
+                        }
+                    }
+                    sortLods();
+                    vc->lodLastLevel = -1;
+                    runtimeDirty = true;
+                }
+                ImGui::SameLine();
+                ImGui::TextDisabled(vc->lodScreenSize
+                    ? "(switch by projected height)" : "(switch by distance)");
                 for (int i = 0; i < static_cast<int>(vc->lods.size()); ++i) {
                     VisualComponent::LodLevel& lod = vc->lods[static_cast<size_t>(i)];
                     ImGui::PushID(i);
@@ -394,15 +421,18 @@ void DrawEditorInspectorPanel(bool playVisuals, bool* open)
                     ImGui::Text("LOD %d", i + 1);
                     ImGui::SameLine();
                     ImGui::SetNextItemWidth(90.0f);
-                    if (ImGui::DragFloat("##LodDist", &lod.maxDistance, 0.5f, 0.0f, 100000.0f, "%.1f m")) {
+                    if (vc->lodScreenSize) {
+                        float percent = lod.screenHeight * 100.0f;
+                        if (ImGui::DragFloat("##LodScreen", &percent, 0.1f, 0.0f, 100.0f, "%.1f %%")) {
+                            lod.screenHeight = std::min(std::max(percent, 0.0f), 100.0f) * 0.01f;
+                            runtimeDirty = true;
+                        }
+                    } else if (ImGui::DragFloat("##LodDist", &lod.maxDistance, 0.5f, 0.0f, 100000.0f, "%.1f m")) {
                         if (lod.maxDistance < 0.0f) lod.maxDistance = 0.0f;
                         runtimeDirty = true;
                     }
-                    if (ImGui::IsItemDeactivatedAfterEdit()) {
-                        std::stable_sort(vc->lods.begin(), vc->lods.end(),
-                            [](const VisualComponent::LodLevel& a, const VisualComponent::LodLevel& b) {
-                                return a.maxDistance < b.maxDistance; });
-                    }
+                    if (ImGui::IsItemDeactivatedAfterEdit())
+                        sortLods();
                     ImGui::SameLine();
                     if (ImGui::SmallButton("X"))
                         removeIdx = i;
@@ -428,6 +458,8 @@ void DrawEditorInspectorPanel(bool playVisuals, bool* open)
                     if (ImGui::SmallButton("Add LOD")) {
                         VisualComponent::LodLevel lod;
                         lod.maxDistance = vc->lods.empty() ? 20.0f : vc->lods.back().maxDistance + 30.0f;
+                        lod.screenHeight = vc->lods.empty() ? 0.25f
+                            : std::max(vc->lods.back().screenHeight * 0.5f, 0.005f);
                         vc->lods.push_back(lod);
                         runtimeDirty = true;
                     }

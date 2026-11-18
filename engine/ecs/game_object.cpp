@@ -233,6 +233,7 @@ void GameObject::DrawVisual(bool useRealModel) {
                 && (!vc->lods.empty() || vc->cullDistance > 0.0f)) {
                 lodTracked = true;
                 float distance = 0.0f;
+                float worldExtent = 0.0f;  // largest world AABB side, for screen-size LOD
                 {
                     XMFLOAT3 center = worldPos;
                     if (model->HasLocalAabb()) {
@@ -245,6 +246,9 @@ void GameObject::DrawVisual(bool useRealModel) {
                             0.5f * (wb.min.x + wb.max.x),
                             0.5f * (wb.min.y + wb.max.y),
                             0.5f * (wb.min.z + wb.max.z));
+                        worldExtent = std::max({ wb.max.x - wb.min.x,
+                                                 wb.max.y - wb.min.y,
+                                                 wb.max.z - wb.min.z });
                     }
                     const XMFLOAT3& cam = Lod_GetCameraPosition();
                     const float dx = center.x - cam.x;
@@ -258,8 +262,14 @@ void GameObject::DrawVisual(bool useRealModel) {
                 if (!vc->playAnimation) {
                     thresholdCount = static_cast<int>(
                         std::min<size_t>(vc->lods.size(), kLodMaxLevels - 1));
-                    for (int i = 0; i < thresholdCount; ++i)
-                        thresholds[i] = vc->lods[static_cast<size_t>(i)].maxDistance;
+                    const float tanHalfFov = Lod_GetTanHalfFov();
+                    for (int i = 0; i < thresholdCount; ++i) {
+                        const VisualComponent::LodLevel& level = vc->lods[static_cast<size_t>(i)];
+                        thresholds[i] = vc->lodScreenSize
+                            ? lod_select::ScreenHeightToDistance(
+                                worldExtent, tanHalfFov, level.screenHeight)
+                            : level.maxDistance;
+                    }
                     lod_select::NormalizeThresholds(thresholds, thresholdCount);
                 }
                 lodLevel = lod_select::SelectLevel(

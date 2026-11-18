@@ -174,7 +174,7 @@ Saved by `SceneLoader_SaveToFile`:
 | Type | Source | JSON keys |
 |------|--------|-----------|
 | `SceneTransform` | `ecs/transform.h` | `posX/Y/Z`, `rotX/Y/Z` (Euler degrees, local), `scaleX/Y/Z` |
-| `visual` | `ecs/visual_component.h` | `model`, `proxy_model` (edit/paused), `animate`, `active_clip`, `animations` (clip → FBX), `shader` (per-object override), `lods` (array of `{model, maxDistance}`; level 0 is `model`, `maxDistance` = camera distance that switches TO that level), `cullDistance` (0 = never) |
+| `visual` | `ecs/visual_component.h` | `model`, `proxy_model` (edit/paused), `animate`, `active_clip`, `animations` (clip → FBX), `shader` (per-object override), `lods` (array of `{model, maxDistance}` or, with `lodMode: "screenSize"`, `{model, screenHeight}`; level 0 is `model`, `maxDistance` = camera distance that switches TO that level, `screenHeight` = fraction of viewport height below which it switches), `lodMode` (`distance` default / `screenSize`), `cullDistance` (0 = never) |
 | `Billboard` | `ecs/billboard_component.h` | `texture`, `sizeX`, `sizeY`, `color {r,g,b,a}`, `rotation`, `groundAligned`, `enabled` |
 | `Script` | `scripting/script_component.h` | `scriptClass`, optional `properties` (per-instance overrides) |
 | `BoxCollider` … `MeshCollider` | `ecs/collider_component*.h` | Shape-locked; only that shape's fields. One 3D collider per GameObject |

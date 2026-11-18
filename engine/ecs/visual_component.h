@@ -55,7 +55,13 @@ public:
     struct LodLevel {
         std::string modelPath;
         float maxDistance = 0.0f;
+        // Screen-size mode: switch TO this level when the object's projected height drops
+        // below this fraction of the viewport height (0..1). 0 = never switches.
+        float screenHeight = 0.0f;
     };
+    // false: levels switch at maxDistance (metres). true: at screenHeight, so the
+    // switch distance follows each object's size and the camera's field of view.
+    bool lodScreenSize = false;
     std::vector<LodLevel> lods;
     // Beyond this camera distance the object is not drawn. 0 = never.
     float cullDistance = 0.0f;
