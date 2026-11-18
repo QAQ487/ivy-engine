@@ -203,7 +203,7 @@ int main() {
     // Protocol quit still ACKs with receipt (host process exit is WinMain-side).
     auto quitAck = ed.Request(R"({"protocolVersion":1,"requestId":26,"runId":"editor7","verb":"quit"})");
     check(quitAck["ok"] == true && quitAck["requiresReceipt"] == true, "editor quit ack");
-    check(quitAck["requestId"] == 23, "quit echoes requestId");
+    check(quitAck["requestId"] == 26, "quit echoes requestId");
 
     std::cout << "PASS Phase 7 editor play-mode bridge protocol\n";
     return 0;
