@@ -238,7 +238,8 @@ Protocol::Protocol(std::string runId, unsigned long pid, unsigned long session, 
 bool IsRuntimeTestBridgeSettingKey(const std::string& key) {
     return key == "frustumCullingEnabled"
         || key == "shadowCascadeCullingEnabled"
-        || key == "spriteCullingEnabled";
+        || key == "spriteCullingEnabled"
+        || key == "lodEnabled";
 }
 
 bool ParseRuntimeTestBridgeSettingValue(const Json& value, bool& outBool, std::string& err) {

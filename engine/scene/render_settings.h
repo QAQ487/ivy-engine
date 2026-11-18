@@ -51,6 +51,10 @@ struct RenderSettingsData {
     bool shadowCascadeCullingEnabled = true;
     // 2D orthographic view-rect sprite culling (render submission only).
     bool spriteCullingEnabled = true;
+    // Distance-based mesh LOD (visual.lods). Bias scales distance for level choice
+    // only (>1 switches to lower detail sooner); clamped to [0.1, 10] on load.
+    bool lodEnabled = true;
+    float lodBias = 1.0f;
 };
 
 void RenderSettings_ResetToDefaults();
