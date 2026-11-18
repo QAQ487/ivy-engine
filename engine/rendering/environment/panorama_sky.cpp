@@ -6,6 +6,7 @@
 
 #include "engine/rendering/environment/equirect_cubemap.h"
 #include "engine/core/content_path.h"
+#include "engine/core/builtin_assets.h"
 #include "engine/core/utf8_path.h"
 #include "engine/debug_draw/debug_ofstream.h"
 #include "engine/scene/render_settings.h"
@@ -176,7 +177,9 @@ Prep CookOne(
         LogPanoramaMessage("Panorama cooked " + prep.cubemapRom + " from " + normalized);
     if (prep.ok && prep.iblReady) {
         const std::string lut = RenderSettings_GetConst().iblBrdfLutPath;
-        if (content_path::ResolveRomForRead(lut, roots).empty()) {
+        // The LUT is compiled into the exe, so its built-in path (and the older rom/ spelling) always counts.
+        if (content_path::ResolveRomForRead(lut, roots).empty() &&
+            !builtin_assets::FindTexture(lut, nullptr)) {
             prep.iblReady = false;
             prep.error = "IBL not matching sky: missing " + lut;
             LogPanoramaMessage(prep.error);

@@ -457,6 +457,18 @@ bool ProjectManager::LoadProjectFile(const std::string& rootPath, ProjectData* o
             out->audio.uiClickSound = a.value("uiClickSound", std::string{});
         }
 
+        out->build = BuildSettings{};
+        if (j.contains("build") && j["build"].is_object()) {
+            const auto& b = j["build"];
+            out->build.packAllAssets = b.value("packAllAssets", false);
+            if (b.contains("alwaysInclude") && b["alwaysInclude"].is_array()) {
+                for (const auto& item : b["alwaysInclude"]) {
+                    if (item.is_string() && !item.get<std::string>().empty())
+                        out->build.alwaysInclude.push_back(item.get<std::string>());
+                }
+            }
+        }
+
         if (out->defaultScene.empty())
             out->defaultScene = ReadDefaultSceneFileName(rootPath);
 
@@ -507,6 +519,11 @@ bool ProjectManager::WriteProjectFile(const std::string& rootPath, const Project
         j["audio"]["sfxVolume"] = data.audio.sfxVolume;
         j["audio"]["voiceVolume"] = data.audio.voiceVolume;
         j["audio"]["uiClickSound"] = data.audio.uiClickSound;
+        if (data.build.packAllAssets || !data.build.alwaysInclude.empty()) {
+            j["build"] = json::object();
+            j["build"]["packAllAssets"] = data.build.packAllAssets;
+            j["build"]["alwaysInclude"] = data.build.alwaysInclude;
+        }
 
         const fs::path filePath = fs::path(rootPath) / kProjectFileName;
         std::ofstream file(filePath, std::ios::trunc);

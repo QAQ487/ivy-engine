@@ -17,12 +17,12 @@ foreach ($protectedTree in @((Join-Path $contentPath 'rom'), (Join-Path $content
     if ($destinationPath.StartsWith($protectedTree + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase)) { throw 'Package destination is inside source assets.' }
 }
 if ([IO.Path]::GetFileName($DefaultScene) -ne $DefaultScene -or !(Test-Path -LiteralPath (Join-Path $contentPath "rom/scene/$DefaultScene"))) { throw 'DefaultScene must name an existing scene.' }
-# Match the editor package layout; overlay freshly compiled shaders and branding.
+# Match the editor package layout; overlay freshly compiled shaders (branding is built into the exe).
 New-Item -ItemType Directory -Path $destinationPath -Force | Out-Null
 Copy-Item -LiteralPath (Join-Path $engineOutput 'IvyEngineRuntime.exe') -Destination (Join-Path $destinationPath 'Ivy2DSample.exe') -Force
 Copy-Item -LiteralPath (Join-Path $engineOutput 'libfbxsdk.dll') -Destination $destinationPath -Force
 Copy-Item -LiteralPath (Join-Path $contentPath 'rom') -Destination $destinationPath -Recurse -Force
-foreach ($folder in @('shader','branding')) {
+foreach ($folder in @('shader')) {
     $sourceFolder = Join-Path $engineOutput "resources/$folder"
     if (!(Test-Path -LiteralPath $sourceFolder)) { $sourceFolder = Join-Path $engineRoot "resources/$folder" }
     $targetFolder = Join-Path $destinationPath "rom/$folder"
@@ -37,6 +37,7 @@ if ($LASTEXITCODE -ne 0) { throw 'Failed to materialize referenced engine defaul
 $licenseDestination = Join-Path $destinationPath 'licenses'
 New-Item -ItemType Directory -Path $licenseDestination -Force | Out-Null
 Copy-Item -LiteralPath (Join-Path $engineRoot 'libraries/box2d/LICENSE') -Destination (Join-Path $licenseDestination 'Box2D.txt') -Force
+Copy-Item -LiteralPath (Join-Path $engineRoot 'resources/font/OFL-IBMPlexMono.txt') -Destination (Join-Path $licenseDestination 'IBMPlexMono-OFL.txt') -Force
 $scriptDestination = Join-Path $destinationPath 'game/scripts/bin'
 New-Item -ItemType Directory -Path $scriptDestination -Force | Out-Null
 Copy-Item -LiteralPath (Join-Path $contentPath 'game/scripts/bin/GameScripts.dll') -Destination $scriptDestination -Force

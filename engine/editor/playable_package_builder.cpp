@@ -3,6 +3,8 @@
 
 #include "playable_package_builder.h"
 #include "engine/rendering/environment/panorama_sky.h"
+#include "engine/editor/texture_cook.h"
+#include "engine/editor/package_assets.h"
 
 #include "engine/core/content_path.h"
 #include "project_manager.h"
@@ -14,6 +16,7 @@
 
 #include <atomic>
 #include <cctype>
+#include <cstdio>
 #include <cwctype>
 #include <fstream>
 #include <mutex>
@@ -343,6 +346,13 @@ void CollectRomReferences(const std::string& text, std::vector<std::string>& out
     }
 }
 
+// Keep in step with builtin_assets::TextureEntries and tools/materialize_engine_defaults.py.
+const char* const kBuiltinRomPaths[] = {
+    "rom/branding/ivy_logo.png",
+    "rom/skybox/ibl/brdf_lut.png",
+    "rom/font/IBMPlexMono-Regular.ttf",
+};
+
 bool CopyResourceIfMissing(const fs::path& resources, const fs::path& destRom,
                            const std::string& romPath, std::string* errorOut) {
     std::string normalized;
@@ -351,6 +361,11 @@ bool CopyResourceIfMissing(const fs::path& resources, const fs::path& destRom,
     const std::string rest = normalized.substr(4);
     if (rest == "skybox/source" || rest.rfind("skybox/source/", 0) == 0)
         return true;
+    // Compiled into the exe: content may name these paths, but no file ships.
+    for (const char* builtin : kBuiltinRomPaths) {
+        if (normalized == builtin)
+            return true;
+    }
     const fs::path dest = destRom / fs::path(rest);
     std::error_code ec;
     if (fs::is_regular_file(dest, ec))
@@ -370,12 +385,9 @@ bool CopyResourceIfMissing(const fs::path& resources, const fs::path& destRom,
 
 bool MaterializeReferencedDefaults(const fs::path& resources, const fs::path& destRom,
                                    std::string* errorOut) {
-    static const char* kHostRomPaths[] = {
-        "rom/texture/fade.png",
-        "rom/texture/consolab_ascii_512.png",
-        "rom/font/LemonSlice.ttf",
-    };
-    std::vector<std::string> refs(std::begin(kHostRomPaths), std::end(kHostRomPaths));
+    // No host file needs to be shipped any more: the default UI font, debug font, logo, BRDF
+    // LUT and fade fill are built into the exe. Only files content names are materialized.
+    std::vector<std::string> refs;
     std::error_code ec;
     if (fs::is_directory(destRom, ec)) {
         for (fs::recursive_directory_iterator it(destRom, ec), end; it != end; it.increment(ec)) {
@@ -403,6 +415,86 @@ bool MaterializeReferencedDefaults(const fs::path& resources, const fs::path& de
     return true;
 }
 
+struct AssetPackSettings {
+    bool packAll = false;
+    std::vector<std::string> alwaysInclude;
+    std::string defaultScene;
+};
+
+AssetPackSettings ReadAssetPackSettings(const fs::path& contentRoot) {
+    AssetPackSettings settings;
+    try {
+        std::ifstream file(contentRoot / ProjectManager::kProjectFileName);
+        if (!file)
+            return settings;
+        json j;
+        file >> j;
+        settings.defaultScene = j.value("defaultScene", std::string{});
+        if (j.contains("build") && j["build"].is_object()) {
+            const auto& b = j["build"];
+            settings.packAll = b.value("packAllAssets", false);
+            if (b.contains("alwaysInclude") && b["alwaysInclude"].is_array()) {
+                for (const auto& item : b["alwaysInclude"]) {
+                    if (item.is_string())
+                        settings.alwaysInclude.push_back(item.get<std::string>());
+                }
+            }
+        }
+    }
+    catch (const std::exception&) {
+        // A broken project.json keeps the defaults; the package then still builds.
+    }
+    return settings;
+}
+
+std::string FormatMegabytes(unsigned long long bytes) {
+    char buf[32];
+    snprintf(buf, sizeof(buf), "%.1f MB", static_cast<double>(bytes) / (1024.0 * 1024.0));
+    return buf;
+}
+
+// Copies only the rom/ files the default scene reaches (engine/editor/package_assets.h).
+bool CopyReferencedRom(const fs::path& content, const fs::path& destRom,
+                       const AssetPackSettings& settings, std::string* errorOut) {
+    package_assets::Options options;
+    options.romRoot = content / "rom";
+    options.rootScenes = {settings.defaultScene};
+    options.alwaysInclude = settings.alwaysInclude;
+    options.scanFiles = {content / ProjectManager::kProjectFileName,
+                         content / "game" / "scripts" / "bin" / "GameScripts.dll"};
+    const package_assets::Result result = package_assets::ComputeReferencedAssets(options);
+
+    std::error_code ec;
+    fs::create_directories(destRom, ec);
+    for (const std::string& rel : result.included) {
+        const fs::path from = content / "rom" / PathFromUtf8(rel);
+        const fs::path to = destRom / PathFromUtf8(rel);
+        fs::create_directories(to.parent_path(), ec);
+        fs::copy_file(from, to, fs::copy_options::overwrite_existing, ec);
+        if (ec) {
+            if (errorOut)
+                *errorOut = "Failed to copy " + from.string() + ": " + ec.message();
+            return false;
+        }
+    }
+
+    for (const std::string& warning : result.warnings)
+        AppendLogLine("Warning: " + warning);
+    AppendLogLine("Packing referenced rom/ assets: " + std::to_string(result.included.size()) + " files (" +
+                  FormatMegabytes(result.includedBytes) + "); left out " +
+                  std::to_string(result.excluded.size()) + " unreferenced files (" +
+                  FormatMegabytes(result.excludedBytes) + ").");
+    constexpr std::size_t kMaxListed = 80;
+    for (std::size_t i = 0; i < result.excluded.size() && i < kMaxListed; ++i)
+        AppendLogLine("  skip rom/" + result.excluded[i]);
+    if (result.excluded.size() > kMaxListed)
+        AppendLogLine("  ... and " + std::to_string(result.excluded.size() - kMaxListed) + " more");
+    if (!result.excluded.empty())
+        AppendLogLine("If the game loads a left-out file by a name it builds at runtime, add it to "
+                      "project.json build.alwaysInclude, or set build.packAllAssets to true.");
+    return true;
+}
+
 bool AssemblePackage(const Request& request, const fs::path& engineRoot,
                      const std::string& configName, std::string* errorOut) {
     const fs::path content = request.contentRoot;
@@ -426,6 +518,11 @@ bool AssemblePackage(const Request& request, const fs::path& engineRoot,
     if (!CopyOneFile(engineRoot / "libraries" / "box2d" / "LICENSE",
                      dest / "licenses" / "Box2D.txt", errorOut))
         return false;
+    // The debug text font is compiled into the exe (engine/core/builtin_assets.h); OFL
+    // asks for its license to travel with it.
+    if (!CopyOneFile(engineRoot / "resources" / "font" / "OFL-IBMPlexMono.txt",
+                     dest / "licenses" / "IBMPlexMono-OFL.txt", errorOut))
+        return false;
     if (!CopyOneFile(content / ProjectManager::kProjectFileName,
                      dest / ProjectManager::kProjectFileName, errorOut))
         return false;
@@ -439,8 +536,26 @@ bool AssemblePackage(const Request& request, const fs::path& engineRoot,
         return false;
     }
 
-    if (!CopyDirectoryRecursive(content / "rom", dest / "rom", errorOut))
+    const AssetPackSettings packSettings = ReadAssetPackSettings(content);
+    if (packSettings.packAll) {
+        AppendLogLine("Packing all of rom/ (project.json build.packAllAssets).");
+        if (!CopyDirectoryRecursive(content / "rom", dest / "rom", errorOut))
+            return false;
+    }
+    else if (!CopyReferencedRom(content, dest / "rom", packSettings, errorOut)) {
         return false;
+    }
+
+    // Compress the packaged copy (never the content project) to BC7 .dds and drop the
+    // source images. The runtime falls back from a missing .png/.jpg/.bmp to its .dds.
+    {
+        std::string textureError;
+        if (!texture_cook::CookPackageTextures(dest / "rom", AppendLogLine, nullptr, &textureError)) {
+            if (errorOut)
+                *errorOut = textureError.empty() ? "Texture cook failed." : textureError;
+            return false;
+        }
+    }
 
     // The host loads .cso from dest/rom/shader at boot. Overlay the shaders
     // compiled with this IvyEngineRuntime. Prefer the OutDir mirror, then the
@@ -454,16 +569,8 @@ bool AssemblePackage(const Request& request, const fs::path& engineRoot,
             return false;
     }
 
-    // Branding is an engine default. Overlay it so the boot screen can find
-    // rom/branding/ivy_logo.png even when the project did not copy it.
-    fs::path engineBranding = engineOut / "resources" / "branding";
-    if (!fs::is_directory(engineBranding, ec))
-        engineBranding = engineRoot / "resources" / "branding";
-    const fs::path destBranding = dest / "rom" / "branding";
-    if (fs::is_directory(engineBranding, ec)) {
-        if (!CopyDirectoryRecursive(engineBranding, destBranding, errorOut))
-            return false;
-    }
+    // The boot-screen logo and the PBR BRDF LUT are compiled into the exe
+    // (engine/core/builtin_assets.h), so nothing from resources/branding is copied.
 
     // Keep this list aligned with tools/materialize_engine_defaults.py.
     // MySkybox.dds is not in it: that file is copied only when content names it.

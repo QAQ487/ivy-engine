@@ -17,6 +17,7 @@
 
 #include "engine/rendering/d3d11/shader.h"
 #include "engine/scene/render_settings.h"
+#include "engine/core/builtin_paths.h"
 #include "engine/rendering/culling/frustum_cull.h"
 #include "engine/rendering/culling/shadow_cascade_cull.h"
 #include "engine/rendering/lighting/shadow.h"
@@ -129,10 +130,9 @@ void DrawBootLoadingScreen(float progress01, const std::string& label) {
 	static bool s_logoLoadAttempted = false;
 	if (!s_logoLoadAttempted) {
 		s_logoLoadAttempted = true;
-		// TextureLoad pops a MessageBox on failure ? only call it when the
-		// branding file is present (content deploys may omit it until seeded).
-		if (!content_path::ReadableFileCurrent("rom/branding/ivy_logo.png").empty())
-			s_logoTex = TextureLoad(L"rom/branding/ivy_logo.png", false);
+		// The logo is compiled into the exe ("builtin:" path, builtin_assets.h) and never
+		// touches the disk. Quiet load: a failure must never pop a dialog.
+		s_logoTex = TextureLoadQuiet(builtin_paths::kBrandLogoW, false);
 	}
 
 	float contentBottom = screenH * 0.42f;
@@ -176,7 +176,6 @@ void DrawBootLoadingScreen(float progress01, const std::string& label) {
 		pos += 3;
 	}
 	hal::DebugText dbg(device, ctx,
-		L"rom/texture/consolab_ascii_512.png",
 		static_cast<UINT>(screenW), static_cast<UINT>(screenH),
 		0.0f, 0.0f,
 		0, 0,

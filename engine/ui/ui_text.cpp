@@ -7,6 +7,8 @@
 
 #include "ui_text.h"
 #include "../ecs/string_utils.h"
+#include "../core/content_path.h"
+#include "../core/legacy_asset_alias.h"
 
 UIText::UIText(const std::string& name,
 	const DirectX::XMFLOAT2& position,
@@ -102,8 +104,9 @@ void UIText::SetFontPath(const std::string& fontTexturePath,
 	float charWidth,
 	float charHeight,
 	int charsPerRow) {
-	m_fontPath = fontTexturePath;
-	std::wstring widePath = ToWString(fontTexturePath);
+	// Old content may still name the retired bitmap atlas; read it as the default UI font.
+	m_fontPath = legacy_alias::FontPath(fontTexturePath, !content_path::ReadableFileCurrent(fontTexturePath).empty());
+	std::wstring widePath = ToWString(m_fontPath);
 	if (!widePath.empty())
 		SetFont(widePath.c_str(), charWidth, charHeight, charsPerRow);
 }

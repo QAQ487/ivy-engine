@@ -398,7 +398,7 @@ void SceneCanvas_Initialize()
 	EnsureDefaultButtonActions();
 	g_canvas = std::make_unique<UICanvas>("scene");
 	g_canvas->Initialize();
-	UIButton::SetFontPath("rom/font/LemonSlice.ttf", 32.0f, 32.0f, 16);
+	UIButton::SetFontPath("builtin:font/IBMPlexMono-Regular.ttf", 32.0f, 32.0f, 16);
 	BindSceneHudElements();
 }
 

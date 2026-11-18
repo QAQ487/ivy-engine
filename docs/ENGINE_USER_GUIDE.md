@@ -763,6 +763,8 @@ In the editor, switch to **UI** edit mode to select and drag canvas elements wit
 
 ### Anchor, Position and Pivot
 
+UI Text and Button **Font Path** accepts a `.ttf` / `.otf` (drag one from the Asset Browser) or a PNG atlas. The engine's default UI font is built into the exe, so it is not in your project's `rom/` and the Asset Browser does not list it: click **Use engine built-in font** under the Font Path field (it fills in `builtin:font/IBMPlexMono-Regular.ttf`, a path that never refers to a file in your project). New Text and Buttons already start with it.
+
 UI Sprite, Button, Bar, Text and world Sprites share a **Pivot** dropdown: Center, Top Left, Top Center, Top Right, Middle Left, Middle Right, Bottom Left, Bottom Center, Bottom Right, Custom.
 
 - **Anchor** — the reference point on the canvas.
@@ -930,9 +932,22 @@ The runtime boots from `rom/scene/default_scene.txt` (the scene JSON file name).
 **File → Build Current Project** (output folder and configuration in Project Settings → Build) is the recommended path. It:
 
 1. Builds **IvyEngineRuntime** and your project's **GameScripts**.
-2. Copies the runtime host renamed to `<GameName>.exe`, plus `libfbxsdk.dll`, `project.json`, your `rom/`, and `game/scripts/bin/GameScripts.dll` into the chosen folder.
-3. Adds the built shaders and engine branding, and any engine defaults from `resources/` that your content names but does not contain (`rom/skybox/MySkybox.dds` only when used).
+2. Copies the runtime host renamed to `<GameName>.exe`, plus `libfbxsdk.dll`, `project.json`, the part of your `rom/` the game actually uses, and `game/scripts/bin/GameScripts.dll` into the chosen folder. "Used" means reachable from the default scene: files named in scenes, prefabs, materials and `project.json`; files named inside `GameScripts.dll` strings; scenes named by buttons or code; textures named inside your FBX / OBJ / Effekseer files. Unreferenced files (old test scenes, unused models and sounds, editor layout files) stay out, and the Build log lists them. `project.json` `lastOpenedScene` does not count.
+3. Adds the built shaders and any engine defaults from `resources/` that your content names but does not contain (`rom/skybox/MySkybox.dds` only when used).
 4. Cooks panorama PNG skyboxes into `rom/skybox/cache/` so the package contains the DDS.
+5. Compresses the packaged textures: every `.png` / `.jpg` / `.jpeg` / `.bmp` under `rom/` becomes a BC7 `.dds` (mipmaps included) and the source image is left out of the package. Your project folder is not touched, and scene / prefab / UI JSON keep naming the original `.png`; the game finds the `.dds` itself. Not compressed (the image stays in the package): `rom/shader`, `rom/font`, `rom/branding`, `rom/skybox`, `rom/editor`, images whose width or height is not a multiple of 4, and images that already have a same-name `.dds`. The Build log lists each skipped file. BC7 is lossy, and a `.dds` can be larger on disk than a flat-colour PNG; the saving is GPU memory and load time. `deploy.bat` does not compress and still copies all of `rom/`.
+6. Ships no loose engine files for the fade fill, debug text, boot logo or PBR BRDF lookup table: the fade fill is generated at startup, and the debug text font (IBM Plex Mono, license in `licenses/IBMPlexMono-OFL.txt`), the boot logo and `rom/skybox/ibl/brdf_lut.png` are compiled into the exe. They use `builtin:` paths (`builtin:branding/ivy_logo.png`, `builtin:ibl/brdf_lut.png`) so they are never confused with files in your `rom/`: a `rom/...` path is always a file in your project, a `builtin:...` path never reads the disk. Older scenes that name `rom/branding/ivy_logo.png` or `rom/skybox/ibl/brdf_lut.png` keep working and still let a file at that path override. UI text uses TrueType fonts (`rom/font/LemonSlice.ttf` by default); UI text defaults to the built-in IBM Plex Mono (`builtin:font/IBMPlexMono-Regular.ttf`, no file needed). `LemonSlice.ttf` is no longer shipped: old scenes that still name it, or the retired `rom/texture/consolab_ascii_512.png` bitmap atlas, are read as the default font unless your project has its own copy.
+
+**If something is missing from a package.** The scan cannot see a file name your script builds at runtime (for example `"rom/audio/sfx_" + number + ".wav"` is handled, but a name read from a table or a save file is not), nor a non-ASCII name inside a UTF-16 script string. Add such files to `project.json`:
+
+```json
+"build": {
+  "alwaysInclude": ["rom/audio/", "rom/texture/icons/"],
+  "packAllAssets": false
+}
+```
+
+`alwaysInclude` entries are files, folders or name prefixes under `rom/`. `"packAllAssets": true` switches back to copying everything. The Build log prints how many files were packed and left out, so check it after adding a new kind of asset.
 
 The package reads gravity and audio bus volumes from its `project.json`. Players never see the editor or the debug hotkeys. Release | x64 is recommended; the runtime is statically linked, so no VC++ redistributable is needed.
 

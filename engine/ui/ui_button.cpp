@@ -10,6 +10,8 @@
 #include "../rendering/sprite/texture.h"
 #include "../input/mouse.h"
 #include "../ecs/string_utils.h"
+#include "../core/content_path.h"
+#include "../core/legacy_asset_alias.h"
 #include "../core/engine_gui.h"
 #include "../audio/audio_manager.h"
 
@@ -247,8 +249,9 @@ void UIButton::SetFont(const wchar_t* fontTexturePath, float charWidth, float ch
 }
 
 void UIButton::SetFontPath(const std::string& fontTexturePath, float charWidth, float charHeight, int charsPerRow) {
-	s_fontPath = fontTexturePath;
-	std::wstring widePath = ToWString(fontTexturePath);
+	// Old content may still name the retired bitmap atlas; read it as the default UI font.
+	s_fontPath = legacy_alias::FontPath(fontTexturePath, !content_path::ReadableFileCurrent(fontTexturePath).empty());
+	std::wstring widePath = ToWString(s_fontPath);
 	if (!widePath.empty())
 		SetFont(widePath.c_str(), charWidth, charHeight, charsPerRow);
 }

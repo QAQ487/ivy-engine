@@ -18,6 +18,8 @@
 #include <string>
 #include <wrl/client.h> // For Microsoft::WRL::ComPtr
 
+struct UIFont;
+
 namespace hal {
 	class DebugText {
 	public:
@@ -33,7 +35,6 @@ namespace hal {
 		};
 
 		DebugText(ID3D11Device* pDevice, ID3D11DeviceContext* pContext,
-			const wchar_t* pFontTextureFileName,
 			UINT screenWidth, UINT screenHeight,
 			float offsetX, float offsetY,
 			ULONG maxLine, ULONG maxCharactersPerLine,
@@ -62,7 +63,6 @@ namespace hal {
 		ID3D11Device* m_pDevice = nullptr;
 		ID3D11DeviceContext* m_pContext = nullptr;
 
-		std::wstring m_FileName;
 		float  m_OffsetX = 0.0f;
 		float  m_OffsetY = 0.0f;
 
@@ -72,15 +72,17 @@ namespace hal {
 		float  m_LineSpacing = 0.0f;
 		float  m_CharacterSpacing = 0.0f;
 
-		UINT   m_TextureWidth = 0;
-		UINT   m_TextureHeight = 0;
+		// Built-in monospace TTF atlas (UIFont_GetBuiltinMono). Glyphs sit in fixed
+		// cells of m_CharacterSpacing x m_LineSpacing, scaled to fit the cell.
+		const UIFont* m_pFont = nullptr;
+		float  m_GlyphScale = 1.0f;
+		float  m_CellAdvance = 0.0f;
 
 		std::deque<Line> m_TextLines;
 		ULONG  m_CharacterCount = 0;
 		ULONG  m_BufferSourceCharacterCount = 0;
 
 		// Static shared resources
-		static std::unordered_map<std::wstring, std::tuple<ID3D11Resource*, ID3D11ShaderResourceView*>> m_TextureMap;
 		static Microsoft::WRL::ComPtr<ID3D11BlendState>       m_pBlendState;
 		static Microsoft::WRL::ComPtr<ID3D11DepthStencilState> m_pDepthStencilState;
 		static Microsoft::WRL::ComPtr<ID3D11RasterizerState>   m_pRasterizerState;
@@ -90,9 +92,6 @@ namespace hal {
 		static Microsoft::WRL::ComPtr<ID3D11Buffer>       m_pVSConstantBuffer;
 		static Microsoft::WRL::ComPtr<ID3D11PixelShader>  m_pPixelShader;
 		static Microsoft::WRL::ComPtr<ID3D11SamplerState> m_pSamplerState;
-
-		ID3D11Resource* m_pTexture = nullptr;
-		ID3D11ShaderResourceView* m_pTextureView = nullptr;
 
 		Microsoft::WRL::ComPtr<ID3D11Buffer> m_pVertexBuffer;
 		Microsoft::WRL::ComPtr<ID3D11Buffer> m_pIndexBuffer;

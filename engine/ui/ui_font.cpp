@@ -8,6 +8,8 @@
 #include "ui_font.h"
 #include "engine/rendering/sprite/texture.h"
 #include "engine/core/content_path.h"
+#include "engine/core/builtin_assets.h"
+#include "engine/core/builtin_paths.h"
 
 #include <cctype>
 #include <cstdio>
@@ -23,6 +25,9 @@ namespace {
 	constexpr int kCharCount = 95;
 	constexpr float kBakeSize = 64.0f;
 	constexpr int kAtlasSize = 1024;
+	// Debug text draws at roughly 12..20 px, so it bakes small and scales down less.
+	constexpr float kBuiltinMonoBakeSize = 24.0f;
+	constexpr int kBuiltinMonoAtlasSize = 512;
 
 	std::map<std::wstring, UIFont> g_fonts;
 
@@ -72,57 +77,54 @@ namespace {
 		return data;
 	}
 
-	bool BakeFont(const wchar_t* ttfPath, UIFont& out) {
-		const std::wstring resolved = content_path::ReadableWideCurrent(ttfPath);
-		const wchar_t* openPath = resolved.empty() ? ttfPath : resolved.c_str();
-		const std::vector<unsigned char> ttf = LoadFile(openPath);
-		if (ttf.size() < 12) return false;
-        const int offset = stbtt_GetFontOffsetForIndex(ttf.data(), 0);
-        if (offset < 0 || static_cast<size_t>(offset) + 12 > ttf.size()) return false;
-        const size_t tables = (size_t(ttf[offset + 4]) << 8) | ttf[offset + 5];
-        if (static_cast<size_t>(offset) + 12 + tables * 16 > ttf.size()) return false;
-        auto read32 = [&](size_t pos) { return (size_t(ttf[pos]) << 24) | (size_t(ttf[pos+1]) << 16) | (size_t(ttf[pos+2]) << 8) | ttf[pos+3]; };
-        for (size_t n = 0; n < tables; ++n) {
-            const size_t table = static_cast<size_t>(offset) + 12 + n * 16;
-            const auto begin = read32(table + 8), length = read32(table + 12);
-            if (begin > ttf.size() || length > ttf.size() - begin) return false;
-        }
+	// Bakes ASCII 32..126 of an in-memory TTF into an alpha atlas texture.
+	bool BakeFontData(const unsigned char* ttfData, size_t ttfSize, const std::wstring& atlasName,
+		float bakeSize, int atlasSize, UIFont& out) {
+		if (!ttfData || ttfSize < 12) return false;
+		const int offset = stbtt_GetFontOffsetForIndex(ttfData, 0);
+		if (offset < 0 || static_cast<size_t>(offset) + 12 > ttfSize) return false;
+		const size_t tables = (size_t(ttfData[offset + 4]) << 8) | ttfData[offset + 5];
+		if (static_cast<size_t>(offset) + 12 + tables * 16 > ttfSize) return false;
+		auto read32 = [&](size_t pos) { return (size_t(ttfData[pos]) << 24) | (size_t(ttfData[pos+1]) << 16) | (size_t(ttfData[pos+2]) << 8) | ttfData[pos+3]; };
+		for (size_t n = 0; n < tables; ++n) {
+			const size_t table = static_cast<size_t>(offset) + 12 + n * 16;
+			const auto begin = read32(table + 8), length = read32(table + 12);
+			if (begin > ttfSize || length > ttfSize - begin) return false;
+		}
 
 		stbtt_fontinfo info{};
-		if (!stbtt_InitFont(&info, ttf.data(), stbtt_GetFontOffsetForIndex(ttf.data(), 0)))
+		if (!stbtt_InitFont(&info, ttfData, stbtt_GetFontOffsetForIndex(ttfData, 0)))
 			return false;
 
 		int ascent = 0, descent = 0, lineGap = 0;
 		stbtt_GetFontVMetrics(&info, &ascent, &descent, &lineGap);
-		const float pixelScale = stbtt_ScaleForPixelHeight(&info, kBakeSize);
+		const float pixelScale = stbtt_ScaleForPixelHeight(&info, bakeSize);
 
-		std::vector<unsigned char> alpha(static_cast<size_t>(kAtlasSize * kAtlasSize), 0);
+		std::vector<unsigned char> alpha(static_cast<size_t>(atlasSize * atlasSize), 0);
 		stbtt_bakedchar baked[kCharCount]{};
 		const int bakeResult = stbtt_BakeFontBitmap(
-			ttf.data(), 0, kBakeSize,
-			alpha.data(), kAtlasSize, kAtlasSize,
+			ttfData, 0, bakeSize,
+			alpha.data(), atlasSize, atlasSize,
 			kFirstChar, kCharCount, baked);
 		if (bakeResult <= 0)
 			return false;
 
-		std::vector<unsigned char> rgba(static_cast<size_t>(kAtlasSize * kAtlasSize * 4));
-		for (int i = 0; i < kAtlasSize * kAtlasSize; ++i) {
+		std::vector<unsigned char> rgba(static_cast<size_t>(atlasSize * atlasSize * 4));
+		for (int i = 0; i < atlasSize * atlasSize; ++i) {
 			rgba[static_cast<size_t>(i) * 4 + 0] = 255;
 			rgba[static_cast<size_t>(i) * 4 + 1] = 255;
 			rgba[static_cast<size_t>(i) * 4 + 2] = 255;
 			rgba[static_cast<size_t>(i) * 4 + 3] = alpha[static_cast<size_t>(i)];
 		}
 
-		std::wstring atlasName = L"__ttf_atlas__:";
-		atlasName += ttfPath;
-		const int textureId = TextureCreateFromRGBA(atlasName.c_str(), rgba.data(), kAtlasSize, kAtlasSize);
+		const int textureId = TextureCreateFromRGBA(atlasName.c_str(), rgba.data(), atlasSize, atlasSize);
 		if (textureId < 0)
 			return false;
 
 		out.textureId = textureId;
-		out.atlasWidth = kAtlasSize;
-		out.atlasHeight = kAtlasSize;
-		out.bakeSize = kBakeSize;
+		out.atlasWidth = atlasSize;
+		out.atlasHeight = atlasSize;
+		out.bakeSize = bakeSize;
 		out.ascent = static_cast<float>(ascent) * pixelScale;
 		out.descent = static_cast<float>(descent) * pixelScale;
 		out.lineHeight = static_cast<float>(ascent - descent + lineGap) * pixelScale;
@@ -137,6 +139,28 @@ namespace {
 			glyph.xadvance = baked[i].xadvance;
 		}
 		return true;
+	}
+
+	bool BakeFont(const wchar_t* ttfPath, UIFont& out) {
+		if (builtin_paths::IsBuiltin(std::wstring(ttfPath))) {
+			// "builtin:" never reads the disk and cannot be overridden by a project file.
+			builtin_assets::Asset builtin;
+			if (!builtin_assets::FindFont(std::wstring(ttfPath), &builtin)) return false;
+			return BakeFontData(builtin.data, builtin.size, std::wstring(L"__ttf_atlas__:") + ttfPath,
+				kBakeSize, kAtlasSize, out);
+		}
+		const std::wstring resolved = content_path::ReadableWideCurrent(ttfPath);
+		const wchar_t* openPath = resolved.empty() ? ttfPath : resolved.c_str();
+		const std::vector<unsigned char> ttf = LoadFile(openPath);
+		std::wstring atlasName = L"__ttf_atlas__:";
+		atlasName += ttfPath;
+		if (ttf.empty()) {
+			// The default UI font is compiled into the exe; a real file at its path still wins.
+			builtin_assets::Asset builtin;
+			if (builtin_assets::FindFont(std::wstring(ttfPath), &builtin))
+				return BakeFontData(builtin.data, builtin.size, atlasName, kBakeSize, kAtlasSize, out);
+		}
+		return BakeFontData(ttf.data(), ttf.size(), atlasName, kBakeSize, kAtlasSize, out);
 	}
 }
 
@@ -174,6 +198,20 @@ const UIFont* UIFont_Get(const wchar_t* ttfPath) {
 	return &inserted.first->second;
 }
 
+const UIFont* UIFont_GetBuiltinMono() {
+	static const std::wstring kKey = L"builtin:debug_mono";
+	const auto found = g_fonts.find(kKey);
+	if (found != g_fonts.end())
+		return &found->second;
+
+	const builtin_assets::Asset ttf = builtin_assets::DebugMonoFontTtf();
+	UIFont font;
+	if (!BakeFontData(ttf.data, ttf.size, L"__ttf_atlas__:builtin:debug_mono",
+			kBuiltinMonoBakeSize, kBuiltinMonoAtlasSize, font))
+		return nullptr;
+	return &g_fonts.emplace(kKey, font).first->second;
+}
+
 void UIFont_ClearCache() {
 	g_fonts.clear();
 }
@@ -181,6 +219,7 @@ void UIFont_ClearCache() {
 bool UIFont_Reload(const wchar_t* path) {
     const auto key = std::filesystem::absolute(path).lexically_normal().wstring();
     for (auto& entry : g_fonts) {
+        if (builtin_paths::IsBuiltin(entry.first)) continue;  // compiled in, nothing to reload
         if (_wcsicmp(std::filesystem::absolute(entry.first).lexically_normal().c_str(), key.c_str()) != 0) continue;
         UIFont candidate;
         const std::wstring resolved = content_path::ReadableWideCurrent(entry.first.c_str());
