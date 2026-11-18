@@ -2,7 +2,6 @@
 // Extracted from engine/core/engine_gui.cpp (phase-1 editor UI split; behaviour-preserving).
 
 #include "editor_gui_common_includes.h"
-#include "engine/rendering/culling/lod_state.h"
 namespace fs = std::filesystem;
 using json = nlohmann::json;
 

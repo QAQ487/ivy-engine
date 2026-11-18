@@ -17,6 +17,7 @@
 #include "engine/scene/scene_file_monitor.h"
 #include "engine/scene/render_settings.h"
 #include "engine/rendering/culling/frustum_cull.h"
+#include "engine/rendering/culling/lod_state.h"
 #include "engine/rendering/culling/shadow_cascade_cull.h"
 #include "engine/rendering/culling/sprite_cull.h"
 #include "engine/rendering/d3d11/shader.h"

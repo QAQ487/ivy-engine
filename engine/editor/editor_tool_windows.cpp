@@ -379,7 +379,15 @@ void DrawRenderingSettingsBody() {
     ImGui::SetNextItemWidth(-1);
     ImGui::SliderFloat("LOD Bias", &rs.lodBias, 0.1f, 10.0f, "%.2f",
         ImGuiSliderFlags_Logarithmic);
-    ImGui::TextDisabled("Bias > 1 switches to lower detail sooner.");
+    {
+        const LodStats lod = Lod_GetLastStats();
+        int lodFar = 0;
+        for (int level = 2; level < kLodMaxLevels; ++level)
+            lodFar += lod.drawn[level];
+        ImGui::TextDisabled("lod      considered %d  |  culled %d  |  L0 %d  L1 %d  L2+ %d",
+            lod.considered, lod.culledByDistance, lod.drawn[0], lod.drawn[1], lodFar);
+        ImGui::TextDisabled("Bias > 1 switches to lower detail sooner. Play only.");
+    }
 
     ImGui::Spacing();
     ImGui::Text("Fog");

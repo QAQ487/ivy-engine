@@ -1393,6 +1393,12 @@ Json Protocol::Request(const std::string& frame) {
         spriteCullConsidered.reserve(static_cast<std::size_t>(take));
         spriteCullCulled.reserve(static_cast<std::size_t>(take));
         spriteCullDrawn.reserve(static_cast<std::size_t>(take));
+        std::vector<float> lodConsidered, lodCulled, lodLevel0, lodLevel1, lodLevel2Plus;
+        lodConsidered.reserve(static_cast<std::size_t>(take));
+        lodCulled.reserve(static_cast<std::size_t>(take));
+        lodLevel0.reserve(static_cast<std::size_t>(take));
+        lodLevel1.reserve(static_cast<std::size_t>(take));
+        lodLevel2Plus.reserve(static_cast<std::size_t>(take));
         for(int i = 0; i < take; ++i) {
             const std::size_t idx = (perfWrite_ + kRuntimeTestPerfCapacity - static_cast<std::size_t>(take) + static_cast<std::size_t>(i))
                 % kRuntimeTestPerfCapacity;
@@ -1410,6 +1416,11 @@ Json Protocol::Request(const std::string& frame) {
             spriteCullConsidered.push_back(static_cast<float>(s.spriteCullConsidered));
             spriteCullCulled.push_back(static_cast<float>(s.spriteCullCulled));
             spriteCullDrawn.push_back(static_cast<float>(s.spriteCullDrawn));
+            lodConsidered.push_back(static_cast<float>(s.lodConsidered));
+            lodCulled.push_back(static_cast<float>(s.lodCulledByDistance));
+            lodLevel0.push_back(static_cast<float>(s.lodLevel0));
+            lodLevel1.push_back(static_cast<float>(s.lodLevel1));
+            lodLevel2Plus.push_back(static_cast<float>(s.lodLevel2Plus));
         }
         double fpsAvg = 0.0;
         if(!frameMs.empty()) {
@@ -1442,6 +1453,13 @@ Json Protocol::Request(const std::string& frame) {
                 {"considered", PerfStatsJson(spriteCullConsidered)},
                 {"culled", PerfStatsJson(spriteCullCulled)},
                 {"drawn", PerfStatsJson(spriteCullDrawn)}
+            }},
+            {"lod", {
+                {"considered", PerfStatsJson(lodConsidered)},
+                {"culled", PerfStatsJson(lodCulled)},
+                {"level0", PerfStatsJson(lodLevel0)},
+                {"level1", PerfStatsJson(lodLevel1)},
+                {"level2Plus", PerfStatsJson(lodLevel2Plus)}
             }},
         };
     }

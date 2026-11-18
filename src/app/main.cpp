@@ -177,6 +177,7 @@ static MainStaticDestructionMarker s_mainStaticMarker;
 #include "engine/rendering/culling/frustum_cull.h"
 #include "engine/rendering/culling/shadow_cascade_cull.h"
 #include "engine/rendering/culling/sprite_cull.h"
+#include "engine/rendering/culling/lod_state.h"
 
 #ifndef GAME_RUNTIME
 #include "imgui/imgui.h"
@@ -581,6 +582,13 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstanc
                         sample.spriteCullConsidered = spriteCull.considered;
                         sample.spriteCullCulled = spriteCull.culled;
                         sample.spriteCullDrawn = spriteCull.drawn;
+                        const LodStats lod = Lod_GetLastStats();
+                        sample.lodConsidered = lod.considered;
+                        sample.lodCulledByDistance = lod.culledByDistance;
+                        sample.lodLevel0 = lod.drawn[0];
+                        sample.lodLevel1 = lod.drawn[1];
+                        for (int level = 2; level < kLodMaxLevels; ++level)
+                            sample.lodLevel2Plus += lod.drawn[level];
                     }
                     runtimeTestBridge.RecordPerfSample(sample);
 
@@ -966,6 +974,15 @@ static void DrawWorld(void) {
 				   << "\n2CULL c:" << spriteCull.considered
 				   << " x:" << spriteCull.culled
 				   << " d:" << spriteCull.drawn;
+				const LodStats lod = Lod_GetLastStats();
+				int lodFar = 0;
+				for (int level = 2; level < kLodMaxLevels; ++level)
+					lodFar += lod.drawn[level];
+				ss << "\nLOD c:" << lod.considered
+				   << " x:" << lod.culledByDistance
+				   << " 0:" << lod.drawn[0]
+				   << " 1:" << lod.drawn[1]
+				   << " 2+:" << lodFar;
 			}
 			const std::string fpsText = ss.str();
 

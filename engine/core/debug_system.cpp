@@ -8,6 +8,7 @@
 #include "engine/rendering/culling/frustum_cull.h"
 #include "engine/rendering/culling/shadow_cascade_cull.h"
 #include "engine/rendering/culling/sprite_cull.h"
+#include "engine/rendering/culling/lod_state.h"
 #include "third_person_camera.h"
 
 #include <cstdio>
@@ -197,6 +198,10 @@ void RefreshOverlay() {
 	const FrustumCullStats cull = FrustumCull_GetLastStats();
 	const ShadowCascadeCullStats shadowCull = ShadowCascadeCull_GetLastStats();
 	const SpriteCullStats spriteCull = SpriteCull_GetLastStats();
+	const LodStats lodStats = Lod_GetLastStats();
+	int lodFar = 0;
+	for (int level = 2; level < kLodMaxLevels; ++level)
+		lodFar += lodStats.drawn[level];
 	if (s_collisionViz) {
 		const PhysicsDebugStats st = PhysicsSystem_GetDebugStats();
 		std::snprintf(s_overlayText, sizeof(s_overlayText),
@@ -204,11 +209,14 @@ void RefreshOverlay() {
 			"colliders:%d pairs:%d contacts:%d triggers:%d\n"
 			"frustum considered:%d culled:%d drawn:%d\n"
 			"shadow considered:%d culled:%d drawn:%d\n"
-			"sprite considered:%d culled:%d drawn:%d",
+			"sprite considered:%d culled:%d drawn:%d\n"
+			"lod considered:%d culled:%d l0:%d l1:%d l2+:%d",
 			viz, timeBuf, st.colliders, st.pairs, st.contacts, st.triggers,
 			cull.considered, cull.culled, cull.drawn,
 			shadowCull.considered, shadowCull.culled, shadowCull.drawn,
-			spriteCull.considered, spriteCull.culled, spriteCull.drawn);
+			spriteCull.considered, spriteCull.culled, spriteCull.drawn,
+			lodStats.considered, lodStats.culledByDistance,
+			lodStats.drawn[0], lodStats.drawn[1], lodFar);
 	} else {
 		std::snprintf(s_overlayText, sizeof(s_overlayText),
 			"COLLISION VIZ %s   TIME %s",
