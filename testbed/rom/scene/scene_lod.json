@@ -136,6 +136,334 @@
       }
     },
     {
+      "name": "Big LOD Sphere L0 (z=0)",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -8.0,
+          "posY": 2.0,
+          "posZ": 0.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 4.0,
+          "scaleY": 4.0,
+          "scaleZ": 4.0
+        },
+        "visual": {
+          "model": "rom/model/primitives/Sphere.fbx",
+          "shader": "pbr",
+          "lods": [
+            {
+              "model": "rom/model/lod/Sphere_LOD1.fbx",
+              "maxDistance": 15.0
+            },
+            {
+              "model": "rom/model/lod/Sphere_LOD2.fbx",
+              "maxDistance": 35.0
+            }
+          ]
+        },
+        "Material": {
+          "color": [
+            0.25,
+            0.55,
+            0.95
+          ],
+          "roughness": 0.45,
+          "metallic": 0.0
+        }
+      }
+    },
+    {
+      "name": "Big LOD Sphere R0 (z=0)",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 8.0,
+          "posY": 2.0,
+          "posZ": 0.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 4.0,
+          "scaleY": 4.0,
+          "scaleZ": 4.0
+        },
+        "visual": {
+          "model": "rom/model/primitives/Sphere.fbx",
+          "shader": "pbr",
+          "lods": [
+            {
+              "model": "rom/model/lod/Sphere_LOD1.fbx",
+              "maxDistance": 15.0
+            },
+            {
+              "model": "rom/model/lod/Sphere_LOD2.fbx",
+              "maxDistance": 35.0
+            }
+          ]
+        },
+        "Material": {
+          "color": [
+            0.25,
+            0.55,
+            0.95
+          ],
+          "roughness": 0.45,
+          "metallic": 0.0
+        }
+      }
+    },
+    {
+      "name": "Big LOD Sphere L1 (z=16)",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -8.0,
+          "posY": 2.0,
+          "posZ": 16.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 4.0,
+          "scaleY": 4.0,
+          "scaleZ": 4.0
+        },
+        "visual": {
+          "model": "rom/model/primitives/Sphere.fbx",
+          "shader": "pbr",
+          "lods": [
+            {
+              "model": "rom/model/lod/Sphere_LOD1.fbx",
+              "maxDistance": 15.0
+            },
+            {
+              "model": "rom/model/lod/Sphere_LOD2.fbx",
+              "maxDistance": 35.0
+            }
+          ]
+        },
+        "Material": {
+          "color": [
+            0.25,
+            0.55,
+            0.95
+          ],
+          "roughness": 0.45,
+          "metallic": 0.0
+        }
+      }
+    },
+    {
+      "name": "Big LOD Sphere R1 (z=16)",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 8.0,
+          "posY": 2.0,
+          "posZ": 16.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 4.0,
+          "scaleY": 4.0,
+          "scaleZ": 4.0
+        },
+        "visual": {
+          "model": "rom/model/primitives/Sphere.fbx",
+          "shader": "pbr",
+          "lods": [
+            {
+              "model": "rom/model/lod/Sphere_LOD1.fbx",
+              "maxDistance": 15.0
+            },
+            {
+              "model": "rom/model/lod/Sphere_LOD2.fbx",
+              "maxDistance": 35.0
+            }
+          ]
+        },
+        "Material": {
+          "color": [
+            0.25,
+            0.55,
+            0.95
+          ],
+          "roughness": 0.45,
+          "metallic": 0.0
+        }
+      }
+    },
+    {
+      "name": "Big LOD Sphere L2 (z=32)",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -8.0,
+          "posY": 2.0,
+          "posZ": 32.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 4.0,
+          "scaleY": 4.0,
+          "scaleZ": 4.0
+        },
+        "visual": {
+          "model": "rom/model/primitives/Sphere.fbx",
+          "shader": "pbr",
+          "lods": [
+            {
+              "model": "rom/model/lod/Sphere_LOD1.fbx",
+              "maxDistance": 15.0
+            },
+            {
+              "model": "rom/model/lod/Sphere_LOD2.fbx",
+              "maxDistance": 35.0
+            }
+          ]
+        },
+        "Material": {
+          "color": [
+            0.25,
+            0.55,
+            0.95
+          ],
+          "roughness": 0.45,
+          "metallic": 0.0
+        }
+      }
+    },
+    {
+      "name": "Big LOD Sphere R2 (z=32)",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 8.0,
+          "posY": 2.0,
+          "posZ": 32.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 4.0,
+          "scaleY": 4.0,
+          "scaleZ": 4.0
+        },
+        "visual": {
+          "model": "rom/model/primitives/Sphere.fbx",
+          "shader": "pbr",
+          "lods": [
+            {
+              "model": "rom/model/lod/Sphere_LOD1.fbx",
+              "maxDistance": 15.0
+            },
+            {
+              "model": "rom/model/lod/Sphere_LOD2.fbx",
+              "maxDistance": 35.0
+            }
+          ]
+        },
+        "Material": {
+          "color": [
+            0.25,
+            0.55,
+            0.95
+          ],
+          "roughness": 0.45,
+          "metallic": 0.0
+        }
+      }
+    },
+    {
+      "name": "Big LOD Sphere L3 (z=48)",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -8.0,
+          "posY": 2.0,
+          "posZ": 48.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 4.0,
+          "scaleY": 4.0,
+          "scaleZ": 4.0
+        },
+        "visual": {
+          "model": "rom/model/primitives/Sphere.fbx",
+          "shader": "pbr",
+          "lods": [
+            {
+              "model": "rom/model/lod/Sphere_LOD1.fbx",
+              "maxDistance": 15.0
+            },
+            {
+              "model": "rom/model/lod/Sphere_LOD2.fbx",
+              "maxDistance": 35.0
+            }
+          ]
+        },
+        "Material": {
+          "color": [
+            0.25,
+            0.55,
+            0.95
+          ],
+          "roughness": 0.45,
+          "metallic": 0.0
+        }
+      }
+    },
+    {
+      "name": "Big LOD Sphere R3 (z=48)",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 8.0,
+          "posY": 2.0,
+          "posZ": 48.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 4.0,
+          "scaleY": 4.0,
+          "scaleZ": 4.0
+        },
+        "visual": {
+          "model": "rom/model/primitives/Sphere.fbx",
+          "shader": "pbr",
+          "lods": [
+            {
+              "model": "rom/model/lod/Sphere_LOD1.fbx",
+              "maxDistance": 15.0
+            },
+            {
+              "model": "rom/model/lod/Sphere_LOD2.fbx",
+              "maxDistance": 35.0
+            }
+          ]
+        },
+        "Material": {
+          "color": [
+            0.25,
+            0.55,
+            0.95
+          ],
+          "roughness": 0.45,
+          "metallic": 0.0
+        }
+      }
+    },
+    {
       "name": "LOD Sphere 0 (z=8)",
       "tag": 0,
       "children": [],
@@ -156,11 +484,11 @@
           "shader": "pbr",
           "lods": [
             {
-              "model": "rom/model/primitives/Capsule.fbx",
+              "model": "rom/model/lod/Sphere_LOD1.fbx",
               "maxDistance": 30.0
             },
             {
-              "model": "rom/model/primitives/Cube.fbx",
+              "model": "rom/model/lod/Sphere_LOD2.fbx",
               "maxDistance": 70.0
             }
           ],
@@ -172,7 +500,7 @@
             0.35,
             0.25
           ],
-          "roughness": 0.5,
+          "roughness": 0.45,
           "metallic": 0.0
         }
       }
@@ -198,11 +526,11 @@
           "shader": "pbr",
           "lods": [
             {
-              "model": "rom/model/primitives/Capsule.fbx",
+              "model": "rom/model/lod/Sphere_LOD1.fbx",
               "maxDistance": 30.0
             },
             {
-              "model": "rom/model/primitives/Cube.fbx",
+              "model": "rom/model/lod/Sphere_LOD2.fbx",
               "maxDistance": 70.0
             }
           ],
@@ -214,7 +542,7 @@
             0.35,
             0.25
           ],
-          "roughness": 0.5,
+          "roughness": 0.45,
           "metallic": 0.0
         }
       }
@@ -240,11 +568,11 @@
           "shader": "pbr",
           "lods": [
             {
-              "model": "rom/model/primitives/Capsule.fbx",
+              "model": "rom/model/lod/Sphere_LOD1.fbx",
               "maxDistance": 30.0
             },
             {
-              "model": "rom/model/primitives/Cube.fbx",
+              "model": "rom/model/lod/Sphere_LOD2.fbx",
               "maxDistance": 70.0
             }
           ],
@@ -256,7 +584,7 @@
             0.35,
             0.25
           ],
-          "roughness": 0.5,
+          "roughness": 0.45,
           "metallic": 0.0
         }
       }
@@ -282,11 +610,11 @@
           "shader": "pbr",
           "lods": [
             {
-              "model": "rom/model/primitives/Capsule.fbx",
+              "model": "rom/model/lod/Sphere_LOD1.fbx",
               "maxDistance": 30.0
             },
             {
-              "model": "rom/model/primitives/Cube.fbx",
+              "model": "rom/model/lod/Sphere_LOD2.fbx",
               "maxDistance": 70.0
             }
           ],
@@ -298,7 +626,7 @@
             0.35,
             0.25
           ],
-          "roughness": 0.5,
+          "roughness": 0.45,
           "metallic": 0.0
         }
       }
@@ -324,11 +652,11 @@
           "shader": "pbr",
           "lods": [
             {
-              "model": "rom/model/primitives/Capsule.fbx",
+              "model": "rom/model/lod/Sphere_LOD1.fbx",
               "maxDistance": 30.0
             },
             {
-              "model": "rom/model/primitives/Cube.fbx",
+              "model": "rom/model/lod/Sphere_LOD2.fbx",
               "maxDistance": 70.0
             }
           ],
@@ -340,7 +668,7 @@
             0.35,
             0.25
           ],
-          "roughness": 0.5,
+          "roughness": 0.45,
           "metallic": 0.0
         }
       }
@@ -366,11 +694,11 @@
           "shader": "pbr",
           "lods": [
             {
-              "model": "rom/model/primitives/Capsule.fbx",
+              "model": "rom/model/lod/Sphere_LOD1.fbx",
               "maxDistance": 30.0
             },
             {
-              "model": "rom/model/primitives/Cube.fbx",
+              "model": "rom/model/lod/Sphere_LOD2.fbx",
               "maxDistance": 70.0
             }
           ],
@@ -382,7 +710,7 @@
             0.35,
             0.25
           ],
-          "roughness": 0.5,
+          "roughness": 0.45,
           "metallic": 0.0
         }
       }
@@ -408,11 +736,11 @@
           "shader": "pbr",
           "lods": [
             {
-              "model": "rom/model/primitives/Capsule.fbx",
+              "model": "rom/model/lod/Sphere_LOD1.fbx",
               "maxDistance": 30.0
             },
             {
-              "model": "rom/model/primitives/Cube.fbx",
+              "model": "rom/model/lod/Sphere_LOD2.fbx",
               "maxDistance": 70.0
             }
           ],
@@ -424,7 +752,7 @@
             0.35,
             0.25
           ],
-          "roughness": 0.5,
+          "roughness": 0.45,
           "metallic": 0.0
         }
       }
@@ -450,11 +778,11 @@
           "shader": "pbr",
           "lods": [
             {
-              "model": "rom/model/primitives/Capsule.fbx",
+              "model": "rom/model/lod/Sphere_LOD1.fbx",
               "maxDistance": 30.0
             },
             {
-              "model": "rom/model/primitives/Cube.fbx",
+              "model": "rom/model/lod/Sphere_LOD2.fbx",
               "maxDistance": 70.0
             }
           ],
@@ -466,7 +794,7 @@
             0.35,
             0.25
           ],
-          "roughness": 0.5,
+          "roughness": 0.45,
           "metallic": 0.0
         }
       }
@@ -492,11 +820,11 @@
           "shader": "pbr",
           "lods": [
             {
-              "model": "rom/model/primitives/Capsule.fbx",
+              "model": "rom/model/lod/Sphere_LOD1.fbx",
               "maxDistance": 30.0
             },
             {
-              "model": "rom/model/primitives/Cube.fbx",
+              "model": "rom/model/lod/Sphere_LOD2.fbx",
               "maxDistance": 70.0
             }
           ],
@@ -508,7 +836,7 @@
             0.35,
             0.25
           ],
-          "roughness": 0.5,
+          "roughness": 0.45,
           "metallic": 0.0
         }
       }
@@ -534,11 +862,11 @@
           "shader": "pbr",
           "lods": [
             {
-              "model": "rom/model/primitives/Capsule.fbx",
+              "model": "rom/model/lod/Sphere_LOD1.fbx",
               "maxDistance": 30.0
             },
             {
-              "model": "rom/model/primitives/Cube.fbx",
+              "model": "rom/model/lod/Sphere_LOD2.fbx",
               "maxDistance": 70.0
             }
           ],
@@ -550,7 +878,7 @@
             0.35,
             0.25
           ],
-          "roughness": 0.5,
+          "roughness": 0.45,
           "metallic": 0.0
         }
       }
@@ -576,11 +904,11 @@
           "shader": "pbr",
           "lods": [
             {
-              "model": "rom/model/primitives/Capsule.fbx",
+              "model": "rom/model/lod/Sphere_LOD1.fbx",
               "maxDistance": 30.0
             },
             {
-              "model": "rom/model/primitives/Cube.fbx",
+              "model": "rom/model/lod/Sphere_LOD2.fbx",
               "maxDistance": 70.0
             }
           ],
@@ -592,7 +920,7 @@
             0.35,
             0.25
           ],
-          "roughness": 0.5,
+          "roughness": 0.45,
           "metallic": 0.0
         }
       }
@@ -618,11 +946,11 @@
           "shader": "pbr",
           "lods": [
             {
-              "model": "rom/model/primitives/Capsule.fbx",
+              "model": "rom/model/lod/Sphere_LOD1.fbx",
               "maxDistance": 30.0
             },
             {
-              "model": "rom/model/primitives/Cube.fbx",
+              "model": "rom/model/lod/Sphere_LOD2.fbx",
               "maxDistance": 70.0
             }
           ],
@@ -634,7 +962,7 @@
             0.35,
             0.25
           ],
-          "roughness": 0.5,
+          "roughness": 0.45,
           "metallic": 0.0
         }
       }

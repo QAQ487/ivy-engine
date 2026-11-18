@@ -97,7 +97,7 @@
   - `visual.lods`（`{model, maxDistance}` 陣列，level 0 係 `model`，`maxDistance` 係切換去該級嘅 camera 距離）同 `visual.cullDistance`。距離用 camera → 基礎 mesh world AABB 中心，5% hysteresis；`render.lodEnabled`（預設 true）、`render.lodBias`（預設 1，0.1–10）。選擇數學喺 `engine/rendering/culling/lod_select_math.h`，狀態同計數器喺 `lod_state.{h,cpp}`，接入點係 `GameObject::DrawVisual`。
   - Shadow pass 跟主 camera 揀嘅 level（`Lod_BeginFrame` 喺 shadow cascade 之前）。`animate: true` 嘅 Visual 只用 level 0（`cullDistance` 仍生效）；`proxy_model` edit view 唔行 LOD；LOD mesh 缺失退回 level 0。Preload 會載入 LOD mesh。
   - Counters：Rendering Settings、collision-viz、FPS `LOD`、bridge `perf.lod`；bridge `set_setting` 加 `lodEnabled`。Inspector Visual 區有 LOD 清單同 Cull Distance。
-  - Linux：`tools/run_lod_check.sh`。驗收場景：`testbed/rom/scene/scene_lod.json`（Sphere → Capsule → Cube，切換距離 30／70，cullDistance 120）。
+  - Linux：`tools/run_lod_check.sh`。驗收場景：`testbed/rom/scene/scene_lod.json`——同一個球嘅三級面數（`Sphere.fbx` 32×16 → `testbed/rom/model/lod/Sphere_LOD1.fbx` 16×8 → `Sphere_LOD2.fbx` 8×4，半徑同座標軸一致）。兩排：大球（scale 4，切換 15／35，開場即同時見到三級）同遠景排（切換 30／70，`cullDistance` 120，z=128／140 會被剔除）。LOD mesh 由 `python3 tools/gen_lod_test_meshes.py` 生成（ASCII FBX；Linux 只做咗自我一致性檢查，FBX SDK 匯入要 Windows 驗收）。
   - 驗收（Windows Debug＋Release，Terry）：行近行遠目視切換、counters 正確、影子冇跳變、`lodEnabled` A/B 頂點數／GPU ms、`animate` 物件冇回歸、Inspector 加減 LOD＋Undo／Redo＋保存重載、LOD mesh hot reload。
   - 未做：per-layer cull distance、自動減面、skinned LOD、per-clip bounds。
 - [ ] **Occlusion culling（暫緩）**
