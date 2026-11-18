@@ -10,6 +10,7 @@
 #include "engine/debug_draw/debug_ofstream.h"
 #include "engine/core/content_path.h"
 #include "engine/core/builtin_assets.h"
+#include "engine/core/builtin_paths.h"
 #include "engine/rendering/environment/panorama_sky.h"
 
 #include <fstream>
@@ -26,10 +27,13 @@ static bool s_ready = false;
 static bool FileExistsW(const wchar_t* path) {
     if (!path || !path[0])
         return false;
+    // The BRDF LUT is compiled into the exe ("builtin:" never reads the disk).
+    if (builtin_paths::IsBuiltin(std::wstring(path)))
+        return builtin_assets::FindTexture(std::wstring(path), nullptr);
     std::ifstream file(content_path::ReadableWideCurrent(path), std::ios::binary);
     if (file)
         return true;
-    // The BRDF LUT is compiled into the exe, so its default path needs no file.
+    // The older "rom/skybox/ibl/brdf_lut.png" spelling also falls back to the built-in LUT.
     return builtin_assets::FindTexture(std::wstring(path), nullptr);
 }
 

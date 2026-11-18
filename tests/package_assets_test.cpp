@@ -52,7 +52,7 @@ int main() {
     Write(rom / "scene/default_scene.txt", "scene_main.json");
     Write(rom / "scene/scene_main.json",
           R"({"nodes":[{"components":{"visual":{"model":"rom/model/hero/hero.fbx"}},"prefabAssetPath":"rom/prefabs/enemy.prefab"}],)"
-          R"("canvas":{"elements":[{"onClick":{"script":"LoadScene","scene":"scene_next.json"},"font":{"texture":"rom/font/IBMPlexMono-Regular.ttf"}}]}})");
+          R"("canvas":{"elements":[{"onClick":{"script":"LoadScene","scene":"scene_next.json"},"font":{"texture":"builtin:font/IBMPlexMono-Regular.ttf"}}]}})");
     Write(rom / "scene/scene_next.json", R"({"texture":"rom/texture/bg.png"})");
     Write(rom / "scene/scene_unused.json", R"({"texture":"rom/texture/unused.png"})");
     Write(rom / "scene/scene_from_script.json", R"({"texture":"rom/texture/from_script.png"})");

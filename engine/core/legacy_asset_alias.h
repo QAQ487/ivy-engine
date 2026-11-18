@@ -1,8 +1,8 @@
 // legacy_asset_alias.h
 // Old content names two fonts the engine no longer ships: the bitmap font atlas
 // (rom/texture/consolab_ascii_512.png) and rom/font/LemonSlice.ttf. UI text now defaults to
-// the built-in IBM Plex Mono (rom/font/IBMPlexMono-Regular.ttf, compiled into the exe). A
-// content file that still names a retired font is read as the default UI font, unless the
+// the built-in IBM Plex Mono ("builtin:font/IBMPlexMono-Regular.ttf", compiled into the exe).
+// A content file that still names a retired font is read as the default UI font, unless the
 // project provides its own file at that path.
 // Pure logic (no Windows / D3D), unit-testable on Linux.
 
@@ -14,7 +14,7 @@ namespace legacy_alias {
 
 inline constexpr const char* kLegacyFontAtlas = "rom/texture/consolab_ascii_512.png";
 inline constexpr const char* kLegacyLemonSlice = "rom/font/LemonSlice.ttf";
-inline constexpr const char* kReplacementFont = "rom/font/IBMPlexMono-Regular.ttf";
+inline constexpr const char* kReplacementFont = "builtin:font/IBMPlexMono-Regular.ttf";
 
 namespace detail {
 

@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "engine/core/builtin_paths.h"
+
 #include <string>
 
 struct UIGlyph {
@@ -26,8 +28,8 @@ struct UIFont {
 	UIGlyph glyphs[95]{};
 };
 
-// Default UI font path (IBM Plex Mono). No project file is needed: it is compiled into the exe.
-inline constexpr const char* kUIFontDefaultPath = "rom/font/IBMPlexMono-Regular.ttf";
+// Default UI font path (IBM Plex Mono, "builtin:" = compiled into the exe, no project file).
+inline constexpr const char* kUIFontDefaultPath = builtin_paths::kUiFont;
 
 const UIFont* UIFont_Get(const wchar_t* ttfPath);
 // Debug text font (IBM Plex Mono, compiled into the exe). Null when it cannot be baked.

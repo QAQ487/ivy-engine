@@ -11,6 +11,7 @@ filenames in ``testbed/rom/scene``.
 """
 
 import json
+import re
 import struct
 import sys
 from pathlib import Path
@@ -71,6 +72,14 @@ def resolve_rom(ref):
     fail("missing asset: %s" % normalized)
 
 
+def _builtin_paths():
+    header = (REPO / "engine" / "core" / "builtin_paths.h").read_text(encoding="utf-8")
+    return set(re.findall(r'"(builtin:[^"]+)"', header))
+
+
+BUILTIN_PATHS = _builtin_paths()
+
+
 def walk(value, scene_name, inherited_key=None):
     if isinstance(value, dict):
         for key, item in value.items():
@@ -91,6 +100,13 @@ def walk(value, scene_name, inherited_key=None):
         scene_path = SCENE_DIR / value
         if not scene_path.is_file() or not is_inside(SCENE_DIR, scene_path):
             fail("%s: missing scene %s" % (scene_name, value))
+        return
+
+    # "builtin:..." names an engine asset compiled into the exe (engine/core/builtin_paths.h),
+    # not a project file. Only the known built-in paths are accepted.
+    if value.lower().startswith("builtin:"):
+        if value not in BUILTIN_PATHS:
+            fail("%s: unknown built-in asset %s" % (scene_name, value))
         return
 
     normalized = value.replace("\\", "/")

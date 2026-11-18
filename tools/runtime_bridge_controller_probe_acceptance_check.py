@@ -96,8 +96,6 @@ class ProbeAcceptanceCheck(unittest.TestCase):
             exe.write_bytes(b"MZ\x00\x00")
             (exe_dir / "resources" / "skybox").mkdir(parents=True)
             (exe_dir / "resources" / "skybox" / "MySkybox.dds").write_bytes(b"DDS")
-            (exe_dir / "resources" / "font").mkdir(parents=True)
-            (exe_dir / "resources" / "font" / "IBMPlexMono-Regular.ttf").write_bytes(b"TTF")
 
             staged_exe, package = runner.stage_fixture_package(
                 exe, out_dir, runner.DEFAULT_FIXTURE)
@@ -105,8 +103,6 @@ class ProbeAcceptanceCheck(unittest.TestCase):
             self.assertTrue((package / "rom" / "scene" / runner.EXPECTED_SCENE).is_file())
             self.assertTrue((package / "rom" / "model" / "object" / "Box_Brown.fbx").is_file())
             self.assertTrue(mouse.fixture_asset_readable(package, "rom/skybox/MySkybox.dds"))
-            self.assertTrue(
-                mouse.fixture_asset_readable(package, "rom/font/IBMPlexMono-Regular.ttf"))
 
             scene = json.loads(runner.DEFAULT_FIXTURE.read_text(encoding="utf-8"))
             for rom_path in mouse.collect_fixture_rom_paths(scene):

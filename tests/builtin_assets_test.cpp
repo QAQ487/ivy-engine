@@ -32,7 +32,8 @@ int main() {
 
     // Built-in textures answer to their rom/ path.
     const unsigned char kPngSig[8] = {0x89, 'P', 'N', 'G', 0x0d, 0x0a, 0x1a, 0x0a};
-    const char* const kPaths[] = {"rom/branding/ivy_logo.png", "rom/skybox/ibl/brdf_lut.png"};
+    const char* const kPaths[] = {"builtin:branding/ivy_logo.png", "builtin:ibl/brdf_lut.png",
+                                  "rom/branding/ivy_logo.png", "rom/skybox/ibl/brdf_lut.png"};
     for (const char* path : kPaths) {
         builtin_assets::Asset a;
         Expect(builtin_assets::FindTexture(std::string(path), &a), path);
@@ -45,10 +46,21 @@ int main() {
     Expect(builtin_assets::FindTexture(std::wstring(L"ROM\\Skybox\\IBL\\BRDF_LUT.PNG"), &w), "wide, backslash, any case");
     // Default UI font answers to its rom/ path, not the retired ones.
     builtin_assets::Asset f;
-    Expect(builtin_assets::FindFont(std::string("rom/font/IBMPlexMono-Regular.ttf"), &f), "default UI font");
+    Expect(builtin_assets::FindFont(std::string(builtin_paths::kUiFont), &f), "default UI font, builtin: path");
+    Expect(builtin_assets::FindFont(std::string("rom/font/IBMPlexMono-Regular.ttf"), nullptr), "older rom/ spelling");
     Expect(f.data == font.data && f.size == font.size, "UI font is the debug font data");
     Expect(builtin_assets::FindFont(std::wstring(L"ROM\\Font\\ibmplexmono-regular.TTF"), nullptr), "font, wide, any case");
     Expect(!builtin_assets::FindFont(std::string("rom/font/LemonSlice.ttf"), nullptr), "LemonSlice is gone");
+    Expect(builtin_assets::FindTexture(std::string(builtin_paths::kBrandLogo), nullptr), "logo constant");
+    Expect(builtin_assets::FindTexture(std::string(builtin_paths::kBrdfLut), nullptr), "LUT constant");
+    Expect(builtin_assets::FindTexture(std::wstring(builtin_paths::kBrandLogoW), nullptr), "logo constant, wide");
+
+    // "builtin:" prefix detection.
+    Expect(builtin_paths::IsBuiltin(std::string("builtin:font/x.ttf")), "builtin prefix");
+    Expect(builtin_paths::IsBuiltin(std::wstring(L"BUILTIN:Font/x.ttf")), "builtin prefix, wide, any case");
+    Expect(!builtin_paths::IsBuiltin(std::string("rom/font/x.ttf")), "rom path is not builtin");
+    Expect(!builtin_paths::IsBuiltin(std::string("builtin")), "too short");
+    Expect(!builtin_paths::IsBuiltin(std::string("xbuiltin:font/x.ttf")), "prefix only at the start");
     Expect(!builtin_assets::FindTexture(std::string("rom/font/IBMPlexMono-Regular.ttf"), nullptr), "a font is not a texture");
     Expect(!builtin_assets::FindTexture(std::string("rom/skybox/ibl/irradiance.dds"), nullptr),
            "per-skybox IBL maps are content, not built in");

@@ -9,6 +9,7 @@
 #include "engine/rendering/sprite/texture.h"
 #include "engine/core/content_path.h"
 #include "engine/core/builtin_assets.h"
+#include "engine/core/builtin_paths.h"
 
 #include <cctype>
 #include <cstdio>
@@ -141,6 +142,13 @@ namespace {
 	}
 
 	bool BakeFont(const wchar_t* ttfPath, UIFont& out) {
+		if (builtin_paths::IsBuiltin(std::wstring(ttfPath))) {
+			// "builtin:" never reads the disk and cannot be overridden by a project file.
+			builtin_assets::Asset builtin;
+			if (!builtin_assets::FindFont(std::wstring(ttfPath), &builtin)) return false;
+			return BakeFontData(builtin.data, builtin.size, std::wstring(L"__ttf_atlas__:") + ttfPath,
+				kBakeSize, kAtlasSize, out);
+		}
 		const std::wstring resolved = content_path::ReadableWideCurrent(ttfPath);
 		const wchar_t* openPath = resolved.empty() ? ttfPath : resolved.c_str();
 		const std::vector<unsigned char> ttf = LoadFile(openPath);
@@ -211,6 +219,7 @@ void UIFont_ClearCache() {
 bool UIFont_Reload(const wchar_t* path) {
     const auto key = std::filesystem::absolute(path).lexically_normal().wstring();
     for (auto& entry : g_fonts) {
+        if (builtin_paths::IsBuiltin(entry.first)) continue;  // compiled in, nothing to reload
         if (_wcsicmp(std::filesystem::absolute(entry.first).lexically_normal().c_str(), key.c_str()) != 0) continue;
         UIFont candidate;
         const std::wstring resolved = content_path::ReadableWideCurrent(entry.first.c_str());

@@ -83,15 +83,15 @@ bool DrawFontPathInput(const char* id, char* buf, size_t bufSize) {
         }
         ImGui::EndDragDropTarget();
     }
-    // The engine's default font lives in the exe, not in the project's rom/, so the Asset
-    // Browser cannot offer it. This button fills in its path.
+    // The engine's built-in font lives in the exe, not in the project's rom/, so the Asset
+    // Browser cannot offer it. This button fills in its "builtin:" path.
     ImGui::PushID(id);
-    if (ImGui::SmallButton("Use engine default font")) {
+    if (ImGui::SmallButton("Use engine built-in font")) {
         strncpy_s(buf, bufSize, kUIFontDefaultPath, _TRUNCATE);
         changed = true;
     }
     if (ImGui::IsItemHovered())
-        ImGui::SetTooltip("%s\nBuilt into the engine; no file is needed in your project.", kUIFontDefaultPath);
+        ImGui::SetTooltip("%s\nBuilt into the engine (\"builtin:\"), not a file in your project's rom/.", kUIFontDefaultPath);
     ImGui::PopID();
     return changed;
 }

@@ -10,6 +10,7 @@
 #include "engine/core/content_path.h"
 #include "engine/core/texture_cook_policy.h"
 #include "engine/core/builtin_assets.h"
+#include "engine/core/builtin_paths.h"
 #include <string>
 #include <filesystem>
 #include <cstdio>
@@ -58,6 +59,8 @@ void Texture_Finalize() {
 }
 
 static std::wstring TexturePathKey(const std::filesystem::path& path) {
+    // "builtin:" is not a file path; keep it out of the filesystem calls below.
+    if (builtin_paths::IsBuiltin(path.wstring())) return path.wstring();
     std::error_code ec;
     const auto absolute = std::filesystem::absolute(path, ec);
     return (ec ? path : absolute).lexically_normal().wstring();
@@ -66,6 +69,7 @@ static std::wstring TexturePathKey(const std::filesystem::path& path) {
 // (playable package texture cook). Prefer the file the content names; when it is
 // not there, use the .dds with the same name. Otherwise keep the old behaviour.
 static std::wstring ResolveTexturePath(const wchar_t* path) {
+    if (builtin_paths::IsBuiltin(std::wstring(path))) return path;
     std::wstring primary = content_path::ReadableWideCurrent(path);
     std::error_code ec;
     if (!primary.empty() && std::filesystem::is_regular_file(std::filesystem::path(primary), ec))
@@ -90,6 +94,12 @@ static HRESULT ReadTextureImage(const wchar_t* path, TexMetadata& metadata, Scra
 // when no file exists there. `requested` is the path the content named, `openPath` the
 // resolved one; a real file always wins.
 static HRESULT ReadTextureOrBuiltin(const wchar_t* requested, const wchar_t* openPath, TexMetadata& metadata, ScratchImage& image) {
+    if (builtin_paths::IsBuiltin(std::wstring(requested))) {
+        // "builtin:" never reads the disk and cannot be overridden by a project file.
+        builtin_assets::Asset asset;
+        if (!builtin_assets::FindTexture(std::wstring(requested), &asset)) return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
+        return LoadFromWICMemory(asset.data, asset.size, WIC_FLAGS_NONE, &metadata, image);
+    }
     std::error_code ec;
     if (!std::filesystem::is_regular_file(std::filesystem::path(openPath), ec)) {
         builtin_assets::Asset asset;

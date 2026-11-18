@@ -7,6 +7,7 @@
 #include <DirectXMath.h>
 #include <string>
 #include "engine/rendering/d3d11/shader.h"
+#include "engine/core/builtin_paths.h"
 
 enum class ShadowQuality {
     Low = 0,
@@ -32,7 +33,8 @@ struct RenderSettingsData {
     float iblIntensity = 1.0f;
     std::string iblIrradiancePath = "rom/skybox/ibl/irradiance.dds";
     std::string iblPrefilterPath = "rom/skybox/ibl/prefilter.dds";
-    std::string iblBrdfLutPath = "rom/skybox/ibl/brdf_lut.png";
+    // Constant PBR lookup table, compiled into the exe (older scenes may still say rom/skybox/ibl/brdf_lut.png).
+    std::string iblBrdfLutPath = builtin_paths::kBrdfLut;
     DirectX::XMFLOAT4 clearColor = { 0.69f, 0.77f, 0.87f, 1.0f };
     std::string defaultShader = "standard";
     ShadowQuality shadowQuality = ShadowQuality::Medium;

@@ -6,6 +6,7 @@
 #pragma once
 
 #include "engine/core/builtin_assets_data.h"
+#include "engine/core/builtin_paths.h"
 
 #include <cstddef>
 #include <string>
@@ -22,10 +23,12 @@ inline Asset DebugMonoFontTtf() {
     return Asset{kDebugMonoFontTtf, sizeof(kDebugMonoFontTtf)};
 }
 
-// Textures that answer to a rom/ path when no file exists there (project or resources/).
-// A real file always wins, so a project can still override one. Keep the list in step
-// with kBuiltinRomPaths in tools/materialize_engine_defaults.py (checked by
-// tools/check_runtime_host_assets.py): those paths are never copied into a package.
+// Each asset answers to its "builtin:" path (builtin_paths.h) and never touches the disk. The
+// older "rom/..." spellings from before the "builtin:" prefix still work, but only when no
+// file exists there (project or resources/), so a project can override those. Keep the "rom/"
+// spellings in step with kBuiltinRomPaths in playable_package_builder.cpp and
+// tools/materialize_engine_defaults.py (tools/check_runtime_host_assets.py checks it): those
+// paths are never copied into a package.
 struct TextureEntry {
     const char* romPath;  // lower case, '/' separators
     const unsigned char* data;
@@ -34,6 +37,8 @@ struct TextureEntry {
 
 inline const TextureEntry* TextureEntries(std::size_t* count) {
     static const TextureEntry kEntries[] = {
+        {"builtin:branding/ivy_logo.png", kBrandLogoPng, sizeof(kBrandLogoPng)},
+        {"builtin:ibl/brdf_lut.png", kBrdfLutPng, sizeof(kBrdfLutPng)},
         {"rom/branding/ivy_logo.png", kBrandLogoPng, sizeof(kBrandLogoPng)},
         {"rom/skybox/ibl/brdf_lut.png", kBrdfLutPng, sizeof(kBrdfLutPng)},
     };
@@ -45,6 +50,7 @@ inline const TextureEntry* TextureEntries(std::size_t* count) {
 // same IBM Plex Mono as the debug text font. Same rules and checks as the textures above.
 inline const TextureEntry* FontEntries(std::size_t* count) {
     static const TextureEntry kEntries[] = {
+        {"builtin:font/ibmplexmono-regular.ttf", kDebugMonoFontTtf, sizeof(kDebugMonoFontTtf)},
         {"rom/font/ibmplexmono-regular.ttf", kDebugMonoFontTtf, sizeof(kDebugMonoFontTtf)},
     };
     *count = sizeof(kEntries) / sizeof(kEntries[0]);

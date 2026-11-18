@@ -17,6 +17,7 @@
 
 #include "engine/rendering/d3d11/shader.h"
 #include "engine/scene/render_settings.h"
+#include "engine/core/builtin_paths.h"
 #include "engine/rendering/culling/frustum_cull.h"
 #include "engine/rendering/culling/shadow_cascade_cull.h"
 #include "engine/rendering/lighting/shadow.h"
@@ -129,9 +130,9 @@ void DrawBootLoadingScreen(float progress01, const std::string& label) {
 	static bool s_logoLoadAttempted = false;
 	if (!s_logoLoadAttempted) {
 		s_logoLoadAttempted = true;
-		// The logo is compiled into the exe (builtin_assets.h); a project file at this
-		// path still overrides it. Quiet load: a missing logo must never pop a dialog.
-		s_logoTex = TextureLoadQuiet(L"rom/branding/ivy_logo.png", false);
+		// The logo is compiled into the exe ("builtin:" path, builtin_assets.h) and never
+		// touches the disk. Quiet load: a failure must never pop a dialog.
+		s_logoTex = TextureLoadQuiet(builtin_paths::kBrandLogoW, false);
 	}
 
 	float contentBottom = screenH * 0.42f;
