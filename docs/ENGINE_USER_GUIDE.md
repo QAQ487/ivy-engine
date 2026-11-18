@@ -91,7 +91,7 @@ You should get a window (design size **1920×1080**). The editor opens a **conte
 ### Try the sample pack
 
 1. Run **IvyEngine**. If a recent external project opens instead, use **File → Open Testbed**. With no recent project, a Debug build opens `testbed/` on its own.
-2. The startup scene is the sample menu inside `testbed/rom/scene/`. Other scenes there cover PBR, panorama sky, 2D sprites, 2D physics and a top-down 2D sample.
+2. The startup scene is the sample menu inside `testbed/rom/scene/`. Other scenes there cover PBR, panorama sky, mesh LOD (`scene_lod.json`, walkable; `scene_lod_fly.json` for a script-free fly camera), 2D sprites, 2D physics and a top-down 2D sample.
 3. Press **F2** (or the toolbar Play button) and click **Play** in the menu to load `scene_sample_playground.json`.
 4. Move with **WASD** / left stick (the character always faces where the camera looks: **W** forward, **D** right, **S** back, **A** left), turn the camera and character with the **mouse** / right stick, **Space** to jump; the cursor is hidden while playing (**F6** toggles it). The testbed has no `GameScripts` of its own: script-driven behavior (for example the spinning box from `SampleSpinScript`) only runs when a script DLL that contains those classes is loaded. The Debug editor and Debug runtime host additionally compile in `SamplePlayerScript` (WASD / jump / third-person camera), so scenes with that player walk without any script build. Reference scripts live in `samples/scripts/`.
 5. Press **F2** again to stop Play mode.

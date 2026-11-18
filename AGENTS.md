@@ -63,7 +63,7 @@ Linux-runnable checks (use what matches the change; none of these is a Windows p
 | Area | Command |
 |------|---------|
 | Editor pure-logic units | `tools/run_editor_{console_log,docking_math,settings_categories,theme,ui_scale_math}_check.sh`, `tools/run_debug_ofstream_tls_check.sh` |
-| Culling | `tools/run_{frustum,shadow,sprite}_cull_check.sh` |
+| Culling / LOD | `tools/run_{frustum,shadow,sprite}_cull_check.sh`, `tools/run_lod_check.sh`; `tests/{cull_settings,euler_math,third_person_move}_test.cpp` (build lines in each file header) |
 | Content paths / hot reload | `tools/run_utf8_path_check.sh`, `tools/run_content_removal_policy_check.sh`, `g++ -std=c++17 -I. tools/content_path_check.cpp -o /tmp/cpc && /tmp/cpc` |
 | Asset layout | `python3 tools/check_testbed_assets.py`, `python3 tools/check_engine_resource_paths.py`, `python3 tools/check_runtime_host_assets.py` |
 | Test bridge (offline protocol) | `tools/run_runtime_bridge_offline_linux.sh` |
@@ -88,7 +88,7 @@ Windows-only harnesses: `tools/run_*.cmd`, `tools/run_*.ps1` (2D regression, col
 | `src/app/` | `main.cpp` (WinMain, loop, debug hotkeys), `scene/game_scene.cpp`, cameras (scene/debug/third/first person, director), fades/transitions |
 | `resources/` | Read-only engine defaults (shaders, fonts, branding, primitives, skybox/IBL), mirrored beside the exe |
 | `testbed/` | In-repo content project (sample + bridge fixture scenes, `scenarios/`); has no `GameScripts` |
-| `samples/scripts/` | Reference scripts (not compiled in-repo) |
+| `samples/scripts/` | Reference scripts. `SamplePlayerScript` is compiled into the Debug editor and Debug runtime host (so the testbed player walks without a `GameScripts` build); `SampleCheckpointScript` into the Debug runtime host only; the rest are not compiled in-repo |
 | `external_content_template/` | Starter for an external content project (`IvyEngine.props`, `GameScripts.vcxproj`, `deploy/deploy.bat`) |
 | `libraries/` | imgui (docking 1.92.5), imguizmo, nlohmann, fbxsdk, effekseer, directxtex, box2d |
 | `tools/`, `tests/` | Checks, generators, bridge clients, Linux Win32 shim |

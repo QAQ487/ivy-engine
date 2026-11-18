@@ -6,7 +6,7 @@ Script-facing helpers from `api:ScriptRuntimeApi` / `script_runtime_api.h`. Scen
 
 | Find / type | Notes |
 |-------------|--------|
-| `api:ScriptApi_FindVisualComponent` | Skinned/static mesh + clips (`api:VisualComponent`) |
+| `api:ScriptApi_FindVisualComponent` | Skinned/static mesh + clips (`api:VisualComponent`). Public fields also include the mesh LOD data `lods` (level `i+1` = `lods[i]`, `maxDistance` = switch-to distance) and `cullDistance` (0 = never); see `scene-prefab.md`. LOD applies in Play / runtime only and is skipped while `playAnimation` is on |
 | `api:ScriptApi_FindMaterialComponent` | `api:MaterialComponent` |
 | `api:ScriptApi_FindEffectComponent` | Effekseer-style `api:EffectComponent` |
 | Scene types `visual`, `Billboard`, `SpriteRenderer`, `SpriteAnimator`, lights | Registered in `api:SceneLoader_RegisterComponentTypes` |
