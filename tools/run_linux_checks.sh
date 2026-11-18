@@ -67,6 +67,7 @@ run tools/content_path_check.cpp bash -c \
 # 4. Python checks that do not need Windows (no ctypes.WinDLL, no live bridge harness).
 for py in \
   tools/check_testbed_assets.py \
+  tools/check_2d_sample.py \
   tools/check_engine_resource_paths.py \
   tools/check_runtime_host_assets.py \
   tools/check_editor_gui_linkage.py \

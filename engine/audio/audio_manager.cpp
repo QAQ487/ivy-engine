@@ -9,6 +9,7 @@
 #include "engine/core/utf8_path.h"
 #include "engine/core/content_path.h"
 #include "engine/audio/wav_parse.h"
+#include "engine/debug_draw/debug_ofstream.h"
 #include "libraries/nlohmann/json.hpp"
 #include <algorithm>
 #include <cmath>
@@ -30,7 +31,13 @@ struct Playback {
     // XAudio2 Data
     IXAudio2SourceVoice* sourceVoice = nullptr;
     std::vector<BYTE>                           audioData; // Owns the raw WAV data
-    WAVEFORMATEX                                wfx;
+    // Whole voice format: XAudio2 reads sizeof(WAVEFORMATEX) + cbSize bytes,
+    // so WAVE_FORMAT_EXTENSIBLE (cbSize 22) and ADPCM (cbSize 32) need room
+    // past the 18-byte WAVEFORMATEX. Copied by value with the Playback.
+    union VoiceFormat {
+        WAVEFORMATEX ex;
+        BYTE         bytes[64];
+    } format = {};
 
     // 3D Data
     DirectX::XMFLOAT3           position;
@@ -168,15 +175,18 @@ bool AudioManager::LoadWav(const std::string& path, Playback* outSource) {
     wav_parse::WavChunks chunks;
     if (!wav_parse::ParseRiffWave(bytes.data(), bytes.size(), &chunks)) return false;
 
-    memset(&outSource->wfx, 0, sizeof(WAVEFORMATEX));
-    if (chunks.fmtSize >= sizeof(WAVEFORMATEX)) {
-        memcpy(&outSource->wfx, bytes.data() + chunks.fmtOffset, sizeof(WAVEFORMATEX));
+    static_assert(sizeof(WAVEFORMATEX) == wav_parse::kWaveFormatExSize, "WAVEFORMATEX size");
+    wav_parse::FormatCopy copy;
+    if (!wav_parse::PlanFormatCopy(bytes.data() + chunks.fmtOffset, chunks.fmtSize,
+            sizeof(outSource->format.bytes), &copy)) {
+        const std::string msg = "AudioManager: unsupported WAV format chunk (cbSize too large): " + path + "\n";
+        hal::DebugWriteA(msg.c_str());
+        return false;
     }
-    else {
-        // PCMWAVEFORMAT (16 bytes): no cbSize field.
-        memcpy(&outSource->wfx, bytes.data() + chunks.fmtOffset, sizeof(PCMWAVEFORMAT));
-        outSource->wfx.cbSize = 0;
-    }
+    memset(&outSource->format, 0, sizeof(outSource->format));
+    memcpy(outSource->format.bytes, bytes.data() + chunks.fmtOffset, copy.bytes);
+    if (copy.zeroCbSize)
+        outSource->format.ex.cbSize = 0;
 
     const auto dataBegin = bytes.begin() + static_cast<std::ptrdiff_t>(chunks.dataOffset);
     outSource->audioData.assign(dataBegin, dataBegin + static_cast<std::ptrdiff_t>(chunks.dataSize));
@@ -199,7 +209,7 @@ void AudioManager::PlaySFX3D(const std::string& id, const std::string& path, con
     source->position = position;
 
     // Create Source Voice
-    if (FAILED(m_xaudio->CreateSourceVoice(&source->sourceVoice, &source->wfx))) return;
+    if (FAILED(m_xaudio->CreateSourceVoice(&source->sourceVoice, &source->format.ex))) return;
 
     // --- 3D Setup (The Fix) ---
     // We force the Emitter calculation to be MONO (1 channel) regardless of the file.
@@ -245,7 +255,7 @@ void AudioManager::PlaySFX(const std::string& id, const std::string& path, float
     source->isLooping = loop;
     source->baseVolume = volume;
 
-    if (FAILED(m_xaudio->CreateSourceVoice(&source->sourceVoice, &source->wfx))) return;
+    if (FAILED(m_xaudio->CreateSourceVoice(&source->sourceVoice, &source->format.ex))) return;
 
     XAUDIO2_BUFFER buffer = { 0 };
     buffer.AudioBytes = (UINT32)source->audioData.size();
@@ -269,7 +279,7 @@ void AudioManager::PlayBGM(const std::string& id, const std::string& path, float
     source->isLooping = loop;
     source->baseVolume = volume;
 
-    if (FAILED(m_xaudio->CreateSourceVoice(&source->sourceVoice, &source->wfx))) return;
+    if (FAILED(m_xaudio->CreateSourceVoice(&source->sourceVoice, &source->format.ex))) return;
 
     XAUDIO2_BUFFER buffer = { 0 };
     buffer.AudioBytes = (UINT32)source->audioData.size();
@@ -293,7 +303,7 @@ void AudioManager::PlayVoice(const std::string& id, const std::string& path, flo
     source->isLooping = false;
     source->baseVolume = volume;
 
-    if (FAILED(m_xaudio->CreateSourceVoice(&source->sourceVoice, &source->wfx))) return;
+    if (FAILED(m_xaudio->CreateSourceVoice(&source->sourceVoice, &source->format.ex))) return;
 
     XAUDIO2_BUFFER buffer = { 0 };
     buffer.AudioBytes = (UINT32)source->audioData.size();
@@ -348,10 +358,10 @@ void AudioManager::PlayBGM(const std::string& id, float volume, bool loop) {
     
     // Deep copy audio data
     source->audioData = loaded->audioData; // std::vector does deep copy
-    source->wfx = loaded->wfx;
+    source->format = loaded->format;
     
     // Create Source Voice
-    if (FAILED(m_xaudio->CreateSourceVoice(&source->sourceVoice, &source->wfx))) return;
+    if (FAILED(m_xaudio->CreateSourceVoice(&source->sourceVoice, &source->format.ex))) return;
     
     // Submit Buffer
     XAUDIO2_BUFFER buffer = { 0 };
@@ -405,10 +415,10 @@ void AudioManager::PlaySFX(const std::string& id, float volume, bool loop) {
     
     // Deep copy audio data
     source->audioData = loaded->audioData; // std::vector does deep copy
-    source->wfx = loaded->wfx;
+    source->format = loaded->format;
     
     // Create Source Voice
-    if (FAILED(m_xaudio->CreateSourceVoice(&source->sourceVoice, &source->wfx))) return;
+    if (FAILED(m_xaudio->CreateSourceVoice(&source->sourceVoice, &source->format.ex))) return;
     
     // Submit Buffer
     XAUDIO2_BUFFER buffer = { 0 };
@@ -462,10 +472,10 @@ void AudioManager::PlayVoice(const std::string& id, float volume) {
     
     // Deep copy audio data
     source->audioData = loaded->audioData; // std::vector does deep copy
-    source->wfx = loaded->wfx;
+    source->format = loaded->format;
     
     // Create Source Voice
-    if (FAILED(m_xaudio->CreateSourceVoice(&source->sourceVoice, &source->wfx))) return;
+    if (FAILED(m_xaudio->CreateSourceVoice(&source->sourceVoice, &source->format.ex))) return;
     
     // Submit Buffer
     XAUDIO2_BUFFER buffer = { 0 };
@@ -537,7 +547,7 @@ void AudioManager::PlaySFX3D(const std::string& id, float volume, bool loop) {
     
     // Deep copy audio data
     source->audioData = loaded->audioData; // std::vector does deep copy
-    source->wfx = loaded->wfx;
+    source->format = loaded->format;
     
     // Copy 3D data
     source->position = loaded->position;
@@ -553,7 +563,7 @@ void AudioManager::PlaySFX3D(const std::string& id, float volume, bool loop) {
     source->dspSettings.pMatrixCoefficients = source->matrixCoefficients.data();
     
     // Create Source Voice
-    if (FAILED(m_xaudio->CreateSourceVoice(&source->sourceVoice, &source->wfx))) return;
+    if (FAILED(m_xaudio->CreateSourceVoice(&source->sourceVoice, &source->format.ex))) return;
     
     // Submit Buffer
     XAUDIO2_BUFFER buffer = { 0 };
@@ -604,7 +614,7 @@ void AudioManager::Apply3DAudio(Playback* source) {
     }
 
     // 5. Apply to Voice (Handling Stereo Files correctly)
-    int voiceChannels = source->wfx.nChannels;
+    int voiceChannels = source->format.ex.nChannels;
 
     if (voiceChannels == 1) {
         // Mono File: Direct mapping
@@ -897,7 +907,7 @@ void AudioManager::Setup3DEmitter(Playback* source, const DirectX::XMFLOAT3& pos
 
 bool AudioManager::SubmitAndStart(Playback* source, bool loop) {
     if (!source || !m_xaudio) return false;
-    if (FAILED(m_xaudio->CreateSourceVoice(&source->sourceVoice, &source->wfx)))
+    if (FAILED(m_xaudio->CreateSourceVoice(&source->sourceVoice, &source->format.ex)))
         return false;
 
     XAUDIO2_BUFFER buffer = { 0 };
@@ -982,7 +992,7 @@ AudioPlaybackId AudioManager::StartInstanceFromLoaded(const std::string& loadedI
     playback->isLoaded = false;
     playback->persistAcrossScene = persistAcrossScene;
     playback->audioData = loaded->audioData;
-    playback->wfx = loaded->wfx;
+    playback->format = loaded->format;
     playback->position = loaded->position;
 
     if (playback->is3D)
@@ -1151,7 +1161,7 @@ bool AudioManager::ReloadContent(const std::string& path) {
         if (!matches(source)) continue;
         DestroyPlaybackVoice(&source);
         source.audioData = candidate.audioData;
-        source.wfx = candidate.wfx;
+        source.format = candidate.format;
     }
     return true;
 }

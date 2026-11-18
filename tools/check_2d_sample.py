@@ -1,8 +1,18 @@
-"""Validate the phase-6 sample's scene contract and relocatable asset references."""
+"""Validate the phase-6 sample's scene contract and relocatable asset references.
+
+Usage: python3 tools/check_2d_sample.py [content-project-root]   (default: testbed/)
+"""
 import json
 import sys
 from pathlib import Path
-root = Path(sys.argv[1]).resolve()
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+# Older rom/ spellings of engine assets compiled into the exe: they resolve to
+# built-in data when no file exists there, so they are not project files.
+from materialize_engine_defaults import BUILTIN_ROM_PATHS  # noqa: E402
+
+REPO = Path(__file__).resolve().parent.parent
+root = (Path(sys.argv[1]) if len(sys.argv) > 1 else REPO / "testbed").resolve()
 def read(path):
     return json.loads(path.read_text(encoding="utf-8-sig"))
 def walk(nodes):
@@ -35,6 +45,10 @@ for filename in ("scene_topdown_2d.json", "scene_topdown_2d_next.json", "scene_e
             assert not (len(value) > 1 and value[1] == ":"), "absolute developer path"
             if value.startswith("rom/"):
                 assert ".." not in Path(value).parts
-                assert (root / value).is_file(), value
+                # Same lookup as content_path::ResolveRomForRead: the project
+                # file, else <engine>/resources/<rest>.
+                if (root / value).is_file() or (REPO / "resources" / value[4:]).is_file():
+                    return
+                assert value in BUILTIN_ROM_PATHS, value
     refs(scene)
 print("PASS: phase-6 scenes, hierarchy, score, exits and relative assets")
