@@ -86,16 +86,16 @@
       }
     },
     {
-      "name": "Boulder x1 z12",
+      "name": "Boulder x1 z8",
       "tag": 0,
       "children": [],
       "components": {
         "SceneTransform": {
-          "posX": -36.0,
+          "posX": -18.0,
           "posY": 0.0,
-          "posZ": 12.0,
+          "posZ": 8.0,
           "rotX": 0.0,
-          "rotY": 30.0,
+          "rotY": 0.0,
           "rotZ": 0.0,
           "scaleX": 1.0,
           "scaleY": 1.0,
@@ -108,17 +108,17 @@
           "lods": [
             {
               "model": "rom/model/lod/Boulder_LOD1.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 11.1,
               "screenHeight": 0.12
             },
             {
               "model": "rom/model/lod/Boulder_LOD2.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 22.1,
               "screenHeight": 0.06
             },
             {
               "model": "rom/model/lod/Boulder_LOD3.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 44.3,
               "screenHeight": 0.03
             }
           ]
@@ -126,16 +126,16 @@
       }
     },
     {
-      "name": "Boulder x1 z24",
+      "name": "Boulder x1 z16",
       "tag": 0,
       "children": [],
       "components": {
         "SceneTransform": {
-          "posX": -36.0,
+          "posX": -18.0,
           "posY": 0.0,
-          "posZ": 24.0,
+          "posZ": 16.0,
           "rotX": 0.0,
-          "rotY": 30.0,
+          "rotY": 0.0,
           "rotZ": 0.0,
           "scaleX": 1.0,
           "scaleY": 1.0,
@@ -148,17 +148,17 @@
           "lods": [
             {
               "model": "rom/model/lod/Boulder_LOD1.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 11.1,
               "screenHeight": 0.12
             },
             {
               "model": "rom/model/lod/Boulder_LOD2.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 22.1,
               "screenHeight": 0.06
             },
             {
               "model": "rom/model/lod/Boulder_LOD3.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 44.3,
               "screenHeight": 0.03
             }
           ]
@@ -166,16 +166,16 @@
       }
     },
     {
-      "name": "Boulder x1 z48",
+      "name": "Boulder x1 z30",
       "tag": 0,
       "children": [],
       "components": {
         "SceneTransform": {
-          "posX": -36.0,
+          "posX": -18.0,
           "posY": 0.0,
-          "posZ": 48.0,
+          "posZ": 30.0,
           "rotX": 0.0,
-          "rotY": 30.0,
+          "rotY": 0.0,
           "rotZ": 0.0,
           "scaleX": 1.0,
           "scaleY": 1.0,
@@ -188,17 +188,17 @@
           "lods": [
             {
               "model": "rom/model/lod/Boulder_LOD1.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 11.1,
               "screenHeight": 0.12
             },
             {
               "model": "rom/model/lod/Boulder_LOD2.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 22.1,
               "screenHeight": 0.06
             },
             {
               "model": "rom/model/lod/Boulder_LOD3.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 44.3,
               "screenHeight": 0.03
             }
           ]
@@ -206,16 +206,16 @@
       }
     },
     {
-      "name": "Boulder x1 z90",
+      "name": "Boulder x1 z60",
       "tag": 0,
       "children": [],
       "components": {
         "SceneTransform": {
-          "posX": -36.0,
+          "posX": -18.0,
           "posY": 0.0,
-          "posZ": 90.0,
+          "posZ": 60.0,
           "rotX": 0.0,
-          "rotY": 30.0,
+          "rotY": 0.0,
           "rotZ": 0.0,
           "scaleX": 1.0,
           "scaleY": 1.0,
@@ -228,17 +228,17 @@
           "lods": [
             {
               "model": "rom/model/lod/Boulder_LOD1.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 11.1,
               "screenHeight": 0.12
             },
             {
               "model": "rom/model/lod/Boulder_LOD2.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 22.1,
               "screenHeight": 0.06
             },
             {
               "model": "rom/model/lod/Boulder_LOD3.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 44.3,
               "screenHeight": 0.03
             }
           ]
@@ -246,16 +246,16 @@
       }
     },
     {
-      "name": "Boulder x1 z140",
+      "name": "Boulder x1 z100",
       "tag": 0,
       "children": [],
       "components": {
         "SceneTransform": {
-          "posX": -36.0,
+          "posX": -18.0,
           "posY": 0.0,
-          "posZ": 140.0,
+          "posZ": 100.0,
           "rotX": 0.0,
-          "rotY": 30.0,
+          "rotY": 0.0,
           "rotZ": 0.0,
           "scaleX": 1.0,
           "scaleY": 1.0,
@@ -268,17 +268,17 @@
           "lods": [
             {
               "model": "rom/model/lod/Boulder_LOD1.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 11.1,
               "screenHeight": 0.12
             },
             {
               "model": "rom/model/lod/Boulder_LOD2.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 22.1,
               "screenHeight": 0.06
             },
             {
               "model": "rom/model/lod/Boulder_LOD3.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 44.3,
               "screenHeight": 0.03
             }
           ]
@@ -286,16 +286,16 @@
       }
     },
     {
-      "name": "Boulder x1 z200",
+      "name": "Boulder x1 z150",
       "tag": 0,
       "children": [],
       "components": {
         "SceneTransform": {
-          "posX": -36.0,
+          "posX": -18.0,
           "posY": 0.0,
-          "posZ": 200.0,
+          "posZ": 150.0,
           "rotX": 0.0,
-          "rotY": 30.0,
+          "rotY": 0.0,
           "rotZ": 0.0,
           "scaleX": 1.0,
           "scaleY": 1.0,
@@ -308,17 +308,17 @@
           "lods": [
             {
               "model": "rom/model/lod/Boulder_LOD1.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 11.1,
               "screenHeight": 0.12
             },
             {
               "model": "rom/model/lod/Boulder_LOD2.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 22.1,
               "screenHeight": 0.06
             },
             {
               "model": "rom/model/lod/Boulder_LOD3.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 44.3,
               "screenHeight": 0.03
             }
           ]
@@ -326,16 +326,16 @@
       }
     },
     {
-      "name": "Boulder x1 z280",
+      "name": "Boulder x1 z220",
       "tag": 0,
       "children": [],
       "components": {
         "SceneTransform": {
-          "posX": -36.0,
+          "posX": -18.0,
           "posY": 0.0,
-          "posZ": 280.0,
+          "posZ": 220.0,
           "rotX": 0.0,
-          "rotY": 30.0,
+          "rotY": 0.0,
           "rotZ": 0.0,
           "scaleX": 1.0,
           "scaleY": 1.0,
@@ -348,17 +348,17 @@
           "lods": [
             {
               "model": "rom/model/lod/Boulder_LOD1.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 11.1,
               "screenHeight": 0.12
             },
             {
               "model": "rom/model/lod/Boulder_LOD2.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 22.1,
               "screenHeight": 0.06
             },
             {
               "model": "rom/model/lod/Boulder_LOD3.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 44.3,
               "screenHeight": 0.03
             }
           ]
@@ -366,16 +366,16 @@
       }
     },
     {
-      "name": "Boulder x1 z380",
+      "name": "Boulder x1 z320",
       "tag": 0,
       "children": [],
       "components": {
         "SceneTransform": {
-          "posX": -36.0,
+          "posX": -18.0,
           "posY": 0.0,
-          "posZ": 380.0,
+          "posZ": 320.0,
           "rotX": 0.0,
-          "rotY": 30.0,
+          "rotY": 0.0,
           "rotZ": 0.0,
           "scaleX": 1.0,
           "scaleY": 1.0,
@@ -388,17 +388,17 @@
           "lods": [
             {
               "model": "rom/model/lod/Boulder_LOD1.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 11.1,
               "screenHeight": 0.12
             },
             {
               "model": "rom/model/lod/Boulder_LOD2.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 22.1,
               "screenHeight": 0.06
             },
             {
               "model": "rom/model/lod/Boulder_LOD3.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 44.3,
               "screenHeight": 0.03
             }
           ]
@@ -406,16 +406,16 @@
       }
     },
     {
-      "name": "Boulder x2 z12",
+      "name": "Boulder x2 z8",
       "tag": 0,
       "children": [],
       "components": {
         "SceneTransform": {
-          "posX": -12.0,
+          "posX": -6.0,
           "posY": 0.0,
-          "posZ": 12.0,
+          "posZ": 8.0,
           "rotX": 0.0,
-          "rotY": 30.0,
+          "rotY": 0.0,
           "rotZ": 0.0,
           "scaleX": 2.0,
           "scaleY": 2.0,
@@ -428,17 +428,17 @@
           "lods": [
             {
               "model": "rom/model/lod/Boulder_LOD1.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 22.1,
               "screenHeight": 0.12
             },
             {
               "model": "rom/model/lod/Boulder_LOD2.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 44.3,
               "screenHeight": 0.06
             },
             {
               "model": "rom/model/lod/Boulder_LOD3.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 88.5,
               "screenHeight": 0.03
             }
           ]
@@ -446,16 +446,16 @@
       }
     },
     {
-      "name": "Boulder x2 z24",
+      "name": "Boulder x2 z16",
       "tag": 0,
       "children": [],
       "components": {
         "SceneTransform": {
-          "posX": -12.0,
+          "posX": -6.0,
           "posY": 0.0,
-          "posZ": 24.0,
+          "posZ": 16.0,
           "rotX": 0.0,
-          "rotY": 30.0,
+          "rotY": 0.0,
           "rotZ": 0.0,
           "scaleX": 2.0,
           "scaleY": 2.0,
@@ -468,17 +468,17 @@
           "lods": [
             {
               "model": "rom/model/lod/Boulder_LOD1.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 22.1,
               "screenHeight": 0.12
             },
             {
               "model": "rom/model/lod/Boulder_LOD2.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 44.3,
               "screenHeight": 0.06
             },
             {
               "model": "rom/model/lod/Boulder_LOD3.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 88.5,
               "screenHeight": 0.03
             }
           ]
@@ -486,16 +486,16 @@
       }
     },
     {
-      "name": "Boulder x2 z48",
+      "name": "Boulder x2 z30",
       "tag": 0,
       "children": [],
       "components": {
         "SceneTransform": {
-          "posX": -12.0,
+          "posX": -6.0,
           "posY": 0.0,
-          "posZ": 48.0,
+          "posZ": 30.0,
           "rotX": 0.0,
-          "rotY": 30.0,
+          "rotY": 0.0,
           "rotZ": 0.0,
           "scaleX": 2.0,
           "scaleY": 2.0,
@@ -508,17 +508,17 @@
           "lods": [
             {
               "model": "rom/model/lod/Boulder_LOD1.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 22.1,
               "screenHeight": 0.12
             },
             {
               "model": "rom/model/lod/Boulder_LOD2.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 44.3,
               "screenHeight": 0.06
             },
             {
               "model": "rom/model/lod/Boulder_LOD3.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 88.5,
               "screenHeight": 0.03
             }
           ]
@@ -526,16 +526,16 @@
       }
     },
     {
-      "name": "Boulder x2 z90",
+      "name": "Boulder x2 z60",
       "tag": 0,
       "children": [],
       "components": {
         "SceneTransform": {
-          "posX": -12.0,
+          "posX": -6.0,
           "posY": 0.0,
-          "posZ": 90.0,
+          "posZ": 60.0,
           "rotX": 0.0,
-          "rotY": 30.0,
+          "rotY": 0.0,
           "rotZ": 0.0,
           "scaleX": 2.0,
           "scaleY": 2.0,
@@ -548,17 +548,17 @@
           "lods": [
             {
               "model": "rom/model/lod/Boulder_LOD1.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 22.1,
               "screenHeight": 0.12
             },
             {
               "model": "rom/model/lod/Boulder_LOD2.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 44.3,
               "screenHeight": 0.06
             },
             {
               "model": "rom/model/lod/Boulder_LOD3.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 88.5,
               "screenHeight": 0.03
             }
           ]
@@ -566,16 +566,16 @@
       }
     },
     {
-      "name": "Boulder x2 z140",
+      "name": "Boulder x2 z100",
       "tag": 0,
       "children": [],
       "components": {
         "SceneTransform": {
-          "posX": -12.0,
+          "posX": -6.0,
           "posY": 0.0,
-          "posZ": 140.0,
+          "posZ": 100.0,
           "rotX": 0.0,
-          "rotY": 30.0,
+          "rotY": 0.0,
           "rotZ": 0.0,
           "scaleX": 2.0,
           "scaleY": 2.0,
@@ -588,17 +588,17 @@
           "lods": [
             {
               "model": "rom/model/lod/Boulder_LOD1.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 22.1,
               "screenHeight": 0.12
             },
             {
               "model": "rom/model/lod/Boulder_LOD2.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 44.3,
               "screenHeight": 0.06
             },
             {
               "model": "rom/model/lod/Boulder_LOD3.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 88.5,
               "screenHeight": 0.03
             }
           ]
@@ -606,16 +606,16 @@
       }
     },
     {
-      "name": "Boulder x2 z200",
+      "name": "Boulder x2 z150",
       "tag": 0,
       "children": [],
       "components": {
         "SceneTransform": {
-          "posX": -12.0,
+          "posX": -6.0,
           "posY": 0.0,
-          "posZ": 200.0,
+          "posZ": 150.0,
           "rotX": 0.0,
-          "rotY": 30.0,
+          "rotY": 0.0,
           "rotZ": 0.0,
           "scaleX": 2.0,
           "scaleY": 2.0,
@@ -628,17 +628,17 @@
           "lods": [
             {
               "model": "rom/model/lod/Boulder_LOD1.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 22.1,
               "screenHeight": 0.12
             },
             {
               "model": "rom/model/lod/Boulder_LOD2.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 44.3,
               "screenHeight": 0.06
             },
             {
               "model": "rom/model/lod/Boulder_LOD3.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 88.5,
               "screenHeight": 0.03
             }
           ]
@@ -646,16 +646,16 @@
       }
     },
     {
-      "name": "Boulder x2 z280",
+      "name": "Boulder x2 z220",
       "tag": 0,
       "children": [],
       "components": {
         "SceneTransform": {
-          "posX": -12.0,
+          "posX": -6.0,
           "posY": 0.0,
-          "posZ": 280.0,
+          "posZ": 220.0,
           "rotX": 0.0,
-          "rotY": 30.0,
+          "rotY": 0.0,
           "rotZ": 0.0,
           "scaleX": 2.0,
           "scaleY": 2.0,
@@ -668,17 +668,17 @@
           "lods": [
             {
               "model": "rom/model/lod/Boulder_LOD1.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 22.1,
               "screenHeight": 0.12
             },
             {
               "model": "rom/model/lod/Boulder_LOD2.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 44.3,
               "screenHeight": 0.06
             },
             {
               "model": "rom/model/lod/Boulder_LOD3.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 88.5,
               "screenHeight": 0.03
             }
           ]
@@ -686,16 +686,16 @@
       }
     },
     {
-      "name": "Boulder x2 z380",
+      "name": "Boulder x2 z320",
       "tag": 0,
       "children": [],
       "components": {
         "SceneTransform": {
-          "posX": -12.0,
+          "posX": -6.0,
           "posY": 0.0,
-          "posZ": 380.0,
+          "posZ": 320.0,
           "rotX": 0.0,
-          "rotY": 30.0,
+          "rotY": 0.0,
           "rotZ": 0.0,
           "scaleX": 2.0,
           "scaleY": 2.0,
@@ -708,17 +708,17 @@
           "lods": [
             {
               "model": "rom/model/lod/Boulder_LOD1.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 22.1,
               "screenHeight": 0.12
             },
             {
               "model": "rom/model/lod/Boulder_LOD2.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 44.3,
               "screenHeight": 0.06
             },
             {
               "model": "rom/model/lod/Boulder_LOD3.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 88.5,
               "screenHeight": 0.03
             }
           ]
@@ -726,16 +726,16 @@
       }
     },
     {
-      "name": "Boulder x4 z12",
+      "name": "Boulder x4 z8",
       "tag": 0,
       "children": [],
       "components": {
         "SceneTransform": {
-          "posX": 12.0,
+          "posX": 6.0,
           "posY": 0.0,
-          "posZ": 12.0,
+          "posZ": 8.0,
           "rotX": 0.0,
-          "rotY": 30.0,
+          "rotY": 0.0,
           "rotZ": 0.0,
           "scaleX": 4.0,
           "scaleY": 4.0,
@@ -748,17 +748,17 @@
           "lods": [
             {
               "model": "rom/model/lod/Boulder_LOD1.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 44.3,
               "screenHeight": 0.12
             },
             {
               "model": "rom/model/lod/Boulder_LOD2.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 88.5,
               "screenHeight": 0.06
             },
             {
               "model": "rom/model/lod/Boulder_LOD3.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 177.0,
               "screenHeight": 0.03
             }
           ]
@@ -766,16 +766,16 @@
       }
     },
     {
-      "name": "Boulder x4 z24",
+      "name": "Boulder x4 z16",
       "tag": 0,
       "children": [],
       "components": {
         "SceneTransform": {
-          "posX": 12.0,
+          "posX": 6.0,
           "posY": 0.0,
-          "posZ": 24.0,
+          "posZ": 16.0,
           "rotX": 0.0,
-          "rotY": 30.0,
+          "rotY": 0.0,
           "rotZ": 0.0,
           "scaleX": 4.0,
           "scaleY": 4.0,
@@ -788,17 +788,17 @@
           "lods": [
             {
               "model": "rom/model/lod/Boulder_LOD1.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 44.3,
               "screenHeight": 0.12
             },
             {
               "model": "rom/model/lod/Boulder_LOD2.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 88.5,
               "screenHeight": 0.06
             },
             {
               "model": "rom/model/lod/Boulder_LOD3.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 177.0,
               "screenHeight": 0.03
             }
           ]
@@ -806,16 +806,16 @@
       }
     },
     {
-      "name": "Boulder x4 z48",
+      "name": "Boulder x4 z30",
       "tag": 0,
       "children": [],
       "components": {
         "SceneTransform": {
-          "posX": 12.0,
+          "posX": 6.0,
           "posY": 0.0,
-          "posZ": 48.0,
+          "posZ": 30.0,
           "rotX": 0.0,
-          "rotY": 30.0,
+          "rotY": 0.0,
           "rotZ": 0.0,
           "scaleX": 4.0,
           "scaleY": 4.0,
@@ -828,17 +828,17 @@
           "lods": [
             {
               "model": "rom/model/lod/Boulder_LOD1.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 44.3,
               "screenHeight": 0.12
             },
             {
               "model": "rom/model/lod/Boulder_LOD2.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 88.5,
               "screenHeight": 0.06
             },
             {
               "model": "rom/model/lod/Boulder_LOD3.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 177.0,
               "screenHeight": 0.03
             }
           ]
@@ -846,16 +846,16 @@
       }
     },
     {
-      "name": "Boulder x4 z90",
+      "name": "Boulder x4 z60",
       "tag": 0,
       "children": [],
       "components": {
         "SceneTransform": {
-          "posX": 12.0,
+          "posX": 6.0,
           "posY": 0.0,
-          "posZ": 90.0,
+          "posZ": 60.0,
           "rotX": 0.0,
-          "rotY": 30.0,
+          "rotY": 0.0,
           "rotZ": 0.0,
           "scaleX": 4.0,
           "scaleY": 4.0,
@@ -868,17 +868,17 @@
           "lods": [
             {
               "model": "rom/model/lod/Boulder_LOD1.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 44.3,
               "screenHeight": 0.12
             },
             {
               "model": "rom/model/lod/Boulder_LOD2.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 88.5,
               "screenHeight": 0.06
             },
             {
               "model": "rom/model/lod/Boulder_LOD3.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 177.0,
               "screenHeight": 0.03
             }
           ]
@@ -886,16 +886,16 @@
       }
     },
     {
-      "name": "Boulder x4 z140",
+      "name": "Boulder x4 z100",
       "tag": 0,
       "children": [],
       "components": {
         "SceneTransform": {
-          "posX": 12.0,
+          "posX": 6.0,
           "posY": 0.0,
-          "posZ": 140.0,
+          "posZ": 100.0,
           "rotX": 0.0,
-          "rotY": 30.0,
+          "rotY": 0.0,
           "rotZ": 0.0,
           "scaleX": 4.0,
           "scaleY": 4.0,
@@ -908,17 +908,17 @@
           "lods": [
             {
               "model": "rom/model/lod/Boulder_LOD1.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 44.3,
               "screenHeight": 0.12
             },
             {
               "model": "rom/model/lod/Boulder_LOD2.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 88.5,
               "screenHeight": 0.06
             },
             {
               "model": "rom/model/lod/Boulder_LOD3.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 177.0,
               "screenHeight": 0.03
             }
           ]
@@ -926,16 +926,16 @@
       }
     },
     {
-      "name": "Boulder x4 z200",
+      "name": "Boulder x4 z150",
       "tag": 0,
       "children": [],
       "components": {
         "SceneTransform": {
-          "posX": 12.0,
+          "posX": 6.0,
           "posY": 0.0,
-          "posZ": 200.0,
+          "posZ": 150.0,
           "rotX": 0.0,
-          "rotY": 30.0,
+          "rotY": 0.0,
           "rotZ": 0.0,
           "scaleX": 4.0,
           "scaleY": 4.0,
@@ -948,17 +948,17 @@
           "lods": [
             {
               "model": "rom/model/lod/Boulder_LOD1.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 44.3,
               "screenHeight": 0.12
             },
             {
               "model": "rom/model/lod/Boulder_LOD2.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 88.5,
               "screenHeight": 0.06
             },
             {
               "model": "rom/model/lod/Boulder_LOD3.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 177.0,
               "screenHeight": 0.03
             }
           ]
@@ -966,16 +966,16 @@
       }
     },
     {
-      "name": "Boulder x4 z280",
+      "name": "Boulder x4 z220",
       "tag": 0,
       "children": [],
       "components": {
         "SceneTransform": {
-          "posX": 12.0,
+          "posX": 6.0,
           "posY": 0.0,
-          "posZ": 280.0,
+          "posZ": 220.0,
           "rotX": 0.0,
-          "rotY": 30.0,
+          "rotY": 0.0,
           "rotZ": 0.0,
           "scaleX": 4.0,
           "scaleY": 4.0,
@@ -988,17 +988,17 @@
           "lods": [
             {
               "model": "rom/model/lod/Boulder_LOD1.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 44.3,
               "screenHeight": 0.12
             },
             {
               "model": "rom/model/lod/Boulder_LOD2.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 88.5,
               "screenHeight": 0.06
             },
             {
               "model": "rom/model/lod/Boulder_LOD3.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 177.0,
               "screenHeight": 0.03
             }
           ]
@@ -1006,16 +1006,16 @@
       }
     },
     {
-      "name": "Boulder x4 z380",
+      "name": "Boulder x4 z320",
       "tag": 0,
       "children": [],
       "components": {
         "SceneTransform": {
-          "posX": 12.0,
+          "posX": 6.0,
           "posY": 0.0,
-          "posZ": 380.0,
+          "posZ": 320.0,
           "rotX": 0.0,
-          "rotY": 30.0,
+          "rotY": 0.0,
           "rotZ": 0.0,
           "scaleX": 4.0,
           "scaleY": 4.0,
@@ -1028,17 +1028,17 @@
           "lods": [
             {
               "model": "rom/model/lod/Boulder_LOD1.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 44.3,
               "screenHeight": 0.12
             },
             {
               "model": "rom/model/lod/Boulder_LOD2.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 88.5,
               "screenHeight": 0.06
             },
             {
               "model": "rom/model/lod/Boulder_LOD3.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 177.0,
               "screenHeight": 0.03
             }
           ]
@@ -1046,16 +1046,16 @@
       }
     },
     {
-      "name": "Boulder x8 z12",
+      "name": "Boulder x8 z8",
       "tag": 0,
       "children": [],
       "components": {
         "SceneTransform": {
-          "posX": 36.0,
+          "posX": 18.0,
           "posY": 0.0,
-          "posZ": 12.0,
+          "posZ": 8.0,
           "rotX": 0.0,
-          "rotY": 30.0,
+          "rotY": 0.0,
           "rotZ": 0.0,
           "scaleX": 8.0,
           "scaleY": 8.0,
@@ -1068,17 +1068,17 @@
           "lods": [
             {
               "model": "rom/model/lod/Boulder_LOD1.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 88.5,
               "screenHeight": 0.12
             },
             {
               "model": "rom/model/lod/Boulder_LOD2.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 177.0,
               "screenHeight": 0.06
             },
             {
               "model": "rom/model/lod/Boulder_LOD3.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 354.1,
               "screenHeight": 0.03
             }
           ]
@@ -1086,16 +1086,16 @@
       }
     },
     {
-      "name": "Boulder x8 z24",
+      "name": "Boulder x8 z16",
       "tag": 0,
       "children": [],
       "components": {
         "SceneTransform": {
-          "posX": 36.0,
+          "posX": 18.0,
           "posY": 0.0,
-          "posZ": 24.0,
+          "posZ": 16.0,
           "rotX": 0.0,
-          "rotY": 30.0,
+          "rotY": 0.0,
           "rotZ": 0.0,
           "scaleX": 8.0,
           "scaleY": 8.0,
@@ -1108,17 +1108,17 @@
           "lods": [
             {
               "model": "rom/model/lod/Boulder_LOD1.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 88.5,
               "screenHeight": 0.12
             },
             {
               "model": "rom/model/lod/Boulder_LOD2.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 177.0,
               "screenHeight": 0.06
             },
             {
               "model": "rom/model/lod/Boulder_LOD3.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 354.1,
               "screenHeight": 0.03
             }
           ]
@@ -1126,16 +1126,16 @@
       }
     },
     {
-      "name": "Boulder x8 z48",
+      "name": "Boulder x8 z30",
       "tag": 0,
       "children": [],
       "components": {
         "SceneTransform": {
-          "posX": 36.0,
+          "posX": 18.0,
           "posY": 0.0,
-          "posZ": 48.0,
+          "posZ": 30.0,
           "rotX": 0.0,
-          "rotY": 30.0,
+          "rotY": 0.0,
           "rotZ": 0.0,
           "scaleX": 8.0,
           "scaleY": 8.0,
@@ -1148,17 +1148,17 @@
           "lods": [
             {
               "model": "rom/model/lod/Boulder_LOD1.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 88.5,
               "screenHeight": 0.12
             },
             {
               "model": "rom/model/lod/Boulder_LOD2.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 177.0,
               "screenHeight": 0.06
             },
             {
               "model": "rom/model/lod/Boulder_LOD3.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 354.1,
               "screenHeight": 0.03
             }
           ]
@@ -1166,16 +1166,16 @@
       }
     },
     {
-      "name": "Boulder x8 z90",
+      "name": "Boulder x8 z60",
       "tag": 0,
       "children": [],
       "components": {
         "SceneTransform": {
-          "posX": 36.0,
+          "posX": 18.0,
           "posY": 0.0,
-          "posZ": 90.0,
+          "posZ": 60.0,
           "rotX": 0.0,
-          "rotY": 30.0,
+          "rotY": 0.0,
           "rotZ": 0.0,
           "scaleX": 8.0,
           "scaleY": 8.0,
@@ -1188,17 +1188,17 @@
           "lods": [
             {
               "model": "rom/model/lod/Boulder_LOD1.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 88.5,
               "screenHeight": 0.12
             },
             {
               "model": "rom/model/lod/Boulder_LOD2.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 177.0,
               "screenHeight": 0.06
             },
             {
               "model": "rom/model/lod/Boulder_LOD3.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 354.1,
               "screenHeight": 0.03
             }
           ]
@@ -1206,16 +1206,16 @@
       }
     },
     {
-      "name": "Boulder x8 z140",
+      "name": "Boulder x8 z100",
       "tag": 0,
       "children": [],
       "components": {
         "SceneTransform": {
-          "posX": 36.0,
+          "posX": 18.0,
           "posY": 0.0,
-          "posZ": 140.0,
+          "posZ": 100.0,
           "rotX": 0.0,
-          "rotY": 30.0,
+          "rotY": 0.0,
           "rotZ": 0.0,
           "scaleX": 8.0,
           "scaleY": 8.0,
@@ -1228,17 +1228,17 @@
           "lods": [
             {
               "model": "rom/model/lod/Boulder_LOD1.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 88.5,
               "screenHeight": 0.12
             },
             {
               "model": "rom/model/lod/Boulder_LOD2.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 177.0,
               "screenHeight": 0.06
             },
             {
               "model": "rom/model/lod/Boulder_LOD3.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 354.1,
               "screenHeight": 0.03
             }
           ]
@@ -1246,16 +1246,16 @@
       }
     },
     {
-      "name": "Boulder x8 z200",
+      "name": "Boulder x8 z150",
       "tag": 0,
       "children": [],
       "components": {
         "SceneTransform": {
-          "posX": 36.0,
+          "posX": 18.0,
           "posY": 0.0,
-          "posZ": 200.0,
+          "posZ": 150.0,
           "rotX": 0.0,
-          "rotY": 30.0,
+          "rotY": 0.0,
           "rotZ": 0.0,
           "scaleX": 8.0,
           "scaleY": 8.0,
@@ -1268,17 +1268,17 @@
           "lods": [
             {
               "model": "rom/model/lod/Boulder_LOD1.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 88.5,
               "screenHeight": 0.12
             },
             {
               "model": "rom/model/lod/Boulder_LOD2.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 177.0,
               "screenHeight": 0.06
             },
             {
               "model": "rom/model/lod/Boulder_LOD3.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 354.1,
               "screenHeight": 0.03
             }
           ]
@@ -1286,16 +1286,16 @@
       }
     },
     {
-      "name": "Boulder x8 z280",
+      "name": "Boulder x8 z220",
       "tag": 0,
       "children": [],
       "components": {
         "SceneTransform": {
-          "posX": 36.0,
+          "posX": 18.0,
           "posY": 0.0,
-          "posZ": 280.0,
+          "posZ": 220.0,
           "rotX": 0.0,
-          "rotY": 30.0,
+          "rotY": 0.0,
           "rotZ": 0.0,
           "scaleX": 8.0,
           "scaleY": 8.0,
@@ -1308,17 +1308,17 @@
           "lods": [
             {
               "model": "rom/model/lod/Boulder_LOD1.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 88.5,
               "screenHeight": 0.12
             },
             {
               "model": "rom/model/lod/Boulder_LOD2.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 177.0,
               "screenHeight": 0.06
             },
             {
               "model": "rom/model/lod/Boulder_LOD3.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 354.1,
               "screenHeight": 0.03
             }
           ]
@@ -1326,16 +1326,16 @@
       }
     },
     {
-      "name": "Boulder x8 z380",
+      "name": "Boulder x8 z320",
       "tag": 0,
       "children": [],
       "components": {
         "SceneTransform": {
-          "posX": 36.0,
+          "posX": 18.0,
           "posY": 0.0,
-          "posZ": 380.0,
+          "posZ": 320.0,
           "rotX": 0.0,
-          "rotY": 30.0,
+          "rotY": 0.0,
           "rotZ": 0.0,
           "scaleX": 8.0,
           "scaleY": 8.0,
@@ -1348,17 +1348,17 @@
           "lods": [
             {
               "model": "rom/model/lod/Boulder_LOD1.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 88.5,
               "screenHeight": 0.12
             },
             {
               "model": "rom/model/lod/Boulder_LOD2.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 177.0,
               "screenHeight": 0.06
             },
             {
               "model": "rom/model/lod/Boulder_LOD3.fbx",
-              "maxDistance": 0.0,
+              "maxDistance": 354.1,
               "screenHeight": 0.03
             }
           ]
