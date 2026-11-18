@@ -116,6 +116,20 @@ int main() {
                "child faces its parent's yaw direction");
     }
 
+    // Why a controller must not reuse GetRotation()'s x / z. Rigidbody::Integrate rewrites a
+    // body's Euler in canonical ZYX form (yaw within +/-90): yaw 135 -> (180, 45, 180), the
+    // same rotation. Overriding only y on that tuple ((180, 135, 180)) is a DIFFERENT rotation,
+    // yaw 180 - 135 = 45, which flips the facing every other frame past 90 degrees.
+    {
+        auto zyx = [](float x, float y, float z) { return Mul(Mul(Rz(z), Ry(y)), Rx(x)); };  // Transform order
+        Expect(SameMatrix(zyx(180.0f, 45.0f, 180.0f), Ry(135.0f)), "(180,45,180) is yaw 135");
+        Expect(SameMatrix(zyx(180.0f, 135.0f, 180.0f), Ry(45.0f)), "(180,135,180) is yaw 45, not 135");
+        Expect(!SameMatrix(zyx(180.0f, 135.0f, 180.0f), Ry(135.0f)), "overriding only y breaks the facing");
+        for (int deg = 0; deg < 360; deg += 15)
+            Expect(SameMatrix(zyx(0.0f, static_cast<float>(deg), 0.0f), Ry(static_cast<float>(deg))),
+                   "an upright (0, yaw, 0) rotation is always exactly that yaw");
+    }
+
     if (g_failed) {
         std::fprintf(stderr, "%d check(s) failed\n", g_failed);
         return 1;

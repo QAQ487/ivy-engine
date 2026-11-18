@@ -206,9 +206,13 @@ void SamplePlayerScript::OnUpdate(engine::GameObject& self, float dt) {
     vel.z = wish.z * moveSpeed;
     rb.SetVelocity(vel);
 
-    // Always face the camera direction, whatever key is held.
-    DirectX::XMFLOAT3 rot = self.GetRotation();
-    rot.y = m_cameraYaw;
+    // Always face the camera direction, whatever key is held. Upright and yaw only: do not
+    // reuse GetRotation()'s x / z. PhysicsSystem rewrites a dynamic body's Euler into a
+    // canonical form every step (yaw kept within +/-90, so yaw 135 becomes (180, 45, 180));
+    // overriding just y on top of that is a different rotation (yaw 45), so the facing
+    // would mirror every other frame once the camera turns past 90 degrees.
+    const DirectX::XMFLOAT3 rot = { 0.0f, m_cameraYaw, 0.0f };
+    rb.SetAngularVelocity({ 0.0f, 0.0f, 0.0f });   // a character never rolls
     self.SetRotation(rot);
     if (engine::Transform* t = ScriptApi_FindTransform(self)) {
         t->localPosition = self.GetPosition();
