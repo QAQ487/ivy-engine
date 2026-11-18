@@ -9,6 +9,7 @@
 #include "engine/ecs/string_utils.h"
 #include "engine/debug_draw/debug_ofstream.h"
 #include "engine/core/content_path.h"
+#include "engine/core/builtin_assets.h"
 #include "engine/rendering/environment/panorama_sky.h"
 
 #include <fstream>
@@ -26,7 +27,10 @@ static bool FileExistsW(const wchar_t* path) {
     if (!path || !path[0])
         return false;
     std::ifstream file(content_path::ReadableWideCurrent(path), std::ios::binary);
-    return static_cast<bool>(file);
+    if (file)
+        return true;
+    // The BRDF LUT is compiled into the exe, so its default path needs no file.
+    return builtin_assets::FindTexture(std::wstring(path), nullptr);
 }
 
 bool Ibl_Initialize() {

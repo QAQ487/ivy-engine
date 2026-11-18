@@ -9,6 +9,7 @@
 #include "engine/ui/ui_font.h"
 #include "engine/core/content_path.h"
 #include "engine/core/texture_cook_policy.h"
+#include "engine/core/builtin_assets.h"
 #include <string>
 #include <filesystem>
 #include <cstdio>
@@ -85,6 +86,19 @@ static HRESULT ReadTextureImage(const wchar_t* path, TexMetadata& metadata, Scra
     return LoadFromWICFile(path, WIC_FLAGS_NONE, &metadata, image);
 }
 
+// Engine textures compiled into the exe (builtin_assets.h) answer to their rom/ path
+// when no file exists there. `requested` is the path the content named, `openPath` the
+// resolved one; a real file always wins.
+static HRESULT ReadTextureOrBuiltin(const wchar_t* requested, const wchar_t* openPath, TexMetadata& metadata, ScratchImage& image) {
+    std::error_code ec;
+    if (!std::filesystem::is_regular_file(std::filesystem::path(openPath), ec)) {
+        builtin_assets::Asset asset;
+        if (builtin_assets::FindTexture(std::wstring(requested), &asset))
+            return LoadFromWICMemory(asset.data, asset.size, WIC_FLAGS_NONE, &metadata, image);
+    }
+    return ReadTextureImage(openPath, metadata, image);
+}
+
 static int TextureLoadInternal(const wchar_t* ptr_file_name, bool mipmap, bool reportErrors) {
     if (!ptr_file_name || !ptr_file_name[0] || !g_pDevice) return -1;
     const std::wstring resolvedName = ResolveTexturePath(ptr_file_name);
@@ -105,7 +119,7 @@ static int TextureLoadInternal(const wchar_t* ptr_file_name, bool mipmap, bool r
 		/* Load texture */
 		TexMetadata metadata;
 		ScratchImage image;
-		HRESULT loadHr = ReadTextureImage(openPath, metadata, image);
+		HRESULT loadHr = ReadTextureOrBuiltin(ptr_file_name, openPath, metadata, image);
 		if (FAILED(loadHr)) {
 			char pathUtf8[MAX_PATH * 3] = {};
 			WideCharToMultiByte(CP_UTF8, 0, ptr_file_name, -1, pathUtf8, sizeof(pathUtf8),
@@ -415,5 +429,6 @@ TextureReloadResult CubemapReload(const wchar_t* path) {
 bool TextureValidateFile(const wchar_t* path) {
     if (!path || !path[0]) return false;
     TexMetadata metadata; ScratchImage image;
-    return SUCCEEDED(ReadTextureImage(path, metadata, image));
+    const std::wstring resolved = ResolveTexturePath(path);
+    return SUCCEEDED(ReadTextureOrBuiltin(path, resolved.empty() ? path : resolved.c_str(), metadata, image));
 }

@@ -344,6 +344,12 @@ void CollectRomReferences(const std::string& text, std::vector<std::string>& out
     }
 }
 
+// Keep in step with builtin_assets::TextureEntries and tools/materialize_engine_defaults.py.
+const char* const kBuiltinRomPaths[] = {
+    "rom/branding/ivy_logo.png",
+    "rom/skybox/ibl/brdf_lut.png",
+};
+
 bool CopyResourceIfMissing(const fs::path& resources, const fs::path& destRom,
                            const std::string& romPath, std::string* errorOut) {
     std::string normalized;
@@ -352,6 +358,11 @@ bool CopyResourceIfMissing(const fs::path& resources, const fs::path& destRom,
     const std::string rest = normalized.substr(4);
     if (rest == "skybox/source" || rest.rfind("skybox/source/", 0) == 0)
         return true;
+    // Compiled into the exe: content may name these paths, but no file ships.
+    for (const char* builtin : kBuiltinRomPaths) {
+        if (normalized == builtin)
+            return true;
+    }
     const fs::path dest = destRom / fs::path(rest);
     std::error_code ec;
     if (fs::is_regular_file(dest, ec))
@@ -469,16 +480,8 @@ bool AssemblePackage(const Request& request, const fs::path& engineRoot,
             return false;
     }
 
-    // Branding is an engine default. Overlay it so the boot screen can find
-    // rom/branding/ivy_logo.png even when the project did not copy it.
-    fs::path engineBranding = engineOut / "resources" / "branding";
-    if (!fs::is_directory(engineBranding, ec))
-        engineBranding = engineRoot / "resources" / "branding";
-    const fs::path destBranding = dest / "rom" / "branding";
-    if (fs::is_directory(engineBranding, ec)) {
-        if (!CopyDirectoryRecursive(engineBranding, destBranding, errorOut))
-            return false;
-    }
+    // The boot-screen logo and the PBR BRDF LUT are compiled into the exe
+    // (engine/core/builtin_assets.h), so nothing from resources/branding is copied.
 
     // Keep this list aligned with tools/materialize_engine_defaults.py.
     // MySkybox.dds is not in it: that file is copied only when content names it.

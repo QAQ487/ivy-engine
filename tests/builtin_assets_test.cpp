@@ -8,6 +8,7 @@
 #include "engine/core/builtin_assets.h"
 
 #include <cstdio>
+#include <string>
 
 static int g_failed = 0;
 
@@ -28,6 +29,26 @@ int main() {
          (font.data[0] == 't' && font.data[1] == 'r' && font.data[2] == 'u' && font.data[3] == 'e') ||
          (font.data[0] == 'O' && font.data[1] == 'T' && font.data[2] == 'T' && font.data[3] == 'O'));
     Expect(ttf, "debug font starts with a font scaler tag");
+
+    // Built-in textures answer to their rom/ path.
+    const unsigned char kPngSig[8] = {0x89, 'P', 'N', 'G', 0x0d, 0x0a, 0x1a, 0x0a};
+    const char* const kPaths[] = {"rom/branding/ivy_logo.png", "rom/skybox/ibl/brdf_lut.png"};
+    for (const char* path : kPaths) {
+        builtin_assets::Asset a;
+        Expect(builtin_assets::FindTexture(std::string(path), &a), path);
+        bool sig = a.size > 8;
+        for (int i = 0; sig && i < 8; ++i)
+            sig = a.data[i] == kPngSig[i];
+        Expect(sig, "built-in texture is a PNG");
+    }
+    builtin_assets::Asset w;
+    Expect(builtin_assets::FindTexture(std::wstring(L"ROM\\Skybox\\IBL\\BRDF_LUT.PNG"), &w), "wide, backslash, any case");
+    Expect(!builtin_assets::FindTexture(std::string("rom/skybox/ibl/irradiance.dds"), nullptr),
+           "per-skybox IBL maps are content, not built in");
+    Expect(!builtin_assets::FindTexture(std::string("rom/branding/other.png"), nullptr), "unknown path");
+    Expect(!builtin_assets::FindTexture(std::string("branding/ivy_logo.png"), nullptr), "needs the rom/ prefix");
+    Expect(!builtin_assets::FindTexture(std::wstring(L"rom/branding/ivy_logo\u00e9.png"), nullptr), "non-ASCII never matches");
+    Expect(!builtin_assets::FindTexture(std::string(), nullptr), "empty path");
 
     if (g_failed) {
         std::fprintf(stderr, "%d check(s) failed\n", g_failed);

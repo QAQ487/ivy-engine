@@ -17,12 +17,12 @@ foreach ($protectedTree in @((Join-Path $contentPath 'rom'), (Join-Path $content
     if ($destinationPath.StartsWith($protectedTree + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase)) { throw 'Package destination is inside source assets.' }
 }
 if ([IO.Path]::GetFileName($DefaultScene) -ne $DefaultScene -or !(Test-Path -LiteralPath (Join-Path $contentPath "rom/scene/$DefaultScene"))) { throw 'DefaultScene must name an existing scene.' }
-# Match the editor package layout; overlay freshly compiled shaders and branding.
+# Match the editor package layout; overlay freshly compiled shaders (branding is built into the exe).
 New-Item -ItemType Directory -Path $destinationPath -Force | Out-Null
 Copy-Item -LiteralPath (Join-Path $engineOutput 'IvyEngineRuntime.exe') -Destination (Join-Path $destinationPath 'Ivy2DSample.exe') -Force
 Copy-Item -LiteralPath (Join-Path $engineOutput 'libfbxsdk.dll') -Destination $destinationPath -Force
 Copy-Item -LiteralPath (Join-Path $contentPath 'rom') -Destination $destinationPath -Recurse -Force
-foreach ($folder in @('shader','branding')) {
+foreach ($folder in @('shader')) {
     $sourceFolder = Join-Path $engineOutput "resources/$folder"
     if (!(Test-Path -LiteralPath $sourceFolder)) { $sourceFolder = Join-Path $engineRoot "resources/$folder" }
     $targetFolder = Join-Path $destinationPath "rom/$folder"

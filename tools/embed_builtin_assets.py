@@ -2,8 +2,10 @@
 """Generate engine/core/builtin_assets_data.h from the engine-owned asset sources.
 
 Built-in assets are compiled into the runtime host and the editor, so no file is
-shipped in a package or copied into a content project. Today that is the debug
-text font (IBM Plex Mono Regular, SIL OFL 1.1: resources/font/OFL-IBMPlexMono.txt).
+shipped in a package or copied into a content project:
+  - the debug text font (IBM Plex Mono Regular, SIL OFL 1.1: resources/font/OFL-IBMPlexMono.txt)
+  - the boot-screen logo and the constant PBR BRDF LUT, answering to their usual rom/ paths
+    (see engine/core/builtin_assets.h). The files stay in resources/ for the editor.
 
     python3 tools/embed_builtin_assets.py          # rewrite the header
     python3 tools/embed_builtin_assets.py --check  # exit 1 when the header is stale
@@ -18,6 +20,8 @@ HEADER = REPO / "engine" / "core" / "builtin_assets_data.h"
 # (C++ symbol, source file). Accessors live in engine/core/builtin_assets.h.
 ASSETS = (
     ("kDebugMonoFontTtf", REPO / "resources" / "font" / "IBMPlexMono-Regular.ttf"),
+    ("kBrandLogoPng", REPO / "resources" / "branding" / "ivy_logo.png"),
+    ("kBrdfLutPng", REPO / "resources" / "skybox" / "ibl" / "brdf_lut.png"),
 )
 
 
