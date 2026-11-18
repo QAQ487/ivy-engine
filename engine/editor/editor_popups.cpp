@@ -524,14 +524,19 @@ void DrawEditorPopups() {
         ImGui::EndPopup();
     }
 
+    // Regular top-most window instead of a modal popup: it does not depend on the
+    // shared popup stack, so other popups opening or closing cannot swallow it.
     if (g_showBuildLog)
-        ImGui::OpenPopup("BuildLogPopup");
-    ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
     {
         const bool buildDone = PlayablePackage::IsBuildFinished();
-        ImGuiWindowFlags logFlags = ImGuiWindowFlags_AlwaysAutoResize;
+        ImGuiWindowFlags logFlags = ImGuiWindowFlags_AlwaysAutoResize |
+                                    ImGuiWindowFlags_NoCollapse |
+                                    ImGuiWindowFlags_NoDocking |
+                                    ImGuiWindowFlags_NoSavedSettings;
         bool* logOpen = buildDone ? &g_showBuildLog : nullptr;
-        if (ImGui::BeginPopupModal("BuildLogPopup", logOpen, logFlags)) {
+        ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+        const bool logVisible = ImGui::Begin("Build Log##BuildLogWindow", logOpen, logFlags);
+        if (logVisible) {
             if (!buildDone) {
                 const std::string buildHeader =
                     "Building " + ProjectManager::Instance().GetName() + " ? Ivy Engine";
@@ -557,16 +562,14 @@ void DrawEditorPopups() {
                 const std::string result = PlayablePackage::LastBuildResultMessage();
                 if (!result.empty())
                     ImGui::TextWrapped("%s", result.c_str());
-                if (ImGui::Button("OK", ImVec2(Ui(120.0f), 0))) {
+                if (ImGui::Button("OK", ImVec2(Ui(120.0f), 0)))
                     g_showBuildLog = false;
-                    ImGui::CloseCurrentPopup();
-                }
             }
             else {
                 ImGui::TextDisabled("This window stays open until MSBuild finishes.");
             }
-            ImGui::EndPopup();
         }
+        ImGui::End();
     }
 }
 
