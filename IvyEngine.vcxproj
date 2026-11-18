@@ -302,6 +302,7 @@ exit /b 0</Command>
     <ClInclude Include="engine\editor\project_manager.h" />
     <ClInclude Include="engine\editor\playable_package_builder.h" />
     <ClInclude Include="engine\editor\texture_cook.h" />
+    <ClInclude Include="engine\editor\package_assets.h" />
     <ClInclude Include="engine\core\texture_cook_policy.h" />
     <ClInclude Include="engine\core\builtin_assets.h" />
     <ClInclude Include="engine\core\builtin_assets_data.h" />
@@ -473,6 +474,7 @@ exit /b 0</Command>
     <ClCompile Include="engine\editor\project_manager.cpp" />
     <ClCompile Include="engine\editor\playable_package_builder.cpp" />
     <ClCompile Include="engine\editor\texture_cook.cpp" />
+    <ClCompile Include="engine\editor\package_assets.cpp" />
     <ClCompile Include="engine\editor\editor_project_browser.cpp" />
     <ClCompile Include="engine\editor\editor_theme.cpp" />
     <ClCompile Include="engine\editor\editor_icon_button.cpp" />

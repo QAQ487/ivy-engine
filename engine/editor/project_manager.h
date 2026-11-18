@@ -38,6 +38,15 @@ public:
         std::string uiClickSound;
     };
 
+    // project.json "build": which rom/ files a playable package carries.
+    struct BuildSettings {
+        // true: copy all of rom/ (the old behaviour). false: only what the default scene reaches.
+        bool packAllAssets = false;
+        // "rom/..." files, folders or name prefixes to keep even when nothing references them
+        // (assets a script loads by a name it builds at runtime).
+        std::vector<std::string> alwaysInclude;
+    };
+
     struct ProjectData {
         std::string name;
         int version = kSchemaVersion;
@@ -46,6 +55,7 @@ public:
         EditorSettings editor;
         PhysicsSettings physics;
         AudioSettings audio;
+        BuildSettings build;
     };
 
     static ProjectManager& Instance();

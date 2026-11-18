@@ -4,6 +4,7 @@
 #include "playable_package_builder.h"
 #include "engine/rendering/environment/panorama_sky.h"
 #include "engine/editor/texture_cook.h"
+#include "engine/editor/package_assets.h"
 
 #include "engine/core/content_path.h"
 #include "project_manager.h"
@@ -15,6 +16,7 @@
 
 #include <atomic>
 #include <cctype>
+#include <cstdio>
 #include <cwctype>
 #include <fstream>
 #include <mutex>
@@ -413,6 +415,86 @@ bool MaterializeReferencedDefaults(const fs::path& resources, const fs::path& de
     return true;
 }
 
+struct AssetPackSettings {
+    bool packAll = false;
+    std::vector<std::string> alwaysInclude;
+    std::string defaultScene;
+};
+
+AssetPackSettings ReadAssetPackSettings(const fs::path& contentRoot) {
+    AssetPackSettings settings;
+    try {
+        std::ifstream file(contentRoot / ProjectManager::kProjectFileName);
+        if (!file)
+            return settings;
+        json j;
+        file >> j;
+        settings.defaultScene = j.value("defaultScene", std::string{});
+        if (j.contains("build") && j["build"].is_object()) {
+            const auto& b = j["build"];
+            settings.packAll = b.value("packAllAssets", false);
+            if (b.contains("alwaysInclude") && b["alwaysInclude"].is_array()) {
+                for (const auto& item : b["alwaysInclude"]) {
+                    if (item.is_string())
+                        settings.alwaysInclude.push_back(item.get<std::string>());
+                }
+            }
+        }
+    }
+    catch (const std::exception&) {
+        // A broken project.json keeps the defaults; the package then still builds.
+    }
+    return settings;
+}
+
+std::string FormatMegabytes(unsigned long long bytes) {
+    char buf[32];
+    snprintf(buf, sizeof(buf), "%.1f MB", static_cast<double>(bytes) / (1024.0 * 1024.0));
+    return buf;
+}
+
+// Copies only the rom/ files the default scene reaches (engine/editor/package_assets.h).
+bool CopyReferencedRom(const fs::path& content, const fs::path& destRom,
+                       const AssetPackSettings& settings, std::string* errorOut) {
+    package_assets::Options options;
+    options.romRoot = content / "rom";
+    options.rootScenes = {settings.defaultScene};
+    options.alwaysInclude = settings.alwaysInclude;
+    options.scanFiles = {content / ProjectManager::kProjectFileName,
+                         content / "game" / "scripts" / "bin" / "GameScripts.dll"};
+    const package_assets::Result result = package_assets::ComputeReferencedAssets(options);
+
+    std::error_code ec;
+    fs::create_directories(destRom, ec);
+    for (const std::string& rel : result.included) {
+        const fs::path from = content / "rom" / PathFromUtf8(rel);
+        const fs::path to = destRom / PathFromUtf8(rel);
+        fs::create_directories(to.parent_path(), ec);
+        fs::copy_file(from, to, fs::copy_options::overwrite_existing, ec);
+        if (ec) {
+            if (errorOut)
+                *errorOut = "Failed to copy " + from.string() + ": " + ec.message();
+            return false;
+        }
+    }
+
+    for (const std::string& warning : result.warnings)
+        AppendLogLine("Warning: " + warning);
+    AppendLogLine("Packing referenced rom/ assets: " + std::to_string(result.included.size()) + " files (" +
+                  FormatMegabytes(result.includedBytes) + "); left out " +
+                  std::to_string(result.excluded.size()) + " unreferenced files (" +
+                  FormatMegabytes(result.excludedBytes) + ").");
+    constexpr std::size_t kMaxListed = 80;
+    for (std::size_t i = 0; i < result.excluded.size() && i < kMaxListed; ++i)
+        AppendLogLine("  skip rom/" + result.excluded[i]);
+    if (result.excluded.size() > kMaxListed)
+        AppendLogLine("  ... and " + std::to_string(result.excluded.size() - kMaxListed) + " more");
+    if (!result.excluded.empty())
+        AppendLogLine("If the game loads a left-out file by a name it builds at runtime, add it to "
+                      "project.json build.alwaysInclude, or set build.packAllAssets to true.");
+    return true;
+}
+
 bool AssemblePackage(const Request& request, const fs::path& engineRoot,
                      const std::string& configName, std::string* errorOut) {
     const fs::path content = request.contentRoot;
@@ -454,8 +536,15 @@ bool AssemblePackage(const Request& request, const fs::path& engineRoot,
         return false;
     }
 
-    if (!CopyDirectoryRecursive(content / "rom", dest / "rom", errorOut))
+    const AssetPackSettings packSettings = ReadAssetPackSettings(content);
+    if (packSettings.packAll) {
+        AppendLogLine("Packing all of rom/ (project.json build.packAllAssets).");
+        if (!CopyDirectoryRecursive(content / "rom", dest / "rom", errorOut))
+            return false;
+    }
+    else if (!CopyReferencedRom(content, dest / "rom", packSettings, errorOut)) {
         return false;
+    }
 
     // Compress the packaged copy (never the content project) to BC7 .dds and drop the
     // source images. The runtime falls back from a missing .png/.jpg/.bmp to its .dds.
