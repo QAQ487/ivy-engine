@@ -1,0 +1,33 @@
+name: Linux checks
+
+# Pure-logic, asset-layout and doc checks that run without MSVC / D3D11.
+# Passing here is not a Windows Editor/Runtime pass.
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: linux-checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Toolchain versions
+        run: |
+          g++ --version | head -n 1
+          python3 --version
+      - name: Run Linux checks
+        run: tools/run_linux_checks.sh

@@ -7,11 +7,14 @@
 #include "engine/ecs/game_object.h"
 #include "engine/debug_draw/debug_drawer.h"
 #include "engine/core/utf8_path.h"
+#include "engine/core/content_path.h"
+#include "engine/audio/wav_parse.h"
 #include "libraries/nlohmann/json.hpp"
 #include <algorithm>
 #include <cmath>
 #include <fstream>
 #include <filesystem>
+#include <iterator>
 
  // Internal structure to hold all data for a single sound
 struct Playback {
@@ -147,61 +150,36 @@ void AudioManager::Update() {
 // ---------------------------------------------------------------------------
 bool AudioManager::LoadWav(const std::string& path, Playback* outSource) {
     outSource->contentPath = path;
-    HMMIO hmmio = mmioOpenA(const_cast<LPSTR>(path.c_str()), nullptr, MMIO_READ);
-    if (!hmmio) return false;
 
-    MMCKINFO riffChunk = { 0 };
-    riffChunk.fccType = mmioFOURCC('W', 'A', 'V', 'E');
-    if (mmioDescend(hmmio, &riffChunk, nullptr, MMIO_FINDRIFF) != MMSYSERR_NOERROR) {
-        mmioClose(hmmio, 0);
+    // UTF-8 safe: rom/ paths resolve project-then-resources; other paths stay
+    // literal. mmioOpenA decoded the path as the ANSI code page instead.
+    std::vector<std::uint8_t> bytes;
+    try {
+        const std::filesystem::path file = content_path::ReadableFileCurrent(path);
+        if (file.empty()) return false;
+        std::ifstream in(file, std::ios::binary);
+        if (!in) return false;
+        bytes.assign(std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>());
+    }
+    catch (...) {
         return false;
     }
 
-    MMCKINFO chunk = { 0 };
-    chunk.ckid = mmioFOURCC('f', 'm', 't', ' ');
-    if (mmioDescend(hmmio, &chunk, &riffChunk, MMIO_FINDCHUNK) != MMSYSERR_NOERROR) {
-        mmioClose(hmmio, 0);
-        return false;
-    }
+    wav_parse::WavChunks chunks;
+    if (!wav_parse::ParseRiffWave(bytes.data(), bytes.size(), &chunks)) return false;
 
-    if (chunk.cksize >= sizeof(WAVEFORMATEX)) {
-        if (mmioRead(hmmio, (HPSTR)&outSource->wfx, sizeof(WAVEFORMATEX)) == -1) {
-            mmioClose(hmmio, 0);
-            return false;
-        }
-    }
-    else if (chunk.cksize >= sizeof(PCMWAVEFORMAT)) {
-        PCMWAVEFORMAT pcm = { 0 };
-        if (mmioRead(hmmio, (HPSTR)&pcm, sizeof(PCMWAVEFORMAT)) == -1) {
-            mmioClose(hmmio, 0);
-            return false;
-        }
-        memset(&outSource->wfx, 0, sizeof(WAVEFORMATEX));
-        memcpy(&outSource->wfx, &pcm, sizeof(PCMWAVEFORMAT));
-        outSource->wfx.cbSize = 0;
+    memset(&outSource->wfx, 0, sizeof(WAVEFORMATEX));
+    if (chunks.fmtSize >= sizeof(WAVEFORMATEX)) {
+        memcpy(&outSource->wfx, bytes.data() + chunks.fmtOffset, sizeof(WAVEFORMATEX));
     }
     else {
-        // fmt chunk too small to hold any recognizable WAVEFORMAT variant.
-        mmioClose(hmmio, 0);
-        return false;
-    }
-    mmioAscend(hmmio, &chunk, 0);
-
-    chunk.ckid = mmioFOURCC('d', 'a', 't', 'a');
-    if (mmioDescend(hmmio, &chunk, &riffChunk, MMIO_FINDCHUNK) != MMSYSERR_NOERROR) {
-        mmioClose(hmmio, 0);
-        return false;
+        // PCMWAVEFORMAT (16 bytes): no cbSize field.
+        memcpy(&outSource->wfx, bytes.data() + chunks.fmtOffset, sizeof(PCMWAVEFORMAT));
+        outSource->wfx.cbSize = 0;
     }
 
-    // Resize vector to hold data
-    outSource->audioData.resize(chunk.cksize);
-    if (mmioRead(hmmio, (HPSTR)outSource->audioData.data(), chunk.cksize) == -1) {
-        outSource->audioData.clear();
-        mmioClose(hmmio, 0);
-        return false;
-    }
-    mmioClose(hmmio, 0);
-
+    const auto dataBegin = bytes.begin() + static_cast<std::ptrdiff_t>(chunks.dataOffset);
+    outSource->audioData.assign(dataBegin, dataBegin + static_cast<std::ptrdiff_t>(chunks.dataSize));
     return true;
 }
 

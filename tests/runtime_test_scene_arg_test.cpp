@@ -1,5 +1,9 @@
 // runtime_test_scene_arg_test.cpp
 // Linux-runnable pure validation for --scene path rules.
+//
+// Build from the repo root:
+//   g++ -std=c++20 -Wall -Wextra -I. -o /tmp/runtime_test_scene_arg_test tests/runtime_test_scene_arg_test.cpp
+//   /tmp/runtime_test_scene_arg_test
 #include "engine/testing/runtime_test_scene_arg.h"
 #include <cstdio>
 #include <string>
