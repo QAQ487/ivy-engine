@@ -41,9 +41,20 @@ inline const TextureEntry* TextureEntries(std::size_t* count) {
     return kEntries;
 }
 
-// Case-insensitive, accepts '\\'. Only ASCII paths can match. `out` may be null.
+// Fonts that answer to a rom/ path when no file exists there. The default UI font is the
+// same IBM Plex Mono as the debug text font. Same rules and checks as the textures above.
+inline const TextureEntry* FontEntries(std::size_t* count) {
+    static const TextureEntry kEntries[] = {
+        {"rom/font/ibmplexmono-regular.ttf", kDebugMonoFontTtf, sizeof(kDebugMonoFontTtf)},
+    };
+    *count = sizeof(kEntries) / sizeof(kEntries[0]);
+    return kEntries;
+}
+
+namespace detail {
+
 template <class Char>
-inline bool FindTexture(const std::basic_string<Char>& romPath, Asset* out) {
+inline bool Lookup(const std::basic_string<Char>& romPath, const TextureEntry* (*entries)(std::size_t*), Asset* out) {
     std::string key;
     key.reserve(romPath.size());
     for (Char c : romPath) {
@@ -58,17 +69,30 @@ inline bool FindTexture(const std::basic_string<Char>& romPath, Asset* out) {
         key.push_back(ch);
     }
     std::size_t count = 0;
-    const TextureEntry* entries = TextureEntries(&count);
+    const TextureEntry* table = entries(&count);
     for (std::size_t i = 0; i < count; ++i) {
-        if (key == entries[i].romPath) {
+        if (key == table[i].romPath) {
             if (out) {
-                out->data = entries[i].data;
-                out->size = entries[i].size;
+                out->data = table[i].data;
+                out->size = table[i].size;
             }
             return true;
         }
     }
     return false;
+}
+
+}  // namespace detail
+
+// Case-insensitive, accepts '\\'. Only ASCII paths can match. `out` may be null.
+template <class Char>
+inline bool FindTexture(const std::basic_string<Char>& romPath, Asset* out) {
+    return detail::Lookup(romPath, &TextureEntries, out);
+}
+
+template <class Char>
+inline bool FindFont(const std::basic_string<Char>& romPath, Asset* out) {
+    return detail::Lookup(romPath, &FontEntries, out);
 }
 
 }  // namespace builtin_assets

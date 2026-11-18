@@ -48,7 +48,7 @@
                 "alignment": "CENTER",
                 "color": { "r": 1.0, "g": 1.0, "b": 1.0, "a": 1.0 },
                 "font": {
-                    "texture": "rom/font/LemonSlice.ttf",
+                    "texture": "rom/font/IBMPlexMono-Regular.ttf",
                     "charWidth": 32.0,
                     "charHeight": 32.0,
                     "charsPerRow": 16
@@ -66,7 +66,7 @@
                 "alignment": "CENTER",
                 "color": { "r": 0.75, "g": 0.8, "b": 0.9, "a": 1.0 },
                 "font": {
-                    "texture": "rom/font/LemonSlice.ttf",
+                    "texture": "rom/font/IBMPlexMono-Regular.ttf",
                     "charWidth": 32.0,
                     "charHeight": 32.0,
                     "charsPerRow": 16

@@ -22,15 +22,20 @@ static void Expect(bool cond, const char* msg) {
 int main() {
     using namespace legacy_alias;
 
-    Expect(IsLegacyFontAtlas("rom/texture/consolab_ascii_512.png"), "exact path");
-    Expect(IsLegacyFontAtlas("ROM\\Texture\\Consolab_ASCII_512.PNG"), "backslash and case");
-    Expect(!IsLegacyFontAtlas("rom/texture/consolab_ascii_512.dds"), "other extension");
-    Expect(!IsLegacyFontAtlas("rom/texture/my_font.png"), "other texture");
-    Expect(!IsLegacyFontAtlas("rom/font/LemonSlice.ttf"), "a real font");
-    Expect(!IsLegacyFontAtlas(""), "empty");
+    Expect(IsLegacyFontPath("rom/texture/consolab_ascii_512.png"), "bitmap atlas");
+    Expect(IsLegacyFontPath("ROM\\Texture\\Consolab_ASCII_512.PNG"), "backslash and case");
+    Expect(IsLegacyFontPath("rom/font/LemonSlice.ttf"), "LemonSlice");
+    Expect(IsLegacyFontPath("ROM/FONT/lemonslice.TTF"), "LemonSlice, any case");
+    Expect(!IsLegacyFontPath("rom/texture/consolab_ascii_512.dds"), "other extension");
+    Expect(!IsLegacyFontPath("rom/texture/my_font.png"), "other texture");
+    Expect(!IsLegacyFontPath("rom/font/IBMPlexMono-Regular.ttf"), "the default font is not legacy");
+    Expect(!IsLegacyFontPath(""), "empty");
 
-    Expect(FontPath("rom/texture/consolab_ascii_512.png", false) == "rom/font/LemonSlice.ttf",
+    Expect(FontPath("rom/texture/consolab_ascii_512.png", false) == "rom/font/IBMPlexMono-Regular.ttf",
            "missing legacy atlas becomes the default font");
+    Expect(FontPath("rom/font/LemonSlice.ttf", false) == "rom/font/IBMPlexMono-Regular.ttf",
+           "missing LemonSlice becomes the default font");
+    Expect(FontPath("rom/font/LemonSlice.ttf", true) == "rom/font/LemonSlice.ttf", "a project's own LemonSlice wins");
     Expect(FontPath("rom/texture/consolab_ascii_512.png", true) == "rom/texture/consolab_ascii_512.png",
            "a project's own atlas file wins");
     Expect(FontPath("rom/font/Other.ttf", false) == "rom/font/Other.ttf", "other paths are untouched");

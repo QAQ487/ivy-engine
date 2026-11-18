@@ -350,6 +350,7 @@ void CollectRomReferences(const std::string& text, std::vector<std::string>& out
 const char* const kBuiltinRomPaths[] = {
     "rom/branding/ivy_logo.png",
     "rom/skybox/ibl/brdf_lut.png",
+    "rom/font/IBMPlexMono-Regular.ttf",
 };
 
 bool CopyResourceIfMissing(const fs::path& resources, const fs::path& destRom,
@@ -384,10 +385,9 @@ bool CopyResourceIfMissing(const fs::path& resources, const fs::path& destRom,
 
 bool MaterializeReferencedDefaults(const fs::path& resources, const fs::path& destRom,
                                    std::string* errorOut) {
-    static const char* kHostRomPaths[] = {
-        "rom/font/LemonSlice.ttf",
-    };
-    std::vector<std::string> refs(std::begin(kHostRomPaths), std::end(kHostRomPaths));
+    // No host file needs to be shipped any more: the default UI font, debug font, logo, BRDF
+    // LUT and fade fill are built into the exe. Only files content names are materialized.
+    std::vector<std::string> refs;
     std::error_code ec;
     if (fs::is_directory(destRom, ec)) {
         for (fs::recursive_directory_iterator it(destRom, ec), end; it != end; it.increment(ec)) {

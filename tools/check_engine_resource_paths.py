@@ -35,6 +35,8 @@ OPTIONAL_EXACT = {
     # Retired bitmap font atlas. Old content may still name it; legacy_asset_alias.h reads it as
     # the default UI font. No such file ships.
     "rom/texture/consolab_ascii_512.png",
+    # Retired font. Same alias; the file was removed from resources/font.
+    "rom/font/LemonSlice.ttf",
     "rom/skip_boot_preload",
     "rom/idle.png",
     "rom/walk.png",
@@ -82,7 +84,19 @@ def is_optional(token):
 def resources_file(token):
     if not token.startswith("rom/"):
         return None
-    return RESOURCES / token[4:]
+    direct = RESOURCES / token[4:]
+    if direct.is_file():
+        return direct
+    # Windows paths are case-insensitive and builtin_assets.h keys are lower case.
+    current = RESOURCES
+    for part in token[4:].split("/"):
+        match = None
+        if current.is_dir():
+            match = next((c for c in current.iterdir() if c.name.lower() == part.lower()), None)
+        if match is None:
+            return direct
+        current = match
+    return current
 
 
 def main():

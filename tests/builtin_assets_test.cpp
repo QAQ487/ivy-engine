@@ -43,6 +43,13 @@ int main() {
     }
     builtin_assets::Asset w;
     Expect(builtin_assets::FindTexture(std::wstring(L"ROM\\Skybox\\IBL\\BRDF_LUT.PNG"), &w), "wide, backslash, any case");
+    // Default UI font answers to its rom/ path, not the retired ones.
+    builtin_assets::Asset f;
+    Expect(builtin_assets::FindFont(std::string("rom/font/IBMPlexMono-Regular.ttf"), &f), "default UI font");
+    Expect(f.data == font.data && f.size == font.size, "UI font is the debug font data");
+    Expect(builtin_assets::FindFont(std::wstring(L"ROM\\Font\\ibmplexmono-regular.TTF"), nullptr), "font, wide, any case");
+    Expect(!builtin_assets::FindFont(std::string("rom/font/LemonSlice.ttf"), nullptr), "LemonSlice is gone");
+    Expect(!builtin_assets::FindTexture(std::string("rom/font/IBMPlexMono-Regular.ttf"), nullptr), "a font is not a texture");
     Expect(!builtin_assets::FindTexture(std::string("rom/skybox/ibl/irradiance.dds"), nullptr),
            "per-skybox IBL maps are content, not built in");
     Expect(!builtin_assets::FindTexture(std::string("rom/branding/other.png"), nullptr), "unknown path");

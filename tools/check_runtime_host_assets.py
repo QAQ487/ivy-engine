@@ -16,9 +16,7 @@ REPO = Path(__file__).resolve().parents[1]
 RESOURCES = REPO / "resources"
 
 # Keep in sync with tools/materialize_engine_defaults.py HOST_ROM_PATHS.
-HOST_ROM_PATHS = (
-    "rom/font/LemonSlice.ttf",
-)
+HOST_ROM_PATHS = ()
 
 VCXPROJS = (
     REPO / "IvyEngineRuntime.vcxproj",
@@ -58,11 +56,12 @@ def main():
                 f"in Debug and Release (found {len(matches)})"
             )
 
-    # Built-in textures: the C++ table, the package builder and the Python mirror must agree,
+    # Built-in textures and fonts: the C++ tables, the package builder and the Python mirror must agree,
     # and each file must still exist in resources/ (the editor reads it from there).
     header = (REPO / "engine" / "core" / "builtin_assets.h").read_text(encoding="utf-8", errors="replace")
     builder = (REPO / "engine" / "editor" / "playable_package_builder.cpp").read_text(
         encoding="utf-8", errors="replace")
+    # builtin_assets.h keys are lower case (matching is case-insensitive); compare that way.
     cpp_paths = set(re.findall(r'\{"(rom/[^"]+)",\s*k', header))
     builder_block = re.search(r"kBuiltinRomPaths\[\]\s*=\s*\{(.*?)\};", builder, re.S)
     builder_paths = set(re.findall(r'"(rom/[^"]+)"', builder_block.group(1))) if builder_block else set()
@@ -70,13 +69,13 @@ def main():
     py_paths = set(re.findall(r'"(rom/[^"]+)"', py_block.group(1))) if py_block else set()
     if not cpp_paths:
         errors.append("engine/core/builtin_assets.h lists no built-in texture paths")
-    if cpp_paths != builder_paths:
+    if cpp_paths != {p.lower() for p in builder_paths}:
         errors.append(f"builtin_assets.h {sorted(cpp_paths)} != playable_package_builder.cpp {sorted(builder_paths)}")
-    if cpp_paths != py_paths:
+    if cpp_paths != {p.lower() for p in py_paths}:
         errors.append(f"builtin_assets.h {sorted(cpp_paths)} != materialize_engine_defaults.py {sorted(py_paths)}")
-    for rom_path in sorted(cpp_paths):
+    for rom_path in sorted(py_paths):
         if not (RESOURCES / rom_path[4:]).is_file():
-            errors.append(f"built-in texture source missing in resources/: {rom_path}")
+            errors.append(f"built-in asset source missing in resources/: {rom_path}")
 
     # Debug text and the fade fill need no shipped files: the font is compiled in.
     debug_text = DEBUG_TEXT.read_text(encoding="utf-8", errors="replace")

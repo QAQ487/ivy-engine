@@ -15,7 +15,7 @@
                     "charHeight": 32.0,
                     "charWidth": 32.0,
                     "charsPerRow": 16,
-                    "texture": "rom/font/LemonSlice.ttf"
+                    "texture": "rom/font/IBMPlexMono-Regular.ttf"
                 },
                 "fontSize": 1.0,
                 "name": "Hint",

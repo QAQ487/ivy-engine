@@ -148,7 +148,7 @@ UIText* CreateCanvasText() {
     UICanvas* canvas = SceneCanvas_GetCanvas();
     if (!canvas) return nullptr;
     UIText* text = canvas->AddText("Text", { 0.0f, 0.0f }, UIAnchor::CENTER, "Text");
-    text->SetFontPath("rom/font/LemonSlice.ttf", 32.0f, 32.0f, 16);
+    text->SetFontPath("rom/font/IBMPlexMono-Regular.ttf", 32.0f, 32.0f, 16);
     text->SetFontSize(1.5f);
     text->SetCharacterSpacing(32.0f);
     text->SetAlignment(TextAlign::LEFT);

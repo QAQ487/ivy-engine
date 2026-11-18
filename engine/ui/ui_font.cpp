@@ -146,6 +146,12 @@ namespace {
 		const std::vector<unsigned char> ttf = LoadFile(openPath);
 		std::wstring atlasName = L"__ttf_atlas__:";
 		atlasName += ttfPath;
+		if (ttf.empty()) {
+			// The default UI font is compiled into the exe; a real file at its path still wins.
+			builtin_assets::Asset builtin;
+			if (builtin_assets::FindFont(std::wstring(ttfPath), &builtin))
+				return BakeFontData(builtin.data, builtin.size, atlasName, kBakeSize, kAtlasSize, out);
+		}
 		return BakeFontData(ttf.data(), ttf.size(), atlasName, kBakeSize, kAtlasSize, out);
 	}
 }

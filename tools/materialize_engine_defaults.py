@@ -4,8 +4,8 @@
 Project files already in the destination win. Shaders are overlaid by the
 caller; the boot logo and BRDF LUT are built into the exe and never copied. This script adds:
 
-- host files the runtime opens even when no scene names them
-  (the default UI font; the fade fill and debug text font are built into the exe)
+- host files the runtime opens even when no scene names them (none now: the default UI
+  font, debug text font, logo, BRDF LUT and fade fill are all built into the exe)
 - every safe rom/ path named in the destination's text files, when that
   file exists under resources/ and is not already in the package
 
@@ -16,9 +16,7 @@ resources/skybox/source is authoring input and is never copied.
 import sys
 from pathlib import Path
 
-HOST_ROM_PATHS = (
-    "rom/font/LemonSlice.ttf",
-)
+HOST_ROM_PATHS = ()
 TEXT_SUFFIXES = {".json", ".txt", ".prefab", ".physmat", ".mtl", ".obj", ".md"}
 
 
@@ -67,6 +65,7 @@ def collect_references(root):
 BUILTIN_ROM_PATHS = (
     "rom/branding/ivy_logo.png",
     "rom/skybox/ibl/brdf_lut.png",
+    "rom/font/IBMPlexMono-Regular.ttf",
 )
 
 
