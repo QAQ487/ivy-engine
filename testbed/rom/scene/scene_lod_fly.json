@@ -108,7 +108,7 @@
       "children": [],
       "components": {
         "SceneTransform": {
-          "posX": -6.0,
+          "posX": -9.0,
           "posY": 0.0,
           "posZ": 11.0,
           "rotX": 0.0,
@@ -128,6 +128,10 @@
             },
             {
               "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 1000000.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD3.fbx",
               "maxDistance": 1000000.0
             }
           ]
@@ -140,7 +144,7 @@
       "children": [],
       "components": {
         "SceneTransform": {
-          "posX": -6.0,
+          "posX": -9.0,
           "posY": 0.0,
           "posZ": 19.0,
           "rotX": 0.0,
@@ -160,6 +164,10 @@
             },
             {
               "model": "rom/model/lod/Boulder_LOD2.fbx",
+              "maxDistance": 1000000.0
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD3.fbx",
               "maxDistance": 1000000.0
             }
           ]
@@ -172,7 +180,7 @@
       "children": [],
       "components": {
         "SceneTransform": {
-          "posX": 0.0,
+          "posX": -3.0,
           "posY": 0.0,
           "posZ": 11.0,
           "rotX": 0.0,
@@ -192,6 +200,10 @@
             },
             {
               "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 1000000.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD3.fbx",
               "maxDistance": 1000000.0
             }
           ]
@@ -204,7 +216,7 @@
       "children": [],
       "components": {
         "SceneTransform": {
-          "posX": 0.0,
+          "posX": -3.0,
           "posY": 0.0,
           "posZ": 19.0,
           "rotX": 0.0,
@@ -225,6 +237,10 @@
             {
               "model": "rom/model/lod/Boulder_LOD2.fbx",
               "maxDistance": 1000000.0
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD3.fbx",
+              "maxDistance": 1000000.0
             }
           ]
         }
@@ -236,7 +252,7 @@
       "children": [],
       "components": {
         "SceneTransform": {
-          "posX": 6.0,
+          "posX": 3.0,
           "posY": 0.0,
           "posZ": 11.0,
           "rotX": 0.0,
@@ -257,6 +273,10 @@
             {
               "model": "rom/model/lod/PineTree_LOD2.fbx",
               "maxDistance": 0.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD3.fbx",
+              "maxDistance": 1000000.0
             }
           ]
         }
@@ -268,7 +288,7 @@
       "children": [],
       "components": {
         "SceneTransform": {
-          "posX": 6.0,
+          "posX": 3.0,
           "posY": 0.0,
           "posZ": 19.0,
           "rotX": 0.0,
@@ -288,6 +308,82 @@
             },
             {
               "model": "rom/model/lod/Boulder_LOD2.fbx",
+              "maxDistance": 0.0
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD3.fbx",
+              "maxDistance": 1000000.0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Gallery Pine LOD3 (forced)",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 9.0,
+          "posY": 0.0,
+          "posZ": 11.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/PineTree_LOD1.fbx",
+              "maxDistance": 0.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 0.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD3.fbx",
+              "maxDistance": 0.0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Gallery Boulder LOD3 (forced)",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 9.0,
+          "posY": 0.0,
+          "posZ": 19.0,
+          "rotX": 0.0,
+          "rotY": 30.0,
+          "rotZ": 0.0,
+          "scaleX": 2.5,
+          "scaleY": 2.5,
+          "scaleZ": 2.5
+        },
+        "visual": {
+          "model": "rom/model/lod/Boulder_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/Boulder_LOD1.fbx",
+              "maxDistance": 0.0
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD2.fbx",
+              "maxDistance": 0.0
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD3.fbx",
               "maxDistance": 0.0
             }
           ]
@@ -316,14 +412,18 @@
           "lods": [
             {
               "model": "rom/model/lod/PineTree_LOD1.fbx",
-              "maxDistance": 25.0
+              "maxDistance": 34.5
             },
             {
               "model": "rom/model/lod/PineTree_LOD2.fbx",
-              "maxDistance": 60.0
+              "maxDistance": 69.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD3.fbx",
+              "maxDistance": 138.1
             }
           ],
-          "cullDistance": 100.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -349,14 +449,18 @@
           "lods": [
             {
               "model": "rom/model/lod/PineTree_LOD1.fbx",
-              "maxDistance": 25.0
+              "maxDistance": 38.2
             },
             {
               "model": "rom/model/lod/PineTree_LOD2.fbx",
-              "maxDistance": 60.0
+              "maxDistance": 76.3
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD3.fbx",
+              "maxDistance": 152.7
             }
           ],
-          "cullDistance": 100.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -382,14 +486,18 @@
           "lods": [
             {
               "model": "rom/model/lod/PineTree_LOD1.fbx",
-              "maxDistance": 25.0
+              "maxDistance": 26.6
             },
             {
               "model": "rom/model/lod/PineTree_LOD2.fbx",
-              "maxDistance": 60.0
+              "maxDistance": 53.1
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD3.fbx",
+              "maxDistance": 106.2
             }
           ],
-          "cullDistance": 100.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -415,14 +523,18 @@
           "lods": [
             {
               "model": "rom/model/lod/PineTree_LOD1.fbx",
-              "maxDistance": 25.0
+              "maxDistance": 32.9
             },
             {
               "model": "rom/model/lod/PineTree_LOD2.fbx",
-              "maxDistance": 60.0
+              "maxDistance": 65.7
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD3.fbx",
+              "maxDistance": 131.5
             }
           ],
-          "cullDistance": 100.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -448,14 +560,18 @@
           "lods": [
             {
               "model": "rom/model/lod/PineTree_LOD1.fbx",
-              "maxDistance": 25.0
+              "maxDistance": 31.5
             },
             {
               "model": "rom/model/lod/PineTree_LOD2.fbx",
-              "maxDistance": 60.0
+              "maxDistance": 63.1
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD3.fbx",
+              "maxDistance": 126.1
             }
           ],
-          "cullDistance": 100.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -481,14 +597,18 @@
           "lods": [
             {
               "model": "rom/model/lod/PineTree_LOD1.fbx",
-              "maxDistance": 25.0
+              "maxDistance": 36.5
             },
             {
               "model": "rom/model/lod/PineTree_LOD2.fbx",
-              "maxDistance": 60.0
+              "maxDistance": 73.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD3.fbx",
+              "maxDistance": 146.1
             }
           ],
-          "cullDistance": 100.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -514,14 +634,18 @@
           "lods": [
             {
               "model": "rom/model/lod/PineTree_LOD1.fbx",
-              "maxDistance": 25.0
+              "maxDistance": 45.5
             },
             {
               "model": "rom/model/lod/PineTree_LOD2.fbx",
-              "maxDistance": 60.0
+              "maxDistance": 91.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD3.fbx",
+              "maxDistance": 181.9
             }
           ],
-          "cullDistance": 100.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -547,14 +671,18 @@
           "lods": [
             {
               "model": "rom/model/lod/PineTree_LOD1.fbx",
-              "maxDistance": 25.0
+              "maxDistance": 35.9
             },
             {
               "model": "rom/model/lod/PineTree_LOD2.fbx",
-              "maxDistance": 60.0
+              "maxDistance": 71.7
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD3.fbx",
+              "maxDistance": 143.4
             }
           ],
-          "cullDistance": 100.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -580,14 +708,18 @@
           "lods": [
             {
               "model": "rom/model/lod/PineTree_LOD1.fbx",
-              "maxDistance": 25.0
+              "maxDistance": 43.2
             },
             {
               "model": "rom/model/lod/PineTree_LOD2.fbx",
-              "maxDistance": 60.0
+              "maxDistance": 86.3
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD3.fbx",
+              "maxDistance": 172.6
             }
           ],
-          "cullDistance": 100.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -613,14 +745,18 @@
           "lods": [
             {
               "model": "rom/model/lod/PineTree_LOD1.fbx",
-              "maxDistance": 25.0
+              "maxDistance": 35.2
             },
             {
               "model": "rom/model/lod/PineTree_LOD2.fbx",
-              "maxDistance": 60.0
+              "maxDistance": 70.4
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD3.fbx",
+              "maxDistance": 140.7
             }
           ],
-          "cullDistance": 100.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -646,14 +782,18 @@
           "lods": [
             {
               "model": "rom/model/lod/PineTree_LOD1.fbx",
-              "maxDistance": 25.0
+              "maxDistance": 42.8
             },
             {
               "model": "rom/model/lod/PineTree_LOD2.fbx",
-              "maxDistance": 60.0
+              "maxDistance": 85.6
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD3.fbx",
+              "maxDistance": 171.3
             }
           ],
-          "cullDistance": 100.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -679,14 +819,18 @@
           "lods": [
             {
               "model": "rom/model/lod/PineTree_LOD1.fbx",
-              "maxDistance": 25.0
+              "maxDistance": 31.2
             },
             {
               "model": "rom/model/lod/PineTree_LOD2.fbx",
-              "maxDistance": 60.0
+              "maxDistance": 62.4
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD3.fbx",
+              "maxDistance": 124.8
             }
           ],
-          "cullDistance": 100.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -712,14 +856,18 @@
           "lods": [
             {
               "model": "rom/model/lod/PineTree_LOD1.fbx",
-              "maxDistance": 25.0
+              "maxDistance": 47.1
             },
             {
               "model": "rom/model/lod/PineTree_LOD2.fbx",
-              "maxDistance": 60.0
+              "maxDistance": 94.3
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD3.fbx",
+              "maxDistance": 188.6
             }
           ],
-          "cullDistance": 100.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -745,14 +893,18 @@
           "lods": [
             {
               "model": "rom/model/lod/PineTree_LOD1.fbx",
-              "maxDistance": 25.0
+              "maxDistance": 43.8
             },
             {
               "model": "rom/model/lod/PineTree_LOD2.fbx",
-              "maxDistance": 60.0
+              "maxDistance": 87.6
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD3.fbx",
+              "maxDistance": 175.3
             }
           ],
-          "cullDistance": 100.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -778,14 +930,18 @@
           "lods": [
             {
               "model": "rom/model/lod/PineTree_LOD1.fbx",
-              "maxDistance": 25.0
+              "maxDistance": 32.9
             },
             {
               "model": "rom/model/lod/PineTree_LOD2.fbx",
-              "maxDistance": 60.0
+              "maxDistance": 65.7
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD3.fbx",
+              "maxDistance": 131.5
             }
           ],
-          "cullDistance": 100.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -811,14 +967,18 @@
           "lods": [
             {
               "model": "rom/model/lod/PineTree_LOD1.fbx",
-              "maxDistance": 25.0
+              "maxDistance": 27.9
             },
             {
               "model": "rom/model/lod/PineTree_LOD2.fbx",
-              "maxDistance": 60.0
+              "maxDistance": 55.8
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD3.fbx",
+              "maxDistance": 111.5
             }
           ],
-          "cullDistance": 100.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -844,14 +1004,18 @@
           "lods": [
             {
               "model": "rom/model/lod/PineTree_LOD1.fbx",
-              "maxDistance": 25.0
+              "maxDistance": 39.2
             },
             {
               "model": "rom/model/lod/PineTree_LOD2.fbx",
-              "maxDistance": 60.0
+              "maxDistance": 78.3
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD3.fbx",
+              "maxDistance": 156.7
             }
           ],
-          "cullDistance": 100.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -877,14 +1041,18 @@
           "lods": [
             {
               "model": "rom/model/lod/PineTree_LOD1.fbx",
-              "maxDistance": 25.0
+              "maxDistance": 28.9
             },
             {
               "model": "rom/model/lod/PineTree_LOD2.fbx",
-              "maxDistance": 60.0
+              "maxDistance": 57.8
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD3.fbx",
+              "maxDistance": 115.5
             }
           ],
-          "cullDistance": 100.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -910,14 +1078,18 @@
           "lods": [
             {
               "model": "rom/model/lod/PineTree_LOD1.fbx",
-              "maxDistance": 25.0
+              "maxDistance": 27.6
             },
             {
               "model": "rom/model/lod/PineTree_LOD2.fbx",
-              "maxDistance": 60.0
+              "maxDistance": 55.1
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD3.fbx",
+              "maxDistance": 110.2
             }
           ],
-          "cullDistance": 100.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -943,14 +1115,18 @@
           "lods": [
             {
               "model": "rom/model/lod/PineTree_LOD1.fbx",
-              "maxDistance": 25.0
+              "maxDistance": 49.5
             },
             {
               "model": "rom/model/lod/PineTree_LOD2.fbx",
-              "maxDistance": 60.0
+              "maxDistance": 98.9
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD3.fbx",
+              "maxDistance": 197.8
             }
           ],
-          "cullDistance": 100.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -976,14 +1152,18 @@
           "lods": [
             {
               "model": "rom/model/lod/PineTree_LOD1.fbx",
-              "maxDistance": 25.0
+              "maxDistance": 32.9
             },
             {
               "model": "rom/model/lod/PineTree_LOD2.fbx",
-              "maxDistance": 60.0
+              "maxDistance": 65.7
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD3.fbx",
+              "maxDistance": 131.5
             }
           ],
-          "cullDistance": 100.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -1009,14 +1189,18 @@
           "lods": [
             {
               "model": "rom/model/lod/PineTree_LOD1.fbx",
-              "maxDistance": 25.0
+              "maxDistance": 27.2
             },
             {
               "model": "rom/model/lod/PineTree_LOD2.fbx",
-              "maxDistance": 60.0
+              "maxDistance": 54.4
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD3.fbx",
+              "maxDistance": 108.9
             }
           ],
-          "cullDistance": 100.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -1042,14 +1226,18 @@
           "lods": [
             {
               "model": "rom/model/lod/PineTree_LOD1.fbx",
-              "maxDistance": 25.0
+              "maxDistance": 37.5
             },
             {
               "model": "rom/model/lod/PineTree_LOD2.fbx",
-              "maxDistance": 60.0
+              "maxDistance": 75.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD3.fbx",
+              "maxDistance": 150.0
             }
           ],
-          "cullDistance": 100.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -1075,14 +1263,18 @@
           "lods": [
             {
               "model": "rom/model/lod/PineTree_LOD1.fbx",
-              "maxDistance": 25.0
+              "maxDistance": 29.9
             },
             {
               "model": "rom/model/lod/PineTree_LOD2.fbx",
-              "maxDistance": 60.0
+              "maxDistance": 59.8
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD3.fbx",
+              "maxDistance": 119.5
             }
           ],
-          "cullDistance": 100.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -1108,14 +1300,18 @@
           "lods": [
             {
               "model": "rom/model/lod/PineTree_LOD1.fbx",
-              "maxDistance": 25.0
+              "maxDistance": 38.8
             },
             {
               "model": "rom/model/lod/PineTree_LOD2.fbx",
-              "maxDistance": 60.0
+              "maxDistance": 77.7
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD3.fbx",
+              "maxDistance": 155.4
             }
           ],
-          "cullDistance": 100.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -1141,14 +1337,18 @@
           "lods": [
             {
               "model": "rom/model/lod/PineTree_LOD1.fbx",
-              "maxDistance": 25.0
+              "maxDistance": 45.8
             },
             {
               "model": "rom/model/lod/PineTree_LOD2.fbx",
-              "maxDistance": 60.0
+              "maxDistance": 91.6
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD3.fbx",
+              "maxDistance": 183.2
             }
           ],
-          "cullDistance": 100.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -1174,14 +1374,18 @@
           "lods": [
             {
               "model": "rom/model/lod/PineTree_LOD1.fbx",
-              "maxDistance": 25.0
+              "maxDistance": 39.5
             },
             {
               "model": "rom/model/lod/PineTree_LOD2.fbx",
-              "maxDistance": 60.0
+              "maxDistance": 79.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD3.fbx",
+              "maxDistance": 158.0
             }
           ],
-          "cullDistance": 100.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -1207,14 +1411,18 @@
           "lods": [
             {
               "model": "rom/model/lod/PineTree_LOD1.fbx",
-              "maxDistance": 25.0
+              "maxDistance": 32.5
             },
             {
               "model": "rom/model/lod/PineTree_LOD2.fbx",
-              "maxDistance": 60.0
+              "maxDistance": 65.1
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD3.fbx",
+              "maxDistance": 130.1
             }
           ],
-          "cullDistance": 100.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -1240,14 +1448,18 @@
           "lods": [
             {
               "model": "rom/model/lod/PineTree_LOD1.fbx",
-              "maxDistance": 25.0
+              "maxDistance": 39.2
             },
             {
               "model": "rom/model/lod/PineTree_LOD2.fbx",
-              "maxDistance": 60.0
+              "maxDistance": 78.3
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD3.fbx",
+              "maxDistance": 156.7
             }
           ],
-          "cullDistance": 100.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -1273,14 +1485,18 @@
           "lods": [
             {
               "model": "rom/model/lod/PineTree_LOD1.fbx",
-              "maxDistance": 25.0
+              "maxDistance": 48.8
             },
             {
               "model": "rom/model/lod/PineTree_LOD2.fbx",
-              "maxDistance": 60.0
+              "maxDistance": 97.6
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD3.fbx",
+              "maxDistance": 195.2
             }
           ],
-          "cullDistance": 100.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -1306,14 +1522,18 @@
           "lods": [
             {
               "model": "rom/model/lod/PineTree_LOD1.fbx",
-              "maxDistance": 25.0
+              "maxDistance": 48.1
             },
             {
               "model": "rom/model/lod/PineTree_LOD2.fbx",
-              "maxDistance": 60.0
+              "maxDistance": 96.3
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD3.fbx",
+              "maxDistance": 192.5
             }
           ],
-          "cullDistance": 100.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -1339,14 +1559,18 @@
           "lods": [
             {
               "model": "rom/model/lod/PineTree_LOD1.fbx",
-              "maxDistance": 25.0
+              "maxDistance": 38.8
             },
             {
               "model": "rom/model/lod/PineTree_LOD2.fbx",
-              "maxDistance": 60.0
+              "maxDistance": 77.7
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD3.fbx",
+              "maxDistance": 155.4
             }
           ],
-          "cullDistance": 100.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -1372,14 +1596,18 @@
           "lods": [
             {
               "model": "rom/model/lod/PineTree_LOD1.fbx",
-              "maxDistance": 25.0
+              "maxDistance": 36.2
             },
             {
               "model": "rom/model/lod/PineTree_LOD2.fbx",
-              "maxDistance": 60.0
+              "maxDistance": 72.4
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD3.fbx",
+              "maxDistance": 144.7
             }
           ],
-          "cullDistance": 100.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -1405,14 +1633,18 @@
           "lods": [
             {
               "model": "rom/model/lod/PineTree_LOD1.fbx",
-              "maxDistance": 25.0
+              "maxDistance": 47.8
             },
             {
               "model": "rom/model/lod/PineTree_LOD2.fbx",
-              "maxDistance": 60.0
+              "maxDistance": 95.6
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD3.fbx",
+              "maxDistance": 191.2
             }
           ],
-          "cullDistance": 100.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -1438,14 +1670,18 @@
           "lods": [
             {
               "model": "rom/model/lod/PineTree_LOD1.fbx",
-              "maxDistance": 25.0
+              "maxDistance": 30.5
             },
             {
               "model": "rom/model/lod/PineTree_LOD2.fbx",
-              "maxDistance": 60.0
+              "maxDistance": 61.1
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD3.fbx",
+              "maxDistance": 122.2
             }
           ],
-          "cullDistance": 100.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -1471,14 +1707,18 @@
           "lods": [
             {
               "model": "rom/model/lod/PineTree_LOD1.fbx",
-              "maxDistance": 25.0
+              "maxDistance": 29.2
             },
             {
               "model": "rom/model/lod/PineTree_LOD2.fbx",
-              "maxDistance": 60.0
+              "maxDistance": 58.4
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD3.fbx",
+              "maxDistance": 116.8
             }
           ],
-          "cullDistance": 100.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -1504,14 +1744,18 @@
           "lods": [
             {
               "model": "rom/model/lod/PineTree_LOD1.fbx",
-              "maxDistance": 25.0
+              "maxDistance": 28.9
             },
             {
               "model": "rom/model/lod/PineTree_LOD2.fbx",
-              "maxDistance": 60.0
+              "maxDistance": 57.8
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD3.fbx",
+              "maxDistance": 115.5
             }
           ],
-          "cullDistance": 100.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -1537,14 +1781,18 @@
           "lods": [
             {
               "model": "rom/model/lod/PineTree_LOD1.fbx",
-              "maxDistance": 25.0
+              "maxDistance": 38.8
             },
             {
               "model": "rom/model/lod/PineTree_LOD2.fbx",
-              "maxDistance": 60.0
+              "maxDistance": 77.7
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD3.fbx",
+              "maxDistance": 155.4
             }
           ],
-          "cullDistance": 100.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -1554,15 +1802,15 @@
       "children": [],
       "components": {
         "SceneTransform": {
-          "posX": 12.265,
+          "posX": -74.781,
           "posY": 0.0,
-          "posZ": 22.63,
+          "posZ": 19.278,
           "rotX": 0.0,
-          "rotY": 252.85,
+          "rotY": 0.923,
           "rotZ": 0.0,
-          "scaleX": 1.12,
-          "scaleY": 1.12,
-          "scaleZ": 1.12
+          "scaleX": 0.96,
+          "scaleY": 0.96,
+          "scaleZ": 0.96
         },
         "visual": {
           "model": "rom/model/lod/PineTree_LOD0.fbx",
@@ -1570,14 +1818,18 @@
           "lods": [
             {
               "model": "rom/model/lod/PineTree_LOD1.fbx",
-              "maxDistance": 25.0
+              "maxDistance": 31.9
             },
             {
               "model": "rom/model/lod/PineTree_LOD2.fbx",
-              "maxDistance": 60.0
+              "maxDistance": 63.7
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD3.fbx",
+              "maxDistance": 127.5
             }
           ],
-          "cullDistance": 100.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -1603,14 +1855,18 @@
           "lods": [
             {
               "model": "rom/model/lod/PineTree_LOD1.fbx",
-              "maxDistance": 25.0
+              "maxDistance": 30.5
             },
             {
               "model": "rom/model/lod/PineTree_LOD2.fbx",
-              "maxDistance": 60.0
+              "maxDistance": 61.1
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD3.fbx",
+              "maxDistance": 122.2
             }
           ],
-          "cullDistance": 100.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -1636,14 +1892,18 @@
           "lods": [
             {
               "model": "rom/model/lod/PineTree_LOD1.fbx",
-              "maxDistance": 25.0
+              "maxDistance": 27.2
             },
             {
               "model": "rom/model/lod/PineTree_LOD2.fbx",
-              "maxDistance": 60.0
+              "maxDistance": 54.4
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD3.fbx",
+              "maxDistance": 108.9
             }
           ],
-          "cullDistance": 100.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -1669,14 +1929,18 @@
           "lods": [
             {
               "model": "rom/model/lod/PineTree_LOD1.fbx",
-              "maxDistance": 25.0
+              "maxDistance": 43.8
             },
             {
               "model": "rom/model/lod/PineTree_LOD2.fbx",
-              "maxDistance": 60.0
+              "maxDistance": 87.6
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD3.fbx",
+              "maxDistance": 175.3
             }
           ],
-          "cullDistance": 100.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -1702,14 +1966,18 @@
           "lods": [
             {
               "model": "rom/model/lod/PineTree_LOD1.fbx",
-              "maxDistance": 25.0
+              "maxDistance": 49.8
             },
             {
               "model": "rom/model/lod/PineTree_LOD2.fbx",
-              "maxDistance": 60.0
+              "maxDistance": 99.6
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD3.fbx",
+              "maxDistance": 199.2
             }
           ],
-          "cullDistance": 100.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -1735,14 +2003,18 @@
           "lods": [
             {
               "model": "rom/model/lod/PineTree_LOD1.fbx",
-              "maxDistance": 25.0
+              "maxDistance": 38.2
             },
             {
               "model": "rom/model/lod/PineTree_LOD2.fbx",
-              "maxDistance": 60.0
+              "maxDistance": 76.3
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD3.fbx",
+              "maxDistance": 152.7
             }
           ],
-          "cullDistance": 100.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -1768,14 +2040,18 @@
           "lods": [
             {
               "model": "rom/model/lod/PineTree_LOD1.fbx",
-              "maxDistance": 25.0
+              "maxDistance": 47.5
             },
             {
               "model": "rom/model/lod/PineTree_LOD2.fbx",
-              "maxDistance": 60.0
+              "maxDistance": 94.9
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD3.fbx",
+              "maxDistance": 189.9
             }
           ],
-          "cullDistance": 100.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -1801,14 +2077,18 @@
           "lods": [
             {
               "model": "rom/model/lod/PineTree_LOD1.fbx",
-              "maxDistance": 25.0
+              "maxDistance": 27.6
             },
             {
               "model": "rom/model/lod/PineTree_LOD2.fbx",
-              "maxDistance": 60.0
+              "maxDistance": 55.1
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD3.fbx",
+              "maxDistance": 110.2
             }
           ],
-          "cullDistance": 100.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -1834,14 +2114,18 @@
           "lods": [
             {
               "model": "rom/model/lod/PineTree_LOD1.fbx",
-              "maxDistance": 25.0
+              "maxDistance": 32.2
             },
             {
               "model": "rom/model/lod/PineTree_LOD2.fbx",
-              "maxDistance": 60.0
+              "maxDistance": 64.4
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD3.fbx",
+              "maxDistance": 128.8
             }
           ],
-          "cullDistance": 100.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -1867,14 +2151,18 @@
           "lods": [
             {
               "model": "rom/model/lod/PineTree_LOD1.fbx",
-              "maxDistance": 25.0
+              "maxDistance": 38.5
             },
             {
               "model": "rom/model/lod/PineTree_LOD2.fbx",
-              "maxDistance": 60.0
+              "maxDistance": 77.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD3.fbx",
+              "maxDistance": 154.0
             }
           ],
-          "cullDistance": 100.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -1900,14 +2188,18 @@
           "lods": [
             {
               "model": "rom/model/lod/PineTree_LOD1.fbx",
-              "maxDistance": 25.0
+              "maxDistance": 47.5
             },
             {
               "model": "rom/model/lod/PineTree_LOD2.fbx",
-              "maxDistance": 60.0
+              "maxDistance": 94.9
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD3.fbx",
+              "maxDistance": 189.9
             }
           ],
-          "cullDistance": 100.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -1933,14 +2225,18 @@
           "lods": [
             {
               "model": "rom/model/lod/PineTree_LOD1.fbx",
-              "maxDistance": 25.0
+              "maxDistance": 33.5
             },
             {
               "model": "rom/model/lod/PineTree_LOD2.fbx",
-              "maxDistance": 60.0
+              "maxDistance": 67.1
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD3.fbx",
+              "maxDistance": 134.1
             }
           ],
-          "cullDistance": 100.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -1966,14 +2262,18 @@
           "lods": [
             {
               "model": "rom/model/lod/PineTree_LOD1.fbx",
-              "maxDistance": 25.0
+              "maxDistance": 42.5
             },
             {
               "model": "rom/model/lod/PineTree_LOD2.fbx",
-              "maxDistance": 60.0
+              "maxDistance": 85.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD3.fbx",
+              "maxDistance": 170.0
             }
           ],
-          "cullDistance": 100.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -1999,14 +2299,18 @@
           "lods": [
             {
               "model": "rom/model/lod/PineTree_LOD1.fbx",
-              "maxDistance": 25.0
+              "maxDistance": 34.2
             },
             {
               "model": "rom/model/lod/PineTree_LOD2.fbx",
-              "maxDistance": 60.0
+              "maxDistance": 68.4
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD3.fbx",
+              "maxDistance": 136.8
             }
           ],
-          "cullDistance": 100.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -2032,14 +2336,18 @@
           "lods": [
             {
               "model": "rom/model/lod/PineTree_LOD1.fbx",
-              "maxDistance": 25.0
+              "maxDistance": 42.8
             },
             {
               "model": "rom/model/lod/PineTree_LOD2.fbx",
-              "maxDistance": 60.0
+              "maxDistance": 85.6
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD3.fbx",
+              "maxDistance": 171.3
             }
           ],
-          "cullDistance": 100.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -2065,14 +2373,18 @@
           "lods": [
             {
               "model": "rom/model/lod/PineTree_LOD1.fbx",
-              "maxDistance": 25.0
+              "maxDistance": 26.6
             },
             {
               "model": "rom/model/lod/PineTree_LOD2.fbx",
-              "maxDistance": 60.0
+              "maxDistance": 53.1
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD3.fbx",
+              "maxDistance": 106.2
             }
           ],
-          "cullDistance": 100.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -2098,14 +2410,18 @@
           "lods": [
             {
               "model": "rom/model/lod/PineTree_LOD1.fbx",
-              "maxDistance": 25.0
+              "maxDistance": 46.8
             },
             {
               "model": "rom/model/lod/PineTree_LOD2.fbx",
-              "maxDistance": 60.0
+              "maxDistance": 93.6
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD3.fbx",
+              "maxDistance": 187.2
             }
           ],
-          "cullDistance": 100.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -2131,14 +2447,18 @@
           "lods": [
             {
               "model": "rom/model/lod/PineTree_LOD1.fbx",
-              "maxDistance": 25.0
+              "maxDistance": 47.5
             },
             {
               "model": "rom/model/lod/PineTree_LOD2.fbx",
-              "maxDistance": 60.0
+              "maxDistance": 94.9
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD3.fbx",
+              "maxDistance": 189.9
             }
           ],
-          "cullDistance": 100.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -2164,14 +2484,18 @@
           "lods": [
             {
               "model": "rom/model/lod/PineTree_LOD1.fbx",
-              "maxDistance": 25.0
+              "maxDistance": 37.8
             },
             {
               "model": "rom/model/lod/PineTree_LOD2.fbx",
-              "maxDistance": 60.0
+              "maxDistance": 75.7
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD3.fbx",
+              "maxDistance": 151.4
             }
           ],
-          "cullDistance": 100.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -2197,14 +2521,18 @@
           "lods": [
             {
               "model": "rom/model/lod/PineTree_LOD1.fbx",
-              "maxDistance": 25.0
+              "maxDistance": 41.5
             },
             {
               "model": "rom/model/lod/PineTree_LOD2.fbx",
-              "maxDistance": 60.0
+              "maxDistance": 83.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD3.fbx",
+              "maxDistance": 166.0
             }
           ],
-          "cullDistance": 100.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -2230,14 +2558,18 @@
           "lods": [
             {
               "model": "rom/model/lod/PineTree_LOD1.fbx",
-              "maxDistance": 25.0
+              "maxDistance": 39.5
             },
             {
               "model": "rom/model/lod/PineTree_LOD2.fbx",
-              "maxDistance": 60.0
+              "maxDistance": 79.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD3.fbx",
+              "maxDistance": 158.0
             }
           ],
-          "cullDistance": 100.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -2263,14 +2595,18 @@
           "lods": [
             {
               "model": "rom/model/lod/PineTree_LOD1.fbx",
-              "maxDistance": 25.0
+              "maxDistance": 34.9
             },
             {
               "model": "rom/model/lod/PineTree_LOD2.fbx",
-              "maxDistance": 60.0
+              "maxDistance": 69.7
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD3.fbx",
+              "maxDistance": 139.4
             }
           ],
-          "cullDistance": 100.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -2296,14 +2632,18 @@
           "lods": [
             {
               "model": "rom/model/lod/PineTree_LOD1.fbx",
-              "maxDistance": 25.0
+              "maxDistance": 46.5
             },
             {
               "model": "rom/model/lod/PineTree_LOD2.fbx",
-              "maxDistance": 60.0
+              "maxDistance": 92.9
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD3.fbx",
+              "maxDistance": 185.9
             }
           ],
-          "cullDistance": 100.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -2329,14 +2669,18 @@
           "lods": [
             {
               "model": "rom/model/lod/PineTree_LOD1.fbx",
-              "maxDistance": 25.0
+              "maxDistance": 33.9
             },
             {
               "model": "rom/model/lod/PineTree_LOD2.fbx",
-              "maxDistance": 60.0
+              "maxDistance": 67.7
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD3.fbx",
+              "maxDistance": 135.4
             }
           ],
-          "cullDistance": 100.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -2362,14 +2706,18 @@
           "lods": [
             {
               "model": "rom/model/lod/PineTree_LOD1.fbx",
-              "maxDistance": 25.0
+              "maxDistance": 41.5
             },
             {
               "model": "rom/model/lod/PineTree_LOD2.fbx",
-              "maxDistance": 60.0
+              "maxDistance": 83.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD3.fbx",
+              "maxDistance": 166.0
             }
           ],
-          "cullDistance": 100.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -2395,14 +2743,18 @@
           "lods": [
             {
               "model": "rom/model/lod/PineTree_LOD1.fbx",
-              "maxDistance": 25.0
+              "maxDistance": 31.2
             },
             {
               "model": "rom/model/lod/PineTree_LOD2.fbx",
-              "maxDistance": 60.0
+              "maxDistance": 62.4
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD3.fbx",
+              "maxDistance": 124.8
             }
           ],
-          "cullDistance": 100.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -2428,14 +2780,18 @@
           "lods": [
             {
               "model": "rom/model/lod/PineTree_LOD1.fbx",
-              "maxDistance": 25.0
+              "maxDistance": 44.8
             },
             {
               "model": "rom/model/lod/PineTree_LOD2.fbx",
-              "maxDistance": 60.0
+              "maxDistance": 89.6
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD3.fbx",
+              "maxDistance": 179.3
             }
           ],
-          "cullDistance": 100.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -2461,14 +2817,18 @@
           "lods": [
             {
               "model": "rom/model/lod/PineTree_LOD1.fbx",
-              "maxDistance": 25.0
+              "maxDistance": 46.8
             },
             {
               "model": "rom/model/lod/PineTree_LOD2.fbx",
-              "maxDistance": 60.0
+              "maxDistance": 93.6
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD3.fbx",
+              "maxDistance": 187.2
             }
           ],
-          "cullDistance": 100.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -2494,14 +2854,18 @@
           "lods": [
             {
               "model": "rom/model/lod/PineTree_LOD1.fbx",
-              "maxDistance": 25.0
+              "maxDistance": 26.9
             },
             {
               "model": "rom/model/lod/PineTree_LOD2.fbx",
-              "maxDistance": 60.0
+              "maxDistance": 53.8
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD3.fbx",
+              "maxDistance": 107.6
             }
           ],
-          "cullDistance": 100.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -2527,14 +2891,18 @@
           "lods": [
             {
               "model": "rom/model/lod/PineTree_LOD1.fbx",
-              "maxDistance": 25.0
+              "maxDistance": 29.2
             },
             {
               "model": "rom/model/lod/PineTree_LOD2.fbx",
-              "maxDistance": 60.0
+              "maxDistance": 58.4
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD3.fbx",
+              "maxDistance": 116.8
             }
           ],
-          "cullDistance": 100.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -2560,14 +2928,18 @@
           "lods": [
             {
               "model": "rom/model/lod/PineTree_LOD1.fbx",
-              "maxDistance": 25.0
+              "maxDistance": 36.2
             },
             {
               "model": "rom/model/lod/PineTree_LOD2.fbx",
-              "maxDistance": 60.0
+              "maxDistance": 72.4
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD3.fbx",
+              "maxDistance": 144.7
             }
           ],
-          "cullDistance": 100.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -2593,14 +2965,18 @@
           "lods": [
             {
               "model": "rom/model/lod/PineTree_LOD1.fbx",
-              "maxDistance": 25.0
+              "maxDistance": 39.8
             },
             {
               "model": "rom/model/lod/PineTree_LOD2.fbx",
-              "maxDistance": 60.0
+              "maxDistance": 79.7
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD3.fbx",
+              "maxDistance": 159.3
             }
           ],
-          "cullDistance": 100.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -2626,14 +3002,18 @@
           "lods": [
             {
               "model": "rom/model/lod/Boulder_LOD1.fbx",
-              "maxDistance": 20.0
+              "maxDistance": 40.6
             },
             {
               "model": "rom/model/lod/Boulder_LOD2.fbx",
-              "maxDistance": 45.0
+              "maxDistance": 81.2
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD3.fbx",
+              "maxDistance": 162.4
             }
           ],
-          "cullDistance": 80.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -2659,14 +3039,18 @@
           "lods": [
             {
               "model": "rom/model/lod/Boulder_LOD1.fbx",
-              "maxDistance": 20.0
+              "maxDistance": 35.5
             },
             {
               "model": "rom/model/lod/Boulder_LOD2.fbx",
-              "maxDistance": 45.0
+              "maxDistance": 71.0
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD3.fbx",
+              "maxDistance": 142.1
             }
           ],
-          "cullDistance": 80.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -2692,14 +3076,18 @@
           "lods": [
             {
               "model": "rom/model/lod/Boulder_LOD1.fbx",
-              "maxDistance": 20.0
+              "maxDistance": 35.3
             },
             {
               "model": "rom/model/lod/Boulder_LOD2.fbx",
-              "maxDistance": 45.0
+              "maxDistance": 70.6
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD3.fbx",
+              "maxDistance": 141.2
             }
           ],
-          "cullDistance": 80.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -2725,14 +3113,18 @@
           "lods": [
             {
               "model": "rom/model/lod/Boulder_LOD1.fbx",
-              "maxDistance": 20.0
+              "maxDistance": 18.9
             },
             {
               "model": "rom/model/lod/Boulder_LOD2.fbx",
-              "maxDistance": 45.0
+              "maxDistance": 37.8
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD3.fbx",
+              "maxDistance": 75.7
             }
           ],
-          "cullDistance": 80.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -2758,14 +3150,18 @@
           "lods": [
             {
               "model": "rom/model/lod/Boulder_LOD1.fbx",
-              "maxDistance": 20.0
+              "maxDistance": 28.0
             },
             {
               "model": "rom/model/lod/Boulder_LOD2.fbx",
-              "maxDistance": 45.0
+              "maxDistance": 56.0
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD3.fbx",
+              "maxDistance": 112.0
             }
           ],
-          "cullDistance": 80.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -2791,14 +3187,18 @@
           "lods": [
             {
               "model": "rom/model/lod/Boulder_LOD1.fbx",
-              "maxDistance": 20.0
+              "maxDistance": 30.7
             },
             {
               "model": "rom/model/lod/Boulder_LOD2.fbx",
-              "maxDistance": 45.0
+              "maxDistance": 61.3
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD3.fbx",
+              "maxDistance": 122.6
             }
           ],
-          "cullDistance": 80.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -2824,14 +3224,18 @@
           "lods": [
             {
               "model": "rom/model/lod/Boulder_LOD1.fbx",
-              "maxDistance": 20.0
+              "maxDistance": 28.7
             },
             {
               "model": "rom/model/lod/Boulder_LOD2.fbx",
-              "maxDistance": 45.0
+              "maxDistance": 57.3
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD3.fbx",
+              "maxDistance": 114.6
             }
           ],
-          "cullDistance": 80.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -2857,14 +3261,18 @@
           "lods": [
             {
               "model": "rom/model/lod/Boulder_LOD1.fbx",
-              "maxDistance": 20.0
+              "maxDistance": 25.0
             },
             {
               "model": "rom/model/lod/Boulder_LOD2.fbx",
-              "maxDistance": 45.0
+              "maxDistance": 50.0
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD3.fbx",
+              "maxDistance": 100.0
             }
           ],
-          "cullDistance": 80.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -2890,14 +3298,18 @@
           "lods": [
             {
               "model": "rom/model/lod/Boulder_LOD1.fbx",
-              "maxDistance": 20.0
+              "maxDistance": 35.6
             },
             {
               "model": "rom/model/lod/Boulder_LOD2.fbx",
-              "maxDistance": 45.0
+              "maxDistance": 71.3
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD3.fbx",
+              "maxDistance": 142.5
             }
           ],
-          "cullDistance": 80.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -2923,14 +3335,18 @@
           "lods": [
             {
               "model": "rom/model/lod/Boulder_LOD1.fbx",
-              "maxDistance": 20.0
+              "maxDistance": 43.9
             },
             {
               "model": "rom/model/lod/Boulder_LOD2.fbx",
-              "maxDistance": 45.0
+              "maxDistance": 87.9
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD3.fbx",
+              "maxDistance": 175.7
             }
           ],
-          "cullDistance": 80.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -2956,14 +3372,18 @@
           "lods": [
             {
               "model": "rom/model/lod/Boulder_LOD1.fbx",
-              "maxDistance": 20.0
+              "maxDistance": 29.8
             },
             {
               "model": "rom/model/lod/Boulder_LOD2.fbx",
-              "maxDistance": 45.0
+              "maxDistance": 59.5
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD3.fbx",
+              "maxDistance": 119.1
             }
           ],
-          "cullDistance": 80.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -2989,14 +3409,18 @@
           "lods": [
             {
               "model": "rom/model/lod/Boulder_LOD1.fbx",
-              "maxDistance": 20.0
+              "maxDistance": 33.2
             },
             {
               "model": "rom/model/lod/Boulder_LOD2.fbx",
-              "maxDistance": 45.0
+              "maxDistance": 66.4
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD3.fbx",
+              "maxDistance": 132.8
             }
           ],
-          "cullDistance": 80.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -3022,14 +3446,18 @@
           "lods": [
             {
               "model": "rom/model/lod/Boulder_LOD1.fbx",
-              "maxDistance": 20.0
+              "maxDistance": 36.4
             },
             {
               "model": "rom/model/lod/Boulder_LOD2.fbx",
-              "maxDistance": 45.0
+              "maxDistance": 72.8
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD3.fbx",
+              "maxDistance": 145.6
             }
           ],
-          "cullDistance": 80.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -3055,14 +3483,18 @@
           "lods": [
             {
               "model": "rom/model/lod/Boulder_LOD1.fbx",
-              "maxDistance": 20.0
+              "maxDistance": 38.1
             },
             {
               "model": "rom/model/lod/Boulder_LOD2.fbx",
-              "maxDistance": 45.0
+              "maxDistance": 76.1
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD3.fbx",
+              "maxDistance": 152.3
             }
           ],
-          "cullDistance": 80.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -3088,14 +3520,18 @@
           "lods": [
             {
               "model": "rom/model/lod/Boulder_LOD1.fbx",
-              "maxDistance": 20.0
+              "maxDistance": 25.2
             },
             {
               "model": "rom/model/lod/Boulder_LOD2.fbx",
-              "maxDistance": 45.0
+              "maxDistance": 50.5
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD3.fbx",
+              "maxDistance": 100.9
             }
           ],
-          "cullDistance": 80.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -3121,14 +3557,18 @@
           "lods": [
             {
               "model": "rom/model/lod/Boulder_LOD1.fbx",
-              "maxDistance": 20.0
+              "maxDistance": 22.7
             },
             {
               "model": "rom/model/lod/Boulder_LOD2.fbx",
-              "maxDistance": 45.0
+              "maxDistance": 45.4
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD3.fbx",
+              "maxDistance": 90.7
             }
           ],
-          "cullDistance": 80.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -3154,14 +3594,18 @@
           "lods": [
             {
               "model": "rom/model/lod/Boulder_LOD1.fbx",
-              "maxDistance": 20.0
+              "maxDistance": 39.9
             },
             {
               "model": "rom/model/lod/Boulder_LOD2.fbx",
-              "maxDistance": 45.0
+              "maxDistance": 79.9
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD3.fbx",
+              "maxDistance": 159.8
             }
           ],
-          "cullDistance": 80.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -3187,14 +3631,18 @@
           "lods": [
             {
               "model": "rom/model/lod/Boulder_LOD1.fbx",
-              "maxDistance": 20.0
+              "maxDistance": 36.6
             },
             {
               "model": "rom/model/lod/Boulder_LOD2.fbx",
-              "maxDistance": 45.0
+              "maxDistance": 73.3
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD3.fbx",
+              "maxDistance": 146.5
             }
           ],
-          "cullDistance": 80.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -3220,14 +3668,18 @@
           "lods": [
             {
               "model": "rom/model/lod/Boulder_LOD1.fbx",
-              "maxDistance": 20.0
+              "maxDistance": 23.5
             },
             {
               "model": "rom/model/lod/Boulder_LOD2.fbx",
-              "maxDistance": 45.0
+              "maxDistance": 46.9
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD3.fbx",
+              "maxDistance": 93.8
             }
           ],
-          "cullDistance": 80.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -3253,14 +3705,18 @@
           "lods": [
             {
               "model": "rom/model/lod/Boulder_LOD1.fbx",
-              "maxDistance": 20.0
+              "maxDistance": 18.1
             },
             {
               "model": "rom/model/lod/Boulder_LOD2.fbx",
-              "maxDistance": 45.0
+              "maxDistance": 36.3
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD3.fbx",
+              "maxDistance": 72.6
             }
           ],
-          "cullDistance": 80.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -3286,14 +3742,18 @@
           "lods": [
             {
               "model": "rom/model/lod/Boulder_LOD1.fbx",
-              "maxDistance": 20.0
+              "maxDistance": 32.4
             },
             {
               "model": "rom/model/lod/Boulder_LOD2.fbx",
-              "maxDistance": 45.0
+              "maxDistance": 64.8
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD3.fbx",
+              "maxDistance": 129.7
             }
           ],
-          "cullDistance": 80.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -3319,14 +3779,18 @@
           "lods": [
             {
               "model": "rom/model/lod/Boulder_LOD1.fbx",
-              "maxDistance": 20.0
+              "maxDistance": 30.4
             },
             {
               "model": "rom/model/lod/Boulder_LOD2.fbx",
-              "maxDistance": 45.0
+              "maxDistance": 60.9
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD3.fbx",
+              "maxDistance": 121.7
             }
           ],
-          "cullDistance": 80.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -3352,14 +3816,18 @@
           "lods": [
             {
               "model": "rom/model/lod/Boulder_LOD1.fbx",
-              "maxDistance": 20.0
+              "maxDistance": 31.1
             },
             {
               "model": "rom/model/lod/Boulder_LOD2.fbx",
-              "maxDistance": 45.0
+              "maxDistance": 62.2
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD3.fbx",
+              "maxDistance": 124.4
             }
           ],
-          "cullDistance": 80.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -3385,14 +3853,18 @@
           "lods": [
             {
               "model": "rom/model/lod/Boulder_LOD1.fbx",
-              "maxDistance": 20.0
+              "maxDistance": 23.0
             },
             {
               "model": "rom/model/lod/Boulder_LOD2.fbx",
-              "maxDistance": 45.0
+              "maxDistance": 46.0
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD3.fbx",
+              "maxDistance": 92.1
             }
           ],
-          "cullDistance": 80.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -3418,14 +3890,18 @@
           "lods": [
             {
               "model": "rom/model/lod/Boulder_LOD1.fbx",
-              "maxDistance": 20.0
+              "maxDistance": 29.4
             },
             {
               "model": "rom/model/lod/Boulder_LOD2.fbx",
-              "maxDistance": 45.0
+              "maxDistance": 58.9
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD3.fbx",
+              "maxDistance": 117.7
             }
           ],
-          "cullDistance": 80.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -3451,14 +3927,18 @@
           "lods": [
             {
               "model": "rom/model/lod/Boulder_LOD1.fbx",
-              "maxDistance": 20.0
+              "maxDistance": 25.9
             },
             {
               "model": "rom/model/lod/Boulder_LOD2.fbx",
-              "maxDistance": 45.0
+              "maxDistance": 51.8
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD3.fbx",
+              "maxDistance": 103.6
             }
           ],
-          "cullDistance": 80.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -3484,14 +3964,18 @@
           "lods": [
             {
               "model": "rom/model/lod/Boulder_LOD1.fbx",
-              "maxDistance": 20.0
+              "maxDistance": 28.1
             },
             {
               "model": "rom/model/lod/Boulder_LOD2.fbx",
-              "maxDistance": 45.0
+              "maxDistance": 56.2
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD3.fbx",
+              "maxDistance": 112.4
             }
           ],
-          "cullDistance": 80.0
+          "cullDistance": 160.0
         }
       }
     },
@@ -3517,14 +4001,18 @@
           "lods": [
             {
               "model": "rom/model/lod/Boulder_LOD1.fbx",
-              "maxDistance": 20.0
+              "maxDistance": 20.8
             },
             {
               "model": "rom/model/lod/Boulder_LOD2.fbx",
-              "maxDistance": 45.0
+              "maxDistance": 41.6
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD3.fbx",
+              "maxDistance": 83.2
             }
           ],
-          "cullDistance": 80.0
+          "cullDistance": 160.0
         }
       }
     }
