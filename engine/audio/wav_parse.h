@@ -85,4 +85,39 @@ inline bool ParseRiffWave(const std::uint8_t* bytes, std::size_t size, WavChunks
     return true;
 }
 
+// How many fmt-chunk bytes to hand XAudio2 as the voice format.
+struct FormatCopy {
+    std::size_t bytes = 0;    // bytes to copy from the start of the fmt body
+    bool zeroCbSize = false;  // write cbSize = 0 after copying (PCM / float)
+};
+
+inline constexpr std::uint16_t kFormatPcm = 0x0001;
+inline constexpr std::uint16_t kFormatIeeeFloat = 0x0003;
+inline constexpr std::size_t kWaveFormatExSize = 18;  // sizeof(WAVEFORMATEX)
+
+// Decides the format bytes CreateSourceVoice may read. XAudio2 reads
+// sizeof(WAVEFORMATEX) + cbSize bytes, so the copy must hold all of them:
+//  - PCM / IEEE float (and 16-17 byte fmt chunks): the first 16 bytes, cbSize 0
+//    (cbSize is meaningless for these tags; some writers leave junk in it).
+//  - Anything else (WAVE_FORMAT_EXTENSIBLE, ADPCM, ...): 18 + cbSize bytes,
+//    which must fit both the fmt chunk and capacity. Otherwise returns false.
+inline bool PlanFormatCopy(const std::uint8_t* fmt, std::size_t fmtSize, std::size_t capacity,
+                           FormatCopy* out) {
+    if (!fmt || !out || fmtSize < kMinFmtSize || capacity < kMinFmtSize)
+        return false;
+    const std::uint16_t tag = static_cast<std::uint16_t>(fmt[0] | (fmt[1] << 8));
+    if (fmtSize < kWaveFormatExSize || tag == kFormatPcm || tag == kFormatIeeeFloat) {
+        out->bytes = kMinFmtSize;
+        out->zeroCbSize = true;
+        return true;
+    }
+    const std::size_t cbSize = static_cast<std::size_t>(fmt[16] | (fmt[17] << 8));
+    const std::size_t needed = kWaveFormatExSize + cbSize;
+    if (needed > fmtSize || needed > capacity)
+        return false;
+    out->bytes = needed;
+    out->zeroCbSize = false;
+    return true;
+}
+
 }  // namespace wav_parse

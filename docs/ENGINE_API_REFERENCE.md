@@ -325,7 +325,7 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `bool SubmitAndStart(Playback* source, bool loop);`
 
 ### `engine/audio/wav_parse.h`
-**Types:** WavChunks
+**Types:** WavChunks, FormatCopy
 - `inline std::uint32_t ReadU32LE(const std::uint8_t* p) { return static_cast<std::uint32_t>(p[0]) | (static_cast<std::uint32_t>(p[1]) << 8) | (static_cast<std::uint32_t>(p[2]) << 16) | (static_cast<std::uint32_t>(p[3]) << 24);`
 - `inline bool TagEquals(const std::uint8_t* p, const char* tag) { return p[0] == static_cast<std::uint8_t>(tag[0]) && p[1] == static_cast<std::uint8_t>(tag[1]) && p[2] == static_cast<std::uint8_t>(tag[2]) && p[3] == static_cast<std::uint8_t>(tag[3]);`
 

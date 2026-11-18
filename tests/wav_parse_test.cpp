@@ -168,6 +168,57 @@ int main() {
         Expect(!Parse(Riff(hugeChunk), &w), "huge junk chunk stops scan without data");
     }
 
+    // PlanFormatCopy: how much of the fmt chunk becomes the voice format.
+    {
+        using wav_parse::FormatCopy;
+        using wav_parse::PlanFormatCopy;
+        auto fmt = [](std::uint16_t tag, std::size_t size, std::uint16_t cbSize) {
+            Bytes f(size, 0);
+            f[0] = static_cast<std::uint8_t>(tag & 0xFFu);
+            f[1] = static_cast<std::uint8_t>(tag >> 8);
+            if (size >= 18) {
+                f[16] = static_cast<std::uint8_t>(cbSize & 0xFFu);
+                f[17] = static_cast<std::uint8_t>(cbSize >> 8);
+            }
+            return f;
+        };
+        FormatCopy c;
+
+        Bytes pcm16 = fmt(1, 16, 0);
+        Expect(PlanFormatCopy(pcm16.data(), pcm16.size(), 64, &c) && c.bytes == 16 && c.zeroCbSize,
+               "PCM 16-byte fmt -> 16 bytes, cbSize 0");
+        Bytes pcmJunk = fmt(1, 18, 0xBEEF);
+        Expect(PlanFormatCopy(pcmJunk.data(), pcmJunk.size(), 64, &c) && c.bytes == 16 && c.zeroCbSize,
+               "PCM with junk cbSize -> cbSize ignored");
+        Bytes flt = fmt(3, 18, 0);
+        Expect(PlanFormatCopy(flt.data(), flt.size(), 64, &c) && c.bytes == 16 && c.zeroCbSize,
+               "IEEE float -> 16 bytes, cbSize 0");
+
+        Bytes ext = fmt(0xFFFE, 40, 22);
+        Expect(PlanFormatCopy(ext.data(), ext.size(), 64, &c) && c.bytes == 40 && !c.zeroCbSize,
+               "WAVE_FORMAT_EXTENSIBLE -> all 40 bytes");
+        Bytes adpcm = fmt(2, 50, 32);
+        Expect(PlanFormatCopy(adpcm.data(), adpcm.size(), 64, &c) && c.bytes == 50 && !c.zeroCbSize,
+               "MS ADPCM (cbSize 32) -> 50 bytes");
+        Bytes zeroCb = fmt(0x0161, 18, 0);
+        Expect(PlanFormatCopy(zeroCb.data(), zeroCb.size(), 64, &c) && c.bytes == 18,
+               "other tag with cbSize 0 -> 18 bytes");
+        Bytes shortOther = fmt(2, 16, 0);
+        Expect(PlanFormatCopy(shortOther.data(), shortOther.size(), 64, &c) && c.bytes == 16 && c.zeroCbSize,
+               "16-byte fmt of any tag -> 16 bytes, cbSize 0");
+
+        Bytes cbPastChunk = fmt(0xFFFE, 30, 22);
+        Expect(!PlanFormatCopy(cbPastChunk.data(), cbPastChunk.size(), 64, &c),
+               "cbSize past the fmt chunk rejected");
+        Bytes cbPastCapacity = fmt(0xFFFE, 200, 100);
+        Expect(!PlanFormatCopy(cbPastCapacity.data(), cbPastCapacity.size(), 64, &c),
+               "cbSize past the storage rejected");
+        Expect(!PlanFormatCopy(ext.data(), ext.size(), 39, &c), "capacity one short rejected");
+        Expect(!PlanFormatCopy(nullptr, 40, 64, &c), "null fmt rejected");
+        Expect(!PlanFormatCopy(ext.data(), ext.size(), 64, nullptr), "null out rejected");
+        Expect(!PlanFormatCopy(ext.data(), 14, 64, &c), "fmt below 16 bytes rejected");
+    }
+
     if (g_failed) {
         std::fprintf(stderr, "%d check(s) failed\n", g_failed);
         return 1;
