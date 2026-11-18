@@ -88,6 +88,7 @@ SETTING_KEYS = (
     "shadowCascadeCullingEnabled",
     "spriteCullingEnabled",
     "lodEnabled",
+    "animCullingEnabled",
 )
 
 def build_play_enter_payload(mode=None):

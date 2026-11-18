@@ -287,6 +287,12 @@ void GameObject::DrawVisual(bool useRealModel) {
                 }
             }
 
+            // Stamp for off-screen animation skipping (see anim_cull_math.h). Only the
+            // real-model Play pass counts; shadow passes mark drawn below as well.
+            const bool animStamp = useRealModel && Lod_IsFrameActive();
+            if (animStamp)
+                vc->lastConsideredSerial = Lod_GetFrameSerial();
+
             if (model) {
                 // Main-camera frustum cull and/or per-cascade light-ortho caster cull.
                 // Cascade cull uses open-near so casters between the light and the
@@ -333,6 +339,8 @@ void GameObject::DrawVisual(bool useRealModel) {
                 }
 
                 if (submitDraw) {
+                    if (animStamp)
+                        vc->lastDrawnSerial = Lod_GetFrameSerial();
                     const XMFLOAT4 prevEmission = model->GetEmission();
                     model->SetEmission(vc->emissionGlow);
                     Shader3DVariant variant = vc->shaderOverride.empty()

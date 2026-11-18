@@ -589,6 +589,9 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstanc
                         sample.lodLevel1 = lod.drawn[1];
                         for (int level = 2; level < kLodMaxLevels; ++level)
                             sample.lodLevel2Plus += lod.drawn[level];
+                        const AnimCullStats animCull = Lod_GetLastAnimStats();
+                        sample.animUpdated = animCull.updated;
+                        sample.animSkipped = animCull.skipped;
                     }
                     runtimeTestBridge.RecordPerfSample(sample);
 
@@ -982,6 +985,9 @@ static void DrawWorld(void) {
 				   << " 0:" << lod.drawn[0]
 				   << " 1:" << lod.drawn[1]
 				   << " 2+:" << lodFar;
+				const AnimCullStats animCull = Lod_GetLastAnimStats();
+				ss << "\nANIM u:" << animCull.updated
+				   << " s:" << animCull.skipped;
 			}
 			const std::string fpsText = ss.str();
 

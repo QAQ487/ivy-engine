@@ -6,6 +6,7 @@
 #pragma once
 
 #include <DirectXMath.h>
+#include <cstdint>
 
 constexpr int kLodMaxLevels = 8;
 
@@ -29,3 +30,18 @@ void Lod_RecordCulledByDistance();
 void Lod_RecordDrawn(int level);
 
 LodStats Lod_GetLastStats();
+
+// Frame serial: incremented by every Lod_BeginFrame. Visuals stamp it when the 3D
+// object pass considers / draws them so the next animation update can tell whether
+// they were visible (see anim_cull_math.h). Starts at 0.
+uint64_t Lod_GetFrameSerial();
+
+// Off-screen animation counters. Recorded by VisualComponent::Update (which runs
+// before the next draw), so the "last" totals are the previous update pass.
+struct AnimCullStats {
+    int updated = 0;  // animated Visuals whose pose was evaluated
+    int skipped = 0;  // animated Visuals whose pose was skipped (not drawn)
+};
+void Lod_RecordAnimUpdated();
+void Lod_RecordAnimSkipped();
+AnimCullStats Lod_GetLastAnimStats();

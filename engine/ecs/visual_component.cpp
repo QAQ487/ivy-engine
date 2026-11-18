@@ -10,6 +10,9 @@
 #include "visual_component.h"
 
 #include "model_asset_cache.h"
+#include "engine/rendering/culling/anim_cull_math.h"
+#include "engine/rendering/culling/lod_state.h"
+#include "engine/scene/render_settings.h"
 #include "engine/rendering/model/model_util.h"
 
 #include "libraries/nlohmann/json.hpp"
@@ -259,6 +262,16 @@ void VisualComponent::Update(double elapsed_time) {
     Model3D* model = GetRealModel();
     if (!model) return;
 
+    if (anim_cull::ShouldSkipPose(RenderSettings_GetConst().animCullingEnabled,
+            lastConsideredSerial, lastDrawnSerial, Lod_GetFrameSerial())) {
+        // Not drawn by the main camera or any shadow cascade last frame: keep the
+        // clip phase moving but skip bone sampling, skinning and palette upload.
+        model->AdvanceAnimationTime(elapsed_time);
+        Lod_RecordAnimSkipped();
+        return;
+    }
+
+    Lod_RecordAnimUpdated();
     model->UpdateAnimation(elapsed_time);
 }
 

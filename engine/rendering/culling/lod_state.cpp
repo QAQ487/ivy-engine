@@ -8,10 +8,16 @@ bool g_active = false;
 DirectX::XMFLOAT3 g_cameraPos{0.0f, 0.0f, 0.0f};
 LodStats g_stats{};
 LodStats g_lastStats{};
+uint64_t g_serial = 0;
+AnimCullStats g_animStats{};
+AnimCullStats g_lastAnimStats{};
 }
 
 void Lod_BeginFrame(const DirectX::XMFLOAT3& cameraPosition) {
     g_stats = {};
+    ++g_serial;
+    g_lastAnimStats = g_animStats;
+    g_animStats = {};
     g_cameraPos = cameraPosition;
     g_active = true;
 }
@@ -37,3 +43,8 @@ void Lod_RecordDrawn(int level) {
 }
 
 LodStats Lod_GetLastStats() { return g_lastStats; }
+
+uint64_t Lod_GetFrameSerial() { return g_serial; }
+void Lod_RecordAnimUpdated() { ++g_animStats.updated; }
+void Lod_RecordAnimSkipped() { ++g_animStats.skipped; }
+AnimCullStats Lod_GetLastAnimStats() { return g_lastAnimStats; }

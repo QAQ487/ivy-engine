@@ -121,6 +121,9 @@ public:
     void Draw();
 
     void UpdateAnimation(double dtSec = 1.0 / 60.0);
+    // Advance clip time (speed, loop, clamp) without sampling or skinning. Used for
+    // animated Visuals nobody drew, so the clip phase stays continuous when they return.
+    void AdvanceAnimationTime(double dtSec);
     // Main thread only: Map dirty CPU VBs + publish GPU palette front buffer.
     void UploadSkinnedVerticesIfDirty();
     void SetAnimationSpeed(double speed) { m_animSpeed = speed; }

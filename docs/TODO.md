@@ -110,7 +110,12 @@
 唔屬於上面 LOD v1 嘅範圍，建議每個主題獨立 PR（每個都要自己嘅 Windows A/B 證據）。順序按效益／風險。
 
 - [x] **`DrawVisual` 先剔除再設定**（source 已做，等 Windows 驗收）：`GameObject::DrawVisual`（`engine/ecs/game_object.cpp`）而家先做距離／frustum／cascade 剔除，確定要畫先做 `SetEmission`／`SetShaderVariant`／`SetMaterialOverride` 同 model 姿態設定；被剔除嘅物件唔再付呢啲成本，亦唔會改 model 嘅 pose／override 狀態。剔除結果同 counters 不變。仍然冇空間分割，逐個物件 O(N) 遍歷。
-- [ ] **離屏／遠距動畫降頻或暫停**：`VisualComponent::Update` 只睇 `playAnimation`，唔睇可見度或距離；`VisualSystem_UploadSkinning` 亦冇可見度判斷，被剔除或 `cullDistance` 外嘅角色仍然每幀 `UpdateAnimation` 同上傳 skin palette。對應 Unity Animator Culling Mode。可重用 `DrawVisual` 嘅可見度結果同 `cullDistance`。
+- [x] **離屏／遠距動畫降頻或暫停**（source 已做，等 Windows 驗收）
+  - `DrawVisual` 喺 Play 嘅 real-model pass 為每個 Visual 記低「最後被考慮」同「最後被任何 pass（主鏡頭或 shadow cascade）提交」嘅 frame serial（`Lod_GetFrameSerial`，`lod_state.{h,cpp}`）。下一幀 `VisualComponent::Update` 用 `anim_cull::ShouldSkipPose`（`engine/rendering/culling/anim_cull_math.h`）判斷：上一幀有被考慮但冇被畫 → 唔做 `UpdateAnimation`（跳過 bone 採樣、skinning、palette），只用新加嘅 `Model3D::AdvanceAnimationTime` 推進 clip 時間，所以返回畫面時相位連續。冇被考慮過嘅 Visual（新生成、父節點 inactive）照常更新，唔會喺第一次畫之前凍結。Shadow cascade 仍然畫到嘅 caster 會維持更新。
+  - 涵蓋 frustum 剔除、`cullDistance` 剔除同兩者都冇畫嘅情況；Toggle：`render.animCullingEnabled`（預設 true；Rendering 面板、bridge `set_setting`）。Counters：Rendering 面板、collision-viz、FPS `ANIM u/s`、bridge `perf.anim.{updated,skipped}`（上一個 update pass）。
+  - 已知限制：重新入畫面嗰一幀可能顯示舊 pose（一幀滯後）；腳本讀離屏角色 bone（`TryGetBoneLocalMatrix`）會拎到最後一次評估嘅 pose；未做降頻（只有「畫／唔畫」兩級）、物理／腳本唔受影響。
+  - Linux：`tools/run_anim_cull_check.sh`（決策邏輯）。驗收場景：`testbed/rom/scene/scene_anim_cull_fly.json`（`python3 tools/gen_anim_cull_scene.py` 生成；fly 鏡頭，冇腳本）：前排 5、後排 5（鏡頭後 45 m）、左右 4、遠排 4（`cullDistance 40`）、鏡頭後 1 個 shadow caster，全部循環播 Idle。
+  - 驗收（Windows Debug＋Release，Terry）：起始望前面 → `ANIM u` ≈ 前排＋可能嘅 shadow caster，`s` ≈ 後排＋左右＋遠排；Rendering 面板關 `Off-screen Animation Culling` 後 `s` 變 0、`u` 變全部；轉身 180° 後原本被跳過嘅後排同前排 pose 一致（相位連續，唔應該跳返 T-pose／第 0 幀）；`animCullingEnabled` ON vs OFF 同一視角截圖像素 diff 0；GPU／update ms A/B；shadow caster 嘅影子唔凍結；Edit／Play 切換同 scene 重載後冇凍結角色。
 - [ ] **燈光揀選**：`Lighting::MAX_LIGHTS = 4`，`SceneLightingSyncFromNodes` 按場景遍歷順序攞頭 4 盞然後 `break`，唔睇距離／range／重要性／可見度，多燈場景會用錯燈。
 - [ ] **Billboard／粒子／Effekseer 剔除**：`Billboard::Update` 只做遠到近排序，冇 frustum 或距離剔除；`ParticlePool` 只有 `maxParticles` 上限，冇 per-emitter 剔除或距離縮減；`EffectSystem` 直接 `Manager::Draw`，冇用 Effekseer culling world。
 - [ ] **LOD 螢幕大小模式**：而家只有距離；按物件大細計距離要靠 `tools/gen_lod_test_assets.py`（`d = size / (0.828 × coverage)`），引擎本身冇 screen-relative height 閾值。

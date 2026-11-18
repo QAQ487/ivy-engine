@@ -125,6 +125,9 @@ struct PerfSample {
     int lodLevel0 = 0;
     int lodLevel1 = 0;
     int lodLevel2Plus = 0;
+    // Last completed update-pass off-screen animation counters.
+    int animUpdated = 0;
+    int animSkipped = 0;
 };
 
 // Consumer probe: samples public Controller_* getters once per Update after

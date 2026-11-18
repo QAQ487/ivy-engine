@@ -1,0 +1,606 @@
+{
+  "version": 4,
+  "settings": {
+    "render": {
+      "clearColor": [
+        0.69,
+        0.77,
+        0.87,
+        1.0
+      ],
+      "defaultShader": "standard",
+      "fogEnabled": false,
+      "shadowQuality": "medium",
+      "skyboxCubemap": "rom/skybox/MySkybox.dds",
+      "skyboxEnabled": true,
+      "lodEnabled": true,
+      "animCullingEnabled": true
+    },
+    "debugCamera": {
+      "mode": "fly",
+      "enabledOnPlay": true,
+      "yawDeg": 0.0,
+      "pitchDeg": -5.0,
+      "position": {
+        "x": 0.0,
+        "y": 2.5,
+        "z": 0.0
+      }
+    }
+  },
+  "nodes": [
+    {
+      "name": "Directional Light",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 0.0,
+          "posY": 10.0,
+          "posZ": 0.0,
+          "rotX": 50.0,
+          "rotY": -35.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "DirectionalLight": {
+          "enabled": true,
+          "castShadows": true,
+          "color": [
+            1.0,
+            0.97,
+            0.92
+          ],
+          "intensity": 1.1,
+          "specColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "specPower": 32.0
+        }
+      }
+    },
+    {
+      "name": "Ground",
+      "tag": 2,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 0.0,
+          "posY": -0.5,
+          "posZ": 0.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 400.0,
+          "scaleY": 1.0,
+          "scaleZ": 400.0
+        },
+        "visual": {
+          "model": "rom/model/object/Box_Green.fbx",
+          "shader": "standard"
+        }
+      }
+    },
+    {
+      "name": "Front 1",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -8.0,
+          "posY": 0.0,
+          "posZ": 8.0,
+          "rotX": 0.0,
+          "rotY": 180.0,
+          "rotZ": 0.0,
+          "scaleX": 0.01,
+          "scaleY": 0.01,
+          "scaleZ": 0.01
+        },
+        "visual": {
+          "model": "rom/model/player/Y Bot_white.fbx",
+          "shader": "standard",
+          "animate": true,
+          "active_clip": "idle",
+          "animations": {
+            "idle": "rom/model/player/Idle.fbx"
+          }
+        }
+      }
+    },
+    {
+      "name": "Front 2",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -4.0,
+          "posY": 0.0,
+          "posZ": 8.0,
+          "rotX": 0.0,
+          "rotY": 180.0,
+          "rotZ": 0.0,
+          "scaleX": 0.01,
+          "scaleY": 0.01,
+          "scaleZ": 0.01
+        },
+        "visual": {
+          "model": "rom/model/player/Y Bot_white.fbx",
+          "shader": "standard",
+          "animate": true,
+          "active_clip": "idle",
+          "animations": {
+            "idle": "rom/model/player/Idle.fbx"
+          }
+        }
+      }
+    },
+    {
+      "name": "Front 3",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 0.0,
+          "posY": 0.0,
+          "posZ": 8.0,
+          "rotX": 0.0,
+          "rotY": 180.0,
+          "rotZ": 0.0,
+          "scaleX": 0.01,
+          "scaleY": 0.01,
+          "scaleZ": 0.01
+        },
+        "visual": {
+          "model": "rom/model/player/Y Bot_white.fbx",
+          "shader": "standard",
+          "animate": true,
+          "active_clip": "idle",
+          "animations": {
+            "idle": "rom/model/player/Idle.fbx"
+          }
+        }
+      }
+    },
+    {
+      "name": "Front 4",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 4.0,
+          "posY": 0.0,
+          "posZ": 8.0,
+          "rotX": 0.0,
+          "rotY": 180.0,
+          "rotZ": 0.0,
+          "scaleX": 0.01,
+          "scaleY": 0.01,
+          "scaleZ": 0.01
+        },
+        "visual": {
+          "model": "rom/model/player/Y Bot_white.fbx",
+          "shader": "standard",
+          "animate": true,
+          "active_clip": "idle",
+          "animations": {
+            "idle": "rom/model/player/Idle.fbx"
+          }
+        }
+      }
+    },
+    {
+      "name": "Front 5",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 8.0,
+          "posY": 0.0,
+          "posZ": 8.0,
+          "rotX": 0.0,
+          "rotY": 180.0,
+          "rotZ": 0.0,
+          "scaleX": 0.01,
+          "scaleY": 0.01,
+          "scaleZ": 0.01
+        },
+        "visual": {
+          "model": "rom/model/player/Y Bot_white.fbx",
+          "shader": "standard",
+          "animate": true,
+          "active_clip": "idle",
+          "animations": {
+            "idle": "rom/model/player/Idle.fbx"
+          }
+        }
+      }
+    },
+    {
+      "name": "Back 1",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -8.0,
+          "posY": 0.0,
+          "posZ": -45.0,
+          "rotX": 0.0,
+          "rotY": 180.0,
+          "rotZ": 0.0,
+          "scaleX": 0.01,
+          "scaleY": 0.01,
+          "scaleZ": 0.01
+        },
+        "visual": {
+          "model": "rom/model/player/Y Bot_white.fbx",
+          "shader": "standard",
+          "animate": true,
+          "active_clip": "idle",
+          "animations": {
+            "idle": "rom/model/player/Idle.fbx"
+          }
+        }
+      }
+    },
+    {
+      "name": "Back 2",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -4.0,
+          "posY": 0.0,
+          "posZ": -45.0,
+          "rotX": 0.0,
+          "rotY": 180.0,
+          "rotZ": 0.0,
+          "scaleX": 0.01,
+          "scaleY": 0.01,
+          "scaleZ": 0.01
+        },
+        "visual": {
+          "model": "rom/model/player/Y Bot_white.fbx",
+          "shader": "standard",
+          "animate": true,
+          "active_clip": "idle",
+          "animations": {
+            "idle": "rom/model/player/Idle.fbx"
+          }
+        }
+      }
+    },
+    {
+      "name": "Back 3",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 0.0,
+          "posY": 0.0,
+          "posZ": -45.0,
+          "rotX": 0.0,
+          "rotY": 180.0,
+          "rotZ": 0.0,
+          "scaleX": 0.01,
+          "scaleY": 0.01,
+          "scaleZ": 0.01
+        },
+        "visual": {
+          "model": "rom/model/player/Y Bot_white.fbx",
+          "shader": "standard",
+          "animate": true,
+          "active_clip": "idle",
+          "animations": {
+            "idle": "rom/model/player/Idle.fbx"
+          }
+        }
+      }
+    },
+    {
+      "name": "Back 4",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 4.0,
+          "posY": 0.0,
+          "posZ": -45.0,
+          "rotX": 0.0,
+          "rotY": 180.0,
+          "rotZ": 0.0,
+          "scaleX": 0.01,
+          "scaleY": 0.01,
+          "scaleZ": 0.01
+        },
+        "visual": {
+          "model": "rom/model/player/Y Bot_white.fbx",
+          "shader": "standard",
+          "animate": true,
+          "active_clip": "idle",
+          "animations": {
+            "idle": "rom/model/player/Idle.fbx"
+          }
+        }
+      }
+    },
+    {
+      "name": "Back 5",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 8.0,
+          "posY": 0.0,
+          "posZ": -45.0,
+          "rotX": 0.0,
+          "rotY": 180.0,
+          "rotZ": 0.0,
+          "scaleX": 0.01,
+          "scaleY": 0.01,
+          "scaleZ": 0.01
+        },
+        "visual": {
+          "model": "rom/model/player/Y Bot_white.fbx",
+          "shader": "standard",
+          "animate": true,
+          "active_clip": "idle",
+          "animations": {
+            "idle": "rom/model/player/Idle.fbx"
+          }
+        }
+      }
+    },
+    {
+      "name": "Side 1",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -60.0,
+          "posY": 0.0,
+          "posZ": 0.0,
+          "rotX": 0.0,
+          "rotY": 180.0,
+          "rotZ": 0.0,
+          "scaleX": 0.01,
+          "scaleY": 0.01,
+          "scaleZ": 0.01
+        },
+        "visual": {
+          "model": "rom/model/player/Y Bot_white.fbx",
+          "shader": "standard",
+          "animate": true,
+          "active_clip": "idle",
+          "animations": {
+            "idle": "rom/model/player/Idle.fbx"
+          }
+        }
+      }
+    },
+    {
+      "name": "Side 2",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -50.0,
+          "posY": 0.0,
+          "posZ": 0.0,
+          "rotX": 0.0,
+          "rotY": 180.0,
+          "rotZ": 0.0,
+          "scaleX": 0.01,
+          "scaleY": 0.01,
+          "scaleZ": 0.01
+        },
+        "visual": {
+          "model": "rom/model/player/Y Bot_white.fbx",
+          "shader": "standard",
+          "animate": true,
+          "active_clip": "idle",
+          "animations": {
+            "idle": "rom/model/player/Idle.fbx"
+          }
+        }
+      }
+    },
+    {
+      "name": "Side 3",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 50.0,
+          "posY": 0.0,
+          "posZ": 0.0,
+          "rotX": 0.0,
+          "rotY": 180.0,
+          "rotZ": 0.0,
+          "scaleX": 0.01,
+          "scaleY": 0.01,
+          "scaleZ": 0.01
+        },
+        "visual": {
+          "model": "rom/model/player/Y Bot_white.fbx",
+          "shader": "standard",
+          "animate": true,
+          "active_clip": "idle",
+          "animations": {
+            "idle": "rom/model/player/Idle.fbx"
+          }
+        }
+      }
+    },
+    {
+      "name": "Side 4",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 60.0,
+          "posY": 0.0,
+          "posZ": 0.0,
+          "rotX": 0.0,
+          "rotY": 180.0,
+          "rotZ": 0.0,
+          "scaleX": 0.01,
+          "scaleY": 0.01,
+          "scaleZ": 0.01
+        },
+        "visual": {
+          "model": "rom/model/player/Y Bot_white.fbx",
+          "shader": "standard",
+          "animate": true,
+          "active_clip": "idle",
+          "animations": {
+            "idle": "rom/model/player/Idle.fbx"
+          }
+        }
+      }
+    },
+    {
+      "name": "Far 1 (cullDistance 40)",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -6.0,
+          "posY": 0.0,
+          "posZ": 70.0,
+          "rotX": 0.0,
+          "rotY": 180.0,
+          "rotZ": 0.0,
+          "scaleX": 0.01,
+          "scaleY": 0.01,
+          "scaleZ": 0.01
+        },
+        "visual": {
+          "model": "rom/model/player/Y Bot_white.fbx",
+          "shader": "standard",
+          "animate": true,
+          "active_clip": "idle",
+          "animations": {
+            "idle": "rom/model/player/Idle.fbx"
+          },
+          "cullDistance": 40.0
+        }
+      }
+    },
+    {
+      "name": "Far 2 (cullDistance 40)",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -2.0,
+          "posY": 0.0,
+          "posZ": 70.0,
+          "rotX": 0.0,
+          "rotY": 180.0,
+          "rotZ": 0.0,
+          "scaleX": 0.01,
+          "scaleY": 0.01,
+          "scaleZ": 0.01
+        },
+        "visual": {
+          "model": "rom/model/player/Y Bot_white.fbx",
+          "shader": "standard",
+          "animate": true,
+          "active_clip": "idle",
+          "animations": {
+            "idle": "rom/model/player/Idle.fbx"
+          },
+          "cullDistance": 40.0
+        }
+      }
+    },
+    {
+      "name": "Far 3 (cullDistance 40)",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 2.0,
+          "posY": 0.0,
+          "posZ": 70.0,
+          "rotX": 0.0,
+          "rotY": 180.0,
+          "rotZ": 0.0,
+          "scaleX": 0.01,
+          "scaleY": 0.01,
+          "scaleZ": 0.01
+        },
+        "visual": {
+          "model": "rom/model/player/Y Bot_white.fbx",
+          "shader": "standard",
+          "animate": true,
+          "active_clip": "idle",
+          "animations": {
+            "idle": "rom/model/player/Idle.fbx"
+          },
+          "cullDistance": 40.0
+        }
+      }
+    },
+    {
+      "name": "Far 4 (cullDistance 40)",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 6.0,
+          "posY": 0.0,
+          "posZ": 70.0,
+          "rotX": 0.0,
+          "rotY": 180.0,
+          "rotZ": 0.0,
+          "scaleX": 0.01,
+          "scaleY": 0.01,
+          "scaleZ": 0.01
+        },
+        "visual": {
+          "model": "rom/model/player/Y Bot_white.fbx",
+          "shader": "standard",
+          "animate": true,
+          "active_clip": "idle",
+          "animations": {
+            "idle": "rom/model/player/Idle.fbx"
+          },
+          "cullDistance": 40.0
+        }
+      }
+    },
+    {
+      "name": "Shadow Caster (behind camera)",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 0.0,
+          "posY": 0.0,
+          "posZ": -4.0,
+          "rotX": 0.0,
+          "rotY": 180.0,
+          "rotZ": 0.0,
+          "scaleX": 0.01,
+          "scaleY": 0.01,
+          "scaleZ": 0.01
+        },
+        "visual": {
+          "model": "rom/model/player/Y Bot_white.fbx",
+          "shader": "standard",
+          "animate": true,
+          "active_clip": "idle",
+          "animations": {
+            "idle": "rom/model/player/Idle.fbx"
+          }
+        }
+      }
+    }
+  ]
+}

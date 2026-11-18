@@ -199,6 +199,7 @@ void RefreshOverlay() {
 	const ShadowCascadeCullStats shadowCull = ShadowCascadeCull_GetLastStats();
 	const SpriteCullStats spriteCull = SpriteCull_GetLastStats();
 	const LodStats lodStats = Lod_GetLastStats();
+	const AnimCullStats animStats = Lod_GetLastAnimStats();
 	int lodFar = 0;
 	for (int level = 2; level < kLodMaxLevels; ++level)
 		lodFar += lodStats.drawn[level];
@@ -210,13 +211,15 @@ void RefreshOverlay() {
 			"frustum considered:%d culled:%d drawn:%d\n"
 			"shadow considered:%d culled:%d drawn:%d\n"
 			"sprite considered:%d culled:%d drawn:%d\n"
-			"lod considered:%d culled:%d l0:%d l1:%d l2+:%d",
+			"lod considered:%d culled:%d l0:%d l1:%d l2+:%d\n"
+			"anim updated:%d skipped:%d",
 			viz, timeBuf, st.colliders, st.pairs, st.contacts, st.triggers,
 			cull.considered, cull.culled, cull.drawn,
 			shadowCull.considered, shadowCull.culled, shadowCull.drawn,
 			spriteCull.considered, spriteCull.culled, spriteCull.drawn,
 			lodStats.considered, lodStats.culledByDistance,
-			lodStats.drawn[0], lodStats.drawn[1], lodFar);
+			lodStats.drawn[0], lodStats.drawn[1], lodFar,
+			animStats.updated, animStats.skipped);
 	} else {
 		std::snprintf(s_overlayText, sizeof(s_overlayText),
 			"COLLISION VIZ %s   TIME %s",

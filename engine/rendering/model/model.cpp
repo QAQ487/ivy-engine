@@ -1944,14 +1944,7 @@ void Model3D::SkinFromScratch() {
 	updateDynamicVBFromCP(m_skinPosBuf);
 }
 
-// Advance animation (CPU skin + update VB when skinned)
-void Model3D::UpdateAnimation(double dtSec) {
-	if (!m_baseScene && m_bakedClips.empty()) return;
-
-	const bool hasSkinning = m_hasSkin && !m_skinBake.empty() && !m_skinPosBuf.empty();
-	const bool hasRigidAnim = !m_rigidBake.empty();
-	if (!hasSkinning && !hasRigidAnim) return;
-
+void Model3D::AdvanceAnimationTime(double dtSec) {
 	m_animTimeSec += dtSec * m_animSpeed;
 	if (m_animDurationSec > 0.0) {
 		if (m_loop) {
@@ -1965,6 +1958,17 @@ void Model3D::UpdateAnimation(double dtSec) {
 			if (m_animTimeSec > m_animDurationSec) m_animTimeSec = m_animDurationSec;
 		}
 	}
+}
+
+// Advance animation (CPU skin + update VB when skinned)
+void Model3D::UpdateAnimation(double dtSec) {
+	if (!m_baseScene && m_bakedClips.empty()) return;
+
+	const bool hasSkinning = m_hasSkin && !m_skinBake.empty() && !m_skinPosBuf.empty();
+	const bool hasRigidAnim = !m_rigidBake.empty();
+	if (!hasSkinning && !hasRigidAnim) return;
+
+	AdvanceAnimationTime(dtSec);
 
 	if (hasSkinning && SampleBakedClip()) {
 #if MODEL3D_CPU_SKIN_ORACLE

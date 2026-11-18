@@ -61,6 +61,11 @@ public:
     float cullDistance = 0.0f;
     // Hysteresis memory for LOD selection (not serialized).
     mutable int lodLastLevel = -1;
+    // Frame serials (Lod_GetFrameSerial) stamped by GameObject::DrawVisual: last frame
+    // the Visual was considered by the 3D object pass / submitted by any pass. Used to
+    // skip pose evaluation while nothing draws it. Not serialized.
+    mutable uint64_t lastConsideredSerial = ~uint64_t{0};
+    mutable uint64_t lastDrawnSerial = ~uint64_t{0};
 
     // Shared-cache mesh for level (0 = modelPath). Falls back to level 0 when the
     // LOD mesh is missing or failed to load. nullptr only if level 0 is unavailable.

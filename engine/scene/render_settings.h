@@ -56,6 +56,9 @@ struct RenderSettingsData {
     // Distance-based mesh LOD (visual.lods). Bias scales distance for level choice
     // only (>1 switches to lower detail sooner); clamped to [0.1, 10] on load.
     bool lodEnabled = true;
+    // Skip skeletal pose evaluation for animated Visuals that no pass (main or shadow
+    // cascade) drew last frame. Animation time still advances. Play / runtime only.
+    bool animCullingEnabled = true;
     float lodBias = 1.0f;
     // Multiplies every visual.cullDistance (> 1 keeps objects visible further out, < 1 culls
     // sooner). Clamped to [0.1, 10]. Needs lodEnabled, like cullDistance itself.

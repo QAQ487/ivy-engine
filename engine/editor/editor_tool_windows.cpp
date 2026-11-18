@@ -391,6 +391,12 @@ void DrawRenderingSettingsBody() {
             lod.considered, lod.culledByDistance, lod.drawn[0], lod.drawn[1], lodFar);
         ImGui::TextDisabled("Bias > 1 switches to lower detail sooner. Play only.");
     }
+    ImGui::Checkbox("Off-screen Animation Culling (3D)", &rs.animCullingEnabled);
+    {
+        const AnimCullStats anim = Lod_GetLastAnimStats();
+        ImGui::TextDisabled("anim     evaluated %d  |  skipped %d", anim.updated, anim.skipped);
+        ImGui::TextDisabled("Animated Visuals no pass drew last frame skip bone sampling (clip time still advances). Play only.");
+    }
     ImGui::SliderFloat("Cull Distance Scale", &rs.cullDistanceScale, 0.1f, 10.0f, "%.2f",
         ImGuiSliderFlags_Logarithmic);
     ImGui::TextDisabled("Multiplies every visual.cullDistance (> 1 keeps objects visible longer).");
