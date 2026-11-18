@@ -189,6 +189,9 @@
     <ClInclude Include="engine\ecs\string_utils.h">
       <Filter>engine\ecs</Filter>
     </ClInclude>
+    <ClInclude Include="engine\ecs\euler_math.h">
+      <Filter>engine\ecs</Filter>
+    </ClInclude>
     <ClInclude Include="engine\ecs\transform.h">
       <Filter>engine\ecs</Filter>
     </ClInclude>
@@ -387,6 +390,15 @@
     <ClInclude Include="engine\rendering\culling\frustum_cull_math.h">
       <Filter>engine\rendering\culling</Filter>
     </ClInclude>
+    <ClInclude Include="engine\rendering\culling\cull_settings_math.h">
+      <Filter>engine\rendering\culling</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\rendering\culling\lod_select_math.h">
+      <Filter>engine\rendering\culling</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\rendering\culling\lod_state.h">
+      <Filter>engine\rendering\culling</Filter>
+    </ClInclude>
     <ClInclude Include="engine\rendering\culling\shadow_cascade_cull.h">
       <Filter>engine\rendering\culling</Filter>
     </ClInclude>
@@ -529,6 +541,9 @@
       <Filter>src\app\camera</Filter>
     </ClInclude>
     <ClInclude Include="src\app\camera\third_person_camera.h">
+      <Filter>src\app\camera</Filter>
+    </ClInclude>
+    <ClInclude Include="src\app\camera\third_person_move_math.h">
       <Filter>src\app\camera</Filter>
     </ClInclude>
     <ClInclude Include="src\app\camera\first_person_camera.h">
@@ -840,6 +855,9 @@
       <Filter>engine\rendering\lighting</Filter>
     </ClCompile>
     <ClCompile Include="engine\rendering\culling\frustum_cull.cpp">
+      <Filter>engine\rendering\culling</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\rendering\culling\lod_state.cpp">
       <Filter>engine\rendering\culling</Filter>
     </ClCompile>
     <ClCompile Include="engine\rendering\culling\shadow_cascade_cull.cpp">
@@ -1228,5 +1246,9 @@
     <ClCompile Include="engine\core\frame_capture.cpp">
       <Filter>engine\core</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="samples\scripts\SamplePlayerScript.h" />
+    <ClCompile Include="samples\scripts\SamplePlayerScript.cpp" />
   </ItemGroup>
 </Project>

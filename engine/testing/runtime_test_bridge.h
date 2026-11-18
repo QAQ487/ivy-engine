@@ -119,6 +119,12 @@ struct PerfSample {
     int spriteCullConsidered = 0;
     int spriteCullCulled = 0;
     int spriteCullDrawn = 0;
+    // Last completed main-pass mesh LOD counters (0 when LOD is off).
+    int lodConsidered = 0;
+    int lodCulledByDistance = 0;
+    int lodLevel0 = 0;
+    int lodLevel1 = 0;
+    int lodLevel2Plus = 0;
 };
 
 // Consumer probe: samples public Controller_* getters once per Update after

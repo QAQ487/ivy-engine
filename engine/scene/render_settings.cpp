@@ -11,6 +11,8 @@
 #include "engine/rendering/d3d11/shader.h"
 #include "engine/rendering/d3d11/renderer.h"
 #include "engine/rendering/lighting/shadow.h"
+#include "engine/rendering/culling/cull_settings_math.h"
+#include "engine/rendering/culling/lod_select_math.h"
 
 static RenderSettingsData g_renderSettings;
 
@@ -69,7 +71,11 @@ ShadowQualityPreset RenderSettings_GetShadowPreset(ShadowQuality quality) {
 }
 
 ShadowQualityPreset RenderSettings_GetShadowPreset() {
-    return RenderSettings_GetShadowPreset(g_renderSettings.shadowQuality);
+    ShadowQualityPreset preset = RenderSettings_GetShadowPreset(g_renderSettings.shadowQuality);
+    // Optional per-scene range override; map size and cascade count stay with the preset.
+    preset.maxDistance = cull_settings::ResolveShadowDistance(
+        preset.maxDistance, g_renderSettings.shadowDistance);
+    return preset;
 }
 
 const char* RenderSettings_ShadowQualityLabel(ShadowQuality quality) {
@@ -178,6 +184,13 @@ RenderSettingsData RenderSettings_ParseJson(const nlohmann::json& renderJson, Re
         "shadowCascadeCullingEnabled", settings.shadowCascadeCullingEnabled);
     settings.spriteCullingEnabled = renderJson.value(
         "spriteCullingEnabled", settings.spriteCullingEnabled);
+    settings.lodEnabled = renderJson.value("lodEnabled", settings.lodEnabled);
+    settings.lodBias = lod_select::ClampBias(
+        renderJson.value("lodBias", settings.lodBias));
+    settings.cullDistanceScale = cull_settings::ClampCullDistanceScale(
+        renderJson.value("cullDistanceScale", settings.cullDistanceScale));
+    settings.shadowDistance = cull_settings::ClampShadowDistanceOverride(
+        renderJson.value("shadowDistance", settings.shadowDistance));
 
     return settings;
 }
@@ -228,6 +241,10 @@ nlohmann::json RenderSettings_ToJson() {
     render["frustumCullingEnabled"] = g_renderSettings.frustumCullingEnabled;
     render["shadowCascadeCullingEnabled"] = g_renderSettings.shadowCascadeCullingEnabled;
     render["spriteCullingEnabled"] = g_renderSettings.spriteCullingEnabled;
+    render["lodEnabled"] = g_renderSettings.lodEnabled;
+    render["lodBias"] = g_renderSettings.lodBias;
+    render["cullDistanceScale"] = g_renderSettings.cullDistanceScale;
+    render["shadowDistance"] = g_renderSettings.shadowDistance;
     return render;
 }
 

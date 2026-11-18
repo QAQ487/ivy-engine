@@ -13,6 +13,9 @@
 #include "engine/scene/render_settings.h"
 #include "engine/rendering/d3d11/shader.h"
 #include "engine/rendering/culling/frustum_cull.h"
+#include "engine/rendering/culling/cull_settings_math.h"
+#include "engine/rendering/culling/lod_select_math.h"
+#include "engine/rendering/culling/lod_state.h"
 #include "engine/rendering/culling/shadow_cascade_cull.h"
 #include "engine/rendering/lighting/shadow.h"
 #include "engine/audio/audio_manager.h"
@@ -21,6 +24,7 @@
 
 #include <DirectXMath.h>
 #include <algorithm>
+#include <cmath>
 #include <atomic>
 
 using namespace DirectX;
@@ -212,6 +216,77 @@ void GameObject::DrawVisual(bool useRealModel) {
     if (const engine::Transform* t = GetTransform()) {
         if (auto* vc = GetComponent<VisualComponent>()) {
             Model3D* model = useRealModel ? vc->GetRealModel() : vc->GetModel();
+
+            XMFLOAT3 worldPos, worldRot, worldScale;
+            t->GetWorldPositionRotationScale(worldPos, worldRot, worldScale);
+
+            // Distance-based mesh LOD (Play / runtime only). Level 0 is the base
+            // mesh; levels > 0 are skipped while the Visual animates so the shared
+            // skeleton / bind pose is never mixed with a different mesh.
+            int lodLevel = 0;
+            bool lodCulledByDistance = false;
+            bool lodTracked = false;
+            const bool lodCounting = FrustumCull_IsMainPassActive()
+                && Shadow::GetRenderingLightIndex() < 0;
+            if (model && useRealModel && Lod_IsFrameActive()
+                && RenderSettings_GetConst().lodEnabled
+                && (!vc->lods.empty() || vc->cullDistance > 0.0f)) {
+                lodTracked = true;
+                float distance = 0.0f;
+                {
+                    XMFLOAT3 center = worldPos;
+                    if (model->HasLocalAabb()) {
+                        frustum_cull::Aabb local{};
+                        model->GetLocalAabb(local.min, local.max);
+                        local.valid = true;
+                        const frustum_cull::Aabb wb = frustum_cull::TransformAabbTRS(
+                            local, worldPos, worldRot, worldScale);
+                        center = XMFLOAT3(
+                            0.5f * (wb.min.x + wb.max.x),
+                            0.5f * (wb.min.y + wb.max.y),
+                            0.5f * (wb.min.z + wb.max.z));
+                    }
+                    const XMFLOAT3& cam = Lod_GetCameraPosition();
+                    const float dx = center.x - cam.x;
+                    const float dy = center.y - cam.y;
+                    const float dz = center.z - cam.z;
+                    distance = std::sqrt(dx * dx + dy * dy + dz * dz);
+                }
+
+                float thresholds[kLodMaxLevels - 1] = {};
+                int thresholdCount = 0;
+                if (!vc->playAnimation) {
+                    thresholdCount = static_cast<int>(
+                        std::min<size_t>(vc->lods.size(), kLodMaxLevels - 1));
+                    for (int i = 0; i < thresholdCount; ++i)
+                        thresholds[i] = vc->lods[static_cast<size_t>(i)].maxDistance;
+                    lod_select::NormalizeThresholds(thresholds, thresholdCount);
+                }
+                lodLevel = lod_select::SelectLevel(
+                    distance, thresholds, thresholdCount, vc->lodLastLevel,
+                    lod_select::kDefaultHysteresis,
+                    RenderSettings_GetConst().lodBias,
+                    cull_settings::ScaledCullDistance(
+                        vc->cullDistance, RenderSettings_GetConst().cullDistanceScale));
+                if (lodLevel == lod_select::kCulled) {
+                    lodCulledByDistance = true;
+                    lodLevel = 0;
+                } else {
+                    vc->lodLastLevel = lodLevel;
+                    if (lodLevel > 0) {
+                        if (Model3D* lodModel = vc->GetLodModel(lodLevel))
+                            model = lodModel;
+                        else
+                            lodLevel = 0;
+                    }
+                }
+                if (lodCounting) {
+                    Lod_RecordConsidered();
+                    if (lodCulledByDistance)
+                        Lod_RecordCulledByDistance();
+                }
+            }
+
             if (model) {
                 const XMFLOAT4 prevEmission = model->GetEmission();
                 model->SetEmission(vc->emissionGlow);
@@ -249,8 +324,6 @@ void GameObject::DrawVisual(bool useRealModel) {
                     }
                 }
 
-                XMFLOAT3 worldPos, worldRot, worldScale;
-                t->GetWorldPositionRotationScale(worldPos, worldRot, worldScale);
                 model->SetPosition(worldPos);
                 model->SetRotateEulerDeg(worldRot);
                 model->SetScale(worldScale);
@@ -258,7 +331,7 @@ void GameObject::DrawVisual(bool useRealModel) {
                 // Main-camera frustum cull and/or per-cascade light-ortho caster cull.
                 // Cascade cull uses open-near so casters between the light and the
                 // cascade volume still cast; camera-frustum culling never gates shadows.
-                bool submitDraw = true;
+                bool submitDraw = !lodCulledByDistance;
                 const auto& renderSettings = RenderSettings_GetConst();
                 const bool frustumEnabled = renderSettings.frustumCullingEnabled;
                 const bool shadowCullEnabled = renderSettings.shadowCascadeCullingEnabled;
@@ -302,6 +375,8 @@ void GameObject::DrawVisual(bool useRealModel) {
                 if (submitDraw) {
                     if (frustumEnabled && mainPass)
                         FrustumCull_RecordDrawn();
+                    if (lodCounting && lodTracked)
+                        Lod_RecordDrawn(lodLevel);
                     if (shadowCullEnabled && shadowPass)
                         ShadowCascadeCull_RecordDrawn();
                     model->Draw();

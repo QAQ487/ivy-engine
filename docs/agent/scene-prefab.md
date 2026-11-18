@@ -32,6 +32,10 @@ From `api:SceneExecutionPolicy` + `api:RenderSettings_ToJson` / parse:
 | `render.frustumCullingEnabled` | bool — main-pass 3D mesh cull |
 | `render.shadowCascadeCullingEnabled` | bool — shadow cascade caster cull |
 | `render.spriteCullingEnabled` | bool — 2D ortho sprite view-rect cull |
+| `render.lodEnabled` | bool (default `true`) — distance-based mesh LOD and `visual.cullDistance` (Play / runtime only) |
+| `render.lodBias` | number (default `1`, clamped 0.1–10) — scales distance for LOD choice; >1 switches to lower detail sooner |
+| `render.cullDistanceScale` | number (default `1`, clamped 0.1–10) — multiplies every `visual.cullDistance` (`0` / absent stays "never"); >1 keeps objects visible further out, <1 culls sooner. Needs `lodEnabled` |
+| `render.shadowDistance` | number (default `0`, clamped 5–1000 when positive) — shadow range in world units; `0` uses the Shadow Quality preset (Low 40 / Medium 70 / High 90). Map size and cascade count still come from the preset |
 | `camera.mode` | JSON strings from `PrepareSceneSettings` in `engine/scene/scene_loader.cpp`: `"thirdPerson"`, `"firstPerson"`, or default `"scene"` (→ `api:CameraMode` `SceneCamera`). C++ also has `CameraMode::Intro`; it is **not** a JSON mode string |
 | `camera.node` | Preferred scene camera node name |
 | `debugCamera` | Same `.cpp` parser: `mode` (`"orbit"` default / `"fly"`), `enabledOnPlay`, `yawDeg`, `pitchDeg`, optional `position` object `{x,y,z}` |
@@ -85,6 +89,24 @@ Node JSON (recursive), from `prefab_serializer.h`:
   "children": [ ]
 }
 ```
+
+`visual` LOD fields (optional; absent = no LOD):
+
+```json
+"visual": {
+  "model": "rom/model/x.fbx",
+  "lods": [
+    { "model": "rom/model/x_lod1.fbx", "maxDistance": 30 },
+    { "model": "rom/model/x_lod2.fbx", "maxDistance": 70 }
+  ],
+  "cullDistance": 120
+}
+```
+
+- Level 0 is `model`; `lods[i]` is level `i+1`. Each `maxDistance` is the camera distance at which rendering switches **to** that level (loaded ascending; at most 7 LOD levels). Distance is camera → world-AABB centre of the base mesh, with 5% hysteresis.
+- Shadow passes use the same level as the main camera pass.
+- Ignored while `animate` is `true` (levels > 0 are skipped); `cullDistance` still applies. LOD only applies in Play / runtime, never to `proxy_model` edit view. A missing LOD mesh falls back to level 0.
+- LOD meshes should share the base mesh pivot and scale, or the switch will visibly jump.
 
 Files written by `api:PrefabSerializer` `SaveToFile` use the scene-style wrapper:
 

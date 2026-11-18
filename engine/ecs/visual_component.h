@@ -26,6 +26,7 @@
  *****************************************************/
 #pragma once
 #include <string>
+#include <vector>
 #include <unordered_map>
 #include <unordered_set>
 #include <memory>
@@ -47,6 +48,23 @@ public:
 
     // Per-instance glow (shared Model3D cache must not store emission globally).
     DirectX::XMFLOAT4 emissionGlow = {0.0f, 0.0f, 0.0f, 0.0f};
+
+    // Distance-based mesh LOD (Play / runtime only; ignored while playAnimation).
+    // Level 0 is modelPath; lods[i] is level i+1. maxDistance is the camera
+    // distance at which rendering switches TO that level (kept ascending).
+    struct LodLevel {
+        std::string modelPath;
+        float maxDistance = 0.0f;
+    };
+    std::vector<LodLevel> lods;
+    // Beyond this camera distance the object is not drawn. 0 = never.
+    float cullDistance = 0.0f;
+    // Hysteresis memory for LOD selection (not serialized).
+    mutable int lodLastLevel = -1;
+
+    // Shared-cache mesh for level (0 = modelPath). Falls back to level 0 when the
+    // LOD mesh is missing or failed to load. nullptr only if level 0 is unavailable.
+    Model3D* GetLodModel(int level) const;
 
     // Per-object shader override. Empty string uses scene default from RenderSettings.
     std::string shaderOverride;

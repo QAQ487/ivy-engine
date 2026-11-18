@@ -71,7 +71,7 @@
 
 ## 渲染效能：Culling
 
-現況：3D main camera frustum culling（PR #25 `ba52894`）同 CSM per-cascade caster culling（PR #27 合併 `6db6040`）已入 master；後者 Windows Release A/B 已驗收。2D ortho sprite view-rect culling（PR #28 合併 `6adb343`）Windows Release runtime 已驗收。仍然冇 distance／occlusion culling；billboard／particle／screen-space UI／tilemap 未做。Physics AABB 仍然唔共用。`D3D11_QUERY` 仍然只見 timestamp／pipeline stats。
+現況：3D main camera frustum culling（PR #25 `ba52894`）同 CSM per-cascade caster culling（PR #27 合併 `6db6040`）已入 master；後者 Windows Release A/B 已驗收。2D ortho sprite view-rect culling（PR #28 合併 `6adb343`）Windows Release runtime 已驗收。distance culling（`visual.cullDistance`）同 mesh LOD v1 已有 source（等 Windows 驗收）；仍然冇 occlusion culling；billboard／particle／effect 未做（見下面「Culling／LOD 缺口盤點」）。Physics AABB 仍然唔共用。`D3D11_QUERY` 仍然只見 timestamp／pipeline stats。
 
 參考：Unity 模型——自動 frustum culling、手動 baked occlusion、Unity 6 GPU occlusion、`CullingGroup` API。
 
@@ -93,10 +93,33 @@
   - Linux：`./tools/run_sprite_cull_check.sh`。
   - 驗收：Windows Debug＋Release 已 build；Release ON vs OFF capture 像素 diff 0；115-sprite 場景 overlay `2CULL c:115 x:84 d:31`，sprite draws 115→31，GPU 0.97→0.17 ms。Terry 批准合併。
   - 剩餘：tilemap／billboard／particle 之後另做。
-- [ ] **Distance／layer cull distance 同 LOD**
-  - 仿 Unity `Camera.layerCullDistances` 同 LOD Group，按 layer 設剔除距離，近遠換 mesh 精度。排喺 frustum culling 之後。
+- [ ] **Distance cull 同 mesh LOD**（source 已做 v1；等 Windows 驗收）
+  - `visual.lods`（`{model, maxDistance}` 陣列，level 0 係 `model`，`maxDistance` 係切換去該級嘅 camera 距離）同 `visual.cullDistance`。距離用 camera → 基礎 mesh world AABB 中心，5% hysteresis；`render.lodEnabled`（預設 true）、`render.lodBias`（預設 1，0.1–10）。選擇數學喺 `engine/rendering/culling/lod_select_math.h`，狀態同計數器喺 `lod_state.{h,cpp}`，接入點係 `GameObject::DrawVisual`。
+  - Shadow pass 跟主 camera 揀嘅 level（`Lod_BeginFrame` 喺 shadow cascade 之前）。`animate: true` 嘅 Visual 只用 level 0（`cullDistance` 仍生效）；`proxy_model` edit view 唔行 LOD；LOD mesh 缺失退回 level 0。Preload 會載入 LOD mesh。
+  - Counters：Rendering Settings、collision-viz、FPS `LOD`、bridge `perf.lod`；bridge `set_setting` 加 `lodEnabled`。Inspector Visual 區有 LOD 清單同 Cull Distance。
+  - Linux：`tools/run_lod_check.sh`。驗收場景：`testbed/rom/scene/scene_lod.json`——可行走嘅場地（200×200 地面、`SamplePlayerScript` TPS 玩家、70 棵松樹、28 粒岩石）。程序生成嘅原創 mesh（`testbed/rom/model/lod/`，每個物件 4 級、同形狀同底部原點）：`Boulder_LOD0..3`（2562／642／162／42 頂點，即 5120／1280／320／80 三角面；LOD0 平滑，其餘稜角；大塊起伏每級一致，細緻脊線同碎片只喺高級別出現）同 `PineTree_LOD0..3`（390／102／54／31 頂點，6／5／4／3 層，LOD0 係波浪邊針葉）。有程序貼圖（`rock_albedo.png` 512²、`bark.png`、`needles.png`，可無縫重複，固定 seed），FBX 用 Blender 同款 `Texture`／`Video`／`DiffuseColor` 連接結構，材質顏色設白色避免同貼圖相乘變暗；岩石用 box 投影 UV，樹用圓柱 UV（逐 polygon 解包，冇接縫拉伸）。**LOD 距離按物件大細計**：用螢幕覆蓋比例反推（FOV 45°，d = 大小 / (0.828 × 覆蓋)），LOD0→1 喺約 12% 螢幕高度（1080p 約 120 px）、→2 喺 6%、→3 喺 3%；樹用樹冠闊度 3.3 m×scale，岩用 1.1 m×scale。結果：岩石 18–44／36–88／73–176 m，樹 27–50／53–100／106–199 m（舊版全部岩石固定 20／45 m，大岩喺 20 m 已佔 24% 螢幕高度所以太激進）。想再遲啲切換就調細 `render.lodBias`（例如 0.5 = 所有距離加倍）。全局旋鈕：`render.cullDistanceScale`（縮放所有 `cullDistance`，>1 = 更遠先剔除）同 `render.shadowDistance`（0 = Shadow Quality 預設範圍，>0 覆蓋，5–1000），Rendering 面板各有滑桿；Linux：`tests/cull_settings_test.cpp`。出生點前面有「強制」展示排：同一個物件分別鎖定 LOD0／1／2／3（松樹 z=11、岩石 z=19，x=−9／−3／3／9），唔使走動就可以並排比較。全部由 `python3 tools/gen_lod_test_assets.py` 生成（需要 numpy＋Pillow；ASCII FBX，Linux 只做咗閉合流形＋正體積＋索引／連接自我檢查，FBX SDK 匯入同貼圖載入要 Windows 驗收；如果貼圖冇出現，睇 `content_hot_reload.log`／Debug 輸出有冇 FBX 或 texture 載入錯誤）。
+  - 行走驗證（testbed 冇 `GameScripts`，唔使自己編譯腳本）：`SamplePlayerScript`（WASD／左 stick 行、Space 跳、滑鼠轉鏡頭）而家同時編譯入 **Debug `IvyEngine`** 同 **Debug `IvyEngineRuntime`**（兩個 vcxproj 都有 `samples\scripts\SamplePlayerScript`，Release 冇；外部 `GameScripts.dll` 入面同名腳本會覆蓋佢，`ScriptFactory::Register` 係按名覆蓋）。重新 build Debug 編輯器後：File → Open Testbed → 打開 `scene_lod.json` → F2 Play 就可以行（`settings.camera.mode = "thirdPerson"`，TPS 鏡頭跟住 Player）。
+  - 完全唔使腳本嘅後備：`testbed/rom/scene/scene_lod_fly.json`（同一個場地，冇 Player；`debugCamera` fly + `enabledOnPlay`，Play 時直接用自由飛行鏡頭：RMB + WASD、Shift 加速）。Release 編輯器或者未重新 build 時用呢個。Counters：Rendering 面板、View → Show FPS When Playing、F11 overlay 嘅 `lod` 行。
+  - 驗收（Windows Debug＋Release，Terry）：行近行遠目視切換、counters 正確、影子冇跳變、`lodEnabled` A/B 頂點數／GPU ms、`animate` 物件冇回歸、Inspector 加減 LOD＋Undo／Redo＋保存重載、LOD mesh hot reload。
+  - 未做：per-layer cull distance、自動減面、skinned LOD、per-clip bounds。
 - [ ] **Occlusion culling（暫緩）**
   - 等 Release profiling 顯示 draw call／overdraw 係瓶頸、場景有大量遮擋先做。起點：D3D11 occlusion predicate（`D3D11_QUERY_OCCLUSION_PREDICATE`）或 Hi-Z（上一 frame depth pyramid）；baked PVS（似 Unity Umbra）需要 editor bake 流程，放最後。
+
+### Culling／LOD 缺口盤點（2026-11-18 source audit，每項都對過代碼）
+
+唔屬於上面 LOD v1 嘅範圍，建議每個主題獨立 PR（每個都要自己嘅 Windows A/B 證據）。順序按效益／風險。
+
+- [ ] **`DrawVisual` 先剔除再設定**：`GameObject::DrawVisual`（`engine/ecs/game_object.cpp`）喺 frustum／cascade／距離剔除判斷**之前**已經做 `SetEmission`／`SetShaderVariant`／`SetMaterialOverride` 同世界姿態解算；主 pass 加每個 cascade 每物件每幀最多行 5 次，被剔除嘅物件照付成本。改動細、風險低。另外冇空間分割，逐個物件 O(N) 遍歷。
+- [ ] **離屏／遠距動畫降頻或暫停**：`VisualComponent::Update` 只睇 `playAnimation`，唔睇可見度或距離；`VisualSystem_UploadSkinning` 亦冇可見度判斷，被剔除或 `cullDistance` 外嘅角色仍然每幀 `UpdateAnimation` 同上傳 skin palette。對應 Unity Animator Culling Mode。可重用 `DrawVisual` 嘅可見度結果同 `cullDistance`。
+- [ ] **燈光揀選**：`Lighting::MAX_LIGHTS = 4`，`SceneLightingSyncFromNodes` 按場景遍歷順序攞頭 4 盞然後 `break`，唔睇距離／range／重要性／可見度，多燈場景會用錯燈。
+- [ ] **Billboard／粒子／Effekseer 剔除**：`Billboard::Update` 只做遠到近排序，冇 frustum 或距離剔除；`ParticlePool` 只有 `maxParticles` 上限，冇 per-emitter 剔除或距離縮減；`EffectSystem` 直接 `Manager::Draw`，冇用 Effekseer culling world。
+- [ ] **LOD 螢幕大小模式**：而家只有距離；按物件大細計距離要靠 `tools/gen_lod_test_assets.py`（`d = size / (0.828 × coverage)`），引擎本身冇 screen-relative height 閾值。
+- [ ] **LOD cross-fade／dither**：切換係硬切。
+- [ ] **陰影投影物用較低 LOD**：而家陰影同主鏡頭同一級，用低一級可以省陰影成本。
+- [ ] **編輯器 LOD 工具**：編輯視圖用 proxy（`DrawVisual(false)`）所以唔行 LOD；冇強制指定某級嘅 debug 選項，冇顯示邊界、距離嘅 gizmo。
+- [ ] **腳本同 bridge 可控性**：`ScriptRuntimeApi` 冇任何 LOD／culling／render 設定介面；bridge `set_setting` 只收布林，`lodBias`／`cullDistanceScale`／`shadowDistance` 唔能夠由測試改。（加 `ScriptRuntimeApi` 要 append-only 並 bump 版本。）
+- [ ] **LOD／剔除嘅進階項**（暫緩）：HLOD／impostor、自動減面、per-clip skinned bounds、per-layer／per-tag cull distance。
+- 唔算缺口：texture mip chain 已由 `model_util.cpp` 生成；engine 冇 tilemap 系統；screen-space UI 唔剔除係設計。
 
 ## 歷史 backlog（source audit 結果）
 
@@ -131,6 +154,7 @@ PBR 球場已由引擎待辦移除：倉庫只有 PBR shader 同 `testbed/rom/sc
 
 1. PR #7 視覺檢查（lighting、CSM、post-process、gizmo）喺 Windows 做（ImGuizmo AddPolyline 已驗收）。
 2. 重做 Properties Panel／Inspector（先有 UI 草案；現有編輯同 Undo 要保住）。
+   Culling／LOD 跟進（獨立 PR，順序：`DrawVisual` 先剔除、離屏動畫降頻 → 燈光揀選 → billboard／粒子／effect 剔除）見「Culling／LOD 缺口盤點」。
 3. AI 套件：Waypoint → Perception → BT／Blackboard → EQS。NavMesh 繼續暫緩。
 
 Box friction torque 同 World-space UI 未排入上面次序：前者只有想箱子傾側先做；後者驗收仍待設計。Culling 主線（3D frustum／shadow cascade／2D sprite）已入 master；距離／occlusion／tilemap／billboard／particle 未排入。

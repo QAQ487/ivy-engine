@@ -381,6 +381,68 @@ void DrawEditorInspectorPanel(bool playVisuals, bool* open)
                 runtimeDirty = true;
             }
 
+            ImGui::Text("LOD");
+            {
+                // Level 0 is the Mesh above; each row switches TO that level at its
+                // distance. Applies in Play / runtime only.
+                const char* lodExts[] = { ".fbx", ".obj", ".gltf", ".glb" };
+                int removeIdx = -1;
+                for (int i = 0; i < static_cast<int>(vc->lods.size()); ++i) {
+                    VisualComponent::LodLevel& lod = vc->lods[static_cast<size_t>(i)];
+                    ImGui::PushID(i);
+                    ImGui::AlignTextToFramePadding();
+                    ImGui::Text("LOD %d", i + 1);
+                    ImGui::SameLine();
+                    ImGui::SetNextItemWidth(90.0f);
+                    if (ImGui::DragFloat("##LodDist", &lod.maxDistance, 0.5f, 0.0f, 100000.0f, "%.1f m")) {
+                        if (lod.maxDistance < 0.0f) lod.maxDistance = 0.0f;
+                        runtimeDirty = true;
+                    }
+                    if (ImGui::IsItemDeactivatedAfterEdit()) {
+                        std::stable_sort(vc->lods.begin(), vc->lods.end(),
+                            [](const VisualComponent::LodLevel& a, const VisualComponent::LodLevel& b) {
+                                return a.maxDistance < b.maxDistance; });
+                    }
+                    ImGui::SameLine();
+                    if (ImGui::SmallButton("X"))
+                        removeIdx = i;
+                    char pathBuf[512];
+                    std::snprintf(pathBuf, sizeof(pathBuf), "%s", lod.modelPath.c_str());
+                    ImGui::SetNextItemWidth(-1);
+                    if (ImGui::InputText("##LodPath", pathBuf, sizeof(pathBuf))) {
+                        lod.modelPath = pathBuf;
+                        runtimeDirty = true;
+                    }
+                    std::string droppedLod;
+                    if (AcceptAssetPathDrop(lodExts, IM_ARRAYSIZE(lodExts), droppedLod)) {
+                        lod.modelPath = droppedLod;
+                        runtimeDirty = true;
+                    }
+                    ImGui::PopID();
+                }
+                if (removeIdx >= 0) {
+                    vc->lods.erase(vc->lods.begin() + removeIdx);
+                    runtimeDirty = true;
+                }
+                if (static_cast<int>(vc->lods.size()) < kLodMaxLevels - 1) {
+                    if (ImGui::SmallButton("Add LOD")) {
+                        VisualComponent::LodLevel lod;
+                        lod.maxDistance = vc->lods.empty() ? 20.0f : vc->lods.back().maxDistance + 30.0f;
+                        vc->lods.push_back(lod);
+                        runtimeDirty = true;
+                    }
+                }
+                if (ImGui::DragFloat("Cull Distance", &vc->cullDistance, 1.0f, 0.0f, 100000.0f,
+                        vc->cullDistance > 0.0f ? "%.1f m" : "Never")) {
+                    if (vc->cullDistance < 0.0f) vc->cullDistance = 0.0f;
+                    runtimeDirty = true;
+                }
+                if (vc->playAnimation && !vc->lods.empty())
+                    ImGui::TextDisabled("LOD levels ignored while Animate is on.");
+                else if (!vc->lods.empty() || vc->cullDistance > 0.0f)
+                    ImGui::TextDisabled("Play / runtime only; needs Mesh LOD on in Rendering.");
+            }
+
             ImGui::Text("Shader");
             {
                 const int variantCount = Shader3DVariantCount();

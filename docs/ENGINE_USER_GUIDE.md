@@ -91,9 +91,9 @@ You should get a window (design size **1920×1080**). The editor opens a **conte
 ### Try the sample pack
 
 1. Run **IvyEngine**. If a recent external project opens instead, use **File → Open Testbed**. With no recent project, a Debug build opens `testbed/` on its own.
-2. The startup scene is the sample menu inside `testbed/rom/scene/`. Other scenes there cover PBR, panorama sky, 2D sprites, 2D physics and a top-down 2D sample.
+2. The startup scene is the sample menu inside `testbed/rom/scene/`. Other scenes there cover PBR, panorama sky, mesh LOD (`scene_lod.json`, walkable; `scene_lod_fly.json` for a script-free fly camera), 2D sprites, 2D physics and a top-down 2D sample.
 3. Press **F2** (or the toolbar Play button) and click **Play** in the menu to load `scene_sample_playground.json`.
-4. Move with **WASD** / left stick. The testbed has no `GameScripts` of its own: script-driven behavior (for example the spinning box from `SampleSpinScript`) only runs when a script DLL that contains those classes is loaded. Reference scripts live in `samples/scripts/`.
+4. Move with **WASD** / left stick (the character always faces where the camera looks: **W** forward, **D** right, **S** back, **A** left), turn the camera and character with the **mouse** / right stick, **Space** to jump; the cursor is hidden while playing (**F6** toggles it). The testbed has no `GameScripts` of its own: script-driven behavior (for example the spinning box from `SampleSpinScript`) only runs when a script DLL that contains those classes is loaded. The Debug editor and Debug runtime host additionally compile in `SamplePlayerScript` (WASD / jump / third-person camera), so scenes with that player walk without any script build. Reference scripts live in `samples/scripts/`.
 5. Press **F2** again to stop Play mode.
 
 ### Keys to remember
@@ -360,6 +360,10 @@ Always attach this for scene objects you place in the editor.
 | `animations` | Map of clip name → animation FBX path |
 | `active_clip` | Which clip is current |
 | `shader` | Override: `standard`, `toon`, `rim`, … |
+| `lods` | Optional list of `{model, maxDistance}`. Level 0 is `model`; each row switches to that mesh at its camera distance (Play / runtime only) |
+| `cullDistance` | Do not draw beyond this camera distance (`0` = never) |
+
+**LOD:** in the Inspector's Visual section use **Add LOD** and drag an FBX/OBJ onto each row; rows stay sorted by distance. Shadows use the same level as the camera pass, levels are ignored while **Animate** is on, and a missing LOD mesh falls back to the base mesh. Keep LOD meshes at the same pivot and scale as the base mesh. Turn **Mesh LOD (3D)** off in Rendering for A/B, or lower **LOD Bias** to keep detail further out. Pick switch distances from the object size (distance = size / (0.83 x screen coverage) at a 45 degree field of view), not one fixed number for every object. Open `scene_lod.json` in the testbed to try it: a walkable pine and boulder field (meshes from `tools/gen_lod_test_assets.py`) with a side-by-side gallery of the three levels in front of the spawn. Walking uses `SamplePlayerScript`, compiled into the Debug editor and Debug runtime host; `scene_lod_fly.json` is the same field with a free-fly camera and needs no script.
 
 From scripts, play a clip with:
 
@@ -699,6 +703,9 @@ Edit these in **Edit → Project Settings → Rendering** (saved into the curren
 - `frustumCullingEnabled` (default `true`) — skip 3D mesh draws fully outside the **main** camera frustum. Does not gate shadow depth passes. Toggle off in the Rendering page for A/B. Counters (considered / culled / drawn) show in the Rendering page, the play FPS overlay, and collision-viz debug text.
 - `shadowCascadeCullingEnabled` (default `true`) — per cascade, skip shadow casters whose world AABB is outside that cascade's light-space ortho volume. Near plane is open toward the light (casters between light and cascade still cast). Off-screen casters that still project into a cascade keep their shadows. Counters: frame totals + per-cascade in the Rendering page; frame totals on FPS / collision-viz overlays and bridge `perf.shadowCull`.
 - `spriteCullingEnabled` (default `true`) — skip 2D sprite draws whose world AABB (size, pivot, rotation, scale) is fully outside the orthographic camera view rect, with a small margin against edge popping. Does not affect animation, physics, or scripts. Screen-space UI is untouched. Perspective cameras leave sprites unculled. Counters (considered / culled / drawn) show in the Rendering page, FPS overlay `2CULL`, collision-viz, and bridge `perf.spriteCull`.
+- `lodEnabled` (default `true`) and `lodBias` (default `1`, 0.1–10) — distance-based mesh LOD from `visual.lods` plus `visual.cullDistance`, Play / runtime only. Bias above 1 switches to lower detail sooner. Counters (considered / culled / drawn per level) show in the Rendering page, FPS overlay `LOD`, collision-viz, and bridge `perf.lod`.
+- `cullDistanceScale` (default `1`, 0.1–10) — multiplies every object's `cullDistance`, so one slider raises or lowers how far everything stays visible (bigger = visible longer). Objects with no `cullDistance` are never culled whatever the scale. Like `cullDistance`, it only applies while **Mesh LOD (3D)** is on.
+- `shadowDistance` (default `0`, 5–1000) — how far from the camera shadows are drawn. `0` keeps the range of the **Shadow Quality** preset (Low 40 / Medium 70 / High 90); a positive value replaces it. This is the main shadow cost knob: the cascades are fitted over this range, so a shorter range means sharper shadows near the camera and fewer casters. Shadow Distance is shown as "Preset" while it is 0.
 
 Reload skybox after changing the cubemap path (`RenderSettings_ReloadSkybox` / editor path). Manual check scene: `testbed/rom/scene/scene_panorama_sky.json`.
 

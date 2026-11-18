@@ -1,7 +1,7 @@
 # Ivy Engine — Complete Ability & API Reference
 
 Exhaustive catalog of **Ivy Engine** capabilities and public functions,
-scanned from every header under `engine/` and `src/app/` (159 headers; regenerate to refresh).
+scanned from every header under `engine/` and `src/app/` (165 headers; regenerate to refresh).
 
 **Learning how to use the engine?** Start with [`ENGINE_USER_GUIDE.md`](ENGINE_USER_GUIDE.md) (humans).  
 For JSON schemas, source map, and change rules, see [`AGENTS.md`](../AGENTS.md) (AI agents).
@@ -669,6 +669,10 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `void EffectSystem_RegisterComponent(class EffectComponent* component);`
 - `void EffectSystem_UnregisterComponent(class EffectComponent* component);`
 
+### `engine/ecs/euler_math.h`
+**Types:** EulerDeg
+- `inline EulerDeg RollPitchYawDegFromMatrix(const float m[3][3]) { const float cosPitch = std::sqrt(m[2][0] * m[2][0] + m[2][2] * m[2][2]);`
+
 ### `engine/ecs/game_object.h`
 **Types:** GameObject
 **Enums:** Tag
@@ -852,7 +856,8 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `void Deserialize(const std::string& json) override;`
 
 ### `engine/ecs/visual_component.h`
-**Types:** VisualComponent
+**Types:** VisualComponent, LodLevel
+- `Model3D* GetLodModel(int level) const;`
 - `ID3D11ShaderResourceView* GetSurfaceFxSRV();`
 - `void OnDetach() override;`
 - `void OnReset() override;`
@@ -872,6 +877,13 @@ Vendor header `WICTextureLoader11.h` is omitted.
 
 ### `engine/ecs/visual_system.h`
 - `void VisualSystem_UploadSkinning();`
+
+### `engine/editor/agent_docs_export.h`
+- `std::string MakeManagedBlock(const std::string& body);`
+- `bool UpsertManagedSection(const std::string& original, const std::string& block, std::string* out);`
+- `std::string RewriteExportedMarkdown(const std::string& text);`
+- `std::string ReadEngineCommit(const std::filesystem::path& engineRoot);`
+- `bool ExportToContentProject(const std::filesystem::path& engineRoot, const std::filesystem::path& projectRoot, std::string* errorOut);`
 
 ### `engine/editor/asset_browser_text.h`
 - `return measure(text, user);`
@@ -1449,6 +1461,11 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `static void Add(const BillboardData& data);`
 - `static void ClearDrawList() { s_draw_list.clear();`
 
+### `engine/rendering/culling/cull_settings_math.h`
+- `return std::min(std::max(scale, kMinCullDistanceScale), kMaxCullDistanceScale);`
+- `return std::min(std::max(distance, kMinShadowDistance), kMaxShadowDistance);`
+- `inline float ResolveShadowDistance(float presetDistance, float overrideDistance) { const float o = ClampShadowDistanceOverride(overrideDistance);`
+
 ### `engine/rendering/culling/frustum_cull.h`
 **Types:** FrustumCullStats
 - `void FrustumCull_BeginMainPass(DirectX::FXMMATRIX viewProj);`
@@ -1467,6 +1484,20 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `return MakeAabbFromPoints(worldCorners, 8);`
 - `return TransformAabb(local, world);`
 - `return TransformAabb(local, rows);`
+
+### `engine/rendering/culling/lod_select_math.h`
+- `return std::min(std::max(bias, kMinBias), kMaxBias);`
+
+### `engine/rendering/culling/lod_state.h`
+**Types:** LodStats
+- `void Lod_BeginFrame(const DirectX::XMFLOAT3& cameraPosition);`
+- `void Lod_EndFrame();`
+- `bool Lod_IsFrameActive();`
+- `const DirectX::XMFLOAT3& Lod_GetCameraPosition();`
+- `void Lod_RecordConsidered();`
+- `void Lod_RecordCulledByDistance();`
+- `void Lod_RecordDrawn(int level);`
+- `LodStats Lod_GetLastStats();`
 
 ### `engine/rendering/culling/shadow_cascade_cull.h`
 **Types:** ShadowCascadeCullStats
@@ -2560,6 +2591,9 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `void ThirdPersonCamera_AddTrauma(float amount01);`
 - `float ThirdPersonCamera_GetTrauma();`
 - `void ThirdPersonCamera_SetSpeedFactor(float speed01);`
+
+### `src/app/camera/third_person_move_math.h`
+**Types:** Vec2
 
 ### `src/app/rendering/fade.h`
 **Types:** FADE

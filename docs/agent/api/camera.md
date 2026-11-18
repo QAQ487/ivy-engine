@@ -38,7 +38,9 @@ Also wired into `api:ScriptRuntimeApi` (`thirdPersonCamera*` pointers). Prefer t
 - `void ThirdPersonCamera_SetMagnetMode(ThirdPersonMagnetMode mode)` / `void ThirdPersonCamera_SetMagnetTarget(const DirectX::XMFLOAT3& targetPos)` — `api:ThirdPersonCamera_SetMagnetMode` / `api:ThirdPersonCamera_SetMagnetTarget` (`api:ThirdPersonMagnetMode`)
 - `void ThirdPersonCamera_AddTrauma(float amount01)` / `void ThirdPersonCamera_SetSpeedFactor(float speed01)` — `api:ThirdPersonCamera_AddTrauma` / `api:ThirdPersonCamera_SetSpeedFactor`
 
-Sample: `SamplePlayerScript` calls these after `OnCreate` and sets `CameraMode::ThirdPerson` via `api:ScriptRuntimeApi_GetHost`.
+The camera **writes** the yaw pointer (mouse / right stick orbit) and reads the position pointer. The pointer must be a yaw the script does not overwrite itself: if a script sets that float to its own movement direction, the camera swings with every strafe or backward step.
+
+Sample: `SamplePlayerScript` passes `m_cameraYaw` to `ThirdPersonCamera_SetTarget`, calls these after `OnCreate`, and sets `CameraMode::ThirdPerson` via `api:ScriptRuntimeApi_GetHost`. The character always faces the camera yaw (`rot.y = m_cameraYaw`); WASD / left stick move relative to that facing (W front, D 90 deg clockwise, S 180, A 270, no turning to the move direction); mouse / right stick turn the camera and the character together; Space jumps.
 
 ## First-person (`src/app/camera/first_person_camera.h`)
 

@@ -85,6 +85,10 @@ bool RuntimeTestEditor_Apply(const ivy::testing::EditorOpRequest& op, std::strin
             rs.spriteCullingEnabled = op.settingBoolValue;
             return true;
         }
+        if (op.settingKey == "lodEnabled") {
+            rs.lodEnabled = op.settingBoolValue;
+            return true;
+        }
         errorOut = "unknown_setting";
         return false;
     }

@@ -340,6 +340,10 @@ void DrawRenderingSettingsBody() {
             }
             ImGui::EndCombo();
         }
+        ImGui::SliderFloat("Shadow Distance", &rs.shadowDistance, 0.0f, 300.0f,
+            rs.shadowDistance > 0.0f ? "%.0f m" : "Preset");
+        if (rs.shadowDistance > 0.0f && rs.shadowDistance < 5.0f)
+            rs.shadowDistance = 5.0f;
         const ShadowQualityPreset preset = RenderSettings_GetShadowPreset();
         ImGui::TextDisabled("%u px  |  %d cascades  |  range %.0f",
             preset.mapSize, preset.cascadeCount, preset.maxDistance);
@@ -375,6 +379,21 @@ void DrawRenderingSettingsBody() {
             sc.considered, sc.culled, sc.drawn);
         ImGui::TextDisabled("Ortho view-rect; render submit only.");
     }
+    ImGui::Checkbox("Mesh LOD (3D)", &rs.lodEnabled);
+    ImGui::SliderFloat("LOD Bias", &rs.lodBias, 0.1f, 10.0f, "%.2f",
+        ImGuiSliderFlags_Logarithmic);
+    {
+        const LodStats lod = Lod_GetLastStats();
+        int lodFar = 0;
+        for (int level = 2; level < kLodMaxLevels; ++level)
+            lodFar += lod.drawn[level];
+        ImGui::TextDisabled("lod      considered %d  |  culled %d  |  L0 %d  L1 %d  L2+ %d",
+            lod.considered, lod.culledByDistance, lod.drawn[0], lod.drawn[1], lodFar);
+        ImGui::TextDisabled("Bias > 1 switches to lower detail sooner. Play only.");
+    }
+    ImGui::SliderFloat("Cull Distance Scale", &rs.cullDistanceScale, 0.1f, 10.0f, "%.2f",
+        ImGuiSliderFlags_Logarithmic);
+    ImGui::TextDisabled("Multiplies every visual.cullDistance (> 1 keeps objects visible longer).");
 
     ImGui::Spacing();
     ImGui::Text("Fog");

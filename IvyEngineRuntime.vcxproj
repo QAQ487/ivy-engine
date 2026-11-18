@@ -377,6 +377,9 @@ exit /b 0</Command>
     <ClInclude Include="engine\rendering\lighting\shadow.h" />
     <ClInclude Include="engine\rendering\culling\frustum_cull.h" />
     <ClInclude Include="engine\rendering\culling\frustum_cull_math.h" />
+    <ClInclude Include="engine\rendering\culling\cull_settings_math.h" />
+    <ClInclude Include="engine\rendering\culling\lod_select_math.h" />
+    <ClInclude Include="engine\rendering\culling\lod_state.h" />
     <ClInclude Include="engine\rendering\culling\shadow_cascade_cull.h" />
     <ClInclude Include="engine\rendering\culling\sprite_cull.h" />
     <ClInclude Include="engine\rendering\culling\sprite_cull_math.h" />
@@ -408,6 +411,7 @@ exit /b 0</Command>
     <ClInclude Include="engine\ecs\component_factory.h" />
     <ClInclude Include="engine\ecs\prefab_serializer.h" />
     <ClInclude Include="engine\scene\scene_node.h" />
+    <ClInclude Include="engine\ecs\euler_math.h" />
     <ClInclude Include="engine\ecs\transform.h" />
     <ClInclude Include="engine\ecs\visual_component.h" />
     <ClInclude Include="engine\ecs\billboard_component.h" />
@@ -451,6 +455,7 @@ exit /b 0</Command>
     <ClInclude Include="src\app\main.h" />
     <ClInclude Include="src\app\scene\scene_manager.h" />
     <ClInclude Include="src\app\camera\third_person_camera.h" />
+    <ClInclude Include="src\app\camera\third_person_move_math.h" />
     <ClInclude Include="src\app\camera\first_person_camera.h" />
     <ClInclude Include="src\app\rendering\WICTextureLoader11.h" />
   </ItemGroup>
@@ -490,6 +495,7 @@ exit /b 0</Command>
     <ClCompile Include="engine\rendering\lighting\lighting.cpp" />
     <ClCompile Include="engine\rendering\lighting\shadow.cpp" />
     <ClCompile Include="engine\rendering\culling\frustum_cull.cpp" />
+    <ClCompile Include="engine\rendering\culling\lod_state.cpp" />
     <ClCompile Include="engine\rendering\culling\shadow_cascade_cull.cpp" />
     <ClCompile Include="engine\rendering\culling\sprite_cull.cpp" />
     <ClCompile Include="engine\ecs\collider_component.cpp" />

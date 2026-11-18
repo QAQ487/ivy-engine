@@ -12,6 +12,7 @@
 #include "engine/scripting/script_dll_register.h"
 #include "engine/scripting/script_runtime_api.h"
 #include "third_person_camera.h"
+#include "third_person_move_math.h"
 
 #include <cmath>
 #include <string>
@@ -96,14 +97,15 @@ void SamplePlayerScript::OnCreate(engine::GameObject& self) {
     self.GetRigidbody().SetMass(1.0f);
 
     if (engine::Transform* t = ScriptApi_FindTransform(self))
-        m_yaw = t->localRotation.y;
+        m_cameraYaw = t->localRotation.y;
     else
-        m_yaw = self.GetRotation().y;
+        m_cameraYaw = self.GetRotation().y;
 
     ThirdPersonCamera_Initialize();
-    ThirdPersonCamera_SetTarget(&self.m_position, &m_yaw);
+    ThirdPersonCamera_SetTarget(&self.m_position, &m_cameraYaw);
     ThirdPersonCamera_SetMouseSensitivity(0.15f);
-    ThirdPersonCamera_SetPitchLimits(-35.0f, 60.0f);
+    // Keep the camera above the ground plane (head height 3, distance 8).
+    ThirdPersonCamera_SetPitchLimits(-20.0f, 60.0f);
     ThirdPersonCamera_ShowCursor(false);
 
     const ScriptRuntimeApi* api = ScriptRuntimeApi_GetHost();
@@ -191,23 +193,12 @@ void SamplePlayerScript::SyncPlayerAnimation(engine::GameObject& self, float dt)
 
 void SamplePlayerScript::OnUpdate(engine::GameObject& self, float dt) {
     const DirectX::XMFLOAT3 input = GetMoveInput();
-    DirectX::XMFLOAT3 forward = ScriptApi_GetCameraForward();
-    forward.y = 0.0f;
-    const float fwdLenSq = forward.x * forward.x + forward.z * forward.z;
-    if (fwdLenSq > 0.0001f) {
-        const float inv = 1.0f / std::sqrt(fwdLenSq);
-        forward.x *= inv;
-        forward.z *= inv;
-    } else {
-        forward = { 0.0f, 0.0f, 1.0f };
-    }
-
-    const DirectX::XMFLOAT3 right = { forward.z, 0.0f, -forward.x };
-    DirectX::XMFLOAT3 wish = {
-        right.x * input.x + forward.x * input.z,
-        0.0f,
-        right.z * input.x + forward.z * input.z
-    };
+    // The character faces the camera direction (m_cameraYaw) and WASD move relative to that
+    // facing: W front, D 90 deg clockwise, S 180 deg, A 270 deg. ThirdPersonCamera looks
+    // along +(sin yaw, cos yaw); using the yaw directly (not the smoothed camera pose) keeps
+    // movement exact and lag-free. See third_person_move_math.h (unit tested).
+    const tp_move::Vec2 wishDir = tp_move::CameraRelativeWish(m_cameraYaw, input.x, input.z);
+    const DirectX::XMFLOAT3 wish = { wishDir.x, 0.0f, wishDir.z };
 
     auto& rb = self.GetRigidbody();
     DirectX::XMFLOAT3 vel = rb.GetVelocity();
@@ -215,11 +206,13 @@ void SamplePlayerScript::OnUpdate(engine::GameObject& self, float dt) {
     vel.z = wish.z * moveSpeed;
     rb.SetVelocity(vel);
 
-    if (std::fabs(wish.x) + std::fabs(wish.z) > 0.01f)
-        m_yaw = std::atan2(wish.x, wish.z) * (180.0f / 3.14159265f);
-
-    DirectX::XMFLOAT3 rot = self.GetRotation();
-    rot.y = m_yaw;
+    // Always face the camera direction, whatever key is held. Upright and yaw only: do not
+    // reuse GetRotation()'s x / z. PhysicsSystem rewrites a dynamic body's Euler into a
+    // canonical form every step (yaw kept within +/-90, so yaw 135 becomes (180, 45, 180));
+    // overriding just y on top of that is a different rotation (yaw 45), so the facing
+    // would mirror every other frame once the camera turns past 90 degrees.
+    const DirectX::XMFLOAT3 rot = { 0.0f, m_cameraYaw, 0.0f };
+    rb.SetAngularVelocity({ 0.0f, 0.0f, 0.0f });   // a character never rolls
     self.SetRotation(rot);
     if (engine::Transform* t = ScriptApi_FindTransform(self)) {
         t->localPosition = self.GetPosition();

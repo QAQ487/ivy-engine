@@ -19,6 +19,7 @@
 #include "engine/scene/render_settings.h"
 #include "engine/core/builtin_paths.h"
 #include "engine/rendering/culling/frustum_cull.h"
+#include "engine/rendering/culling/lod_state.h"
 #include "engine/rendering/culling/shadow_cascade_cull.h"
 #include "engine/rendering/lighting/shadow.h"
 #include "engine/physics/core/physics_system.h"
@@ -679,6 +680,8 @@ void GameScene::Object_Draw() {
 		cp.farClip = cam.farClip;
 		cp.aspect = aspect;
 		Shadow::UpdateForCamera(cp, RenderSettings_GetShadowPreset().maxDistance);
+		// LOD distances use the main camera for both shadow and camera passes.
+		Lod_BeginFrame(cam.position);
 	}
 
 	// Cascade depth passes (optional per-cascade light-ortho caster cull).
@@ -732,6 +735,7 @@ void GameScene::Object_Draw() {
 		FrustumCull_BeginMainPass(view * proj);
 		SetRenderObject(RENDER_MAIN);
 		FrustumCull_EndMainPass();
+		Lod_EndFrame();
 	}
 
 	// Billboard pass
