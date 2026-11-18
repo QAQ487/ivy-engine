@@ -1,7 +1,7 @@
 # Ivy Engine — Complete Ability & API Reference
 
 Exhaustive catalog of **Ivy Engine** capabilities and public functions,
-scanned from every header under `engine/` and `src/app/` (170 headers; regenerate to refresh).
+scanned from every header under `engine/` and `src/app/` (171 headers; regenerate to refresh).
 
 **Learning how to use the engine?** Start with [`ENGINE_USER_GUIDE.md`](ENGINE_USER_GUIDE.md) (humans).  
 For JSON schemas, source map, and change rules, see [`AGENTS.md`](../AGENTS.md) (AI agents).
@@ -1509,11 +1509,16 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `return TransformAabb(local, world);`
 - `return TransformAabb(local, rows);`
 
+### `engine/rendering/culling/light_select_math.h`
+**Types:** Candidate
+- `std::vector<float> score(static_cast<size_t>(n));`
+- `std::vector<int> order(static_cast<size_t>(n));`
+
 ### `engine/rendering/culling/lod_select_math.h`
 - `return std::min(std::max(bias, kMinBias), kMaxBias);`
 
 ### `engine/rendering/culling/lod_state.h`
-**Types:** LodStats
+**Types:** LodStats, AnimCullStats
 - `void Lod_BeginFrame(const DirectX::XMFLOAT3& cameraPosition);`
 - `void Lod_EndFrame();`
 - `bool Lod_IsFrameActive();`
@@ -1522,6 +1527,10 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `void Lod_RecordCulledByDistance();`
 - `void Lod_RecordDrawn(int level);`
 - `LodStats Lod_GetLastStats();`
+- `uint64_t Lod_GetFrameSerial();`
+- `void Lod_RecordAnimUpdated();`
+- `void Lod_RecordAnimSkipped();`
+- `AnimCullStats Lod_GetLastAnimStats();`
 
 ### `engine/rendering/culling/shadow_cascade_cull.h`
 **Types:** ShadowCascadeCullStats
@@ -1798,6 +1807,7 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `void SetScale(const DirectX::XMFLOAT3& s);`
 - `void Draw();`
 - `void UpdateAnimation(double dtSec = 1.0 / 60.0);`
+- `void AdvanceAnimationTime(double dtSec);`
 - `void UploadSkinnedVerticesIfDirty();`
 - `void AddAnimation(const std::string& animName, const char* fileName);`
 - `void EnsureAnimation(const std::string& animName, const char* fileName);`
@@ -1981,8 +1991,9 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `std::ifstream file(disk, std::ios::binary);`
 
 ### `engine/scene/scene_lighting.h`
-**Types:** GameObject
-- `void SceneLightingSyncFromNodes(const std::vector<std::unique_ptr<GameObject>>& roots);`
+**Types:** GameObject, SceneLightingStats
+- `void SceneLightingSyncFromNodes(const std::vector<std::unique_ptr<GameObject>>& roots, const DirectX::XMFLOAT3& cameraPosition);`
+- `SceneLightingStats SceneLighting_GetLastStats();`
 
 ### `engine/scene/scene_loader.h`
 **Types:** PreparedScene, ScenePreparationJob

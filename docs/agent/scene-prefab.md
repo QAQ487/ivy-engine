@@ -34,6 +34,7 @@ From `api:SceneExecutionPolicy` + `api:RenderSettings_ToJson` / parse:
 | `render.spriteCullingEnabled` | bool — 2D ortho sprite view-rect cull |
 | `render.lodEnabled` | bool (default `true`) — distance-based mesh LOD and `visual.cullDistance` (Play / runtime only) |
 | `render.animCullingEnabled` | bool (default `true`) — animated Visuals that no pass (main camera or shadow cascade) drew last frame skip bone sampling / skinning; clip time still advances (Play / runtime only) |
+| `render.lightSelectionEnabled` | bool (default `true`) — only 4 lights reach the GPU. With more enabled lights, directional lights first, then point / spot lights by influence at the camera (brightness × range² / (range² + distance²), with hysteresis); `false` uses the first 4 in scene order. Scenes with ≤ 4 lights are unaffected |
 | `render.lodBias` | number (default `1`, clamped 0.1–10) — scales distance for LOD choice; >1 switches to lower detail sooner |
 | `render.cullDistanceScale` | number (default `1`, clamped 0.1–10) — multiplies every `visual.cullDistance` (`0` / absent stays "never"); >1 keeps objects visible further out, <1 culls sooner. Needs `lodEnabled` |
 | `render.shadowDistance` | number (default `0`, clamped 5–1000 when positive) — shadow range in world units; `0` uses the Shadow Quality preset (Low 40 / Medium 70 / High 90). Map size and cascade count still come from the preset |

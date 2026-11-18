@@ -116,7 +116,12 @@
   - 已知限制：重新入畫面嗰一幀可能顯示舊 pose（一幀滯後）；腳本讀離屏角色 bone（`TryGetBoneLocalMatrix`）會拎到最後一次評估嘅 pose；未做降頻（只有「畫／唔畫」兩級）、物理／腳本唔受影響。
   - Linux：`tools/run_anim_cull_check.sh`（決策邏輯）。驗收場景：`testbed/rom/scene/scene_anim_cull_fly.json`（`python3 tools/gen_anim_cull_scene.py` 生成；fly 鏡頭，冇腳本）：前排 5、後排 5（鏡頭後 45 m）、左右 4、遠排 4（`cullDistance 40`）、鏡頭後 12 m 嘅 1 個 shadow caster，全部循環播 Idle。
   - 驗收（Windows Debug＋Release，Terry）：起始望前面 → `ANIM u` ≈ 前排＋可能嘅 shadow caster，`s` ≈ 後排＋左右＋遠排；Rendering 面板關 `Off-screen Animation Culling` 後 `s` 變 0、`u` 變全部；轉身 180° 後原本被跳過嘅後排同前排 pose 一致（相位連續，唔應該跳返 T-pose／第 0 幀）；`animCullingEnabled` ON vs OFF 同一視角截圖像素 diff 0；GPU／update ms A/B；shadow caster 嘅影子唔凍結；Edit／Play 切換同 scene 重載後冇凍結角色。
-- [ ] **燈光揀選**：`Lighting::MAX_LIGHTS = 4`，`SceneLightingSyncFromNodes` 按場景遍歷順序攞頭 4 盞然後 `break`，唔睇距離／range／重要性／可見度，多燈場景會用錯燈。
+- [x] **燈光揀選**（source 已做，等 Windows 驗收）
+  - `SceneLightingSyncFromNodes(roots, cameraPosition)`（`engine/scene/scene_lighting.cpp`）喺啟用燈光多過 `Lighting::MAX_LIGHTS`（4）時，用 `light_select::Select`（`engine/rendering/culling/light_select_math.h`）揀：directional 優先，然後 point／spot 按 camera 處影響力 `亮度 × range² / (range² + 距離²)`（亮度 = colour × intensity 最大分量）排序；上一幀揀中嘅燈有 1.25× 加成避免臨界閃爍；揀中嘅燈保持場景順序，所以 shadow caster 索引穩定。≤ 4 盞燈嘅場景行為完全不變。
+  - Toggle：`render.lightSelectionEnabled`（預設 true；Rendering 面板、bridge `set_setting`）。關閉 = 舊行為（場景順序頭 4 盞）。Counters：Rendering 面板 `lights enabled / used`。
+  - 未做：spot 錐形方向／物件包圍盒嘅影響力、per-object 燈光（forward+ 或 tiled）、燈光 fade-in/out、spot／point shadow。
+  - Linux：`tools/run_light_select_check.sh`（選擇數學）。驗收場景：`testbed/rom/scene/scene_light_select_fly.json`（`python3 tools/gen_light_select_scene.py` 生成）：1 盞暗 directional ＋ 12 盞彩色 point light 排成一行，13 盞燈對 4 個 slot。
+  - 驗收（Windows Debug＋Release，Terry）：Play 後沿住燈行飛，開住 Light Selection 時最近嘅 3 盞 point light 照亮地面，亮區跟住鏡頭移動，交界處冇明顯閃爍；`lights enabled 13 | used 4`；關掉之後永遠只係行頭嗰 3 盞（最左）亮；`≤ 4` 盞燈嘅現有場景（例如 `scene_lod.json`）畫面冇變。
 - [ ] **Billboard／粒子／Effekseer 剔除**：`Billboard::Update` 只做遠到近排序，冇 frustum 或距離剔除；`ParticlePool` 只有 `maxParticles` 上限，冇 per-emitter 剔除或距離縮減；`EffectSystem` 直接 `Manager::Draw`，冇用 Effekseer culling world。
 - [ ] **LOD 螢幕大小模式**：而家只有距離；按物件大細計距離要靠 `tools/gen_lod_test_assets.py`（`d = size / (0.828 × coverage)`），引擎本身冇 screen-relative height 閾值。
 - [ ] **LOD cross-fade／dither**：切換係硬切。

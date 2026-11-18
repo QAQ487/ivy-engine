@@ -93,6 +93,10 @@ bool RuntimeTestEditor_Apply(const ivy::testing::EditorOpRequest& op, std::strin
             rs.animCullingEnabled = op.settingBoolValue;
             return true;
         }
+        if (op.settingKey == "lightSelectionEnabled") {
+            rs.lightSelectionEnabled = op.settingBoolValue;
+            return true;
+        }
         errorOut = "unknown_setting";
         return false;
     }

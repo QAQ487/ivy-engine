@@ -56,6 +56,9 @@ struct RenderSettingsData {
     // Distance-based mesh LOD (visual.lods). Bias scales distance for level choice
     // only (>1 switches to lower detail sooner); clamped to [0.1, 10] on load.
     bool lodEnabled = true;
+    // With more enabled lights than GPU slots (Lighting::MAX_LIGHTS), pick the most
+    // influential at the camera instead of the first ones in scene order.
+    bool lightSelectionEnabled = true;
     // Skip skeletal pose evaluation for animated Visuals that no pass (main or shadow
     // cascade) drew last frame. Animation time still advances. Play / runtime only.
     bool animCullingEnabled = true;

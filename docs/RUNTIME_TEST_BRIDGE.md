@@ -83,7 +83,7 @@ Additive identity fields: `host` (`"runtime"` | `"editor"`). Editor also reports
 | `events` | Bounded checkpoint event ring (offline check: `tools/runtime_bridge_events_check.cpp`) |
 | `controller` | One-at-a-time controller inject (below) |
 | `controller_probe` | Read-only consumer-trace snapshot (below) |
-| `set_setting` | Whitelisted render toggles: `frustumCullingEnabled`, `shadowCascadeCullingEnabled`, `spriteCullingEnabled`, `lodEnabled`, `animCullingEnabled` (JSON bool `value`). Works on Runtime and Editor (Edit or Play). Queued; `status.editorOp` reports completion. |
+| `set_setting` | Whitelisted render toggles: `frustumCullingEnabled`, `shadowCascadeCullingEnabled`, `spriteCullingEnabled`, `lodEnabled`, `animCullingEnabled`, `lightSelectionEnabled` (JSON bool `value`). Works on Runtime and Editor (Edit or Play). Queued; `status.editorOp` reports completion. |
 
 ### Editor Play-mode verbs (Phase 7; `host: "editor"` only)
 

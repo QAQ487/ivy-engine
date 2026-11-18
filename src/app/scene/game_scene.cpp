@@ -663,7 +663,7 @@ void GameScene::SetRenderObject(RENDER_OBJECT_TYPE type) {
 }
 
 void GameScene::Object_Draw() {
-	SceneLightingSyncFromNodes(SceneLoader_GetSceneNodes());
+	SceneLightingSyncFromNodes(SceneLoader_GetSceneNodes(), GetCamera().position);
 
 	float vx, vy, vw, vh;
 	EngineGUI_GetGameViewportRect(vx, vy, vw, vh);

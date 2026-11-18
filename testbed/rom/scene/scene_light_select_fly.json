@@ -1,0 +1,819 @@
+{
+  "version": 4,
+  "settings": {
+    "render": {
+      "clearColor": [
+        0.05,
+        0.06,
+        0.1,
+        1.0
+      ],
+      "defaultShader": "standard",
+      "fogEnabled": false,
+      "shadowQuality": "low",
+      "skyboxEnabled": false,
+      "lightSelectionEnabled": true
+    },
+    "debugCamera": {
+      "mode": "fly",
+      "enabledOnPlay": true,
+      "yawDeg": 0.0,
+      "pitchDeg": -20.0,
+      "position": {
+        "x": -77.0,
+        "y": 6.0,
+        "z": -14.0
+      }
+    }
+  },
+  "nodes": [
+    {
+      "name": "Directional Light (dim)",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 0.0,
+          "posY": 10.0,
+          "posZ": 0.0,
+          "rotX": 50.0,
+          "rotY": -35.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "DirectionalLight": {
+          "enabled": true,
+          "castShadows": false,
+          "color": [
+            0.5,
+            0.55,
+            0.7
+          ],
+          "intensity": 0.25,
+          "specColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "specPower": 32.0
+        }
+      }
+    },
+    {
+      "name": "Ground",
+      "tag": 2,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 0.0,
+          "posY": -0.5,
+          "posZ": 0.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 400.0,
+          "scaleY": 1.0,
+          "scaleZ": 60.0
+        },
+        "visual": {
+          "model": "rom/model/object/Box_Sand.fbx",
+          "shader": "standard"
+        }
+      }
+    },
+    {
+      "name": "Pillar 01",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -77.0,
+          "posY": 1.0,
+          "posZ": 4.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 0.6,
+          "scaleY": 2.0,
+          "scaleZ": 0.6
+        },
+        "visual": {
+          "model": "rom/model/object/Box_Brown.fbx",
+          "shader": "standard"
+        }
+      }
+    },
+    {
+      "name": "Point Light 01",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -77.0,
+          "posY": 3.0,
+          "posZ": 0.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "PointLight": {
+          "enabled": true,
+          "color": [
+            1.0,
+            0.15000000000000002,
+            0.15000000000000002
+          ],
+          "intensity": 3.0,
+          "specColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "specPower": 32.0,
+          "range": 12.0,
+          "attenuation": [
+            1.0,
+            0.0,
+            1.0
+          ]
+        }
+      }
+    },
+    {
+      "name": "Pillar 02",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -63.0,
+          "posY": 1.0,
+          "posZ": 4.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 0.6,
+          "scaleY": 2.0,
+          "scaleZ": 0.6
+        },
+        "visual": {
+          "model": "rom/model/object/Box_Brown.fbx",
+          "shader": "standard"
+        }
+      }
+    },
+    {
+      "name": "Point Light 02",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -63.0,
+          "posY": 3.0,
+          "posZ": 0.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "PointLight": {
+          "enabled": true,
+          "color": [
+            1.0,
+            0.575,
+            0.15000000000000002
+          ],
+          "intensity": 3.0,
+          "specColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "specPower": 32.0,
+          "range": 12.0,
+          "attenuation": [
+            1.0,
+            0.0,
+            1.0
+          ]
+        }
+      }
+    },
+    {
+      "name": "Pillar 03",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -49.0,
+          "posY": 1.0,
+          "posZ": 4.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 0.6,
+          "scaleY": 2.0,
+          "scaleZ": 0.6
+        },
+        "visual": {
+          "model": "rom/model/object/Box_Brown.fbx",
+          "shader": "standard"
+        }
+      }
+    },
+    {
+      "name": "Point Light 03",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -49.0,
+          "posY": 3.0,
+          "posZ": 0.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "PointLight": {
+          "enabled": true,
+          "color": [
+            1.0,
+            1.0,
+            0.15000000000000002
+          ],
+          "intensity": 3.0,
+          "specColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "specPower": 32.0,
+          "range": 12.0,
+          "attenuation": [
+            1.0,
+            0.0,
+            1.0
+          ]
+        }
+      }
+    },
+    {
+      "name": "Pillar 04",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -35.0,
+          "posY": 1.0,
+          "posZ": 4.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 0.6,
+          "scaleY": 2.0,
+          "scaleZ": 0.6
+        },
+        "visual": {
+          "model": "rom/model/object/Box_Brown.fbx",
+          "shader": "standard"
+        }
+      }
+    },
+    {
+      "name": "Point Light 04",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -35.0,
+          "posY": 3.0,
+          "posZ": 0.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "PointLight": {
+          "enabled": true,
+          "color": [
+            0.575,
+            1.0,
+            0.15000000000000002
+          ],
+          "intensity": 3.0,
+          "specColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "specPower": 32.0,
+          "range": 12.0,
+          "attenuation": [
+            1.0,
+            0.0,
+            1.0
+          ]
+        }
+      }
+    },
+    {
+      "name": "Pillar 05",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -21.0,
+          "posY": 1.0,
+          "posZ": 4.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 0.6,
+          "scaleY": 2.0,
+          "scaleZ": 0.6
+        },
+        "visual": {
+          "model": "rom/model/object/Box_Brown.fbx",
+          "shader": "standard"
+        }
+      }
+    },
+    {
+      "name": "Point Light 05",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -21.0,
+          "posY": 3.0,
+          "posZ": 0.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "PointLight": {
+          "enabled": true,
+          "color": [
+            0.15000000000000002,
+            1.0,
+            0.15000000000000002
+          ],
+          "intensity": 3.0,
+          "specColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "specPower": 32.0,
+          "range": 12.0,
+          "attenuation": [
+            1.0,
+            0.0,
+            1.0
+          ]
+        }
+      }
+    },
+    {
+      "name": "Pillar 06",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -7.0,
+          "posY": 1.0,
+          "posZ": 4.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 0.6,
+          "scaleY": 2.0,
+          "scaleZ": 0.6
+        },
+        "visual": {
+          "model": "rom/model/object/Box_Brown.fbx",
+          "shader": "standard"
+        }
+      }
+    },
+    {
+      "name": "Point Light 06",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -7.0,
+          "posY": 3.0,
+          "posZ": 0.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "PointLight": {
+          "enabled": true,
+          "color": [
+            0.15000000000000002,
+            1.0,
+            0.575
+          ],
+          "intensity": 3.0,
+          "specColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "specPower": 32.0,
+          "range": 12.0,
+          "attenuation": [
+            1.0,
+            0.0,
+            1.0
+          ]
+        }
+      }
+    },
+    {
+      "name": "Pillar 07",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 7.0,
+          "posY": 1.0,
+          "posZ": 4.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 0.6,
+          "scaleY": 2.0,
+          "scaleZ": 0.6
+        },
+        "visual": {
+          "model": "rom/model/object/Box_Brown.fbx",
+          "shader": "standard"
+        }
+      }
+    },
+    {
+      "name": "Point Light 07",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 7.0,
+          "posY": 3.0,
+          "posZ": 0.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "PointLight": {
+          "enabled": true,
+          "color": [
+            0.15000000000000002,
+            1.0,
+            1.0
+          ],
+          "intensity": 3.0,
+          "specColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "specPower": 32.0,
+          "range": 12.0,
+          "attenuation": [
+            1.0,
+            0.0,
+            1.0
+          ]
+        }
+      }
+    },
+    {
+      "name": "Pillar 08",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 21.0,
+          "posY": 1.0,
+          "posZ": 4.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 0.6,
+          "scaleY": 2.0,
+          "scaleZ": 0.6
+        },
+        "visual": {
+          "model": "rom/model/object/Box_Brown.fbx",
+          "shader": "standard"
+        }
+      }
+    },
+    {
+      "name": "Point Light 08",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 21.0,
+          "posY": 3.0,
+          "posZ": 0.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "PointLight": {
+          "enabled": true,
+          "color": [
+            0.15000000000000002,
+            0.575,
+            1.0
+          ],
+          "intensity": 3.0,
+          "specColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "specPower": 32.0,
+          "range": 12.0,
+          "attenuation": [
+            1.0,
+            0.0,
+            1.0
+          ]
+        }
+      }
+    },
+    {
+      "name": "Pillar 09",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 35.0,
+          "posY": 1.0,
+          "posZ": 4.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 0.6,
+          "scaleY": 2.0,
+          "scaleZ": 0.6
+        },
+        "visual": {
+          "model": "rom/model/object/Box_Brown.fbx",
+          "shader": "standard"
+        }
+      }
+    },
+    {
+      "name": "Point Light 09",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 35.0,
+          "posY": 3.0,
+          "posZ": 0.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "PointLight": {
+          "enabled": true,
+          "color": [
+            0.15000000000000002,
+            0.15000000000000002,
+            1.0
+          ],
+          "intensity": 3.0,
+          "specColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "specPower": 32.0,
+          "range": 12.0,
+          "attenuation": [
+            1.0,
+            0.0,
+            1.0
+          ]
+        }
+      }
+    },
+    {
+      "name": "Pillar 10",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 49.0,
+          "posY": 1.0,
+          "posZ": 4.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 0.6,
+          "scaleY": 2.0,
+          "scaleZ": 0.6
+        },
+        "visual": {
+          "model": "rom/model/object/Box_Brown.fbx",
+          "shader": "standard"
+        }
+      }
+    },
+    {
+      "name": "Point Light 10",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 49.0,
+          "posY": 3.0,
+          "posZ": 0.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "PointLight": {
+          "enabled": true,
+          "color": [
+            0.575,
+            0.15000000000000002,
+            1.0
+          ],
+          "intensity": 3.0,
+          "specColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "specPower": 32.0,
+          "range": 12.0,
+          "attenuation": [
+            1.0,
+            0.0,
+            1.0
+          ]
+        }
+      }
+    },
+    {
+      "name": "Pillar 11",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 63.0,
+          "posY": 1.0,
+          "posZ": 4.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 0.6,
+          "scaleY": 2.0,
+          "scaleZ": 0.6
+        },
+        "visual": {
+          "model": "rom/model/object/Box_Brown.fbx",
+          "shader": "standard"
+        }
+      }
+    },
+    {
+      "name": "Point Light 11",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 63.0,
+          "posY": 3.0,
+          "posZ": 0.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "PointLight": {
+          "enabled": true,
+          "color": [
+            1.0,
+            0.15000000000000002,
+            1.0
+          ],
+          "intensity": 3.0,
+          "specColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "specPower": 32.0,
+          "range": 12.0,
+          "attenuation": [
+            1.0,
+            0.0,
+            1.0
+          ]
+        }
+      }
+    },
+    {
+      "name": "Pillar 12",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 77.0,
+          "posY": 1.0,
+          "posZ": 4.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 0.6,
+          "scaleY": 2.0,
+          "scaleZ": 0.6
+        },
+        "visual": {
+          "model": "rom/model/object/Box_Brown.fbx",
+          "shader": "standard"
+        }
+      }
+    },
+    {
+      "name": "Point Light 12",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 77.0,
+          "posY": 3.0,
+          "posZ": 0.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "PointLight": {
+          "enabled": true,
+          "color": [
+            1.0,
+            0.15000000000000002,
+            0.575
+          ],
+          "intensity": 3.0,
+          "specColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "specPower": 32.0,
+          "range": 12.0,
+          "attenuation": [
+            1.0,
+            0.0,
+            1.0
+          ]
+        }
+      }
+    }
+  ]
+}

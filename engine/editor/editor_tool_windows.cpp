@@ -2,6 +2,8 @@
 // Extracted from engine/core/engine_gui.cpp (phase-1 editor UI split; behaviour-preserving).
 
 #include "editor_gui_common_includes.h"
+#include "engine/scene/scene_lighting.h"
+#include "engine/rendering/lighting/lighting.h"
 
 std::string ShaderVariantPreviewLabel(Shader3DVariant v) {
     const char* label = Shader3DVariantLabel(v);
@@ -396,6 +398,13 @@ void DrawRenderingSettingsBody() {
         const AnimCullStats anim = Lod_GetLastAnimStats();
         ImGui::TextDisabled("anim     evaluated %d  |  skipped %d", anim.updated, anim.skipped);
         ImGui::TextDisabled("Animated Visuals no pass drew last frame skip bone sampling (clip time still advances). Play only.");
+    }
+    ImGui::Checkbox("Light Selection (3D)", &rs.lightSelectionEnabled);
+    {
+        const SceneLightingStats ls = SceneLighting_GetLastStats();
+        ImGui::TextDisabled("lights   enabled %d  |  used %d  (max %d)",
+            ls.total, ls.used, Lighting::MAX_LIGHTS);
+        ImGui::TextDisabled("Over the slot limit, the most influential lights at the camera win. Off = first in scene order.");
     }
     ImGui::SliderFloat("Cull Distance Scale", &rs.cullDistanceScale, 0.1f, 10.0f, "%.2f",
         ImGuiSliderFlags_Logarithmic);

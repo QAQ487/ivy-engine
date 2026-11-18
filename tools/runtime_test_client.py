@@ -89,6 +89,7 @@ SETTING_KEYS = (
     "spriteCullingEnabled",
     "lodEnabled",
     "animCullingEnabled",
+    "lightSelectionEnabled",
 )
 
 def build_play_enter_payload(mode=None):

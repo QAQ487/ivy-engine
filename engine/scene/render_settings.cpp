@@ -185,6 +185,8 @@ RenderSettingsData RenderSettings_ParseJson(const nlohmann::json& renderJson, Re
     settings.spriteCullingEnabled = renderJson.value(
         "spriteCullingEnabled", settings.spriteCullingEnabled);
     settings.lodEnabled = renderJson.value("lodEnabled", settings.lodEnabled);
+    settings.lightSelectionEnabled = renderJson.value(
+        "lightSelectionEnabled", settings.lightSelectionEnabled);
     settings.animCullingEnabled = renderJson.value(
         "animCullingEnabled", settings.animCullingEnabled);
     settings.lodBias = lod_select::ClampBias(
@@ -244,6 +246,7 @@ nlohmann::json RenderSettings_ToJson() {
     render["shadowCascadeCullingEnabled"] = g_renderSettings.shadowCascadeCullingEnabled;
     render["spriteCullingEnabled"] = g_renderSettings.spriteCullingEnabled;
     render["lodEnabled"] = g_renderSettings.lodEnabled;
+    render["lightSelectionEnabled"] = g_renderSettings.lightSelectionEnabled;
     render["animCullingEnabled"] = g_renderSettings.animCullingEnabled;
     render["lodBias"] = g_renderSettings.lodBias;
     render["cullDistanceScale"] = g_renderSettings.cullDistanceScale;
