@@ -1528,6 +1528,8 @@ Vendor header `WICTextureLoader11.h` is omitted.
 
 ### `engine/rendering/culling/lod_select_math.h`
 - `return std::min(std::max(bias, kMinBias), kMaxBias);`
+- `inline int ClampShadowLodOffset(int offset) { return std::min(std::max(offset, 0), kMaxShadowLodOffset);`
+- `return std::min(cameraLevel + ClampShadowLodOffset(offset), std::max(last, cameraLevel));`
 
 ### `engine/rendering/culling/lod_state.h`
 **Types:** LodStats, AnimCullStats
@@ -2279,6 +2281,8 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `void RuntimeTestSceneOverride_Clear();`
 - `bool IsRuntimeTestBridgeSettingKey(const std::string& key);`
 - `bool ParseRuntimeTestBridgeSettingValue(const Json& value, bool& outBool, std::string& err);`
+- `bool IsRuntimeTestBridgeNumericSettingKey(const std::string& key);`
+- `bool ParseRuntimeTestBridgeNumericSettingValue(const Json& value, double& outNumber, std::string& err);`
 - `public: Protocol(std::string runId, unsigned long pid, unsigned long session, BridgeHostKind host = BridgeHostKind::Runtime);`
 - `void Publish(bool ready, bool playing, const std::string& scene, std::vector<ObservedTarget> targets = {}, std::vector<ListedObject> objects = {}, const char* readyDetail = nullptr, EditorPlayModeKind playMode = EditorPlayModeKind::None);`
 - `bool TakeQuit();`

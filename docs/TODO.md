@@ -132,9 +132,14 @@
   - 驗收（Windows Debug＋Release，Terry）：Billboard——`billboard considered 160 | culled N`（N 隨視角變，望向一邊時約一半）；開關 Billboard／Particle Culling 前後同一視角截圖像素 diff 0；邊緣冇閃現／消失；GPU ms A/B。粒子——開 `scene_particle_cull_fly.json`（Debug build）F2：`particle considered` 約 40 × 每 emitter 活粒子數；望住一個 emitter 時 `particle culled` 佔大部分，望天則接近全部；開關 Billboard／Particle Culling 前後同一視角畫面不變。Effekseer——`effect culled` > 0；effect 嘅 origin 離開畫面邊緣時有冇突然消失（有就調大 `effectCullRadius`）；返入畫面時 effect 進度連續（冇由頭播）。
 - [ ] **LOD 螢幕大小模式**：而家只有距離；按物件大細計距離要靠 `tools/gen_lod_test_assets.py`（`d = size / (0.828 × coverage)`），引擎本身冇 screen-relative height 閾值。
 - [ ] **LOD cross-fade／dither**：切換係硬切。
-- [ ] **陰影投影物用較低 LOD**：而家陰影同主鏡頭同一級，用低一級可以省陰影成本。
+- [x] **陰影投影物用較低 LOD**（source 已做，等 Windows 驗收）
+  - `render.shadowLodOffset`（預設 0，0–3；Rendering 面板 `Shadow LOD Offset`）：cascade pass 喺 `GameObject::DrawVisual` 用 `lod_select::ShadowCasterLevel(cameraLevel, offset, count)` 揀 mesh——相機級別往低細節方向推 `offset` 級，唔超過最後一級；`cullDistance` 剔除照舊，`animate: true` 嘅 Visual 只有 level 0 所以唔受影響。Hysteresis 記憶仍然記相機級別，唔會被 offset 污染。預設 0 = 行為不變。
+  - Linux：`tools/run_lod_check.sh`（`ShadowCasterLevel`、clamp）。驗收場景：`testbed/rom/scene/scene_lod_fly.json` 嘅強制 LOD0 展示排（offset 3 時影子變 LOD3 形狀）。
+  - 驗收（Windows）：offset 0 影子同之前一樣；offset 1／2／3 影子逐級變粗但位置唔飄；Rendering 面板 vertices／GPU ms A/B；遠距樹影冇跳變。
 - [ ] **編輯器 LOD 工具**：編輯視圖用 proxy（`DrawVisual(false)`）所以唔行 LOD；冇強制指定某級嘅 debug 選項，冇顯示邊界、距離嘅 gizmo。
-- [ ] **腳本同 bridge 可控性**：`ScriptRuntimeApi` 冇任何 LOD／culling／render 設定介面；bridge `set_setting` 只收布林，`lodBias`／`cullDistanceScale`／`shadowDistance` 唔能夠由測試改。（加 `ScriptRuntimeApi` 要 append-only 並 bump 版本。）
+- [ ] **腳本同 bridge 可控性**（bridge 部分已做，等 Windows 驗收；腳本部分未做）
+  - Bridge：`set_setting` 而家除布林外亦收數值 key（`lodBias`、`cullDistanceScale`、`shadowDistance`、`shadowLodOffset`、`effectCullRadius`；JSON number、必須有限；host 按場景載入嘅同一組 clamp 夾住，超範圍唔會報錯）。`tools/runtime_test_client.py` 同 `--value` 一併支援；Linux：`tools/run_runtime_bridge_offline_linux.sh`、`python3 -m unittest tools/runtime_test_client_check.py`。
+  - 未做：`ScriptRuntimeApi` 嘅 LOD／culling／render 設定介面（要 append-only 並 bump 版本，目前仍然係 48）；bridge `perf` 未輸出 anim／fx／light 計數。
 - [ ] **LOD／剔除嘅進階項**（暫緩）：HLOD／impostor、自動減面、per-clip skinned bounds、per-layer／per-tag cull distance。
 - 唔算缺口：texture mip chain 已由 `model_util.cpp` 生成；engine 冇 tilemap 系統；screen-space UI 唔剔除係設計。
 

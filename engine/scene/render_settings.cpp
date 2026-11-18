@@ -197,6 +197,8 @@ RenderSettingsData RenderSettings_ParseJson(const nlohmann::json& renderJson, Re
         "animCullingEnabled", settings.animCullingEnabled);
     settings.lodBias = lod_select::ClampBias(
         renderJson.value("lodBias", settings.lodBias));
+    settings.shadowLodOffset = lod_select::ClampShadowLodOffset(
+        renderJson.value("shadowLodOffset", settings.shadowLodOffset));
     settings.cullDistanceScale = cull_settings::ClampCullDistanceScale(
         renderJson.value("cullDistanceScale", settings.cullDistanceScale));
     settings.shadowDistance = cull_settings::ClampShadowDistanceOverride(
@@ -258,6 +260,7 @@ nlohmann::json RenderSettings_ToJson() {
     render["lightSelectionEnabled"] = g_renderSettings.lightSelectionEnabled;
     render["animCullingEnabled"] = g_renderSettings.animCullingEnabled;
     render["lodBias"] = g_renderSettings.lodBias;
+    render["shadowLodOffset"] = g_renderSettings.shadowLodOffset;
     render["cullDistanceScale"] = g_renderSettings.cullDistanceScale;
     render["shadowDistance"] = g_renderSettings.shadowDistance;
     return render;

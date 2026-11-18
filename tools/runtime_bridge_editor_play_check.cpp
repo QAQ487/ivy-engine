@@ -28,6 +28,18 @@ int main() {
     check(IsRuntimeTestBridgeSettingKey("shadowCascadeCullingEnabled"), "whitelist shadow");
     check(IsRuntimeTestBridgeSettingKey("spriteCullingEnabled"), "whitelist sprite");
     check(!IsRuntimeTestBridgeSettingKey("fogEnabled"), "reject non-whitelist key");
+    check(IsRuntimeTestBridgeNumericSettingKey("lodBias"), "numeric whitelist lodBias");
+    check(IsRuntimeTestBridgeNumericSettingKey("effectCullRadius"), "numeric whitelist effectCullRadius");
+    check(!IsRuntimeTestBridgeNumericSettingKey("lodEnabled"), "bool key is not numeric");
+    check(!IsRuntimeTestBridgeSettingKey("lodBias"), "numeric key is not bool");
+    {
+        double n = 0.0;
+        std::string nerr;
+        check(ParseRuntimeTestBridgeNumericSettingValue(Json(2.5), n, nerr) && n == 2.5, "numeric accepts double");
+        check(ParseRuntimeTestBridgeNumericSettingValue(Json(3), n, nerr) && n == 3.0, "numeric accepts int");
+        check(!ParseRuntimeTestBridgeNumericSettingValue(Json(true), n, nerr), "numeric rejects bool");
+        check(!ParseRuntimeTestBridgeNumericSettingValue(Json("1"), n, nerr), "numeric rejects string");
+    }
     check(!IsRuntimeTestBridgeSettingKey(""), "reject empty key");
 
     bool outBool = false;
@@ -151,6 +163,17 @@ int main() {
     check(eop.settingKey == "frustumCullingEnabled" && eop.settingBoolValue == false, "set_setting payload");
     ed.CompleteEditorOp(eop.requestId, true, "");
 
+    // Numeric settings: number accepted, bool rejected, bool keys still reject numbers.
+    badSet = ed.Request(R"({"protocolVersion":1,"requestId":21,"runId":"editor7","verb":"set_setting","key":"lodBias","value":true})");
+    check(badSet["error"] == "invalid_request", "numeric setting rejects bool");
+    badSet = ed.Request(R"({"protocolVersion":1,"requestId":22,"runId":"editor7","verb":"set_setting","key":"lodBias","value":"2"})");
+    check(badSet["error"] == "invalid_request", "numeric setting rejects string");
+    auto numSet = ed.Request(R"({"protocolVersion":1,"requestId":23,"runId":"editor7","verb":"set_setting","key":"lodBias","value":2.5})");
+    check(numSet["ok"] == true && numSet["status"] == "queued", "numeric set_setting queues");
+    check(ed.HasPendingEditorOp(eop) && eop.kind == EditorOpKind::SetSetting, "pending numeric set_setting");
+    check(eop.settingKey == "lodBias" && eop.settingIsNumber && eop.settingNumberValue == 2.5, "numeric payload");
+    ed.CompleteEditorOp(eop.requestId, true, "");
+
     // set_setting also on runtime host.
     auto rtSet = rt.Request(R"({"protocolVersion":1,"requestId":5,"runId":"runtime7","verb":"set_setting","key":"spriteCullingEnabled","value":true})");
     check(rtSet["ok"] == true && rtSet["status"] == "queued", "runtime set_setting queues");
@@ -160,9 +183,9 @@ int main() {
     ed.Publish(true, true, "rom/scene/fixture.json", {
         ObservedTarget{"Player", 1, 2, 3}
     }, {}, nullptr, EditorPlayModeKind::Fullscreen);
-    auto obs = ed.Request(R"({"protocolVersion":1,"requestId":21,"runId":"editor7","verb":"observe","target":"Player"})");
+    auto obs = ed.Request(R"({"protocolVersion":1,"requestId":24,"runId":"editor7","verb":"observe","target":"Player"})");
     check(obs["ok"] == true && obs["found"] == true, "observe ok while playing");
-    auto st = ed.Request(R"({"protocolVersion":1,"requestId":22,"runId":"editor7","verb":"status"})");
+    auto st = ed.Request(R"({"protocolVersion":1,"requestId":25,"runId":"editor7","verb":"status"})");
     check(st["playMode"] == "fullscreen", "status reports fullscreen");
 
     // --- Editor bridge quit policy (StopPlay then DestroyWindow; skip unsaved) ---
@@ -178,7 +201,7 @@ int main() {
     }
 
     // Protocol quit still ACKs with receipt (host process exit is WinMain-side).
-    auto quitAck = ed.Request(R"({"protocolVersion":1,"requestId":23,"runId":"editor7","verb":"quit"})");
+    auto quitAck = ed.Request(R"({"protocolVersion":1,"requestId":26,"runId":"editor7","verb":"quit"})");
     check(quitAck["ok"] == true && quitAck["requiresReceipt"] == true, "editor quit ack");
     check(quitAck["requestId"] == 23, "quit echoes requestId");
 

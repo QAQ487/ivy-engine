@@ -7,9 +7,12 @@
 #if defined(IVY_RUNTIME_TEST_BRIDGE_AVAILABLE)
 #include "engine/core/engine_gui.h"
 #include "engine/scene/render_settings.h"
+#include "engine/rendering/culling/cull_settings_math.h"
+#include "engine/rendering/culling/lod_select_math.h"
 #if !defined(GAME_RUNTIME)
 #include "engine/core/engine_gui_internal.h"
 #endif
+#include <cmath>
 #include <string>
 
 bool RuntimeTestEditor_Apply(const ivy::testing::EditorOpRequest& op, std::string& errorOut) {
@@ -73,6 +76,27 @@ bool RuntimeTestEditor_Apply(const ivy::testing::EditorOpRequest& op, std::strin
     }
     case EditorOpKind::SetSetting: {
         RenderSettingsData& rs = RenderSettings_Get();
+        if (op.settingIsNumber) {
+            // Same clamps as the scene loader, so a test cannot push a value the
+            // file format would reject.
+            const float v = static_cast<float>(op.settingNumberValue);
+            if (op.settingKey == "lodBias") {
+                rs.lodBias = lod_select::ClampBias(v);
+            } else if (op.settingKey == "cullDistanceScale") {
+                rs.cullDistanceScale = cull_settings::ClampCullDistanceScale(v);
+            } else if (op.settingKey == "shadowDistance") {
+                rs.shadowDistance = cull_settings::ClampShadowDistanceOverride(v);
+            } else if (op.settingKey == "shadowLodOffset") {
+                rs.shadowLodOffset = lod_select::ClampShadowLodOffset(
+                    static_cast<int>(std::lround(op.settingNumberValue)));
+            } else if (op.settingKey == "effectCullRadius") {
+                rs.effectCullRadius = cull_settings::ClampEffectCullRadius(v);
+            } else {
+                errorOut = "unknown_setting";
+                return false;
+            }
+            return true;
+        }
         if (op.settingKey == "frustumCullingEnabled") {
             rs.frustumCullingEnabled = op.settingBoolValue;
             return true;

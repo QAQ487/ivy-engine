@@ -92,6 +92,18 @@ int main() {
         NormalizeThresholds(nullptr, 3); // must not crash
     }
 
+    // Shadow caster level offset.
+    Expect(ShadowCasterLevel(0, 0, 3) == 0, "offset 0 keeps the camera level");
+    Expect(ShadowCasterLevel(0, 1, 3) == 1, "offset 1 goes one level lower");
+    Expect(ShadowCasterLevel(1, 2, 3) == 3, "offset adds to the camera level");
+    Expect(ShadowCasterLevel(2, 3, 3) == 3, "offset never passes the last level");
+    Expect(ShadowCasterLevel(0, 3, 0) == 0, "no lods -> level 0");
+    Expect(ShadowCasterLevel(kCulled, 2, 3) == kCulled, "culled stays culled");
+    Expect(ShadowCasterLevel(0, -4, 3) == 0, "negative offset clamps to 0");
+    Expect(ShadowCasterLevel(0, 99, 8) == kMaxShadowLodOffset, "offset clamps to the max");
+    Expect(ClampShadowLodOffset(5) == kMaxShadowLodOffset, "clamp high");
+    Expect(ShadowCasterLevel(3, 1, 2) == 3, "camera level above count is not reduced");
+
     if (g_failed) {
         std::fprintf(stderr, "%d check(s) failed\n", g_failed);
         return 1;

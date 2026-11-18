@@ -69,6 +69,9 @@ struct RenderSettingsData {
     // cascade) drew last frame. Animation time still advances. Play / runtime only.
     bool animCullingEnabled = true;
     float lodBias = 1.0f;
+    // Shadow casters use a lower-detail LOD than the camera pass: this many levels lower
+    // (0 = same level, clamped to [0, 3] and to the last available level). Play only.
+    int shadowLodOffset = 0;
     // Multiplies every visual.cullDistance (> 1 keeps objects visible further out, < 1 culls
     // sooner). Clamped to [0.1, 10]. Needs lodEnabled, like cullDistance itself.
     float cullDistanceScale = 1.0f;

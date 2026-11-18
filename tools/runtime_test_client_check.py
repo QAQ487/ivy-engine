@@ -418,7 +418,8 @@ class ClientChecks(unittest.TestCase):
 
     def test_editor_play_client_validation(self):
         from runtime_test_client import (
-            build_play_enter_payload, build_load_scene_payload, build_set_setting_payload, SETTING_KEYS)
+            build_play_enter_payload, build_load_scene_payload, build_set_setting_payload,
+            SETTING_KEYS, NUMERIC_SETTING_KEYS)
         self.assertEqual(build_play_enter_payload(), {})
         self.assertEqual(build_play_enter_payload("viewport"), {"mode": "viewport"})
         self.assertEqual(build_play_enter_payload("fullscreen"), {"mode": "fullscreen"})
@@ -438,6 +439,13 @@ class ClientChecks(unittest.TestCase):
             build_set_setting_payload("frustumCullingEnabled", 1)
         with self.assertRaises(ValueError):
             build_set_setting_payload("frustumCullingEnabled", "true")
+        for key in NUMERIC_SETTING_KEYS:
+            self.assertEqual(build_set_setting_payload(key, 2), {"key": key, "value": 2})
+            self.assertEqual(build_set_setting_payload(key, 0.5), {"key": key, "value": 0.5})
+            for bad in (True, "1", float("nan"), float("inf"), None):
+                with self.subTest(key=key, bad=bad):
+                    with self.assertRaises(ValueError):
+                        build_set_setting_payload(key, bad)
 
     def test_events_client_validation(self):
         from runtime_test_client import validate_events_reply

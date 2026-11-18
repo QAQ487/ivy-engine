@@ -215,6 +215,10 @@ struct EditorOpRequest {
     std::string scenePath;
     std::string settingKey;
     bool settingBoolValue = false;
+    // Numeric settings (lodBias, cullDistanceScale, ...): settingIsNumber is true and the
+    // value is in settingNumberValue; the host clamps it to the setting's range.
+    bool settingIsNumber = false;
+    double settingNumberValue = 0.0;
 };
 
 using EditorOpHandler = bool(*)(const EditorOpRequest& op, std::string& errorOut);
@@ -222,6 +226,8 @@ using EditorOpHandler = bool(*)(const EditorOpRequest& op, std::string& errorOut
 // Pure helpers (unit-tested on Linux offline).
 bool IsRuntimeTestBridgeSettingKey(const std::string& key);
 bool ParseRuntimeTestBridgeSettingValue(const Json& value, bool& outBool, std::string& err);
+bool IsRuntimeTestBridgeNumericSettingKey(const std::string& key);
+bool ParseRuntimeTestBridgeNumericSettingValue(const Json& value, double& outNumber, std::string& err);
 EditorPlayModeKind ParseRuntimeTestBridgePlayMode(const char* mode) noexcept;
 const char* EditorPlayModeKindName(EditorPlayModeKind mode) noexcept;
 

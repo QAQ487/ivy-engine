@@ -5,6 +5,7 @@
 #include "engine/scene/scene_lighting.h"
 #include "engine/rendering/culling/fx_cull.h"
 #include "engine/rendering/culling/cull_settings_math.h"
+#include "engine/rendering/culling/lod_select_math.h"
 #include "engine/rendering/lighting/lighting.h"
 
 std::string ShaderVariantPreviewLabel(Shader3DVariant v) {
@@ -384,6 +385,8 @@ void DrawRenderingSettingsBody() {
         ImGui::TextDisabled("Ortho view-rect; render submit only.");
     }
     ImGui::Checkbox("Mesh LOD (3D)", &rs.lodEnabled);
+    ImGui::SliderInt("Shadow LOD Offset", &rs.shadowLodOffset, 0, lod_select::kMaxShadowLodOffset);
+    ImGui::TextDisabled("Shadow casters use this many LOD levels lower than the camera. 0 = same level.");
     ImGui::SliderFloat("LOD Bias", &rs.lodBias, 0.1f, 10.0f, "%.2f",
         ImGuiSliderFlags_Logarithmic);
     {

@@ -72,4 +72,20 @@ inline int SelectLevel(float distance,
     return level;
 }
 
+constexpr int kMaxShadowLodOffset = 3;
+
+inline int ClampShadowLodOffset(int offset) {
+    return std::min(std::max(offset, 0), kMaxShadowLodOffset);
+}
+
+// Level a shadow caster uses: the camera's level pushed `offset` levels towards lower
+// detail, never past the last level (`count` thresholds describe `count + 1` levels).
+// A culled visual (kCulled) stays culled.
+inline int ShadowCasterLevel(int cameraLevel, int offset, int count) {
+    if (cameraLevel < 0)
+        return cameraLevel;
+    const int last = std::max(count, 0);
+    return std::min(cameraLevel + ClampShadowLodOffset(offset), std::max(last, cameraLevel));
+}
+
 } // namespace lod_select
