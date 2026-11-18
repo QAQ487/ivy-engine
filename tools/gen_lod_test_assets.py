@@ -5,7 +5,8 @@ Everything here is original procedural content (no third-party assets):
 
   testbed/rom/model/lod/Boulder_LOD{0,1,2}.fbx   displaced icosphere rock
   testbed/rom/model/lod/PineTree_LOD{0,1,2}.fbx  stacked-cone pine, trunk + foliage
-  testbed/rom/scene/scene_lod.json               third-person walkable field
+  testbed/rom/scene/scene_lod.json               third-person walkable field (needs SamplePlayerScript)
+  testbed/rom/scene/scene_lod_fly.json           same field, free-fly debug camera, no scripts
 
 The three levels of one object are the same shape (same noise / same tiers, same
 origin at the base) and differ only in facet count, so a LOD switch is a quality
@@ -27,6 +28,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 MODEL_DIR = ROOT / "testbed/rom/model/lod"
 SCENE_PATH = ROOT / "testbed/rom/scene/scene_lod.json"
+FLY_SCENE_PATH = ROOT / "testbed/rom/scene/scene_lod_fly.json"
 
 Vec = tuple
 
@@ -455,7 +457,7 @@ def prop(name, kind, x, z, scale, rot_y, near, far, cull):
             "components": {"SceneTransform": transform(x, 0.0, z, scale, rot_y), "visual": visual}}
 
 
-def build_scene():
+def build_scene(fly):
     rng = random.Random(20261118)
     nodes = [
         {"name": "Directional Light", "tag": 0, "children": [], "components": {
@@ -468,6 +470,9 @@ def build_scene():
                          "meshSizePadding": 0.0, "radius": 0.5, "showDebugCollider": False},
             "SceneTransform": {**transform(0.0, -0.5, 0.0), "scaleX": 200.0, "scaleY": 1.0, "scaleZ": 200.0},
             "visual": {"model": "rom/model/object/Box_Green.fbx", "shader": "standard"}}},
+    ]
+    if not fly:
+        nodes.append(
         {"name": "Player", "tag": 5, "components": {
             "Collider": {"colliderCenter": {"x": 0.0, "y": 0.0, "z": 0.0}, "colliderType": 2,
                          "halfExtents": {"x": 0.5, "y": 0.5, "z": 0.5}, "height": 2.0,
@@ -480,8 +485,7 @@ def build_scene():
                         "animations": {"idle": "rom/model/player/Idle.fbx",
                                        "jump": "rom/model/player/Jump01.fbx",
                                        "run": "rom/model/player/Running.fbx"},
-                        "model": "rom/model/player/Y Bot_white.fbx", "shader": "standard"}}}]},
-    ]
+                        "model": "rom/model/player/Y Bot_white.fbx", "shader": "standard"}}}]})
 
     # Gallery in front of the spawn: the same object forced to LOD0 / LOD1 / LOD2
     # (thresholds 1e6/1e6 -> level 0, 0/1e6 -> level 1, 0/0 -> level 2) so the
@@ -516,19 +520,26 @@ def build_scene():
     scatter(70, "PineTree", 5.0, 8.0, 92.0, (0.8, 1.5), 25.0, 60.0, 100.0, "Pine")
     scatter(28, "Boulder", 6.0, 8.0, 92.0, (1.5, 4.0), 20.0, 45.0, 80.0, "Boulder")
 
-    return {"version": 4,
-            "settings": {"render": {"clearColor": [0.69, 0.77, 0.87, 1.0], "defaultShader": "standard",
-                                    "fogEnabled": False, "shadowQuality": "medium",
-                                    "skyboxCubemap": "rom/skybox/MySkybox.dds", "skyboxEnabled": True,
-                                    "lodEnabled": True, "lodBias": 1.0}},
-            "nodes": nodes, "canvas": {}}
+    settings = {"render": {"clearColor": [0.69, 0.77, 0.87, 1.0], "defaultShader": "standard",
+                           "fogEnabled": False, "shadowQuality": "medium",
+                           "skyboxCubemap": "rom/skybox/MySkybox.dds", "skyboxEnabled": True,
+                           "lodEnabled": True, "lodBias": 1.0}}
+    if fly:
+        # No scripts needed: the free-fly debug camera is the viewer (RMB + WASD, Shift boost).
+        settings["debugCamera"] = {"mode": "fly", "enabledOnPlay": True, "yawDeg": 0.0,
+                                   "pitchDeg": -8.0, "position": {"x": 0.0, "y": 3.0, "z": -8.0}}
+    else:
+        # Third-person follow camera; the target is set by SamplePlayerScript on Player.
+        settings["camera"] = {"mode": "thirdPerson"}
+    return {"version": 4, "settings": settings, "nodes": nodes, "canvas": {}}
 
 
 def main():
     generate_meshes()
-    scene = build_scene()
-    SCENE_PATH.write_text(json.dumps(scene, indent=2) + "\n", encoding="utf-8", newline="\n")
-    print("wrote %s: %d top-level nodes" % (SCENE_PATH.relative_to(ROOT), len(scene["nodes"])))
+    for path, fly in ((SCENE_PATH, False), (FLY_SCENE_PATH, True)):
+        scene = build_scene(fly)
+        path.write_text(json.dumps(scene, indent=2) + "\n", encoding="utf-8", newline="\n")
+        print("wrote %s: %d top-level nodes" % (path.relative_to(ROOT), len(scene["nodes"])))
     return 0
 
 

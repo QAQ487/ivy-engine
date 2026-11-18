@@ -1214,4 +1214,8 @@
       <Filter>engine\core</Filter>
     </ClCompile>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="samples\scripts\SamplePlayerScript.h" />
+    <ClCompile Include="samples\scripts\SamplePlayerScript.cpp" />
+  </ItemGroup>
 </Project>

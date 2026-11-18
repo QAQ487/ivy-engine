@@ -93,7 +93,7 @@ You should get a window (design size **1920×1080**). The editor opens a **conte
 1. Run **IvyEngine**. If a recent external project opens instead, use **File → Open Testbed**. With no recent project, a Debug build opens `testbed/` on its own.
 2. The startup scene is the sample menu inside `testbed/rom/scene/`. Other scenes there cover PBR, panorama sky, 2D sprites, 2D physics and a top-down 2D sample.
 3. Press **F2** (or the toolbar Play button) and click **Play** in the menu to load `scene_sample_playground.json`.
-4. Move with **WASD** / left stick. The testbed has no `GameScripts` of its own: script-driven behavior (for example the spinning box from `SampleSpinScript`) only runs when a script DLL that contains those classes is loaded. Reference scripts live in `samples/scripts/`.
+4. Move with **WASD** / left stick. The testbed has no `GameScripts` of its own: script-driven behavior (for example the spinning box from `SampleSpinScript`) only runs when a script DLL that contains those classes is loaded. The Debug editor and Debug runtime host additionally compile in `SamplePlayerScript` (WASD / jump / third-person camera), so scenes with that player walk without any script build. Reference scripts live in `samples/scripts/`.
 5. Press **F2** again to stop Play mode.
 
 ### Keys to remember
@@ -363,7 +363,7 @@ Always attach this for scene objects you place in the editor.
 | `lods` | Optional list of `{model, maxDistance}`. Level 0 is `model`; each row switches to that mesh at its camera distance (Play / runtime only) |
 | `cullDistance` | Do not draw beyond this camera distance (`0` = never) |
 
-**LOD:** in the Inspector's Visual section use **Add LOD** and drag an FBX/OBJ onto each row; rows stay sorted by distance. Shadows use the same level as the camera pass, levels are ignored while **Animate** is on, and a missing LOD mesh falls back to the base mesh. Keep LOD meshes at the same pivot and scale as the base mesh. Turn **Mesh LOD (3D)** off in Rendering for A/B. Open `scene_lod.json` in the testbed to try it: a walkable pine and boulder field (meshes from `tools/gen_lod_test_assets.py`) with a side-by-side gallery of the three levels in front of the spawn. Walking needs `SamplePlayerScript`, which is only compiled into the Debug runtime host.
+**LOD:** in the Inspector's Visual section use **Add LOD** and drag an FBX/OBJ onto each row; rows stay sorted by distance. Shadows use the same level as the camera pass, levels are ignored while **Animate** is on, and a missing LOD mesh falls back to the base mesh. Keep LOD meshes at the same pivot and scale as the base mesh. Turn **Mesh LOD (3D)** off in Rendering for A/B. Open `scene_lod.json` in the testbed to try it: a walkable pine and boulder field (meshes from `tools/gen_lod_test_assets.py`) with a side-by-side gallery of the three levels in front of the spawn. Walking uses `SamplePlayerScript`, compiled into the Debug editor and Debug runtime host; `scene_lod_fly.json` is the same field with a free-fly camera and needs no script.
 
 From scripts, play a clip with:
 

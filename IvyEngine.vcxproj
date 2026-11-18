@@ -626,4 +626,8 @@ exit /b 0</Command>
   </ItemGroup>
   <ItemGroup><ClCompile Include="engine\ecs\collider_component_serialization.cpp" /></ItemGroup>
   <ItemGroup><ClCompile Include="engine\core\frame_capture.cpp" /></ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="samples\scripts\SamplePlayerScript.h" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
+    <ClCompile Include="samples\scripts\SamplePlayerScript.cpp" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
+  </ItemGroup>
 </Project>

@@ -15,6 +15,9 @@
       "skyboxEnabled": true,
       "lodEnabled": true,
       "lodBias": 1.0
+    },
+    "camera": {
+      "mode": "thirdPerson"
     }
   },
   "nodes": [

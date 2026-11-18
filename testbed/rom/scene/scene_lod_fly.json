@@ -1,0 +1,3533 @@
+{
+  "version": 4,
+  "settings": {
+    "render": {
+      "clearColor": [
+        0.69,
+        0.77,
+        0.87,
+        1.0
+      ],
+      "defaultShader": "standard",
+      "fogEnabled": false,
+      "shadowQuality": "medium",
+      "skyboxCubemap": "rom/skybox/MySkybox.dds",
+      "skyboxEnabled": true,
+      "lodEnabled": true,
+      "lodBias": 1.0
+    },
+    "debugCamera": {
+      "mode": "fly",
+      "enabledOnPlay": true,
+      "yawDeg": 0.0,
+      "pitchDeg": -8.0,
+      "position": {
+        "x": 0.0,
+        "y": 3.0,
+        "z": -8.0
+      }
+    }
+  },
+  "nodes": [
+    {
+      "name": "Directional Light",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 0.0,
+          "posY": 10.0,
+          "posZ": 0.0,
+          "rotX": 50.0,
+          "rotY": -35.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "DirectionalLight": {
+          "enabled": true,
+          "castShadows": true,
+          "color": [
+            1.0,
+            0.97,
+            0.92
+          ],
+          "intensity": 1.1,
+          "specColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "specPower": 32.0
+        }
+      }
+    },
+    {
+      "name": "Ground",
+      "tag": 2,
+      "children": [],
+      "components": {
+        "Collider": {
+          "colliderCenter": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "colliderType": 1,
+          "halfExtents": {
+            "x": 100.0,
+            "y": 0.5,
+            "z": 100.0
+          },
+          "height": 1.0,
+          "meshSizePadding": 0.0,
+          "radius": 0.5,
+          "showDebugCollider": false
+        },
+        "SceneTransform": {
+          "posX": 0.0,
+          "posY": -0.5,
+          "posZ": 0.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 200.0,
+          "scaleY": 1.0,
+          "scaleZ": 200.0
+        },
+        "visual": {
+          "model": "rom/model/object/Box_Green.fbx",
+          "shader": "standard"
+        }
+      }
+    },
+    {
+      "name": "Gallery Pine LOD0 (forced)",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -6.0,
+          "posY": 0.0,
+          "posZ": 11.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/PineTree_LOD1.fbx",
+              "maxDistance": 1000000.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 1000000.0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Gallery Boulder LOD0 (forced)",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -6.0,
+          "posY": 0.0,
+          "posZ": 19.0,
+          "rotX": 0.0,
+          "rotY": 30.0,
+          "rotZ": 0.0,
+          "scaleX": 2.5,
+          "scaleY": 2.5,
+          "scaleZ": 2.5
+        },
+        "visual": {
+          "model": "rom/model/lod/Boulder_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/Boulder_LOD1.fbx",
+              "maxDistance": 1000000.0
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD2.fbx",
+              "maxDistance": 1000000.0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Gallery Pine LOD1 (forced)",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 0.0,
+          "posY": 0.0,
+          "posZ": 11.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/PineTree_LOD1.fbx",
+              "maxDistance": 0.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 1000000.0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Gallery Boulder LOD1 (forced)",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 0.0,
+          "posY": 0.0,
+          "posZ": 19.0,
+          "rotX": 0.0,
+          "rotY": 30.0,
+          "rotZ": 0.0,
+          "scaleX": 2.5,
+          "scaleY": 2.5,
+          "scaleZ": 2.5
+        },
+        "visual": {
+          "model": "rom/model/lod/Boulder_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/Boulder_LOD1.fbx",
+              "maxDistance": 0.0
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD2.fbx",
+              "maxDistance": 1000000.0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Gallery Pine LOD2 (forced)",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 6.0,
+          "posY": 0.0,
+          "posZ": 11.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/PineTree_LOD1.fbx",
+              "maxDistance": 0.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 0.0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Gallery Boulder LOD2 (forced)",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 6.0,
+          "posY": 0.0,
+          "posZ": 19.0,
+          "rotX": 0.0,
+          "rotY": 30.0,
+          "rotZ": 0.0,
+          "scaleX": 2.5,
+          "scaleY": 2.5,
+          "scaleZ": 2.5
+        },
+        "visual": {
+          "model": "rom/model/lod/Boulder_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/Boulder_LOD1.fbx",
+              "maxDistance": 0.0
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD2.fbx",
+              "maxDistance": 0.0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Pine 01",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 68.278,
+          "posY": 0.0,
+          "posZ": -48.784,
+          "rotX": 0.0,
+          "rotY": 16.369,
+          "rotZ": 0.0,
+          "scaleX": 1.04,
+          "scaleY": 1.04,
+          "scaleZ": 1.04
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/PineTree_LOD1.fbx",
+              "maxDistance": 25.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 60.0
+            }
+          ],
+          "cullDistance": 100.0
+        }
+      }
+    },
+    {
+      "name": "Pine 02",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 56.788,
+          "posY": 0.0,
+          "posZ": 6.483,
+          "rotX": 0.0,
+          "rotY": 152.463,
+          "rotZ": 0.0,
+          "scaleX": 1.15,
+          "scaleY": 1.15,
+          "scaleZ": 1.15
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/PineTree_LOD1.fbx",
+              "maxDistance": 25.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 60.0
+            }
+          ],
+          "cullDistance": 100.0
+        }
+      }
+    },
+    {
+      "name": "Pine 03",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 38.539,
+          "posY": 0.0,
+          "posZ": 65.324,
+          "rotX": 0.0,
+          "rotY": 356.785,
+          "rotZ": 0.0,
+          "scaleX": 0.8,
+          "scaleY": 0.8,
+          "scaleZ": 0.8
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/PineTree_LOD1.fbx",
+              "maxDistance": 25.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 60.0
+            }
+          ],
+          "cullDistance": 100.0
+        }
+      }
+    },
+    {
+      "name": "Pine 04",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 10.211,
+          "posY": 0.0,
+          "posZ": 3.569,
+          "rotX": 0.0,
+          "rotY": 267.64,
+          "rotZ": 0.0,
+          "scaleX": 0.99,
+          "scaleY": 0.99,
+          "scaleZ": 0.99
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/PineTree_LOD1.fbx",
+              "maxDistance": 25.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 60.0
+            }
+          ],
+          "cullDistance": 100.0
+        }
+      }
+    },
+    {
+      "name": "Pine 05",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -79.889,
+          "posY": 0.0,
+          "posZ": -37.605,
+          "rotX": 0.0,
+          "rotY": 51.892,
+          "rotZ": 0.0,
+          "scaleX": 0.95,
+          "scaleY": 0.95,
+          "scaleZ": 0.95
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/PineTree_LOD1.fbx",
+              "maxDistance": 25.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 60.0
+            }
+          ],
+          "cullDistance": 100.0
+        }
+      }
+    },
+    {
+      "name": "Pine 06",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -26.897,
+          "posY": 0.0,
+          "posZ": -15.493,
+          "rotX": 0.0,
+          "rotY": 18.454,
+          "rotZ": 0.0,
+          "scaleX": 1.1,
+          "scaleY": 1.1,
+          "scaleZ": 1.1
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/PineTree_LOD1.fbx",
+              "maxDistance": 25.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 60.0
+            }
+          ],
+          "cullDistance": 100.0
+        }
+      }
+    },
+    {
+      "name": "Pine 07",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 32.019,
+          "posY": 0.0,
+          "posZ": -23.562,
+          "rotX": 0.0,
+          "rotY": 201.646,
+          "rotZ": 0.0,
+          "scaleX": 1.37,
+          "scaleY": 1.37,
+          "scaleZ": 1.37
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/PineTree_LOD1.fbx",
+              "maxDistance": 25.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 60.0
+            }
+          ],
+          "cullDistance": 100.0
+        }
+      }
+    },
+    {
+      "name": "Pine 08",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 32.925,
+          "posY": 0.0,
+          "posZ": -16.343,
+          "rotX": 0.0,
+          "rotY": 135.294,
+          "rotZ": 0.0,
+          "scaleX": 1.08,
+          "scaleY": 1.08,
+          "scaleZ": 1.08
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/PineTree_LOD1.fbx",
+              "maxDistance": 25.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 60.0
+            }
+          ],
+          "cullDistance": 100.0
+        }
+      }
+    },
+    {
+      "name": "Pine 09",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -4.454,
+          "posY": 0.0,
+          "posZ": -22.948,
+          "rotX": 0.0,
+          "rotY": 106.477,
+          "rotZ": 0.0,
+          "scaleX": 1.3,
+          "scaleY": 1.3,
+          "scaleZ": 1.3
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/PineTree_LOD1.fbx",
+              "maxDistance": 25.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 60.0
+            }
+          ],
+          "cullDistance": 100.0
+        }
+      }
+    },
+    {
+      "name": "Pine 10",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -62.423,
+          "posY": 0.0,
+          "posZ": -43.303,
+          "rotX": 0.0,
+          "rotY": 239.085,
+          "rotZ": 0.0,
+          "scaleX": 1.06,
+          "scaleY": 1.06,
+          "scaleZ": 1.06
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/PineTree_LOD1.fbx",
+              "maxDistance": 25.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 60.0
+            }
+          ],
+          "cullDistance": 100.0
+        }
+      }
+    },
+    {
+      "name": "Pine 11",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -38.749,
+          "posY": 0.0,
+          "posZ": 28.767,
+          "rotX": 0.0,
+          "rotY": 287.273,
+          "rotZ": 0.0,
+          "scaleX": 1.29,
+          "scaleY": 1.29,
+          "scaleZ": 1.29
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/PineTree_LOD1.fbx",
+              "maxDistance": 25.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 60.0
+            }
+          ],
+          "cullDistance": 100.0
+        }
+      }
+    },
+    {
+      "name": "Pine 12",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 3.858,
+          "posY": 0.0,
+          "posZ": -31.302,
+          "rotX": 0.0,
+          "rotY": 203.066,
+          "rotZ": 0.0,
+          "scaleX": 0.94,
+          "scaleY": 0.94,
+          "scaleZ": 0.94
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/PineTree_LOD1.fbx",
+              "maxDistance": 25.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 60.0
+            }
+          ],
+          "cullDistance": 100.0
+        }
+      }
+    },
+    {
+      "name": "Pine 13",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 31.645,
+          "posY": 0.0,
+          "posZ": -52.041,
+          "rotX": 0.0,
+          "rotY": 225.552,
+          "rotZ": 0.0,
+          "scaleX": 1.42,
+          "scaleY": 1.42,
+          "scaleZ": 1.42
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/PineTree_LOD1.fbx",
+              "maxDistance": 25.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 60.0
+            }
+          ],
+          "cullDistance": 100.0
+        }
+      }
+    },
+    {
+      "name": "Pine 14",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -23.055,
+          "posY": 0.0,
+          "posZ": -9.228,
+          "rotX": 0.0,
+          "rotY": 87.0,
+          "rotZ": 0.0,
+          "scaleX": 1.32,
+          "scaleY": 1.32,
+          "scaleZ": 1.32
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/PineTree_LOD1.fbx",
+              "maxDistance": 25.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 60.0
+            }
+          ],
+          "cullDistance": 100.0
+        }
+      }
+    },
+    {
+      "name": "Pine 15",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -66.003,
+          "posY": 0.0,
+          "posZ": 14.167,
+          "rotX": 0.0,
+          "rotY": 345.024,
+          "rotZ": 0.0,
+          "scaleX": 0.99,
+          "scaleY": 0.99,
+          "scaleZ": 0.99
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/PineTree_LOD1.fbx",
+              "maxDistance": 25.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 60.0
+            }
+          ],
+          "cullDistance": 100.0
+        }
+      }
+    },
+    {
+      "name": "Pine 16",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 33.935,
+          "posY": 0.0,
+          "posZ": 22.436,
+          "rotX": 0.0,
+          "rotY": 15.279,
+          "rotZ": 0.0,
+          "scaleX": 0.84,
+          "scaleY": 0.84,
+          "scaleZ": 0.84
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/PineTree_LOD1.fbx",
+              "maxDistance": 25.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 60.0
+            }
+          ],
+          "cullDistance": 100.0
+        }
+      }
+    },
+    {
+      "name": "Pine 17",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 37.862,
+          "posY": 0.0,
+          "posZ": 29.242,
+          "rotX": 0.0,
+          "rotY": 137.85,
+          "rotZ": 0.0,
+          "scaleX": 1.18,
+          "scaleY": 1.18,
+          "scaleZ": 1.18
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/PineTree_LOD1.fbx",
+              "maxDistance": 25.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 60.0
+            }
+          ],
+          "cullDistance": 100.0
+        }
+      }
+    },
+    {
+      "name": "Pine 18",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -25.973,
+          "posY": 0.0,
+          "posZ": -75.164,
+          "rotX": 0.0,
+          "rotY": 298.904,
+          "rotZ": 0.0,
+          "scaleX": 0.87,
+          "scaleY": 0.87,
+          "scaleZ": 0.87
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/PineTree_LOD1.fbx",
+              "maxDistance": 25.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 60.0
+            }
+          ],
+          "cullDistance": 100.0
+        }
+      }
+    },
+    {
+      "name": "Pine 19",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 40.201,
+          "posY": 0.0,
+          "posZ": 72.568,
+          "rotX": 0.0,
+          "rotY": 172.831,
+          "rotZ": 0.0,
+          "scaleX": 0.83,
+          "scaleY": 0.83,
+          "scaleZ": 0.83
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/PineTree_LOD1.fbx",
+              "maxDistance": 25.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 60.0
+            }
+          ],
+          "cullDistance": 100.0
+        }
+      }
+    },
+    {
+      "name": "Pine 20",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -34.112,
+          "posY": 0.0,
+          "posZ": 10.819,
+          "rotX": 0.0,
+          "rotY": 342.075,
+          "rotZ": 0.0,
+          "scaleX": 1.49,
+          "scaleY": 1.49,
+          "scaleZ": 1.49
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/PineTree_LOD1.fbx",
+              "maxDistance": 25.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 60.0
+            }
+          ],
+          "cullDistance": 100.0
+        }
+      }
+    },
+    {
+      "name": "Pine 21",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -26.814,
+          "posY": 0.0,
+          "posZ": 78.772,
+          "rotX": 0.0,
+          "rotY": 125.687,
+          "rotZ": 0.0,
+          "scaleX": 0.99,
+          "scaleY": 0.99,
+          "scaleZ": 0.99
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/PineTree_LOD1.fbx",
+              "maxDistance": 25.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 60.0
+            }
+          ],
+          "cullDistance": 100.0
+        }
+      }
+    },
+    {
+      "name": "Pine 22",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 34.97,
+          "posY": 0.0,
+          "posZ": -70.303,
+          "rotX": 0.0,
+          "rotY": 121.569,
+          "rotZ": 0.0,
+          "scaleX": 0.82,
+          "scaleY": 0.82,
+          "scaleZ": 0.82
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/PineTree_LOD1.fbx",
+              "maxDistance": 25.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 60.0
+            }
+          ],
+          "cullDistance": 100.0
+        }
+      }
+    },
+    {
+      "name": "Pine 23",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -60.83,
+          "posY": 0.0,
+          "posZ": -33.442,
+          "rotX": 0.0,
+          "rotY": 67.6,
+          "rotZ": 0.0,
+          "scaleX": 1.13,
+          "scaleY": 1.13,
+          "scaleZ": 1.13
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/PineTree_LOD1.fbx",
+              "maxDistance": 25.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 60.0
+            }
+          ],
+          "cullDistance": 100.0
+        }
+      }
+    },
+    {
+      "name": "Pine 24",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -26.141,
+          "posY": 0.0,
+          "posZ": 36.371,
+          "rotX": 0.0,
+          "rotY": 97.624,
+          "rotZ": 0.0,
+          "scaleX": 0.9,
+          "scaleY": 0.9,
+          "scaleZ": 0.9
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/PineTree_LOD1.fbx",
+              "maxDistance": 25.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 60.0
+            }
+          ],
+          "cullDistance": 100.0
+        }
+      }
+    },
+    {
+      "name": "Pine 25",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -56.917,
+          "posY": 0.0,
+          "posZ": -50.523,
+          "rotX": 0.0,
+          "rotY": 151.483,
+          "rotZ": 0.0,
+          "scaleX": 1.17,
+          "scaleY": 1.17,
+          "scaleZ": 1.17
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/PineTree_LOD1.fbx",
+              "maxDistance": 25.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 60.0
+            }
+          ],
+          "cullDistance": 100.0
+        }
+      }
+    },
+    {
+      "name": "Pine 26",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -47.347,
+          "posY": 0.0,
+          "posZ": -42.55,
+          "rotX": 0.0,
+          "rotY": 345.245,
+          "rotZ": 0.0,
+          "scaleX": 1.38,
+          "scaleY": 1.38,
+          "scaleZ": 1.38
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/PineTree_LOD1.fbx",
+              "maxDistance": 25.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 60.0
+            }
+          ],
+          "cullDistance": 100.0
+        }
+      }
+    },
+    {
+      "name": "Pine 27",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 52.043,
+          "posY": 0.0,
+          "posZ": 69.168,
+          "rotX": 0.0,
+          "rotY": 312.046,
+          "rotZ": 0.0,
+          "scaleX": 1.19,
+          "scaleY": 1.19,
+          "scaleZ": 1.19
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/PineTree_LOD1.fbx",
+              "maxDistance": 25.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 60.0
+            }
+          ],
+          "cullDistance": 100.0
+        }
+      }
+    },
+    {
+      "name": "Pine 28",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 28.413,
+          "posY": 0.0,
+          "posZ": 51.741,
+          "rotX": 0.0,
+          "rotY": 220.891,
+          "rotZ": 0.0,
+          "scaleX": 0.98,
+          "scaleY": 0.98,
+          "scaleZ": 0.98
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/PineTree_LOD1.fbx",
+              "maxDistance": 25.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 60.0
+            }
+          ],
+          "cullDistance": 100.0
+        }
+      }
+    },
+    {
+      "name": "Pine 29",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -36.8,
+          "posY": 0.0,
+          "posZ": 36.267,
+          "rotX": 0.0,
+          "rotY": 336.61,
+          "rotZ": 0.0,
+          "scaleX": 1.18,
+          "scaleY": 1.18,
+          "scaleZ": 1.18
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/PineTree_LOD1.fbx",
+              "maxDistance": 25.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 60.0
+            }
+          ],
+          "cullDistance": 100.0
+        }
+      }
+    },
+    {
+      "name": "Pine 30",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -35.885,
+          "posY": 0.0,
+          "posZ": 65.825,
+          "rotX": 0.0,
+          "rotY": 37.824,
+          "rotZ": 0.0,
+          "scaleX": 1.47,
+          "scaleY": 1.47,
+          "scaleZ": 1.47
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/PineTree_LOD1.fbx",
+              "maxDistance": 25.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 60.0
+            }
+          ],
+          "cullDistance": 100.0
+        }
+      }
+    },
+    {
+      "name": "Pine 31",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -43.669,
+          "posY": 0.0,
+          "posZ": 7.875,
+          "rotX": 0.0,
+          "rotY": 325.239,
+          "rotZ": 0.0,
+          "scaleX": 1.45,
+          "scaleY": 1.45,
+          "scaleZ": 1.45
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/PineTree_LOD1.fbx",
+              "maxDistance": 25.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 60.0
+            }
+          ],
+          "cullDistance": 100.0
+        }
+      }
+    },
+    {
+      "name": "Pine 32",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 18.738,
+          "posY": 0.0,
+          "posZ": 75.471,
+          "rotX": 0.0,
+          "rotY": 43.606,
+          "rotZ": 0.0,
+          "scaleX": 1.17,
+          "scaleY": 1.17,
+          "scaleZ": 1.17
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/PineTree_LOD1.fbx",
+              "maxDistance": 25.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 60.0
+            }
+          ],
+          "cullDistance": 100.0
+        }
+      }
+    },
+    {
+      "name": "Pine 33",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -56.372,
+          "posY": 0.0,
+          "posZ": 43.469,
+          "rotX": 0.0,
+          "rotY": 193.817,
+          "rotZ": 0.0,
+          "scaleX": 1.09,
+          "scaleY": 1.09,
+          "scaleZ": 1.09
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/PineTree_LOD1.fbx",
+              "maxDistance": 25.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 60.0
+            }
+          ],
+          "cullDistance": 100.0
+        }
+      }
+    },
+    {
+      "name": "Pine 34",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -36.314,
+          "posY": 0.0,
+          "posZ": -78.517,
+          "rotX": 0.0,
+          "rotY": 173.97,
+          "rotZ": 0.0,
+          "scaleX": 1.44,
+          "scaleY": 1.44,
+          "scaleZ": 1.44
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/PineTree_LOD1.fbx",
+              "maxDistance": 25.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 60.0
+            }
+          ],
+          "cullDistance": 100.0
+        }
+      }
+    },
+    {
+      "name": "Pine 35",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -37.289,
+          "posY": 0.0,
+          "posZ": -0.723,
+          "rotX": 0.0,
+          "rotY": 313.97,
+          "rotZ": 0.0,
+          "scaleX": 0.92,
+          "scaleY": 0.92,
+          "scaleZ": 0.92
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/PineTree_LOD1.fbx",
+              "maxDistance": 25.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 60.0
+            }
+          ],
+          "cullDistance": 100.0
+        }
+      }
+    },
+    {
+      "name": "Pine 36",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -5.149,
+          "posY": 0.0,
+          "posZ": -70.055,
+          "rotX": 0.0,
+          "rotY": 282.847,
+          "rotZ": 0.0,
+          "scaleX": 0.88,
+          "scaleY": 0.88,
+          "scaleZ": 0.88
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/PineTree_LOD1.fbx",
+              "maxDistance": 25.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 60.0
+            }
+          ],
+          "cullDistance": 100.0
+        }
+      }
+    },
+    {
+      "name": "Pine 37",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 78.948,
+          "posY": 0.0,
+          "posZ": -9.541,
+          "rotX": 0.0,
+          "rotY": 143.358,
+          "rotZ": 0.0,
+          "scaleX": 0.87,
+          "scaleY": 0.87,
+          "scaleZ": 0.87
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/PineTree_LOD1.fbx",
+              "maxDistance": 25.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 60.0
+            }
+          ],
+          "cullDistance": 100.0
+        }
+      }
+    },
+    {
+      "name": "Pine 38",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -56.091,
+          "posY": 0.0,
+          "posZ": -61.254,
+          "rotX": 0.0,
+          "rotY": 137.499,
+          "rotZ": 0.0,
+          "scaleX": 1.17,
+          "scaleY": 1.17,
+          "scaleZ": 1.17
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/PineTree_LOD1.fbx",
+              "maxDistance": 25.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 60.0
+            }
+          ],
+          "cullDistance": 100.0
+        }
+      }
+    },
+    {
+      "name": "Pine 39",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 12.265,
+          "posY": 0.0,
+          "posZ": 22.63,
+          "rotX": 0.0,
+          "rotY": 252.85,
+          "rotZ": 0.0,
+          "scaleX": 1.12,
+          "scaleY": 1.12,
+          "scaleZ": 1.12
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/PineTree_LOD1.fbx",
+              "maxDistance": 25.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 60.0
+            }
+          ],
+          "cullDistance": 100.0
+        }
+      }
+    },
+    {
+      "name": "Pine 40",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -27.754,
+          "posY": 0.0,
+          "posZ": -67.749,
+          "rotX": 0.0,
+          "rotY": 29.729,
+          "rotZ": 0.0,
+          "scaleX": 0.92,
+          "scaleY": 0.92,
+          "scaleZ": 0.92
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/PineTree_LOD1.fbx",
+              "maxDistance": 25.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 60.0
+            }
+          ],
+          "cullDistance": 100.0
+        }
+      }
+    },
+    {
+      "name": "Pine 41",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -54.197,
+          "posY": 0.0,
+          "posZ": -13.324,
+          "rotX": 0.0,
+          "rotY": 153.215,
+          "rotZ": 0.0,
+          "scaleX": 0.82,
+          "scaleY": 0.82,
+          "scaleZ": 0.82
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/PineTree_LOD1.fbx",
+              "maxDistance": 25.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 60.0
+            }
+          ],
+          "cullDistance": 100.0
+        }
+      }
+    },
+    {
+      "name": "Pine 42",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 13.932,
+          "posY": 0.0,
+          "posZ": -76.943,
+          "rotX": 0.0,
+          "rotY": 327.808,
+          "rotZ": 0.0,
+          "scaleX": 1.32,
+          "scaleY": 1.32,
+          "scaleZ": 1.32
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/PineTree_LOD1.fbx",
+              "maxDistance": 25.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 60.0
+            }
+          ],
+          "cullDistance": 100.0
+        }
+      }
+    },
+    {
+      "name": "Pine 43",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 67.331,
+          "posY": 0.0,
+          "posZ": 37.249,
+          "rotX": 0.0,
+          "rotY": 52.05,
+          "rotZ": 0.0,
+          "scaleX": 1.5,
+          "scaleY": 1.5,
+          "scaleZ": 1.5
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/PineTree_LOD1.fbx",
+              "maxDistance": 25.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 60.0
+            }
+          ],
+          "cullDistance": 100.0
+        }
+      }
+    },
+    {
+      "name": "Pine 44",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -32.488,
+          "posY": 0.0,
+          "posZ": -11.046,
+          "rotX": 0.0,
+          "rotY": 269.084,
+          "rotZ": 0.0,
+          "scaleX": 1.15,
+          "scaleY": 1.15,
+          "scaleZ": 1.15
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/PineTree_LOD1.fbx",
+              "maxDistance": 25.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 60.0
+            }
+          ],
+          "cullDistance": 100.0
+        }
+      }
+    },
+    {
+      "name": "Pine 45",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -54.493,
+          "posY": 0.0,
+          "posZ": -29.48,
+          "rotX": 0.0,
+          "rotY": 25.417,
+          "rotZ": 0.0,
+          "scaleX": 1.43,
+          "scaleY": 1.43,
+          "scaleZ": 1.43
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/PineTree_LOD1.fbx",
+              "maxDistance": 25.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 60.0
+            }
+          ],
+          "cullDistance": 100.0
+        }
+      }
+    },
+    {
+      "name": "Pine 46",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -14.066,
+          "posY": 0.0,
+          "posZ": 23.396,
+          "rotX": 0.0,
+          "rotY": 111.878,
+          "rotZ": 0.0,
+          "scaleX": 0.83,
+          "scaleY": 0.83,
+          "scaleZ": 0.83
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/PineTree_LOD1.fbx",
+              "maxDistance": 25.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 60.0
+            }
+          ],
+          "cullDistance": 100.0
+        }
+      }
+    },
+    {
+      "name": "Pine 47",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 62.425,
+          "posY": 0.0,
+          "posZ": -57.987,
+          "rotX": 0.0,
+          "rotY": 342.852,
+          "rotZ": 0.0,
+          "scaleX": 0.97,
+          "scaleY": 0.97,
+          "scaleZ": 0.97
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/PineTree_LOD1.fbx",
+              "maxDistance": 25.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 60.0
+            }
+          ],
+          "cullDistance": 100.0
+        }
+      }
+    },
+    {
+      "name": "Pine 48",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 0.746,
+          "posY": 0.0,
+          "posZ": -24.455,
+          "rotX": 0.0,
+          "rotY": 140.627,
+          "rotZ": 0.0,
+          "scaleX": 1.16,
+          "scaleY": 1.16,
+          "scaleZ": 1.16
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/PineTree_LOD1.fbx",
+              "maxDistance": 25.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 60.0
+            }
+          ],
+          "cullDistance": 100.0
+        }
+      }
+    },
+    {
+      "name": "Pine 49",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 53.436,
+          "posY": 0.0,
+          "posZ": 33.389,
+          "rotX": 0.0,
+          "rotY": 148.313,
+          "rotZ": 0.0,
+          "scaleX": 1.43,
+          "scaleY": 1.43,
+          "scaleZ": 1.43
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/PineTree_LOD1.fbx",
+              "maxDistance": 25.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 60.0
+            }
+          ],
+          "cullDistance": 100.0
+        }
+      }
+    },
+    {
+      "name": "Pine 50",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -10.249,
+          "posY": 0.0,
+          "posZ": 4.193,
+          "rotX": 0.0,
+          "rotY": 58.351,
+          "rotZ": 0.0,
+          "scaleX": 1.01,
+          "scaleY": 1.01,
+          "scaleZ": 1.01
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/PineTree_LOD1.fbx",
+              "maxDistance": 25.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 60.0
+            }
+          ],
+          "cullDistance": 100.0
+        }
+      }
+    },
+    {
+      "name": "Pine 51",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 63.484,
+          "posY": 0.0,
+          "posZ": 17.337,
+          "rotX": 0.0,
+          "rotY": 245.461,
+          "rotZ": 0.0,
+          "scaleX": 1.28,
+          "scaleY": 1.28,
+          "scaleZ": 1.28
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/PineTree_LOD1.fbx",
+              "maxDistance": 25.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 60.0
+            }
+          ],
+          "cullDistance": 100.0
+        }
+      }
+    },
+    {
+      "name": "Pine 52",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 28.01,
+          "posY": 0.0,
+          "posZ": 61.82,
+          "rotX": 0.0,
+          "rotY": 325.865,
+          "rotZ": 0.0,
+          "scaleX": 1.03,
+          "scaleY": 1.03,
+          "scaleZ": 1.03
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/PineTree_LOD1.fbx",
+              "maxDistance": 25.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 60.0
+            }
+          ],
+          "cullDistance": 100.0
+        }
+      }
+    },
+    {
+      "name": "Pine 53",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -12.264,
+          "posY": 0.0,
+          "posZ": -86.015,
+          "rotX": 0.0,
+          "rotY": 148.598,
+          "rotZ": 0.0,
+          "scaleX": 1.29,
+          "scaleY": 1.29,
+          "scaleZ": 1.29
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/PineTree_LOD1.fbx",
+              "maxDistance": 25.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 60.0
+            }
+          ],
+          "cullDistance": 100.0
+        }
+      }
+    },
+    {
+      "name": "Pine 54",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -79.06,
+          "posY": 0.0,
+          "posZ": -25.732,
+          "rotX": 0.0,
+          "rotY": 303.852,
+          "rotZ": 0.0,
+          "scaleX": 0.8,
+          "scaleY": 0.8,
+          "scaleZ": 0.8
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/PineTree_LOD1.fbx",
+              "maxDistance": 25.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 60.0
+            }
+          ],
+          "cullDistance": 100.0
+        }
+      }
+    },
+    {
+      "name": "Pine 55",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 75.037,
+          "posY": 0.0,
+          "posZ": -21.657,
+          "rotX": 0.0,
+          "rotY": 63.572,
+          "rotZ": 0.0,
+          "scaleX": 1.41,
+          "scaleY": 1.41,
+          "scaleZ": 1.41
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/PineTree_LOD1.fbx",
+              "maxDistance": 25.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 60.0
+            }
+          ],
+          "cullDistance": 100.0
+        }
+      }
+    },
+    {
+      "name": "Pine 56",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 22.607,
+          "posY": 0.0,
+          "posZ": -52.056,
+          "rotX": 0.0,
+          "rotY": 7.419,
+          "rotZ": 0.0,
+          "scaleX": 1.43,
+          "scaleY": 1.43,
+          "scaleZ": 1.43
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/PineTree_LOD1.fbx",
+              "maxDistance": 25.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 60.0
+            }
+          ],
+          "cullDistance": 100.0
+        }
+      }
+    },
+    {
+      "name": "Pine 57",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 9.871,
+          "posY": 0.0,
+          "posZ": 32.33,
+          "rotX": 0.0,
+          "rotY": 59.278,
+          "rotZ": 0.0,
+          "scaleX": 1.14,
+          "scaleY": 1.14,
+          "scaleZ": 1.14
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/PineTree_LOD1.fbx",
+              "maxDistance": 25.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 60.0
+            }
+          ],
+          "cullDistance": 100.0
+        }
+      }
+    },
+    {
+      "name": "Pine 58",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 42.416,
+          "posY": 0.0,
+          "posZ": -63.931,
+          "rotX": 0.0,
+          "rotY": 39.661,
+          "rotZ": 0.0,
+          "scaleX": 1.25,
+          "scaleY": 1.25,
+          "scaleZ": 1.25
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/PineTree_LOD1.fbx",
+              "maxDistance": 25.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 60.0
+            }
+          ],
+          "cullDistance": 100.0
+        }
+      }
+    },
+    {
+      "name": "Pine 59",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 60.513,
+          "posY": 0.0,
+          "posZ": -26.547,
+          "rotX": 0.0,
+          "rotY": 54.456,
+          "rotZ": 0.0,
+          "scaleX": 1.19,
+          "scaleY": 1.19,
+          "scaleZ": 1.19
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/PineTree_LOD1.fbx",
+              "maxDistance": 25.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 60.0
+            }
+          ],
+          "cullDistance": 100.0
+        }
+      }
+    },
+    {
+      "name": "Pine 60",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -78.363,
+          "posY": 0.0,
+          "posZ": 11.009,
+          "rotX": 0.0,
+          "rotY": 98.692,
+          "rotZ": 0.0,
+          "scaleX": 1.05,
+          "scaleY": 1.05,
+          "scaleZ": 1.05
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/PineTree_LOD1.fbx",
+              "maxDistance": 25.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 60.0
+            }
+          ],
+          "cullDistance": 100.0
+        }
+      }
+    },
+    {
+      "name": "Pine 61",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -82.533,
+          "posY": 0.0,
+          "posZ": 33.696,
+          "rotX": 0.0,
+          "rotY": 206.611,
+          "rotZ": 0.0,
+          "scaleX": 1.4,
+          "scaleY": 1.4,
+          "scaleZ": 1.4
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/PineTree_LOD1.fbx",
+              "maxDistance": 25.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 60.0
+            }
+          ],
+          "cullDistance": 100.0
+        }
+      }
+    },
+    {
+      "name": "Pine 62",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 44.548,
+          "posY": 0.0,
+          "posZ": -20.479,
+          "rotX": 0.0,
+          "rotY": 276.604,
+          "rotZ": 0.0,
+          "scaleX": 1.02,
+          "scaleY": 1.02,
+          "scaleZ": 1.02
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/PineTree_LOD1.fbx",
+              "maxDistance": 25.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 60.0
+            }
+          ],
+          "cullDistance": 100.0
+        }
+      }
+    },
+    {
+      "name": "Pine 63",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -49.382,
+          "posY": 0.0,
+          "posZ": 66.834,
+          "rotX": 0.0,
+          "rotY": 175.343,
+          "rotZ": 0.0,
+          "scaleX": 1.25,
+          "scaleY": 1.25,
+          "scaleZ": 1.25
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/PineTree_LOD1.fbx",
+              "maxDistance": 25.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 60.0
+            }
+          ],
+          "cullDistance": 100.0
+        }
+      }
+    },
+    {
+      "name": "Pine 64",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -17.048,
+          "posY": 0.0,
+          "posZ": -19.228,
+          "rotX": 0.0,
+          "rotY": 142.359,
+          "rotZ": 0.0,
+          "scaleX": 0.94,
+          "scaleY": 0.94,
+          "scaleZ": 0.94
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/PineTree_LOD1.fbx",
+              "maxDistance": 25.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 60.0
+            }
+          ],
+          "cullDistance": 100.0
+        }
+      }
+    },
+    {
+      "name": "Pine 65",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 42.779,
+          "posY": 0.0,
+          "posZ": -75.336,
+          "rotX": 0.0,
+          "rotY": 33.377,
+          "rotZ": 0.0,
+          "scaleX": 1.35,
+          "scaleY": 1.35,
+          "scaleZ": 1.35
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/PineTree_LOD1.fbx",
+              "maxDistance": 25.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 60.0
+            }
+          ],
+          "cullDistance": 100.0
+        }
+      }
+    },
+    {
+      "name": "Pine 66",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -40.935,
+          "posY": 0.0,
+          "posZ": 50.477,
+          "rotX": 0.0,
+          "rotY": 96.052,
+          "rotZ": 0.0,
+          "scaleX": 1.41,
+          "scaleY": 1.41,
+          "scaleZ": 1.41
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/PineTree_LOD1.fbx",
+              "maxDistance": 25.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 60.0
+            }
+          ],
+          "cullDistance": 100.0
+        }
+      }
+    },
+    {
+      "name": "Pine 67",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -74.018,
+          "posY": 0.0,
+          "posZ": 27.007,
+          "rotX": 0.0,
+          "rotY": 117.659,
+          "rotZ": 0.0,
+          "scaleX": 0.81,
+          "scaleY": 0.81,
+          "scaleZ": 0.81
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/PineTree_LOD1.fbx",
+              "maxDistance": 25.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 60.0
+            }
+          ],
+          "cullDistance": 100.0
+        }
+      }
+    },
+    {
+      "name": "Pine 68",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -80.219,
+          "posY": 0.0,
+          "posZ": 18.256,
+          "rotX": 0.0,
+          "rotY": 106.363,
+          "rotZ": 0.0,
+          "scaleX": 0.88,
+          "scaleY": 0.88,
+          "scaleZ": 0.88
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/PineTree_LOD1.fbx",
+              "maxDistance": 25.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 60.0
+            }
+          ],
+          "cullDistance": 100.0
+        }
+      }
+    },
+    {
+      "name": "Pine 69",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 72.749,
+          "posY": 0.0,
+          "posZ": 33.423,
+          "rotX": 0.0,
+          "rotY": 91.764,
+          "rotZ": 0.0,
+          "scaleX": 1.09,
+          "scaleY": 1.09,
+          "scaleZ": 1.09
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/PineTree_LOD1.fbx",
+              "maxDistance": 25.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 60.0
+            }
+          ],
+          "cullDistance": 100.0
+        }
+      }
+    },
+    {
+      "name": "Pine 70",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 61.374,
+          "posY": 0.0,
+          "posZ": -51.029,
+          "rotX": 0.0,
+          "rotY": 338.044,
+          "rotZ": 0.0,
+          "scaleX": 1.2,
+          "scaleY": 1.2,
+          "scaleZ": 1.2
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/PineTree_LOD1.fbx",
+              "maxDistance": 25.0
+            },
+            {
+              "model": "rom/model/lod/PineTree_LOD2.fbx",
+              "maxDistance": 60.0
+            }
+          ],
+          "cullDistance": 100.0
+        }
+      }
+    },
+    {
+      "name": "Boulder 01",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -21.077,
+          "posY": 0.0,
+          "posZ": 83.44,
+          "rotX": 0.0,
+          "rotY": 166.37,
+          "rotZ": 0.0,
+          "scaleX": 3.67,
+          "scaleY": 3.67,
+          "scaleZ": 3.67
+        },
+        "visual": {
+          "model": "rom/model/lod/Boulder_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/Boulder_LOD1.fbx",
+              "maxDistance": 20.0
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD2.fbx",
+              "maxDistance": 45.0
+            }
+          ],
+          "cullDistance": 80.0
+        }
+      }
+    },
+    {
+      "name": "Boulder 02",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -11.104,
+          "posY": 0.0,
+          "posZ": 39.027,
+          "rotX": 0.0,
+          "rotY": 21.892,
+          "rotZ": 0.0,
+          "scaleX": 3.21,
+          "scaleY": 3.21,
+          "scaleZ": 3.21
+        },
+        "visual": {
+          "model": "rom/model/lod/Boulder_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/Boulder_LOD1.fbx",
+              "maxDistance": 20.0
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD2.fbx",
+              "maxDistance": 45.0
+            }
+          ],
+          "cullDistance": 80.0
+        }
+      }
+    },
+    {
+      "name": "Boulder 03",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -70.493,
+          "posY": 0.0,
+          "posZ": -45.681,
+          "rotX": 0.0,
+          "rotY": 134.372,
+          "rotZ": 0.0,
+          "scaleX": 3.19,
+          "scaleY": 3.19,
+          "scaleZ": 3.19
+        },
+        "visual": {
+          "model": "rom/model/lod/Boulder_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/Boulder_LOD1.fbx",
+              "maxDistance": 20.0
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD2.fbx",
+              "maxDistance": 45.0
+            }
+          ],
+          "cullDistance": 80.0
+        }
+      }
+    },
+    {
+      "name": "Boulder 04",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -25.735,
+          "posY": 0.0,
+          "posZ": 29.304,
+          "rotX": 0.0,
+          "rotY": 285.014,
+          "rotZ": 0.0,
+          "scaleX": 1.71,
+          "scaleY": 1.71,
+          "scaleZ": 1.71
+        },
+        "visual": {
+          "model": "rom/model/lod/Boulder_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/Boulder_LOD1.fbx",
+              "maxDistance": 20.0
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD2.fbx",
+              "maxDistance": 45.0
+            }
+          ],
+          "cullDistance": 80.0
+        }
+      }
+    },
+    {
+      "name": "Boulder 05",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -18.855,
+          "posY": 0.0,
+          "posZ": -78.354,
+          "rotX": 0.0,
+          "rotY": 326.831,
+          "rotZ": 0.0,
+          "scaleX": 2.53,
+          "scaleY": 2.53,
+          "scaleZ": 2.53
+        },
+        "visual": {
+          "model": "rom/model/lod/Boulder_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/Boulder_LOD1.fbx",
+              "maxDistance": 20.0
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD2.fbx",
+              "maxDistance": 45.0
+            }
+          ],
+          "cullDistance": 80.0
+        }
+      }
+    },
+    {
+      "name": "Boulder 06",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -26.201,
+          "posY": 0.0,
+          "posZ": 54.323,
+          "rotX": 0.0,
+          "rotY": 58.836,
+          "rotZ": 0.0,
+          "scaleX": 2.77,
+          "scaleY": 2.77,
+          "scaleZ": 2.77
+        },
+        "visual": {
+          "model": "rom/model/lod/Boulder_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/Boulder_LOD1.fbx",
+              "maxDistance": 20.0
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD2.fbx",
+              "maxDistance": 45.0
+            }
+          ],
+          "cullDistance": 80.0
+        }
+      }
+    },
+    {
+      "name": "Boulder 07",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -87.07,
+          "posY": 0.0,
+          "posZ": -8.026,
+          "rotX": 0.0,
+          "rotY": 182.679,
+          "rotZ": 0.0,
+          "scaleX": 2.59,
+          "scaleY": 2.59,
+          "scaleZ": 2.59
+        },
+        "visual": {
+          "model": "rom/model/lod/Boulder_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/Boulder_LOD1.fbx",
+              "maxDistance": 20.0
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD2.fbx",
+              "maxDistance": 45.0
+            }
+          ],
+          "cullDistance": 80.0
+        }
+      }
+    },
+    {
+      "name": "Boulder 08",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 14.942,
+          "posY": 0.0,
+          "posZ": -8.702,
+          "rotX": 0.0,
+          "rotY": 101.195,
+          "rotZ": 0.0,
+          "scaleX": 2.26,
+          "scaleY": 2.26,
+          "scaleZ": 2.26
+        },
+        "visual": {
+          "model": "rom/model/lod/Boulder_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/Boulder_LOD1.fbx",
+              "maxDistance": 20.0
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD2.fbx",
+              "maxDistance": 45.0
+            }
+          ],
+          "cullDistance": 80.0
+        }
+      }
+    },
+    {
+      "name": "Boulder 09",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 13.797,
+          "posY": 0.0,
+          "posZ": 88.343,
+          "rotX": 0.0,
+          "rotY": 7.822,
+          "rotZ": 0.0,
+          "scaleX": 3.22,
+          "scaleY": 3.22,
+          "scaleZ": 3.22
+        },
+        "visual": {
+          "model": "rom/model/lod/Boulder_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/Boulder_LOD1.fbx",
+              "maxDistance": 20.0
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD2.fbx",
+              "maxDistance": 45.0
+            }
+          ],
+          "cullDistance": 80.0
+        }
+      }
+    },
+    {
+      "name": "Boulder 10",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -9.519,
+          "posY": 0.0,
+          "posZ": 71.862,
+          "rotX": 0.0,
+          "rotY": 108.955,
+          "rotZ": 0.0,
+          "scaleX": 3.97,
+          "scaleY": 3.97,
+          "scaleZ": 3.97
+        },
+        "visual": {
+          "model": "rom/model/lod/Boulder_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/Boulder_LOD1.fbx",
+              "maxDistance": 20.0
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD2.fbx",
+              "maxDistance": 45.0
+            }
+          ],
+          "cullDistance": 80.0
+        }
+      }
+    },
+    {
+      "name": "Boulder 11",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -74.027,
+          "posY": 0.0,
+          "posZ": 38.756,
+          "rotX": 0.0,
+          "rotY": 230.905,
+          "rotZ": 0.0,
+          "scaleX": 2.69,
+          "scaleY": 2.69,
+          "scaleZ": 2.69
+        },
+        "visual": {
+          "model": "rom/model/lod/Boulder_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/Boulder_LOD1.fbx",
+              "maxDistance": 20.0
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD2.fbx",
+              "maxDistance": 45.0
+            }
+          ],
+          "cullDistance": 80.0
+        }
+      }
+    },
+    {
+      "name": "Boulder 12",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -0.291,
+          "posY": 0.0,
+          "posZ": 66.277,
+          "rotX": 0.0,
+          "rotY": 184.579,
+          "rotZ": 0.0,
+          "scaleX": 3.0,
+          "scaleY": 3.0,
+          "scaleZ": 3.0
+        },
+        "visual": {
+          "model": "rom/model/lod/Boulder_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/Boulder_LOD1.fbx",
+              "maxDistance": 20.0
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD2.fbx",
+              "maxDistance": 45.0
+            }
+          ],
+          "cullDistance": 80.0
+        }
+      }
+    },
+    {
+      "name": "Boulder 13",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 33.056,
+          "posY": 0.0,
+          "posZ": 74.522,
+          "rotX": 0.0,
+          "rotY": 273.79,
+          "rotZ": 0.0,
+          "scaleX": 3.29,
+          "scaleY": 3.29,
+          "scaleZ": 3.29
+        },
+        "visual": {
+          "model": "rom/model/lod/Boulder_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/Boulder_LOD1.fbx",
+              "maxDistance": 20.0
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD2.fbx",
+              "maxDistance": 45.0
+            }
+          ],
+          "cullDistance": 80.0
+        }
+      }
+    },
+    {
+      "name": "Boulder 14",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 11.928,
+          "posY": 0.0,
+          "posZ": -87.596,
+          "rotX": 0.0,
+          "rotY": 189.651,
+          "rotZ": 0.0,
+          "scaleX": 3.44,
+          "scaleY": 3.44,
+          "scaleZ": 3.44
+        },
+        "visual": {
+          "model": "rom/model/lod/Boulder_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/Boulder_LOD1.fbx",
+              "maxDistance": 20.0
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD2.fbx",
+              "maxDistance": 45.0
+            }
+          ],
+          "cullDistance": 80.0
+        }
+      }
+    },
+    {
+      "name": "Boulder 15",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 14.877,
+          "posY": 0.0,
+          "posZ": -22.985,
+          "rotX": 0.0,
+          "rotY": 177.776,
+          "rotZ": 0.0,
+          "scaleX": 2.28,
+          "scaleY": 2.28,
+          "scaleZ": 2.28
+        },
+        "visual": {
+          "model": "rom/model/lod/Boulder_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/Boulder_LOD1.fbx",
+              "maxDistance": 20.0
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD2.fbx",
+              "maxDistance": 45.0
+            }
+          ],
+          "cullDistance": 80.0
+        }
+      }
+    },
+    {
+      "name": "Boulder 16",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 56.744,
+          "posY": 0.0,
+          "posZ": -18.15,
+          "rotX": 0.0,
+          "rotY": 181.152,
+          "rotZ": 0.0,
+          "scaleX": 2.05,
+          "scaleY": 2.05,
+          "scaleZ": 2.05
+        },
+        "visual": {
+          "model": "rom/model/lod/Boulder_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/Boulder_LOD1.fbx",
+              "maxDistance": 20.0
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD2.fbx",
+              "maxDistance": 45.0
+            }
+          ],
+          "cullDistance": 80.0
+        }
+      }
+    },
+    {
+      "name": "Boulder 17",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -4.659,
+          "posY": 0.0,
+          "posZ": -87.026,
+          "rotX": 0.0,
+          "rotY": 98.061,
+          "rotZ": 0.0,
+          "scaleX": 3.61,
+          "scaleY": 3.61,
+          "scaleZ": 3.61
+        },
+        "visual": {
+          "model": "rom/model/lod/Boulder_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/Boulder_LOD1.fbx",
+              "maxDistance": 20.0
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD2.fbx",
+              "maxDistance": 45.0
+            }
+          ],
+          "cullDistance": 80.0
+        }
+      }
+    },
+    {
+      "name": "Boulder 18",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -48.751,
+          "posY": 0.0,
+          "posZ": 39.092,
+          "rotX": 0.0,
+          "rotY": 89.055,
+          "rotZ": 0.0,
+          "scaleX": 3.31,
+          "scaleY": 3.31,
+          "scaleZ": 3.31
+        },
+        "visual": {
+          "model": "rom/model/lod/Boulder_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/Boulder_LOD1.fbx",
+              "maxDistance": 20.0
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD2.fbx",
+              "maxDistance": 45.0
+            }
+          ],
+          "cullDistance": 80.0
+        }
+      }
+    },
+    {
+      "name": "Boulder 19",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -89.365,
+          "posY": 0.0,
+          "posZ": 21.147,
+          "rotX": 0.0,
+          "rotY": 209.75,
+          "rotZ": 0.0,
+          "scaleX": 2.12,
+          "scaleY": 2.12,
+          "scaleZ": 2.12
+        },
+        "visual": {
+          "model": "rom/model/lod/Boulder_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/Boulder_LOD1.fbx",
+              "maxDistance": 20.0
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD2.fbx",
+              "maxDistance": 45.0
+            }
+          ],
+          "cullDistance": 80.0
+        }
+      }
+    },
+    {
+      "name": "Boulder 20",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 55.071,
+          "posY": 0.0,
+          "posZ": -0.431,
+          "rotX": 0.0,
+          "rotY": 332.442,
+          "rotZ": 0.0,
+          "scaleX": 1.64,
+          "scaleY": 1.64,
+          "scaleZ": 1.64
+        },
+        "visual": {
+          "model": "rom/model/lod/Boulder_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/Boulder_LOD1.fbx",
+              "maxDistance": 20.0
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD2.fbx",
+              "maxDistance": 45.0
+            }
+          ],
+          "cullDistance": 80.0
+        }
+      }
+    },
+    {
+      "name": "Boulder 21",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 17.575,
+          "posY": 0.0,
+          "posZ": 67.139,
+          "rotX": 0.0,
+          "rotY": 171.334,
+          "rotZ": 0.0,
+          "scaleX": 2.93,
+          "scaleY": 2.93,
+          "scaleZ": 2.93
+        },
+        "visual": {
+          "model": "rom/model/lod/Boulder_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/Boulder_LOD1.fbx",
+              "maxDistance": 20.0
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD2.fbx",
+              "maxDistance": 45.0
+            }
+          ],
+          "cullDistance": 80.0
+        }
+      }
+    },
+    {
+      "name": "Boulder 22",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -20.015,
+          "posY": 0.0,
+          "posZ": 36.351,
+          "rotX": 0.0,
+          "rotY": 294.634,
+          "rotZ": 0.0,
+          "scaleX": 2.75,
+          "scaleY": 2.75,
+          "scaleZ": 2.75
+        },
+        "visual": {
+          "model": "rom/model/lod/Boulder_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/Boulder_LOD1.fbx",
+              "maxDistance": 20.0
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD2.fbx",
+              "maxDistance": 45.0
+            }
+          ],
+          "cullDistance": 80.0
+        }
+      }
+    },
+    {
+      "name": "Boulder 23",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 70.957,
+          "posY": 0.0,
+          "posZ": 11.395,
+          "rotX": 0.0,
+          "rotY": 349.323,
+          "rotZ": 0.0,
+          "scaleX": 2.81,
+          "scaleY": 2.81,
+          "scaleZ": 2.81
+        },
+        "visual": {
+          "model": "rom/model/lod/Boulder_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/Boulder_LOD1.fbx",
+              "maxDistance": 20.0
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD2.fbx",
+              "maxDistance": 45.0
+            }
+          ],
+          "cullDistance": 80.0
+        }
+      }
+    },
+    {
+      "name": "Boulder 24",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 80.498,
+          "posY": 0.0,
+          "posZ": -27.004,
+          "rotX": 0.0,
+          "rotY": 112.09,
+          "rotZ": 0.0,
+          "scaleX": 2.08,
+          "scaleY": 2.08,
+          "scaleZ": 2.08
+        },
+        "visual": {
+          "model": "rom/model/lod/Boulder_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/Boulder_LOD1.fbx",
+              "maxDistance": 20.0
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD2.fbx",
+              "maxDistance": 45.0
+            }
+          ],
+          "cullDistance": 80.0
+        }
+      }
+    },
+    {
+      "name": "Boulder 25",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -76.925,
+          "posY": 0.0,
+          "posZ": 4.242,
+          "rotX": 0.0,
+          "rotY": 319.581,
+          "rotZ": 0.0,
+          "scaleX": 2.66,
+          "scaleY": 2.66,
+          "scaleZ": 2.66
+        },
+        "visual": {
+          "model": "rom/model/lod/Boulder_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/Boulder_LOD1.fbx",
+              "maxDistance": 20.0
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD2.fbx",
+              "maxDistance": 45.0
+            }
+          ],
+          "cullDistance": 80.0
+        }
+      }
+    },
+    {
+      "name": "Boulder 26",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 16.067,
+          "posY": 0.0,
+          "posZ": -1.432,
+          "rotX": 0.0,
+          "rotY": 242.847,
+          "rotZ": 0.0,
+          "scaleX": 2.34,
+          "scaleY": 2.34,
+          "scaleZ": 2.34
+        },
+        "visual": {
+          "model": "rom/model/lod/Boulder_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/Boulder_LOD1.fbx",
+              "maxDistance": 20.0
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD2.fbx",
+              "maxDistance": 45.0
+            }
+          ],
+          "cullDistance": 80.0
+        }
+      }
+    },
+    {
+      "name": "Boulder 27",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -59.268,
+          "posY": 0.0,
+          "posZ": 30.184,
+          "rotX": 0.0,
+          "rotY": 142.935,
+          "rotZ": 0.0,
+          "scaleX": 2.54,
+          "scaleY": 2.54,
+          "scaleZ": 2.54
+        },
+        "visual": {
+          "model": "rom/model/lod/Boulder_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/Boulder_LOD1.fbx",
+              "maxDistance": 20.0
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD2.fbx",
+              "maxDistance": 45.0
+            }
+          ],
+          "cullDistance": 80.0
+        }
+      }
+    },
+    {
+      "name": "Boulder 28",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -15.869,
+          "posY": 0.0,
+          "posZ": 9.718,
+          "rotX": 0.0,
+          "rotY": 17.273,
+          "rotZ": 0.0,
+          "scaleX": 1.88,
+          "scaleY": 1.88,
+          "scaleZ": 1.88
+        },
+        "visual": {
+          "model": "rom/model/lod/Boulder_LOD0.fbx",
+          "shader": "standard",
+          "lods": [
+            {
+              "model": "rom/model/lod/Boulder_LOD1.fbx",
+              "maxDistance": 20.0
+            },
+            {
+              "model": "rom/model/lod/Boulder_LOD2.fbx",
+              "maxDistance": 45.0
+            }
+          ],
+          "cullDistance": 80.0
+        }
+      }
+    }
+  ],
+  "canvas": {}
+}
