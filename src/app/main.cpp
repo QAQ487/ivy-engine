@@ -1131,6 +1131,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 		Renderer_SetWindowMode(Renderer_IsWindowed() ? FALSE : TRUE);
 		return 0;
 	}
+	// Swallow the WM_SYSCHAR that follows Alt+Enter: DefWindowProc treats it as a
+	// menu mnemonic and beeps when the windowed style has a system menu.
+	if (uMsg == WM_SYSCHAR && wParam == VK_RETURN && (lParam & (1 << 29)))
+		return 0;
 
 #ifndef GAME_RUNTIME
 	// Allow ImGui to process Windows messages first
