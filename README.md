@@ -19,6 +19,7 @@
 - **Rendering** — D3D11 forward renderer with 8 shader variants: PBR (Cook-Torrance BRDF, energy-conserving), toon, fog, PostFX pipeline (bloom, vignette, chromatic aberration, RGB burst), cascaded-ready shadow path
 - **Editor** — full ImGui editor: hierarchy, inspector, asset browser with context menus, transform gizmos, UI canvas, **undo/redo** (command pattern, 100-deep stack), scene transitions, and a branded start screen
 - **Gameplay runtime** — ECS architecture; play mode (F3) runs the exact same components as the deployed game
+- **Culling & LOD** — main-camera frustum, shadow-cascade, 2D sprite, billboard / particle / Effekseer culling, off-screen animation culling, scene light selection, and distance- or screen-size-based mesh LOD with debug labels and editor range gizmos; every option has a Rendering-panel toggle for A/B checks
 - **Physics** — AABB / sphere / capsule / box collision, triggers with `OnTriggerEnter/Exit` events, 4-type raycasting, swept resolution, contact visualization
 - **Concurrency** — custom job system: worker pool, dependency graph, parallel script updates with per-script safety flags and a sequential fallback that is behavior-identical
 - **Scripting** — hot-reloadable C++ DLL scripts (`ScriptRuntimeApi` v49), scene JSON authoring, prefab system
@@ -60,6 +61,7 @@ The engine and game content are fully decoupled:
 
 - **レンダリング** — D3D11 フォワードレンダラ、シェーダ 8 種類：PBR（Cook-Torrance、エネルギー保存則準拠）、トゥーン、フォグ、ポストエフェクト（ブルーム、ビネット、RGB バースト）
 - **エディタ** — フル ImGui エディタ：ヒエラルキー、インスペクタ、アセットブラウザ、 transform ギズモ、UI キャンバス、**Undo/Redo**（コマンドパターン、最大 100 ステップ）、ブランド付きスタート画面
+- **カリング & LOD** — メインカメラ視錐台、シャドウカスケード、2D スプライト、ビルボード／パーティクル／Effekseer のカリング、画面外アニメーション省略、シーンライト選択、距離または画面サイズ基準のメッシュ LOD（デバッグラベルとエディタ範囲ギズモ付き）。すべてレンダリングパネルのトグルで A/B 比較可能
 - **物理** — AABB / 球 / カプセル / ボックス衝突、トリガーイベント（`OnTriggerEnter/Exit`）、4 種類のレイキャスト、接触可視化
 - **並列処理** — 自作ジョブシステム：ワーカープール、依存グラフ、スクリプト並列更新（安全フラグ付き、逐次フォールバックと挙動一致）
 - **スクリプト** — ホットリロード対応 C++ DLL スクリプト（`ScriptRuntimeApi` v49）、シーン JSON、プレハブシステム

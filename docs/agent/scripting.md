@@ -76,6 +76,7 @@ void MySpinScript::OnUpdate(engine::GameObject& self, float dt) {
 | Transform | `api:ScriptApi_FindTransform` |
 | Prefab | `GameObject* ScriptApi_PrefabInstantiate(...)` / `ScriptApi_PrefabDestroy` — see [`api/assets.md`](api/assets.md) (`api:ScriptApi_PrefabInstantiate`, `api:ScriptApi_PrefabDestroy`) |
 | Visual | `api:ScriptApi_FindVisualComponent`, `ScriptApi_Visual_PlayClip(VisualComponent*, const char*)` — [`api/render.md`](api/render.md) |
+| Render settings (v49) | `api:ScriptApi_RenderSettingSetBool`, `api:ScriptApi_RenderSettingSetNumber`, `api:ScriptApi_RenderSettingGetBool`, `api:ScriptApi_RenderSettingGetNumber` — runtime culling / LOD options by name, [`api/render.md`](api/render.md) |
 | Audio | `api:ScriptApi_FindAudioComponent`, `api:ScriptApi_Audio_Play`, `api:ScriptApi_Audio_Stop` |
 | Physics 3D | `ScriptApi_Physics_Raycast(...)` — [`api/physics-3d.md`](api/physics-3d.md) |
 | Physics 2D | full signatures in [`api/physics-2d.md`](api/physics-2d.md) |

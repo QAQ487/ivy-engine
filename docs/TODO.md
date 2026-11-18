@@ -154,7 +154,7 @@
   - Bridge `set_setting` 收布林同數值 key，host 端用同一組函數（`runtime_test_editor_apply.cpp` 已簡化）。
   - **`ScriptRuntimeApi` v49**（append-only；`kScriptRuntimeApiVersion` 48 → 49，新增 `ScriptRuntimeApi_GetV49`，`GetV48` 變成複製並設 version 48）：`renderSettingSetBool`／`GetBool`／`SetNumber`／`GetNumber` 四個 host 函數，腳本用 `ScriptApi_RenderSettingSetBool` 等 wrapper（先查 `version >= 49`，舊 host 返回 false）。改動只作用於運行中場景，唔寫入場景檔。
   - Linux：`tools/run_render_setting_check.sh`（名稱表＋clamp，另外 `tools/check_render_setting_keys.py` 核對 bridge／client／access header／`render_settings.h` 四份 key 表一致）、`tools/run_runtime_bridge_offline_linux.sh`、`python3 tools/agent_docs_check.py`。
-  - 未做：bridge `perf` 輸出 anim／fx／light 計數。
+  - 未做：bridge `perf` 輸出 fx／light 計數（anim 已經喺 `perf.anim`）。
 - [ ] **LOD／剔除嘅進階項**（暫緩）：HLOD／impostor、自動減面、per-clip skinned bounds、per-layer／per-tag cull distance。
 - 唔算缺口：texture mip chain 已由 `model_util.cpp` 生成；engine 冇 tilemap 系統；screen-space UI 唔剔除係設計。
 

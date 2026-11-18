@@ -17,7 +17,7 @@ Script-facing helpers from `api:ScriptRuntimeApi` / `script_runtime_api.h`. Scen
 - `void ScriptApi_Visual_PlayClipLoop(VisualComponent* component, const char* clipName, bool loop)` — `api:ScriptApi_Visual_PlayClipLoop`
 - `float ScriptApi_Visual_GetClipDuration(VisualComponent* component)` — `api:ScriptApi_Visual_GetClipDuration`
 - `void ScriptApi_Visual_SetAnimSpeed(VisualComponent* component, float speed)` — `api:ScriptApi_Visual_SetAnimSpeed`
-- `bool ScriptApi_Visual_TryGetBoneWorld(VisualComponent* component, const char* boneName, DirectX::XMFLOAT3& outPos, DirectX::XMFLOAT3& outRotDeg)` — `api:ScriptApi_Visual_TryGetBoneWorld`
+- `bool ScriptApi_Visual_TryGetBoneWorld(VisualComponent* component, const char* boneName, DirectX::XMFLOAT3& outPos, DirectX::XMFLOAT3& outRotDeg)` — `api:ScriptApi_Visual_TryGetBoneWorld`. While off-screen animation culling is on (`render.animCullingEnabled`, default), an animated Visual that no camera / shadow pass drew last frame keeps its clip time but not its bone pose, so this returns the **last evaluated** pose; turn the option off (`ScriptApi_RenderSettingSetBool("animCullingEnabled", false)`) if gameplay reads bones of off-screen characters
 
 ## World sprites (2D)
 
@@ -29,12 +29,12 @@ Script-facing helpers from `api:ScriptRuntimeApi` / `script_runtime_api.h`. Scen
 ## Immediate / FX
 
 - `api:ScriptApi_SpriteDraw` — screen-space textured quad (`texId`, x/y/width/height, source rect, angle, color)
-- `api:ScriptApi_BillboardAdd` / `api:ScriptApi_BillboardAddUv`
-- `void ScriptApi_Effect_Play(EffectComponent* component)` — `api:ScriptApi_Effect_Play`
+- `api:ScriptApi_BillboardAdd` / `api:ScriptApi_BillboardAddUv` — billboards are frustum-culled when drawn (`render.billboardCullingEnabled`); a billboard fully outside the camera view is simply not drawn, so re-submit it every frame as before
+- `void ScriptApi_Effect_Play(EffectComponent* component)` — `api:ScriptApi_Effect_Play`. Effects keep simulating off-screen; drawing is skipped while the effect (assumed radius `render.effectCullRadius` × scale) is outside the camera frustum (`render.effectCullingEnabled`)
 - `void ScriptApi_PostFX_Burst(float rgbShift, float durationSeconds)` — `api:ScriptApi_PostFX_Burst`
 - `void ScriptApi_LineSprite_Draw(const DirectX::XMFLOAT3& a, const DirectX::XMFLOAT3& b, float thicknessWorld, const DirectX::XMFLOAT4& color)` — `api:ScriptApi_LineSprite_Draw`
 - `api:ScriptApi_DebugDrawSphereWire` / `api:ScriptApi_DebugDrawLine`
-- Particles: `api:ScriptApi_ParticleCreateEmitter`, `api:ScriptApi_ParticleSetEmitterPosition`, `api:ScriptApi_ParticleSetEmitterEmitting`, `api:ScriptApi_ParticleStopEmitter`, `api:ScriptApi_ParticleDestroyEmitter`, `api:ScriptApi_ParticleSpawnAt`
+- Particles (individual particles outside the camera frustum are not drawn, simulation is unaffected — `render.billboardCullingEnabled`): `api:ScriptApi_ParticleCreateEmitter`, `api:ScriptApi_ParticleSetEmitterPosition`, `api:ScriptApi_ParticleSetEmitterEmitting`, `api:ScriptApi_ParticleStopEmitter`, `api:ScriptApi_ParticleDestroyEmitter`, `api:ScriptApi_ParticleSpawnAt`
 
 ## Runtime render settings (v49)
 
