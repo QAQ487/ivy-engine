@@ -125,11 +125,13 @@
     </Link>
     <PostBuildEvent>
       <Command>if not exist "$(RuntimeScriptBin)" mkdir "$(RuntimeScriptBin)"
-xcopy /Y /D "$(OutDir)$(TargetName).dll" "$(RuntimeScriptBin)"
-if exist "$(OutDir)$(TargetName).pdb" xcopy /Y /D "$(OutDir)$(TargetName).pdb" "$(RuntimeScriptBin)"
+if /I not "$(OutDir)"=="$(RuntimeScriptBin)" xcopy /Y /D "$(OutDir)$(TargetName).dll" "$(RuntimeScriptBin)"
+if /I not "$(OutDir)"=="$(RuntimeScriptBin)" if exist "$(OutDir)$(TargetName).pdb" xcopy /Y /D "$(OutDir)$(TargetName).pdb" "$(RuntimeScriptBin)"
 if not exist "$(EngineScriptBin)" mkdir "$(EngineScriptBin)"
-xcopy /Y /D "$(OutDir)$(TargetName).dll" "$(EngineScriptBin)"
-if exist "$(OutDir)$(TargetName).pdb" xcopy /Y /D "$(OutDir)$(TargetName).pdb" "$(EngineScriptBin)"</Command>
+rem The editor keeps the loaded DLL's PDB open; a locked PDB must not fail the build.
+if exist "$(OutDir)$(TargetName).pdb" xcopy /Y /D "$(OutDir)$(TargetName).pdb" "$(EngineScriptBin)" || echo warning: could not copy PDB to "$(EngineScriptBin)" (file in use)
+rem Last command decides the exit code: a failed DLL copy still fails the build.
+xcopy /Y /D "$(OutDir)$(TargetName).dll" "$(EngineScriptBin)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -161,11 +163,13 @@ if exist "$(OutDir)$(TargetName).pdb" xcopy /Y /D "$(OutDir)$(TargetName).pdb" "
     </Link>
     <PostBuildEvent>
       <Command>if not exist "$(RuntimeScriptBin)" mkdir "$(RuntimeScriptBin)"
-xcopy /Y /D "$(OutDir)$(TargetName).dll" "$(RuntimeScriptBin)"
-if exist "$(OutDir)$(TargetName).pdb" xcopy /Y /D "$(OutDir)$(TargetName).pdb" "$(RuntimeScriptBin)"
+if /I not "$(OutDir)"=="$(RuntimeScriptBin)" xcopy /Y /D "$(OutDir)$(TargetName).dll" "$(RuntimeScriptBin)"
+if /I not "$(OutDir)"=="$(RuntimeScriptBin)" if exist "$(OutDir)$(TargetName).pdb" xcopy /Y /D "$(OutDir)$(TargetName).pdb" "$(RuntimeScriptBin)"
 if not exist "$(EngineScriptBin)" mkdir "$(EngineScriptBin)"
-xcopy /Y /D "$(OutDir)$(TargetName).dll" "$(EngineScriptBin)"
-if exist "$(OutDir)$(TargetName).pdb" xcopy /Y /D "$(OutDir)$(TargetName).pdb" "$(EngineScriptBin)"</Command>
+rem The editor keeps the loaded DLL's PDB open; a locked PDB must not fail the build.
+if exist "$(OutDir)$(TargetName).pdb" xcopy /Y /D "$(OutDir)$(TargetName).pdb" "$(EngineScriptBin)" || echo warning: could not copy PDB to "$(EngineScriptBin)" (file in use)
+rem Last command decides the exit code: a failed DLL copy still fails the build.
+xcopy /Y /D "$(OutDir)$(TargetName).dll" "$(EngineScriptBin)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -195,11 +199,13 @@ if exist "$(OutDir)$(TargetName).pdb" xcopy /Y /D "$(OutDir)$(TargetName).pdb" "
     </Link>
     <PostBuildEvent>
       <Command>if not exist "$(RuntimeScriptBin)" mkdir "$(RuntimeScriptBin)"
-xcopy /Y /D "$(OutDir)$(TargetName).dll" "$(RuntimeScriptBin)"
-if exist "$(OutDir)$(TargetName).pdb" xcopy /Y /D "$(OutDir)$(TargetName).pdb" "$(RuntimeScriptBin)"
+if /I not "$(OutDir)"=="$(RuntimeScriptBin)" xcopy /Y /D "$(OutDir)$(TargetName).dll" "$(RuntimeScriptBin)"
+if /I not "$(OutDir)"=="$(RuntimeScriptBin)" if exist "$(OutDir)$(TargetName).pdb" xcopy /Y /D "$(OutDir)$(TargetName).pdb" "$(RuntimeScriptBin)"
 if not exist "$(EngineScriptBin)" mkdir "$(EngineScriptBin)"
-xcopy /Y /D "$(OutDir)$(TargetName).dll" "$(EngineScriptBin)"
-if exist "$(OutDir)$(TargetName).pdb" xcopy /Y /D "$(OutDir)$(TargetName).pdb" "$(EngineScriptBin)"</Command>
+rem The editor keeps the loaded DLL's PDB open; a locked PDB must not fail the build.
+if exist "$(OutDir)$(TargetName).pdb" xcopy /Y /D "$(OutDir)$(TargetName).pdb" "$(EngineScriptBin)" || echo warning: could not copy PDB to "$(EngineScriptBin)" (file in use)
+rem Last command decides the exit code: a failed DLL copy still fails the build.
+xcopy /Y /D "$(OutDir)$(TargetName).dll" "$(EngineScriptBin)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -231,11 +237,13 @@ if exist "$(OutDir)$(TargetName).pdb" xcopy /Y /D "$(OutDir)$(TargetName).pdb" "
     </Link>
     <PostBuildEvent>
       <Command>if not exist "$(RuntimeScriptBin)" mkdir "$(RuntimeScriptBin)"
-xcopy /Y /D "$(OutDir)$(TargetName).dll" "$(RuntimeScriptBin)"
-if exist "$(OutDir)$(TargetName).pdb" xcopy /Y /D "$(OutDir)$(TargetName).pdb" "$(RuntimeScriptBin)"
+if /I not "$(OutDir)"=="$(RuntimeScriptBin)" xcopy /Y /D "$(OutDir)$(TargetName).dll" "$(RuntimeScriptBin)"
+if /I not "$(OutDir)"=="$(RuntimeScriptBin)" if exist "$(OutDir)$(TargetName).pdb" xcopy /Y /D "$(OutDir)$(TargetName).pdb" "$(RuntimeScriptBin)"
 if not exist "$(EngineScriptBin)" mkdir "$(EngineScriptBin)"
-xcopy /Y /D "$(OutDir)$(TargetName).dll" "$(EngineScriptBin)"
-if exist "$(OutDir)$(TargetName).pdb" xcopy /Y /D "$(OutDir)$(TargetName).pdb" "$(EngineScriptBin)"</Command>
+rem The editor keeps the loaded DLL's PDB open; a locked PDB must not fail the build.
+if exist "$(OutDir)$(TargetName).pdb" xcopy /Y /D "$(OutDir)$(TargetName).pdb" "$(EngineScriptBin)" || echo warning: could not copy PDB to "$(EngineScriptBin)" (file in use)
+rem Last command decides the exit code: a failed DLL copy still fails the build.
+xcopy /Y /D "$(OutDir)$(TargetName).dll" "$(EngineScriptBin)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

@@ -64,7 +64,10 @@ public:
             auto relative = Utf8Path(content_path::LexicalChildPath(it->path(), root));
             if (relative.empty()) continue;
             const auto name = Utf8Path(it->path().filename());
-            if (name.empty() || name[0] == '.' || relative == "shader" || relative.rfind("shader/", 0) == 0) {
+            if (name.empty() || name[0] == '.' || relative == "shader" || relative.rfind("shader/", 0) == 0 ||
+                // Editor-owned state (imgui_layout.ini, ui_prefs.json) is rewritten by the editor itself;
+                // watching it would reload the scene a few seconds after any window appears.
+                relative == "editor" || relative.rfind("editor/", 0) == 0) {
                 if (it->is_directory(ec)) it.disable_recursion_pending();
                 continue;
             }
