@@ -763,6 +763,8 @@ In the editor, switch to **UI** edit mode to select and drag canvas elements wit
 
 ### Anchor, Position and Pivot
 
+UI Text and Button **Font Path** accepts a `.ttf` / `.otf` (drag one from the Asset Browser) or a PNG atlas. The engine's default UI font is built into the exe, so it is not in your project's `rom/` and the Asset Browser does not list it: click **Use engine default font** under the Font Path field (it fills in `rom/font/IBMPlexMono-Regular.ttf`). New Text and Buttons already start with it.
+
 UI Sprite, Button, Bar, Text and world Sprites share a **Pivot** dropdown: Center, Top Left, Top Center, Top Right, Middle Left, Middle Right, Bottom Left, Bottom Center, Bottom Right, Custom.
 
 - **Anchor** — the reference point on the canvas.

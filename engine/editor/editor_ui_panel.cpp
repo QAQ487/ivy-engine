@@ -12,6 +12,7 @@
 #include "../ui/ui_bar.h"
 #include "../ui/ui_button.h"
 #include "../ui/ui_canvas.h"
+#include "../ui/ui_font.h"
 #include "../ui/ui_sprite.h"
 #include "../ui/ui_text.h"
 #include "../scripting/ui_canvas_script_factory.h"
@@ -82,6 +83,16 @@ bool DrawFontPathInput(const char* id, char* buf, size_t bufSize) {
         }
         ImGui::EndDragDropTarget();
     }
+    // The engine's default font lives in the exe, not in the project's rom/, so the Asset
+    // Browser cannot offer it. This button fills in its path.
+    ImGui::PushID(id);
+    if (ImGui::SmallButton("Use engine default font")) {
+        strncpy_s(buf, bufSize, kUIFontDefaultPath, _TRUNCATE);
+        changed = true;
+    }
+    if (ImGui::IsItemHovered())
+        ImGui::SetTooltip("%s\nBuilt into the engine; no file is needed in your project.", kUIFontDefaultPath);
+    ImGui::PopID();
     return changed;
 }
 
@@ -148,7 +159,7 @@ UIText* CreateCanvasText() {
     UICanvas* canvas = SceneCanvas_GetCanvas();
     if (!canvas) return nullptr;
     UIText* text = canvas->AddText("Text", { 0.0f, 0.0f }, UIAnchor::CENTER, "Text");
-    text->SetFontPath("rom/font/IBMPlexMono-Regular.ttf", 32.0f, 32.0f, 16);
+    text->SetFontPath(kUIFontDefaultPath, 32.0f, 32.0f, 16);
     text->SetFontSize(1.5f);
     text->SetCharacterSpacing(32.0f);
     text->SetAlignment(TextAlign::LEFT);

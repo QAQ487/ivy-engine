@@ -26,6 +26,9 @@ struct UIFont {
 	UIGlyph glyphs[95]{};
 };
 
+// Default UI font path (IBM Plex Mono). No project file is needed: it is compiled into the exe.
+inline constexpr const char* kUIFontDefaultPath = "rom/font/IBMPlexMono-Regular.ttf";
+
 const UIFont* UIFont_Get(const wchar_t* ttfPath);
 // Debug text font (IBM Plex Mono, compiled into the exe). Null when it cannot be baked.
 const UIFont* UIFont_GetBuiltinMono();
