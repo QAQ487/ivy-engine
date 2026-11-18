@@ -311,8 +311,20 @@ void GameObject::DrawVisual(bool useRealModel) {
                     : -1.0f;
                 if (lodCounting) {
                     Lod_RecordConsidered();
-                    if (lodCulledByDistance)
+                    if (lodCulledByDistance) {
                         Lod_RecordCulledByDistance();
+                        // A culled Visual is never drawn, so give it a label here: it shows
+                        // why the object is missing (distance vs. its cull limit).
+                        if (RenderSettings_GetConst().lodDebugLabels) {
+                            LodDebugLabel label;
+                            label.worldPosition = lodLabelPosition;
+                            label.distance = lodLabelDistance;
+                            label.culled = true;
+                            label.cullDistance = cull_settings::ScaledCullDistance(
+                                vc->cullDistance, RenderSettings_GetConst().cullDistanceScale);
+                            Lod_AddDebugLabel(label);
+                        }
+                    }
                 }
             }
 

@@ -262,7 +262,12 @@ void VisualComponent::Update(double elapsed_time) {
     Model3D* model = GetRealModel();
     if (!model) return;
 
-    if (anim_cull::ShouldSkipPose(RenderSettings_GetConst().animCullingEnabled,
+    // Never skip before a few real evaluations: a Visual that is culled from its very first
+    // frame (cull distance, off-screen spawn) must still get a valid skin palette before it
+    // can be skipped, or it would draw with an unposed palette when it first comes into view.
+    constexpr int kMinPoseUpdatesBeforeSkip = 3;
+    if (m_poseUpdateCount >= kMinPoseUpdatesBeforeSkip
+        && anim_cull::ShouldSkipPose(RenderSettings_GetConst().animCullingEnabled,
             lastConsideredSerial, lastDrawnSerial, Lod_GetFrameSerial())) {
         // Not drawn by the main camera or any shadow cascade last frame: keep the
         // clip phase moving but skip bone sampling, skinning and palette upload.
@@ -273,6 +278,8 @@ void VisualComponent::Update(double elapsed_time) {
 
     Lod_RecordAnimUpdated();
     model->UpdateAnimation(elapsed_time);
+    if (m_poseUpdateCount < 1000)
+        ++m_poseUpdateCount;
 }
 
 std::string VisualComponent::Serialize() const {

@@ -124,6 +124,7 @@ private:
     bool m_animationsLoaded = false;
     std::unordered_set<std::string> m_triedAnimClips;
     float m_lastAnimSpeed = 0.0f;
+    int m_poseUpdateCount = 0;  // real pose evaluations so far (see Update)
 
     ID3D11ShaderResourceView* m_surfaceFxSRV = nullptr;
     std::string m_surfaceFxLoadedPath;

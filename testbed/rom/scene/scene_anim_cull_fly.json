@@ -14,7 +14,8 @@
       "skyboxCubemap": "rom/skybox/MySkybox.dds",
       "skyboxEnabled": true,
       "lodEnabled": true,
-      "animCullingEnabled": true
+      "animCullingEnabled": true,
+      "lodDebugLabels": true
     },
     "debugCamera": {
       "mode": "fly",

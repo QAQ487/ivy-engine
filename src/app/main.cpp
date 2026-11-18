@@ -1048,7 +1048,10 @@ static void DrawWorld(void) {
 				if (ndcX < -1.0f || ndcX > 1.0f || ndcY < -1.0f || ndcY > 1.0f) continue;
 
 				char text[64];
-				if (label.screenPercent >= 0.0f)
+				if (label.culled)
+					std::snprintf(text, sizeof(text), "CULLED %.0fm > %.0fm",
+						label.distance, label.cullDistance);
+				else if (label.screenPercent >= 0.0f)
 					std::snprintf(text, sizeof(text), "L%d %.0fm %.1f%%",
 						label.level, label.distance, label.screenPercent);
 				else
@@ -1056,7 +1059,9 @@ static void DrawWorld(void) {
 				static const XMFLOAT4 kLevelColors[] = {
 					{ 0.3f, 1.0f, 0.3f, 1.0f }, { 1.0f, 1.0f, 0.2f, 1.0f },
 					{ 1.0f, 0.6f, 0.1f, 1.0f }, { 1.0f, 0.2f, 0.2f, 1.0f } };
-				const XMFLOAT4& color = kLevelColors[(std::min)(label.level, 3)];
+				static const XMFLOAT4 kCulledColor = { 0.9f, 0.3f, 0.9f, 1.0f };
+				const XMFLOAT4& color = label.culled
+					? kCulledColor : kLevelColors[(std::min)(label.level, 3)];
 
 				float textW = 0.0f, textH = 0.0f;
 				dt.MeasureText(text, textW, textH);

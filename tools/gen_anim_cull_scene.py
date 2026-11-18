@@ -10,6 +10,10 @@ Groups (camera starts at the origin looking +Z):
   Back    behind the camera, far from the sun   -> skipped while you look forward
   Sides   far left / right of the view          -> skipped
   Far     in view direction, past cullDistance  -> skipped (distance cull)
+                                                   needs Mesh LOD (3D) on: cullDistance is
+                                                   ignored while it is off. LOD debug labels
+                                                   are on, so each Far bot shows "CULLED <d>m >
+                                                   40m" until you are within 40 m, then "L0 ...".
   Shadow  just behind the camera                -> may stay evaluated if a shadow
                                                    cascade still draws it
 
@@ -72,7 +76,8 @@ def build():
             "render": {"clearColor": [0.69, 0.77, 0.87, 1.0], "defaultShader": "standard",
                        "fogEnabled": False, "shadowQuality": "medium",
                        "skyboxCubemap": "rom/skybox/MySkybox.dds", "skyboxEnabled": True,
-                       "lodEnabled": True, "animCullingEnabled": True},
+                       "lodEnabled": True, "animCullingEnabled": True,
+                       "lodDebugLabels": True},
             "debugCamera": {"mode": "fly", "enabledOnPlay": True, "yawDeg": 0.0,
                             "pitchDeg": -5.0, "position": {"x": 0.0, "y": 2.5, "z": 0.0}},
         },

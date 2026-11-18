@@ -36,13 +36,17 @@ void Lod_RecordDrawn(int level);
 LodStats Lod_GetLastStats();
 
 // Debug labels (render.lodDebugLabels): one entry per LOD-tracked Visual the main camera
-// pass drew, recorded by GameObject::DrawVisual. The list is reset by Lod_BeginFrame and
+// pass drew, plus one (culled = true) per Visual skipped by its cull distance, recorded by GameObject::DrawVisual. The list is reset by Lod_BeginFrame and
 // stays valid after Lod_EndFrame so the overlay can draw it later in the frame.
 struct LodDebugLabel {
     DirectX::XMFLOAT3 worldPosition{0.0f, 0.0f, 0.0f};  // above the object's world AABB
     int level = 0;
     float distance = 0.0f;       // camera distance used for the level choice
     float screenPercent = -1.0f; // projected height in % of the viewport, -1 = unknown
+    // True when the Visual is NOT drawn because it is beyond its cull distance. `distance`
+    // is then the camera distance and `cullDistance` the (scaled) limit it exceeded.
+    bool culled = false;
+    float cullDistance = 0.0f;
 };
 constexpr int kLodMaxDebugLabels = 256;
 void Lod_AddDebugLabel(const LodDebugLabel& label);
