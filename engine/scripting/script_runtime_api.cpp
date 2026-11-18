@@ -2,6 +2,7 @@
 // C API surface exposed to gameplay script DLLs.
 
 #include "script_runtime_api.h"
+#include "engine/scripting/host_text.h"
 #include "engine/ecs/collider_component_access.h"
 
 #include "camera.h"
@@ -37,17 +38,23 @@
 #include "engine/ecs/rigidbody_component.h"
 #include "engine/scene/scene_loader.h"
 #include "engine/core/system_timer.h"
+#include "engine/save/save_store.h"
+#include "engine/save/save_system.h"
 #endif
 #include "engine/rendering/d3d11/post_process.h"
 #include "engine/physics/core/physics_system.h"
 #include "engine/core/debug_system.h"
 
 #include <Windows.h>
+#include <algorithm>
+#include <climits>
 #include <cmath>
+#include <cstring>
 #include <string>
+#include <vector>
 
 namespace {
-constexpr std::uint32_t kScriptRuntimeApiVersion = 50;
+constexpr std::uint32_t kScriptRuntimeApiVersion = 51;
 
 template <typename T>
 T* FindComponentByTypeName(GameObject& object, const char* typeName) {
@@ -765,6 +772,83 @@ double Host_GetRealTimeSeconds() {
     return SystemTimer_GetTime();
 }
 
+// --- v51 save data -------------------------------------------------------------
+// Null slot / key pointers fail like invalid names.
+const char* Str(const char* s) { return s ? s : ""; }
+
+using host_text::CopyOut;
+
+template <class Fn>
+auto WithSaves(Fn fn) {
+    std::lock_guard<std::mutex> lock(SaveSystem_Mutex());
+    return fn(SaveSystem_Store());
+}
+
+bool Host_SaveSetInt(const char* slot, const char* key, long long value) {
+    return WithSaves([&](save_store::Store& s) { return s.SetInt(Str(slot), Str(key), value); });
+}
+bool Host_SaveGetInt(const char* slot, const char* key, long long* outValue) {
+    return WithSaves([&](save_store::Store& s) {
+        std::int64_t v = 0;
+        if (!outValue || !s.GetInt(Str(slot), Str(key), &v)) return false;
+        *outValue = static_cast<long long>(v);
+        return true;
+    });
+}
+bool Host_SaveSetFloat(const char* slot, const char* key, double value) {
+    if (!std::isfinite(value)) return false;
+    return WithSaves([&](save_store::Store& s) { return s.SetDouble(Str(slot), Str(key), value); });
+}
+bool Host_SaveGetFloat(const char* slot, const char* key, double* outValue) {
+    return WithSaves([&](save_store::Store& s) { return outValue && s.GetDouble(Str(slot), Str(key), outValue); });
+}
+bool Host_SaveSetBool(const char* slot, const char* key, bool value) {
+    return WithSaves([&](save_store::Store& s) { return s.SetBool(Str(slot), Str(key), value); });
+}
+bool Host_SaveGetBool(const char* slot, const char* key, bool* outValue) {
+    return WithSaves([&](save_store::Store& s) { return outValue && s.GetBool(Str(slot), Str(key), outValue); });
+}
+bool Host_SaveSetString(const char* slot, const char* key, const char* utf8Value) {
+    if (!utf8Value) return false;
+    return WithSaves([&](save_store::Store& s) { return s.SetString(Str(slot), Str(key), utf8Value); });
+}
+int Host_SaveGetString(const char* slot, const char* key, char* out, int capacity) {
+    return WithSaves([&](save_store::Store& s) {
+        std::string v;
+        return s.GetString(Str(slot), Str(key), &v) ? CopyOut(v, out, capacity) : -1;
+    });
+}
+bool Host_SaveSetJson(const char* slot, const char* key, const char* jsonText) {
+    if (!jsonText) return false;
+    return WithSaves([&](save_store::Store& s) { return s.SetJsonText(Str(slot), Str(key), jsonText); });
+}
+int Host_SaveGetJson(const char* slot, const char* key, char* out, int capacity) {
+    return WithSaves([&](save_store::Store& s) {
+        std::string v;
+        return s.GetJsonText(Str(slot), Str(key), &v) ? CopyOut(v, out, capacity) : -1;
+    });
+}
+bool Host_SaveHasKey(const char* slot, const char* key) {
+    return WithSaves([&](save_store::Store& s) { return s.HasKey(Str(slot), Str(key)); });
+}
+bool Host_SaveDeleteKey(const char* slot, const char* key) {
+    return WithSaves([&](save_store::Store& s) { return s.DeleteKey(Str(slot), Str(key)); });
+}
+bool Host_SaveCommit(const char* slot) {
+    return WithSaves([&](save_store::Store& s) { return s.Commit(Str(slot)); });
+}
+bool Host_SaveSlotExists(const char* slot) {
+    return WithSaves([&](save_store::Store& s) { return s.SlotExists(Str(slot)); });
+}
+bool Host_SaveDeleteSlot(const char* slot) {
+    return WithSaves([&](save_store::Store& s) { return s.DeleteSlot(Str(slot)); });
+}
+int Host_SaveListSlots(char* out, int capacity) {
+    return WithSaves([&](save_store::Store& s) {
+        return CopyOut(host_text::JoinLines(s.ListSlots()), out, capacity);
+    });
+}
+
 const ScriptRuntimeApi g_scriptRuntimeApi = {
     kScriptRuntimeApiVersion,
     &Host_GetCurrentScene,
@@ -910,6 +994,22 @@ const ScriptRuntimeApi g_scriptRuntimeApi = {
     &Host_FindGameObjectsByTag,
     &Host_GetTimeScale,
     &Host_GetRealTimeSeconds,
+    &Host_SaveSetInt,
+    &Host_SaveGetInt,
+    &Host_SaveSetFloat,
+    &Host_SaveGetFloat,
+    &Host_SaveSetBool,
+    &Host_SaveGetBool,
+    &Host_SaveSetString,
+    &Host_SaveGetString,
+    &Host_SaveSetJson,
+    &Host_SaveGetJson,
+    &Host_SaveHasKey,
+    &Host_SaveDeleteKey,
+    &Host_SaveCommit,
+    &Host_SaveSlotExists,
+    &Host_SaveDeleteSlot,
+    &Host_SaveListSlots,
 };
 #else
 using GetApiFn = const ScriptRuntimeApi* (*)();
@@ -919,7 +1019,9 @@ const ScriptRuntimeApi* ResolveScriptRuntimeApi() {
     if (!module)
         return nullptr;
 
-    auto getApi = reinterpret_cast<GetApiFn>(GetProcAddress(module, "ScriptRuntimeApi_GetV50"));
+    auto getApi = reinterpret_cast<GetApiFn>(GetProcAddress(module, "ScriptRuntimeApi_GetV51"));
+    if (!getApi)
+        getApi = reinterpret_cast<GetApiFn>(GetProcAddress(module, "ScriptRuntimeApi_GetV50"));
     if (!getApi)
         getApi = reinterpret_cast<GetApiFn>(GetProcAddress(module, "ScriptRuntimeApi_GetV49"));
     if (!getApi)
@@ -1030,6 +1132,16 @@ const ScriptRuntimeApi* ScriptRuntimeApi_GetV49() {
 
 extern "C" __declspec(dllexport)
 const ScriptRuntimeApi* ScriptRuntimeApi_GetV50() {
+    static const ScriptRuntimeApi api = [] {
+        ScriptRuntimeApi copy = g_scriptRuntimeApi;
+        copy.version = 50;
+        return copy;
+    }();
+    return &api;
+}
+
+extern "C" __declspec(dllexport)
+const ScriptRuntimeApi* ScriptRuntimeApi_GetV51() {
     return &g_scriptRuntimeApi;
 }
 
@@ -1579,6 +1691,94 @@ float ScriptApi_GetTimeScale() {
 double ScriptApi_GetRealTimeSeconds() {
     const auto* api = ScriptRuntimeApi_GetHost();
     return (api && api->version >= 50 && api->getRealTimeSeconds) ? api->getRealTimeSeconds() : 0.0;
+}
+
+namespace {
+const ScriptRuntimeApi* SaveApi() {
+    const auto* api = ScriptRuntimeApi_GetHost();
+    return (api && api->version >= 51) ? api : nullptr;
+}
+using host_text::ReadText;
+} // namespace
+
+bool ScriptApi_SaveSetInt(const char* slot, const char* key, long long value) {
+    const auto* api = SaveApi();
+    return api && api->saveSetInt && api->saveSetInt(slot, key, value);
+}
+long long ScriptApi_SaveGetInt(const char* slot, const char* key, long long defaultValue) {
+    const auto* api = SaveApi();
+    long long v = 0;
+    return (api && api->saveGetInt && api->saveGetInt(slot, key, &v)) ? v : defaultValue;
+}
+bool ScriptApi_SaveSetFloat(const char* slot, const char* key, double value) {
+    const auto* api = SaveApi();
+    return api && api->saveSetFloat && api->saveSetFloat(slot, key, value);
+}
+double ScriptApi_SaveGetFloat(const char* slot, const char* key, double defaultValue) {
+    const auto* api = SaveApi();
+    double v = 0.0;
+    return (api && api->saveGetFloat && api->saveGetFloat(slot, key, &v)) ? v : defaultValue;
+}
+bool ScriptApi_SaveSetBool(const char* slot, const char* key, bool value) {
+    const auto* api = SaveApi();
+    return api && api->saveSetBool && api->saveSetBool(slot, key, value);
+}
+bool ScriptApi_SaveGetBool(const char* slot, const char* key, bool defaultValue) {
+    const auto* api = SaveApi();
+    bool v = false;
+    return (api && api->saveGetBool && api->saveGetBool(slot, key, &v)) ? v : defaultValue;
+}
+bool ScriptApi_SaveSetString(const char* slot, const char* key, const char* utf8Value) {
+    const auto* api = SaveApi();
+    return api && api->saveSetString && api->saveSetString(slot, key, utf8Value);
+}
+std::string ScriptApi_SaveGetString(const char* slot, const char* key, const char* defaultValue) {
+    const auto* api = SaveApi();
+    std::string v;
+    if (api && api->saveGetString &&
+        ReadText([&](char* out, int cap) { return api->saveGetString(slot, key, out, cap); }, &v))
+        return v;
+    return defaultValue ? defaultValue : "";
+}
+bool ScriptApi_SaveSetJson(const char* slot, const char* key, const char* jsonText) {
+    const auto* api = SaveApi();
+    return api && api->saveSetJson && api->saveSetJson(slot, key, jsonText);
+}
+std::string ScriptApi_SaveGetJson(const char* slot, const char* key) {
+    const auto* api = SaveApi();
+    std::string v;
+    if (api && api->saveGetJson &&
+        ReadText([&](char* out, int cap) { return api->saveGetJson(slot, key, out, cap); }, &v))
+        return v;
+    return {};
+}
+bool ScriptApi_SaveHasKey(const char* slot, const char* key) {
+    const auto* api = SaveApi();
+    return api && api->saveHasKey && api->saveHasKey(slot, key);
+}
+bool ScriptApi_SaveDeleteKey(const char* slot, const char* key) {
+    const auto* api = SaveApi();
+    return api && api->saveDeleteKey && api->saveDeleteKey(slot, key);
+}
+bool ScriptApi_SaveCommit(const char* slot) {
+    const auto* api = SaveApi();
+    return api && api->saveCommit && api->saveCommit(slot);
+}
+bool ScriptApi_SaveSlotExists(const char* slot) {
+    const auto* api = SaveApi();
+    return api && api->saveSlotExists && api->saveSlotExists(slot);
+}
+bool ScriptApi_SaveDeleteSlot(const char* slot) {
+    const auto* api = SaveApi();
+    return api && api->saveDeleteSlot && api->saveDeleteSlot(slot);
+}
+std::vector<std::string> ScriptApi_SaveListSlots() {
+    const auto* api = SaveApi();
+    std::string joined;
+    if (!api || !api->saveListSlots ||
+        !ReadText([&](char* out, int cap) { return api->saveListSlots(out, cap); }, &joined))
+        return {};
+    return host_text::SplitLines(joined);
 }
 
 void ScriptApi_EngineGUIStopPlay() {

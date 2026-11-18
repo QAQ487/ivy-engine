@@ -57,6 +57,7 @@
 #include <iomanip>
 #include <sstream>
 #include <locale>
+#include "engine/save/save_system.h"
 #include <system_error>
 #include <Windows.h>
 #include <filesystem>
@@ -1064,6 +1065,8 @@ void ReturnToStart() {
     g_holdPlayVisuals = false;
     TeardownPlaySession(true);
     DebugSystem::ResetTimeScale();
+    // Next Play re-reads saves from disk; uncommitted values are dropped.
+    SaveSystem_Reset();
     g_enabled = true;
     g_editMode = EditorEditMode::Scene3D;
     DebugCamera_SetControlMode(DebugCameraControlMode::Orbit);

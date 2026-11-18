@@ -26,6 +26,8 @@
 #include "engine/ui/ui_text.h"
 
 #include <cstdint>
+#include <string>
+#include <vector>
 
 struct ScriptRuntimeApi {
     std::uint32_t version;
@@ -261,6 +263,28 @@ struct ScriptRuntimeApi {
     int (*findGameObjectsByTag)(Tag tag, GameObject** out, int capacity, bool includeInactive);
     float (*getTimeScale)();
     double (*getRealTimeSeconds)();
+
+    // v51 - save data (engine/save/save_store.h): named slots of key-value
+    // pairs, written only by saveCommit. Text getters copy into out (NUL
+    // terminated, truncated to capacity) and return the full length in bytes,
+    // or -1 when the key is missing / of another type. saveListSlots writes
+    // slot names separated by '\n'.
+    bool (*saveSetInt)(const char* slot, const char* key, long long value);
+    bool (*saveGetInt)(const char* slot, const char* key, long long* outValue);
+    bool (*saveSetFloat)(const char* slot, const char* key, double value);
+    bool (*saveGetFloat)(const char* slot, const char* key, double* outValue);
+    bool (*saveSetBool)(const char* slot, const char* key, bool value);
+    bool (*saveGetBool)(const char* slot, const char* key, bool* outValue);
+    bool (*saveSetString)(const char* slot, const char* key, const char* utf8Value);
+    int (*saveGetString)(const char* slot, const char* key, char* out, int capacity);
+    bool (*saveSetJson)(const char* slot, const char* key, const char* jsonText);
+    int (*saveGetJson)(const char* slot, const char* key, char* out, int capacity);
+    bool (*saveHasKey)(const char* slot, const char* key);
+    bool (*saveDeleteKey)(const char* slot, const char* key);
+    bool (*saveCommit)(const char* slot);
+    bool (*saveSlotExists)(const char* slot);
+    bool (*saveDeleteSlot)(const char* slot);
+    int (*saveListSlots)(char* out, int capacity);
 };
 
 const ScriptRuntimeApi* ScriptRuntimeApi_GetHost();
@@ -356,6 +380,33 @@ int ScriptApi_FindGameObjectsByTag(Tag tag, GameObject** out, int capacity,
 // real time is wall-clock seconds since the engine started, not scaled.
 float ScriptApi_GetTimeScale();
 double ScriptApi_GetRealTimeSeconds();
+
+// Save data (v51 host; older hosts: setters / Commit return false, getters the
+// default). A slot is one file (name: 1-32 of A-Z a-z 0-9 _ -); keys are
+// 1-128 bytes of UTF-8. Set* only changes memory: call ScriptApi_SaveCommit
+// to write the slot (atomic, previous file kept as .bak). Saves live in
+// <Saved Games>/<game name>/ for a packaged game and in
+// <content project>/.ivy/saves/ in editor Play; Stop drops uncommitted values.
+// GetInt reads integers only; GetFloat reads any number.
+bool ScriptApi_SaveSetInt(const char* slot, const char* key, long long value);
+long long ScriptApi_SaveGetInt(const char* slot, const char* key, long long defaultValue = 0);
+bool ScriptApi_SaveSetFloat(const char* slot, const char* key, double value);
+double ScriptApi_SaveGetFloat(const char* slot, const char* key, double defaultValue = 0.0);
+bool ScriptApi_SaveSetBool(const char* slot, const char* key, bool value);
+bool ScriptApi_SaveGetBool(const char* slot, const char* key, bool defaultValue = false);
+bool ScriptApi_SaveSetString(const char* slot, const char* key, const char* utf8Value);
+std::string ScriptApi_SaveGetString(const char* slot, const char* key, const char* defaultValue = "");
+// Any JSON value as text, e.g. a nested object built with nlohmann::json::dump().
+// SetJson returns false for text that does not parse; GetJson returns "" when missing.
+bool ScriptApi_SaveSetJson(const char* slot, const char* key, const char* jsonText);
+std::string ScriptApi_SaveGetJson(const char* slot, const char* key);
+bool ScriptApi_SaveHasKey(const char* slot, const char* key);
+bool ScriptApi_SaveDeleteKey(const char* slot, const char* key);
+bool ScriptApi_SaveCommit(const char* slot);
+// On disk (committed) only.
+bool ScriptApi_SaveSlotExists(const char* slot);
+bool ScriptApi_SaveDeleteSlot(const char* slot);
+std::vector<std::string> ScriptApi_SaveListSlots();
 void ScriptApi_CameraSetPosition(DirectX::XMFLOAT3 position);
 void ScriptApi_CameraSetTarget(DirectX::XMFLOAT3 target);
 void ScriptApi_CameraSetUp(DirectX::XMFLOAT3 up);

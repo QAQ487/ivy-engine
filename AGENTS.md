@@ -23,7 +23,7 @@ Ivy Engine is a from-scratch C++ / Direct3D 11 engine: an ImGui **editor** (`Ivy
 
 - **Development status:** engine development is fully unfrozen (ADR 0007, 2026-10-20). Any engine system may change within the requested task scope. `engine-v1.0-lock` is a historical tag, not a restriction.
 - **Compatibility still applies** unless the task explicitly changes it: existing content-project layout, scene/prefab JSON, and the `ScriptRuntimeApi` ABI.
-- **`ScriptRuntimeApi` is append-only.** Current version: **50** (`kScriptRuntimeApiVersion` in `engine/scripting/script_runtime_api.cpp`). New host functions go at the end, bump the version, keep older `ScriptRuntimeApi_Get*` entry points working, and scripts must check the version before calling newer entries.
+- **`ScriptRuntimeApi` is append-only.** Current version: **51** (`kScriptRuntimeApiVersion` in `engine/scripting/script_runtime_api.cpp`). New host functions go at the end, bump the version, keep older `ScriptRuntimeApi_Get*` entry points working, and scripts must check the version before calling newer entries.
 - **Engine vs game:** do not add game-specific logic to engine code. Game behavior belongs in content-project scripts/JSON. Use game files only as examples of how the engine is consumed.
 - **JSON names are contracts.** Component type names and field names are case-sensitive; preserve them unless the user asks for a migration (then also keep the loader accepting the old form).
 - **Never claim Windows verification from Linux.** This container cannot build MSVC / D3D11 or run named pipes. Report Linux checks as Linux checks; Windows Editor/Runtime acceptance is the owner's.
@@ -72,6 +72,7 @@ Linux-runnable checks (use what matches the change; none of these is a Windows p
 | Audio WAV parsing | `tests/wav_parse_test.cpp` |
 | Frame loop / device lost | `tests/frame_pacing_test.cpp`, `tests/device_lost_test.cpp` |
 | Script DLL layout check / scene search | `tests/script_abi_layout_test.cpp`, `tests/game_object_search_test.cpp` |
+| Save data / host text buffers | `tests/save_store_test.cpp` (real files in a temp dir), `tests/host_text_test.cpp` |
 | Other unit tests | `tests/*_test.cpp` (single-file `g++ -std=c++20 -I.` builds; see each file header) |
 
 Windows-only harnesses: `tools/run_*.cmd`, `tools/run_*.ps1` (2D regression, collider components, content reload, scene hot-load, play-scene switch, bridge acceptance).
@@ -88,6 +89,7 @@ Windows-only harnesses: `tools/run_*.cmd`, `tools/run_*.ps1` (2D regression, col
 | `engine/rendering/` | D3D11 renderer/shaders/post, models, sprites, billboards, particles, Effekseer, lighting/shadows, sky/IBL, culling |
 | `engine/physics/` | Custom 3D rigidbody + colliders; `2d/` Box2D adapter (ADR 0008) |
 | `engine/ui/`, `engine/input/`, `engine/audio/` | Canvas UI, keyboard/mouse/XInput, XAudio2 |
+| `engine/save/` | Save slots: `save_store` (pure, Linux-tested), `save_system` (Windows folder + `MoveFileExW`) |
 | `engine/testing/` | Debug runtime test bridge |
 | `src/app/` | `main.cpp` (WinMain, loop, debug hotkeys), `scene/game_scene.cpp`, cameras (scene/debug/third/first person, director), fades/transitions |
 | `resources/` | Read-only engine defaults (shaders, fonts, branding, primitives, skybox/IBL), mirrored beside the exe |
@@ -122,6 +124,7 @@ A content project is a directory with `rom/` and usually `project.json`; the edi
 | `audio.masterVolume` / `bgmVolume` / `sfxVolume` / `voiceVolume` | Bus levels, applied in editor and runtime (ADR 0001) |
 | `audio.uiClickSound` | UIButton click WAV |
 | `build.packAllAssets` | `true` = a package copies all of `rom/` (old behaviour). Default `false`: only referenced assets. Written only when set |
+| `save.folderName` | Folder name under Saved Games for the packaged game's saves (default: `name`, sanitised). Written only when set |
 | `build.alwaysInclude` | `rom/` files, folders or name prefixes a package keeps even when nothing references them (assets a script loads by a name built at runtime). Written only when non-empty |
 
 Other per-project editor state: `rom/editor/imgui_layout.ini` (dock layout), `rom/editor/ui_prefs.json`, `rom/tags.json`. Recent list: `%AppData%/GameEngine/recent_projects.json`.
@@ -210,6 +213,7 @@ When adding a component: register it in `SceneLoader_RegisterComponentTypes()`, 
 - **Cameras:** `CameraMode` (`engine/core/engine_gui.h`): `ThirdPerson=0`, `SceneCamera=1`, `Intro=2`, `FirstPerson=3`; `CameraDirector` samples the active source. Editor game viewport is the largest centered 16:9 rect in the dock central node (`EngineGUI_GetGameViewportRect`, backbuffer pixels); projection, shadows, picking and UI hit-tests use it. Shipped runtime uses the full backbuffer.
 - **Skinning** (ADR 0003): GPU vertex-shader skin must use the same formula as `SkinFromScratch` (kept as oracle); palette `meshCount * boneCount`; matrices stored as `FbxToXM`, transposed only in `Shader_SetSkinPalette`.
 - **UI:** canvas design space 1920×1080; element types `sprite`, `text`, `button`, `bar`; anchors `TOP_LEFT`…`BOTTOM_RIGHT`. Optional `pivot {x,y}` (bottom-left origin like world sprites) in shared UI data; absent → legacy layout/text alignment. Pivot is sidecar data (does not change UI class layout or vtables). Buttons use builtin `LoadScene` / `ExitGame` actions or a `UICanvasScript::OnClick`.
+- **Save data** (ADR 0009, `engine/save/`, `ScriptApi_Save*` v51): named slots (`[A-Za-z0-9_-]{1,32}`) of key-value JSON, one `<slot>.json` per slot (`{"format":"ivy-save","version":1,"savedAt","data"}`). `Set*` is memory-only; `ScriptApi_SaveCommit` writes `.tmp` → copies old to `.bak` → `MoveFileExW`; load falls back to `.bak`; >4 MiB refused; newer `version` read-only. Folder: runtime/package `FOLDERID_SavedGames\<save.folderName or name>`; editor Play `<content project>/.ivy/saves/` (`SaveSystem_Reset` on Stop drops uncommitted values). Host access is locked by `SaveSystem_Mutex()`; text crosses the DLL boundary through `host_text.h` buffers. Demo: `SampleSaveScript` (Debug builds) in testbed `scene_save_demo.json`.
 - **Audio:** XAudio2/X3DAudio; components preferred for authored content; tracked GameObjects must outlive their emitters/listener.
 - **Editor console:** `hal::DebugWriteA`/`dout` feed a thread-safe ring buffer shown in the dockable Console; engine logs route through `hal::DebugWriteA`.
 

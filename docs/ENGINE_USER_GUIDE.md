@@ -597,6 +597,25 @@ const double now = ScriptApi_GetRealTimeSeconds();
 
 Do **not** link scripts against the full editor. The host table is the supported boundary between DLL and exe.
 
+### Saving game data
+
+Scripts keep progress and settings in **save slots** (v51). A slot is one file named after it (`slot1`, `settings`, `auto` — letters, digits, `_`, `-`, up to 32 characters) and holds key-value data:
+
+```cpp
+const long long coins = ScriptApi_SaveGetInt("slot1", "coins", 0);   // default when missing
+ScriptApi_SaveSetInt("slot1", "coins", coins + 10);
+ScriptApi_SaveSetString("slot1", "level", "forest");
+nlohmann::json player = {{"hp", 80}, {"items", {"key"}}};
+ScriptApi_SaveSetJson("slot1", "player", player.dump().c_str());     // nested data as JSON text
+ScriptApi_SaveCommit("slot1");                                         // only now written to disk
+```
+
+- **Set does not write.** Call `ScriptApi_SaveCommit(slot)` at checkpoints. In the editor, **Stop** drops values that were set but not committed.
+- **Where:** a packaged game saves to `<your user>\Saved Games\<game name>\` (the name comes from `project.json` → `name`, or `save.folderName` to pick another). Editor **Play** saves to `<content project>\.ivy\saves\` instead, so testing never touches real saves — add `.ivy/` to your game repo's `.gitignore`. The Console prints the folder the first time a script uses saves.
+- **Safety:** a commit writes a temporary file and then replaces the slot, keeping the previous version as `<slot>.json.bak`; if the slot file is damaged, the backup is loaded and the Console says so. Files are plain JSON you can open in any editor.
+- Other calls: `SaveGetFloat/Bool/String/Json`, `SaveHasKey`, `SaveDeleteKey`, `SaveSlotExists`, `SaveDeleteSlot`, `SaveListSlots`.
+- Try it: testbed `scene_save_demo.json` (Debug build). Press **K** to add 1 and save, **L** to delete the slot; Stop and Play again and the numbers are still there.
+
 ### UI-only scripts
 
 For canvas elements, inherit `UICanvasScript` and register with `REGISTER_UI_SCRIPT(MyUiScript)`. Attach via the UI element’s script class field in the canvas JSON / UI editor.
@@ -1095,9 +1114,14 @@ The editor calls `SetCurrentDirectory` on that folder so relative paths like `ro
     "sfxVolume": 1.0,
     "voiceVolume": 1.0,
     "uiClickSound": "rom/audio/ui_click.wav"
+  },
+  "save": {
+    "folderName": "MyGame"
   }
 }
 ```
+
+`save.folderName` is optional: the Saved Games folder name for the packaged game's saves (default: `name`).
 
 | Field | Meaning |
 |-------|---------|

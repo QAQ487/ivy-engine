@@ -22,7 +22,8 @@
 - **Culling & LOD** — main-camera frustum, shadow-cascade, 2D sprite, billboard / particle / Effekseer culling, off-screen animation culling, scene light selection, and distance- or screen-size-based mesh LOD with debug labels and editor range gizmos; every option has a Rendering-panel toggle for A/B checks
 - **Physics** — AABB / sphere / capsule / box collision, triggers with `OnTriggerEnter/Exit` events, 4-type raycasting, swept resolution, contact visualization
 - **Concurrency** — custom job system: worker pool, dependency graph, parallel script updates with per-script safety flags and a sequential fallback that is behavior-identical
-- **Scripting** — hot-reloadable C++ DLL scripts (`ScriptRuntimeApi` v49), scene JSON authoring, prefab system
+- **Scripting** — hot-reloadable C++ DLL scripts (`ScriptRuntimeApi` v51) with a DLL layout check, scene JSON authoring, prefab system
+- **Save data** — named save slots (key-value + nested JSON) in Saved Games, atomic writes with a backup, separate editor-Play saves
 - **Debug tools** — time-scale cycling (F7), frame stepping (F12), collision visualizer (F11), live physics stats overlay
 - **Asset pipeline** — time-sliced asset preloading (editor overlays + runtime boot loading screen with logo and progress bar), process-lifetime model/animation cache
 - **Deploy** — one-click "Build Current Project" packages any content project into a standalone `/MT` exe named after the game, with engine branding overlaid (content can override it)
@@ -64,7 +65,8 @@ The engine and game content are fully decoupled:
 - **カリング & LOD** — メインカメラ視錐台、シャドウカスケード、2D スプライト、ビルボード／パーティクル／Effekseer のカリング、画面外アニメーション省略、シーンライト選択、距離または画面サイズ基準のメッシュ LOD（デバッグラベルとエディタ範囲ギズモ付き）。すべてレンダリングパネルのトグルで A/B 比較可能
 - **物理** — AABB / 球 / カプセル / ボックス衝突、トリガーイベント（`OnTriggerEnter/Exit`）、4 種類のレイキャスト、接触可視化
 - **並列処理** — 自作ジョブシステム：ワーカープール、依存グラフ、スクリプト並列更新（安全フラグ付き、逐次フォールバックと挙動一致）
-- **スクリプト** — ホットリロード対応 C++ DLL スクリプト（`ScriptRuntimeApi` v49）、シーン JSON、プレハブシステム
+- **スクリプト** — ホットリロード対応 C++ DLL スクリプト（`ScriptRuntimeApi` v51、DLL レイアウト検査付き）、シーン JSON、プレハブシステム
+- **セーブデータ** — 名前付きスロット（キー・値＋ネスト JSON）を Saved Games に保存、バックアップ付きアトミック書き込み、エディタ Play 用は別フォルダ
 - **デバッグ** — タイムスケール（F7）、フレームステップ（F12）、コリジョン可視化（F11）、物理統計オーバーレイ
 - **アセット** — タイムスライス方式のプリロード（エディタ.overlay + ランタイム起動時のロゴ＆プログレスバー付きローディング画面）、プロセス寿命のモデル/アニメーションキャッシュ
 - **デプロイ** — ワンクリック「Build Current Project」で、コンテンツプロジェクトをゲーム名そのままのスタンドアロン `/MT` exe にパッケージ化

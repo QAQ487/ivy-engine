@@ -417,3 +417,6 @@ resources/**/*.exe
 
 # Generated intermediate for docs/ENGINE_API_REFERENCE.md (tools/extract_api_headers.py).
 /docs/_api_extract.md
+
+# Editor Play-mode save data (engine/save/save_system.cpp).
+/testbed/.ivy/

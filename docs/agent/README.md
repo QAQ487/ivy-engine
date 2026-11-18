@@ -39,5 +39,6 @@ JSON field names and ordinary file paths stay in normal backticks (no `api:` / `
 | [`api/audio.md`](api/audio.md) | Audio component + master volume |
 | [`api/camera.md`](api/camera.md) | Scene / third-person / first-person cameras |
 | [`api/assets.md`](api/assets.md) | Textures, prefab instantiate/destroy, content paths |
+| [`api/save.md`](api/save.md) | Save slots: key-value data, commit, folders |
 
 Also (engine repo docs, not always exported): `docs/RUNTIME_TEST_BRIDGE.md`, `docs/ENGINE_USER_GUIDE.md`, `AGENTS.md`. Bridge scenario schema: [`../schemas/runtime_bridge_scenario.v1.schema.json`](../schemas/runtime_bridge_scenario.v1.schema.json) (`export_agent_docs.py` rewrites this link to `schemas/` under `docs/ivy-engine/`).
