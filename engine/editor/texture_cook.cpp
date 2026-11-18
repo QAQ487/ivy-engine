@@ -8,6 +8,7 @@
 
 #include <Windows.h>
 #include <objbase.h>
+#include <d3d11.h>
 
 #include "DirectXTex.h"
 
@@ -26,8 +27,10 @@ namespace {
 constexpr DXGI_FORMAT kCookFormat = DXGI_FORMAT_BC7_UNORM;
 
 // Returns S_OK when the .dds was written.
-HRESULT CookOne(const fs::path& source, const fs::path& ddsPath, bool* sizeSkipped) {
+HRESULT CookOne(const fs::path& source, const fs::path& ddsPath, ID3D11Device* gpu,
+                bool* sizeSkipped, bool* usedGpu) {
     *sizeSkipped = false;
+    *usedGpu = false;
 
     TexMetadata metadata;
     ScratchImage image;
@@ -56,11 +59,21 @@ HRESULT CookOne(const fs::path& source, const fs::path& ddsPath, bool* sizeSkipp
     if (FAILED(hr))
         return hr;
 
+    // GPU BC7 (compute shader) takes seconds; the CPU encoder takes minutes per large
+    // texture, so it is only the fallback and runs in its quick mode.
     ScratchImage compressed;
-    hr = Compress(mips.GetImages(), mips.GetImageCount(), mips.GetMetadata(), kCookFormat,
-                  TEX_COMPRESS_PARALLEL, TEX_THRESHOLD_DEFAULT, compressed);
-    if (FAILED(hr))
-        return hr;
+    hr = E_FAIL;
+    if (gpu) {
+        hr = Compress(gpu, mips.GetImages(), mips.GetImageCount(), mips.GetMetadata(), kCookFormat,
+                      TEX_COMPRESS_DEFAULT, 1.0f, compressed);
+        *usedGpu = SUCCEEDED(hr);
+    }
+    if (FAILED(hr)) {
+        hr = Compress(mips.GetImages(), mips.GetImageCount(), mips.GetMetadata(), kCookFormat,
+                      TEX_COMPRESS_PARALLEL | TEX_COMPRESS_BC7_QUICK, TEX_THRESHOLD_DEFAULT, compressed);
+        if (FAILED(hr))
+            return hr;
+    }
 
     return SaveToDDSFile(compressed.GetImages(), compressed.GetImageCount(), compressed.GetMetadata(),
                          DDS_FLAGS_NONE, ddsPath.c_str());
@@ -97,6 +110,23 @@ bool CookPackageTextures(const fs::path& packageRom,
     const HRESULT coHr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
     const bool coInitialized = SUCCEEDED(coHr);
 
+    // Private device for GPU compression; it never touches the editor's renderer.
+    ID3D11Device* gpu = nullptr;
+    ID3D11DeviceContext* gpuContext = nullptr;
+    {
+        D3D_FEATURE_LEVEL level = D3D_FEATURE_LEVEL_10_0;
+        const HRESULT dh = D3D11CreateDevice(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, 0, nullptr, 0,
+                                             D3D11_SDK_VERSION, &gpu, &level, &gpuContext);
+        if (FAILED(dh) || level < D3D_FEATURE_LEVEL_11_0) {
+            if (gpuContext) gpuContext->Release();
+            if (gpu) gpu->Release();
+            gpu = nullptr;
+            gpuContext = nullptr;
+        }
+        emit(gpu ? "Texture cook: GPU BC7 compression."
+                 : "Texture cook: no D3D11 GPU, using the slow CPU encoder (quick mode).");
+    }
+
     // Collect first so we do not delete files while the iterator walks the tree.
     std::vector<fs::path> sources;
     for (fs::recursive_directory_iterator it(packageRom, ec), end; it != end; it.increment(ec)) {
@@ -121,7 +151,9 @@ bool CookPackageTextures(const fs::path& packageRom,
     if (!sources.empty())
         emit("Cooking " + std::to_string(sources.size()) + " texture(s) to BC7...");
 
+    int index = 0;
     for (const fs::path& source : sources) {
+        ++index;
         const std::string name = PathToUtf8(source.lexically_relative(packageRom));
         fs::path ddsPath = source;
         ddsPath.replace_extension(L".dds");
@@ -133,8 +165,11 @@ bool CookPackageTextures(const fs::path& packageRom,
             continue;
         }
 
+        emit("  [" + std::to_string(index) + "/" + std::to_string(sources.size()) + "] " + name);
+        const ULONGLONG started = GetTickCount64();
         bool sizeSkipped = false;
-        const HRESULT hr = CookOne(source, ddsPath, &sizeSkipped);
+        bool usedGpu = false;
+        const HRESULT hr = CookOne(source, ddsPath, gpu, &sizeSkipped, &usedGpu);
         if (FAILED(hr)) {
             ++s.failed;
             std::error_code rmEc;
@@ -157,7 +192,12 @@ bool CookPackageTextures(const fs::path& packageRom,
             continue;
         }
         ++s.cooked;
+        emit("      done in " + std::to_string(GetTickCount64() - started) + " ms (" +
+             (usedGpu ? "GPU" : "CPU") + ")");
     }
+
+    if (gpuContext) gpuContext->Release();
+    if (gpu) gpu->Release();
 
     if (coInitialized)
         CoUninitialize();
