@@ -226,6 +226,9 @@ void GameObject::DrawVisual(bool useRealModel) {
             int lodLevel = 0;
             bool lodCulledByDistance = false;
             bool lodTracked = false;
+            XMFLOAT3 lodLabelPosition = worldPos;
+            float lodLabelDistance = 0.0f;
+            float lodLabelScreenPercent = -1.0f;
             const bool lodCounting = FrustumCull_IsMainPassActive()
                 && Shadow::GetRenderingLightIndex() < 0;
             if (model && useRealModel && Lod_IsFrameActive()
@@ -233,6 +236,8 @@ void GameObject::DrawVisual(bool useRealModel) {
                 && (!vc->lods.empty() || vc->cullDistance > 0.0f)) {
                 lodTracked = true;
                 float distance = 0.0f;
+                float worldExtent = 0.0f;  // largest world AABB side, for screen-size LOD
+                XMFLOAT3 labelPosition = worldPos;  // top of the world AABB, for debug labels
                 {
                     XMFLOAT3 center = worldPos;
                     if (model->HasLocalAabb()) {
@@ -245,6 +250,10 @@ void GameObject::DrawVisual(bool useRealModel) {
                             0.5f * (wb.min.x + wb.max.x),
                             0.5f * (wb.min.y + wb.max.y),
                             0.5f * (wb.min.z + wb.max.z));
+                        labelPosition = XMFLOAT3(center.x, wb.max.y, center.z);
+                        worldExtent = std::max({ wb.max.x - wb.min.x,
+                                                 wb.max.y - wb.min.y,
+                                                 wb.max.z - wb.min.z });
                     }
                     const XMFLOAT3& cam = Lod_GetCameraPosition();
                     const float dx = center.x - cam.x;
@@ -258,8 +267,14 @@ void GameObject::DrawVisual(bool useRealModel) {
                 if (!vc->playAnimation) {
                     thresholdCount = static_cast<int>(
                         std::min<size_t>(vc->lods.size(), kLodMaxLevels - 1));
-                    for (int i = 0; i < thresholdCount; ++i)
-                        thresholds[i] = vc->lods[static_cast<size_t>(i)].maxDistance;
+                    const float tanHalfFov = Lod_GetTanHalfFov();
+                    for (int i = 0; i < thresholdCount; ++i) {
+                        const VisualComponent::LodLevel& level = vc->lods[static_cast<size_t>(i)];
+                        thresholds[i] = vc->lodScreenSize
+                            ? lod_select::ScreenHeightToDistance(
+                                worldExtent, tanHalfFov, level.screenHeight)
+                            : level.maxDistance;
+                    }
                     lod_select::NormalizeThresholds(thresholds, thresholdCount);
                 }
                 lodLevel = lod_select::SelectLevel(
@@ -272,7 +287,16 @@ void GameObject::DrawVisual(bool useRealModel) {
                     lodCulledByDistance = true;
                     lodLevel = 0;
                 } else {
+                    // Hysteresis memory keeps the camera's level; the shadow offset below
+                    // only changes which mesh a cascade pass draws.
                     vc->lodLastLevel = lodLevel;
+                    // Debug override replaces the camera level (shadows follow, offset on top).
+                    lodLevel = lod_select::ForcedLevel(lodLevel, Lod_GetForceLevel(), thresholdCount);
+                    if (ShadowCascadeCull_IsCascadePassActive()
+                        && Shadow::GetRenderingLightIndex() >= 0) {
+                        lodLevel = lod_select::ShadowCasterLevel(
+                            lodLevel, RenderSettings_GetConst().shadowLodOffset, thresholdCount);
+                    }
                     if (lodLevel > 0) {
                         if (Model3D* lodModel = vc->GetLodModel(lodLevel))
                             model = lodModel;
@@ -280,54 +304,37 @@ void GameObject::DrawVisual(bool useRealModel) {
                             lodLevel = 0;
                     }
                 }
+                lodLabelPosition = labelPosition;
+                lodLabelDistance = distance;
+                lodLabelScreenPercent = (worldExtent > 0.0f && distance > 0.0f && Lod_GetTanHalfFov() > 0.0f)
+                    ? 100.0f * worldExtent / (2.0f * distance * Lod_GetTanHalfFov())
+                    : -1.0f;
                 if (lodCounting) {
                     Lod_RecordConsidered();
-                    if (lodCulledByDistance)
+                    if (lodCulledByDistance) {
                         Lod_RecordCulledByDistance();
+                        // A culled Visual is never drawn, so give it a label here: it shows
+                        // why the object is missing (distance vs. its cull limit).
+                        if (RenderSettings_GetConst().lodDebugLabels) {
+                            LodDebugLabel label;
+                            label.worldPosition = lodLabelPosition;
+                            label.distance = lodLabelDistance;
+                            label.culled = true;
+                            label.cullDistance = cull_settings::ScaledCullDistance(
+                                vc->cullDistance, RenderSettings_GetConst().cullDistanceScale);
+                            Lod_AddDebugLabel(label);
+                        }
+                    }
                 }
             }
 
+            // Stamp for off-screen animation skipping (see anim_cull_math.h). Only the
+            // real-model Play pass counts; shadow passes mark drawn below as well.
+            const bool animStamp = useRealModel && Lod_IsFrameActive();
+            if (animStamp)
+                vc->lastConsideredSerial = Lod_GetFrameSerial();
+
             if (model) {
-                const XMFLOAT4 prevEmission = model->GetEmission();
-                model->SetEmission(vc->emissionGlow);
-                Shader3DVariant variant = vc->shaderOverride.empty()
-                    ? RenderSettings_GetDefaultShader()
-                    : Shader3DVariantFromId(vc->shaderOverride);
-                model->SetShaderVariant(variant);
-
-                if (variant == Shader3DVariant::SurfaceFX) {
-                    Shader_SetSurfaceFXParams(vc->hasSurfaceFx ? vc->surfaceFx : SURFACE_FX_PARAMS{});
-                    model->SetTextureOverride(vc->GetSurfaceFxSRV());
-                    model->ClearMaterialOverride();
-                } else {
-                    model->SetTextureOverride(nullptr);
-
-                    if (auto* mc = GetComponent<MaterialComponent>()) {
-                        Model3D::MaterialOverride mo;
-                        mo.enabled = true;
-                        mo.color = mc->color;
-                        mo.roughness = mc->roughness;
-                        mo.metallic = mc->metallic;
-                        mo.normalStrength = mc->normalStrength;
-                        mo.normalSRV = mc->GetNormalMapSRV();
-                        mo.shadeSteps = mc->shadeSteps;
-                        mo.shadeSmoothness = mc->shadeSmoothness;
-                        mo.specularThreshold = mc->specularThreshold;
-                        mo.outlineWidth = mc->outlineWidth;
-                        mo.outlineColor = mc->outlineColor;
-                        mo.shadowTint = mc->shadowTint;
-                        mo.rimStrength = mc->rimStrength;
-                        mo.rampSRV = mc->GetRampTextureSRV();
-                        model->SetMaterialOverride(mo);
-                    } else {
-                        model->ClearMaterialOverride();
-                    }
-                }
-
-                model->SetPosition(worldPos);
-                model->SetRotateEulerDeg(worldRot);
-                model->SetScale(worldScale);
-
                 // Main-camera frustum cull and/or per-cascade light-ortho caster cull.
                 // Cascade cull uses open-near so casters between the light and the
                 // cascade volume still cast; camera-frustum culling never gates shadows.
@@ -373,17 +380,68 @@ void GameObject::DrawVisual(bool useRealModel) {
                 }
 
                 if (submitDraw) {
+                    if (animStamp)
+                        vc->lastDrawnSerial = Lod_GetFrameSerial();
+                    const XMFLOAT4 prevEmission = model->GetEmission();
+                    model->SetEmission(vc->emissionGlow);
+                    Shader3DVariant variant = vc->shaderOverride.empty()
+                        ? RenderSettings_GetDefaultShader()
+                        : Shader3DVariantFromId(vc->shaderOverride);
+                    model->SetShaderVariant(variant);
+
+                    if (variant == Shader3DVariant::SurfaceFX) {
+                        Shader_SetSurfaceFXParams(vc->hasSurfaceFx ? vc->surfaceFx : SURFACE_FX_PARAMS{});
+                        model->SetTextureOverride(vc->GetSurfaceFxSRV());
+                        model->ClearMaterialOverride();
+                    } else {
+                        model->SetTextureOverride(nullptr);
+
+                        if (auto* mc = GetComponent<MaterialComponent>()) {
+                            Model3D::MaterialOverride mo;
+                            mo.enabled = true;
+                            mo.color = mc->color;
+                            mo.roughness = mc->roughness;
+                            mo.metallic = mc->metallic;
+                            mo.normalStrength = mc->normalStrength;
+                            mo.normalSRV = mc->GetNormalMapSRV();
+                            mo.shadeSteps = mc->shadeSteps;
+                            mo.shadeSmoothness = mc->shadeSmoothness;
+                            mo.specularThreshold = mc->specularThreshold;
+                            mo.outlineWidth = mc->outlineWidth;
+                            mo.outlineColor = mc->outlineColor;
+                            mo.shadowTint = mc->shadowTint;
+                            mo.rimStrength = mc->rimStrength;
+                            mo.rampSRV = mc->GetRampTextureSRV();
+                            model->SetMaterialOverride(mo);
+                        } else {
+                            model->ClearMaterialOverride();
+                        }
+                    }
+
+                    model->SetPosition(worldPos);
+                    model->SetRotateEulerDeg(worldRot);
+                    model->SetScale(worldScale);
+
                     if (frustumEnabled && mainPass)
                         FrustumCull_RecordDrawn();
-                    if (lodCounting && lodTracked)
+                    if (lodCounting && lodTracked) {
                         Lod_RecordDrawn(lodLevel);
+                        if (renderSettings.lodDebugLabels) {
+                            LodDebugLabel label;
+                            label.worldPosition = lodLabelPosition;
+                            label.level = lodLevel;
+                            label.distance = lodLabelDistance;
+                            label.screenPercent = lodLabelScreenPercent;
+                            Lod_AddDebugLabel(label);
+                        }
+                    }
                     if (shadowCullEnabled && shadowPass)
                         ShadowCascadeCull_RecordDrawn();
                     model->Draw();
+                    model->SetTextureOverride(nullptr);
+                    model->ClearMaterialOverride();
+                    model->SetEmission(prevEmission);
                 }
-                model->SetTextureOverride(nullptr);
-                model->ClearMaterialOverride();
-                model->SetEmission(prevEmission);
             }
         }
     }

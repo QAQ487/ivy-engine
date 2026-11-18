@@ -3,16 +3,34 @@
 
 #include "lod_state.h"
 
+#include <algorithm>
+#include <cmath>
+
 namespace {
 bool g_active = false;
 DirectX::XMFLOAT3 g_cameraPos{0.0f, 0.0f, 0.0f};
+float g_tanHalfFov = 0.0f;
 LodStats g_stats{};
 LodStats g_lastStats{};
+LodDebugLabel g_labels[kLodMaxDebugLabels];
+int g_labelCount = 0;
+uint64_t g_serial = 0;
+int g_forceLevel = -1;
+bool g_showRanges = true;
+AnimCullStats g_animStats{};
+AnimCullStats g_lastAnimStats{};
 }
 
-void Lod_BeginFrame(const DirectX::XMFLOAT3& cameraPosition) {
+void Lod_BeginFrame(const DirectX::XMFLOAT3& cameraPosition, float verticalFovDeg) {
     g_stats = {};
+    g_labelCount = 0;
+    ++g_serial;
+    g_lastAnimStats = g_animStats;
+    g_animStats = {};
     g_cameraPos = cameraPosition;
+    g_tanHalfFov = 0.0f;
+    if (verticalFovDeg > 0.0f && verticalFovDeg < 179.0f)
+        g_tanHalfFov = std::tan(DirectX::XMConvertToRadians(verticalFovDeg) * 0.5f);
     g_active = true;
 }
 
@@ -25,6 +43,7 @@ void Lod_EndFrame() {
 
 bool Lod_IsFrameActive() { return g_active; }
 const DirectX::XMFLOAT3& Lod_GetCameraPosition() { return g_cameraPos; }
+float Lod_GetTanHalfFov() { return g_tanHalfFov; }
 
 void Lod_RecordConsidered() { ++g_stats.considered; }
 void Lod_RecordCulledByDistance() { ++g_stats.culledByDistance; }
@@ -37,3 +56,25 @@ void Lod_RecordDrawn(int level) {
 }
 
 LodStats Lod_GetLastStats() { return g_lastStats; }
+
+void Lod_SetForceLevel(int level) {
+    g_forceLevel = std::min(std::max(level, -1), 7);
+}
+int Lod_GetForceLevel() { return g_forceLevel; }
+void Lod_SetShowRanges(bool show) { g_showRanges = show; }
+bool Lod_GetShowRanges() { return g_showRanges; }
+
+void Lod_AddDebugLabel(const LodDebugLabel& label) {
+    if (g_labelCount < kLodMaxDebugLabels)
+        g_labels[g_labelCount++] = label;
+}
+
+const LodDebugLabel* Lod_GetDebugLabels(int& count) {
+    count = g_labelCount;
+    return g_labels;
+}
+
+uint64_t Lod_GetFrameSerial() { return g_serial; }
+void Lod_RecordAnimUpdated() { ++g_animStats.updated; }
+void Lod_RecordAnimSkipped() { ++g_animStats.skipped; }
+AnimCullStats Lod_GetLastAnimStats() { return g_lastAnimStats; }

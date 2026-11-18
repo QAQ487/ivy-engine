@@ -125,6 +125,9 @@ struct PerfSample {
     int lodLevel0 = 0;
     int lodLevel1 = 0;
     int lodLevel2Plus = 0;
+    // Last completed update-pass off-screen animation counters.
+    int animUpdated = 0;
+    int animSkipped = 0;
 };
 
 // Consumer probe: samples public Controller_* getters once per Update after
@@ -212,6 +215,10 @@ struct EditorOpRequest {
     std::string scenePath;
     std::string settingKey;
     bool settingBoolValue = false;
+    // Numeric settings (lodBias, cullDistanceScale, ...): settingIsNumber is true and the
+    // value is in settingNumberValue; the host clamps it to the setting's range.
+    bool settingIsNumber = false;
+    double settingNumberValue = 0.0;
 };
 
 using EditorOpHandler = bool(*)(const EditorOpRequest& op, std::string& errorOut);
@@ -219,6 +226,8 @@ using EditorOpHandler = bool(*)(const EditorOpRequest& op, std::string& errorOut
 // Pure helpers (unit-tested on Linux offline).
 bool IsRuntimeTestBridgeSettingKey(const std::string& key);
 bool ParseRuntimeTestBridgeSettingValue(const Json& value, bool& outBool, std::string& err);
+bool IsRuntimeTestBridgeNumericSettingKey(const std::string& key);
+bool ParseRuntimeTestBridgeNumericSettingValue(const Json& value, double& outNumber, std::string& err);
 EditorPlayModeKind ParseRuntimeTestBridgePlayMode(const char* mode) noexcept;
 const char* EditorPlayModeKindName(EditorPlayModeKind mode) noexcept;
 

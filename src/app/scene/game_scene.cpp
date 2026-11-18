@@ -19,6 +19,7 @@
 #include "engine/scene/render_settings.h"
 #include "engine/core/builtin_paths.h"
 #include "engine/rendering/culling/frustum_cull.h"
+#include "engine/rendering/culling/fx_cull.h"
 #include "engine/rendering/culling/lod_state.h"
 #include "engine/rendering/culling/shadow_cascade_cull.h"
 #include "engine/rendering/lighting/shadow.h"
@@ -663,7 +664,7 @@ void GameScene::SetRenderObject(RENDER_OBJECT_TYPE type) {
 }
 
 void GameScene::Object_Draw() {
-	SceneLightingSyncFromNodes(SceneLoader_GetSceneNodes());
+	SceneLightingSyncFromNodes(SceneLoader_GetSceneNodes(), GetCamera().position);
 
 	float vx, vy, vw, vh;
 	EngineGUI_GetGameViewportRect(vx, vy, vw, vh);
@@ -681,7 +682,7 @@ void GameScene::Object_Draw() {
 		cp.aspect = aspect;
 		Shadow::UpdateForCamera(cp, RenderSettings_GetShadowPreset().maxDistance);
 		// LOD distances use the main camera for both shadow and camera passes.
-		Lod_BeginFrame(cam.position);
+		Lod_BeginFrame(cam.position, cam.orthographic ? 0.0f : cam.fov);
 	}
 
 	// Cascade depth passes (optional per-cascade light-ortho caster cull).
@@ -740,6 +741,7 @@ void GameScene::Object_Draw() {
 
 	// Billboard pass
 	{
+		FxCull_BeginFrame();
 		const auto& cam = GetCamera();
 		Billboard::SetViewMatrix(cam.GetViewMatrix());
 		Billboard::SetProjectionMatrix(cam.GetProjMatrix(GetRenderViewportWidth(), GetRenderViewportHeight()));

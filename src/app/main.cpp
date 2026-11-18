@@ -178,6 +178,11 @@ static MainStaticDestructionMarker s_mainStaticMarker;
 #include "engine/rendering/culling/shadow_cascade_cull.h"
 #include "engine/rendering/culling/sprite_cull.h"
 #include "engine/rendering/culling/lod_state.h"
+#include "engine/scene/render_settings.h"
+#include "camera.h"
+#include <algorithm>
+#include <cstdio>
+#include <vector>
 
 #ifndef GAME_RUNTIME
 #include "imgui/imgui.h"
@@ -589,6 +594,9 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstanc
                         sample.lodLevel1 = lod.drawn[1];
                         for (int level = 2; level < kLodMaxLevels; ++level)
                             sample.lodLevel2Plus += lod.drawn[level];
+                        const AnimCullStats animCull = Lod_GetLastAnimStats();
+                        sample.animUpdated = animCull.updated;
+                        sample.animSkipped = animCull.skipped;
                     }
                     runtimeTestBridge.RecordPerfSample(sample);
 
@@ -982,6 +990,9 @@ static void DrawWorld(void) {
 				   << " 0:" << lod.drawn[0]
 				   << " 1:" << lod.drawn[1]
 				   << " 2+:" << lodFar;
+				const AnimCullStats animCull = Lod_GetLastAnimStats();
+				ss << "\nANIM u:" << animCull.updated
+				   << " s:" << animCull.skipped;
 			}
 			const std::string fpsText = ss.str();
 
@@ -998,6 +1009,70 @@ static void DrawWorld(void) {
 			dt.SetText(fpsText.c_str(), { 0.1f, 0.5f, 0.2f, 1.0f });
 			dt.Draw();
 			dt.Clear();
+		}
+	}
+
+	// LOD debug labels (render.lodDebugLabels): world-anchored text above each LOD mesh.
+	if (RenderSettings_GetConst().lodDebugLabels) {
+		int labelCount = 0;
+		const LodDebugLabel* labels = Lod_GetDebugLabels(labelCount);
+		float viewportX, viewportY, viewportWidth, viewportHeight;
+		EngineGUI_GetGameViewportRect(viewportX, viewportY, viewportWidth, viewportHeight);
+		if (labelCount > 0 && viewportWidth > 0.0f && viewportHeight > 0.0f) {
+			using namespace DirectX;
+			const Camera& cam = GetCamera();
+			const XMMATRIX viewProj = cam.GetViewMatrix()
+				* cam.GetProjMatrix(GetRenderViewportWidth(), GetRenderViewportHeight());
+
+			// Nearest first, so the cap keeps the labels that matter.
+			std::vector<int> order(static_cast<size_t>(labelCount));
+			for (int i = 0; i < labelCount; ++i) order[static_cast<size_t>(i)] = i;
+			std::sort(order.begin(), order.end(), [labels](int a, int b) {
+				return labels[a].distance < labels[b].distance; });
+			constexpr int kMaxDrawnLabels = 96;
+
+			hal::DebugText dt(GetDevice(), GetDeviceContext(),
+				static_cast<UINT>(GetBackBufferWidth()), static_cast<UINT>(GetBackBufferHeight()),
+				0.0f, 0.0f, 0, 0, 13.0f, 9.0f);
+			int drawn = 0;
+			for (int idx : order) {
+				if (drawn >= kMaxDrawnLabels) break;
+				const LodDebugLabel& label = labels[idx];
+				const XMVECTOR clip = XMVector4Transform(
+					XMVectorSet(label.worldPosition.x, label.worldPosition.y + 0.2f,
+						label.worldPosition.z, 1.0f), viewProj);
+				const float w = XMVectorGetW(clip);
+				if (w <= 0.01f) continue;
+				const float ndcX = XMVectorGetX(clip) / w;
+				const float ndcY = XMVectorGetY(clip) / w;
+				if (ndcX < -1.0f || ndcX > 1.0f || ndcY < -1.0f || ndcY > 1.0f) continue;
+
+				char text[64];
+				if (label.culled)
+					std::snprintf(text, sizeof(text), "CULLED %.0fm > %.0fm",
+						label.distance, label.cullDistance);
+				else if (label.screenPercent >= 0.0f)
+					std::snprintf(text, sizeof(text), "L%d %.0fm %.1f%%",
+						label.level, label.distance, label.screenPercent);
+				else
+					std::snprintf(text, sizeof(text), "L%d %.0fm", label.level, label.distance);
+				static const XMFLOAT4 kLevelColors[] = {
+					{ 0.3f, 1.0f, 0.3f, 1.0f }, { 1.0f, 1.0f, 0.2f, 1.0f },
+					{ 1.0f, 0.6f, 0.1f, 1.0f }, { 1.0f, 0.2f, 0.2f, 1.0f } };
+				static const XMFLOAT4 kCulledColor = { 0.9f, 0.3f, 0.9f, 1.0f };
+				const XMFLOAT4& color = label.culled
+					? kCulledColor : kLevelColors[(std::min)(label.level, 3)];
+
+				float textW = 0.0f, textH = 0.0f;
+				dt.MeasureText(text, textW, textH);
+				dt.SetOffset(
+					viewportX + (ndcX * 0.5f + 0.5f) * viewportWidth - textW * 0.5f,
+					viewportY + (0.5f - ndcY * 0.5f) * viewportHeight - textH);
+				dt.SetText(text, color);
+				dt.Draw();
+				dt.Clear();
+				++drawn;
+			}
 		}
 	}
 

@@ -43,4 +43,17 @@ inline float ResolveShadowDistance(float presetDistance, float overrideDistance)
     return o > 0.0f ? o : presetDistance;
 }
 
+// render.effectCullRadius: assumed bounding radius (world units, before the effect's scale)
+// of every Effekseer effect, which has no authored bounds. Clamped to [0.5, 500];
+// non-finite input falls back to the default.
+constexpr float kDefaultEffectCullRadius = 20.0f;
+constexpr float kMinEffectCullRadius = 0.5f;
+constexpr float kMaxEffectCullRadius = 500.0f;
+
+inline float ClampEffectCullRadius(float radius) {
+    if (!std::isfinite(radius))
+        return kDefaultEffectCullRadius;
+    return std::min(std::max(radius, kMinEffectCullRadius), kMaxEffectCullRadius);
+}
+
 } // namespace cull_settings

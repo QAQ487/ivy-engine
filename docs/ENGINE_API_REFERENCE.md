@@ -1,7 +1,7 @@
 # Ivy Engine — Complete Ability & API Reference
 
 Exhaustive catalog of **Ivy Engine** capabilities and public functions,
-scanned from every header under `engine/` and `src/app/` (170 headers; regenerate to refresh).
+scanned from every header under `engine/` and `src/app/` (173 headers; regenerate to refresh).
 
 **Learning how to use the engine?** Start with [`ENGINE_USER_GUIDE.md`](ENGINE_USER_GUIDE.md) (humans).  
 For JSON schemas, source map, and change rules, see [`AGENTS.md`](../AGENTS.md) (AI agents).
@@ -1489,6 +1489,7 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `return std::min(std::max(scale, kMinCullDistanceScale), kMaxCullDistanceScale);`
 - `return std::min(std::max(distance, kMinShadowDistance), kMaxShadowDistance);`
 - `inline float ResolveShadowDistance(float presetDistance, float overrideDistance) { const float o = ClampShadowDistanceOverride(overrideDistance);`
+- `return std::min(std::max(radius, kMinEffectCullRadius), kMaxEffectCullRadius);`
 
 ### `engine/rendering/culling/frustum_cull.h`
 **Types:** FrustumCullStats
@@ -1509,19 +1510,50 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `return TransformAabb(local, world);`
 - `return TransformAabb(local, rows);`
 
+### `engine/rendering/culling/fx_cull.h`
+**Types:** FxCullStats
+- `void FxCull_BeginFrame();`
+- `void FxCull_RecordBillboards(int considered, int culled);`
+- `void FxCull_RecordParticles(int considered, int culled);`
+- `void FxCull_RecordEffects(int considered, int culled);`
+- `FxCullStats FxCull_GetLastStats();`
+
+### `engine/rendering/culling/fx_cull_math.h`
+- `return std::max(baseRadius, 0.0f) * std::max({sx, sy, sz, 1e-3f});`
+
+### `engine/rendering/culling/light_select_math.h`
+**Types:** Candidate
+- `std::vector<float> score(static_cast<size_t>(n));`
+- `std::vector<int> order(static_cast<size_t>(n));`
+
 ### `engine/rendering/culling/lod_select_math.h`
 - `return std::min(std::max(bias, kMinBias), kMaxBias);`
+- `inline int ClampForcedLevel(int level) { return std::min(std::max(level, -1), kMaxForcedLevel);`
+- `return std::min(f, std::max(count, 0));`
+- `inline int ClampShadowLodOffset(int offset) { return std::min(std::max(offset, 0), kMaxShadowLodOffset);`
+- `return std::min(cameraLevel + ClampShadowLodOffset(offset), std::max(last, cameraLevel));`
 
 ### `engine/rendering/culling/lod_state.h`
-**Types:** LodStats
-- `void Lod_BeginFrame(const DirectX::XMFLOAT3& cameraPosition);`
+**Types:** LodStats, LodDebugLabel, AnimCullStats
+- `void Lod_BeginFrame(const DirectX::XMFLOAT3& cameraPosition, float verticalFovDeg = 0.0f);`
 - `void Lod_EndFrame();`
 - `bool Lod_IsFrameActive();`
 - `const DirectX::XMFLOAT3& Lod_GetCameraPosition();`
+- `float Lod_GetTanHalfFov();`
 - `void Lod_RecordConsidered();`
 - `void Lod_RecordCulledByDistance();`
 - `void Lod_RecordDrawn(int level);`
 - `LodStats Lod_GetLastStats();`
+- `void Lod_AddDebugLabel(const LodDebugLabel& label);`
+- `const LodDebugLabel* Lod_GetDebugLabels(int& count);`
+- `void Lod_SetForceLevel(int level);`
+- `int Lod_GetForceLevel();`
+- `void Lod_SetShowRanges(bool show);`
+- `bool Lod_GetShowRanges();`
+- `uint64_t Lod_GetFrameSerial();`
+- `void Lod_RecordAnimUpdated();`
+- `void Lod_RecordAnimSkipped();`
+- `AnimCullStats Lod_GetLastAnimStats();`
 
 ### `engine/rendering/culling/shadow_cascade_cull.h`
 **Types:** ShadowCascadeCullStats
@@ -1798,6 +1830,7 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `void SetScale(const DirectX::XMFLOAT3& s);`
 - `void Draw();`
 - `void UpdateAnimation(double dtSec = 1.0 / 60.0);`
+- `void AdvanceAnimationTime(double dtSec);`
 - `void UploadSkinnedVerticesIfDirty();`
 - `void AddAnimation(const std::string& animName, const char* fileName);`
 - `void EnsureAnimation(const std::string& animName, const char* fileName);`
@@ -1940,6 +1973,10 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `void RenderSettings_ResetToDefaults();`
 - `RenderSettingsData& RenderSettings_Get();`
 - `const RenderSettingsData& RenderSettings_GetConst();`
+- `bool RenderSettings_SetBoolByName(const char* key, bool value);`
+- `bool RenderSettings_GetBoolByName(const char* key, bool* outValue);`
+- `bool RenderSettings_SetNumberByName(const char* key, double value);`
+- `bool RenderSettings_GetNumberByName(const char* key, double* outValue);`
 - `RenderSettingsData RenderSettings_ParseJson(const nlohmann::json& renderJson, RenderSettingsData settings = {});`
 - `void RenderSettings_ApplyFromJson(const nlohmann::json& renderJson);`
 - `nlohmann::json RenderSettings_ToJson();`
@@ -1981,8 +2018,9 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `std::ifstream file(disk, std::ios::binary);`
 
 ### `engine/scene/scene_lighting.h`
-**Types:** GameObject
-- `void SceneLightingSyncFromNodes(const std::vector<std::unique_ptr<GameObject>>& roots);`
+**Types:** GameObject, SceneLightingStats
+- `void SceneLightingSyncFromNodes(const std::vector<std::unique_ptr<GameObject>>& roots, const DirectX::XMFLOAT3& cameraPosition);`
+- `SceneLightingStats SceneLighting_GetLastStats();`
 
 ### `engine/scene/scene_loader.h`
 **Types:** PreparedScene, ScenePreparationJob
@@ -2141,6 +2179,10 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `bool ScriptApi_TryGetColliderFootprint(const Collider& collider, DirectX::XMFLOAT3& outCenter, DirectX::XMFLOAT3& outSize);`
 - `void ScriptApi_EngineGUIStopPlay();`
 - `bool ScriptApi_RequestExitGame();`
+- `bool ScriptApi_RenderSettingSetBool(const char* key, bool value);`
+- `bool ScriptApi_RenderSettingGetBool(const char* key, bool& outValue);`
+- `bool ScriptApi_RenderSettingSetNumber(const char* key, double value);`
+- `bool ScriptApi_RenderSettingGetNumber(const char* key, double& outValue);`
 - `void ScriptApi_CameraSetPosition(DirectX::XMFLOAT3 position);`
 - `void ScriptApi_CameraSetTarget(DirectX::XMFLOAT3 target);`
 - `void ScriptApi_CameraSetUp(DirectX::XMFLOAT3 up);`
@@ -2256,6 +2298,8 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `void RuntimeTestSceneOverride_Clear();`
 - `bool IsRuntimeTestBridgeSettingKey(const std::string& key);`
 - `bool ParseRuntimeTestBridgeSettingValue(const Json& value, bool& outBool, std::string& err);`
+- `bool IsRuntimeTestBridgeNumericSettingKey(const std::string& key);`
+- `bool ParseRuntimeTestBridgeNumericSettingValue(const Json& value, double& outNumber, std::string& err);`
 - `public: Protocol(std::string runId, unsigned long pid, unsigned long session, BridgeHostKind host = BridgeHostKind::Runtime);`
 - `void Publish(bool ready, bool playing, const std::string& scene, std::vector<ObservedTarget> targets = {}, std::vector<ListedObject> objects = {}, const char* readyDetail = nullptr, EditorPlayModeKind playMode = EditorPlayModeKind::None);`
 - `bool TakeQuit();`

@@ -10,6 +10,9 @@
 #include "visual_component.h"
 
 #include "model_asset_cache.h"
+#include "engine/rendering/culling/anim_cull_math.h"
+#include "engine/rendering/culling/lod_state.h"
+#include "engine/scene/render_settings.h"
 #include "engine/rendering/model/model_util.h"
 
 #include "libraries/nlohmann/json.hpp"
@@ -259,7 +262,24 @@ void VisualComponent::Update(double elapsed_time) {
     Model3D* model = GetRealModel();
     if (!model) return;
 
+    // Never skip before a few real evaluations: a Visual that is culled from its very first
+    // frame (cull distance, off-screen spawn) must still get a valid skin palette before it
+    // can be skipped, or it would draw with an unposed palette when it first comes into view.
+    constexpr int kMinPoseUpdatesBeforeSkip = 3;
+    if (m_poseUpdateCount >= kMinPoseUpdatesBeforeSkip
+        && anim_cull::ShouldSkipPose(RenderSettings_GetConst().animCullingEnabled,
+            lastConsideredSerial, lastDrawnSerial, Lod_GetFrameSerial())) {
+        // Not drawn by the main camera or any shadow cascade last frame: keep the
+        // clip phase moving but skip bone sampling, skinning and palette upload.
+        model->AdvanceAnimationTime(elapsed_time);
+        Lod_RecordAnimSkipped();
+        return;
+    }
+
+    Lod_RecordAnimUpdated();
     model->UpdateAnimation(elapsed_time);
+    if (m_poseUpdateCount < 1000)
+        ++m_poseUpdateCount;
 }
 
 std::string VisualComponent::Serialize() const {
@@ -277,9 +297,15 @@ std::string VisualComponent::Serialize() const {
         j["shader"] = shaderOverride;
     if (!lods.empty()) {
         nlohmann::json arr = nlohmann::json::array();
-        for (const LodLevel& lod : lods)
-            arr.push_back({ {"model", lod.modelPath}, {"maxDistance", lod.maxDistance} });
+        for (const LodLevel& lod : lods) {
+            nlohmann::json entry = { {"model", lod.modelPath}, {"maxDistance", lod.maxDistance} };
+            if (lod.screenHeight > 0.0f)
+                entry["screenHeight"] = lod.screenHeight;
+            arr.push_back(std::move(entry));
+        }
         j["lods"] = arr;
+        if (lodScreenSize)
+            j["lodMode"] = "screenSize";
     }
     if (cullDistance > 0.0f)
         j["cullDistance"] = cullDistance;
@@ -323,6 +349,8 @@ void VisualComponent::Deserialize(const std::string& jsonStr) {
 
         lods.clear();
         lodLastLevel = -1;
+        lodScreenSize = j.contains("lodMode") && j["lodMode"].is_string()
+            && j["lodMode"].get<std::string>() == "screenSize";
         if (j.contains("lods") && j["lods"].is_array()) {
             for (const auto& entry : j["lods"]) {
                 if (!entry.is_object() || !entry.contains("model") || !entry["model"].is_string())
@@ -335,10 +363,20 @@ void VisualComponent::Deserialize(const std::string& jsonStr) {
                     const float d = entry["maxDistance"].get<float>();
                     lod.maxDistance = std::isfinite(d) ? std::max(d, 0.0f) : 0.0f;
                 }
+                if (entry.contains("screenHeight") && entry["screenHeight"].is_number()) {
+                    const float h = entry["screenHeight"].get<float>();
+                    lod.screenHeight = std::isfinite(h) ? std::min(std::max(h, 0.0f), 1.0f) : 0.0f;
+                }
                 lods.push_back(std::move(lod));
             }
-            std::stable_sort(lods.begin(), lods.end(),
-                [](const LodLevel& a, const LodLevel& b) { return a.maxDistance < b.maxDistance; });
+            if (lodScreenSize) {
+                // Largest on-screen size first: the first level to switch to is the biggest.
+                std::stable_sort(lods.begin(), lods.end(),
+                    [](const LodLevel& a, const LodLevel& b) { return a.screenHeight > b.screenHeight; });
+            } else {
+                std::stable_sort(lods.begin(), lods.end(),
+                    [](const LodLevel& a, const LodLevel& b) { return a.maxDistance < b.maxDistance; });
+            }
         }
         cullDistance = 0.0f;
         if (j.contains("cullDistance") && j["cullDistance"].is_number()) {

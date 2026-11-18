@@ -109,15 +109,52 @@
 
 唔屬於上面 LOD v1 嘅範圍，建議每個主題獨立 PR（每個都要自己嘅 Windows A/B 證據）。順序按效益／風險。
 
-- [ ] **`DrawVisual` 先剔除再設定**：`GameObject::DrawVisual`（`engine/ecs/game_object.cpp`）喺 frustum／cascade／距離剔除判斷**之前**已經做 `SetEmission`／`SetShaderVariant`／`SetMaterialOverride` 同世界姿態解算；主 pass 加每個 cascade 每物件每幀最多行 5 次，被剔除嘅物件照付成本。改動細、風險低。另外冇空間分割，逐個物件 O(N) 遍歷。
-- [ ] **離屏／遠距動畫降頻或暫停**：`VisualComponent::Update` 只睇 `playAnimation`，唔睇可見度或距離；`VisualSystem_UploadSkinning` 亦冇可見度判斷，被剔除或 `cullDistance` 外嘅角色仍然每幀 `UpdateAnimation` 同上傳 skin palette。對應 Unity Animator Culling Mode。可重用 `DrawVisual` 嘅可見度結果同 `cullDistance`。
-- [ ] **燈光揀選**：`Lighting::MAX_LIGHTS = 4`，`SceneLightingSyncFromNodes` 按場景遍歷順序攞頭 4 盞然後 `break`，唔睇距離／range／重要性／可見度，多燈場景會用錯燈。
-- [ ] **Billboard／粒子／Effekseer 剔除**：`Billboard::Update` 只做遠到近排序，冇 frustum 或距離剔除；`ParticlePool` 只有 `maxParticles` 上限，冇 per-emitter 剔除或距離縮減；`EffectSystem` 直接 `Manager::Draw`，冇用 Effekseer culling world。
-- [ ] **LOD 螢幕大小模式**：而家只有距離；按物件大細計距離要靠 `tools/gen_lod_test_assets.py`（`d = size / (0.828 × coverage)`），引擎本身冇 screen-relative height 閾值。
-- [ ] **LOD cross-fade／dither**：切換係硬切。
-- [ ] **陰影投影物用較低 LOD**：而家陰影同主鏡頭同一級，用低一級可以省陰影成本。
-- [ ] **編輯器 LOD 工具**：編輯視圖用 proxy（`DrawVisual(false)`）所以唔行 LOD；冇強制指定某級嘅 debug 選項，冇顯示邊界、距離嘅 gizmo。
-- [ ] **腳本同 bridge 可控性**：`ScriptRuntimeApi` 冇任何 LOD／culling／render 設定介面；bridge `set_setting` 只收布林，`lodBias`／`cullDistanceScale`／`shadowDistance` 唔能夠由測試改。（加 `ScriptRuntimeApi` 要 append-only 並 bump 版本。）
+- [x] **`DrawVisual` 先剔除再設定**（source 已做，等 Windows 驗收）：`GameObject::DrawVisual`（`engine/ecs/game_object.cpp`）而家先做距離／frustum／cascade 剔除，確定要畫先做 `SetEmission`／`SetShaderVariant`／`SetMaterialOverride` 同 model 姿態設定；被剔除嘅物件唔再付呢啲成本，亦唔會改 model 嘅 pose／override 狀態。剔除結果同 counters 不變。仍然冇空間分割，逐個物件 O(N) 遍歷。
+- [x] **離屏／遠距動畫降頻或暫停**（source 已做，等 Windows 驗收）
+  - `DrawVisual` 喺 Play 嘅 real-model pass 為每個 Visual 記低「最後被考慮」同「最後被任何 pass（主鏡頭或 shadow cascade）提交」嘅 frame serial（`Lod_GetFrameSerial`，`lod_state.{h,cpp}`）。下一幀 `VisualComponent::Update` 用 `anim_cull::ShouldSkipPose`（`engine/rendering/culling/anim_cull_math.h`）判斷：上一幀有被考慮但冇被畫 → 唔做 `UpdateAnimation`（跳過 bone 採樣、skinning、palette），只用新加嘅 `Model3D::AdvanceAnimationTime` 推進 clip 時間，所以返回畫面時相位連續。冇被考慮過嘅 Visual（新生成、父節點 inactive）照常更新，唔會喺第一次畫之前凍結。Shadow cascade 仍然畫到嘅 caster 會維持更新。
+  - 涵蓋 frustum 剔除、`cullDistance` 剔除同兩者都冇畫嘅情況；Toggle：`render.animCullingEnabled`（預設 true；Rendering 面板、bridge `set_setting`）。Counters：Rendering 面板、collision-viz、FPS `ANIM u/s`、bridge `perf.anim.{updated,skipped}`（上一個 update pass）。
+  - Windows 已確認（Terry）：遠排 `cullDistance 40` 開 Mesh LOD 時冇 bug——超過 40 m 顯示 `CULLED`，入到 40 m 內就出現。
+  - 排查紀錄（遠排 `cullDistance 40` 開 Mesh LOD 時唔出現）：`DrawVisual` 嘅距離剔除邏輯（`SelectLevel` 單元測試涵蓋）同 animate 物件走同一條路，睇唔到 bug；`cullDistance` 只喺 Mesh LOD 開時生效（設計如此），遠排喺 z=70，要飛到 z≈30 以內（距離 < 40 m）先會畫。為免再靠估：`render.lodDebugLabels` 而家對被距離剔除嘅物件顯示洋紅色 `CULLED <距離>m > <上限>m`（`scene_anim_cull_fly.json` 預設開）；另外離屏動畫降頻要先做夠 3 次真正評估先可以跳過，避免一開始就被剔除嘅 Visual 帶住未初始化嘅 skin palette 出場。
+  - 已知限制：重新入畫面嗰一幀可能顯示舊 pose（一幀滯後）；腳本讀離屏角色 bone（`TryGetBoneLocalMatrix`）會拎到最後一次評估嘅 pose；未做降頻（只有「畫／唔畫」兩級）、物理／腳本唔受影響。
+  - Linux：`tools/run_anim_cull_check.sh`（決策邏輯）。驗收場景：`testbed/rom/scene/scene_anim_cull_fly.json`（`python3 tools/gen_anim_cull_scene.py` 生成；fly 鏡頭，冇腳本）：前排 5、後排 5（鏡頭後 45 m）、左右 4、遠排 4（`cullDistance 40`）、鏡頭後 12 m 嘅 1 個 shadow caster，全部循環播 Idle。
+  - 驗收（Windows Debug＋Release，Terry）：起始望前面 → `ANIM u` ≈ 前排＋可能嘅 shadow caster，`s` ≈ 後排＋左右＋遠排；Rendering 面板關 `Off-screen Animation Culling` 後 `s` 變 0、`u` 變全部；轉身 180° 後原本被跳過嘅後排同前排 pose 一致（相位連續，唔應該跳返 T-pose／第 0 幀）；`animCullingEnabled` ON vs OFF 同一視角截圖像素 diff 0；GPU／update ms A/B；shadow caster 嘅影子唔凍結；Edit／Play 切換同 scene 重載後冇凍結角色。
+- [x] **燈光揀選**（source 已做，等 Windows 驗收）
+  - `SceneLightingSyncFromNodes(roots, cameraPosition)`（`engine/scene/scene_lighting.cpp`）喺啟用燈光多過 `Lighting::MAX_LIGHTS`（4）時，用 `light_select::Select`（`engine/rendering/culling/light_select_math.h`）揀：directional 優先，然後 point／spot 按 camera 處影響力 `亮度 × range² / (range² + 距離²)`（亮度 = colour × intensity 最大分量）排序；上一幀揀中嘅燈有 1.25× 加成避免臨界閃爍；揀中嘅燈保持場景順序，所以 shadow caster 索引穩定。≤ 4 盞燈嘅場景行為完全不變。
+  - Toggle：`render.lightSelectionEnabled`（預設 true；Rendering 面板、bridge `set_setting`）。關閉 = 舊行為（場景順序頭 4 盞）。Counters：Rendering 面板 `lights enabled / used`。
+  - 未做：spot 錐形方向／物件包圍盒嘅影響力、per-object 燈光（forward+ 或 tiled）、燈光 fade-in/out、spot／point shadow。
+  - Linux：`tools/run_light_select_check.sh`（選擇數學）。驗收場景：`testbed/rom/scene/scene_light_select_fly.json`（`python3 tools/gen_light_select_scene.py` 生成）：1 盞暗 directional ＋ 12 盞彩色 point light 排成一行，13 盞燈對 4 個 slot。
+  - 驗收（Windows Debug＋Release，Terry）：Play 後沿住燈行飛，開住 Light Selection 時最近嘅 3 盞 point light 照亮地面，亮區跟住鏡頭移動，交界處冇明顯閃爍；`lights enabled 13 | used 4`；關掉之後永遠只係行頭嗰 3 盞（最左）亮；`≤ 4` 盞燈嘅現有場景（例如 `scene_lod.json`）畫面冇變。
+- [x] **Billboard／粒子／Effekseer 剔除**（source 已做，等 Windows 驗收；粒子同 Effekseer 要有腳本／effect 資產嘅 content project 先驗到）
+  - **Billboard**：`Billboard::Draw`（`engine/rendering/billboard/billboard.cpp`）按 view×proj 對清單做球體 frustum 剔除（半徑 = 四邊形半對角線，camera-facing 同 ground-aligned 都適用），用 `remove_if` 保持遠到近次序；腳本 `Billboard::Add` 同 `BillboardComponent` 都涵蓋。Toggle：`render.billboardCullingEnabled`。
+  - **粒子**：`ParticleRenderer_RenderEmitter` 對每粒粒子做球體測試（半徑 0.75×size），被剔除嘅粒子唔入 instance buffer，全部被剔除就唔 Map／Draw。同一個 toggle。模擬、spawn、壽命完全唔受影響。
+  - **Effekseer**：`EffectSystem` 追蹤每個 handle 嘅位置同縮放（`Play`／`SetLocation`／`SetScale`），`Draw3D` 前按 `effectCullRadius`（預設 20 m）× 最大縮放分量做球體測試，用 `Manager::SetAutoDrawing` 開關，所以 `Manager::Draw` 保持原有繪製次序；effect 照常模擬。Toggle：`render.effectCullingEnabled`、`render.effectCullRadius`（0.5–500）。Effect 冇 authored bounds，半徑係全局估算，大範圍 effect 要自己調大。
+  - Counters：Rendering 面板（billboard／particle／effect 各 considered／culled）。未接 bridge `perf`；bridge `set_setting` 加 `billboardCullingEnabled`、`effectCullingEnabled`。
+  - 未做：per-effect／per-billboard 剔除距離、Effekseer 自帶 culling world、粒子 emitter 級別剔除與距離縮減（`maxParticles` 按距離減）、粒子／effect 嘅 LOD。
+  - Linux：`tools/run_fx_cull_check.sh`（半徑＋球體 frustum 數學）、`tests/cull_settings_test.cpp`（半徑 clamp）。驗收場景：`testbed/rom/scene/scene_billboard_cull_fly.json`（`python3 tools/gen_billboard_cull_scene.py` 生成：12×12 billboard 加 16 個地面標記，fly 鏡頭；Windows 已驗收：望天全部 160 個被剔除、只望一個時其餘約 150 個被剔除）同 `testbed/rom/scene/scene_particle_cull_fly.json`（Windows Debug 已驗收：望天全部粒子被剔除、只望一個 emitter 時約 100 粒未被剔除其餘全剔除；`python3 tools/gen_particle_cull_scene.py` 生成：三圈共 40 個 emitter，每個掛 `SampleParticleEmitterScript`（`samples/scripts/`，只編入 Debug editor／Debug runtime host，Release 冇粒子）；fly 鏡頭）。testbed 冇 Effekseer 資產，所以 effect 仍然要用有 effect 資產嘅 content project 驗。
+  - 驗收（Windows Debug＋Release，Terry）：Billboard——`billboard considered 160 | culled N`（N 隨視角變，望向一邊時約一半）；開關 Billboard／Particle Culling 前後同一視角截圖像素 diff 0；邊緣冇閃現／消失；GPU ms A/B。粒子——開 `scene_particle_cull_fly.json`（Debug build）F2：`particle considered` 約 40 × 每 emitter 活粒子數；望住一個 emitter 時 `particle culled` 佔大部分，望天則接近全部；開關 Billboard／Particle Culling 前後同一視角畫面不變。Effekseer——`effect culled` > 0；effect 嘅 origin 離開畫面邊緣時有冇突然消失（有就調大 `effectCullRadius`）；返入畫面時 effect 進度連續（冇由頭播）。
+- [x] **LOD 螢幕大小模式**（source 已做，等 Windows 驗收）
+  - `visual.lodMode: "screenSize"`（預設 `"distance"`）＋ `lods[i].screenHeight`（0–1，視口高度比例；投影高度跌到呢個比例以下就切去呢級，由大到小排序，0 = 永不切換）。投影高度 = 基礎 mesh 世界 AABB 最長邊 /（2 × 距離 × tan(fov/2)）；`lod_select::ScreenHeightToDistance`（`lod_select_math.h`）將每個閾值換算成切換距離，之後照用原有距離選擇（hysteresis、`lodBias`、`cullDistance` 不變），所以接入點只係 `GameObject::DrawVisual` 同 `Lod_BeginFrame(pos, fov)`（新增 `Lod_GetTanHalfFov`）。Orthographic 相機保持 level 0。
+  - Inspector：Visual 區 `Screen Size Mode` checkbox，每行改為 `%` 輸入；切換模式時會補預設值並重排。Save／load：兩個欄位有設就寫。
+  - Linux：`tools/run_lod_check.sh`（換算公式、往返、同距離選擇配合）。驗收場景：`testbed/rom/scene/scene_lod_screen_fly.json`（`python3 tools/gen_lod_screen_scene.py` 生成；4 欄 boulder 縮放 1／2／4／8，全部用 12%／6%／3%）。
+  - Windows 已驗收（Terry）：切換位置跟閾值走（標籤百分比 ≈ 設定值，同一個 boulder 用 50／20／10 比 12／6／3 喺更近嘅距離就降級）；Inspector 開關／改百分比／保存重載未驗收（Inspector LOD 區喺 `Animate` 下面，唔係獨立選單）。
+  - 驗收（Windows）：fly 遠離，細 boulder 好早變 LOD1，大 boulder 要遠好多先變，切換距離大約同尺寸成正比（細 boulder 喺 45° FOV 下約 11／22／44 m，×8 嗰欄約 8 倍；實際數字隨相機 FOV 變）；Rendering 面板 `lod L0 / L1 / L2+` 隨距離變；縮窄 FOV 時 LOD 保持得更遠；Inspector 開關模式、改 %、Undo 之外嘅保存重載；舊場景（distance 模式）畫面不變。
+  - Debug 標籤：`render.lodDebugLabels`（預設 false；Rendering 面板 `LOD Debug Labels`；bridge `set_setting` 收）。`DrawVisual` 喺主 camera pass 為每個有 LOD／cullDistance 嘅 Visual 記低 `LodDebugLabel`（`lod_state`），`main.cpp` 喺 FPS overlay 之後將 AABB 頂部投影到螢幕，用 `hal::DebugText` 畫 `L<級> <距離>m <螢幕高度%>`（綠／黃／橙／紅 = L0／L1／L2／L3）；最近優先、上限 96 個。`scene_lod_screen_fly.json` 預設開。
+  - 未做：以 bounding sphere 而非 AABB 最長邊計大小、per-camera（shadow 專用）螢幕大小、editor 視圖預覽。
+- [ ] **LOD cross-fade／dither**：切換係硬切。**設計備忘（未實作，Linux 環境冇 HLSL 編譯器同 D3D11，唔能夠驗證）**：每個 pixel shader 變體（standard／toon／rim／PBR／surface_fx／directional／point／spot…）加一個 `LodFade` constant buffer 值（0..1）同 8×8 Bayer／interleaved-gradient dither，`clip(fade - dither)`（淡出）或 `clip(dither - fade)`（淡入）；過渡期間 `DrawVisual` 要用兩個 pass 畫新舊兩級 mesh（新級淡入、舊級淡出），每個 Visual 記 `lodFadeFrom／lodFadeT`，由 `Lod_BeginFrame` 嘅 dt 推進（約 0.25–0.5 s）；shadow pass 唔做 cross-fade（直接用目標級）；distance／screenSize 兩種模式共用。風險：所有 shader 變體都要改且要 Windows 重新編譯，每個物件過渡期間 draw call 翻倍；建議作為獨立 PR，附 Windows 截圖證據。
+- [x] **陰影投影物用較低 LOD**（source 已做，等 Windows 驗收）
+  - `render.shadowLodOffset`（預設 0，0–3；Rendering 面板 `Shadow LOD Offset`）：cascade pass 喺 `GameObject::DrawVisual` 用 `lod_select::ShadowCasterLevel(cameraLevel, offset, count)` 揀 mesh——相機級別往低細節方向推 `offset` 級，唔超過最後一級；`cullDistance` 剔除照舊，`animate: true` 嘅 Visual 只有 level 0 所以唔受影響。Hysteresis 記憶仍然記相機級別，唔會被 offset 污染。預設 0 = 行為不變。
+  - Linux：`tools/run_lod_check.sh`（`ShadowCasterLevel`、clamp）。驗收場景：`testbed/rom/scene/scene_lod_fly.json` 嘅強制 LOD0 展示排（offset 3 時影子變 LOD3 形狀）。
+  - 驗收（Windows）：offset 0 影子同之前一樣；offset 1／2／3 影子逐級變粗但位置唔飄；Rendering 面板 vertices／GPU ms A/B；遠距樹影冇跳變。
+- [x] **編輯器 LOD 工具**（source 已做，等 Windows 驗收）
+  - **強制某級**：Rendering 面板 `Force LOD Level`（Auto／L0–L7），`lod_select::ForcedLevel` 喺 `DrawVisual` 揀完相機級別後覆蓋（受物件實際級數限制；culled 照舊；shadow 跟隨再疊 `shadowLodOffset`）。狀態放喺 `lod_state`（`Lod_SetForceLevel`），**唔會**存入場景，場景重載後保留；bridge／腳本 key `lodForceLevel`（-1–7）。只喺 Play／runtime 有效（Edit 視圖用 proxy mesh，唔行 LOD）。
+  - **距離 gizmo**：Edit 視圖揀中有 LOD／cullDistance 嘅物件時，`DrawSelectionLodRanges`（`engine_gui.cpp`）喺其世界 AABB 中心畫線框球：黃／橙／紅 = 切去 L1／L2／L3，青色 = cull distance；半徑已除以 `lodBias`、乘 `cullDistanceScale`；Screen Size Mode 用編輯器相機 FOV 換算等價距離；`animate` 嘅 Visual 唔畫 LOD 球（同 runtime 一致）。Rendering 面板 `Show LOD Ranges (selected)` 開關（預設開）。
+  - 未做：Edit 視圖直接預覽 LOD mesh、Inspector 內嘅「預覽此級」按鈕、gizmo 拖曳改距離。
+- [x] **腳本同 bridge 可控性**（source 已做，等 Windows 驗收）
+  - 共用名稱表 `engine/scene/render_setting_access.h`（模板，Linux 可測）＋ `RenderSettings_{Set,Get}{Bool,Number}ByName`：toggle key（`frustumCullingEnabled`、`shadowCascadeCullingEnabled`、`spriteCullingEnabled`、`lodEnabled`、`animCullingEnabled`、`lightSelectionEnabled`、`billboardCullingEnabled`、`effectCullingEnabled`、`lodDebugLabels`）同數值 key（`lodBias`、`cullDistanceScale`、`shadowDistance`、`shadowLodOffset`、`effectCullRadius`、`lodForceLevel`），數值用同場景載入一樣嘅 clamp，非有限值同未知 key 返回 false。
+  - Bridge `set_setting` 收布林同數值 key，host 端用同一組函數（`runtime_test_editor_apply.cpp` 已簡化）。
+  - **`ScriptRuntimeApi` v49**（append-only；`kScriptRuntimeApiVersion` 48 → 49，新增 `ScriptRuntimeApi_GetV49`，`GetV48` 變成複製並設 version 48）：`renderSettingSetBool`／`GetBool`／`SetNumber`／`GetNumber` 四個 host 函數，腳本用 `ScriptApi_RenderSettingSetBool` 等 wrapper（先查 `version >= 49`，舊 host 返回 false）。改動只作用於運行中場景，唔寫入場景檔。
+  - Linux：`tools/run_render_setting_check.sh`（名稱表＋clamp，另外 `tools/check_render_setting_keys.py` 核對 bridge／client／access header／`render_settings.h` 四份 key 表一致）、`tools/run_runtime_bridge_offline_linux.sh`、`python3 tools/agent_docs_check.py`。
+  - 未做：bridge `perf` 輸出 fx／light 計數（anim 已經喺 `perf.anim`）。
 - [ ] **LOD／剔除嘅進階項**（暫緩）：HLOD／impostor、自動減面、per-clip skinned bounds、per-layer／per-tag cull distance。
 - 唔算缺口：texture mip chain 已由 `model_util.cpp` 生成；engine 冇 tilemap 系統；screen-space UI 唔剔除係設計。
 

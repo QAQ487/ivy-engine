@@ -33,7 +33,14 @@ From `api:SceneExecutionPolicy` + `api:RenderSettings_ToJson` / parse:
 | `render.shadowCascadeCullingEnabled` | bool — shadow cascade caster cull |
 | `render.spriteCullingEnabled` | bool — 2D ortho sprite view-rect cull |
 | `render.lodEnabled` | bool (default `true`) — distance-based mesh LOD and `visual.cullDistance` (Play / runtime only) |
+| `render.animCullingEnabled` | bool (default `true`) — animated Visuals that no pass (main camera or shadow cascade) drew last frame skip bone sampling / skinning; clip time still advances (Play / runtime only) |
+| `render.lightSelectionEnabled` | bool (default `true`) — only 4 lights reach the GPU. With more enabled lights, directional lights first, then point / spot lights by influence at the camera (brightness × range² / (range² + distance²), with hysteresis); `false` uses the first 4 in scene order. Scenes with ≤ 4 lights are unaffected |
+| `render.billboardCullingEnabled` | bool (default `true`) — frustum-cull camera-facing / ground-aligned billboards and individual particles at draw time (simulation unaffected) |
+| `render.effectCullingEnabled` | bool (default `true`) — skip drawing Effekseer effects whose bounding sphere is outside the camera frustum; they keep simulating |
+| `render.effectCullRadius` | number (default `20`, clamped 0.5–500) — assumed bounding radius in world units of every Effekseer effect (effects carry no bounds); multiplied by the effect's largest scale component. Raise it if large effects pop at the screen edge |
 | `render.lodBias` | number (default `1`, clamped 0.1–10) — scales distance for LOD choice; >1 switches to lower detail sooner |
+| `render.shadowLodOffset` | integer (default `0`, clamped 0–3) — shadow cascade passes draw a mesh this many LOD levels lower than the camera pass (never past the last level, never while `animate` is on); `0` keeps the old behaviour. Needs `lodEnabled` |
+| `render.lodDebugLabels` | bool (default `false`) — debug aid: draws a label above every LOD-tracked mesh the camera drew (`L<level> <distance>m <screen height>%`, green / yellow / orange / red for L0–L3; a magenta `CULLED <distance>m > <limit>m` label marks a mesh hidden by its `cullDistance`). Play / runtime only |
 | `render.cullDistanceScale` | number (default `1`, clamped 0.1–10) — multiplies every `visual.cullDistance` (`0` / absent stays "never"); >1 keeps objects visible further out, <1 culls sooner. Needs `lodEnabled` |
 | `render.shadowDistance` | number (default `0`, clamped 5–1000 when positive) — shadow range in world units; `0` uses the Shadow Quality preset (Low 40 / Medium 70 / High 90). Map size and cascade count still come from the preset |
 | `camera.mode` | JSON strings from `PrepareSceneSettings` in `engine/scene/scene_loader.cpp`: `"thirdPerson"`, `"firstPerson"`, or default `"scene"` (→ `api:CameraMode` `SceneCamera`). C++ also has `CameraMode::Intro`; it is **not** a JSON mode string |
@@ -104,7 +111,8 @@ Node JSON (recursive), from `prefab_serializer.h`:
 ```
 
 - Level 0 is `model`; `lods[i]` is level `i+1`. Each `maxDistance` is the camera distance at which rendering switches **to** that level (loaded ascending; at most 7 LOD levels). Distance is camera → world-AABB centre of the base mesh, with 5% hysteresis.
-- Shadow passes use the same level as the main camera pass.
+- Optional `"lodMode": "screenSize"` (default `"distance"`): each `lods[i]` then uses `screenHeight` (0–1, fraction of the viewport height) instead of `maxDistance`: the level switches **to** that mesh once the object's projected height falls below it (rows load sorted largest first; `0` = never switches). Projected height = largest side of the base mesh's world AABB / (2 · distance · tan(fov/2)), so the switch distance follows the object's size and the camera's vertical FOV (perspective cameras only; orthographic stays on level 0). Hysteresis, `lodBias` and `cullDistance` behave as in distance mode. Both fields are written on save when set.
+- Shadow passes use the same level as the main camera pass (unless `render.shadowLodOffset` > 0).
 - Ignored while `animate` is `true` (levels > 0 are skipped); `cullDistance` still applies. LOD only applies in Play / runtime, never to `proxy_model` edit view. A missing LOD mesh falls back to level 0.
 - LOD meshes should share the base mesh pivot and scale, or the switch will visibly jump.
 

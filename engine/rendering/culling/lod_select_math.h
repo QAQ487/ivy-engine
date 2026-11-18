@@ -72,4 +72,54 @@ inline int SelectLevel(float distance,
     return level;
 }
 
+// Screen-size LOD: a level switches when the object's projected height drops below
+// `screenHeight` (fraction of the viewport height, 0..1). The projected height of an
+// object with world extent E at distance d is E / (2 d tan(fov/2)), so each threshold
+// converts to a switch distance and the normal distance selection (hysteresis, bias)
+// applies unchanged. Returns kNeverSwitch when the inputs cannot give a distance
+// (no bounds, bad fov, screenHeight <= 0), which keeps the object on its current level.
+constexpr float kNeverSwitch = 1.0e30f;
+
+inline float ScreenHeightToDistance(float worldExtent, float tanHalfFov, float screenHeight) {
+    if (!std::isfinite(worldExtent) || !std::isfinite(tanHalfFov) || !std::isfinite(screenHeight))
+        return kNeverSwitch;
+    if (worldExtent <= 0.0f || tanHalfFov <= 0.0f || screenHeight <= 0.0f)
+        return kNeverSwitch;
+    return worldExtent / (2.0f * tanHalfFov * screenHeight);
+}
+
+// Debug override: force every LOD-tracked mesh onto one level (-1 = off / automatic).
+// The level is limited to what the object has (`count` thresholds = `count + 1` levels);
+// a culled visual stays culled.
+constexpr int kMaxForcedLevel = 7;
+
+inline int ClampForcedLevel(int level) {
+    return std::min(std::max(level, -1), kMaxForcedLevel);
+}
+
+inline int ForcedLevel(int autoLevel, int forceLevel, int count) {
+    if (autoLevel < 0)
+        return autoLevel;
+    const int f = ClampForcedLevel(forceLevel);
+    if (f < 0)
+        return autoLevel;
+    return std::min(f, std::max(count, 0));
+}
+
+constexpr int kMaxShadowLodOffset = 3;
+
+inline int ClampShadowLodOffset(int offset) {
+    return std::min(std::max(offset, 0), kMaxShadowLodOffset);
+}
+
+// Level a shadow caster uses: the camera's level pushed `offset` levels towards lower
+// detail, never past the last level (`count` thresholds describe `count + 1` levels).
+// A culled visual (kCulled) stays culled.
+inline int ShadowCasterLevel(int cameraLevel, int offset, int count) {
+    if (cameraLevel < 0)
+        return cameraLevel;
+    const int last = std::max(count, 0);
+    return std::min(cameraLevel + ClampShadowLodOffset(offset), std::max(last, cameraLevel));
+}
+
 } // namespace lod_select

@@ -28,6 +28,7 @@
 #include "engine/ecs/visual_component.h"
 #include "engine/ecs/material_component.h"
 #if defined(SCRIPT_RUNTIME_API_HOST)
+#include "engine/scene/render_settings.h"
 #include "engine/ecs/physics2d_components.h"
 #include "engine/physics/2d/physics2d.h"
 #include "engine/ecs/sprite_animator_component.h"
@@ -42,7 +43,7 @@
 #include <string>
 
 namespace {
-constexpr std::uint32_t kScriptRuntimeApiVersion = 48;
+constexpr std::uint32_t kScriptRuntimeApiVersion = 49;
 
 template <typename T>
 T* FindComponentByTypeName(GameObject& object, const char* typeName) {
@@ -632,6 +633,22 @@ void Host_EngineGUIStartPlay() {
     EngineGUI_StartPlay();
 }
 
+bool Host_RenderSettingSetBool(const char* key, bool value) {
+    return RenderSettings_SetBoolByName(key, value);
+}
+
+bool Host_RenderSettingGetBool(const char* key, bool* outValue) {
+    return RenderSettings_GetBoolByName(key, outValue);
+}
+
+bool Host_RenderSettingSetNumber(const char* key, double value) {
+    return RenderSettings_SetNumberByName(key, value);
+}
+
+bool Host_RenderSettingGetNumber(const char* key, double* outValue) {
+    return RenderSettings_GetNumberByName(key, outValue);
+}
+
 const ScriptRuntimeApi g_scriptRuntimeApi = {
     kScriptRuntimeApiVersion,
     &Host_GetCurrentScene,
@@ -763,7 +780,10 @@ const ScriptRuntimeApi g_scriptRuntimeApi = {
     &Host_DebugDrawLine,
     &DebugSystem::CollisionVizEnabled,
     &EngineGUI_RequestExitGame,
-
+    &Host_RenderSettingSetBool,
+    &Host_RenderSettingGetBool,
+    &Host_RenderSettingSetNumber,
+    &Host_RenderSettingGetNumber,
 };
 #else
 using GetApiFn = const ScriptRuntimeApi* (*)();
@@ -773,7 +793,9 @@ const ScriptRuntimeApi* ResolveScriptRuntimeApi() {
     if (!module)
         return nullptr;
 
-    auto getApi = reinterpret_cast<GetApiFn>(GetProcAddress(module, "ScriptRuntimeApi_GetV48"));
+    auto getApi = reinterpret_cast<GetApiFn>(GetProcAddress(module, "ScriptRuntimeApi_GetV49"));
+    if (!getApi)
+        getApi = reinterpret_cast<GetApiFn>(GetProcAddress(module, "ScriptRuntimeApi_GetV48"));
     if (!getApi)
         getApi = reinterpret_cast<GetApiFn>(GetProcAddress(module, "ScriptRuntimeApi_GetV47"));
     if (!getApi)
@@ -860,6 +882,16 @@ const ScriptRuntimeApi* ScriptRuntimeApi_GetV47() {
 
 extern "C" __declspec(dllexport)
 const ScriptRuntimeApi* ScriptRuntimeApi_GetV48() {
+    static const ScriptRuntimeApi api = [] {
+        ScriptRuntimeApi copy = g_scriptRuntimeApi;
+        copy.version = 48;
+        return copy;
+    }();
+    return &api;
+}
+
+extern "C" __declspec(dllexport)
+const ScriptRuntimeApi* ScriptRuntimeApi_GetV49() {
     return &g_scriptRuntimeApi;
 }
 
@@ -1326,6 +1358,30 @@ bool ScriptApi_RequestExitGame() {
     if (!api || api->version < 48 || !api->requestExitGame) return false;
     api->requestExitGame();
     return true;
+}
+
+bool ScriptApi_RenderSettingSetBool(const char* key, bool value) {
+    const auto* api = ScriptRuntimeApi_GetHost();
+    return api && api->version >= 49 && api->renderSettingSetBool
+        && api->renderSettingSetBool(key, value);
+}
+
+bool ScriptApi_RenderSettingGetBool(const char* key, bool& outValue) {
+    const auto* api = ScriptRuntimeApi_GetHost();
+    return api && api->version >= 49 && api->renderSettingGetBool
+        && api->renderSettingGetBool(key, &outValue);
+}
+
+bool ScriptApi_RenderSettingSetNumber(const char* key, double value) {
+    const auto* api = ScriptRuntimeApi_GetHost();
+    return api && api->version >= 49 && api->renderSettingSetNumber
+        && api->renderSettingSetNumber(key, value);
+}
+
+bool ScriptApi_RenderSettingGetNumber(const char* key, double& outValue) {
+    const auto* api = ScriptRuntimeApi_GetHost();
+    return api && api->version >= 49 && api->renderSettingGetNumber
+        && api->renderSettingGetNumber(key, &outValue);
 }
 
 void ScriptApi_EngineGUIStopPlay() {

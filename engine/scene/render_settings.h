@@ -56,7 +56,25 @@ struct RenderSettingsData {
     // Distance-based mesh LOD (visual.lods). Bias scales distance for level choice
     // only (>1 switches to lower detail sooner); clamped to [0.1, 10] on load.
     bool lodEnabled = true;
+    // Frustum-cull camera-facing billboards and individual particles (render submit only).
+    bool billboardCullingEnabled = true;
+    // Skip drawing Effekseer effects whose bounding sphere (effectCullRadius x scale) is
+    // outside the camera frustum. Effects keep simulating. Clamped to [0.5, 500] on load.
+    bool effectCullingEnabled = true;
+    float effectCullRadius = 20.0f;
+    // With more enabled lights than GPU slots (Lighting::MAX_LIGHTS), pick the most
+    // influential at the camera instead of the first ones in scene order.
+    bool lightSelectionEnabled = true;
+    // Skip skeletal pose evaluation for animated Visuals that no pass (main or shadow
+    // cascade) drew last frame. Animation time still advances. Play / runtime only.
+    bool animCullingEnabled = true;
     float lodBias = 1.0f;
+    // Draw a text label above every LOD-tracked mesh with its current level, distance and
+    // projected screen height. Debug aid; Play / runtime only.
+    bool lodDebugLabels = false;
+    // Shadow casters use a lower-detail LOD than the camera pass: this many levels lower
+    // (0 = same level, clamped to [0, 3] and to the last available level). Play only.
+    int shadowLodOffset = 0;
     // Multiplies every visual.cullDistance (> 1 keeps objects visible further out, < 1 culls
     // sooner). Clamped to [0.1, 10]. Needs lodEnabled, like cullDistance itself.
     float cullDistanceScale = 1.0f;
@@ -68,6 +86,18 @@ struct RenderSettingsData {
 void RenderSettings_ResetToDefaults();
 RenderSettingsData& RenderSettings_Get();
 const RenderSettingsData& RenderSettings_GetConst();
+
+// Change / read a runtime-tweakable setting by its JSON-style name (test bridge, scripts).
+// Toggles: frustumCullingEnabled, shadowCascadeCullingEnabled, spriteCullingEnabled,
+// lodEnabled, animCullingEnabled, lightSelectionEnabled, billboardCullingEnabled,
+// effectCullingEnabled, lodDebugLabels. Numbers (clamped like the scene loader): lodBias,
+// cullDistanceScale, shadowDistance, shadowLodOffset, effectCullRadius, and lodForceLevel
+// (-1 = automatic, 0..7 = force that LOD level; a debug option that is never saved into a
+// scene). Unknown keys and non-finite numbers return false and change nothing.
+bool RenderSettings_SetBoolByName(const char* key, bool value);
+bool RenderSettings_GetBoolByName(const char* key, bool* outValue);
+bool RenderSettings_SetNumberByName(const char* key, double value);
+bool RenderSettings_GetNumberByName(const char* key, double* outValue);
 
 RenderSettingsData RenderSettings_ParseJson(const nlohmann::json& renderJson, RenderSettingsData settings = {});
 void RenderSettings_ApplyFromJson(const nlohmann::json& renderJson);

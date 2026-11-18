@@ -88,6 +88,11 @@ SETTING_KEYS = (
     "shadowCascadeCullingEnabled",
     "spriteCullingEnabled",
     "lodEnabled",
+    "animCullingEnabled",
+    "lightSelectionEnabled",
+    "billboardCullingEnabled",
+    "effectCullingEnabled",
+    "lodDebugLabels",
 )
 
 def build_play_enter_payload(mode=None):
@@ -105,12 +110,30 @@ def build_load_scene_payload(scene):
         raise ValueError("scene must be a rom/...json path without '..'")
     return {"scene": scene}
 
+NUMERIC_SETTING_KEYS = (
+    "lodBias",
+    "cullDistanceScale",
+    "shadowDistance",
+    "shadowLodOffset",
+    "effectCullRadius",
+    "lodForceLevel",
+)
+
 def build_set_setting_payload(key, value):
-    """Validate set_setting whitelist + bool value; return JSON payload (no I/O)."""
-    if key not in SETTING_KEYS:
-        raise ValueError("key must be one of: " + ", ".join(SETTING_KEYS))
-    if type(value) is not bool:
-        raise ValueError("value must be bool")
+    """Validate set_setting whitelist + value type; return JSON payload (no I/O).
+
+    Bool keys take a bool; numeric keys take a finite int/float (not a bool). The host
+    clamps numeric values to each setting's range.
+    """
+    if key in SETTING_KEYS:
+        if type(value) is not bool:
+            raise ValueError("value must be bool")
+    elif key in NUMERIC_SETTING_KEYS:
+        if type(value) is bool or not isinstance(value, (int, float)) or value != value \
+                or value in (float("inf"), float("-inf")):
+            raise ValueError("value must be a finite number")
+    else:
+        raise ValueError("key must be one of: " + ", ".join(SETTING_KEYS + NUMERIC_SETTING_KEYS))
     return {"key": key, "value": value}
 
 def resolve_capture_path(basename, output_dir=None):
@@ -594,7 +617,7 @@ def main():
     p.add_argument("verb",choices=("hello","status","quit","keyboard","observe","capture","mouse","controller","events","controller_probe","list_objects","pause","resume","step","perf","reset_scene","set_transform","set_velocity","apply_impulse","apply_torque_impulse","play_enter","play_exit","load_scene","set_setting"))
     p.add_argument("--mode",choices=("viewport","fullscreen"),default=None,help="play_enter mode")
     p.add_argument("--key",type=str,default=None,help="set_setting key")
-    p.add_argument("--value",type=str,default=None,help="set_setting bool value (true/false)")
+    p.add_argument("--value",type=str,default=None,help="set_setting value: true/false for toggles, a number for lodBias / cullDistanceScale / shadowDistance / shadowLodOffset / effectCullRadius")
     p.add_argument("--keys",nargs="+")
     p.add_argument("--updates",type=int)
     p.add_argument("--duration-ms",type=int,default=None,dest="duration_ms",
@@ -700,8 +723,13 @@ def main():
             elif a.verb=="set_setting":
                 if a.key is None or a.value is None: p.error("set_setting requires --key and --value")
                 val=a.value.strip().lower()
-                if val not in ("true","false","1","0"): p.error("--value must be true/false")
-                r=c.set_setting(a.request_id,a.key,val in ("true","1"),completion_timeout=a.completion_timeout)
+                if a.key in NUMERIC_SETTING_KEYS:
+                    try: num=float(val)
+                    except ValueError: p.error("--value must be a number for "+a.key)
+                    r=c.set_setting(a.request_id,a.key,num,completion_timeout=a.completion_timeout)
+                else:
+                    if val not in ("true","false","1","0"): p.error("--value must be true/false")
+                    r=c.set_setting(a.request_id,a.key,val in ("true","1"),completion_timeout=a.completion_timeout)
             else:
                 r=c.request(a.verb,a.request_id)
         print(json.dumps(r,ensure_ascii=False))

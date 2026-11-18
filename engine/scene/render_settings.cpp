@@ -12,6 +12,10 @@
 #include "engine/rendering/d3d11/renderer.h"
 #include "engine/rendering/lighting/shadow.h"
 #include "engine/rendering/culling/cull_settings_math.h"
+#include "engine/rendering/culling/lod_state.h"
+#include "engine/scene/render_setting_access.h"
+#include <cmath>
+#include <cstring>
 #include "engine/rendering/culling/lod_select_math.h"
 
 static RenderSettingsData g_renderSettings;
@@ -26,6 +30,38 @@ RenderSettingsData& RenderSettings_Get() {
 
 const RenderSettingsData& RenderSettings_GetConst() {
     return g_renderSettings;
+}
+
+bool RenderSettings_SetBoolByName(const char* key, bool value) {
+    return render_setting_access::SetBool(g_renderSettings, key, value);
+}
+
+bool RenderSettings_GetBoolByName(const char* key, bool* outValue) {
+    bool v = false;
+    if (!outValue || !render_setting_access::GetBool(g_renderSettings, key, v)) return false;
+    *outValue = v;
+    return true;
+}
+
+bool RenderSettings_SetNumberByName(const char* key, double value) {
+    if (key && std::strcmp(key, "lodForceLevel") == 0) {
+        if (!std::isfinite(value)) return false;
+        Lod_SetForceLevel(static_cast<int>(std::lround(value)));
+        return true;
+    }
+    return render_setting_access::SetNumber(g_renderSettings, key, value);
+}
+
+bool RenderSettings_GetNumberByName(const char* key, double* outValue) {
+    if (!outValue) return false;
+    if (key && std::strcmp(key, "lodForceLevel") == 0) {
+        *outValue = Lod_GetForceLevel();
+        return true;
+    }
+    double v = 0.0;
+    if (!render_setting_access::GetNumber(g_renderSettings, key, v)) return false;
+    *outValue = v;
+    return true;
 }
 
 static DirectX::XMFLOAT4 ReadColor4(const nlohmann::json& j, const DirectX::XMFLOAT4& fallback) {
@@ -185,8 +221,21 @@ RenderSettingsData RenderSettings_ParseJson(const nlohmann::json& renderJson, Re
     settings.spriteCullingEnabled = renderJson.value(
         "spriteCullingEnabled", settings.spriteCullingEnabled);
     settings.lodEnabled = renderJson.value("lodEnabled", settings.lodEnabled);
+    settings.billboardCullingEnabled = renderJson.value(
+        "billboardCullingEnabled", settings.billboardCullingEnabled);
+    settings.effectCullingEnabled = renderJson.value(
+        "effectCullingEnabled", settings.effectCullingEnabled);
+    settings.effectCullRadius = cull_settings::ClampEffectCullRadius(
+        renderJson.value("effectCullRadius", settings.effectCullRadius));
+    settings.lightSelectionEnabled = renderJson.value(
+        "lightSelectionEnabled", settings.lightSelectionEnabled);
+    settings.animCullingEnabled = renderJson.value(
+        "animCullingEnabled", settings.animCullingEnabled);
     settings.lodBias = lod_select::ClampBias(
         renderJson.value("lodBias", settings.lodBias));
+    settings.lodDebugLabels = renderJson.value("lodDebugLabels", settings.lodDebugLabels);
+    settings.shadowLodOffset = lod_select::ClampShadowLodOffset(
+        renderJson.value("shadowLodOffset", settings.shadowLodOffset));
     settings.cullDistanceScale = cull_settings::ClampCullDistanceScale(
         renderJson.value("cullDistanceScale", settings.cullDistanceScale));
     settings.shadowDistance = cull_settings::ClampShadowDistanceOverride(
@@ -242,7 +291,14 @@ nlohmann::json RenderSettings_ToJson() {
     render["shadowCascadeCullingEnabled"] = g_renderSettings.shadowCascadeCullingEnabled;
     render["spriteCullingEnabled"] = g_renderSettings.spriteCullingEnabled;
     render["lodEnabled"] = g_renderSettings.lodEnabled;
+    render["billboardCullingEnabled"] = g_renderSettings.billboardCullingEnabled;
+    render["effectCullingEnabled"] = g_renderSettings.effectCullingEnabled;
+    render["effectCullRadius"] = g_renderSettings.effectCullRadius;
+    render["lightSelectionEnabled"] = g_renderSettings.lightSelectionEnabled;
+    render["animCullingEnabled"] = g_renderSettings.animCullingEnabled;
     render["lodBias"] = g_renderSettings.lodBias;
+    render["shadowLodOffset"] = g_renderSettings.shadowLodOffset;
+    render["lodDebugLabels"] = g_renderSettings.lodDebugLabels;
     render["cullDistanceScale"] = g_renderSettings.cullDistanceScale;
     render["shadowDistance"] = g_renderSettings.shadowDistance;
     return render;

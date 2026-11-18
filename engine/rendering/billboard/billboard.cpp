@@ -11,6 +11,10 @@
 #include "engine/rendering/d3d11/renderer.h"
 #include "engine/rendering/sprite/texture.h"
 #include "engine/core/content_path.h"
+#include "engine/rendering/culling/frustum_cull_math.h"
+#include "engine/rendering/culling/fx_cull.h"
+#include "engine/rendering/culling/fx_cull_math.h"
+#include "engine/scene/render_settings.h"
 #include <fstream>
 #include <vector>
 #include <algorithm>
@@ -176,6 +180,23 @@ void Billboard::Update(double elapsed_time) {
 
 void Billboard::Draw() {
 	if (s_draw_list.empty()) return;
+
+	// Frustum-cull the list (order preserved, so the far-to-near sort stays valid).
+	if (RenderSettings_GetConst().billboardCullingEnabled) {
+		frustum_cull::FrustumPlanes planes;
+		frustum_cull::ExtractFrustumPlanesD3D(s_view_matrix * s_proj_matrix, planes);
+		const int before = static_cast<int>(s_draw_list.size());
+		s_draw_list.erase(
+			std::remove_if(s_draw_list.begin(), s_draw_list.end(),
+				[&planes] (const BillboardData& d) {
+					return !fx_cull::SphereIntersectsFrustum(
+						d.position.x, d.position.y, d.position.z,
+						fx_cull::BillboardRadius(d.size.x, d.size.y), planes);
+				}),
+			s_draw_list.end());
+		FxCull_RecordBillboards(before, before - static_cast<int>(s_draw_list.size()));
+		if (s_draw_list.empty()) return;
+	}
 
 	ID3D11VertexShader* prevVs = nullptr;
 	ID3D11PixelShader* prevPs = nullptr;

@@ -239,7 +239,12 @@ bool IsRuntimeTestBridgeSettingKey(const std::string& key) {
     return key == "frustumCullingEnabled"
         || key == "shadowCascadeCullingEnabled"
         || key == "spriteCullingEnabled"
-        || key == "lodEnabled";
+        || key == "lodEnabled"
+        || key == "animCullingEnabled"
+        || key == "lightSelectionEnabled"
+        || key == "billboardCullingEnabled"
+        || key == "effectCullingEnabled"
+        || key == "lodDebugLabels";
 }
 
 bool ParseRuntimeTestBridgeSettingValue(const Json& value, bool& outBool, std::string& err) {
@@ -249,6 +254,30 @@ bool ParseRuntimeTestBridgeSettingValue(const Json& value, bool& outBool, std::s
         return false;
     }
     outBool = value.get<bool>();
+    return true;
+}
+
+bool IsRuntimeTestBridgeNumericSettingKey(const std::string& key) {
+    return key == "lodBias"
+        || key == "cullDistanceScale"
+        || key == "shadowDistance"
+        || key == "shadowLodOffset"
+        || key == "effectCullRadius"
+        || key == "lodForceLevel";
+}
+
+bool ParseRuntimeTestBridgeNumericSettingValue(const Json& value, double& outNumber, std::string& err) {
+    err.clear();
+    if (!value.is_number()) {
+        err = "value must be a number";
+        return false;
+    }
+    const double v = value.get<double>();
+    if (!std::isfinite(v)) {
+        err = "value must be finite";
+        return false;
+    }
+    outNumber = v;
     return true;
 }
 
@@ -1202,14 +1231,23 @@ Json Protocol::Request(const std::string& frame) {
         if(!q.contains("key") || !q["key"].is_string() || !q.contains("value"))
             return error("invalid_request");
         const auto key = q["key"].get<std::string>();
-        if(!IsRuntimeTestBridgeSettingKey(key)) return error("invalid_request");
-        bool value = false;
         std::string serr;
-        if(!ParseRuntimeTestBridgeSettingValue(q["value"], value, serr))
-            return error("invalid_request");
         pendingEditor.kind = EditorOpKind::SetSetting;
         pendingEditor.settingKey = key;
-        pendingEditor.settingBoolValue = value;
+        if(IsRuntimeTestBridgeSettingKey(key)) {
+            bool value = false;
+            if(!ParseRuntimeTestBridgeSettingValue(q["value"], value, serr))
+                return error("invalid_request");
+            pendingEditor.settingBoolValue = value;
+        } else if(IsRuntimeTestBridgeNumericSettingKey(key)) {
+            double value = 0.0;
+            if(!ParseRuntimeTestBridgeNumericSettingValue(q["value"], value, serr))
+                return error("invalid_request");
+            pendingEditor.settingIsNumber = true;
+            pendingEditor.settingNumberValue = value;
+        } else {
+            return error("invalid_request");
+        }
         pendingEditorValid = true;
     } else if(q.size()!=4) return error("invalid_request");
 
@@ -1394,11 +1432,14 @@ Json Protocol::Request(const std::string& frame) {
         spriteCullCulled.reserve(static_cast<std::size_t>(take));
         spriteCullDrawn.reserve(static_cast<std::size_t>(take));
         std::vector<float> lodConsidered, lodCulled, lodLevel0, lodLevel1, lodLevel2Plus;
+        std::vector<float> animUpdated, animSkipped;
         lodConsidered.reserve(static_cast<std::size_t>(take));
         lodCulled.reserve(static_cast<std::size_t>(take));
         lodLevel0.reserve(static_cast<std::size_t>(take));
         lodLevel1.reserve(static_cast<std::size_t>(take));
         lodLevel2Plus.reserve(static_cast<std::size_t>(take));
+        animUpdated.reserve(static_cast<std::size_t>(take));
+        animSkipped.reserve(static_cast<std::size_t>(take));
         for(int i = 0; i < take; ++i) {
             const std::size_t idx = (perfWrite_ + kRuntimeTestPerfCapacity - static_cast<std::size_t>(take) + static_cast<std::size_t>(i))
                 % kRuntimeTestPerfCapacity;
@@ -1421,6 +1462,8 @@ Json Protocol::Request(const std::string& frame) {
             lodLevel0.push_back(static_cast<float>(s.lodLevel0));
             lodLevel1.push_back(static_cast<float>(s.lodLevel1));
             lodLevel2Plus.push_back(static_cast<float>(s.lodLevel2Plus));
+            animUpdated.push_back(static_cast<float>(s.animUpdated));
+            animSkipped.push_back(static_cast<float>(s.animSkipped));
         }
         double fpsAvg = 0.0;
         if(!frameMs.empty()) {
@@ -1460,6 +1503,10 @@ Json Protocol::Request(const std::string& frame) {
                 {"level0", PerfStatsJson(lodLevel0)},
                 {"level1", PerfStatsJson(lodLevel1)},
                 {"level2Plus", PerfStatsJson(lodLevel2Plus)}
+            }},
+            {"anim", {
+                {"updated", PerfStatsJson(animUpdated)},
+                {"skipped", PerfStatsJson(animSkipped)}
             }},
         };
     }

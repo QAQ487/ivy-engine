@@ -13,11 +13,16 @@
 #include <cassert>
 #include <cstring>
 #include <string>
+#include <map>
 #include <unordered_map>
 
 #include "engine/rendering/d3d11/renderer.h" // GetDevice/GetDeviceContext, GetBackBufferWidth/Height
 #include "engine/core/content_path.h"
 #include "camera.h"   // GetCamera()
+#include "engine/rendering/culling/frustum_cull_math.h"
+#include "engine/rendering/culling/fx_cull.h"
+#include "engine/rendering/culling/fx_cull_math.h"
+#include "engine/scene/render_settings.h"
 #include "engine/debug_draw/debug_ofstream.h"
 
 using namespace DirectX;
@@ -26,6 +31,16 @@ namespace {
     ::Effekseer::ManagerRef                    g_manager;
     ::EffekseerRendererDX11::RendererRef       g_renderer;
     ::Effekseer::Backend::GraphicsDeviceRef    g_gfxDevice;
+
+    // Bounds bookkeeping for effect culling. Effekseer handles are the engine's only
+    // identity for a playing effect; position and scale come from Play / SetLocation /
+    // SetScale. std::map keeps iteration deterministic.
+    struct TrackedEffect {
+        DirectX::XMFLOAT3 position { 0.0f, 0.0f, 0.0f };
+        DirectX::XMFLOAT3 scale { 1.0f, 1.0f, 1.0f };
+        bool drawn = true;   // current Effekseer auto-drawing state
+    };
+    std::map<int, TrackedEffect> g_tracked;
 
     std::vector<::Effekseer::EffectRef> g_effects;
     std::unordered_map<std::wstring, int> g_effectCache;
@@ -88,6 +103,7 @@ namespace EffectSystem {
     }
 
     void Finalize() {
+        g_tracked.clear();
         g_effectCache.clear();
         g_effects.clear();
 
@@ -123,6 +139,43 @@ namespace EffectSystem {
         ::Effekseer::Manager::LayerParameter layer {};
         layer.ViewerPosition = ::Effekseer::Vector3D(cam.position.x, cam.position.y, cam.position.z);
         g_manager->SetLayerParameter(0, layer);
+
+        // Per-effect frustum cull through Effekseer's auto-drawing flag, so Manager::Draw
+        // keeps its own draw ordering. Culled effects still simulate.
+        {
+            const auto& rs = RenderSettings_GetConst();
+            const bool cull = rs.effectCullingEnabled;
+            frustum_cull::FrustumPlanes planes;
+            if (cull) {
+                frustum_cull::ExtractFrustumPlanesD3D(
+                    cam.GetViewMatrix() * cam.GetProjMatrix(width, height), planes);
+            }
+            int considered = 0;
+            int culled = 0;
+            for (auto it = g_tracked.begin(); it != g_tracked.end();) {
+                if (!g_manager->Exists(it->first)) {
+                    it = g_tracked.erase(it);
+                    continue;
+                }
+                TrackedEffect& t = it->second;
+                bool visible = true;
+                if (cull) {
+                    ++considered;
+                    visible = fx_cull::SphereIntersectsFrustum(
+                        t.position.x, t.position.y, t.position.z,
+                        fx_cull::EffectRadius(rs.effectCullRadius, t.scale.x, t.scale.y, t.scale.z),
+                        planes);
+                    if (!visible) ++culled;
+                }
+                if (visible != t.drawn) {
+                    g_manager->SetAutoDrawing(it->first, visible);
+                    t.drawn = visible;
+                }
+                ++it;
+            }
+            if (cull)
+                FxCull_RecordEffects(considered, culled);
+        }
 
         g_renderer->BeginRendering();
 
@@ -202,7 +255,11 @@ namespace EffectSystem {
         if (g_effects[effectId] == nullptr) return -1;
 
         auto h = g_manager->Play(g_effects[effectId], pos.x, pos.y, pos.z);
-        return h >= 0 ? h : -1;
+        if (h < 0) return -1;
+        TrackedEffect t;
+        t.position = pos;
+        g_tracked[h] = t;
+        return h;
     }
 
     void Stop(int handle) {
@@ -213,6 +270,7 @@ namespace EffectSystem {
     void StopAll() {
         if (g_manager == nullptr) return;
         g_manager->StopAllEffects();
+        g_tracked.clear();
     }
 
     bool Exists(int handle) {
@@ -224,6 +282,8 @@ namespace EffectSystem {
     void SetLocation(int handle, const DirectX::XMFLOAT3& pos) {
         if (g_manager == nullptr || handle < 0) return;
         g_manager->SetLocation(handle, pos.x, pos.y, pos.z);
+        const auto it = g_tracked.find(handle);
+        if (it != g_tracked.end()) it->second.position = pos;
     }
 
     void SetRotationEulerDeg(int handle, const DirectX::XMFLOAT3& rotDeg) {
@@ -237,11 +297,15 @@ namespace EffectSystem {
     void SetScale(int handle, const DirectX::XMFLOAT3& scale) {
         if (g_manager == nullptr || handle < 0) return;
         g_manager->SetScale(handle, scale.x, scale.y, scale.z);
+        const auto it = g_tracked.find(handle);
+        if (it != g_tracked.end()) it->second.scale = scale;
     }
 
     void SetScale(int handle, float uniform) {
         if (g_manager == nullptr || handle < 0) return;
         g_manager->SetScale(handle, uniform, uniform, uniform);
+        const auto it = g_tracked.find(handle);
+        if (it != g_tracked.end()) it->second.scale = { uniform, uniform, uniform };
     }
 
     void SetSpeed(int handle, float speed) {

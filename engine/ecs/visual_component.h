@@ -55,12 +55,23 @@ public:
     struct LodLevel {
         std::string modelPath;
         float maxDistance = 0.0f;
+        // Screen-size mode: switch TO this level when the object's projected height drops
+        // below this fraction of the viewport height (0..1). 0 = never switches.
+        float screenHeight = 0.0f;
     };
+    // false: levels switch at maxDistance (metres). true: at screenHeight, so the
+    // switch distance follows each object's size and the camera's field of view.
+    bool lodScreenSize = false;
     std::vector<LodLevel> lods;
     // Beyond this camera distance the object is not drawn. 0 = never.
     float cullDistance = 0.0f;
     // Hysteresis memory for LOD selection (not serialized).
     mutable int lodLastLevel = -1;
+    // Frame serials (Lod_GetFrameSerial) stamped by GameObject::DrawVisual: last frame
+    // the Visual was considered by the 3D object pass / submitted by any pass. Used to
+    // skip pose evaluation while nothing draws it. Not serialized.
+    mutable uint64_t lastConsideredSerial = ~uint64_t{0};
+    mutable uint64_t lastDrawnSerial = ~uint64_t{0};
 
     // Shared-cache mesh for level (0 = modelPath). Falls back to level 0 when the
     // LOD mesh is missing or failed to load. nullptr only if level 0 is unavailable.
@@ -113,6 +124,7 @@ private:
     bool m_animationsLoaded = false;
     std::unordered_set<std::string> m_triedAnimClips;
     float m_lastAnimSpeed = 0.0f;
+    int m_poseUpdateCount = 0;  // real pose evaluations so far (see Update)
 
     ID3D11ShaderResourceView* m_surfaceFxSRV = nullptr;
     std::string m_surfaceFxLoadedPath;

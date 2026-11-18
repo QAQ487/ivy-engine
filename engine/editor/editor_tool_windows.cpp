@@ -2,6 +2,12 @@
 // Extracted from engine/core/engine_gui.cpp (phase-1 editor UI split; behaviour-preserving).
 
 #include "editor_gui_common_includes.h"
+#include "engine/scene/scene_lighting.h"
+#include "engine/rendering/culling/fx_cull.h"
+#include "engine/rendering/culling/cull_settings_math.h"
+#include "engine/rendering/culling/lod_select_math.h"
+#include "engine/rendering/culling/lod_state.h"
+#include "engine/rendering/lighting/lighting.h"
 
 std::string ShaderVariantPreviewLabel(Shader3DVariant v) {
     const char* label = Shader3DVariantLabel(v);
@@ -380,6 +386,21 @@ void DrawRenderingSettingsBody() {
         ImGui::TextDisabled("Ortho view-rect; render submit only.");
     }
     ImGui::Checkbox("Mesh LOD (3D)", &rs.lodEnabled);
+    {
+        int force = Lod_GetForceLevel();
+        if (ImGui::SliderInt("Force LOD Level", &force, -1, lod_select::kMaxForcedLevel,
+                force < 0 ? "Auto" : "L%d"))
+            Lod_SetForceLevel(force);
+        ImGui::TextDisabled("Every LOD mesh uses this level (limited to what it has). Not saved into the scene.");
+        bool showRanges = Lod_GetShowRanges();
+        if (ImGui::Checkbox("Show LOD Ranges (selected)", &showRanges))
+            Lod_SetShowRanges(showRanges);
+        ImGui::TextDisabled("Edit view: wire spheres at the selected object's switch distances (yellow / orange / red = L1 / L2 / L3, cyan = cull distance).");
+    }
+    ImGui::Checkbox("LOD Debug Labels", &rs.lodDebugLabels);
+    ImGui::TextDisabled("Text above each LOD mesh: level, distance, projected screen height. Play only.");
+    ImGui::SliderInt("Shadow LOD Offset", &rs.shadowLodOffset, 0, lod_select::kMaxShadowLodOffset);
+    ImGui::TextDisabled("Shadow casters use this many LOD levels lower than the camera. 0 = same level.");
     ImGui::SliderFloat("LOD Bias", &rs.lodBias, 0.1f, 10.0f, "%.2f",
         ImGuiSliderFlags_Logarithmic);
     {
@@ -390,6 +411,31 @@ void DrawRenderingSettingsBody() {
         ImGui::TextDisabled("lod      considered %d  |  culled %d  |  L0 %d  L1 %d  L2+ %d",
             lod.considered, lod.culledByDistance, lod.drawn[0], lod.drawn[1], lodFar);
         ImGui::TextDisabled("Bias > 1 switches to lower detail sooner. Play only.");
+    }
+    ImGui::Checkbox("Off-screen Animation Culling (3D)", &rs.animCullingEnabled);
+    {
+        const AnimCullStats anim = Lod_GetLastAnimStats();
+        ImGui::TextDisabled("anim     evaluated %d  |  skipped %d", anim.updated, anim.skipped);
+        ImGui::TextDisabled("Animated Visuals no pass drew last frame skip bone sampling (clip time still advances). Play only.");
+    }
+    ImGui::Checkbox("Billboard / Particle Culling (3D)", &rs.billboardCullingEnabled);
+    ImGui::Checkbox("Effect Culling (3D)", &rs.effectCullingEnabled);
+    ImGui::SliderFloat("Effect Cull Radius", &rs.effectCullRadius,
+        cull_settings::kMinEffectCullRadius, cull_settings::kMaxEffectCullRadius, "%.1f m",
+        ImGuiSliderFlags_Logarithmic);
+    {
+        const FxCullStats fx = FxCull_GetLastStats();
+        ImGui::TextDisabled("billboard considered %d  |  culled %d", fx.billboardConsidered, fx.billboardCulled);
+        ImGui::TextDisabled("particle  considered %d  |  culled %d", fx.particleConsidered, fx.particleCulled);
+        ImGui::TextDisabled("effect    considered %d  |  culled %d", fx.effectConsidered, fx.effectCulled);
+        ImGui::TextDisabled("Effects have no authored bounds: radius x scale around the effect position. Larger radius = fewer pops.");
+    }
+    ImGui::Checkbox("Light Selection (3D)", &rs.lightSelectionEnabled);
+    {
+        const SceneLightingStats ls = SceneLighting_GetLastStats();
+        ImGui::TextDisabled("lights   enabled %d  |  used %d  (max %d)",
+            ls.total, ls.used, Lighting::MAX_LIGHTS);
+        ImGui::TextDisabled("Over the slot limit, the most influential lights at the camera win. Off = first in scene order.");
     }
     ImGui::SliderFloat("Cull Distance Scale", &rs.cullDistanceScale, 0.1f, 10.0f, "%.2f",
         ImGuiSliderFlags_Logarithmic);

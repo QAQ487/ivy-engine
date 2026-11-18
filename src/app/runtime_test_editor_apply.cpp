@@ -10,6 +10,7 @@
 #if !defined(GAME_RUNTIME)
 #include "engine/core/engine_gui_internal.h"
 #endif
+#include <cmath>
 #include <string>
 
 bool RuntimeTestEditor_Apply(const ivy::testing::EditorOpRequest& op, std::string& errorOut) {
@@ -72,25 +73,15 @@ bool RuntimeTestEditor_Apply(const ivy::testing::EditorOpRequest& op, std::strin
 #endif
     }
     case EditorOpKind::SetSetting: {
-        RenderSettingsData& rs = RenderSettings_Get();
-        if (op.settingKey == "frustumCullingEnabled") {
-            rs.frustumCullingEnabled = op.settingBoolValue;
-            return true;
+        // Same name table and clamps as scripts and the scene loader (render_setting_access.h).
+        const bool ok = op.settingIsNumber
+            ? RenderSettings_SetNumberByName(op.settingKey.c_str(), op.settingNumberValue)
+            : RenderSettings_SetBoolByName(op.settingKey.c_str(), op.settingBoolValue);
+        if (!ok) {
+            errorOut = "unknown_setting";
+            return false;
         }
-        if (op.settingKey == "shadowCascadeCullingEnabled") {
-            rs.shadowCascadeCullingEnabled = op.settingBoolValue;
-            return true;
-        }
-        if (op.settingKey == "spriteCullingEnabled") {
-            rs.spriteCullingEnabled = op.settingBoolValue;
-            return true;
-        }
-        if (op.settingKey == "lodEnabled") {
-            rs.lodEnabled = op.settingBoolValue;
-            return true;
-        }
-        errorOut = "unknown_setting";
-        return false;
+        return true;
     }
     }
     errorOut = "unknown_editor_op";

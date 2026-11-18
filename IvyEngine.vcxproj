@@ -268,6 +268,10 @@ exit /b 0</Command>
     <ClInclude Include="engine\rendering\culling\cull_settings_math.h" />
     <ClInclude Include="engine\rendering\culling\lod_select_math.h" />
     <ClInclude Include="engine\rendering\culling\lod_state.h" />
+    <ClInclude Include="engine\rendering\culling\anim_cull_math.h" />
+    <ClInclude Include="engine\rendering\culling\light_select_math.h" />
+    <ClInclude Include="engine\rendering\culling\fx_cull_math.h" />
+    <ClInclude Include="engine\rendering\culling\fx_cull.h" />
     <ClInclude Include="engine\rendering\culling\shadow_cascade_cull.h" />
     <ClInclude Include="engine\rendering\culling\sprite_cull.h" />
     <ClInclude Include="engine\rendering\culling\sprite_cull_math.h" />
@@ -287,6 +291,7 @@ exit /b 0</Command>
     <ClInclude Include="engine\scene\json_float.h" />
     <ClInclude Include="engine\scene\scene_asset_preload.h" />
     <ClInclude Include="engine\scene\render_settings.h" />
+    <ClInclude Include="engine\scene\render_setting_access.h" />
     <ClInclude Include="engine\rendering\environment\skybox.h" />
     <ClInclude Include="engine\rendering\environment\ibl.h" />
     <ClInclude Include="engine\rendering\environment\equirect_cubemap.h" />
@@ -432,6 +437,7 @@ exit /b 0</Command>
     <ClCompile Include="engine\rendering\lighting\shadow.cpp" />
     <ClCompile Include="engine\rendering\culling\frustum_cull.cpp" />
     <ClCompile Include="engine\rendering\culling\lod_state.cpp" />
+    <ClCompile Include="engine\rendering\culling\fx_cull.cpp" />
     <ClCompile Include="engine\rendering\culling\shadow_cascade_cull.cpp" />
     <ClCompile Include="engine\rendering\culling\sprite_cull.cpp" />
     <ClCompile Include="engine\ecs\collider_component.cpp" />
@@ -640,5 +646,7 @@ exit /b 0</Command>
   <ItemGroup>
     <ClInclude Include="samples\scripts\SamplePlayerScript.h" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
     <ClCompile Include="samples\scripts\SamplePlayerScript.cpp" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
+    <ClInclude Include="samples\scripts\SampleParticleEmitterScript.h" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
+    <ClCompile Include="samples\scripts\SampleParticleEmitterScript.cpp" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
   </ItemGroup>
 </Project>

@@ -29,6 +29,9 @@
 #include "engine/scene/scene_file_monitor.h"
 #include "engine/scene/render_settings.h"
 #include "engine/rendering/culling/frustum_cull.h"
+#include "engine/rendering/culling/cull_settings_math.h"
+#include "engine/rendering/culling/lod_select_math.h"
+#include "engine/rendering/culling/lod_state.h"
 #include "engine/rendering/culling/shadow_cascade_cull.h"
 #include "engine/rendering/culling/sprite_cull.h"
 #include "engine/rendering/d3d11/shader.h"
@@ -1741,6 +1744,64 @@ static bool NodeHasCameraComponent(GameObject* node) {
     return node->GetComponent<CameraComponent>() != nullptr;
 }
 
+// Edit view: the selected object's LOD switch distances (and cull distance) as wire spheres
+// around its world bounds, so authored distances / screen-height thresholds can be judged
+// against the scene. Colours: yellow / orange / red for the switch to L1 / L2 / L3+, cyan
+// for the cull distance. Distances include render.lodBias and cullDistanceScale.
+static void DrawSelectionLodRanges(GameObject* node, DebugDrawer& drawer) {
+    using namespace DirectX;
+    if (!node || !Lod_GetShowRanges()) return;
+    auto* vc = node->GetComponent<VisualComponent>();
+    if (!vc || (vc->lods.empty() && vc->cullDistance <= 0.0f)) return;
+    const engine::Transform* t = node->GetComponent<engine::Transform>();
+    if (!t) return;
+
+    XMFLOAT3 wp, wr, ws;
+    t->GetWorldPositionRotationScale(wp, wr, ws);
+    XMFLOAT3 center = wp;
+    float extent = 0.0f;
+    Model3D* model = vc->GetRealModel();
+    if (!model) model = vc->GetModel();
+    if (model && model->HasLocalAabb()) {
+        frustum_cull::Aabb local{};
+        model->GetLocalAabb(local.min, local.max);
+        local.valid = true;
+        const frustum_cull::Aabb wb = frustum_cull::TransformAabbTRS(local, wp, wr, ws);
+        center = { 0.5f * (wb.min.x + wb.max.x), 0.5f * (wb.min.y + wb.max.y),
+                   0.5f * (wb.min.z + wb.max.z) };
+        extent = (std::max)({ wb.max.x - wb.min.x, wb.max.y - wb.min.y, wb.max.z - wb.min.z });
+    }
+
+    const RenderSettingsData& rs = RenderSettings_GetConst();
+    const float bias = lod_select::ClampBias(rs.lodBias);
+    const float tanHalfFov = std::tan(XMConvertToRadians(GetCamera().fov) * 0.5f);
+    static const XMFLOAT4 kLevelColors[] = {
+        { 1.0f, 1.0f, 0.2f, 1.0f }, { 1.0f, 0.6f, 0.1f, 1.0f }, { 1.0f, 0.2f, 0.2f, 1.0f } };
+    const XMFLOAT3 noRotation = { 0.0f, 0.0f, 0.0f };
+    const XMFLOAT3 noOffset = { 0.0f, 0.0f, 0.0f };
+    auto drawRange = [&](float distance, const XMFLOAT4& color) {
+        // Skip "never" thresholds and anything too large to be useful as a gizmo.
+        if (!std::isfinite(distance) || distance < 0.05f || distance > 5000.0f) return;
+        drawer.DrawSphere(center, noOffset, distance, noRotation, color);
+    };
+
+    // Levels are ignored while the Visual animates, like at runtime.
+    if (!vc->playAnimation) {
+        const int count = static_cast<int>((std::min<size_t>)(vc->lods.size(), kLodMaxLevels - 1));
+        for (int i = 0; i < count; ++i) {
+            const VisualComponent::LodLevel& level = vc->lods[static_cast<size_t>(i)];
+            const float d = vc->lodScreenSize
+                ? lod_select::ScreenHeightToDistance(extent, tanHalfFov, level.screenHeight)
+                : level.maxDistance;
+            drawRange(d / bias, kLevelColors[(std::min)(i, 2)]);
+        }
+    }
+    if (vc->cullDistance > 0.0f) {
+        drawRange(cull_settings::ScaledCullDistance(vc->cullDistance, rs.cullDistanceScale),
+            { 0.2f, 0.9f, 1.0f, 1.0f });
+    }
+}
+
 static void DrawSelectionHighlight() {
     using namespace DirectX;
 
@@ -1784,6 +1845,7 @@ static void DrawSelectionHighlight() {
             }
         }
         DrawSelectionColliderHighlight(g_selNode, drawer);
+        DrawSelectionLodRanges(g_selNode, drawer);
     }
 
     SetDepthEnable(true);

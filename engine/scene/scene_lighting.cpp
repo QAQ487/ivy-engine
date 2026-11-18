@@ -10,7 +10,11 @@
 #include "engine/ecs/transform.h"
 #include "engine/rendering/lighting/lighting.h"
 #include "engine/rendering/lighting/shadow.h"
+#include "engine/rendering/culling/light_select_math.h"
+#include "engine/scene/render_settings.h"
+#include <algorithm>
 #include <cmath>
+#include <unordered_set>
 
 using namespace DirectX;
 
@@ -62,18 +66,77 @@ static float DegToInnerCos(float deg) {
     return cosf(XMConvertToRadians(deg * 0.5f));
 }
 
+SceneLightingStats g_lastStats{};
+// Components selected last sync (hysteresis memory for light_select).
+std::unordered_set<const void*> g_prevSelected;
+
+const void* EntryId(const SceneLightEntry& e) {
+    if (e.directional) return e.directional;
+    return e.point ? static_cast<const void*>(e.point) : static_cast<const void*>(e.spot);
+}
+
+// Keeps only the lights light_select picks; scene order is preserved.
+void SelectLightEntries(std::vector<SceneLightEntry>& entries, const XMFLOAT3& cam) {
+    std::vector<light_select::Candidate> cand;
+    cand.reserve(entries.size());
+    for (const SceneLightEntry& e : entries) {
+        light_select::Candidate c;
+        c.wasSelected = g_prevSelected.count(EntryId(e)) != 0;
+        if (e.kind == SceneLightEntry::Kind::Directional) {
+            c.directional = true;
+        } else {
+            const Component* comp = e.point ? static_cast<const Component*>(e.point)
+                                            : static_cast<const Component*>(e.spot);
+            const engine::Transform* t = comp && comp->owner
+                ? comp->owner->GetComponent<engine::Transform>() : nullptr;
+            const XMFLOAT3 pos = LightGizmo::GetWorldPosition(t);
+            c.x = pos.x; c.y = pos.y; c.z = pos.z;
+            const XMFLOAT3& col = e.point ? e.point->color : e.spot->color;
+            const float inten = e.point ? e.point->intensity : e.spot->intensity;
+            c.luma = std::max({col.x, col.y, col.z}) * inten;
+            c.range = e.point ? e.point->range : e.spot->range;
+        }
+        cand.push_back(c);
+    }
+    std::vector<int> idx(static_cast<size_t>(Lighting::MAX_LIGHTS));
+    const int n = light_select::Select(cand.data(), static_cast<int>(cand.size()),
+        cam.x, cam.y, cam.z, Lighting::MAX_LIGHTS, idx.data());
+    std::vector<SceneLightEntry> kept;
+    kept.reserve(static_cast<size_t>(n));
+    g_prevSelected.clear();
+    for (int i = 0; i < n; ++i) {
+        kept.push_back(entries[static_cast<size_t>(idx[static_cast<size_t>(i)])]);
+        g_prevSelected.insert(EntryId(kept.back()));
+    }
+    entries = std::move(kept);
+}
+
 } // namespace
 
-void SceneLightingSyncFromNodes(const std::vector<std::unique_ptr<GameObject>>& roots) {
+SceneLightingStats SceneLighting_GetLastStats() { return g_lastStats; }
+
+void SceneLightingSyncFromNodes(const std::vector<std::unique_ptr<GameObject>>& roots,
+                                const XMFLOAT3& cameraPosition) {
     std::vector<SceneLightEntry> entries;
     entries.reserve(Lighting::MAX_LIGHTS);
     for (const auto& root : roots)
         if (root) VisitLights(root.get(), entries);
 
+    g_lastStats.total = static_cast<int>(entries.size());
     if (entries.empty()) {
+        g_lastStats.used = 0;
+        g_prevSelected.clear();
         ApplyFallbackLighting();
         return;
     }
+
+    if (RenderSettings_GetConst().lightSelectionEnabled
+        && entries.size() > static_cast<size_t>(Lighting::MAX_LIGHTS)) {
+        SelectLightEntries(entries, cameraPosition);
+    } else {
+        g_prevSelected.clear();
+    }
+    g_lastStats.used = std::min(static_cast<int>(entries.size()), Lighting::MAX_LIGHTS);
 
     Lighting::ClearLights();
     int shadowIndex = 0;

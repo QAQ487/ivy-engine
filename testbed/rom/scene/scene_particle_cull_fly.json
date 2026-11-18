@@ -1,0 +1,1327 @@
+{
+  "version": 4,
+  "settings": {
+    "render": {
+      "clearColor": [
+        0.04,
+        0.05,
+        0.09,
+        1.0
+      ],
+      "defaultShader": "standard",
+      "fogEnabled": false,
+      "shadowQuality": "low",
+      "skyboxEnabled": false,
+      "billboardCullingEnabled": true
+    },
+    "debugCamera": {
+      "mode": "fly",
+      "enabledOnPlay": true,
+      "yawDeg": 0.0,
+      "pitchDeg": -5.0,
+      "position": {
+        "x": 0.0,
+        "y": 3.0,
+        "z": 0.0
+      }
+    }
+  },
+  "nodes": [
+    {
+      "name": "Directional Light",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 0.0,
+          "posY": 10.0,
+          "posZ": 0.0,
+          "rotX": 50.0,
+          "rotY": -35.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "DirectionalLight": {
+          "enabled": true,
+          "castShadows": false,
+          "color": [
+            1.0,
+            0.97,
+            0.92
+          ],
+          "intensity": 0.6,
+          "specColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "specPower": 32.0
+        }
+      }
+    },
+    {
+      "name": "Ground",
+      "tag": 2,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 0.0,
+          "posY": -0.5,
+          "posZ": 0.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 300.0,
+          "scaleY": 1.0,
+          "scaleZ": 300.0
+        },
+        "visual": {
+          "model": "rom/model/object/Box_Sand.fbx",
+          "shader": "standard"
+        }
+      }
+    },
+    {
+      "name": "Emitter R1 00",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 0.0,
+          "posY": 1.5,
+          "posZ": 15.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Script": {
+          "scriptClass": "SampleParticleEmitterScript",
+          "properties": {
+            "emissionRate": 40.0,
+            "lifetime": 5.0,
+            "startSpeed": 1.5,
+            "startSize": 0.4,
+            "colorR": 1.0,
+            "colorG": 0.2,
+            "colorB": 0.2,
+            "maxParticles": 256
+          }
+        }
+      }
+    },
+    {
+      "name": "Emitter R1 01",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 10.606601717798211,
+          "posY": 1.5,
+          "posZ": 10.606601717798213,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Script": {
+          "scriptClass": "SampleParticleEmitterScript",
+          "properties": {
+            "emissionRate": 40.0,
+            "lifetime": 5.0,
+            "startSpeed": 1.5,
+            "startSize": 0.4,
+            "colorR": 1.0,
+            "colorG": 0.8,
+            "colorB": 0.2,
+            "maxParticles": 256
+          }
+        }
+      }
+    },
+    {
+      "name": "Emitter R1 02",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 15.0,
+          "posY": 1.5,
+          "posZ": 9.18485099360515e-16,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Script": {
+          "scriptClass": "SampleParticleEmitterScript",
+          "properties": {
+            "emissionRate": 40.0,
+            "lifetime": 5.0,
+            "startSpeed": 1.5,
+            "startSize": 0.4,
+            "colorR": 0.6,
+            "colorG": 1.0,
+            "colorB": 0.2,
+            "maxParticles": 256
+          }
+        }
+      }
+    },
+    {
+      "name": "Emitter R1 03",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 10.606601717798213,
+          "posY": 1.5,
+          "posZ": -10.606601717798211,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Script": {
+          "scriptClass": "SampleParticleEmitterScript",
+          "properties": {
+            "emissionRate": 40.0,
+            "lifetime": 5.0,
+            "startSpeed": 1.5,
+            "startSize": 0.4,
+            "colorR": 0.2,
+            "colorG": 1.0,
+            "colorB": 0.4,
+            "maxParticles": 256
+          }
+        }
+      }
+    },
+    {
+      "name": "Emitter R1 04",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 1.83697019872103e-15,
+          "posY": 1.5,
+          "posZ": -15.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Script": {
+          "scriptClass": "SampleParticleEmitterScript",
+          "properties": {
+            "emissionRate": 40.0,
+            "lifetime": 5.0,
+            "startSpeed": 1.5,
+            "startSize": 0.4,
+            "colorR": 0.2,
+            "colorG": 1.0,
+            "colorB": 1.0,
+            "maxParticles": 256
+          }
+        }
+      }
+    },
+    {
+      "name": "Emitter R1 05",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -10.606601717798211,
+          "posY": 1.5,
+          "posZ": -10.606601717798215,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Script": {
+          "scriptClass": "SampleParticleEmitterScript",
+          "properties": {
+            "emissionRate": 40.0,
+            "lifetime": 5.0,
+            "startSpeed": 1.5,
+            "startSize": 0.4,
+            "colorR": 0.2,
+            "colorG": 0.4,
+            "colorB": 1.0,
+            "maxParticles": 256
+          }
+        }
+      }
+    },
+    {
+      "name": "Emitter R1 06",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -15.0,
+          "posY": 1.5,
+          "posZ": -2.7554552980815444e-15,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Script": {
+          "scriptClass": "SampleParticleEmitterScript",
+          "properties": {
+            "emissionRate": 40.0,
+            "lifetime": 5.0,
+            "startSpeed": 1.5,
+            "startSize": 0.4,
+            "colorR": 0.6,
+            "colorG": 0.2,
+            "colorB": 1.0,
+            "maxParticles": 256
+          }
+        }
+      }
+    },
+    {
+      "name": "Emitter R1 07",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -10.606601717798215,
+          "posY": 1.5,
+          "posZ": 10.60660171779821,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Script": {
+          "scriptClass": "SampleParticleEmitterScript",
+          "properties": {
+            "emissionRate": 40.0,
+            "lifetime": 5.0,
+            "startSpeed": 1.5,
+            "startSize": 0.4,
+            "colorR": 1.0,
+            "colorG": 0.2,
+            "colorB": 0.8,
+            "maxParticles": 256
+          }
+        }
+      }
+    },
+    {
+      "name": "Emitter R2 00",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 0.0,
+          "posY": 1.5,
+          "posZ": 30.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Script": {
+          "scriptClass": "SampleParticleEmitterScript",
+          "properties": {
+            "emissionRate": 40.0,
+            "lifetime": 5.0,
+            "startSpeed": 1.5,
+            "startSize": 0.4,
+            "colorR": 1.0,
+            "colorG": 0.2,
+            "colorB": 0.2,
+            "maxParticles": 256
+          }
+        }
+      }
+    },
+    {
+      "name": "Emitter R2 01",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 11.480502970952694,
+          "posY": 1.5,
+          "posZ": 27.716385975338603,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Script": {
+          "scriptClass": "SampleParticleEmitterScript",
+          "properties": {
+            "emissionRate": 40.0,
+            "lifetime": 5.0,
+            "startSpeed": 1.5,
+            "startSize": 0.4,
+            "colorR": 1.0,
+            "colorG": 0.5,
+            "colorB": 0.2,
+            "maxParticles": 256
+          }
+        }
+      }
+    },
+    {
+      "name": "Emitter R2 02",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 21.213203435596423,
+          "posY": 1.5,
+          "posZ": 21.213203435596427,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Script": {
+          "scriptClass": "SampleParticleEmitterScript",
+          "properties": {
+            "emissionRate": 40.0,
+            "lifetime": 5.0,
+            "startSpeed": 1.5,
+            "startSize": 0.4,
+            "colorR": 1.0,
+            "colorG": 0.8,
+            "colorB": 0.2,
+            "maxParticles": 256
+          }
+        }
+      }
+    },
+    {
+      "name": "Emitter R2 03",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 27.716385975338603,
+          "posY": 1.5,
+          "posZ": 11.480502970952696,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Script": {
+          "scriptClass": "SampleParticleEmitterScript",
+          "properties": {
+            "emissionRate": 40.0,
+            "lifetime": 5.0,
+            "startSpeed": 1.5,
+            "startSize": 0.4,
+            "colorR": 0.9,
+            "colorG": 1.0,
+            "colorB": 0.2,
+            "maxParticles": 256
+          }
+        }
+      }
+    },
+    {
+      "name": "Emitter R2 04",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 30.0,
+          "posY": 1.5,
+          "posZ": 1.83697019872103e-15,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Script": {
+          "scriptClass": "SampleParticleEmitterScript",
+          "properties": {
+            "emissionRate": 40.0,
+            "lifetime": 5.0,
+            "startSpeed": 1.5,
+            "startSize": 0.4,
+            "colorR": 0.6,
+            "colorG": 1.0,
+            "colorB": 0.2,
+            "maxParticles": 256
+          }
+        }
+      }
+    },
+    {
+      "name": "Emitter R2 05",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 27.716385975338603,
+          "posY": 1.5,
+          "posZ": -11.480502970952692,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Script": {
+          "scriptClass": "SampleParticleEmitterScript",
+          "properties": {
+            "emissionRate": 40.0,
+            "lifetime": 5.0,
+            "startSpeed": 1.5,
+            "startSize": 0.4,
+            "colorR": 0.3,
+            "colorG": 1.0,
+            "colorB": 0.2,
+            "maxParticles": 256
+          }
+        }
+      }
+    },
+    {
+      "name": "Emitter R2 06",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 21.213203435596427,
+          "posY": 1.5,
+          "posZ": -21.213203435596423,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Script": {
+          "scriptClass": "SampleParticleEmitterScript",
+          "properties": {
+            "emissionRate": 40.0,
+            "lifetime": 5.0,
+            "startSpeed": 1.5,
+            "startSize": 0.4,
+            "colorR": 0.2,
+            "colorG": 1.0,
+            "colorB": 0.4,
+            "maxParticles": 256
+          }
+        }
+      }
+    },
+    {
+      "name": "Emitter R2 07",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 11.480502970952697,
+          "posY": 1.5,
+          "posZ": -27.716385975338603,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Script": {
+          "scriptClass": "SampleParticleEmitterScript",
+          "properties": {
+            "emissionRate": 40.0,
+            "lifetime": 5.0,
+            "startSpeed": 1.5,
+            "startSize": 0.4,
+            "colorR": 0.2,
+            "colorG": 1.0,
+            "colorB": 0.7,
+            "maxParticles": 256
+          }
+        }
+      }
+    },
+    {
+      "name": "Emitter R2 08",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 3.67394039744206e-15,
+          "posY": 1.5,
+          "posZ": -30.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Script": {
+          "scriptClass": "SampleParticleEmitterScript",
+          "properties": {
+            "emissionRate": 40.0,
+            "lifetime": 5.0,
+            "startSpeed": 1.5,
+            "startSize": 0.4,
+            "colorR": 0.2,
+            "colorG": 1.0,
+            "colorB": 1.0,
+            "maxParticles": 256
+          }
+        }
+      }
+    },
+    {
+      "name": "Emitter R2 09",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -11.48050297095269,
+          "posY": 1.5,
+          "posZ": -27.716385975338607,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Script": {
+          "scriptClass": "SampleParticleEmitterScript",
+          "properties": {
+            "emissionRate": 40.0,
+            "lifetime": 5.0,
+            "startSpeed": 1.5,
+            "startSize": 0.4,
+            "colorR": 0.2,
+            "colorG": 0.7,
+            "colorB": 1.0,
+            "maxParticles": 256
+          }
+        }
+      }
+    },
+    {
+      "name": "Emitter R2 10",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -21.213203435596423,
+          "posY": 1.5,
+          "posZ": -21.21320343559643,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Script": {
+          "scriptClass": "SampleParticleEmitterScript",
+          "properties": {
+            "emissionRate": 40.0,
+            "lifetime": 5.0,
+            "startSpeed": 1.5,
+            "startSize": 0.4,
+            "colorR": 0.2,
+            "colorG": 0.4,
+            "colorB": 1.0,
+            "maxParticles": 256
+          }
+        }
+      }
+    },
+    {
+      "name": "Emitter R2 11",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -27.716385975338607,
+          "posY": 1.5,
+          "posZ": -11.480502970952685,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Script": {
+          "scriptClass": "SampleParticleEmitterScript",
+          "properties": {
+            "emissionRate": 40.0,
+            "lifetime": 5.0,
+            "startSpeed": 1.5,
+            "startSize": 0.4,
+            "colorR": 0.3,
+            "colorG": 0.2,
+            "colorB": 1.0,
+            "maxParticles": 256
+          }
+        }
+      }
+    },
+    {
+      "name": "Emitter R2 12",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -30.0,
+          "posY": 1.5,
+          "posZ": -5.510910596163089e-15,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Script": {
+          "scriptClass": "SampleParticleEmitterScript",
+          "properties": {
+            "emissionRate": 40.0,
+            "lifetime": 5.0,
+            "startSpeed": 1.5,
+            "startSize": 0.4,
+            "colorR": 0.6,
+            "colorG": 0.2,
+            "colorB": 1.0,
+            "maxParticles": 256
+          }
+        }
+      }
+    },
+    {
+      "name": "Emitter R2 13",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -27.7163859753386,
+          "posY": 1.5,
+          "posZ": 11.480502970952701,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Script": {
+          "scriptClass": "SampleParticleEmitterScript",
+          "properties": {
+            "emissionRate": 40.0,
+            "lifetime": 5.0,
+            "startSpeed": 1.5,
+            "startSize": 0.4,
+            "colorR": 0.9,
+            "colorG": 0.2,
+            "colorB": 1.0,
+            "maxParticles": 256
+          }
+        }
+      }
+    },
+    {
+      "name": "Emitter R2 14",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -21.21320343559643,
+          "posY": 1.5,
+          "posZ": 21.21320343559642,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Script": {
+          "scriptClass": "SampleParticleEmitterScript",
+          "properties": {
+            "emissionRate": 40.0,
+            "lifetime": 5.0,
+            "startSpeed": 1.5,
+            "startSize": 0.4,
+            "colorR": 1.0,
+            "colorG": 0.2,
+            "colorB": 0.8,
+            "maxParticles": 256
+          }
+        }
+      }
+    },
+    {
+      "name": "Emitter R2 15",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -11.480502970952687,
+          "posY": 1.5,
+          "posZ": 27.716385975338607,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Script": {
+          "scriptClass": "SampleParticleEmitterScript",
+          "properties": {
+            "emissionRate": 40.0,
+            "lifetime": 5.0,
+            "startSpeed": 1.5,
+            "startSize": 0.4,
+            "colorR": 1.0,
+            "colorG": 0.2,
+            "colorB": 0.5,
+            "maxParticles": 256
+          }
+        }
+      }
+    },
+    {
+      "name": "Emitter R3 00",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 0.0,
+          "posY": 1.5,
+          "posZ": 55.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Script": {
+          "scriptClass": "SampleParticleEmitterScript",
+          "properties": {
+            "emissionRate": 40.0,
+            "lifetime": 5.0,
+            "startSpeed": 1.5,
+            "startSize": 0.4,
+            "colorR": 1.0,
+            "colorG": 0.2,
+            "colorB": 0.2,
+            "maxParticles": 256
+          }
+        }
+      }
+    },
+    {
+      "name": "Emitter R3 01",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 21.047588780079938,
+          "posY": 1.5,
+          "posZ": 50.81337428812077,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Script": {
+          "scriptClass": "SampleParticleEmitterScript",
+          "properties": {
+            "emissionRate": 40.0,
+            "lifetime": 5.0,
+            "startSpeed": 1.5,
+            "startSize": 0.4,
+            "colorR": 1.0,
+            "colorG": 0.5,
+            "colorB": 0.2,
+            "maxParticles": 256
+          }
+        }
+      }
+    },
+    {
+      "name": "Emitter R3 02",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 38.89087296526011,
+          "posY": 1.5,
+          "posZ": 38.890872965260115,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Script": {
+          "scriptClass": "SampleParticleEmitterScript",
+          "properties": {
+            "emissionRate": 40.0,
+            "lifetime": 5.0,
+            "startSpeed": 1.5,
+            "startSize": 0.4,
+            "colorR": 1.0,
+            "colorG": 0.8,
+            "colorB": 0.2,
+            "maxParticles": 256
+          }
+        }
+      }
+    },
+    {
+      "name": "Emitter R3 03",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 50.81337428812077,
+          "posY": 1.5,
+          "posZ": 21.04758878007994,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Script": {
+          "scriptClass": "SampleParticleEmitterScript",
+          "properties": {
+            "emissionRate": 40.0,
+            "lifetime": 5.0,
+            "startSpeed": 1.5,
+            "startSize": 0.4,
+            "colorR": 0.9,
+            "colorG": 1.0,
+            "colorB": 0.2,
+            "maxParticles": 256
+          }
+        }
+      }
+    },
+    {
+      "name": "Emitter R3 04",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 55.0,
+          "posY": 1.5,
+          "posZ": 3.3677786976552213e-15,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Script": {
+          "scriptClass": "SampleParticleEmitterScript",
+          "properties": {
+            "emissionRate": 40.0,
+            "lifetime": 5.0,
+            "startSpeed": 1.5,
+            "startSize": 0.4,
+            "colorR": 0.6,
+            "colorG": 1.0,
+            "colorB": 0.2,
+            "maxParticles": 256
+          }
+        }
+      }
+    },
+    {
+      "name": "Emitter R3 05",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 50.81337428812077,
+          "posY": 1.5,
+          "posZ": -21.047588780079934,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Script": {
+          "scriptClass": "SampleParticleEmitterScript",
+          "properties": {
+            "emissionRate": 40.0,
+            "lifetime": 5.0,
+            "startSpeed": 1.5,
+            "startSize": 0.4,
+            "colorR": 0.3,
+            "colorG": 1.0,
+            "colorB": 0.2,
+            "maxParticles": 256
+          }
+        }
+      }
+    },
+    {
+      "name": "Emitter R3 06",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 38.890872965260115,
+          "posY": 1.5,
+          "posZ": -38.89087296526011,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Script": {
+          "scriptClass": "SampleParticleEmitterScript",
+          "properties": {
+            "emissionRate": 40.0,
+            "lifetime": 5.0,
+            "startSpeed": 1.5,
+            "startSize": 0.4,
+            "colorR": 0.2,
+            "colorG": 1.0,
+            "colorB": 0.4,
+            "maxParticles": 256
+          }
+        }
+      }
+    },
+    {
+      "name": "Emitter R3 07",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 21.047588780079945,
+          "posY": 1.5,
+          "posZ": -50.81337428812077,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Script": {
+          "scriptClass": "SampleParticleEmitterScript",
+          "properties": {
+            "emissionRate": 40.0,
+            "lifetime": 5.0,
+            "startSpeed": 1.5,
+            "startSize": 0.4,
+            "colorR": 0.2,
+            "colorG": 1.0,
+            "colorB": 0.7,
+            "maxParticles": 256
+          }
+        }
+      }
+    },
+    {
+      "name": "Emitter R3 08",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 6.735557395310443e-15,
+          "posY": 1.5,
+          "posZ": -55.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Script": {
+          "scriptClass": "SampleParticleEmitterScript",
+          "properties": {
+            "emissionRate": 40.0,
+            "lifetime": 5.0,
+            "startSpeed": 1.5,
+            "startSize": 0.4,
+            "colorR": 0.2,
+            "colorG": 1.0,
+            "colorB": 1.0,
+            "maxParticles": 256
+          }
+        }
+      }
+    },
+    {
+      "name": "Emitter R3 09",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -21.04758878007993,
+          "posY": 1.5,
+          "posZ": -50.81337428812078,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Script": {
+          "scriptClass": "SampleParticleEmitterScript",
+          "properties": {
+            "emissionRate": 40.0,
+            "lifetime": 5.0,
+            "startSpeed": 1.5,
+            "startSize": 0.4,
+            "colorR": 0.2,
+            "colorG": 0.7,
+            "colorB": 1.0,
+            "maxParticles": 256
+          }
+        }
+      }
+    },
+    {
+      "name": "Emitter R3 10",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -38.89087296526011,
+          "posY": 1.5,
+          "posZ": -38.89087296526012,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Script": {
+          "scriptClass": "SampleParticleEmitterScript",
+          "properties": {
+            "emissionRate": 40.0,
+            "lifetime": 5.0,
+            "startSpeed": 1.5,
+            "startSize": 0.4,
+            "colorR": 0.2,
+            "colorG": 0.4,
+            "colorB": 1.0,
+            "maxParticles": 256
+          }
+        }
+      }
+    },
+    {
+      "name": "Emitter R3 11",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -50.81337428812078,
+          "posY": 1.5,
+          "posZ": -21.047588780079924,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Script": {
+          "scriptClass": "SampleParticleEmitterScript",
+          "properties": {
+            "emissionRate": 40.0,
+            "lifetime": 5.0,
+            "startSpeed": 1.5,
+            "startSize": 0.4,
+            "colorR": 0.3,
+            "colorG": 0.2,
+            "colorB": 1.0,
+            "maxParticles": 256
+          }
+        }
+      }
+    },
+    {
+      "name": "Emitter R3 12",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -55.0,
+          "posY": 1.5,
+          "posZ": -1.0103336092965664e-14,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Script": {
+          "scriptClass": "SampleParticleEmitterScript",
+          "properties": {
+            "emissionRate": 40.0,
+            "lifetime": 5.0,
+            "startSpeed": 1.5,
+            "startSize": 0.4,
+            "colorR": 0.6,
+            "colorG": 0.2,
+            "colorB": 1.0,
+            "maxParticles": 256
+          }
+        }
+      }
+    },
+    {
+      "name": "Emitter R3 13",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -50.81337428812076,
+          "posY": 1.5,
+          "posZ": 21.047588780079952,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Script": {
+          "scriptClass": "SampleParticleEmitterScript",
+          "properties": {
+            "emissionRate": 40.0,
+            "lifetime": 5.0,
+            "startSpeed": 1.5,
+            "startSize": 0.4,
+            "colorR": 0.9,
+            "colorG": 0.2,
+            "colorB": 1.0,
+            "maxParticles": 256
+          }
+        }
+      }
+    },
+    {
+      "name": "Emitter R3 14",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -38.89087296526012,
+          "posY": 1.5,
+          "posZ": 38.8908729652601,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Script": {
+          "scriptClass": "SampleParticleEmitterScript",
+          "properties": {
+            "emissionRate": 40.0,
+            "lifetime": 5.0,
+            "startSpeed": 1.5,
+            "startSize": 0.4,
+            "colorR": 1.0,
+            "colorG": 0.2,
+            "colorB": 0.8,
+            "maxParticles": 256
+          }
+        }
+      }
+    },
+    {
+      "name": "Emitter R3 15",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -21.047588780079927,
+          "posY": 1.5,
+          "posZ": 50.81337428812078,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Script": {
+          "scriptClass": "SampleParticleEmitterScript",
+          "properties": {
+            "emissionRate": 40.0,
+            "lifetime": 5.0,
+            "startSpeed": 1.5,
+            "startSize": 0.4,
+            "colorR": 1.0,
+            "colorG": 0.2,
+            "colorB": 0.5,
+            "maxParticles": 256
+          }
+        }
+      }
+    }
+  ]
+}
