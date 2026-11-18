@@ -134,6 +134,7 @@
   - `visual.lodMode: "screenSize"`（預設 `"distance"`）＋ `lods[i].screenHeight`（0–1，視口高度比例；投影高度跌到呢個比例以下就切去呢級，由大到小排序，0 = 永不切換）。投影高度 = 基礎 mesh 世界 AABB 最長邊 /（2 × 距離 × tan(fov/2)）；`lod_select::ScreenHeightToDistance`（`lod_select_math.h`）將每個閾值換算成切換距離，之後照用原有距離選擇（hysteresis、`lodBias`、`cullDistance` 不變），所以接入點只係 `GameObject::DrawVisual` 同 `Lod_BeginFrame(pos, fov)`（新增 `Lod_GetTanHalfFov`）。Orthographic 相機保持 level 0。
   - Inspector：Visual 區 `Screen Size Mode` checkbox，每行改為 `%` 輸入；切換模式時會補預設值並重排。Save／load：兩個欄位有設就寫。
   - Linux：`tools/run_lod_check.sh`（換算公式、往返、同距離選擇配合）。驗收場景：`testbed/rom/scene/scene_lod_screen_fly.json`（`python3 tools/gen_lod_screen_scene.py` 生成；4 欄 boulder 縮放 1／2／4／8，全部用 12%／6%／3%）。
+  - Windows 已驗收（Terry）：切換位置跟閾值走（標籤百分比 ≈ 設定值，同一個 boulder 用 50／20／10 比 12／6／3 喺更近嘅距離就降級）；Inspector 開關／改百分比／保存重載未驗收（Inspector LOD 區喺 `Animate` 下面，唔係獨立選單）。
   - 驗收（Windows）：fly 遠離，細 boulder 好早變 LOD1，大 boulder 要遠好多先變，切換距離大約同尺寸成正比（細 boulder 喺 45° FOV 下約 11／22／44 m，×8 嗰欄約 8 倍；實際數字隨相機 FOV 變）；Rendering 面板 `lod L0 / L1 / L2+` 隨距離變；縮窄 FOV 時 LOD 保持得更遠；Inspector 開關模式、改 %、Undo 之外嘅保存重載；舊場景（distance 模式）畫面不變。
   - Debug 標籤：`render.lodDebugLabels`（預設 false；Rendering 面板 `LOD Debug Labels`；bridge `set_setting` 收）。`DrawVisual` 喺主 camera pass 為每個有 LOD／cullDistance 嘅 Visual 記低 `LodDebugLabel`（`lod_state`），`main.cpp` 喺 FPS overlay 之後將 AABB 頂部投影到螢幕，用 `hal::DebugText` 畫 `L<級> <距離>m <螢幕高度%>`（綠／黃／橙／紅 = L0／L1／L2／L3）；最近優先、上限 96 個。`scene_lod_screen_fly.json` 預設開。
   - 未做：以 bounding sphere 而非 AABB 最長邊計大小、per-camera（shadow 專用）螢幕大小、editor 視圖預覽。
