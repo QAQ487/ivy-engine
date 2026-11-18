@@ -1025,6 +1025,7 @@ Use Effekseer via Effect component / `EffectObject::SpawnW`, or a short-lived pa
 | Shadows ugly | Raise shadow quality in Project Settings → Rendering; check light direction |
 | Panels lost / layout broken | **Window → Reset Layout** |
 | Editor text too small / large | **Edit → Preferences → Appearance → UI Scale** |
+| "The graphics device was lost" dialog, then the editor / game closes | The GPU driver was updated, crashed (TDR) or the GPU was removed. The engine cannot rebuild its GPU resources, so it closes; restart it. The dialog and the log (Console / debugger output) name the DXGI reason. Unsaved editor changes are lost |
 
 ### Transform gotcha
 

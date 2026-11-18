@@ -356,6 +356,7 @@ exit /b 0</Command>
     <ClInclude Include="engine\core\utf8_path.h" />
     <ClInclude Include="engine\core\job_system.h" />
     <ClInclude Include="engine\core\frame_timer.h" />
+    <ClInclude Include="engine\core\frame_pacing.h" />
     <ClInclude Include="engine\core\render_thread.h" />
     <ClInclude Include="engine\core\debug_system.h" />
     <ClInclude Include="engine\core\frame_transform_snapshot.h" />
@@ -366,6 +367,7 @@ exit /b 0</Command>
     <ClInclude Include="engine\input\key_logger.h" />
     <ClInclude Include="engine\input\mouse.h" />
     <ClInclude Include="engine\rendering\d3d11\renderer.h" />
+    <ClInclude Include="engine\rendering\d3d11\device_lost.h" />
     <ClInclude Include="engine\rendering\d3d11\shader.h" />
     <ClInclude Include="engine\rendering\d3d11\post_process.h" />
     <ClInclude Include="engine\debug_draw\debug_drawer.h" />

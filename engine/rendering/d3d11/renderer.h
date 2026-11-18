@@ -11,6 +11,7 @@
 #define RENDERER_H
 
 #include "main.h"
+#include <string>
 
  // Safe release
 #define SAFE_RELEASE(o) if (o) { (o)->Release(); o = NULL; }
@@ -56,6 +57,11 @@ void    UninitRenderer(void);
 // Per-frame
 void    Clear(void);
 void    Present(void);
+// True once Present reported DXGI_ERROR_DEVICE_REMOVED / DEVICE_RESET. The
+// renderer does not recreate the device; the host shows
+// Renderer_DeviceLostMessage() and exits. Later Present calls do nothing.
+bool    Renderer_IsDeviceLost();
+std::string Renderer_DeviceLostMessage();
 
 // Device accessors
 ID3D11Device* GetDevice(void);

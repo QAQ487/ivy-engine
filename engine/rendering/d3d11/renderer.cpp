@@ -10,6 +10,8 @@
 #include "renderer.h"
 #include "engine/core/frame_timer.h"
 #include "engine/scene/render_settings.h"
+#include "engine/rendering/d3d11/device_lost.h"
+#include "engine/debug_draw/debug_ofstream.h"
 #include <d3d11sdklayers.h> // InfoQueue
 #include <wrl/client.h> // For ComPtr
 #include <algorithm>
@@ -35,6 +37,11 @@ static ID3D11DepthStencilState* g_DepthStateEnable = nullptr;
 static ID3D11DepthStencilState* g_DepthStateDisable = nullptr;
 
 static HWND g_hWnd = nullptr;
+// Flip-model swap chains unbind the back buffer on Present; Present() rebinds it.
+static bool g_FlipModel = false;
+static bool g_DeviceLost = false;
+static HRESULT g_DeviceLostPresentHr = S_OK;
+static HRESULT g_DeviceLostReason = S_OK;
 static D3D11_VIEWPORT g_CurrentViewport = {};
 
 static float g_BackBufferWidth = (float)SCREEN_WIDTH;
@@ -464,8 +471,11 @@ HRESULT InitRenderer(HINSTANCE /*hInstance*/, HWND hWnd, BOOL bWindow) {
 	g_BackBufferWidth = (float)clientW;
 	g_BackBufferHeight = (float)clientH;
 
+	// Flip model (Windows 10+): two buffers, no blit to the window. Falls back
+	// to the legacy blit model below if the system refuses it.
 	DXGI_SWAP_CHAIN_DESC sd = {};
-	sd.BufferCount = 1;
+	sd.BufferCount = 2;
+	sd.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 	sd.BufferDesc.Width = clientW;
 	sd.BufferDesc.Height = clientH;
 	sd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -482,19 +492,33 @@ HRESULT InitRenderer(HINSTANCE /*hInstance*/, HWND hWnd, BOOL bWindow) {
 	createFlags |= D3D11_CREATE_DEVICE_DEBUG;
 #endif
 
-	hr = D3D11CreateDeviceAndSwapChain(
-		nullptr,
-		D3D_DRIVER_TYPE_HARDWARE,
-		nullptr,
-		createFlags,
-		nullptr,
-		0,
-		D3D11_SDK_VERSION,
-		&sd,
-		&g_SwapChain,
-		&g_D3DDevice,
-		&g_FeatureLevel,
-		&g_ImmediateContext);
+	auto createDeviceAndSwapChain = [&]() {
+		return D3D11CreateDeviceAndSwapChain(
+			nullptr,
+			D3D_DRIVER_TYPE_HARDWARE,
+			nullptr,
+			createFlags,
+			nullptr,
+			0,
+			D3D11_SDK_VERSION,
+			&sd,
+			&g_SwapChain,
+			&g_D3DDevice,
+			&g_FeatureLevel,
+			&g_ImmediateContext);
+	};
+	hr = createDeviceAndSwapChain();
+	g_FlipModel = SUCCEEDED(hr);
+	if (FAILED(hr)) {
+		char msg[160];
+		std::snprintf(msg, sizeof(msg),
+			"Renderer: flip-model swap chain failed (0x%08X); using the legacy blit model\n",
+			static_cast<unsigned>(hr));
+		hal::DebugWriteA(msg);
+		sd.BufferCount = 1;
+		sd.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
+		hr = createDeviceAndSwapChain();
+	}
 	if (FAILED(hr)) return hr;
 
 	// Disable DXGI's default Alt+Enter exclusive fullscreen (breaks ImGui / RTV).
@@ -636,8 +660,34 @@ void Clear(void) {
 
 void Present(void) {
 	FrameTimer_Begin(FrameTimerStage::Present);
-	if (g_SwapChain) g_SwapChain->Present(0, 0);
+	if (g_SwapChain && !g_DeviceLost) {
+		const HRESULT hr = g_SwapChain->Present(0, 0);
+		if (device_lost::IsDeviceLostResult(static_cast<std::int32_t>(hr))) {
+			g_DeviceLost = true;
+			g_DeviceLostPresentHr = hr;
+			g_DeviceLostReason = g_D3DDevice ? g_D3DDevice->GetDeviceRemovedReason() : hr;
+			const std::string line = device_lost::LogLine(
+				static_cast<std::int32_t>(hr), static_cast<std::int32_t>(g_DeviceLostReason)) + "\n";
+			hal::DebugWriteA(line.c_str());
+			std::fprintf(stderr, "%s", line.c_str());
+		}
+		else if (g_FlipModel && g_ImmediateContext && g_RenderTargetView) {
+			// Flip model unbinds the back buffer; keep the legacy state where
+			// it stays bound into the next frame.
+			g_ImmediateContext->OMSetRenderTargets(1, &g_RenderTargetView, g_DepthStencilView);
+		}
+	}
 	FrameTimer_End(FrameTimerStage::Present);
+}
+
+bool Renderer_IsDeviceLost() {
+	return g_DeviceLost;
+}
+
+std::string Renderer_DeviceLostMessage() {
+	if (!g_DeviceLost) return {};
+	return device_lost::UserMessage(
+		static_cast<std::int32_t>(g_DeviceLostPresentHr), static_cast<std::int32_t>(g_DeviceLostReason));
 }
 
 

@@ -165,6 +165,8 @@ static MainStaticDestructionMarker s_mainStaticMarker;
 #include "engine/core/job_system.h"
 #include "engine/core/debug_system.h"
 #include "engine/core/frame_timer.h"
+#include "engine/core/frame_pacing.h"
+#include <mmsystem.h> // timeBeginPeriod / timeEndPeriod
 #include "engine/core/render_thread.h"
 #include "engine/input/mouse.h"
 #include "engine/input/controller.h"
@@ -476,6 +478,9 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstanc
 
 	exec_last_time = fps_last_time = SystemTimer_GetTime();
 
+	// 1 ms timer resolution so the frame-gate wait below wakes on time.
+	const bool timerPeriodSet = (timeBeginPeriod(1) == TIMERR_NOERROR);
+
 	while (1) {
 		// Process Windows messages if any
 		if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
@@ -504,6 +509,14 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstanc
 				// Yield to the OS briefly
 				Sleep(0);
 				continue;
+			}
+
+			// GPU device removed / reset: cannot recover, tell the user and exit.
+			if (Renderer_IsDeviceLost()) {
+				const std::string lostMsg = Renderer_DeviceLostMessage();
+				MessageBoxA(hWnd, lostMsg.c_str(), "Ivy Engine", MB_OK | MB_ICONERROR);
+				msg.wParam = 1;
+				break;
 			}
 
 			current_time = SystemTimer_GetTime();
@@ -718,8 +731,18 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstanc
 #endif
 				frame_count++;
 			}
+			else {
+				// Frame not due yet: block until it nearly is (wakes early on any
+				// window message), then let the loop spin the last couple of ms.
+				const unsigned waitMs = frame_pacing::WaitMilliseconds(elapsed_time);
+				if (waitMs > 0)
+					MsgWaitForMultipleObjects(0, nullptr, FALSE, waitMs, QS_ALLINPUT);
+			}
 		}
 	} // while
+
+	if (timerPeriodSet)
+		timeEndPeriod(1);
 
 	ThirdPersonCamera_Shutdown();
 
@@ -755,7 +778,14 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstanc
    Initialize all subsystems
 ===========================================================================**/
 HRESULT	Initialize(HINSTANCE hInstance, HWND hWnd, BOOL bWindow) {
-	InitRenderer(hInstance, hWnd, bWindow); // initialize DirectX renderer
+	const HRESULT rendererHr = InitRenderer(hInstance, hWnd, bWindow); // initialize DirectX renderer
+	if (FAILED(rendererHr) || !GetDevice() || !GetDeviceContext()) {
+		char msg[160];
+		snprintf(msg, sizeof(msg),
+			"Failed to initialize the Direct3D 11 renderer (0x%08X).", static_cast<unsigned>(rendererHr));
+		MessageBoxA(hWnd, msg, "Ivy Engine", MB_OK | MB_ICONERROR);
+		return FAILED(rendererHr) ? rendererHr : E_FAIL;
+	}
 
 	if (!Shader_Initialize(GetDevice(), GetDeviceContext())) {
 		PostQuitMessage(0);
