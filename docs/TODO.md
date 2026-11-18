@@ -122,7 +122,14 @@
   - 未做：spot 錐形方向／物件包圍盒嘅影響力、per-object 燈光（forward+ 或 tiled）、燈光 fade-in/out、spot／point shadow。
   - Linux：`tools/run_light_select_check.sh`（選擇數學）。驗收場景：`testbed/rom/scene/scene_light_select_fly.json`（`python3 tools/gen_light_select_scene.py` 生成）：1 盞暗 directional ＋ 12 盞彩色 point light 排成一行，13 盞燈對 4 個 slot。
   - 驗收（Windows Debug＋Release，Terry）：Play 後沿住燈行飛，開住 Light Selection 時最近嘅 3 盞 point light 照亮地面，亮區跟住鏡頭移動，交界處冇明顯閃爍；`lights enabled 13 | used 4`；關掉之後永遠只係行頭嗰 3 盞（最左）亮；`≤ 4` 盞燈嘅現有場景（例如 `scene_lod.json`）畫面冇變。
-- [ ] **Billboard／粒子／Effekseer 剔除**：`Billboard::Update` 只做遠到近排序，冇 frustum 或距離剔除；`ParticlePool` 只有 `maxParticles` 上限，冇 per-emitter 剔除或距離縮減；`EffectSystem` 直接 `Manager::Draw`，冇用 Effekseer culling world。
+- [x] **Billboard／粒子／Effekseer 剔除**（source 已做，等 Windows 驗收；粒子同 Effekseer 要有腳本／effect 資產嘅 content project 先驗到）
+  - **Billboard**：`Billboard::Draw`（`engine/rendering/billboard/billboard.cpp`）按 view×proj 對清單做球體 frustum 剔除（半徑 = 四邊形半對角線，camera-facing 同 ground-aligned 都適用），用 `remove_if` 保持遠到近次序；腳本 `Billboard::Add` 同 `BillboardComponent` 都涵蓋。Toggle：`render.billboardCullingEnabled`。
+  - **粒子**：`ParticleRenderer_RenderEmitter` 對每粒粒子做球體測試（半徑 0.75×size），被剔除嘅粒子唔入 instance buffer，全部被剔除就唔 Map／Draw。同一個 toggle。模擬、spawn、壽命完全唔受影響。
+  - **Effekseer**：`EffectSystem` 追蹤每個 handle 嘅位置同縮放（`Play`／`SetLocation`／`SetScale`），`Draw3D` 前按 `effectCullRadius`（預設 20 m）× 最大縮放分量做球體測試，用 `Manager::SetAutoDrawing` 開關，所以 `Manager::Draw` 保持原有繪製次序；effect 照常模擬。Toggle：`render.effectCullingEnabled`、`render.effectCullRadius`（0.5–500）。Effect 冇 authored bounds，半徑係全局估算，大範圍 effect 要自己調大。
+  - Counters：Rendering 面板（billboard／particle／effect 各 considered／culled）。未接 bridge `perf`；bridge `set_setting` 加 `billboardCullingEnabled`、`effectCullingEnabled`。
+  - 未做：per-effect／per-billboard 剔除距離、Effekseer 自帶 culling world、粒子 emitter 級別剔除與距離縮減（`maxParticles` 按距離減）、粒子／effect 嘅 LOD。
+  - Linux：`tools/run_fx_cull_check.sh`（半徑＋球體 frustum 數學）、`tests/cull_settings_test.cpp`（半徑 clamp）。驗收場景：`testbed/rom/scene/scene_billboard_cull_fly.json`（`python3 tools/gen_billboard_cull_scene.py` 生成：12×12 billboard 加 16 個地面標記，fly 鏡頭）。testbed 冇 Effekseer 資產，粒子又冇場景組件，所以呢兩項要用有腳本嘅 content project 驗。
+  - 驗收（Windows Debug＋Release，Terry）：Billboard——`billboard considered 160 | culled N`（N 隨視角變，望向一邊時約一半）；開關 Billboard／Particle Culling 前後同一視角截圖像素 diff 0；邊緣冇閃現／消失；GPU ms A/B。粒子——大量粒子場景（content project）`particle culled` > 0 且畫面不變。Effekseer——`effect culled` > 0；effect 嘅 origin 離開畫面邊緣時有冇突然消失（有就調大 `effectCullRadius`）；返入畫面時 effect 進度連續（冇由頭播）。
 - [ ] **LOD 螢幕大小模式**：而家只有距離；按物件大細計距離要靠 `tools/gen_lod_test_assets.py`（`d = size / (0.828 × coverage)`），引擎本身冇 screen-relative height 閾值。
 - [ ] **LOD cross-fade／dither**：切換係硬切。
 - [ ] **陰影投影物用較低 LOD**：而家陰影同主鏡頭同一級，用低一級可以省陰影成本。

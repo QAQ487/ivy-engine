@@ -1,0 +1,5207 @@
+{
+  "version": 4,
+  "settings": {
+    "render": {
+      "clearColor": [
+        0.69,
+        0.77,
+        0.87,
+        1.0
+      ],
+      "defaultShader": "standard",
+      "fogEnabled": false,
+      "shadowQuality": "low",
+      "skyboxEnabled": false,
+      "billboardCullingEnabled": true
+    },
+    "debugCamera": {
+      "mode": "fly",
+      "enabledOnPlay": true,
+      "yawDeg": 0.0,
+      "pitchDeg": -5.0,
+      "position": {
+        "x": 0.0,
+        "y": 3.0,
+        "z": 0.0
+      }
+    }
+  },
+  "nodes": [
+    {
+      "name": "Directional Light",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 0.0,
+          "posY": 10.0,
+          "posZ": 0.0,
+          "rotX": 50.0,
+          "rotY": -35.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "DirectionalLight": {
+          "enabled": true,
+          "castShadows": false,
+          "color": [
+            1.0,
+            0.97,
+            0.92
+          ],
+          "intensity": 1.0,
+          "specColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "specPower": 32.0
+        }
+      }
+    },
+    {
+      "name": "Ground",
+      "tag": 2,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 0.0,
+          "posY": -0.5,
+          "posZ": 0.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 300.0,
+          "scaleY": 1.0,
+          "scaleZ": 300.0
+        },
+        "visual": {
+          "model": "rom/model/object/Box_Green.fbx",
+          "shader": "standard"
+        }
+      }
+    },
+    {
+      "name": "Billboard 00-00",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -55.0,
+          "posY": 2.0,
+          "posZ": -55.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 1.0,
+            "g": 0.30000000000000004,
+            "b": 0.30000000000000004,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 00-01",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -55.0,
+          "posY": 2.0,
+          "posZ": -45.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 1.0,
+            "g": 0.30000000000000004,
+            "b": 0.30000000000000004,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 00-02",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -55.0,
+          "posY": 2.0,
+          "posZ": -35.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 1.0,
+            "g": 0.30000000000000004,
+            "b": 0.30000000000000004,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 00-03",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -55.0,
+          "posY": 2.0,
+          "posZ": -25.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 1.0,
+            "g": 0.30000000000000004,
+            "b": 0.30000000000000004,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 00-04",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -55.0,
+          "posY": 2.0,
+          "posZ": -15.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 1.0,
+            "g": 0.30000000000000004,
+            "b": 0.30000000000000004,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 00-05",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -55.0,
+          "posY": 2.0,
+          "posZ": -5.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 1.0,
+            "g": 0.30000000000000004,
+            "b": 0.30000000000000004,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 00-06",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -55.0,
+          "posY": 2.0,
+          "posZ": 5.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 1.0,
+            "g": 0.30000000000000004,
+            "b": 0.30000000000000004,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 00-07",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -55.0,
+          "posY": 2.0,
+          "posZ": 15.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 1.0,
+            "g": 0.30000000000000004,
+            "b": 0.30000000000000004,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 00-08",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -55.0,
+          "posY": 2.0,
+          "posZ": 25.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 1.0,
+            "g": 0.30000000000000004,
+            "b": 0.30000000000000004,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 00-09",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -55.0,
+          "posY": 2.0,
+          "posZ": 35.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 1.0,
+            "g": 0.30000000000000004,
+            "b": 0.30000000000000004,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 00-10",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -55.0,
+          "posY": 2.0,
+          "posZ": 45.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 1.0,
+            "g": 0.30000000000000004,
+            "b": 0.30000000000000004,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 00-11",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -55.0,
+          "posY": 2.0,
+          "posZ": 55.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 1.0,
+            "g": 0.30000000000000004,
+            "b": 0.30000000000000004,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 01-00",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -45.0,
+          "posY": 2.0,
+          "posZ": -55.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 1.0,
+            "g": 0.65,
+            "b": 0.30000000000000004,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 01-01",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -45.0,
+          "posY": 2.0,
+          "posZ": -45.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 1.0,
+            "g": 0.65,
+            "b": 0.30000000000000004,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 01-02",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -45.0,
+          "posY": 2.0,
+          "posZ": -35.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 1.0,
+            "g": 0.65,
+            "b": 0.30000000000000004,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 01-03",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -45.0,
+          "posY": 2.0,
+          "posZ": -25.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 1.0,
+            "g": 0.65,
+            "b": 0.30000000000000004,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 01-04",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -45.0,
+          "posY": 2.0,
+          "posZ": -15.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 1.0,
+            "g": 0.65,
+            "b": 0.30000000000000004,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 01-05",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -45.0,
+          "posY": 2.0,
+          "posZ": -5.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 1.0,
+            "g": 0.65,
+            "b": 0.30000000000000004,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 01-06",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -45.0,
+          "posY": 2.0,
+          "posZ": 5.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 1.0,
+            "g": 0.65,
+            "b": 0.30000000000000004,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 01-07",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -45.0,
+          "posY": 2.0,
+          "posZ": 15.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 1.0,
+            "g": 0.65,
+            "b": 0.30000000000000004,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 01-08",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -45.0,
+          "posY": 2.0,
+          "posZ": 25.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 1.0,
+            "g": 0.65,
+            "b": 0.30000000000000004,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 01-09",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -45.0,
+          "posY": 2.0,
+          "posZ": 35.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 1.0,
+            "g": 0.65,
+            "b": 0.30000000000000004,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 01-10",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -45.0,
+          "posY": 2.0,
+          "posZ": 45.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 1.0,
+            "g": 0.65,
+            "b": 0.30000000000000004,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 01-11",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -45.0,
+          "posY": 2.0,
+          "posZ": 55.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 1.0,
+            "g": 0.65,
+            "b": 0.30000000000000004,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 02-00",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -35.0,
+          "posY": 2.0,
+          "posZ": -55.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 1.0,
+            "g": 1.0,
+            "b": 0.30000000000000004,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 02-01",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -35.0,
+          "posY": 2.0,
+          "posZ": -45.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 1.0,
+            "g": 1.0,
+            "b": 0.30000000000000004,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 02-02",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -35.0,
+          "posY": 2.0,
+          "posZ": -35.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 1.0,
+            "g": 1.0,
+            "b": 0.30000000000000004,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 02-03",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -35.0,
+          "posY": 2.0,
+          "posZ": -25.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 1.0,
+            "g": 1.0,
+            "b": 0.30000000000000004,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 02-04",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -35.0,
+          "posY": 2.0,
+          "posZ": -15.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 1.0,
+            "g": 1.0,
+            "b": 0.30000000000000004,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 02-05",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -35.0,
+          "posY": 2.0,
+          "posZ": -5.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 1.0,
+            "g": 1.0,
+            "b": 0.30000000000000004,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 02-06",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -35.0,
+          "posY": 2.0,
+          "posZ": 5.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 1.0,
+            "g": 1.0,
+            "b": 0.30000000000000004,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 02-07",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -35.0,
+          "posY": 2.0,
+          "posZ": 15.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 1.0,
+            "g": 1.0,
+            "b": 0.30000000000000004,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 02-08",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -35.0,
+          "posY": 2.0,
+          "posZ": 25.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 1.0,
+            "g": 1.0,
+            "b": 0.30000000000000004,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 02-09",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -35.0,
+          "posY": 2.0,
+          "posZ": 35.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 1.0,
+            "g": 1.0,
+            "b": 0.30000000000000004,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 02-10",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -35.0,
+          "posY": 2.0,
+          "posZ": 45.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 1.0,
+            "g": 1.0,
+            "b": 0.30000000000000004,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 02-11",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -35.0,
+          "posY": 2.0,
+          "posZ": 55.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 1.0,
+            "g": 1.0,
+            "b": 0.30000000000000004,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 03-00",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -25.0,
+          "posY": 2.0,
+          "posZ": -55.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.65,
+            "g": 1.0,
+            "b": 0.30000000000000004,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 03-01",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -25.0,
+          "posY": 2.0,
+          "posZ": -45.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.65,
+            "g": 1.0,
+            "b": 0.30000000000000004,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 03-02",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -25.0,
+          "posY": 2.0,
+          "posZ": -35.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.65,
+            "g": 1.0,
+            "b": 0.30000000000000004,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 03-03",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -25.0,
+          "posY": 2.0,
+          "posZ": -25.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.65,
+            "g": 1.0,
+            "b": 0.30000000000000004,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 03-04",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -25.0,
+          "posY": 2.0,
+          "posZ": -15.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.65,
+            "g": 1.0,
+            "b": 0.30000000000000004,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 03-05",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -25.0,
+          "posY": 2.0,
+          "posZ": -5.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.65,
+            "g": 1.0,
+            "b": 0.30000000000000004,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 03-06",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -25.0,
+          "posY": 2.0,
+          "posZ": 5.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.65,
+            "g": 1.0,
+            "b": 0.30000000000000004,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 03-07",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -25.0,
+          "posY": 2.0,
+          "posZ": 15.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.65,
+            "g": 1.0,
+            "b": 0.30000000000000004,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 03-08",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -25.0,
+          "posY": 2.0,
+          "posZ": 25.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.65,
+            "g": 1.0,
+            "b": 0.30000000000000004,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 03-09",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -25.0,
+          "posY": 2.0,
+          "posZ": 35.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.65,
+            "g": 1.0,
+            "b": 0.30000000000000004,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 03-10",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -25.0,
+          "posY": 2.0,
+          "posZ": 45.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.65,
+            "g": 1.0,
+            "b": 0.30000000000000004,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 03-11",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -25.0,
+          "posY": 2.0,
+          "posZ": 55.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.65,
+            "g": 1.0,
+            "b": 0.30000000000000004,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 04-00",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -15.0,
+          "posY": 2.0,
+          "posZ": -55.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.30000000000000004,
+            "g": 1.0,
+            "b": 0.30000000000000004,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 04-01",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -15.0,
+          "posY": 2.0,
+          "posZ": -45.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.30000000000000004,
+            "g": 1.0,
+            "b": 0.30000000000000004,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 04-02",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -15.0,
+          "posY": 2.0,
+          "posZ": -35.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.30000000000000004,
+            "g": 1.0,
+            "b": 0.30000000000000004,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 04-03",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -15.0,
+          "posY": 2.0,
+          "posZ": -25.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.30000000000000004,
+            "g": 1.0,
+            "b": 0.30000000000000004,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 04-04",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -15.0,
+          "posY": 2.0,
+          "posZ": -15.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.30000000000000004,
+            "g": 1.0,
+            "b": 0.30000000000000004,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 04-05",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -15.0,
+          "posY": 2.0,
+          "posZ": -5.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.30000000000000004,
+            "g": 1.0,
+            "b": 0.30000000000000004,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 04-06",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -15.0,
+          "posY": 2.0,
+          "posZ": 5.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.30000000000000004,
+            "g": 1.0,
+            "b": 0.30000000000000004,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 04-07",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -15.0,
+          "posY": 2.0,
+          "posZ": 15.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.30000000000000004,
+            "g": 1.0,
+            "b": 0.30000000000000004,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 04-08",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -15.0,
+          "posY": 2.0,
+          "posZ": 25.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.30000000000000004,
+            "g": 1.0,
+            "b": 0.30000000000000004,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 04-09",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -15.0,
+          "posY": 2.0,
+          "posZ": 35.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.30000000000000004,
+            "g": 1.0,
+            "b": 0.30000000000000004,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 04-10",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -15.0,
+          "posY": 2.0,
+          "posZ": 45.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.30000000000000004,
+            "g": 1.0,
+            "b": 0.30000000000000004,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 04-11",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -15.0,
+          "posY": 2.0,
+          "posZ": 55.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.30000000000000004,
+            "g": 1.0,
+            "b": 0.30000000000000004,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 05-00",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -5.0,
+          "posY": 2.0,
+          "posZ": -55.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.30000000000000004,
+            "g": 1.0,
+            "b": 0.65,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 05-01",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -5.0,
+          "posY": 2.0,
+          "posZ": -45.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.30000000000000004,
+            "g": 1.0,
+            "b": 0.65,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 05-02",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -5.0,
+          "posY": 2.0,
+          "posZ": -35.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.30000000000000004,
+            "g": 1.0,
+            "b": 0.65,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 05-03",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -5.0,
+          "posY": 2.0,
+          "posZ": -25.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.30000000000000004,
+            "g": 1.0,
+            "b": 0.65,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 05-04",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -5.0,
+          "posY": 2.0,
+          "posZ": -15.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.30000000000000004,
+            "g": 1.0,
+            "b": 0.65,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 05-05",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -5.0,
+          "posY": 2.0,
+          "posZ": -5.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.30000000000000004,
+            "g": 1.0,
+            "b": 0.65,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 05-06",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -5.0,
+          "posY": 2.0,
+          "posZ": 5.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.30000000000000004,
+            "g": 1.0,
+            "b": 0.65,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 05-07",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -5.0,
+          "posY": 2.0,
+          "posZ": 15.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.30000000000000004,
+            "g": 1.0,
+            "b": 0.65,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 05-08",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -5.0,
+          "posY": 2.0,
+          "posZ": 25.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.30000000000000004,
+            "g": 1.0,
+            "b": 0.65,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 05-09",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -5.0,
+          "posY": 2.0,
+          "posZ": 35.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.30000000000000004,
+            "g": 1.0,
+            "b": 0.65,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 05-10",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -5.0,
+          "posY": 2.0,
+          "posZ": 45.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.30000000000000004,
+            "g": 1.0,
+            "b": 0.65,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 05-11",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -5.0,
+          "posY": 2.0,
+          "posZ": 55.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.30000000000000004,
+            "g": 1.0,
+            "b": 0.65,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 06-00",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 5.0,
+          "posY": 2.0,
+          "posZ": -55.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.30000000000000004,
+            "g": 1.0,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 06-01",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 5.0,
+          "posY": 2.0,
+          "posZ": -45.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.30000000000000004,
+            "g": 1.0,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 06-02",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 5.0,
+          "posY": 2.0,
+          "posZ": -35.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.30000000000000004,
+            "g": 1.0,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 06-03",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 5.0,
+          "posY": 2.0,
+          "posZ": -25.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.30000000000000004,
+            "g": 1.0,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 06-04",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 5.0,
+          "posY": 2.0,
+          "posZ": -15.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.30000000000000004,
+            "g": 1.0,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 06-05",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 5.0,
+          "posY": 2.0,
+          "posZ": -5.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.30000000000000004,
+            "g": 1.0,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 06-06",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 5.0,
+          "posY": 2.0,
+          "posZ": 5.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.30000000000000004,
+            "g": 1.0,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 06-07",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 5.0,
+          "posY": 2.0,
+          "posZ": 15.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.30000000000000004,
+            "g": 1.0,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 06-08",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 5.0,
+          "posY": 2.0,
+          "posZ": 25.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.30000000000000004,
+            "g": 1.0,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 06-09",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 5.0,
+          "posY": 2.0,
+          "posZ": 35.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.30000000000000004,
+            "g": 1.0,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 06-10",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 5.0,
+          "posY": 2.0,
+          "posZ": 45.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.30000000000000004,
+            "g": 1.0,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 06-11",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 5.0,
+          "posY": 2.0,
+          "posZ": 55.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.30000000000000004,
+            "g": 1.0,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 07-00",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 15.0,
+          "posY": 2.0,
+          "posZ": -55.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.30000000000000004,
+            "g": 0.65,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 07-01",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 15.0,
+          "posY": 2.0,
+          "posZ": -45.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.30000000000000004,
+            "g": 0.65,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 07-02",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 15.0,
+          "posY": 2.0,
+          "posZ": -35.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.30000000000000004,
+            "g": 0.65,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 07-03",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 15.0,
+          "posY": 2.0,
+          "posZ": -25.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.30000000000000004,
+            "g": 0.65,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 07-04",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 15.0,
+          "posY": 2.0,
+          "posZ": -15.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.30000000000000004,
+            "g": 0.65,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 07-05",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 15.0,
+          "posY": 2.0,
+          "posZ": -5.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.30000000000000004,
+            "g": 0.65,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 07-06",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 15.0,
+          "posY": 2.0,
+          "posZ": 5.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.30000000000000004,
+            "g": 0.65,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 07-07",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 15.0,
+          "posY": 2.0,
+          "posZ": 15.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.30000000000000004,
+            "g": 0.65,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 07-08",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 15.0,
+          "posY": 2.0,
+          "posZ": 25.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.30000000000000004,
+            "g": 0.65,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 07-09",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 15.0,
+          "posY": 2.0,
+          "posZ": 35.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.30000000000000004,
+            "g": 0.65,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 07-10",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 15.0,
+          "posY": 2.0,
+          "posZ": 45.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.30000000000000004,
+            "g": 0.65,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 07-11",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 15.0,
+          "posY": 2.0,
+          "posZ": 55.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.30000000000000004,
+            "g": 0.65,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 08-00",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 25.0,
+          "posY": 2.0,
+          "posZ": -55.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.30000000000000004,
+            "g": 0.30000000000000004,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 08-01",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 25.0,
+          "posY": 2.0,
+          "posZ": -45.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.30000000000000004,
+            "g": 0.30000000000000004,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 08-02",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 25.0,
+          "posY": 2.0,
+          "posZ": -35.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.30000000000000004,
+            "g": 0.30000000000000004,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 08-03",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 25.0,
+          "posY": 2.0,
+          "posZ": -25.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.30000000000000004,
+            "g": 0.30000000000000004,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 08-04",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 25.0,
+          "posY": 2.0,
+          "posZ": -15.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.30000000000000004,
+            "g": 0.30000000000000004,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 08-05",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 25.0,
+          "posY": 2.0,
+          "posZ": -5.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.30000000000000004,
+            "g": 0.30000000000000004,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 08-06",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 25.0,
+          "posY": 2.0,
+          "posZ": 5.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.30000000000000004,
+            "g": 0.30000000000000004,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 08-07",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 25.0,
+          "posY": 2.0,
+          "posZ": 15.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.30000000000000004,
+            "g": 0.30000000000000004,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 08-08",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 25.0,
+          "posY": 2.0,
+          "posZ": 25.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.30000000000000004,
+            "g": 0.30000000000000004,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 08-09",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 25.0,
+          "posY": 2.0,
+          "posZ": 35.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.30000000000000004,
+            "g": 0.30000000000000004,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 08-10",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 25.0,
+          "posY": 2.0,
+          "posZ": 45.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.30000000000000004,
+            "g": 0.30000000000000004,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 08-11",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 25.0,
+          "posY": 2.0,
+          "posZ": 55.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.30000000000000004,
+            "g": 0.30000000000000004,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 09-00",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 35.0,
+          "posY": 2.0,
+          "posZ": -55.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.65,
+            "g": 0.30000000000000004,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 09-01",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 35.0,
+          "posY": 2.0,
+          "posZ": -45.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.65,
+            "g": 0.30000000000000004,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 09-02",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 35.0,
+          "posY": 2.0,
+          "posZ": -35.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.65,
+            "g": 0.30000000000000004,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 09-03",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 35.0,
+          "posY": 2.0,
+          "posZ": -25.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.65,
+            "g": 0.30000000000000004,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 09-04",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 35.0,
+          "posY": 2.0,
+          "posZ": -15.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.65,
+            "g": 0.30000000000000004,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 09-05",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 35.0,
+          "posY": 2.0,
+          "posZ": -5.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.65,
+            "g": 0.30000000000000004,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 09-06",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 35.0,
+          "posY": 2.0,
+          "posZ": 5.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.65,
+            "g": 0.30000000000000004,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 09-07",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 35.0,
+          "posY": 2.0,
+          "posZ": 15.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.65,
+            "g": 0.30000000000000004,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 09-08",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 35.0,
+          "posY": 2.0,
+          "posZ": 25.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.65,
+            "g": 0.30000000000000004,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 09-09",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 35.0,
+          "posY": 2.0,
+          "posZ": 35.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.65,
+            "g": 0.30000000000000004,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 09-10",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 35.0,
+          "posY": 2.0,
+          "posZ": 45.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.65,
+            "g": 0.30000000000000004,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 09-11",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 35.0,
+          "posY": 2.0,
+          "posZ": 55.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 0.65,
+            "g": 0.30000000000000004,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 10-00",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 45.0,
+          "posY": 2.0,
+          "posZ": -55.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 1.0,
+            "g": 0.30000000000000004,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 10-01",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 45.0,
+          "posY": 2.0,
+          "posZ": -45.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 1.0,
+            "g": 0.30000000000000004,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 10-02",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 45.0,
+          "posY": 2.0,
+          "posZ": -35.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 1.0,
+            "g": 0.30000000000000004,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 10-03",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 45.0,
+          "posY": 2.0,
+          "posZ": -25.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 1.0,
+            "g": 0.30000000000000004,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 10-04",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 45.0,
+          "posY": 2.0,
+          "posZ": -15.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 1.0,
+            "g": 0.30000000000000004,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 10-05",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 45.0,
+          "posY": 2.0,
+          "posZ": -5.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 1.0,
+            "g": 0.30000000000000004,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 10-06",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 45.0,
+          "posY": 2.0,
+          "posZ": 5.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 1.0,
+            "g": 0.30000000000000004,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 10-07",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 45.0,
+          "posY": 2.0,
+          "posZ": 15.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 1.0,
+            "g": 0.30000000000000004,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 10-08",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 45.0,
+          "posY": 2.0,
+          "posZ": 25.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 1.0,
+            "g": 0.30000000000000004,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 10-09",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 45.0,
+          "posY": 2.0,
+          "posZ": 35.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 1.0,
+            "g": 0.30000000000000004,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 10-10",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 45.0,
+          "posY": 2.0,
+          "posZ": 45.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 1.0,
+            "g": 0.30000000000000004,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 10-11",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 45.0,
+          "posY": 2.0,
+          "posZ": 55.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 1.0,
+            "g": 0.30000000000000004,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 11-00",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 55.0,
+          "posY": 2.0,
+          "posZ": -55.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 1.0,
+            "g": 0.30000000000000004,
+            "b": 0.65,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 11-01",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 55.0,
+          "posY": 2.0,
+          "posZ": -45.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 1.0,
+            "g": 0.30000000000000004,
+            "b": 0.65,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 11-02",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 55.0,
+          "posY": 2.0,
+          "posZ": -35.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 1.0,
+            "g": 0.30000000000000004,
+            "b": 0.65,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 11-03",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 55.0,
+          "posY": 2.0,
+          "posZ": -25.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 1.0,
+            "g": 0.30000000000000004,
+            "b": 0.65,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 11-04",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 55.0,
+          "posY": 2.0,
+          "posZ": -15.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 1.0,
+            "g": 0.30000000000000004,
+            "b": 0.65,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 11-05",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 55.0,
+          "posY": 2.0,
+          "posZ": -5.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 1.0,
+            "g": 0.30000000000000004,
+            "b": 0.65,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 11-06",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 55.0,
+          "posY": 2.0,
+          "posZ": 5.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 1.0,
+            "g": 0.30000000000000004,
+            "b": 0.65,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 11-07",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 55.0,
+          "posY": 2.0,
+          "posZ": 15.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 1.0,
+            "g": 0.30000000000000004,
+            "b": 0.65,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 11-08",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 55.0,
+          "posY": 2.0,
+          "posZ": 25.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 1.0,
+            "g": 0.30000000000000004,
+            "b": 0.65,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 11-09",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 55.0,
+          "posY": 2.0,
+          "posZ": 35.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 1.0,
+            "g": 0.30000000000000004,
+            "b": 0.65,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 11-10",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 55.0,
+          "posY": 2.0,
+          "posZ": 45.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 1.0,
+            "g": 0.30000000000000004,
+            "b": 0.65,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Billboard 11-11",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 55.0,
+          "posY": 2.0,
+          "posZ": 55.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 3.0,
+          "sizeY": 3.0,
+          "color": {
+            "r": 1.0,
+            "g": 0.30000000000000004,
+            "b": 0.65,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": false,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Ground Marker 00",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 25.0,
+          "posY": 0.05,
+          "posZ": 0.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 4.0,
+          "sizeY": 4.0,
+          "color": {
+            "r": 1.0,
+            "g": 1.0,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": true,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Ground Marker 01",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 23.09698831278217,
+          "posY": 0.05,
+          "posZ": 9.567085809127244,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 4.0,
+          "sizeY": 4.0,
+          "color": {
+            "r": 1.0,
+            "g": 1.0,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": true,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Ground Marker 02",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 17.67766952966369,
+          "posY": 0.05,
+          "posZ": 17.677669529663685,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 4.0,
+          "sizeY": 4.0,
+          "color": {
+            "r": 1.0,
+            "g": 1.0,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": true,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Ground Marker 03",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 9.567085809127246,
+          "posY": 0.05,
+          "posZ": 23.09698831278217,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 4.0,
+          "sizeY": 4.0,
+          "color": {
+            "r": 1.0,
+            "g": 1.0,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": true,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Ground Marker 04",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 1.5308084989341915e-15,
+          "posY": 0.05,
+          "posZ": 25.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 4.0,
+          "sizeY": 4.0,
+          "color": {
+            "r": 1.0,
+            "g": 1.0,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": true,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Ground Marker 05",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -9.567085809127244,
+          "posY": 0.05,
+          "posZ": 23.09698831278217,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 4.0,
+          "sizeY": 4.0,
+          "color": {
+            "r": 1.0,
+            "g": 1.0,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": true,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Ground Marker 06",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -17.677669529663685,
+          "posY": 0.05,
+          "posZ": 17.67766952966369,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 4.0,
+          "sizeY": 4.0,
+          "color": {
+            "r": 1.0,
+            "g": 1.0,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": true,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Ground Marker 07",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -23.09698831278217,
+          "posY": 0.05,
+          "posZ": 9.567085809127247,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 4.0,
+          "sizeY": 4.0,
+          "color": {
+            "r": 1.0,
+            "g": 1.0,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": true,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Ground Marker 08",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -25.0,
+          "posY": 0.05,
+          "posZ": 3.061616997868383e-15,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 4.0,
+          "sizeY": 4.0,
+          "color": {
+            "r": 1.0,
+            "g": 1.0,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": true,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Ground Marker 09",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -23.09698831278217,
+          "posY": 0.05,
+          "posZ": -9.567085809127242,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 4.0,
+          "sizeY": 4.0,
+          "color": {
+            "r": 1.0,
+            "g": 1.0,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": true,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Ground Marker 10",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -17.677669529663692,
+          "posY": 0.05,
+          "posZ": -17.677669529663685,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 4.0,
+          "sizeY": 4.0,
+          "color": {
+            "r": 1.0,
+            "g": 1.0,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": true,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Ground Marker 11",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -9.567085809127237,
+          "posY": 0.05,
+          "posZ": -23.09698831278217,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 4.0,
+          "sizeY": 4.0,
+          "color": {
+            "r": 1.0,
+            "g": 1.0,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": true,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Ground Marker 12",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -4.592425496802574e-15,
+          "posY": 0.05,
+          "posZ": -25.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 4.0,
+          "sizeY": 4.0,
+          "color": {
+            "r": 1.0,
+            "g": 1.0,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": true,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Ground Marker 13",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 9.56708580912725,
+          "posY": 0.05,
+          "posZ": -23.096988312782166,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 4.0,
+          "sizeY": 4.0,
+          "color": {
+            "r": 1.0,
+            "g": 1.0,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": true,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Ground Marker 14",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 17.677669529663685,
+          "posY": 0.05,
+          "posZ": -17.677669529663692,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 4.0,
+          "sizeY": 4.0,
+          "color": {
+            "r": 1.0,
+            "g": 1.0,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": true,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "Ground Marker 15",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 23.09698831278217,
+          "posY": 0.05,
+          "posZ": -9.567085809127239,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Billboard": {
+          "texture": "rom/model/lod/needles.png",
+          "sizeX": 4.0,
+          "sizeY": 4.0,
+          "color": {
+            "r": 1.0,
+            "g": 1.0,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "rotation": 0.0,
+          "groundAligned": true,
+          "enabled": true
+        }
+      }
+    }
+  ]
+}

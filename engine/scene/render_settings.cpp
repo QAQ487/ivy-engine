@@ -185,6 +185,12 @@ RenderSettingsData RenderSettings_ParseJson(const nlohmann::json& renderJson, Re
     settings.spriteCullingEnabled = renderJson.value(
         "spriteCullingEnabled", settings.spriteCullingEnabled);
     settings.lodEnabled = renderJson.value("lodEnabled", settings.lodEnabled);
+    settings.billboardCullingEnabled = renderJson.value(
+        "billboardCullingEnabled", settings.billboardCullingEnabled);
+    settings.effectCullingEnabled = renderJson.value(
+        "effectCullingEnabled", settings.effectCullingEnabled);
+    settings.effectCullRadius = cull_settings::ClampEffectCullRadius(
+        renderJson.value("effectCullRadius", settings.effectCullRadius));
     settings.lightSelectionEnabled = renderJson.value(
         "lightSelectionEnabled", settings.lightSelectionEnabled);
     settings.animCullingEnabled = renderJson.value(
@@ -246,6 +252,9 @@ nlohmann::json RenderSettings_ToJson() {
     render["shadowCascadeCullingEnabled"] = g_renderSettings.shadowCascadeCullingEnabled;
     render["spriteCullingEnabled"] = g_renderSettings.spriteCullingEnabled;
     render["lodEnabled"] = g_renderSettings.lodEnabled;
+    render["billboardCullingEnabled"] = g_renderSettings.billboardCullingEnabled;
+    render["effectCullingEnabled"] = g_renderSettings.effectCullingEnabled;
+    render["effectCullRadius"] = g_renderSettings.effectCullRadius;
     render["lightSelectionEnabled"] = g_renderSettings.lightSelectionEnabled;
     render["animCullingEnabled"] = g_renderSettings.animCullingEnabled;
     render["lodBias"] = g_renderSettings.lodBias;

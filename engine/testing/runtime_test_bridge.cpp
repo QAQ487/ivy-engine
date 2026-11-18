@@ -241,7 +241,9 @@ bool IsRuntimeTestBridgeSettingKey(const std::string& key) {
         || key == "spriteCullingEnabled"
         || key == "lodEnabled"
         || key == "animCullingEnabled"
-        || key == "lightSelectionEnabled";
+        || key == "lightSelectionEnabled"
+        || key == "billboardCullingEnabled"
+        || key == "effectCullingEnabled";
 }
 
 bool ParseRuntimeTestBridgeSettingValue(const Json& value, bool& outBool, std::string& err) {

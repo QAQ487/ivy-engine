@@ -48,6 +48,14 @@ int main() {
     Expect(Near(ResolveShadowDistance(70.0f, 120.0f), 120.0f), "override replaces the preset");
     Expect(Near(ResolveShadowDistance(40.0f, 1.0f), kMinShadowDistance), "override below min is clamped");
 
+    // Effect cull radius: clamped to [0.5, 500]; non-finite -> default 20.
+    Expect(Near(ClampEffectCullRadius(20.0f), 20.0f), "radius kept");
+    Expect(Near(ClampEffectCullRadius(0.0f), kMinEffectCullRadius), "radius clamps low");
+    Expect(Near(ClampEffectCullRadius(-5.0f), kMinEffectCullRadius), "negative radius clamps low");
+    Expect(Near(ClampEffectCullRadius(1e9f), kMaxEffectCullRadius), "radius clamps high");
+    Expect(Near(ClampEffectCullRadius(NAN), kDefaultEffectCullRadius), "NaN radius -> default");
+    Expect(Near(ClampEffectCullRadius(INFINITY), kDefaultEffectCullRadius), "inf radius -> default");
+
     if (g_failed) {
         std::fprintf(stderr, "%d check(s) failed\n", g_failed);
         return 1;

@@ -19,6 +19,7 @@
 #include "engine/scene/render_settings.h"
 #include "engine/core/builtin_paths.h"
 #include "engine/rendering/culling/frustum_cull.h"
+#include "engine/rendering/culling/fx_cull.h"
 #include "engine/rendering/culling/lod_state.h"
 #include "engine/rendering/culling/shadow_cascade_cull.h"
 #include "engine/rendering/lighting/shadow.h"
@@ -740,6 +741,7 @@ void GameScene::Object_Draw() {
 
 	// Billboard pass
 	{
+		FxCull_BeginFrame();
 		const auto& cam = GetCamera();
 		Billboard::SetViewMatrix(cam.GetViewMatrix());
 		Billboard::SetProjectionMatrix(cam.GetProjMatrix(GetRenderViewportWidth(), GetRenderViewportHeight()));

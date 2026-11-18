@@ -3,6 +3,8 @@
 
 #include "editor_gui_common_includes.h"
 #include "engine/scene/scene_lighting.h"
+#include "engine/rendering/culling/fx_cull.h"
+#include "engine/rendering/culling/cull_settings_math.h"
 #include "engine/rendering/lighting/lighting.h"
 
 std::string ShaderVariantPreviewLabel(Shader3DVariant v) {
@@ -398,6 +400,18 @@ void DrawRenderingSettingsBody() {
         const AnimCullStats anim = Lod_GetLastAnimStats();
         ImGui::TextDisabled("anim     evaluated %d  |  skipped %d", anim.updated, anim.skipped);
         ImGui::TextDisabled("Animated Visuals no pass drew last frame skip bone sampling (clip time still advances). Play only.");
+    }
+    ImGui::Checkbox("Billboard / Particle Culling (3D)", &rs.billboardCullingEnabled);
+    ImGui::Checkbox("Effect Culling (3D)", &rs.effectCullingEnabled);
+    ImGui::SliderFloat("Effect Cull Radius", &rs.effectCullRadius,
+        cull_settings::kMinEffectCullRadius, cull_settings::kMaxEffectCullRadius, "%.1f m",
+        ImGuiSliderFlags_Logarithmic);
+    {
+        const FxCullStats fx = FxCull_GetLastStats();
+        ImGui::TextDisabled("billboard considered %d  |  culled %d", fx.billboardConsidered, fx.billboardCulled);
+        ImGui::TextDisabled("particle  considered %d  |  culled %d", fx.particleConsidered, fx.particleCulled);
+        ImGui::TextDisabled("effect    considered %d  |  culled %d", fx.effectConsidered, fx.effectCulled);
+        ImGui::TextDisabled("Effects have no authored bounds: radius x scale around the effect position. Larger radius = fewer pops.");
     }
     ImGui::Checkbox("Light Selection (3D)", &rs.lightSelectionEnabled);
     {

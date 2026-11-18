@@ -399,6 +399,18 @@
     <ClInclude Include="engine\rendering\culling\lod_state.h">
       <Filter>engine\rendering\culling</Filter>
     </ClInclude>
+    <ClInclude Include="engine\rendering\culling\anim_cull_math.h">
+      <Filter>engine\rendering\culling</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\rendering\culling\light_select_math.h">
+      <Filter>engine\rendering\culling</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\rendering\culling\fx_cull_math.h">
+      <Filter>engine\rendering\culling</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\rendering\culling\fx_cull.h">
+      <Filter>engine\rendering\culling</Filter>
+    </ClInclude>
     <ClInclude Include="engine\rendering\culling\shadow_cascade_cull.h">
       <Filter>engine\rendering\culling</Filter>
     </ClInclude>
@@ -858,6 +870,9 @@
       <Filter>engine\rendering\culling</Filter>
     </ClCompile>
     <ClCompile Include="engine\rendering\culling\lod_state.cpp">
+      <Filter>engine\rendering\culling</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\rendering\culling\fx_cull.cpp">
       <Filter>engine\rendering\culling</Filter>
     </ClCompile>
     <ClCompile Include="engine\rendering\culling\shadow_cascade_cull.cpp">

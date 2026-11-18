@@ -7,6 +7,10 @@
 #include "engine/rendering/d3d11/renderer.h"
 #include "engine/rendering/sprite/texture.h"
 #include "engine/core/content_path.h"
+#include "engine/rendering/culling/frustum_cull_math.h"
+#include "engine/rendering/culling/fx_cull.h"
+#include "engine/rendering/culling/fx_cull_math.h"
+#include "engine/scene/render_settings.h"
 
 #include <Windows.h>
 #include <algorithm>
@@ -591,6 +595,12 @@ void ParticleRenderer_RenderEmitter(const ParticleEmitter& emitter, const XMMATR
 	g_instances.clear();
 	g_instances.reserve(static_cast<size_t>(aliveCount));
 
+	const bool cullParticles = RenderSettings_GetConst().billboardCullingEnabled;
+	frustum_cull::FrustumPlanes planes;
+	if (cullParticles)
+		frustum_cull::ExtractFrustumPlanesD3D(view * proj, planes);
+	int culledParticles = 0;
+
 	const auto& positions = pool.Positions();
 	const auto& sizes = pool.Sizes();
 	const auto& rotations = pool.Rotations();
@@ -604,6 +614,12 @@ void ParticleRenderer_RenderEmitter(const ParticleEmitter& emitter, const XMMATR
 			position.z += emitterPosition.z;
 		}
 
+		if (cullParticles && !fx_cull::SphereIntersectsFrustum(
+				position.x, position.y, position.z, fx_cull::ParticleRadius(sizes[i]), planes)) {
+			++culledParticles;
+			continue;
+		}
+
 		const int frame = frames[i] % (std::max)(1, config.textureSheetFrames);
 		ParticleInstanceData instance = {};
 		instance.position = position;
@@ -613,6 +629,11 @@ void ParticleRenderer_RenderEmitter(const ParticleEmitter& emitter, const XMMATR
 		instance.rotation = rotations[i];
 		g_instances.push_back(instance);
 	}
+
+	if (cullParticles)
+		FxCull_RecordParticles(aliveCount, culledParticles);
+	if (g_instances.empty())
+		return;
 
 	D3D11_MAPPED_SUBRESOURCE mapped = {};
 	if (FAILED(g_context->Map(g_instanceBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped)))

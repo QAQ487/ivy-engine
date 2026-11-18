@@ -1,7 +1,7 @@
 # Ivy Engine — Complete Ability & API Reference
 
 Exhaustive catalog of **Ivy Engine** capabilities and public functions,
-scanned from every header under `engine/` and `src/app/` (171 headers; regenerate to refresh).
+scanned from every header under `engine/` and `src/app/` (173 headers; regenerate to refresh).
 
 **Learning how to use the engine?** Start with [`ENGINE_USER_GUIDE.md`](ENGINE_USER_GUIDE.md) (humans).  
 For JSON schemas, source map, and change rules, see [`AGENTS.md`](../AGENTS.md) (AI agents).
@@ -1489,6 +1489,7 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `return std::min(std::max(scale, kMinCullDistanceScale), kMaxCullDistanceScale);`
 - `return std::min(std::max(distance, kMinShadowDistance), kMaxShadowDistance);`
 - `inline float ResolveShadowDistance(float presetDistance, float overrideDistance) { const float o = ClampShadowDistanceOverride(overrideDistance);`
+- `return std::min(std::max(radius, kMinEffectCullRadius), kMaxEffectCullRadius);`
 
 ### `engine/rendering/culling/frustum_cull.h`
 **Types:** FrustumCullStats
@@ -1508,6 +1509,17 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `return MakeAabbFromPoints(worldCorners, 8);`
 - `return TransformAabb(local, world);`
 - `return TransformAabb(local, rows);`
+
+### `engine/rendering/culling/fx_cull.h`
+**Types:** FxCullStats
+- `void FxCull_BeginFrame();`
+- `void FxCull_RecordBillboards(int considered, int culled);`
+- `void FxCull_RecordParticles(int considered, int culled);`
+- `void FxCull_RecordEffects(int considered, int culled);`
+- `FxCullStats FxCull_GetLastStats();`
+
+### `engine/rendering/culling/fx_cull_math.h`
+- `return std::max(baseRadius, 0.0f) * std::max({sx, sy, sz, 1e-3f});`
 
 ### `engine/rendering/culling/light_select_math.h`
 **Types:** Candidate

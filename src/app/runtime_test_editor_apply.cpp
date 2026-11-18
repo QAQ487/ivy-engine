@@ -97,6 +97,14 @@ bool RuntimeTestEditor_Apply(const ivy::testing::EditorOpRequest& op, std::strin
             rs.lightSelectionEnabled = op.settingBoolValue;
             return true;
         }
+        if (op.settingKey == "billboardCullingEnabled") {
+            rs.billboardCullingEnabled = op.settingBoolValue;
+            return true;
+        }
+        if (op.settingKey == "effectCullingEnabled") {
+            rs.effectCullingEnabled = op.settingBoolValue;
+            return true;
+        }
         errorOut = "unknown_setting";
         return false;
     }
