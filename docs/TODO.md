@@ -158,6 +158,42 @@
 - [ ] **LOD／剔除嘅進階項**（暫緩）：HLOD／impostor、自動減面、per-clip skinned bounds、per-layer／per-tag cull distance。
 - 唔算缺口：texture mip chain 已由 `model_util.cpp` 生成；engine 冇 tilemap 系統；screen-space UI 唔剔除係設計。
 
+## 引擎審計（2026-11-18 source audit，對 `30629c4`）
+
+唔係由本頁抄出嚟，係逐個子系統睇源碼搵到嘅缺口。每項都對過代碼；標明「推斷」嘅未喺 Windows 證實。
+
+### 已完成
+
+- [x] **音效 WAV 讀檔 UTF-8／rom 解析**（PR #46，Terry 喺 Windows 驗收：中文檔名 WAV 播到、`resources/` fallback 播到、一般播放冇退步）：`AudioManager::LoadWav` 由 `mmioOpenA` 改為經 `content_path::ReadableFileCurrent` 讀 bytes，再用 `engine/audio/wav_parse.h` 解析。Linux：`tests/wav_parse_test.cpp`。
+- [x] **Linux CI**（PR #46）：`tools/run_linux_checks.sh` 一次跑晒 Linux 檢查；`.github/workflows/linux-checks.yml` 喺 push `master`／PR 時跑。
+
+### 正確性／穩定性
+
+- [ ] **3D 掉幀變慢鏡**：`src/app/main.cpp` `Update()` 對 3D 場景每幀傳固定 `1/60 × timeScale`（2D 用實際 `elapsed_time`＋Box2D 累加器）。物理逐幀結果穩定可重現，`rigidbody.cpp` 嘅 1/30 上限實際唔會觸發；但遊戲時間跟幀數走，30 FPS 時物理、script、動畫全部半速。修法係掉幀時一幀跑多個 sim step（要設上限），但要處理兩樣：`KeyLogger_IsTrigger` 每幀只更新一次，多 step 會令 script 見到同一下按鍵兩次；test bridge 依賴「一幀 = 一個固定 step」。改之前要決定 2D／3D 時間模型係咪統一。
+- [ ] **主循環食盡一粒 CPU**（source 已做；等 Windows 驗收）：`main.cpp` 主循環未夠 1/60 s 時用 `PeekMessage` 空轉，冇 sleep／wait（只有 resize 時 `Sleep(1)`）。寫死 60 FPS 封頂，高刷新率芒冇得用。
+  - 已做：未到 frame 時用 `MsgWaitForMultipleObjects` 等（有視窗訊息即醒），`timeBeginPeriod(1)`，只空轉最後 2 ms（`engine/core/frame_pacing.h`，Linux：`tests/frame_pacing_test.cpp`）。60 FPS 封頂同 3D 固定 1/60 step 冇改。
+  - 未做：vsync 選項、高刷新率（要先解決 3D 時間模型）。
+- [ ] **Swap chain／device lost**（source 已做；等 Windows 驗收）：`renderer.cpp` 用舊式 `BufferCount = 1`（非 flip model），`Present(0, 0)` 冇 vsync 選項，亦冇處理 `DXGI_ERROR_DEVICE_REMOVED`／`DEVICE_RESET`；換驅動或 GPU TDR 後會靜靜雞黑畫面。最少要 log 原因同乾淨退出。
+  - 已做：flip model（`FLIP_DISCARD`，2 buffers；建立失敗退返舊 blit model），`Present()` 之後重新綁 back buffer；`DEVICE_REMOVED`／`DEVICE_RESET` 會 log `GetDeviceRemovedReason`，主循環彈訊息框後退出（`engine/rendering/d3d11/device_lost.h`，Linux：`tests/device_lost_test.cpp`）。`Initialize` 而家會檢查 `InitRenderer` 結果，失敗就彈訊息框退出（之前無視結果繼續行）。
+  - 未做：重建 device（全部 GPU 資源係全域靜態，要大改）；device lost 時 editor 未保存嘅改動會冇咗。
+- [ ] **`WAVE_FORMAT_EXTENSIBLE` WAV**：`LoadWav` 只複製 fmt chunk 頭 18 bytes 入 `WAVEFORMATEX`，但 `cbSize` 仍然係 22，`CreateSourceVoice` 可能讀超出 struct。PR #46 之前已經存在。
+- [ ] **`tools/check_2d_sample.py` 過時**：仍要求 `rom/skybox/ibl/brdf_lut.png` 係真實檔案，但呢個資產已經係 `builtin:`。修好先加入 CI。
+
+### 結構風險
+
+- [ ] **`GameObject` 佈局係冇版本保護嘅 ABI**：script 直接 call `game_object.h` 嘅 inline 成員（`self.GetRigidbody()`、`SetName`、`AddComponent`…），而 `GameScripts.vcxproj` 自己 compile 一份 `engine/physics/core/rigidbody.cpp`。`ScriptRuntimeApi` append-only 只保護函式表；`GameObject`／`Rigidbody` 加減欄位，舊 DLL 會靜靜雞壞。最少加 `static_assert(sizeof(...))` 同版本號，DLL 載入時檢查。推斷（未證實）：exe 同 DLL 都係 `/MTd` 時各有 debug heap，跨 DLL 分配／釋放 `std::string` 等有機會觸發 assert。
+- [ ] **音效冇快取、冇串流**：`PlaySFX3D` 等每次播都由碟同步讀成個 WAV；同一 id 會先 `Stop` 舊嗰個，同一音效唔可以疊住播；BGM 都係成個讀入記憶體；只支援 WAV。
+- [ ] **Runtime 直接讀 FBX**：`model.cpp` 喺 runtime 用 FBX SDK 解析，遊戲包要帶 `libfbxsdk.dll`。可以跟紋理 BC7 cook 一樣，Build 時轉成二進制 mesh 格式。
+
+### Script API 缺口（`ScriptRuntimeApi` v49，119 個 host 函式）
+
+- [ ] 冇 3D Rigidbody 速度／力／衝量 API（2D 有；而家 script 靠 inline `GetRigidbody()`，即係上面嘅 ABI 風險）
+- [ ] 冇按名或 tag 搵 GameObject
+- [ ] 冇時間／timeScale 查詢
+- [ ] 冇存檔／持久化（設定、進度）
+- [ ] 冇 input action 映射／按鍵重設
+- [ ] 冇非同步載入場景
+
 ## 歷史 backlog（source audit 結果）
 
 以下已對 `3f5afe9` 源碼同 git 核實。勾選代表 source review 完成，唔等於另一次 runtime acceptance。
@@ -193,6 +229,7 @@ PBR 球場已由引擎待辦移除：倉庫只有 PBR shader 同 `testbed/rom/sc
 2. 重做 Properties Panel／Inspector（先有 UI 草案；現有編輯同 Undo 要保住）。
    Culling／LOD 跟進（獨立 PR，順序：`DrawVisual` 先剔除、離屏動畫降頻 → 燈光揀選 → billboard／粒子／effect 剔除）見「Culling／LOD 缺口盤點」。
 3. AI 套件：Waypoint → Perception → BT／Blackboard → EQS。NavMesh 繼續暫緩。
+4. 引擎審計（見「引擎審計」一節）：主循環空轉＋swap chain／device lost → 3D 時間模型（先決定設計）→ `GameObject` ABI 保護＋Script API 缺口 → 音效快取／串流、mesh cook。
 
 Box friction torque 同 World-space UI 未排入上面次序：前者只有想箱子傾側先做；後者驗收仍待設計。Culling 主線（3D frustum／shadow cascade／2D sprite）已入 master；距離／occlusion／tilemap／billboard／particle 未排入。
 

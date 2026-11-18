@@ -1,7 +1,7 @@
 # Ivy Engine — Complete Ability & API Reference
 
 Exhaustive catalog of **Ivy Engine** capabilities and public functions,
-scanned from every header under `engine/` and `src/app/` (173 headers; regenerate to refresh).
+scanned from every header under `engine/` and `src/app/` (175 headers; regenerate to refresh).
 
 **Learning how to use the engine?** Start with [`ENGINE_USER_GUIDE.md`](ENGINE_USER_GUIDE.md) (humans).  
 For JSON schemas, source map, and change rules, see [`AGENTS.md`](../AGENTS.md) (AI agents).
@@ -323,6 +323,11 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `void SweepFinishedInstances();`
 - `void Setup3DEmitter(Playback* source, const DirectX::XMFLOAT3& position, float distanceScale);`
 - `bool SubmitAndStart(Playback* source, bool loop);`
+
+### `engine/audio/wav_parse.h`
+**Types:** WavChunks
+- `inline std::uint32_t ReadU32LE(const std::uint8_t* p) { return static_cast<std::uint32_t>(p[0]) | (static_cast<std::uint32_t>(p[1]) << 8) | (static_cast<std::uint32_t>(p[2]) << 16) | (static_cast<std::uint32_t>(p[3]) << 24);`
+- `inline bool TagEquals(const std::uint8_t* p, const char* tag) { return p[0] == static_cast<std::uint8_t>(tag[0]) && p[1] == static_cast<std::uint8_t>(tag[1]) && p[2] == static_cast<std::uint8_t>(tag[2]) && p[3] == static_cast<std::uint8_t>(tag[3]);`
 
 ### `engine/core/builtin_assets.h`
 **Types:** Asset, TextureEntry
@@ -1593,6 +1598,9 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `inline frustum_cull::Aabb MakeSpriteWorldAabb( float width, float height, float pivotX, float pivotY, DirectX::FXMMATRIX world) { const frustum_cull::Aabb local = MakeSpriteLocalAabb(width, height, pivotX, pivotY);`
 - `return frustum_cull::TransformAabb(local, world);`
 
+### `engine/rendering/d3d11/device_lost.h`
+- `inline bool IsDeviceLostResult(std::int32_t hr) { const std::uint32_t u = static_cast<std::uint32_t>(hr);`
+
 ### `engine/rendering/d3d11/post_process.h`
 **Types:** PostFXParams
 - `void PostProcess_Initialize();`
@@ -1611,6 +1619,8 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `void UninitRenderer(void);`
 - `void Clear(void);`
 - `void Present(void);`
+- `bool Renderer_IsDeviceLost();`
+- `std::string Renderer_DeviceLostMessage();`
 - `ID3D11Device* GetDevice(void);`
 - `ID3D11DeviceContext* GetDeviceContext(void);`
 - `void SetDepthEnable(bool Enable);`

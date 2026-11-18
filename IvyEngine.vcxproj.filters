@@ -135,6 +135,9 @@
     <ClInclude Include="engine\core\frame_timer.h">
       <Filter>engine\core</Filter>
     </ClInclude>
+    <ClInclude Include="engine\core\frame_pacing.h">
+      <Filter>engine\core</Filter>
+    </ClInclude>
     <ClInclude Include="engine\core\render_thread.h">
       <Filter>engine\core</Filter>
     </ClInclude>
@@ -352,6 +355,9 @@
       <Filter>engine\rendering\billboard</Filter>
     </ClInclude>
     <ClInclude Include="engine\rendering\d3d11\renderer.h">
+      <Filter>engine\rendering\d3d11</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\rendering\d3d11\device_lost.h">
       <Filter>engine\rendering\d3d11</Filter>
     </ClInclude>
     <ClInclude Include="engine\rendering\d3d11\post_process.h">
