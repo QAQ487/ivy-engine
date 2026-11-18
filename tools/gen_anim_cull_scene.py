@@ -10,7 +10,7 @@ Groups (camera starts at the origin looking +Z):
   Back    behind the camera, far from the sun   -> skipped while you look forward
   Sides   far left / right of the view          -> skipped
   Far     in view direction, past cullDistance  -> skipped (distance cull)
-  Shadow  right behind the camera               -> may stay evaluated if a shadow
+  Shadow  just behind the camera                -> may stay evaluated if a shadow
                                                    cascade still draws it
 
 Run:  python3 tools/gen_anim_cull_scene.py
@@ -64,7 +64,7 @@ def build():
         nodes.append(bot(f"Side {i + 1}", float(x), 0.0))
     for i, x in enumerate((-6, -2, 2, 6)):
         nodes.append(bot(f"Far {i + 1} (cullDistance 40)", float(x), 70.0, 40.0))
-    nodes.append(bot("Shadow Caster (behind camera)", 0.0, -4.0))
+    nodes.append(bot("Shadow Caster (behind camera)", 0.0, -12.0))
 
     return {
         "version": 4,
