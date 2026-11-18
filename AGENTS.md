@@ -23,7 +23,7 @@ Ivy Engine is a from-scratch C++ / Direct3D 11 engine: an ImGui **editor** (`Ivy
 
 - **Development status:** engine development is fully unfrozen (ADR 0007, 2026-10-20). Any engine system may change within the requested task scope. `engine-v1.0-lock` is a historical tag, not a restriction.
 - **Compatibility still applies** unless the task explicitly changes it: existing content-project layout, scene/prefab JSON, and the `ScriptRuntimeApi` ABI.
-- **`ScriptRuntimeApi` is append-only.** Current version: **49** (`kScriptRuntimeApiVersion` in `engine/scripting/script_runtime_api.cpp`). New host functions go at the end, bump the version, keep older `ScriptRuntimeApi_Get*` entry points working, and scripts must check the version before calling newer entries.
+- **`ScriptRuntimeApi` is append-only.** Current version: **50** (`kScriptRuntimeApiVersion` in `engine/scripting/script_runtime_api.cpp`). New host functions go at the end, bump the version, keep older `ScriptRuntimeApi_Get*` entry points working, and scripts must check the version before calling newer entries.
 - **Engine vs game:** do not add game-specific logic to engine code. Game behavior belongs in content-project scripts/JSON. Use game files only as examples of how the engine is consumed.
 - **JSON names are contracts.** Component type names and field names are case-sensitive; preserve them unless the user asks for a migration (then also keep the loader accepting the old form).
 - **Never claim Windows verification from Linux.** This container cannot build MSVC / D3D11 or run named pipes. Report Linux checks as Linux checks; Windows Editor/Runtime acceptance is the owner's.
@@ -71,6 +71,7 @@ Linux-runnable checks (use what matches the change; none of these is a Windows p
 | Agent doc pack | `python3 tools/agent_docs_check.py`, `python3 -m unittest tools/agent_docs_check_test.py tools/export_agent_docs_check.py`, `tools/run_agent_docs_export_check.sh` (New Project export; diffs C++ vs Python output) |
 | Audio WAV parsing | `tests/wav_parse_test.cpp` |
 | Frame loop / device lost | `tests/frame_pacing_test.cpp`, `tests/device_lost_test.cpp` |
+| Script DLL layout check / scene search | `tests/script_abi_layout_test.cpp`, `tests/game_object_search_test.cpp` |
 | Other unit tests | `tests/*_test.cpp` (single-file `g++ -std=c++20 -I.` builds; see each file header) |
 
 Windows-only harnesses: `tools/run_*.cmd`, `tools/run_*.ps1` (2D regression, collider components, content reload, scene hot-load, play-scene switch, bridge acceptance).
@@ -199,6 +200,7 @@ When adding a component: register it in `SceneLoader_RegisterComponentTypes()`, 
 - Serialized fields: `X(type, name, default)` list + `SCRIPT_DECLARE_FIELD` / `SCRIPT_SERIALIZE_METHODS` (`script_fields.h`).
 - Scripts reach the host only through `ScriptRuntimeApi` (`ScriptRuntimeApi_GetHost()`) and the `ScriptApi_*` wrappers in `script_runtime_api.h` — never link the editor. Adding a host function: append to the struct, fill the host table, add the wrapper, bump the version, update `docs/agent/` and regenerate the API reference.
 - DLL reload: the editor watches `GameScripts.dll`, queues a reload, tears down and recreates script instances; keep `OnCreate`/`OnDestroy` balanced.
+- **DLL layout check** (`engine/scripting/script_abi_layout.h`, `script_abi_fill.h`): scripts call inline `GameObject` / `Rigidbody` / component members and pass STL types across the DLL boundary, which `ScriptRuntimeApi`'s version does not cover. `GameScripts.dll` exports `IvyScriptAbiLayout` (from `script_dll_exports.cpp`): a manual `kAbiRevision`, the build flavour (`_ITERATOR_DEBUG_LEVEL`, `_DEBUG`) and `sizeof` of the shared types. `ScriptFactory::LoadScriptDll` compares it with its own and refuses a DLL that differs, logging the cause (Debug / Release mismatch, or engine headers changed → rebuild GameScripts). A DLL without the export (built before the check) loads with a warning. When you change a shared class in a way `sizeof` cannot see (member order, virtuals), bump `kAbiRevision`; entries are append-only.
 
 ## Subsystem notes
 

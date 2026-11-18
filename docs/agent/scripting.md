@@ -2,7 +2,7 @@
 
 Gameplay scripts are C++ classes that inherit `api:Script` (`engine/scripting/Script.h`) and register by class name for prefab/scene JSON (`"Script": { "scriptClass": "…" }`).
 
-Prefer `ScriptApi_*` wrappers from `engine/scripting/script_runtime_api.h` for host access. The host ABI table is `api:ScriptRuntimeApi`; its `version` field is **49** (constant `kScriptRuntimeApiVersion` in `script_runtime_api.cpp`, not declared in a header — do not use an `api:` marker for it).
+Prefer `ScriptApi_*` wrappers from `engine/scripting/script_runtime_api.h` for host access. The host ABI table is `api:ScriptRuntimeApi`; its `version` field is **50** (constant `kScriptRuntimeApiVersion` in `script_runtime_api.cpp`, not declared in a header — do not use an `api:` marker for it).
 
 ## Lifecycle (`api:Script`)
 
@@ -16,6 +16,8 @@ Prefer `ScriptApi_*` wrappers from `engine/scripting/script_runtime_api.h` for h
 | `api:Serialize` / `api:Deserialize` | Persist/restore fields (`Deserialize` runs before `OnCreate`) |
 
 Optional: `api:GetRuntimePhysicsProxy` for editor play-mode collider overlays.
+
+**Layout check:** the engine refuses to load a `GameScripts.dll` whose `GameObject` / component / STL layout differs from its own (a Debug DLL in a Release editor, or a DLL built against older engine headers) and logs why in the Console. Build GameScripts in the **same configuration** as the editor / runtime that loads it, and rebuild it after updating the engine. Prefer `ScriptApi_*` (for example `api:ScriptApi_RigidbodyAddForce`) over inline engine members where one exists.
 
 Serialized fields: declare with macros in `script_fields.h` (`SCRIPT_DECLARE_FIELD`, `SCRIPT_SERIALIZE_METHODS`).
 
@@ -76,6 +78,9 @@ void MySpinScript::OnUpdate(engine::GameObject& self, float dt) {
 | Transform | `api:ScriptApi_FindTransform` |
 | Prefab | `GameObject* ScriptApi_PrefabInstantiate(...)` / `ScriptApi_PrefabDestroy` — see [`api/assets.md`](api/assets.md) (`api:ScriptApi_PrefabInstantiate`, `api:ScriptApi_PrefabDestroy`) |
 | Visual | `api:ScriptApi_FindVisualComponent`, `ScriptApi_Visual_PlayClip(VisualComponent*, const char*)` — [`api/render.md`](api/render.md) |
+| Rigidbody 3D (v50) | `api:ScriptApi_RigidbodyGetVelocity`, `api:ScriptApi_RigidbodySetVelocity`, `api:ScriptApi_RigidbodyAddForce`, `api:ScriptApi_RigidbodyAddTorque`, angular velocity get / set — [`api/physics-3d.md`](api/physics-3d.md) |
+| Scene search (v50) | `GameObject* ScriptApi_FindGameObjectByName(const char* name, bool includeInactive = false)` (`api:ScriptApi_FindGameObjectByName`), `int ScriptApi_FindGameObjectsByTag(Tag tag, GameObject** out, int capacity, bool includeInactive = false)` (`api:ScriptApi_FindGameObjectsByTag`; returns the total, writes up to `capacity`) — depth-first in scene order, includes spawned prefabs, skips objects pending destroy |
+| Time (v50) | `api:ScriptApi_GetTimeScale` (F7 / pulse multiplier on `dt`), `api:ScriptApi_GetRealTimeSeconds` (unscaled wall-clock seconds since engine start) |
 | Render settings (v49) | `api:ScriptApi_RenderSettingSetBool`, `api:ScriptApi_RenderSettingSetNumber`, `api:ScriptApi_RenderSettingGetBool`, `api:ScriptApi_RenderSettingGetNumber` — runtime culling / LOD options by name, [`api/render.md`](api/render.md) |
 | Audio | `api:ScriptApi_FindAudioComponent`, `api:ScriptApi_Audio_Play`, `api:ScriptApi_Audio_Stop` |
 | Physics 3D | `ScriptApi_Physics_Raycast(...)` — [`api/physics-3d.md`](api/physics-3d.md) |

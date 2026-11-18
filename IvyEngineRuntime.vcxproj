@@ -400,6 +400,7 @@ exit /b 0</Command>
     <ClInclude Include="engine\ecs\audio_listener_component.h" />
     <ClInclude Include="engine\audio\audio_listener_sync.h" />
     <ClInclude Include="engine\ecs\game_object.h" />
+    <ClInclude Include="engine\ecs\game_object_search.h" />
     <ClInclude Include="engine\ecs\tag_registry.h" />
     <ClInclude Include="engine\ecs\model_asset_cache.h" />
     <ClInclude Include="engine\scene\scene_loader.h" />
@@ -438,6 +439,8 @@ exit /b 0</Command>
     <ClInclude Include="engine\scripting\script_register.h" />
     <ClInclude Include="engine\scripting\script_fields.h" />
     <ClInclude Include="engine\scripting\script_runtime_api.h" />
+    <ClInclude Include="engine\scripting\script_abi_layout.h" />
+    <ClInclude Include="engine\scripting\script_abi_fill.h" />
     <ClInclude Include="engine\scripting\script_component.h" />
     <ClInclude Include="engine\scripting\ui_canvas_script.h" />
     <ClInclude Include="engine\scripting\ui_canvas_script_factory.h" />

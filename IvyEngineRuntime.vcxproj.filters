@@ -153,6 +153,9 @@
     <ClInclude Include="engine\ecs\game_object.h">
       <Filter>engine\ecs</Filter>
     </ClInclude>
+    <ClInclude Include="engine\ecs\game_object_search.h">
+      <Filter>engine\ecs</Filter>
+    </ClInclude>
     <ClInclude Include="engine\ecs\tag_registry.h">
       <Filter>engine\ecs</Filter>
     </ClInclude>
@@ -310,6 +313,12 @@
       <Filter>engine\scripting</Filter>
     </ClInclude>
     <ClInclude Include="engine\scripting\script_runtime_api.h">
+      <Filter>engine\scripting</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\scripting\script_abi_layout.h">
+      <Filter>engine\scripting</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\scripting\script_abi_fill.h">
       <Filter>engine\scripting</Filter>
     </ClInclude>
     <ClInclude Include="engine\scripting\script_watcher.h">

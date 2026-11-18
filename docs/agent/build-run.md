@@ -34,5 +34,5 @@ HLSL under `shaders/` is FxCompiled by the Runtime project; post-build copies `*
 
 1. Build Editor and/or Runtime in the engine repo.
 2. Open or create a content project (`project.json` + `rom/` + `game/scripts/`).
-3. Build `GameScripts` DLL; deploy/package per content-project docs.
+3. Build `GameScripts` DLL in the **same configuration** (Debug / Release) as the editor or runtime that loads it, and rebuild it after updating the engine — the host refuses a DLL whose layout differs (Console explains why); deploy/package per content-project docs.
 4. Runtime playable package: host exe + `rom/` + `game/scripts/bin/GameScripts.dll`.

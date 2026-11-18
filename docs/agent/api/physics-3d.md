@@ -10,6 +10,15 @@ Active when scene `physicsMode` is `"3d"` and `renderPath` is not `"2d"` (`api:S
 - `api:ForceMode` (`Force`, `Impulse`, …)
 - Common methods: `SetIsKinematic`, `SetUseGravity`, `SetDrag`, `SetMass`, `GetVelocity`, `AddForce`, `AddTorque`
 
+Through the host (v50; preferred from DLL scripts, never adds a Rigidbody component, returns `false` without one or for a non-finite vector):
+
+- `bool ScriptApi_RigidbodyGetVelocity(GameObject& object, DirectX::XMFLOAT3& outVelocity)` — `api:ScriptApi_RigidbodyGetVelocity`
+- `bool ScriptApi_RigidbodySetVelocity(GameObject& object, DirectX::XMFLOAT3 velocity)` — `api:ScriptApi_RigidbodySetVelocity`
+- `bool ScriptApi_RigidbodyGetAngularVelocity(GameObject& object, DirectX::XMFLOAT3& outVelocity)` / `bool ScriptApi_RigidbodySetAngularVelocity(GameObject& object, DirectX::XMFLOAT3 velocity)` — `api:ScriptApi_RigidbodyGetAngularVelocity` / `api:ScriptApi_RigidbodySetAngularVelocity`
+- `bool ScriptApi_RigidbodyAddForce(GameObject& object, DirectX::XMFLOAT3 force, ForceMode mode = ForceMode::Force)` — `api:ScriptApi_RigidbodyAddForce`
+- `bool ScriptApi_RigidbodyAddTorque(GameObject& object, DirectX::XMFLOAT3 torque, ForceMode mode = ForceMode::Force)` — `api:ScriptApi_RigidbodyAddTorque`
+- Touch another object's body only from scripts that are not `Update_IsParallelSafe`.
+
 ## Colliders
 
 **JSON type names** (scene/prefab) differ from some C++ class names. Full table: [`../scene-prefab.md`](../scene-prefab.md).
