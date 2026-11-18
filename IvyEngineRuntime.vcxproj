@@ -410,6 +410,7 @@ exit /b 0</Command>
     <ClInclude Include="engine\ecs\component_factory.h" />
     <ClInclude Include="engine\ecs\prefab_serializer.h" />
     <ClInclude Include="engine\scene\scene_node.h" />
+    <ClInclude Include="engine\ecs\euler_math.h" />
     <ClInclude Include="engine\ecs\transform.h" />
     <ClInclude Include="engine\ecs\visual_component.h" />
     <ClInclude Include="engine\ecs\billboard_component.h" />

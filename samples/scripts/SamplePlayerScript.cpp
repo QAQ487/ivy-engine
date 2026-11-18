@@ -97,13 +97,11 @@ void SamplePlayerScript::OnCreate(engine::GameObject& self) {
     self.GetRigidbody().SetMass(1.0f);
 
     if (engine::Transform* t = ScriptApi_FindTransform(self))
-        m_facingYaw = t->localRotation.y;
+        m_cameraYaw = t->localRotation.y;
     else
-        m_facingYaw = self.GetRotation().y;
-    m_cameraYaw = m_facingYaw;
+        m_cameraYaw = self.GetRotation().y;
 
     ThirdPersonCamera_Initialize();
-    // The camera orbit owns m_cameraYaw only; the character heading is m_facingYaw.
     ThirdPersonCamera_SetTarget(&self.m_position, &m_cameraYaw);
     ThirdPersonCamera_SetMouseSensitivity(0.15f);
     // Keep the camera above the ground plane (head height 3, distance 8).
@@ -195,8 +193,9 @@ void SamplePlayerScript::SyncPlayerAnimation(engine::GameObject& self, float dt)
 
 void SamplePlayerScript::OnUpdate(engine::GameObject& self, float dt) {
     const DirectX::XMFLOAT3 input = GetMoveInput();
-    // WASD relative to the camera orbit yaw. ThirdPersonCamera looks along
-    // +(sin yaw, cos yaw); using the yaw directly (not the smoothed camera pose) keeps
+    // The character faces the camera direction (m_cameraYaw) and WASD move relative to that
+    // facing: W front, D 90 deg clockwise, S 180 deg, A 270 deg. ThirdPersonCamera looks
+    // along +(sin yaw, cos yaw); using the yaw directly (not the smoothed camera pose) keeps
     // movement exact and lag-free. See third_person_move_math.h (unit tested).
     const tp_move::Vec2 wishDir = tp_move::CameraRelativeWish(m_cameraYaw, input.x, input.z);
     const DirectX::XMFLOAT3 wish = { wishDir.x, 0.0f, wishDir.z };
@@ -207,15 +206,9 @@ void SamplePlayerScript::OnUpdate(engine::GameObject& self, float dt) {
     vel.z = wish.z * moveSpeed;
     rb.SetVelocity(vel);
 
-    if (std::fabs(wish.x) + std::fabs(wish.z) > 0.01f) {
-        const float targetYaw = tp_move::HeadingDeg(wishDir);
-        m_facingYaw = turnSpeed > 0.0f
-            ? tp_move::TurnToward(m_facingYaw, targetYaw, turnSpeed * dt)
-            : targetYaw;
-    }
-
+    // Always face the camera direction, whatever key is held.
     DirectX::XMFLOAT3 rot = self.GetRotation();
-    rot.y = m_facingYaw;
+    rot.y = m_cameraYaw;
     self.SetRotation(rot);
     if (engine::Transform* t = ScriptApi_FindTransform(self)) {
         t->localPosition = self.GetPosition();

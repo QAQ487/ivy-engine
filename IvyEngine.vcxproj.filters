@@ -189,6 +189,9 @@
     <ClInclude Include="engine\ecs\string_utils.h">
       <Filter>engine\ecs</Filter>
     </ClInclude>
+    <ClInclude Include="engine\ecs\euler_math.h">
+      <Filter>engine\ecs</Filter>
+    </ClInclude>
     <ClInclude Include="engine\ecs\transform.h">
       <Filter>engine\ecs</Filter>
     </ClInclude>

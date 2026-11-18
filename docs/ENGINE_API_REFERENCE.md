@@ -1,7 +1,7 @@
 # Ivy Engine — Complete Ability & API Reference
 
 Exhaustive catalog of **Ivy Engine** capabilities and public functions,
-scanned from every header under `engine/` and `src/app/` (163 headers; regenerate to refresh).
+scanned from every header under `engine/` and `src/app/` (164 headers; regenerate to refresh).
 
 **Learning how to use the engine?** Start with [`ENGINE_USER_GUIDE.md`](ENGINE_USER_GUIDE.md) (humans).  
 For JSON schemas, source map, and change rules, see [`AGENTS.md`](../AGENTS.md) (AI agents).
@@ -668,6 +668,10 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `void EffectSystem_FlushCommands();`
 - `void EffectSystem_RegisterComponent(class EffectComponent* component);`
 - `void EffectSystem_UnregisterComponent(class EffectComponent* component);`
+
+### `engine/ecs/euler_math.h`
+**Types:** EulerDeg
+- `inline EulerDeg RollPitchYawDegFromMatrix(const float m[3][3]) { const float cosPitch = std::sqrt(m[2][0] * m[2][0] + m[2][2] * m[2][2]);`
 
 ### `engine/ecs/game_object.h`
 **Types:** GameObject
@@ -2585,7 +2589,6 @@ Vendor header `WICTextureLoader11.h` is omitted.
 
 ### `src/app/camera/third_person_move_math.h`
 **Types:** Vec2
-- `inline float TurnToward(float current, float target, float maxStep) { const float delta = WrapDeg180(target - current);`
 
 ### `src/app/rendering/fade.h`
 **Types:** FADE

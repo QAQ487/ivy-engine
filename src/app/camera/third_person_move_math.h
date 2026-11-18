@@ -1,5 +1,5 @@
 // third_person_move_math.h
-// Header-only camera-relative movement and turning helpers for third-person scripts.
+// Header-only facing-relative movement helpers for third-person scripts.
 // No engine / D3D dependency, so the Linux unit test can compile it.
 //
 // Convention (matches ThirdPersonCamera): the camera orbits at yaw `cameraYawDeg` behind
@@ -20,21 +20,9 @@ struct Vec2 {
     float z = 0.0f;
 };
 
-inline float WrapDeg180(float a) {
-    while (a > 180.0f) a -= 360.0f;
-    while (a < -180.0f) a += 360.0f;
-    return a;
-}
-
-// Rotate `current` toward `target` by at most `maxStep` degrees, the short way round.
-inline float TurnToward(float current, float target, float maxStep) {
-    const float delta = WrapDeg180(target - current);
-    if (std::fabs(delta) <= maxStep)
-        return target;
-    return current + (delta > 0.0f ? maxStep : -maxStep);
-}
-
-// World-space XZ direction for WASD input relative to the camera yaw.
+// World-space XZ direction for WASD input relative to the facing (= camera) yaw:
+// W = facing, D = facing + 90 deg, S = facing + 180 deg, A = facing + 270 deg (clockwise
+// seen from above).
 inline Vec2 CameraRelativeWish(float cameraYawDeg, float inputX, float inputZ) {
     const float yaw = cameraYawDeg * kDegToRad;
     const float fx = std::sin(yaw);

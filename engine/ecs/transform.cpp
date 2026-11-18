@@ -9,6 +9,7 @@
  *****************************************************/
 #include "transform.h"
 #include "engine/ecs/game_object.h"
+#include "engine/ecs/euler_math.h"
 
 #include <Windows.h>
 #include "libraries/nlohmann/json.hpp"
@@ -116,7 +117,19 @@ void Transform::GetWorldPositionRotationScale(XMFLOAT3& outPosition,
 
     XMStoreFloat3(&outPosition, translation);
     XMStoreFloat3(&outScale, scale);
-    outRotation = EulerZyxDegreesFromRotationMatrix(XMMatrixRotationQuaternion(rotQuat));
+
+    // World Euler feeds Model3D::Draw (XMMatrixRotationRollPitchYaw), so extract it in that
+    // same order. The ZYX helper above reads row-vector matrices as column-vector ones and
+    // mirrored a child's yaw under a rotated parent (see tests/euler_math_test.cpp).
+    XMFLOAT4X4 rot;
+    XMStoreFloat4x4(&rot, XMMatrixRotationQuaternion(rotQuat));
+    const float m[3][3] = {
+        { rot._11, rot._12, rot._13 },
+        { rot._21, rot._22, rot._23 },
+        { rot._31, rot._32, rot._33 },
+    };
+    const euler_math::EulerDeg euler = euler_math::RollPitchYawDegFromMatrix(m);
+    outRotation = { euler.x, euler.y, euler.z };
 }
 
 void Transform::SetFromLocalMatrix(XMMATRIX m) {

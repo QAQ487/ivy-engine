@@ -1,4 +1,4 @@
-// Third-person camera-relative movement math tests.
+// Third-person facing-relative movement math tests.
 // Build from the repo root:
 //   g++ -std=c++17 -Wall -Wextra -I. -Isrc/app/camera -o /tmp/third_person_move_test tests/third_person_move_test.cpp
 
@@ -20,6 +20,12 @@ static void Expect(bool cond, const char* msg) {
 
 static bool Near(float a, float b, float tol = 1e-4f) { return std::fabs(a - b) <= tol; }
 
+static float Wrap180(float a) {
+    while (a > 180.0f) a -= 360.0f;
+    while (a < -180.0f) a += 360.0f;
+    return a;
+}
+
 static void ExpectDir(float yaw, float ix, float iz, float ex, float ez, const char* msg) {
     const Vec2 w = CameraRelativeWish(yaw, ix, iz);
     if (!Near(w.x, ex) || !Near(w.z, ez)) {
@@ -29,17 +35,29 @@ static void ExpectDir(float yaw, float ix, float iz, float ex, float ez, const c
 }
 
 int main() {
-    // Camera at yaw 0 looks along +Z: W forward, D right (+X), S back, A left.
+    // Facing +Z (yaw 0): W forward, D right (+X), S back, A left.
     ExpectDir(0.0f, 0.0f, 1.0f, 0.0f, 1.0f, "W at yaw 0 -> +Z");
-    ExpectDir(0.0f, 0.0f, -1.0f, 0.0f, -1.0f, "S at yaw 0 -> -Z");
     ExpectDir(0.0f, 1.0f, 0.0f, 1.0f, 0.0f, "D at yaw 0 -> +X");
+    ExpectDir(0.0f, 0.0f, -1.0f, 0.0f, -1.0f, "S at yaw 0 -> -Z");
     ExpectDir(0.0f, -1.0f, 0.0f, -1.0f, 0.0f, "A at yaw 0 -> -X");
 
-    // Camera yawed 90 deg (looks along +X): W -> +X, D -> -Z (screen right).
+    // Facing +X (yaw 90): W -> +X, D -> -Z, S -> -X, A -> +Z.
     ExpectDir(90.0f, 0.0f, 1.0f, 1.0f, 0.0f, "W at yaw 90 -> +X");
     ExpectDir(90.0f, 1.0f, 0.0f, 0.0f, -1.0f, "D at yaw 90 -> -Z");
+    ExpectDir(90.0f, 0.0f, -1.0f, -1.0f, 0.0f, "S at yaw 90 -> -X");
+    ExpectDir(90.0f, -1.0f, 0.0f, 0.0f, 1.0f, "A at yaw 90 -> +Z");
     ExpectDir(180.0f, 0.0f, 1.0f, 0.0f, -1.0f, "W at yaw 180 -> -Z");
     ExpectDir(270.0f, 0.0f, 1.0f, -1.0f, 0.0f, "W at yaw 270 -> -X");
+
+    // The control scheme: from ANY facing, W is the facing heading, D is +90, S is +180 and
+    // A is +270 (clockwise from the front). The character never turns to the move direction.
+    for (int yaw = 0; yaw < 360; yaw += 7) {
+        const float f = static_cast<float>(yaw);
+        Expect(Near(Wrap180(HeadingDeg(CameraRelativeWish(f, 0.0f, 1.0f)) - f), 0.0f, 1e-2f), "W = facing + 0");
+        Expect(Near(Wrap180(HeadingDeg(CameraRelativeWish(f, 1.0f, 0.0f)) - f), 90.0f, 1e-2f), "D = facing + 90");
+        Expect(Near(std::fabs(Wrap180(HeadingDeg(CameraRelativeWish(f, 0.0f, -1.0f)) - f)), 180.0f, 1e-2f), "S = facing + 180");
+        Expect(Near(Wrap180(HeadingDeg(CameraRelativeWish(f, -1.0f, 0.0f)) - f), -90.0f, 1e-2f), "A = facing + 270");
+    }
 
     // Magnitude is preserved (no speed change from yaw).
     {
@@ -47,36 +65,11 @@ int main() {
         Expect(Near(std::sqrt(w.x * w.x + w.z * w.z), 1.0f), "rotation keeps length");
     }
 
-    // The regression: the move direction depends only on the camera yaw, never on
-    // the character heading. Holding S for many frames while the heading turns to
-    // face the move direction keeps moving the SAME world direction.
-    {
-        const float cameraYaw = 25.0f;
-        float facing = 25.0f;
-        const Vec2 first = CameraRelativeWish(cameraYaw, 0.0f, -1.0f);
-        for (int i = 0; i < 120; ++i) {
-            const Vec2 w = CameraRelativeWish(cameraYaw, 0.0f, -1.0f);
-            facing = TurnToward(facing, HeadingDeg(w), 720.0f / 60.0f);
-            Expect(Near(w.x, first.x) && Near(w.z, first.z), "S direction stays constant while turning");
-        }
-        Expect(Near(WrapDeg180(facing - HeadingDeg(first)), 0.0f), "facing converges to move heading");
-        Expect(cameraYaw == 25.0f, "camera yaw is untouched by facing updates");
-    }
-
     // Heading helper: +Z = 0, +X = 90, -Z = 180, -X = -90.
     Expect(Near(HeadingDeg({0.0f, 1.0f}), 0.0f), "heading +Z");
     Expect(Near(HeadingDeg({1.0f, 0.0f}), 90.0f), "heading +X");
     Expect(Near(std::fabs(HeadingDeg({0.0f, -1.0f})), 180.0f), "heading -Z");
     Expect(Near(HeadingDeg({-1.0f, 0.0f}), -90.0f), "heading -X");
-
-    // Turning: shortest way, clamped step, wraps across +/-180.
-    Expect(Near(TurnToward(0.0f, 90.0f, 30.0f), 30.0f), "turn clamps to step");
-    Expect(Near(TurnToward(0.0f, 20.0f, 30.0f), 20.0f), "turn snaps when within step");
-    Expect(Near(TurnToward(170.0f, -170.0f, 5.0f), 175.0f), "turn takes the short way across 180");
-    Expect(Near(TurnToward(-170.0f, 170.0f, 5.0f), -175.0f), "turn takes the short way across -180");
-    Expect(Near(TurnToward(10.0f, 10.0f, 5.0f), 10.0f), "no turn when aligned");
-    Expect(Near(WrapDeg180(540.0f), 180.0f) || Near(WrapDeg180(540.0f), -180.0f), "wrap 540");
-    Expect(Near(WrapDeg180(-190.0f), 170.0f), "wrap -190");
 
     if (g_failed) {
         std::fprintf(stderr, "%d check(s) failed\n", g_failed);
