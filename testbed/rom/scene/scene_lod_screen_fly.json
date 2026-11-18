@@ -13,7 +13,8 @@
       "shadowQuality": "medium",
       "skyboxEnabled": false,
       "lodEnabled": true,
-      "lodBias": 1.0
+      "lodBias": 1.0,
+      "lodDebugLabels": true
     },
     "debugCamera": {
       "mode": "fly",

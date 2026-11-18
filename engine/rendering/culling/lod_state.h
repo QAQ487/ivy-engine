@@ -35,6 +35,19 @@ void Lod_RecordDrawn(int level);
 
 LodStats Lod_GetLastStats();
 
+// Debug labels (render.lodDebugLabels): one entry per LOD-tracked Visual the main camera
+// pass drew, recorded by GameObject::DrawVisual. The list is reset by Lod_BeginFrame and
+// stays valid after Lod_EndFrame so the overlay can draw it later in the frame.
+struct LodDebugLabel {
+    DirectX::XMFLOAT3 worldPosition{0.0f, 0.0f, 0.0f};  // above the object's world AABB
+    int level = 0;
+    float distance = 0.0f;       // camera distance used for the level choice
+    float screenPercent = -1.0f; // projected height in % of the viewport, -1 = unknown
+};
+constexpr int kLodMaxDebugLabels = 256;
+void Lod_AddDebugLabel(const LodDebugLabel& label);
+const LodDebugLabel* Lod_GetDebugLabels(int& count);
+
 // Frame serial: incremented by every Lod_BeginFrame. Visuals stamp it when the 3D
 // object pass considers / draws them so the next animation update can tell whether
 // they were visible (see anim_cull_math.h). Starts at 0.

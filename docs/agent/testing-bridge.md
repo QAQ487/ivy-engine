@@ -32,7 +32,7 @@ UTF-8 JSON, one LF-terminated frame. Envelope: `protocolVersion` (1), `requestId
 
 `hello`, `status`, `quit`, `keyboard`, `mouse`, `controller`, `controller_probe`, `observe`, `list_objects`, `pause`, `resume`, `step`, `perf`, `capture`, `events`, `reset_scene`, `set_transform`, `set_velocity`, `apply_impulse`, `apply_torque_impulse`, `set_setting`
 
-`set_setting` whitelist: `frustumCullingEnabled`, `shadowCascadeCullingEnabled`, `spriteCullingEnabled`, `lodEnabled`, `animCullingEnabled`, `lightSelectionEnabled`, `billboardCullingEnabled`, `effectCullingEnabled` (JSON bool); numeric (JSON number, host clamps to the scene-loader range): `lodBias`, `cullDistanceScale`, `shadowDistance`, `shadowLodOffset`, `effectCullRadius`.
+`set_setting` whitelist: `frustumCullingEnabled`, `shadowCascadeCullingEnabled`, `spriteCullingEnabled`, `lodEnabled`, `animCullingEnabled`, `lightSelectionEnabled`, `billboardCullingEnabled`, `effectCullingEnabled`, `lodDebugLabels` (JSON bool); numeric (JSON number, host clamps to the scene-loader range): `lodBias`, `cullDistanceScale`, `shadowDistance`, `shadowLodOffset`, `effectCullRadius`.
 
 ## Editor Play-mode verbs (`host: "editor"`)
 

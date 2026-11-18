@@ -92,6 +92,7 @@ SETTING_KEYS = (
     "lightSelectionEnabled",
     "billboardCullingEnabled",
     "effectCullingEnabled",
+    "lodDebugLabels",
 )
 
 def build_play_enter_payload(mode=None):

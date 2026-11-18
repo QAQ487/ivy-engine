@@ -226,6 +226,9 @@ void GameObject::DrawVisual(bool useRealModel) {
             int lodLevel = 0;
             bool lodCulledByDistance = false;
             bool lodTracked = false;
+            XMFLOAT3 lodLabelPosition = worldPos;
+            float lodLabelDistance = 0.0f;
+            float lodLabelScreenPercent = -1.0f;
             const bool lodCounting = FrustumCull_IsMainPassActive()
                 && Shadow::GetRenderingLightIndex() < 0;
             if (model && useRealModel && Lod_IsFrameActive()
@@ -234,6 +237,7 @@ void GameObject::DrawVisual(bool useRealModel) {
                 lodTracked = true;
                 float distance = 0.0f;
                 float worldExtent = 0.0f;  // largest world AABB side, for screen-size LOD
+                XMFLOAT3 labelPosition = worldPos;  // top of the world AABB, for debug labels
                 {
                     XMFLOAT3 center = worldPos;
                     if (model->HasLocalAabb()) {
@@ -246,6 +250,7 @@ void GameObject::DrawVisual(bool useRealModel) {
                             0.5f * (wb.min.x + wb.max.x),
                             0.5f * (wb.min.y + wb.max.y),
                             0.5f * (wb.min.z + wb.max.z));
+                        labelPosition = XMFLOAT3(center.x, wb.max.y, center.z);
                         worldExtent = std::max({ wb.max.x - wb.min.x,
                                                  wb.max.y - wb.min.y,
                                                  wb.max.z - wb.min.z });
@@ -297,6 +302,11 @@ void GameObject::DrawVisual(bool useRealModel) {
                             lodLevel = 0;
                     }
                 }
+                lodLabelPosition = labelPosition;
+                lodLabelDistance = distance;
+                lodLabelScreenPercent = (worldExtent > 0.0f && distance > 0.0f && Lod_GetTanHalfFov() > 0.0f)
+                    ? 100.0f * worldExtent / (2.0f * distance * Lod_GetTanHalfFov())
+                    : -1.0f;
                 if (lodCounting) {
                     Lod_RecordConsidered();
                     if (lodCulledByDistance)
@@ -400,8 +410,17 @@ void GameObject::DrawVisual(bool useRealModel) {
 
                     if (frustumEnabled && mainPass)
                         FrustumCull_RecordDrawn();
-                    if (lodCounting && lodTracked)
+                    if (lodCounting && lodTracked) {
                         Lod_RecordDrawn(lodLevel);
+                        if (renderSettings.lodDebugLabels) {
+                            LodDebugLabel label;
+                            label.worldPosition = lodLabelPosition;
+                            label.level = lodLevel;
+                            label.distance = lodLabelDistance;
+                            label.screenPercent = lodLabelScreenPercent;
+                            Lod_AddDebugLabel(label);
+                        }
+                    }
                     if (shadowCullEnabled && shadowPass)
                         ShadowCascadeCull_RecordDrawn();
                     model->Draw();

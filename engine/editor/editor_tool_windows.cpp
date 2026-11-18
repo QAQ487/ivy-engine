@@ -385,6 +385,8 @@ void DrawRenderingSettingsBody() {
         ImGui::TextDisabled("Ortho view-rect; render submit only.");
     }
     ImGui::Checkbox("Mesh LOD (3D)", &rs.lodEnabled);
+    ImGui::Checkbox("LOD Debug Labels", &rs.lodDebugLabels);
+    ImGui::TextDisabled("Text above each LOD mesh: level, distance, projected screen height. Play only.");
     ImGui::SliderInt("Shadow LOD Offset", &rs.shadowLodOffset, 0, lod_select::kMaxShadowLodOffset);
     ImGui::TextDisabled("Shadow casters use this many LOD levels lower than the camera. 0 = same level.");
     ImGui::SliderFloat("LOD Bias", &rs.lodBias, 0.1f, 10.0f, "%.2f",

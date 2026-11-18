@@ -69,6 +69,9 @@ struct RenderSettingsData {
     // cascade) drew last frame. Animation time still advances. Play / runtime only.
     bool animCullingEnabled = true;
     float lodBias = 1.0f;
+    // Draw a text label above every LOD-tracked mesh with its current level, distance and
+    // projected screen height. Debug aid; Play / runtime only.
+    bool lodDebugLabels = false;
     // Shadow casters use a lower-detail LOD than the camera pass: this many levels lower
     // (0 = same level, clamped to [0, 3] and to the last available level). Play only.
     int shadowLodOffset = 0;

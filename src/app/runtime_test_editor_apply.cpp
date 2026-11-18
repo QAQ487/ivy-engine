@@ -125,6 +125,10 @@ bool RuntimeTestEditor_Apply(const ivy::testing::EditorOpRequest& op, std::strin
             rs.billboardCullingEnabled = op.settingBoolValue;
             return true;
         }
+        if (op.settingKey == "lodDebugLabels") {
+            rs.lodDebugLabels = op.settingBoolValue;
+            return true;
+        }
         if (op.settingKey == "effectCullingEnabled") {
             rs.effectCullingEnabled = op.settingBoolValue;
             return true;

@@ -83,7 +83,7 @@ Additive identity fields: `host` (`"runtime"` | `"editor"`). Editor also reports
 | `events` | Bounded checkpoint event ring (offline check: `tools/runtime_bridge_events_check.cpp`) |
 | `controller` | One-at-a-time controller inject (below) |
 | `controller_probe` | Read-only consumer-trace snapshot (below) |
-| `set_setting` | Whitelisted render toggles and numbers: `frustumCullingEnabled`, `shadowCascadeCullingEnabled`, `spriteCullingEnabled`, `lodEnabled`, `animCullingEnabled`, `lightSelectionEnabled`, `billboardCullingEnabled`, `effectCullingEnabled` (JSON bool `value`), plus numeric settings `lodBias`, `cullDistanceScale`, `shadowDistance`, `shadowLodOffset`, `effectCullRadius` (JSON number `value`, finite; the host clamps it to the same range the scene loader uses, so out-of-range values do not error). Works on Runtime and Editor (Edit or Play). Queued; `status.editorOp` reports completion. |
+| `set_setting` | Whitelisted render toggles and numbers: `frustumCullingEnabled`, `shadowCascadeCullingEnabled`, `spriteCullingEnabled`, `lodEnabled`, `animCullingEnabled`, `lightSelectionEnabled`, `billboardCullingEnabled`, `effectCullingEnabled`, `lodDebugLabels` (JSON bool `value`), plus numeric settings `lodBias`, `cullDistanceScale`, `shadowDistance`, `shadowLodOffset`, `effectCullRadius` (JSON number `value`, finite; the host clamps it to the same range the scene loader uses, so out-of-range values do not error). Works on Runtime and Editor (Edit or Play). Queued; `status.editorOp` reports completion. |
 
 ### Editor Play-mode verbs (Phase 7; `host: "editor"` only)
 

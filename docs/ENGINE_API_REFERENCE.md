@@ -1532,7 +1532,7 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `return std::min(cameraLevel + ClampShadowLodOffset(offset), std::max(last, cameraLevel));`
 
 ### `engine/rendering/culling/lod_state.h`
-**Types:** LodStats, AnimCullStats
+**Types:** LodStats, LodDebugLabel, AnimCullStats
 - `void Lod_BeginFrame(const DirectX::XMFLOAT3& cameraPosition, float verticalFovDeg = 0.0f);`
 - `void Lod_EndFrame();`
 - `bool Lod_IsFrameActive();`
@@ -1542,6 +1542,8 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `void Lod_RecordCulledByDistance();`
 - `void Lod_RecordDrawn(int level);`
 - `LodStats Lod_GetLastStats();`
+- `void Lod_AddDebugLabel(const LodDebugLabel& label);`
+- `const LodDebugLabel* Lod_GetDebugLabels(int& count);`
 - `uint64_t Lod_GetFrameSerial();`
 - `void Lod_RecordAnimUpdated();`
 - `void Lod_RecordAnimSkipped();`

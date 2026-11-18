@@ -11,6 +11,8 @@ DirectX::XMFLOAT3 g_cameraPos{0.0f, 0.0f, 0.0f};
 float g_tanHalfFov = 0.0f;
 LodStats g_stats{};
 LodStats g_lastStats{};
+LodDebugLabel g_labels[kLodMaxDebugLabels];
+int g_labelCount = 0;
 uint64_t g_serial = 0;
 AnimCullStats g_animStats{};
 AnimCullStats g_lastAnimStats{};
@@ -18,6 +20,7 @@ AnimCullStats g_lastAnimStats{};
 
 void Lod_BeginFrame(const DirectX::XMFLOAT3& cameraPosition, float verticalFovDeg) {
     g_stats = {};
+    g_labelCount = 0;
     ++g_serial;
     g_lastAnimStats = g_animStats;
     g_animStats = {};
@@ -50,6 +53,16 @@ void Lod_RecordDrawn(int level) {
 }
 
 LodStats Lod_GetLastStats() { return g_lastStats; }
+
+void Lod_AddDebugLabel(const LodDebugLabel& label) {
+    if (g_labelCount < kLodMaxDebugLabels)
+        g_labels[g_labelCount++] = label;
+}
+
+const LodDebugLabel* Lod_GetDebugLabels(int& count) {
+    count = g_labelCount;
+    return g_labels;
+}
 
 uint64_t Lod_GetFrameSerial() { return g_serial; }
 void Lod_RecordAnimUpdated() { ++g_animStats.updated; }

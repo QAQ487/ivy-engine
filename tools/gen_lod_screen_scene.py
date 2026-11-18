@@ -8,7 +8,10 @@ repeated along +Z. Every boulder uses the same screen-height thresholds
 much further away: the LOD0 -> LOD1 switch distance is proportional to the size.
 (With distance mode all four columns would switch at the same distance.)
 
-Rendering page -> "lod ... L0 / L1 / L2+" shows how many draws use each level.
+Rendering page -> "lod ... L0 / L1 / L2+" shows how many draws use each level, and the
+scene turns on render.lodDebugLabels: every boulder gets a text label with its level,
+camera distance and projected screen height ("L1 23m 5.8%"), coloured green / yellow /
+orange / red for L0 / L1 / L2 / L3.
 
 Needs the LOD meshes made by tools/gen_lod_test_assets.py.
 
@@ -63,7 +66,8 @@ def build():
         "settings": {
             "render": {"clearColor": [0.69, 0.77, 0.87, 1.0], "defaultShader": "standard",
                        "fogEnabled": False, "shadowQuality": "medium", "skyboxEnabled": False,
-                       "lodEnabled": True, "lodBias": 1.0},
+                       "lodEnabled": True, "lodBias": 1.0,
+                       "lodDebugLabels": True},
             "debugCamera": {"mode": "fly", "enabledOnPlay": True, "yawDeg": 0.0,
                             "pitchDeg": -3.0, "position": {"x": 0.0, "y": 4.0, "z": -6.0}},
         },
