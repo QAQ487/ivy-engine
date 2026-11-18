@@ -933,6 +933,7 @@ The runtime boots from `rom/scene/default_scene.txt` (the scene JSON file name).
 2. Copies the runtime host renamed to `<GameName>.exe`, plus `libfbxsdk.dll`, `project.json`, your `rom/`, and `game/scripts/bin/GameScripts.dll` into the chosen folder.
 3. Adds the built shaders and engine branding, and any engine defaults from `resources/` that your content names but does not contain (`rom/skybox/MySkybox.dds` only when used).
 4. Cooks panorama PNG skyboxes into `rom/skybox/cache/` so the package contains the DDS.
+5. Compresses the packaged textures: every `.png` / `.jpg` / `.jpeg` / `.bmp` under `rom/` becomes a BC7 `.dds` (mipmaps included) and the source image is left out of the package. Your project folder is not touched, and scene / prefab / UI JSON keep naming the original `.png`; the game finds the `.dds` itself. Not compressed (the image stays in the package): `rom/shader`, `rom/font`, `rom/branding`, `rom/skybox`, `rom/editor`, the host boot textures, images whose width or height is not a multiple of 4, and images that already have a same-name `.dds`. The Build log lists each skipped file. BC7 is lossy, and a `.dds` can be larger on disk than a flat-colour PNG; the saving is GPU memory and load time. `deploy.bat` does not compress.
 
 The package reads gravity and audio bus volumes from its `project.json`. Players never see the editor or the debug hotkeys. Release | x64 is recommended; the runtime is statically linked, so no VC++ redistributable is needed.
 

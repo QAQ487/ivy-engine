@@ -3,6 +3,7 @@
 
 #include "playable_package_builder.h"
 #include "engine/rendering/environment/panorama_sky.h"
+#include "engine/editor/texture_cook.h"
 
 #include "engine/core/content_path.h"
 #include "project_manager.h"
@@ -441,6 +442,17 @@ bool AssemblePackage(const Request& request, const fs::path& engineRoot,
 
     if (!CopyDirectoryRecursive(content / "rom", dest / "rom", errorOut))
         return false;
+
+    // Compress the packaged copy (never the content project) to BC7 .dds and drop the
+    // source images. The runtime falls back from a missing .png/.jpg/.bmp to its .dds.
+    {
+        std::string textureError;
+        if (!texture_cook::CookPackageTextures(dest / "rom", AppendLogLine, nullptr, &textureError)) {
+            if (errorOut)
+                *errorOut = textureError.empty() ? "Texture cook failed." : textureError;
+            return false;
+        }
+    }
 
     // The host loads .cso from dest/rom/shader at boot. Overlay the shaders
     // compiled with this IvyEngineRuntime. Prefer the OutDir mirror, then the
