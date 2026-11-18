@@ -376,7 +376,6 @@ void DrawRenderingSettingsBody() {
         ImGui::TextDisabled("Ortho view-rect; render submit only.");
     }
     ImGui::Checkbox("Mesh LOD (3D)", &rs.lodEnabled);
-    ImGui::SetNextItemWidth(-1);
     ImGui::SliderFloat("LOD Bias", &rs.lodBias, 0.1f, 10.0f, "%.2f",
         ImGuiSliderFlags_Logarithmic);
     {
