@@ -1,0 +1,629 @@
+{
+  "version": 4,
+  "settings": {
+    "render": {
+      "clearColor": [
+        0.08,
+        0.09,
+        0.12,
+        1.0
+      ],
+      "defaultShader": "standard",
+      "fogEnabled": false,
+      "shadowQuality": "low",
+      "skyboxEnabled": false
+    },
+    "debugCamera": {
+      "mode": "fly",
+      "enabledOnPlay": true,
+      "yawDeg": 0.0,
+      "pitchDeg": -10.0,
+      "position": {
+        "x": 0.0,
+        "y": 2.5,
+        "z": -6.0
+      }
+    }
+  },
+  "nodes": [
+    {
+      "name": "Directional Light",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 0.0,
+          "posY": 10.0,
+          "posZ": 0.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "DirectionalLight": {
+          "enabled": true,
+          "castShadows": false,
+          "color": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "intensity": 0.9,
+          "specColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "specPower": 32.0
+        }
+      }
+    },
+    {
+      "name": "Ground",
+      "tag": 2,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 70.0,
+          "posY": -0.5,
+          "posZ": 0.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 180.0,
+          "scaleY": 1.0,
+          "scaleZ": 40.0
+        },
+        "visual": {
+          "model": "rom/model/object/Box_Sand.fbx",
+          "shader": "standard"
+        }
+      }
+    },
+    {
+      "name": "Pillar 1 PCM16 mono 22k",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 0.0,
+          "posY": 1.5,
+          "posZ": 0.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 3.0,
+          "scaleZ": 1.0
+        },
+        "visual": {
+          "model": "rom/model/object/Box_Blue.fbx",
+          "shader": "standard"
+        },
+        "Audio": {
+          "clipPath": "rom/sound/audio_test/pcm16_mono_22k.wav",
+          "bus": "SFX",
+          "volume": 1.0,
+          "loop": true,
+          "autoPlay": true,
+          "spatial": true,
+          "distanceScale": 10.0
+        }
+      }
+    },
+    {
+      "name": "Pillar 2 PCM16 stereo + odd LIST",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 20.0,
+          "posY": 1.5,
+          "posZ": 0.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 3.0,
+          "scaleZ": 1.0
+        },
+        "visual": {
+          "model": "rom/model/object/Box_Blue.fbx",
+          "shader": "standard"
+        },
+        "Audio": {
+          "clipPath": "rom/sound/audio_test/pcm16_stereo_list.wav",
+          "bus": "SFX",
+          "volume": 1.0,
+          "loop": true,
+          "autoPlay": true,
+          "spatial": true,
+          "distanceScale": 10.0
+        }
+      }
+    },
+    {
+      "name": "Pillar 3 PCM16 junk cbSize",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 40.0,
+          "posY": 1.5,
+          "posZ": 0.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 3.0,
+          "scaleZ": 1.0
+        },
+        "visual": {
+          "model": "rom/model/object/Box_Blue.fbx",
+          "shader": "standard"
+        },
+        "Audio": {
+          "clipPath": "rom/sound/audio_test/pcm16_junk_cbsize.wav",
+          "bus": "SFX",
+          "volume": 1.0,
+          "loop": true,
+          "autoPlay": true,
+          "spatial": true,
+          "distanceScale": 10.0
+        }
+      }
+    },
+    {
+      "name": "Pillar 4 float32 mono",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 60.0,
+          "posY": 1.5,
+          "posZ": 0.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 3.0,
+          "scaleZ": 1.0
+        },
+        "visual": {
+          "model": "rom/model/object/Box_Blue.fbx",
+          "shader": "standard"
+        },
+        "Audio": {
+          "clipPath": "rom/sound/audio_test/float32_mono.wav",
+          "bus": "SFX",
+          "volume": 1.0,
+          "loop": true,
+          "autoPlay": true,
+          "spatial": true,
+          "distanceScale": 10.0
+        }
+      }
+    },
+    {
+      "name": "Pillar 5 EXTENSIBLE PCM16 stereo",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 80.0,
+          "posY": 1.5,
+          "posZ": 0.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 3.0,
+          "scaleZ": 1.0
+        },
+        "visual": {
+          "model": "rom/model/object/Box_Blue.fbx",
+          "shader": "standard"
+        },
+        "Audio": {
+          "clipPath": "rom/sound/audio_test/ext_pcm16_stereo.wav",
+          "bus": "SFX",
+          "volume": 1.0,
+          "loop": true,
+          "autoPlay": true,
+          "spatial": true,
+          "distanceScale": 10.0
+        }
+      }
+    },
+    {
+      "name": "Pillar 6 EXTENSIBLE PCM24 mono",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 100.0,
+          "posY": 1.5,
+          "posZ": 0.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 3.0,
+          "scaleZ": 1.0
+        },
+        "visual": {
+          "model": "rom/model/object/Box_Blue.fbx",
+          "shader": "standard"
+        },
+        "Audio": {
+          "clipPath": "rom/sound/audio_test/ext_pcm24_mono.wav",
+          "bus": "SFX",
+          "volume": 1.0,
+          "loop": true,
+          "autoPlay": true,
+          "spatial": true,
+          "distanceScale": 10.0
+        }
+      }
+    },
+    {
+      "name": "Pillar 7 PCM16 CJK file name",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 120.0,
+          "posY": 1.5,
+          "posZ": 0.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 3.0,
+          "scaleZ": 1.0
+        },
+        "visual": {
+          "model": "rom/model/object/Box_Blue.fbx",
+          "shader": "standard"
+        },
+        "Audio": {
+          "clipPath": "rom/sound/audio_test/中文檔名_測試.wav",
+          "bus": "SFX",
+          "volume": 1.0,
+          "loop": true,
+          "autoPlay": true,
+          "spatial": true,
+          "distanceScale": 10.0
+        }
+      }
+    },
+    {
+      "name": "Pillar 8 bad cbSize (silent)",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 140.0,
+          "posY": 1.5,
+          "posZ": 0.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 3.0,
+          "scaleZ": 1.0
+        },
+        "visual": {
+          "model": "rom/model/object/Box_Red.fbx",
+          "shader": "standard"
+        },
+        "Audio": {
+          "clipPath": "rom/sound/audio_test/ext_bad_cbsize.wav",
+          "bus": "SFX",
+          "volume": 1.0,
+          "loop": true,
+          "autoPlay": true,
+          "spatial": true,
+          "distanceScale": 10.0
+        }
+      }
+    }
+  ],
+  "canvas": {
+    "name": "scene",
+    "elements": [
+      {
+        "type": "text",
+        "name": "Title",
+        "anchor": "TOP_LEFT",
+        "position": {
+          "x": 24,
+          "y": 20
+        },
+        "pivot": {
+          "x": 0,
+          "y": 1
+        },
+        "alignment": "LEFT",
+        "text": "AUDIO FORMAT TEST - fly along the row with A / D",
+        "fontSize": 1.0,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "font": {
+          "texture": "builtin:font/IBMPlexMono-Regular.ttf",
+          "charWidth": 32,
+          "charHeight": 32,
+          "charsPerRow": 16
+        },
+        "visible": true
+      },
+      {
+        "type": "text",
+        "name": "Hint",
+        "anchor": "TOP_LEFT",
+        "position": {
+          "x": 24,
+          "y": 60
+        },
+        "pivot": {
+          "x": 0,
+          "y": 1
+        },
+        "alignment": "LEFT",
+        "text": "Pillar k beeps k times. 1-7 must play; 8 (red) must stay silent.",
+        "fontSize": 0.8,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "font": {
+          "texture": "builtin:font/IBMPlexMono-Regular.ttf",
+          "charWidth": 32,
+          "charHeight": 32,
+          "charsPerRow": 16
+        },
+        "visible": true
+      },
+      {
+        "type": "text",
+        "name": "Clip1",
+        "anchor": "TOP_LEFT",
+        "position": {
+          "x": 24,
+          "y": 100
+        },
+        "pivot": {
+          "x": 0,
+          "y": 1
+        },
+        "alignment": "LEFT",
+        "text": "1 PCM16 mono 22k",
+        "fontSize": 0.8,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "font": {
+          "texture": "builtin:font/IBMPlexMono-Regular.ttf",
+          "charWidth": 32,
+          "charHeight": 32,
+          "charsPerRow": 16
+        },
+        "visible": true
+      },
+      {
+        "type": "text",
+        "name": "Clip2",
+        "anchor": "TOP_LEFT",
+        "position": {
+          "x": 24,
+          "y": 134
+        },
+        "pivot": {
+          "x": 0,
+          "y": 1
+        },
+        "alignment": "LEFT",
+        "text": "2 PCM16 stereo + odd LIST",
+        "fontSize": 0.8,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "font": {
+          "texture": "builtin:font/IBMPlexMono-Regular.ttf",
+          "charWidth": 32,
+          "charHeight": 32,
+          "charsPerRow": 16
+        },
+        "visible": true
+      },
+      {
+        "type": "text",
+        "name": "Clip3",
+        "anchor": "TOP_LEFT",
+        "position": {
+          "x": 24,
+          "y": 168
+        },
+        "pivot": {
+          "x": 0,
+          "y": 1
+        },
+        "alignment": "LEFT",
+        "text": "3 PCM16 junk cbSize",
+        "fontSize": 0.8,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "font": {
+          "texture": "builtin:font/IBMPlexMono-Regular.ttf",
+          "charWidth": 32,
+          "charHeight": 32,
+          "charsPerRow": 16
+        },
+        "visible": true
+      },
+      {
+        "type": "text",
+        "name": "Clip4",
+        "anchor": "TOP_LEFT",
+        "position": {
+          "x": 24,
+          "y": 202
+        },
+        "pivot": {
+          "x": 0,
+          "y": 1
+        },
+        "alignment": "LEFT",
+        "text": "4 float32 mono",
+        "fontSize": 0.8,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "font": {
+          "texture": "builtin:font/IBMPlexMono-Regular.ttf",
+          "charWidth": 32,
+          "charHeight": 32,
+          "charsPerRow": 16
+        },
+        "visible": true
+      },
+      {
+        "type": "text",
+        "name": "Clip5",
+        "anchor": "TOP_LEFT",
+        "position": {
+          "x": 24,
+          "y": 236
+        },
+        "pivot": {
+          "x": 0,
+          "y": 1
+        },
+        "alignment": "LEFT",
+        "text": "5 EXTENSIBLE PCM16 stereo",
+        "fontSize": 0.8,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "font": {
+          "texture": "builtin:font/IBMPlexMono-Regular.ttf",
+          "charWidth": 32,
+          "charHeight": 32,
+          "charsPerRow": 16
+        },
+        "visible": true
+      },
+      {
+        "type": "text",
+        "name": "Clip6",
+        "anchor": "TOP_LEFT",
+        "position": {
+          "x": 24,
+          "y": 270
+        },
+        "pivot": {
+          "x": 0,
+          "y": 1
+        },
+        "alignment": "LEFT",
+        "text": "6 EXTENSIBLE PCM24 mono",
+        "fontSize": 0.8,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "font": {
+          "texture": "builtin:font/IBMPlexMono-Regular.ttf",
+          "charWidth": 32,
+          "charHeight": 32,
+          "charsPerRow": 16
+        },
+        "visible": true
+      },
+      {
+        "type": "text",
+        "name": "Clip7",
+        "anchor": "TOP_LEFT",
+        "position": {
+          "x": 24,
+          "y": 304
+        },
+        "pivot": {
+          "x": 0,
+          "y": 1
+        },
+        "alignment": "LEFT",
+        "text": "7 PCM16 CJK file name",
+        "fontSize": 0.8,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "font": {
+          "texture": "builtin:font/IBMPlexMono-Regular.ttf",
+          "charWidth": 32,
+          "charHeight": 32,
+          "charsPerRow": 16
+        },
+        "visible": true
+      },
+      {
+        "type": "text",
+        "name": "Clip8",
+        "anchor": "TOP_LEFT",
+        "position": {
+          "x": 24,
+          "y": 338
+        },
+        "pivot": {
+          "x": 0,
+          "y": 1
+        },
+        "alignment": "LEFT",
+        "text": "8 bad cbSize (silent)",
+        "fontSize": 0.8,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "font": {
+          "texture": "builtin:font/IBMPlexMono-Regular.ttf",
+          "charWidth": 32,
+          "charHeight": 32,
+          "charsPerRow": 16
+        },
+        "visible": true
+      }
+    ]
+  }
+}
