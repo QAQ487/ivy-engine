@@ -519,6 +519,9 @@
     <ClInclude Include="src\app\camera\third_person_camera.h">
       <Filter>src\app\camera</Filter>
     </ClInclude>
+    <ClInclude Include="src\app\camera\third_person_move_math.h">
+      <Filter>src\app\camera</Filter>
+    </ClInclude>
     <ClInclude Include="src\app\camera\first_person_camera.h">
       <Filter>src\app\camera</Filter>
     </ClInclude>

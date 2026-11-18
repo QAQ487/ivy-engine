@@ -378,6 +378,7 @@ exit /b 0</Command>
     <ClInclude Include="src\app\main.h" />
     <ClInclude Include="src\app\scene\scene_manager.h" />
     <ClInclude Include="src\app\camera\third_person_camera.h" />
+    <ClInclude Include="src\app\camera\third_person_move_math.h" />
     <ClInclude Include="src\app\camera\first_person_camera.h" />
     <ClInclude Include="src\app\rendering\WICTextureLoader11.h" />
   </ItemGroup>

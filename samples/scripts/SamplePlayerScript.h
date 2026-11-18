@@ -7,7 +7,10 @@
 
 #include <string>
 
-// Minimal WASD / stick mover with Space jump, Y Bot clips, third-person follow.
+// WASD / stick mover with Space jump, Y Bot clips and a standard third-person rig:
+// the mouse / right stick orbit the camera, WASD move relative to the camera, and
+// the character turns toward its movement direction (camera yaw and character
+// facing are separate, so moving never spins the camera).
 class SamplePlayerScript : public Script {
 public:
 #define SAMPLE_PLAYER_FIELDS(X) \
@@ -15,6 +18,7 @@ public:
     X(float, jumpForce, 20.0f) \
     X(float, jumpRiseMultiplier, 2.0f) \
     X(float, fallMultiplier, 5.5f) \
+    X(float, turnSpeed, 720.0f) \
     X(std::string, idleClip, "idle") \
     X(std::string, runClip, "run") \
     X(std::string, jumpClip, "jump")
@@ -27,7 +31,10 @@ public:
     void OnDestroy(engine::GameObject& self) override;
 
 private:
-    float m_yaw = 0.0f;
+    // Written by ThirdPersonCamera (mouse / right stick); movement is relative to it.
+    float m_cameraYaw = 0.0f;
+    // Character heading in degrees; turns toward the move direction at turnSpeed deg/s.
+    float m_facingYaw = 0.0f;
     bool m_wasJumpHeld = false;
     bool m_jumpOneShot = false;
     float m_jumpTakeoffY = 0.0f;

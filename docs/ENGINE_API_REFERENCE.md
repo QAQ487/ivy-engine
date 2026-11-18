@@ -1,7 +1,7 @@
 # Ivy Engine — Complete Ability & API Reference
 
 Exhaustive catalog of **Ivy Engine** capabilities and public functions,
-scanned from every header under `engine/` and `src/app/` (162 headers; regenerate to refresh).
+scanned from every header under `engine/` and `src/app/` (163 headers; regenerate to refresh).
 
 **Learning how to use the engine?** Start with [`ENGINE_USER_GUIDE.md`](ENGINE_USER_GUIDE.md) (humans).  
 For JSON schemas, source map, and change rules, see [`AGENTS.md`](../AGENTS.md) (AI agents).
@@ -2582,6 +2582,10 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `void ThirdPersonCamera_AddTrauma(float amount01);`
 - `float ThirdPersonCamera_GetTrauma();`
 - `void ThirdPersonCamera_SetSpeedFactor(float speed01);`
+
+### `src/app/camera/third_person_move_math.h`
+**Types:** Vec2
+- `inline float TurnToward(float current, float target, float maxStep) { const float delta = WrapDeg180(target - current);`
 
 ### `src/app/rendering/fade.h`
 **Types:** FADE

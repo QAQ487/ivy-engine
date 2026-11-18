@@ -57,6 +57,9 @@ float s_pitch = 15.0f;
 float s_mouseSensitivity = 0.2f;
 float s_controllerSensitivity = 120.0f;
 bool  s_cursorHidden = false;
+// Ignore the first mouse delta after the cursor is hidden or the target changes: the
+// cursor is wherever the user left it, so (position - window centre) is not a real motion.
+bool  s_skipMouseDelta = false;
 float s_minPitch = -89.0f;
 float s_maxPitch = 89.0f;
 
@@ -377,6 +380,11 @@ void ThirdPersonCamera_Update(double elapsed_time) {
 		POINT screenCenter = { centerX, centerY };
 		ClientToScreen(hWnd, &screenCenter);
 		SetCursorPos(screenCenter.x, screenCenter.y);
+
+		if (s_skipMouseDelta) {
+			s_skipMouseDelta = false;
+			if (!Mouse_IsInjectionActive()) { dx = 0; dy = 0; }
+		}
 	}
 
 	if (!fixedCamera) { int unused_dx, unused_dy; Mouse_GetDelta(unused_dx, unused_dy); }
@@ -396,10 +404,10 @@ void ThirdPersonCamera_Update(double elapsed_time) {
 		s_pitch += dy * s_mouseSensitivity;
 
 		XMFLOAT2 rightStick = Controller_GetRightStick();
-		if (!fixedCamera) {
+		if (!fixedCamera)
 			*s_targetYaw = NormalizeYawDeg(*s_targetYaw + rightStick.x * s_controllerSensitivity * dt);
-			s_pitch -= rightStick.y * s_controllerSensitivity * dt;
-		}
+		// Stick pitch applies exactly once per frame (it was applied twice outside the
+		// fixed test camera).
 		s_pitch -= rightStick.y * s_controllerSensitivity * dt;
 
 		if (s_pitch < s_minPitch) s_pitch = s_minPitch;
@@ -493,6 +501,7 @@ void ThirdPersonCamera_SetTarget(XMFLOAT3* positionPtr, float* yawPtr) {
 	s_targetYaw = yawPtr;
 	s_hasSmoothedEye = false;
 	s_hasFollowPose = false;
+	s_skipMouseDelta = true;
 }
 
 void ThirdPersonCamera_SetDistance(float distance) {
@@ -535,6 +544,7 @@ void ThirdPersonCamera_ShowCursor(bool show) {
 	} else if (!show && !s_cursorHidden) {
 		while (ShowCursor(FALSE) >= 0) {}
 		s_cursorHidden = true;
+		s_skipMouseDelta = true;
 	}
 }
 
