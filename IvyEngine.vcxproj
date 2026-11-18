@@ -265,6 +265,8 @@ exit /b 0</Command>
     <ClInclude Include="engine\rendering\lighting\shadow.h" />
     <ClInclude Include="engine\rendering\culling\frustum_cull.h" />
     <ClInclude Include="engine\rendering\culling\frustum_cull_math.h" />
+    <ClInclude Include="engine\rendering\culling\lod_select_math.h" />
+    <ClInclude Include="engine\rendering\culling\lod_state.h" />
     <ClInclude Include="engine\rendering\culling\shadow_cascade_cull.h" />
     <ClInclude Include="engine\rendering\culling\sprite_cull.h" />
     <ClInclude Include="engine\rendering\culling\sprite_cull_math.h" />
@@ -420,6 +422,7 @@ exit /b 0</Command>
     <ClCompile Include="engine\rendering\lighting\lighting.cpp" />
     <ClCompile Include="engine\rendering\lighting\shadow.cpp" />
     <ClCompile Include="engine\rendering\culling\frustum_cull.cpp" />
+    <ClCompile Include="engine\rendering\culling\lod_state.cpp" />
     <ClCompile Include="engine\rendering\culling\shadow_cascade_cull.cpp" />
     <ClCompile Include="engine\rendering\culling\sprite_cull.cpp" />
     <ClCompile Include="engine\ecs\collider_component.cpp" />
