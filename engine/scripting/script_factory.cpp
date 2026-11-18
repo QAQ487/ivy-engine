@@ -7,6 +7,7 @@
  *****************************************************/
 #include "script_factory.h"
 #include "ui_canvas_script_factory.h"
+#include "engine/scripting/script_abi_fill.h"
 #include <algorithm>
 #include <Windows.h>
 #include "engine/debug_draw/debug_ofstream.h"
@@ -139,6 +140,28 @@ bool ScriptFactory::LoadScriptDll(const std::string& name,
             + ": " + tempPath + "\n").c_str());
         DeleteFileA(tempPath.c_str());
         return false;
+    }
+
+    // Layout check before any script object crosses the DLL boundary.
+    using AbiLayoutFn = std::uint32_t (*)(std::uint32_t*, std::uint32_t);
+    if (auto abiFn = reinterpret_cast<AbiLayoutFn>(GetProcAddress(h, "IvyScriptAbiLayout"))) {
+        std::uint32_t hostLayout[script_abi::kEntryCount] = {};
+        std::uint32_t dllLayout[script_abi::kEntryCount] = {};
+        script_abi::FillLayout(hostLayout, script_abi::kEntryCount);
+        const std::uint32_t dllCount = abiFn(dllLayout, script_abi::kEntryCount);
+        const auto mismatches = script_abi::Compare(hostLayout, script_abi::kEntryCount,
+            dllLayout, (std::min)(dllCount, static_cast<std::uint32_t>(script_abi::kEntryCount)));
+        if (!mismatches.empty()) {
+            FreeLibrary(h);
+            DeleteFileA(tempPath.c_str());
+            hal::DebugWriteA(script_abi::Describe(mismatches, dllPath).c_str());
+            return false;
+        }
+    }
+    else {
+        hal::DebugWriteA(("[ScriptFactory] " + dllPath + " was built before the layout check "
+            "(no IvyScriptAbiLayout export); rebuild GameScripts so a Debug / Release or "
+            "engine-header mismatch is caught at load.\n").c_str());
     }
 
     using CreateFn = Script * (*)(const char*);
