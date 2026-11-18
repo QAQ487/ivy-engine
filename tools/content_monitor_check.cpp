@@ -43,9 +43,10 @@ int main(int argc, char** argv) {
     auto root = std::filesystem::temp_directory_path() / ("ivy_content_check_" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
     std::filesystem::create_directories(root / "texture/nested");
     std::filesystem::create_directories(root / "shader");
-    { std::ofstream(root / "texture/nested/a.png") << "first"; std::ofstream(root / "shader/a.hlsl") << "ignored"; std::ofstream(root / "texture/save.tmp") << "ignored"; }
+    std::filesystem::create_directories(root / "editor");
+    { std::ofstream(root / "texture/nested/a.png") << "first"; std::ofstream(root / "shader/a.hlsl") << "ignored"; std::ofstream(root / "texture/save.tmp") << "ignored"; std::ofstream(root / "editor/imgui_layout.ini") << "ignored"; }
     auto disk = ContentFileMonitor::Scan(root);
-    assert(disk.count("texture/nested/a.png") == 1 && !disk.count("shader/a.hlsl") && !disk.count("texture/save.tmp"));
+    assert(disk.count("texture/nested/a.png") == 1 && !disk.count("shader/a.hlsl") && !disk.count("texture/save.tmp") && !disk.count("editor/") && !disk.count("editor/imgui_layout.ini"));
     auto stamp = std::filesystem::last_write_time(root / "texture/nested/a.png");
     { std::ofstream(root / "texture/nested/a.png") << "other"; }
     std::filesystem::last_write_time(root / "texture/nested/a.png", stamp);
@@ -86,6 +87,7 @@ int main(int argc, char** argv) {
     std::filesystem::remove(root / "texture/nested");
     std::filesystem::remove(root / "texture/save.tmp"); std::filesystem::remove(root / "texture");
     std::filesystem::remove(root / "shader/a.hlsl"); std::filesystem::remove(root / "shader");
+    std::filesystem::remove(root / "editor/imgui_layout.ini"); std::filesystem::remove(root / "editor");
     std::filesystem::remove(root);
     std::cout << "PASS: content debounce, batching, additions, renames, deletions, same-stamp overwrite, CJK names, 20 updates\n";
 }
