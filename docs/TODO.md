@@ -181,15 +181,15 @@
 
 ### 結構風險
 
-- [ ] **`GameObject` 佈局係冇版本保護嘅 ABI**：script 直接 call `game_object.h` 嘅 inline 成員（`self.GetRigidbody()`、`SetName`、`AddComponent`…），而 `GameScripts.vcxproj` 自己 compile 一份 `engine/physics/core/rigidbody.cpp`。`ScriptRuntimeApi` append-only 只保護函式表；`GameObject`／`Rigidbody` 加減欄位，舊 DLL 會靜靜雞壞。最少加 `static_assert(sizeof(...))` 同版本號，DLL 載入時檢查。推斷（未證實）：exe 同 DLL 都係 `/MTd` 時各有 debug heap，跨 DLL 分配／釋放 `std::string` 等有機會觸發 assert。
+- [x] **`GameObject` 佈局係冇版本保護嘅 ABI**（source 已做；等 Windows 驗收）：`GameScripts.dll` 匯出 `IvyScriptAbiLayout`（手動 `kAbiRevision`＋`_ITERATOR_DEBUG_LEVEL`／`_DEBUG`＋共用類型嘅 `sizeof`），`ScriptFactory::LoadScriptDll` 唔一致就拒絕載入並講原因（Debug／Release 唔夾，或者 engine header 改咗要重 build）；冇呢個匯出嘅舊 DLL 照載但會警告。`engine/scripting/script_abi_layout.h`／`script_abi_fill.h`，Linux：`tests/script_abi_layout_test.cpp`。仍然存在：script 用 inline 成員本身（只係而家會即刻報錯，唔會靜靜雞壞）；`/MTd` 跨 DLL heap 推斷未證實。
 - [ ] **音效冇快取、冇串流**：`PlaySFX3D` 等每次播都由碟同步讀成個 WAV；同一 id 會先 `Stop` 舊嗰個，同一音效唔可以疊住播；BGM 都係成個讀入記憶體；只支援 WAV。
 - [ ] **Runtime 直接讀 FBX**：`model.cpp` 喺 runtime 用 FBX SDK 解析，遊戲包要帶 `libfbxsdk.dll`。可以跟紋理 BC7 cook 一樣，Build 時轉成二進制 mesh 格式。
 
-### Script API 缺口（`ScriptRuntimeApi` v49，119 個 host 函式）
+### Script API 缺口（審計時 `ScriptRuntimeApi` v49；而家 v50）
 
-- [ ] 冇 3D Rigidbody 速度／力／衝量 API（2D 有；而家 script 靠 inline `GetRigidbody()`，即係上面嘅 ABI 風險）
-- [ ] 冇按名或 tag 搵 GameObject
-- [ ] 冇時間／timeScale 查詢
+- [x] 3D Rigidbody：`ScriptApi_RigidbodyGet/SetVelocity`、`Get/SetAngularVelocity`、`AddForce`、`AddTorque`（v50；source 已做，等 Windows 驗收）
+- [x] 按名／tag 搵 GameObject：`ScriptApi_FindGameObjectByName`、`ScriptApi_FindGameObjectsByTag`（v50；深度優先、scene 次序、包括生成嘅 prefab；`engine/ecs/game_object_search.h`，Linux：`tests/game_object_search_test.cpp`）
+- [x] 時間：`ScriptApi_GetTimeScale`、`ScriptApi_GetRealTimeSeconds`（v50）
 - [ ] 冇存檔／持久化（設定、進度）
 - [ ] 冇 input action 映射／按鍵重設
 - [ ] 冇非同步載入場景

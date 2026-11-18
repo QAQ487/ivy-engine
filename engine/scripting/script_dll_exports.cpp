@@ -2,6 +2,7 @@
 // Exports script factory entry points from script DLLs.
 
 #include "Script.h"
+#include "engine/scripting/script_abi_fill.h"
 #include <cstring>
 #include <functional>
 #include <string>
@@ -64,6 +65,13 @@ void DeserializeScript(Script* script, const char* jsonText) {
     } catch (...) {
         script->Deserialize(nlohmann::json::object());
     }
+}
+
+// Layout of the shared engine types as this DLL was compiled; the host refuses
+// to load the DLL when it differs from its own (see script_abi_layout.h).
+extern "C" __declspec(dllexport)
+std::uint32_t IvyScriptAbiLayout(std::uint32_t* out, std::uint32_t capacity) {
+    return script_abi::FillLayout(out, capacity);
 }
 
 extern "C" __declspec(dllexport)

@@ -584,6 +584,15 @@ if (UICanvas* canvas = ScriptApi_SceneCanvasGetCanvas()) {
 
 // Scene change
 ScriptApi_SceneCanvasRequestSceneFile("rom/scene/scene_lobby.json", true);
+
+// Find objects (v50): first match in scene order; inactive objects skipped unless asked
+if (GameObject* door = ScriptApi_FindGameObjectByName("Door")) { /* ... */ }
+GameObject* enemies[32];
+const int enemyCount = ScriptApi_FindGameObjectsByTag(Tag::TAG_ENEMY, enemies, 32);
+
+// Time (v50): dt multiplier and unscaled wall-clock seconds
+const float timeScale = ScriptApi_GetTimeScale();
+const double now = ScriptApi_GetRealTimeSeconds();
 ```
 
 Do **not** link scripts against the full editor. The host table is the supported boundary between DLL and exe.
@@ -595,6 +604,8 @@ For canvas elements, inherit `UICanvasScript` and register with `REGISTER_UI_SCR
 ### Script reload
 
 With the editor running, rebuild **GameScripts**. The engine watches the DLL, queues a reload, and recreates script instances. Keep `OnCreate` / `OnDestroy` balanced so reloads do not leak resources. See [§17 Hot reload](#hot-reload) for scenes and assets.
+
+Build GameScripts in the **same configuration** as the editor or runtime (Debug with Debug, Release with Release), and rebuild it after you update the engine. The engine compares the DLL's object layout with its own and refuses a DLL that differs; the Console says whether the cause is a Debug / Release mismatch or older engine headers.
 
 ---
 
@@ -615,13 +626,16 @@ Every `GameObject` still owns a legacy `GetRigidbody()` body used at runtime. Pr
 }
 ```
 
-From scripts you can also tune the live body:
+From scripts, prefer the host helpers (v50). They work on objects that have a Rigidbody component and return `false` otherwise:
 
 ```cpp
-auto& rb = self.GetRigidbody();
-rb.SetUseGravity(true);
-rb.AddForce({ 0, 5, 0 }, ForceMode::Impulse);
+ScriptApi_RigidbodyAddForce(self, { 0, 5, 0 }, ForceMode::Impulse);
+DirectX::XMFLOAT3 v;
+if (ScriptApi_RigidbodyGetVelocity(self, v) && v.y < -20.0f)
+    ScriptApi_RigidbodySetVelocity(self, { v.x, -20.0f, v.z });
 ```
+
+The body is also reachable directly (`self.GetRigidbody().SetUseGravity(true)`), but that compiles engine code into your DLL; the helpers keep working across engine updates.
 
 Force modes: `Force`, `Acceleration`, `Impulse`, `VelocityChange`. Kinematic bodies are not integrated; move them yourself.
 
@@ -1018,6 +1032,7 @@ Use Effekseer via Effect component / `EffectObject::SpawnW`, or a short-lived pa
 | Wrong project / missing assets | **File → Open Project** on the folder that contains `rom/`; cwd must be that project root |
 | Missing shaders / fonts / branding | These come from the engine `resources/` beside the exe (not copied into projects). Check the exe folder has `resources/`, and that your project does not shadow the path with a broken file |
 | Script never runs | `REGISTER_SCRIPT`, matching `scriptClass`, GameScripts built, Play mode on |
+| Console: "GameScripts layout does not match this engine build" | Build GameScripts in the same configuration as the editor / runtime (Debug with Debug, Release with Release), or rebuild it after an engine update. The lines below name the mismatched sizes |
 | Model missing | Path under `rom/`, FBX SDK DLL beside exe, case of path |
 | Collider wrong | Shape fields / center; enable Show Debug Collider or F11; mesh collider needs a model |
 | Tag missing / wrong id | `rom/tags.json`; custom tags only after builtins; remapping after delete |

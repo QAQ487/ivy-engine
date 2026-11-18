@@ -1,7 +1,7 @@
 # Ivy Engine — Complete Ability & API Reference
 
 Exhaustive catalog of **Ivy Engine** capabilities and public functions,
-scanned from every header under `engine/` and `src/app/` (175 headers; regenerate to refresh).
+scanned from every header under `engine/` and `src/app/` (177 headers; regenerate to refresh).
 
 **Learning how to use the engine?** Start with [`ENGINE_USER_GUIDE.md`](ENGINE_USER_GUIDE.md) (humans).  
 For JSON schemas, source map, and change rules, see [`AGENTS.md`](../AGENTS.md) (AI agents).
@@ -729,6 +729,9 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `void ClearIgnoreCollisionObjects();`
 - `bool IgnoresCollisionWith(const GameObject* other) const;`
 - `void RefreshColliderData(Model3D& sourceModel) { if (m_collider && m_collider->GetType() == ColliderType::MESH) { auto* meshCol = static_cast<MeshCollider*>(m_collider);`
+
+### `engine/ecs/game_object_search.h`
+**Enums:** Visit
 
 ### `engine/ecs/material_component.h`
 **Types:** ID3D11ShaderResourceView, MaterialComponent
@@ -2102,6 +2105,10 @@ Vendor header `WICTextureLoader11.h` is omitted.
 ### `engine/scripting/Script.h`
 **Types:** Script
 
+### `engine/scripting/script_abi_layout.h`
+**Types:** Mismatch
+**Enums:** Entry
+
 ### `engine/scripting/script_component.h`
 **Types:** ScriptComponent
 - `void OnAttach() override;`
@@ -2193,6 +2200,16 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `bool ScriptApi_RenderSettingGetBool(const char* key, bool& outValue);`
 - `bool ScriptApi_RenderSettingSetNumber(const char* key, double value);`
 - `bool ScriptApi_RenderSettingGetNumber(const char* key, double& outValue);`
+- `bool ScriptApi_RigidbodyGetVelocity(GameObject& object, DirectX::XMFLOAT3& outVelocity);`
+- `bool ScriptApi_RigidbodySetVelocity(GameObject& object, DirectX::XMFLOAT3 velocity);`
+- `bool ScriptApi_RigidbodyGetAngularVelocity(GameObject& object, DirectX::XMFLOAT3& outVelocity);`
+- `bool ScriptApi_RigidbodySetAngularVelocity(GameObject& object, DirectX::XMFLOAT3 velocity);`
+- `bool ScriptApi_RigidbodyAddForce(GameObject& object, DirectX::XMFLOAT3 force, ForceMode mode = ForceMode::Force);`
+- `bool ScriptApi_RigidbodyAddTorque(GameObject& object, DirectX::XMFLOAT3 torque, ForceMode mode = ForceMode::Force);`
+- `GameObject* ScriptApi_FindGameObjectByName(const char* name, bool includeInactive = false);`
+- `int ScriptApi_FindGameObjectsByTag(Tag tag, GameObject** out, int capacity, bool includeInactive = false);`
+- `float ScriptApi_GetTimeScale();`
+- `double ScriptApi_GetRealTimeSeconds();`
 - `void ScriptApi_CameraSetPosition(DirectX::XMFLOAT3 position);`
 - `void ScriptApi_CameraSetTarget(DirectX::XMFLOAT3 target);`
 - `void ScriptApi_CameraSetUp(DirectX::XMFLOAT3 up);`

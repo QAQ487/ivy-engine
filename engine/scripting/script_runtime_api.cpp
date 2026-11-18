@@ -33,6 +33,10 @@
 #include "engine/physics/2d/physics2d.h"
 #include "engine/ecs/sprite_animator_component.h"
 #include "engine/ecs/sprite_renderer_component.h"
+#include "engine/ecs/game_object_search.h"
+#include "engine/ecs/rigidbody_component.h"
+#include "engine/scene/scene_loader.h"
+#include "engine/core/system_timer.h"
 #endif
 #include "engine/rendering/d3d11/post_process.h"
 #include "engine/physics/core/physics_system.h"
@@ -43,7 +47,7 @@
 #include <string>
 
 namespace {
-constexpr std::uint32_t kScriptRuntimeApiVersion = 49;
+constexpr std::uint32_t kScriptRuntimeApiVersion = 50;
 
 template <typename T>
 T* FindComponentByTypeName(GameObject& object, const char* typeName) {
@@ -649,6 +653,118 @@ bool Host_RenderSettingGetNumber(const char* key, double* outValue) {
     return RenderSettings_GetNumberByName(key, outValue);
 }
 
+// --- v50 ---------------------------------------------------------------------
+Rigidbody* HostBody(GameObject* object) {
+    RigidbodyComponent* rc = object ? object->GetComponent<RigidbodyComponent>() : nullptr;
+    return rc ? &rc->Body() : nullptr;
+}
+
+bool IsFinite3(const DirectX::XMFLOAT3& v) {
+    return std::isfinite(v.x) && std::isfinite(v.y) && std::isfinite(v.z);
+}
+
+bool ForceModeFromInt(int mode, ForceMode* out) {
+    if (mode < static_cast<int>(ForceMode::Force) || mode > static_cast<int>(ForceMode::VelocityChange))
+        return false;
+    *out = static_cast<ForceMode>(mode);
+    return true;
+}
+
+bool Host_RigidbodyGetVelocity(GameObject* object, DirectX::XMFLOAT3* outVelocity) {
+    Rigidbody* body = HostBody(object);
+    if (!body || !outVelocity) return false;
+    *outVelocity = body->GetVelocity();
+    return true;
+}
+
+bool Host_RigidbodySetVelocity(GameObject* object, DirectX::XMFLOAT3 velocity) {
+    Rigidbody* body = HostBody(object);
+    if (!body || !IsFinite3(velocity)) return false;
+    body->SetVelocity(velocity);
+    return true;
+}
+
+bool Host_RigidbodyGetAngularVelocity(GameObject* object, DirectX::XMFLOAT3* outVelocity) {
+    Rigidbody* body = HostBody(object);
+    if (!body || !outVelocity) return false;
+    *outVelocity = body->GetAngularVelocity();
+    return true;
+}
+
+bool Host_RigidbodySetAngularVelocity(GameObject* object, DirectX::XMFLOAT3 velocity) {
+    Rigidbody* body = HostBody(object);
+    if (!body || !IsFinite3(velocity)) return false;
+    body->SetAngularVelocity(velocity);
+    return true;
+}
+
+bool Host_RigidbodyAddForce(GameObject* object, DirectX::XMFLOAT3 force, int mode) {
+    Rigidbody* body = HostBody(object);
+    ForceMode fm{};
+    if (!body || !IsFinite3(force) || !ForceModeFromInt(mode, &fm)) return false;
+    body->AddForce(force, fm);
+    return true;
+}
+
+bool Host_RigidbodyAddTorque(GameObject* object, DirectX::XMFLOAT3 torque, int mode) {
+    Rigidbody* body = HostBody(object);
+    ForceMode fm{};
+    if (!body || !IsFinite3(torque) || !ForceModeFromInt(mode, &fm)) return false;
+    body->AddTorque(torque, fm);
+    return true;
+}
+
+// Shared walk for the find functions: skips objects waiting to be destroyed
+// and, without includeInactive, inactive subtrees.
+template <class Fn>
+void HostWalkScene(bool includeInactive, Fn onObject) {
+    using game_object_search::Visit;
+    game_object_search::WalkDepthFirst<GameObject>(
+        SceneLoader_GetSceneNodes(),
+        [](GameObject& node) -> const std::vector<std::unique_ptr<GameObject>>& {
+            return node.GetChildren();
+        },
+        [&](GameObject& node) {
+            if (PrefabRuntime_IsPendingDestroy(&node)) return Visit::SkipChildren;
+            if (!includeInactive && !node.IsActive()) return Visit::SkipChildren;
+            return onObject(node) ? Visit::Continue : Visit::Stop;
+        });
+}
+
+GameObject* Host_FindGameObjectByName(const char* name, bool includeInactive) {
+    if (!name || !*name) return nullptr;
+    GameObject* found = nullptr;
+    HostWalkScene(includeInactive, [&](GameObject& node) {
+        if (node.GetName() == name) {
+            found = &node;
+            return false;
+        }
+        return true;
+    });
+    return found;
+}
+
+int Host_FindGameObjectsByTag(Tag tag, GameObject** out, int capacity, bool includeInactive) {
+    int total = 0;
+    HostWalkScene(includeInactive, [&](GameObject& node) {
+        if (node.GetTag() == tag) {
+            if (out && total < capacity)
+                out[total] = &node;
+            ++total;
+        }
+        return true;
+    });
+    return total;
+}
+
+float Host_GetTimeScale() {
+    return DebugSystem::GetTimeScale();
+}
+
+double Host_GetRealTimeSeconds() {
+    return SystemTimer_GetTime();
+}
+
 const ScriptRuntimeApi g_scriptRuntimeApi = {
     kScriptRuntimeApiVersion,
     &Host_GetCurrentScene,
@@ -784,6 +900,16 @@ const ScriptRuntimeApi g_scriptRuntimeApi = {
     &Host_RenderSettingGetBool,
     &Host_RenderSettingSetNumber,
     &Host_RenderSettingGetNumber,
+    &Host_RigidbodyGetVelocity,
+    &Host_RigidbodySetVelocity,
+    &Host_RigidbodyGetAngularVelocity,
+    &Host_RigidbodySetAngularVelocity,
+    &Host_RigidbodyAddForce,
+    &Host_RigidbodyAddTorque,
+    &Host_FindGameObjectByName,
+    &Host_FindGameObjectsByTag,
+    &Host_GetTimeScale,
+    &Host_GetRealTimeSeconds,
 };
 #else
 using GetApiFn = const ScriptRuntimeApi* (*)();
@@ -793,7 +919,9 @@ const ScriptRuntimeApi* ResolveScriptRuntimeApi() {
     if (!module)
         return nullptr;
 
-    auto getApi = reinterpret_cast<GetApiFn>(GetProcAddress(module, "ScriptRuntimeApi_GetV49"));
+    auto getApi = reinterpret_cast<GetApiFn>(GetProcAddress(module, "ScriptRuntimeApi_GetV50"));
+    if (!getApi)
+        getApi = reinterpret_cast<GetApiFn>(GetProcAddress(module, "ScriptRuntimeApi_GetV49"));
     if (!getApi)
         getApi = reinterpret_cast<GetApiFn>(GetProcAddress(module, "ScriptRuntimeApi_GetV48"));
     if (!getApi)
@@ -892,6 +1020,16 @@ const ScriptRuntimeApi* ScriptRuntimeApi_GetV48() {
 
 extern "C" __declspec(dllexport)
 const ScriptRuntimeApi* ScriptRuntimeApi_GetV49() {
+    static const ScriptRuntimeApi api = [] {
+        ScriptRuntimeApi copy = g_scriptRuntimeApi;
+        copy.version = 49;
+        return copy;
+    }();
+    return &api;
+}
+
+extern "C" __declspec(dllexport)
+const ScriptRuntimeApi* ScriptRuntimeApi_GetV50() {
     return &g_scriptRuntimeApi;
 }
 
@@ -1382,6 +1520,65 @@ bool ScriptApi_RenderSettingGetNumber(const char* key, double& outValue) {
     const auto* api = ScriptRuntimeApi_GetHost();
     return api && api->version >= 49 && api->renderSettingGetNumber
         && api->renderSettingGetNumber(key, &outValue);
+}
+
+bool ScriptApi_RigidbodyGetVelocity(GameObject& object, DirectX::XMFLOAT3& outVelocity) {
+    const auto* api = ScriptRuntimeApi_GetHost();
+    return api && api->version >= 50 && api->rigidbodyGetVelocity
+        && api->rigidbodyGetVelocity(&object, &outVelocity);
+}
+
+bool ScriptApi_RigidbodySetVelocity(GameObject& object, DirectX::XMFLOAT3 velocity) {
+    const auto* api = ScriptRuntimeApi_GetHost();
+    return api && api->version >= 50 && api->rigidbodySetVelocity
+        && api->rigidbodySetVelocity(&object, velocity);
+}
+
+bool ScriptApi_RigidbodyGetAngularVelocity(GameObject& object, DirectX::XMFLOAT3& outVelocity) {
+    const auto* api = ScriptRuntimeApi_GetHost();
+    return api && api->version >= 50 && api->rigidbodyGetAngularVelocity
+        && api->rigidbodyGetAngularVelocity(&object, &outVelocity);
+}
+
+bool ScriptApi_RigidbodySetAngularVelocity(GameObject& object, DirectX::XMFLOAT3 velocity) {
+    const auto* api = ScriptRuntimeApi_GetHost();
+    return api && api->version >= 50 && api->rigidbodySetAngularVelocity
+        && api->rigidbodySetAngularVelocity(&object, velocity);
+}
+
+bool ScriptApi_RigidbodyAddForce(GameObject& object, DirectX::XMFLOAT3 force, ForceMode mode) {
+    const auto* api = ScriptRuntimeApi_GetHost();
+    return api && api->version >= 50 && api->rigidbodyAddForce
+        && api->rigidbodyAddForce(&object, force, static_cast<int>(mode));
+}
+
+bool ScriptApi_RigidbodyAddTorque(GameObject& object, DirectX::XMFLOAT3 torque, ForceMode mode) {
+    const auto* api = ScriptRuntimeApi_GetHost();
+    return api && api->version >= 50 && api->rigidbodyAddTorque
+        && api->rigidbodyAddTorque(&object, torque, static_cast<int>(mode));
+}
+
+GameObject* ScriptApi_FindGameObjectByName(const char* name, bool includeInactive) {
+    const auto* api = ScriptRuntimeApi_GetHost();
+    return (api && api->version >= 50 && api->findGameObjectByName)
+        ? api->findGameObjectByName(name, includeInactive) : nullptr;
+}
+
+int ScriptApi_FindGameObjectsByTag(Tag tag, GameObject** out, int capacity, bool includeInactive) {
+    const auto* api = ScriptRuntimeApi_GetHost();
+    if (capacity < 0) capacity = 0;
+    return (api && api->version >= 50 && api->findGameObjectsByTag)
+        ? api->findGameObjectsByTag(tag, out, capacity, includeInactive) : 0;
+}
+
+float ScriptApi_GetTimeScale() {
+    const auto* api = ScriptRuntimeApi_GetHost();
+    return (api && api->version >= 50 && api->getTimeScale) ? api->getTimeScale() : 1.0f;
+}
+
+double ScriptApi_GetRealTimeSeconds() {
+    const auto* api = ScriptRuntimeApi_GetHost();
+    return (api && api->version >= 50 && api->getRealTimeSeconds) ? api->getRealTimeSeconds() : 0.0;
 }
 
 void ScriptApi_EngineGUIStopPlay() {
