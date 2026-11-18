@@ -93,8 +93,13 @@
   - Linux：`./tools/run_sprite_cull_check.sh`。
   - 驗收：Windows Debug＋Release 已 build；Release ON vs OFF capture 像素 diff 0；115-sprite 場景 overlay `2CULL c:115 x:84 d:31`，sprite draws 115→31，GPU 0.97→0.17 ms。Terry 批准合併。
   - 剩餘：tilemap／billboard／particle 之後另做。
-- [ ] **Distance／layer cull distance 同 LOD**
-  - 仿 Unity `Camera.layerCullDistances` 同 LOD Group，按 layer 設剔除距離，近遠換 mesh 精度。排喺 frustum culling 之後。
+- [ ] **Distance cull 同 mesh LOD**（source 已做 v1；等 Windows 驗收）
+  - `visual.lods`（`{model, maxDistance}` 陣列，level 0 係 `model`，`maxDistance` 係切換去該級嘅 camera 距離）同 `visual.cullDistance`。距離用 camera → 基礎 mesh world AABB 中心，5% hysteresis；`render.lodEnabled`（預設 true）、`render.lodBias`（預設 1，0.1–10）。選擇數學喺 `engine/rendering/culling/lod_select_math.h`，狀態同計數器喺 `lod_state.{h,cpp}`，接入點係 `GameObject::DrawVisual`。
+  - Shadow pass 跟主 camera 揀嘅 level（`Lod_BeginFrame` 喺 shadow cascade 之前）。`animate: true` 嘅 Visual 只用 level 0（`cullDistance` 仍生效）；`proxy_model` edit view 唔行 LOD；LOD mesh 缺失退回 level 0。Preload 會載入 LOD mesh。
+  - Counters：Rendering Settings、collision-viz、FPS `LOD`、bridge `perf.lod`；bridge `set_setting` 加 `lodEnabled`。Inspector Visual 區有 LOD 清單同 Cull Distance。
+  - Linux：`tools/run_lod_check.sh`。驗收場景：`testbed/rom/scene/scene_lod.json`（Sphere → Capsule → Cube，切換距離 30／70，cullDistance 120）。
+  - 驗收（Windows Debug＋Release，Terry）：行近行遠目視切換、counters 正確、影子冇跳變、`lodEnabled` A/B 頂點數／GPU ms、`animate` 物件冇回歸、Inspector 加減 LOD＋Undo／Redo＋保存重載、LOD mesh hot reload。
+  - 未做：per-layer cull distance、自動減面、skinned LOD、per-clip bounds。
 - [ ] **Occlusion culling（暫緩）**
   - 等 Release profiling 顯示 draw call／overdraw 係瓶頸、場景有大量遮擋先做。起點：D3D11 occlusion predicate（`D3D11_QUERY_OCCLUSION_PREDICATE`）或 Hi-Z（上一 frame depth pyramid）；baked PVS（似 Unity Umbra）需要 editor bake 流程，放最後。
 

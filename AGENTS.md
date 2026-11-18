@@ -163,7 +163,7 @@ Saved by `SceneLoader_SaveToFile`:
 | `camera.mode` | `"thirdPerson"`, `"firstPerson"`, default `"scene"` (→ `CameraMode::SceneCamera`). `Intro` exists in C++ only |
 | `camera.node` | Preferred scene camera node name |
 | `debugCamera` | `mode` (`"orbit"` default / `"fly"`), `enabledOnPlay`, `yawDeg`, `pitchDeg`, optional `position {x,y,z}` |
-| `render.*` | `RenderSettingsData` in `engine/scene/render_settings.h`: `skyboxEnabled`, `skyboxCubemap` (DDS, or equirect PNG cooked to `rom/skybox/cache/`; width = 360°, height ≤ width/2), `skyboxVerticalFov` (0 = auto), `skyboxTint`, `skyboxExposure`, `skyboxRotationYDeg`, `clearColor`, `defaultShader`, shadow quality, fog, `frustumCullingEnabled`, `shadowCascadeCullingEnabled`, `spriteCullingEnabled` (all culling default `true`) |
+| `render.*` | `RenderSettingsData` in `engine/scene/render_settings.h`: `skyboxEnabled`, `skyboxCubemap` (DDS, or equirect PNG cooked to `rom/skybox/cache/`; width = 360°, height ≤ width/2), `skyboxVerticalFov` (0 = auto), `skyboxTint`, `skyboxExposure`, `skyboxRotationYDeg`, `clearColor`, `defaultShader`, shadow quality, fog, `frustumCullingEnabled`, `shadowCascadeCullingEnabled`, `spriteCullingEnabled` (all culling default `true`), `lodEnabled` (default `true`), `lodBias` (default `1`, clamped 0.1–10; >1 = lower detail sooner) |
 
 ### Registered component types
 
@@ -172,7 +172,7 @@ Saved by `SceneLoader_SaveToFile`:
 | Type | Source | JSON keys |
 |------|--------|-----------|
 | `SceneTransform` | `ecs/transform.h` | `posX/Y/Z`, `rotX/Y/Z` (Euler degrees, local), `scaleX/Y/Z` |
-| `visual` | `ecs/visual_component.h` | `model`, `proxy_model` (edit/paused), `animate`, `active_clip`, `animations` (clip → FBX), `shader` (per-object override) |
+| `visual` | `ecs/visual_component.h` | `model`, `proxy_model` (edit/paused), `animate`, `active_clip`, `animations` (clip → FBX), `shader` (per-object override), `lods` (array of `{model, maxDistance}`; level 0 is `model`, `maxDistance` = camera distance that switches TO that level), `cullDistance` (0 = never) |
 | `Billboard` | `ecs/billboard_component.h` | `texture`, `sizeX`, `sizeY`, `color {r,g,b,a}`, `rotation`, `groundAligned`, `enabled` |
 | `Script` | `scripting/script_component.h` | `scriptClass`, optional `properties` (per-instance overrides) |
 | `BoxCollider` … `MeshCollider` | `ecs/collider_component*.h` | Shape-locked; only that shape's fields. One 3D collider per GameObject |

@@ -360,6 +360,10 @@ Always attach this for scene objects you place in the editor.
 | `animations` | Map of clip name → animation FBX path |
 | `active_clip` | Which clip is current |
 | `shader` | Override: `standard`, `toon`, `rim`, … |
+| `lods` | Optional list of `{model, maxDistance}`. Level 0 is `model`; each row switches to that mesh at its camera distance (Play / runtime only) |
+| `cullDistance` | Do not draw beyond this camera distance (`0` = never) |
+
+**LOD:** in the Inspector's Visual section use **Add LOD** and drag an FBX/OBJ onto each row; rows stay sorted by distance. Shadows use the same level as the camera pass, levels are ignored while **Animate** is on, and a missing LOD mesh falls back to the base mesh. Keep LOD meshes at the same pivot and scale as the base mesh. Turn **Mesh LOD (3D)** off in Rendering for A/B. Open `scene_lod.json` in the testbed to try it.
 
 From scripts, play a clip with:
 
@@ -699,6 +703,7 @@ Edit these in **Edit → Project Settings → Rendering** (saved into the curren
 - `frustumCullingEnabled` (default `true`) — skip 3D mesh draws fully outside the **main** camera frustum. Does not gate shadow depth passes. Toggle off in the Rendering page for A/B. Counters (considered / culled / drawn) show in the Rendering page, the play FPS overlay, and collision-viz debug text.
 - `shadowCascadeCullingEnabled` (default `true`) — per cascade, skip shadow casters whose world AABB is outside that cascade's light-space ortho volume. Near plane is open toward the light (casters between light and cascade still cast). Off-screen casters that still project into a cascade keep their shadows. Counters: frame totals + per-cascade in the Rendering page; frame totals on FPS / collision-viz overlays and bridge `perf.shadowCull`.
 - `spriteCullingEnabled` (default `true`) — skip 2D sprite draws whose world AABB (size, pivot, rotation, scale) is fully outside the orthographic camera view rect, with a small margin against edge popping. Does not affect animation, physics, or scripts. Screen-space UI is untouched. Perspective cameras leave sprites unculled. Counters (considered / culled / drawn) show in the Rendering page, FPS overlay `2CULL`, collision-viz, and bridge `perf.spriteCull`.
+- `lodEnabled` (default `true`) and `lodBias` (default `1`, 0.1–10) — distance-based mesh LOD from `visual.lods` plus `visual.cullDistance`, Play / runtime only. Bias above 1 switches to lower detail sooner. Counters (considered / culled / drawn per level) show in the Rendering page, FPS overlay `LOD`, collision-viz, and bridge `perf.lod`.
 
 Reload skybox after changing the cubemap path (`RenderSettings_ReloadSkybox` / editor path). Manual check scene: `testbed/rom/scene/scene_panorama_sky.json`.
 
