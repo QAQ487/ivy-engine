@@ -480,7 +480,10 @@ def build_scene(fly):
             "SceneTransform": transform(0.0, 1.0, 0.0),
             "Script": {"scriptClass": "SamplePlayerScript"}},
          "children": [{"name": "Player_Model", "tag": 5, "children": [], "components": {
-             "SceneTransform": {**transform(0.0, -0.5, 0.0, 0.01), "rotY": 180.0},
+             # Y Bot natively faces +Z (toes at +Z in the FBX; the DirectX axis conversion only
+             # mirrors X), which is heading 0 for SamplePlayerScript. No extra yaw here: an
+             # additional 180 makes the bot face away from its movement direction.
+             "SceneTransform": transform(0.0, -0.5, 0.0, 0.01),
              "visual": {"active_clip": "idle", "animate": True,
                         "animations": {"idle": "rom/model/player/Idle.fbx",
                                        "jump": "rom/model/player/Jump01.fbx",
