@@ -71,7 +71,7 @@
 
 ## 渲染效能：Culling
 
-現況：3D main camera frustum culling（PR #25 `ba52894`）同 CSM per-cascade caster culling（PR #27 合併 `6db6040`）已入 master；後者 Windows Release A/B 已驗收。2D ortho sprite view-rect culling（PR #28 合併 `6adb343`）Windows Release runtime 已驗收。仍然冇 distance／occlusion culling；billboard／particle／screen-space UI／tilemap 未做。Physics AABB 仍然唔共用。`D3D11_QUERY` 仍然只見 timestamp／pipeline stats。
+現況：3D main camera frustum culling（PR #25 `ba52894`）同 CSM per-cascade caster culling（PR #27 合併 `6db6040`）已入 master；後者 Windows Release A/B 已驗收。2D ortho sprite view-rect culling（PR #28 合併 `6adb343`）Windows Release runtime 已驗收。distance culling（`visual.cullDistance`）同 mesh LOD v1 已有 source（等 Windows 驗收）；仍然冇 occlusion culling；billboard／particle／effect 未做（見下面「Culling／LOD 缺口盤點」）。Physics AABB 仍然唔共用。`D3D11_QUERY` 仍然只見 timestamp／pipeline stats。
 
 參考：Unity 模型——自動 frustum culling、手動 baked occlusion、Unity 6 GPU occlusion、`CullingGroup` API。
 
@@ -104,6 +104,22 @@
   - 未做：per-layer cull distance、自動減面、skinned LOD、per-clip bounds。
 - [ ] **Occlusion culling（暫緩）**
   - 等 Release profiling 顯示 draw call／overdraw 係瓶頸、場景有大量遮擋先做。起點：D3D11 occlusion predicate（`D3D11_QUERY_OCCLUSION_PREDICATE`）或 Hi-Z（上一 frame depth pyramid）；baked PVS（似 Unity Umbra）需要 editor bake 流程，放最後。
+
+### Culling／LOD 缺口盤點（2026-11-18 source audit，每項都對過代碼）
+
+唔屬於上面 LOD v1 嘅範圍，建議每個主題獨立 PR（每個都要自己嘅 Windows A/B 證據）。順序按效益／風險。
+
+- [ ] **`DrawVisual` 先剔除再設定**：`GameObject::DrawVisual`（`engine/ecs/game_object.cpp`）喺 frustum／cascade／距離剔除判斷**之前**已經做 `SetEmission`／`SetShaderVariant`／`SetMaterialOverride` 同世界姿態解算；主 pass 加每個 cascade 每物件每幀最多行 5 次，被剔除嘅物件照付成本。改動細、風險低。另外冇空間分割，逐個物件 O(N) 遍歷。
+- [ ] **離屏／遠距動畫降頻或暫停**：`VisualComponent::Update` 只睇 `playAnimation`，唔睇可見度或距離；`VisualSystem_UploadSkinning` 亦冇可見度判斷，被剔除或 `cullDistance` 外嘅角色仍然每幀 `UpdateAnimation` 同上傳 skin palette。對應 Unity Animator Culling Mode。可重用 `DrawVisual` 嘅可見度結果同 `cullDistance`。
+- [ ] **燈光揀選**：`Lighting::MAX_LIGHTS = 4`，`SceneLightingSyncFromNodes` 按場景遍歷順序攞頭 4 盞然後 `break`，唔睇距離／range／重要性／可見度，多燈場景會用錯燈。
+- [ ] **Billboard／粒子／Effekseer 剔除**：`Billboard::Update` 只做遠到近排序，冇 frustum 或距離剔除；`ParticlePool` 只有 `maxParticles` 上限，冇 per-emitter 剔除或距離縮減；`EffectSystem` 直接 `Manager::Draw`，冇用 Effekseer culling world。
+- [ ] **LOD 螢幕大小模式**：而家只有距離；按物件大細計距離要靠 `tools/gen_lod_test_assets.py`（`d = size / (0.828 × coverage)`），引擎本身冇 screen-relative height 閾值。
+- [ ] **LOD cross-fade／dither**：切換係硬切。
+- [ ] **陰影投影物用較低 LOD**：而家陰影同主鏡頭同一級，用低一級可以省陰影成本。
+- [ ] **編輯器 LOD 工具**：編輯視圖用 proxy（`DrawVisual(false)`）所以唔行 LOD；冇強制指定某級嘅 debug 選項，冇顯示邊界、距離嘅 gizmo。
+- [ ] **腳本同 bridge 可控性**：`ScriptRuntimeApi` 冇任何 LOD／culling／render 設定介面；bridge `set_setting` 只收布林，`lodBias`／`cullDistanceScale`／`shadowDistance` 唔能夠由測試改。（加 `ScriptRuntimeApi` 要 append-only 並 bump 版本。）
+- [ ] **LOD／剔除嘅進階項**（暫緩）：HLOD／impostor、自動減面、per-clip skinned bounds、per-layer／per-tag cull distance。
+- 唔算缺口：texture mip chain 已由 `model_util.cpp` 生成；engine 冇 tilemap 系統；screen-space UI 唔剔除係設計。
 
 ## 歷史 backlog（source audit 結果）
 
@@ -138,6 +154,7 @@ PBR 球場已由引擎待辦移除：倉庫只有 PBR shader 同 `testbed/rom/sc
 
 1. PR #7 視覺檢查（lighting、CSM、post-process、gizmo）喺 Windows 做（ImGuizmo AddPolyline 已驗收）。
 2. 重做 Properties Panel／Inspector（先有 UI 草案；現有編輯同 Undo 要保住）。
+   Culling／LOD 跟進（獨立 PR，順序：`DrawVisual` 先剔除、離屏動畫降頻 → 燈光揀選 → billboard／粒子／effect 剔除）見「Culling／LOD 缺口盤點」。
 3. AI 套件：Waypoint → Perception → BT／Blackboard → EQS。NavMesh 繼續暫緩。
 
 Box friction torque 同 World-space UI 未排入上面次序：前者只有想箱子傾側先做；後者驗收仍待設計。Culling 主線（3D frustum／shadow cascade／2D sprite）已入 master；距離／occlusion／tilemap／billboard／particle 未排入。
