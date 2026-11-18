@@ -163,7 +163,7 @@ Saved by `SceneLoader_SaveToFile`:
 | `camera.mode` | `"thirdPerson"`, `"firstPerson"`, default `"scene"` (→ `CameraMode::SceneCamera`). `Intro` exists in C++ only |
 | `camera.node` | Preferred scene camera node name |
 | `debugCamera` | `mode` (`"orbit"` default / `"fly"`), `enabledOnPlay`, `yawDeg`, `pitchDeg`, optional `position {x,y,z}` |
-| `render.*` | `RenderSettingsData` in `engine/scene/render_settings.h`: `skyboxEnabled`, `skyboxCubemap` (DDS, or equirect PNG cooked to `rom/skybox/cache/`; width = 360°, height ≤ width/2), `skyboxVerticalFov` (0 = auto), `skyboxTint`, `skyboxExposure`, `skyboxRotationYDeg`, `clearColor`, `defaultShader`, shadow quality, fog, `frustumCullingEnabled`, `shadowCascadeCullingEnabled`, `spriteCullingEnabled` (all culling default `true`), `lodEnabled` (default `true`), `lodBias` (default `1`, clamped 0.1–10; >1 = lower detail sooner) |
+| `render.*` | `RenderSettingsData` in `engine/scene/render_settings.h`: `skyboxEnabled`, `skyboxCubemap` (DDS, or equirect PNG cooked to `rom/skybox/cache/`; width = 360°, height ≤ width/2), `skyboxVerticalFov` (0 = auto), `skyboxTint`, `skyboxExposure`, `skyboxRotationYDeg`, `clearColor`, `defaultShader`, shadow quality, fog, `frustumCullingEnabled`, `shadowCascadeCullingEnabled`, `spriteCullingEnabled` (all culling default `true`), `lodEnabled` (default `true`), `lodBias` (default `1`, clamped 0.1–10; >1 = lower detail sooner), `cullDistanceScale` (default `1`, clamped 0.1–10; multiplies every `visual.cullDistance`, >1 = visible longer), `shadowDistance` (default `0` = Shadow Quality preset range; >0 overrides it, clamped 5–1000) |
 
 ### Registered component types
 

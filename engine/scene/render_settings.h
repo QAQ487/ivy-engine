@@ -55,6 +55,12 @@ struct RenderSettingsData {
     // only (>1 switches to lower detail sooner); clamped to [0.1, 10] on load.
     bool lodEnabled = true;
     float lodBias = 1.0f;
+    // Multiplies every visual.cullDistance (> 1 keeps objects visible further out, < 1 culls
+    // sooner). Clamped to [0.1, 10]. Needs lodEnabled, like cullDistance itself.
+    float cullDistanceScale = 1.0f;
+    // Shadow range override in world units. 0 = use the Shadow Quality preset; positive values
+    // replace the preset range and are clamped to [5, 1000].
+    float shadowDistance = 0.0f;
 };
 
 void RenderSettings_ResetToDefaults();

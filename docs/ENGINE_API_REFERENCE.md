@@ -1,7 +1,7 @@
 # Ivy Engine — Complete Ability & API Reference
 
 Exhaustive catalog of **Ivy Engine** capabilities and public functions,
-scanned from every header under `engine/` and `src/app/` (164 headers; regenerate to refresh).
+scanned from every header under `engine/` and `src/app/` (165 headers; regenerate to refresh).
 
 **Learning how to use the engine?** Start with [`ENGINE_USER_GUIDE.md`](ENGINE_USER_GUIDE.md) (humans).  
 For JSON schemas, source map, and change rules, see [`AGENTS.md`](../AGENTS.md) (AI agents).
@@ -1460,6 +1460,11 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `static void Add(const XMFLOAT3& position, const XMFLOAT2& size, const XMFLOAT4& color, ID3D11ShaderResourceView* ptr_texture, float rotation, bool groundAligned, const XMFLOAT2& uvOffset, const XMFLOAT2& uvScale);`
 - `static void Add(const BillboardData& data);`
 - `static void ClearDrawList() { s_draw_list.clear();`
+
+### `engine/rendering/culling/cull_settings_math.h`
+- `return std::min(std::max(scale, kMinCullDistanceScale), kMaxCullDistanceScale);`
+- `return std::min(std::max(distance, kMinShadowDistance), kMaxShadowDistance);`
+- `inline float ResolveShadowDistance(float presetDistance, float overrideDistance) { const float o = ClampShadowDistanceOverride(overrideDistance);`
 
 ### `engine/rendering/culling/frustum_cull.h`
 **Types:** FrustumCullStats

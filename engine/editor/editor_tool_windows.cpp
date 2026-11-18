@@ -340,6 +340,10 @@ void DrawRenderingSettingsBody() {
             }
             ImGui::EndCombo();
         }
+        ImGui::SliderFloat("Shadow Distance", &rs.shadowDistance, 0.0f, 300.0f,
+            rs.shadowDistance > 0.0f ? "%.0f m" : "Preset");
+        if (rs.shadowDistance > 0.0f && rs.shadowDistance < 5.0f)
+            rs.shadowDistance = 5.0f;
         const ShadowQualityPreset preset = RenderSettings_GetShadowPreset();
         ImGui::TextDisabled("%u px  |  %d cascades  |  range %.0f",
             preset.mapSize, preset.cascadeCount, preset.maxDistance);
@@ -387,6 +391,9 @@ void DrawRenderingSettingsBody() {
             lod.considered, lod.culledByDistance, lod.drawn[0], lod.drawn[1], lodFar);
         ImGui::TextDisabled("Bias > 1 switches to lower detail sooner. Play only.");
     }
+    ImGui::SliderFloat("Cull Distance Scale", &rs.cullDistanceScale, 0.1f, 10.0f, "%.2f",
+        ImGuiSliderFlags_Logarithmic);
+    ImGui::TextDisabled("Multiplies every visual.cullDistance (> 1 keeps objects visible longer).");
 
     ImGui::Spacing();
     ImGui::Text("Fog");

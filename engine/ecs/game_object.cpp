@@ -13,6 +13,7 @@
 #include "engine/scene/render_settings.h"
 #include "engine/rendering/d3d11/shader.h"
 #include "engine/rendering/culling/frustum_cull.h"
+#include "engine/rendering/culling/cull_settings_math.h"
 #include "engine/rendering/culling/lod_select_math.h"
 #include "engine/rendering/culling/lod_state.h"
 #include "engine/rendering/culling/shadow_cascade_cull.h"
@@ -264,7 +265,9 @@ void GameObject::DrawVisual(bool useRealModel) {
                 lodLevel = lod_select::SelectLevel(
                     distance, thresholds, thresholdCount, vc->lodLastLevel,
                     lod_select::kDefaultHysteresis,
-                    RenderSettings_GetConst().lodBias, vc->cullDistance);
+                    RenderSettings_GetConst().lodBias,
+                    cull_settings::ScaledCullDistance(
+                        vc->cullDistance, RenderSettings_GetConst().cullDistanceScale));
                 if (lodLevel == lod_select::kCulled) {
                     lodCulledByDistance = true;
                     lodLevel = 0;
