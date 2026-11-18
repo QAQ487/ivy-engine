@@ -2,7 +2,7 @@
 
 Gameplay scripts are C++ classes that inherit `api:Script` (`engine/scripting/Script.h`) and register by class name for prefab/scene JSON (`"Script": { "scriptClass": "…" }`).
 
-Prefer `ScriptApi_*` wrappers from `engine/scripting/script_runtime_api.h` for host access. The host ABI table is `api:ScriptRuntimeApi`; its `version` field is **50** (constant `kScriptRuntimeApiVersion` in `script_runtime_api.cpp`, not declared in a header — do not use an `api:` marker for it).
+Prefer `ScriptApi_*` wrappers from `engine/scripting/script_runtime_api.h` for host access. The host ABI table is `api:ScriptRuntimeApi`; its `version` field is **51** (constant `kScriptRuntimeApiVersion` in `script_runtime_api.cpp`, not declared in a header — do not use an `api:` marker for it).
 
 ## Lifecycle (`api:Script`)
 
@@ -80,6 +80,7 @@ void MySpinScript::OnUpdate(engine::GameObject& self, float dt) {
 | Visual | `api:ScriptApi_FindVisualComponent`, `ScriptApi_Visual_PlayClip(VisualComponent*, const char*)` — [`api/render.md`](api/render.md) |
 | Rigidbody 3D (v50) | `api:ScriptApi_RigidbodyGetVelocity`, `api:ScriptApi_RigidbodySetVelocity`, `api:ScriptApi_RigidbodyAddForce`, `api:ScriptApi_RigidbodyAddTorque`, angular velocity get / set — [`api/physics-3d.md`](api/physics-3d.md) |
 | Scene search (v50) | `GameObject* ScriptApi_FindGameObjectByName(const char* name, bool includeInactive = false)` (`api:ScriptApi_FindGameObjectByName`), `int ScriptApi_FindGameObjectsByTag(Tag tag, GameObject** out, int capacity, bool includeInactive = false)` (`api:ScriptApi_FindGameObjectsByTag`; returns the total, writes up to `capacity`) — depth-first in scene order, includes spawned prefabs, skips objects pending destroy |
+| Save data (v51) | `api:ScriptApi_SaveSetInt` / `api:ScriptApi_SaveGetInt` (+ Float, Bool, String, Json), `api:ScriptApi_SaveCommit` — slots of key-value data, written only on commit; [`api/save.md`](api/save.md) |
 | Time (v50) | `api:ScriptApi_GetTimeScale` (F7 / pulse multiplier on `dt`), `api:ScriptApi_GetRealTimeSeconds` (unscaled wall-clock seconds since engine start) |
 | Render settings (v49) | `api:ScriptApi_RenderSettingSetBool`, `api:ScriptApi_RenderSettingSetNumber`, `api:ScriptApi_RenderSettingGetBool`, `api:ScriptApi_RenderSettingGetNumber` — runtime culling / LOD options by name, [`api/render.md`](api/render.md) |
 | Audio | `api:ScriptApi_FindAudioComponent`, `api:ScriptApi_Audio_Play`, `api:ScriptApi_Audio_Stop` |

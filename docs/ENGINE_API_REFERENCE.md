@@ -1,7 +1,7 @@
 # Ivy Engine — Complete Ability & API Reference
 
 Exhaustive catalog of **Ivy Engine** capabilities and public functions,
-scanned from every header under `engine/` and `src/app/` (177 headers; regenerate to refresh).
+scanned from every header under `engine/` and `src/app/` (180 headers; regenerate to refresh).
 
 **Learning how to use the engine?** Start with [`ENGINE_USER_GUIDE.md`](ENGINE_USER_GUIDE.md) (humans).  
 For JSON schemas, source map, and change rules, see [`AGENTS.md`](../AGENTS.md) (AI agents).
@@ -1967,6 +1967,43 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `void CubemapReleaseAll();`
 - `TextureReloadResult CubemapReload(const wchar_t* path);`
 
+### `engine/save/save_store.h`
+**Types:** Store, Slot
+- `bool IsValidSlotName(std::string_view slot);`
+- `bool IsValidKey(std::string_view key);`
+- `std::string SanitizeFolderName(std::string_view name, std::string_view fallback);`
+- `bool DefaultReplaceFile(const std::filesystem::path& tmp, const std::filesystem::path& target, const std::filesystem::path& backup, std::string* error);`
+- `explicit Store(std::filesystem::path directory, ReplaceFileFn replace = DefaultReplaceFile, LogFn log = {});`
+- `bool SetInt(std::string_view slot, std::string_view key, std::int64_t value);`
+- `bool SetDouble(std::string_view slot, std::string_view key, double value);`
+- `bool SetBool(std::string_view slot, std::string_view key, bool value);`
+- `bool SetString(std::string_view slot, std::string_view key, std::string_view value);`
+- `bool GetInt(std::string_view slot, std::string_view key, std::int64_t* out);`
+- `bool GetDouble(std::string_view slot, std::string_view key, double* out);`
+- `bool GetBool(std::string_view slot, std::string_view key, bool* out);`
+- `bool GetString(std::string_view slot, std::string_view key, std::string* out);`
+- `bool SetJsonText(std::string_view slot, std::string_view key, std::string_view jsonText);`
+- `bool GetJsonText(std::string_view slot, std::string_view key, std::string* out);`
+- `bool HasKey(std::string_view slot, std::string_view key);`
+- `bool DeleteKey(std::string_view slot, std::string_view key);`
+- `bool Commit(std::string_view slot);`
+- `bool SlotExists(std::string_view slot) const;`
+- `bool DeleteSlot(std::string_view slot);`
+- `std::vector<std::string> ListSlots() const;`
+- `void DropCache();`
+- `std::filesystem::path MainPath(std::string_view slot) const;`
+- `std::filesystem::path BackupPath(std::string_view slot) const;`
+- `std::filesystem::path TempPath(std::string_view slot) const;`
+- `Slot* Load(std::string_view slot);`
+- `bool SetValue(std::string_view slot, std::string_view key, nlohmann::json value);`
+- `const nlohmann::json* Find(std::string_view slot, std::string_view key);`
+- `void Log(const std::string& line) const;`
+
+### `engine/save/save_system.h`
+- `std::mutex& SaveSystem_Mutex();`
+- `save_store::Store& SaveSystem_Store();`
+- `void SaveSystem_Reset();`
+
 ### `engine/scene/json_float.h`
 - `std::string s(buf);`
 - `inline bool JsonFloat_Equal(double a, double b, int decimals = kJsonFloatDecimals) { return JsonFloat_Format(a, decimals) == JsonFloat_Format(b, decimals);`
@@ -2105,6 +2142,11 @@ Vendor header `WICTextureLoader11.h` is omitted.
 ### `engine/scripting/Script.h`
 **Types:** Script
 
+### `engine/scripting/host_text.h`
+- `inline int CopyOut(const std::string& text, char* out, int capacity) { if (out && capacity > 0) { const std::size_t n = (std::min)(text.size(), static_cast<std::size_t>(capacity - 1));`
+- `bool ReadText(Getter getter, std::string* out) { const int length = getter(nullptr, 0);`
+- `std::string buf(static_cast<std::size_t>(length) + 1, '\0');`
+
 ### `engine/scripting/script_abi_layout.h`
 **Types:** Mismatch
 **Enums:** Entry
@@ -2210,6 +2252,21 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `int ScriptApi_FindGameObjectsByTag(Tag tag, GameObject** out, int capacity, bool includeInactive = false);`
 - `float ScriptApi_GetTimeScale();`
 - `double ScriptApi_GetRealTimeSeconds();`
+- `bool ScriptApi_SaveSetInt(const char* slot, const char* key, long long value);`
+- `bool ScriptApi_SaveSetFloat(const char* slot, const char* key, double value);`
+- `double ScriptApi_SaveGetFloat(const char* slot, const char* key, double defaultValue = 0.0);`
+- `bool ScriptApi_SaveSetBool(const char* slot, const char* key, bool value);`
+- `bool ScriptApi_SaveGetBool(const char* slot, const char* key, bool defaultValue = false);`
+- `bool ScriptApi_SaveSetString(const char* slot, const char* key, const char* utf8Value);`
+- `std::string ScriptApi_SaveGetString(const char* slot, const char* key, const char* defaultValue = "");`
+- `bool ScriptApi_SaveSetJson(const char* slot, const char* key, const char* jsonText);`
+- `std::string ScriptApi_SaveGetJson(const char* slot, const char* key);`
+- `bool ScriptApi_SaveHasKey(const char* slot, const char* key);`
+- `bool ScriptApi_SaveDeleteKey(const char* slot, const char* key);`
+- `bool ScriptApi_SaveCommit(const char* slot);`
+- `bool ScriptApi_SaveSlotExists(const char* slot);`
+- `bool ScriptApi_SaveDeleteSlot(const char* slot);`
+- `std::vector<std::string> ScriptApi_SaveListSlots();`
 - `void ScriptApi_CameraSetPosition(DirectX::XMFLOAT3 position);`
 - `void ScriptApi_CameraSetTarget(DirectX::XMFLOAT3 target);`
 - `void ScriptApi_CameraSetUp(DirectX::XMFLOAT3 up);`
