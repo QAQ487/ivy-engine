@@ -1733,6 +1733,7 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `void Shader_SetShadowCascadeParams(const DirectX::XMFLOAT4& splits, float blend);`
 - `void Shader_BindShadowMap(ID3D11ShaderResourceView* shadowSRV);`
 - `void Shader_BindShadowMaps(ID3D11ShaderResourceView* const* shadowSRVs, int lightCount);`
+- `void Shader_ClearShadowMaps();`
 - `void Shader_SetUseExternalVP(bool enable);`
 - `bool Shader_IsExternalVP();`
 - `void Shader2D_Begin();`

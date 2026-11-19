@@ -641,14 +641,12 @@ void Shader_BindShadowMaps(ID3D11ShaderResourceView* const* shadowSRVs, int ligh
 	// Requested light count
 	UINT reqCount = (lightCount <= 0) ? 0u : (lightCount > (int) kMax ? kMax : (UINT) lightCount);
 
-	// Copy only live SRVs (validate with AddRef/Release)
+	// Copy up to the first null SRV. (No AddRef "liveness check": calling into a
+	// released SRV is itself the crash; Shader_ClearShadowMaps keeps this cache valid.)
 	UINT bindCount = 0;
 	for (UINT i = 0; i < reqCount; ++i) {
 		ID3D11ShaderResourceView* srv = (shadowSRVs ? shadowSRVs[i] : nullptr);
 		if (!srv) break;
-		HRESULT hrAdd = srv->AddRef();  // Liveness check
-		srv->Release();
-		if (FAILED(hrAdd)) break;       // Abort if invalid
 		s_pShadowSRVs[bindCount++] = srv;
 	}
 	for (UINT i = bindCount; i < kMax; ++i) s_pShadowSRVs[i] = nullptr;
@@ -656,6 +654,15 @@ void Shader_BindShadowMaps(ID3D11ShaderResourceView* const* shadowSRVs, int ligh
 
 	if (bindCount > 0) {
 		g_pContext->PSSetShaderResources(1, bindCount, s_pShadowSRVs);
+	}
+}
+
+void Shader_ClearShadowMaps() {
+	for (int i = 0; i < MAX_LIGHTS; ++i) s_pShadowSRVs[i] = nullptr;
+	s_ShadowSRVCount = 0;
+	if (g_pContext) {
+		ID3D11ShaderResourceView* nullSRV[MAX_LIGHTS] = {};
+		g_pContext->PSSetShaderResources(1, MAX_LIGHTS, nullSRV);
 	}
 }
 
@@ -746,14 +753,11 @@ void Shader3D_Begin(Shader3DVariant variant) {
 	ID3D11ShaderResourceView* nullSRV[MAX_LIGHTS] = {};
 	g_pContext->PSSetShaderResources(1, MAX_LIGHTS, nullSRV);
 
-	// Rebind only valid SRVs
+	// Rebind the remembered SRVs (cleared by Shader_ClearShadowMaps before Shadow
+	// releases them, so they are alive here).
 	UINT bindCount = (s_ShadowSRVCount > MAX_LIGHTS) ? MAX_LIGHTS : (UINT) s_ShadowSRVCount;
 	for (UINT i = 0; i < bindCount; ++i) {
-		ID3D11ShaderResourceView* srv = s_pShadowSRVs[i];
-		if (!srv) { bindCount = i; break; }
-		HRESULT hrAdd = srv->AddRef();
-		srv->Release();
-		if (FAILED(hrAdd)) { bindCount = i; break; }
+		if (!s_pShadowSRVs[i]) { bindCount = i; break; }
 	}
 	s_ShadowSRVCount = (int) bindCount;
 
