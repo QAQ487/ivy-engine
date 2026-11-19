@@ -141,9 +141,9 @@ static ID3D11SamplerState* g_pShadowSampler = nullptr;
 
 struct SHADOW_CB {
 	XMFLOAT4X4 LightVP[MAX_LIGHTS];
-	XMFLOAT4   ShadowParams[MAX_LIGHTS]; // x=bias, y=slope
+	XMFLOAT4   ShadowParams[MAX_LIGHTS]; // x const depth bias, y slope depth bias, z normal offset, w blend width
 	UINT       CascadeCount;
-	float      CascadeBlend;
+	float      ShadowFadeLength;  // view depth over which shadows fade out before the last split
 	int        ShadowLightIndex;  // Lights[] slot that receives CSM shadow; -1 = none
 	float      ShadowAmbient;     // ambient kept inside a CSM shadow (0..1)
 	XMFLOAT4   CascadeSplits;
@@ -155,7 +155,8 @@ static XMMATRIX s_LightVPs[MAX_LIGHTS];
 static float    s_ShadowBias = 0.0015f;
 static float    s_ShadowSlope = 1.5f;
 static int      s_CascadeCount = 0;
-static float    s_CascadeBlend = 2.0f;
+static float    s_ShadowFadeLength = 6.0f;
+static XMFLOAT4 s_ShadowParams[MAX_LIGHTS] = {};
 static int      s_ShadowLightIndex = 0;
 static float    s_ShadowAmbient = 0.35f;
 static XMFLOAT4 s_CascadeSplits = { 0, 0, 0, 0 };
@@ -172,10 +173,10 @@ static void UpdateShadowCB() {
 	for (int i = 0; i < n; ++i) {
 		XMMATRIX wlv = s_World3D * s_LightVPs[i];
 		XMStoreFloat4x4(&cb.LightVP[i], XMMatrixTranspose(wlv));
-		cb.ShadowParams[i] = XMFLOAT4(s_ShadowBias, s_ShadowSlope, 0, 0);
+		cb.ShadowParams[i] = s_ShadowParams[i];
 	}
 	cb.CascadeCount = static_cast<UINT>(n);
-	cb.CascadeBlend = s_CascadeBlend;
+	cb.ShadowFadeLength = s_ShadowFadeLength;
 	cb.ShadowLightIndex = s_ShadowLightIndex;
 	cb.ShadowAmbient = s_ShadowAmbient;
 	cb.CascadeSplits = s_CascadeSplits;
@@ -431,7 +432,8 @@ bool Shader_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext) {
 	s_LightVPs[0] = XMMatrixIdentity();
 	s_ShadowBias = 0.0015f;
 	s_ShadowSlope = 1.5f;
-	s_CascadeBlend = 2.0f;
+	s_ShadowFadeLength = 6.0f;
+	for (auto& p : s_ShadowParams) p = XMFLOAT4(s_ShadowBias, 0.0f, 0.0f, 0.25f);
 	s_CascadeSplits = XMFLOAT4(0, 0, 0, 0);
 	Update2D_VP();
 	Update2D_World();
@@ -591,8 +593,9 @@ void Shader_SetShadowMatrix(const XMMATRIX& lightViewProj, float bias) {
 	s_CascadeCount = 1;
 	s_LightVPs[0] = lightViewProj;
 	s_ShadowBias = bias;
+	s_ShadowParams[0] = XMFLOAT4(bias, 0.0f, 0.0f, 0.25f);
 	s_CascadeSplits = XMFLOAT4(1e6f, 1e6f, 1e6f, 1e6f);
-	s_CascadeBlend = 0.0f;
+	s_ShadowFadeLength = 0.0f;
 	UpdateShadowCB();
 }
 
@@ -604,6 +607,17 @@ void Shader_SetShadowMatrices(const XMMATRIX* lightViewProjArray, int cascadeCou
 	}
 	s_ShadowBias = bias;
 	s_ShadowSlope = slope;
+	// Plain bias until Shader_SetShadowReceiverParams supplies per-cascade values.
+	for (int i = 0; i < s_CascadeCount; ++i)
+		s_ShadowParams[i] = XMFLOAT4(bias, 0.0f, 0.0f, 0.25f);
+	UpdateShadowCB();
+}
+
+void Shader_SetShadowReceiverParams(const DirectX::XMFLOAT4* perCascade, int count) {
+	if (!perCascade) return;
+	const int n = (count <= 0) ? 0 : (count > MAX_LIGHTS ? MAX_LIGHTS : count);
+	for (int i = 0; i < n; ++i)
+		s_ShadowParams[i] = perCascade[i];
 	UpdateShadowCB();
 }
 
@@ -619,9 +633,9 @@ void Shader_SetShadowAmbient(float ambientInShadow) {
 	UpdateShadowCB();
 }
 
-void Shader_SetShadowCascadeParams(const DirectX::XMFLOAT4& splits, float blend) {
+void Shader_SetShadowCascadeParams(const DirectX::XMFLOAT4& splits, float fadeLength) {
 	s_CascadeSplits = splits;
-	s_CascadeBlend = blend;
+	s_ShadowFadeLength = (fadeLength > 0.0f) ? fadeLength : 0.0f;
 	UpdateShadowCB();
 }
 

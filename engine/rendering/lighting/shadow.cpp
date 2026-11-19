@@ -32,12 +32,13 @@ namespace {
 		DirectX::XMMATRIX view = DirectX::XMMatrixIdentity();
 		DirectX::XMMATRIX proj = DirectX::XMMatrixIdentity();
 		float splitFar = 0.0f;
+		DirectX::XMFLOAT4 receiver {0, 0, 0, 0};  // csm_fit::ReceiverParams, shader layout
 	};
 	std::vector<CascadeMap> g_cascades;
 
 	DirectX::XMFLOAT3 g_lightDirWS {0.0f, -1.0f, 0.0f};
 	int g_casterLightIndex = 0;
-	float g_cascadeBlend = 2.0f;
+	float g_fadeLength = 6.0f;
 	float g_shadowDistance = 60.0f;
 
 	D3D11_VIEWPORT g_vp {};
@@ -57,7 +58,6 @@ namespace {
 
 	int g_currentRenderingCascade = -1;
 
-	constexpr float kSplitLambda = 0.65f;
 	constexpr float kZPadding = 25.0f;
 
 	struct ShadowConfig {
@@ -95,11 +95,15 @@ namespace {
 		XMVECTOR up = SafeNormalize3(XMVector3Cross(forward, right), XMVectorSet(0, 1, 0, 0));
 		right = XMVector3Cross(up, forward);
 
-		const float fovY = XMConvertToRadians(cam.fovYDegrees);
-		const float tanHalf = tanf(fovY * 0.5f);
-		const float nearH = tanHalf * nearZ;
+		float nearH, farH;
+		if (cam.orthographic) {
+			nearH = farH = 0.5f * (std::max)(0.001f, cam.orthoHeight);
+		} else {
+			const float tanHalf = tanf(XMConvertToRadians(cam.fovYDegrees) * 0.5f);
+			nearH = tanHalf * nearZ;
+			farH = tanHalf * farZ;
+		}
 		const float nearW = nearH * cam.aspect;
-		const float farH = tanHalf * farZ;
 		const float farW = farH * cam.aspect;
 
 		const XMVECTOR nc = eye + forward * nearZ;
@@ -141,7 +145,9 @@ namespace {
 		DirectX::XMVECTOR sphereCenterWS,
 		float sphereRadius,
 		DirectX::XMVECTOR lightDir,
-		UINT mapSize)
+		UINT mapSize,
+		float sliceNear,
+		float sliceFar)
 	{
 		using namespace DirectX;
 
@@ -166,6 +172,10 @@ namespace {
 		maxZ += kZPadding;
 		if (maxZ <= minZ + 0.1f)
 			maxZ = minZ + 0.1f;
+
+		const csm_fit::ReceiverParams rp =
+			csm_fit::CascadeReceiverParams(texelWorld, maxZ - minZ, sliceNear, sliceFar);
+		cascade.receiver = { rp.constDepthBias, rp.slopeDepthBias, rp.normalOffset, rp.blendWidth };
 
 		cascade.view = lightView;
 		cascade.proj = XMMatrixOrthographicOffCenterLH(
@@ -334,7 +344,13 @@ namespace Shadow {
 		return s;
 	}
 
-	float GetCascadeBlend() { return g_cascadeBlend; }
+	float GetShadowFadeLength() { return g_fadeLength; }
+
+	DirectX::XMFLOAT4 GetCascadeReceiverParams(int cascadeIndex) {
+		if (cascadeIndex < 0 || cascadeIndex >= (int)g_cascades.size())
+			return DirectX::XMFLOAT4(0, 0, 0, csm_fit::kMinBlendWidth);
+		return g_cascades[cascadeIndex].receiver;
+	}
 
 	void UpdateForCamera(const CameraShadowParams& cam, float maxShadowDistance) {
 		using namespace DirectX;
@@ -343,17 +359,14 @@ namespace Shadow {
 		g_shadowDistance = (std::max)(1.0f, maxShadowDistance);
 		const int N = (int)g_cascades.size();
 
-		const float nearZ = (std::max)(0.05f, cam.nearClip);
+		// Orthographic cameras may use a zero or negative near clip.
+		const float nearZ = cam.orthographic ? cam.nearClip : (std::max)(0.05f, cam.nearClip);
 		const float farZ = (std::min)(cam.farClip, g_shadowDistance);
 		const float shadowFar = (std::max)(nearZ + 0.5f, farZ);
 
 		float splits[MAX_CASCADES] = {};
-		for (int i = 0; i < N; ++i) {
-			const float p = static_cast<float>(i + 1) / static_cast<float>(N);
-			const float logSplit = nearZ * powf(shadowFar / nearZ, p);
-			const float uniSplit = nearZ + (shadowFar - nearZ) * p;
-			splits[i] = uniSplit * (1.0f - kSplitLambda) + logSplit * kSplitLambda;
-		}
+		for (int i = 0; i < N; ++i)
+			splits[i] = csm_fit::CascadeSplit(i, N, nearZ, shadowFar, cam.orthographic);
 
 		XMVECTOR lightDir = XMLoadFloat3(&g_lightDirWS);
 		const XMVECTOR eye = XMLoadFloat3(&cam.eye);
@@ -367,16 +380,14 @@ namespace Shadow {
 
 			XMVECTOR corners[8];
 			BuildFrustumCorners(cam, sliceNear, sliceFar, corners);
-			const csm_fit::SliceSphere sphere =
-				csm_fit::FitSliceSphere(sliceNear, sliceFar, tanHalfFovY, cam.aspect);
+			const csm_fit::SliceSphere sphere = cam.orthographic
+				? csm_fit::FitSliceSphereOrtho(sliceNear, sliceFar, 0.5f * cam.orthoHeight, cam.aspect)
+				: csm_fit::FitSliceSphere(sliceNear, sliceFar, tanHalfFovY, cam.aspect);
 			FitOrthoCascade(g_cascades[i], corners, eye + forward * sphere.centerDist,
-				sphere.radius, lightDir, g_size);
+				sphere.radius, lightDir, g_size, sliceNear, sliceFar);
 		}
 
-		// Blend band ~ a small fraction of the first cascade depth span
-		const float firstSpan = (std::max)(0.5f, splits[0] - nearZ);
-		g_cascadeBlend = firstSpan * 0.35f;
-		g_cascadeBlend = (std::max)(1.0f, (std::min)(g_cascadeBlend, 4.0f));
+		g_fadeLength = csm_fit::ShadowFadeLength(shadowFar);
 	}
 
 	DirectX::XMMATRIX GetLightView(int cascadeIndex) {

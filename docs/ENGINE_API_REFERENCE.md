@@ -1730,7 +1730,8 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `DirectX::XMMATRIX Shader_GetWorldMatrix();`
 - `void Shader_SetShadowMatrix(const DirectX::XMMATRIX& lightViewProj, float bias = 0.0015f);`
 - `void Shader_SetShadowMatrices(const DirectX::XMMATRIX* lightViewProjArray, int cascadeCount, float bias = 0.0015f, float slope = 1.5f);`
-- `void Shader_SetShadowCascadeParams(const DirectX::XMFLOAT4& splits, float blend);`
+- `void Shader_SetShadowCascadeParams(const DirectX::XMFLOAT4& splits, float fadeLength);`
+- `void Shader_SetShadowReceiverParams(const DirectX::XMFLOAT4* perCascade, int count);`
 - `void Shader_SetShadowLightIndex(int lightIndex);`
 - `void Shader_SetShadowAmbient(float ambientInShadow);`
 - `void Shader_BindShadowMap(ID3D11ShaderResourceView* shadowSRV);`
@@ -1850,12 +1851,13 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `return RomPathFromAssetPath(std::string_view{path});`
 
 ### `engine/rendering/lighting/csm_fit.h`
-**Types:** Vec3, SliceSphere, LightBasis
+**Types:** Vec3, SliceSphere, LightBasis, ReceiverParams
 - `inline float Length(Vec3 a) { return std::sqrt(Dot(a, a));`
 - `inline Vec3 Normalize(Vec3 a, Vec3 fallback) { const float len = Length(a);`
 - `return Scale(a, 1.0f / len);`
 - `inline float TexelWorldSize(float halfExtent, unsigned mapSize) { return (halfExtent * 2.0f) / static_cast<float>(mapSize == 0 ? 1u : mapSize);`
 - `return Add(centerWS, Add(Scale(basis.right, sx - x), Scale(basis.up, sy - y)));`
+- `inline float SlopeTan(float nDotL) { const float c = nDotL < 1e-3f ? 1e-3f : (nDotL > 1.0f ? 1.0f : nDotL);`
 
 ### `engine/rendering/lighting/lighting.h`
 **Types:** Light, Params
@@ -1887,7 +1889,8 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `int GetLightCount();`
 - `int GetMaxCasters();`
 - `DirectX::XMFLOAT4 GetCascadeSplits();`
-- `float GetCascadeBlend();`
+- `float GetShadowFadeLength();`
+- `DirectX::XMFLOAT4 GetCascadeReceiverParams(int cascadeIndex);`
 - `DirectX::XMMATRIX GetLightView(int cascadeIndex);`
 - `DirectX::XMMATRIX GetLightProj(int cascadeIndex);`
 - `DirectX::XMMATRIX GetLightViewProj(int cascadeIndex);`

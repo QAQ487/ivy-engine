@@ -9,6 +9,8 @@
 //   - Translation: the sphere centre is snapped to whole shadow-map texels in a light-space
 //     frame whose origin is the world origin (not the moving camera), so moving the camera
 //     slides the cascade by whole texels and the rasterised shadow edges do not crawl.
+// It also holds the cascade splits (perspective and orthographic cameras), the per-cascade
+// receiver bias / normal offset / blend width, and the shadow-distance fade.
 #pragma once
 
 #include <cmath>
@@ -113,6 +115,109 @@ inline Vec3 SnapCenterToTexels(Vec3 centerWS, const LightBasis& basis, float tex
     const float sx = std::floor(x / texelWorld) * texelWorld;
     const float sy = std::floor(y / texelWorld) * texelWorld;
     return Add(centerWS, Add(Scale(basis.right, sx - x), Scale(basis.up, sy - y)));
+}
+
+// Bounding sphere of an orthographic camera's slice [nearZ, farZ]: a box of half-height
+// halfHeight and half-width halfHeight * aspect. Centred at mid-depth; like the
+// perspective sphere it does not change when the camera turns.
+inline SliceSphere FitSliceSphereOrtho(float nearZ, float farZ, float halfHeight, float aspect) {
+    SliceSphere s;
+    if (!std::isfinite(nearZ) || !std::isfinite(farZ) || !std::isfinite(halfHeight)
+        || !std::isfinite(aspect) || farZ <= nearZ) {
+        s.centerDist = std::isfinite(nearZ) ? nearZ : 0.0f;
+        s.radius = kMinRadius;
+        return s;
+    }
+    const float hz = 0.5f * (farZ - nearZ);
+    const float hh = std::fabs(halfHeight);
+    const float hw = hh * std::fabs(aspect);
+    float r = std::sqrt(hz * hz + hh * hh + hw * hw);
+    r = std::ceil(r / kRadiusStep) * kRadiusStep;
+    if (r < kMinRadius) r = kMinRadius;
+    s.centerDist = nearZ + hz;
+    s.radius = r;
+    return s;
+}
+
+// Far distance of cascade `index` (0-based) out of `count` between nearZ and farZ.
+// Perspective cameras blend log and uniform splits (lambda 0.65: more resolution near the
+// camera, where a texel covers more pixels). Orthographic cameras see every depth at the
+// same scale, so their splits are uniform.
+constexpr float kPerspectiveSplitLambda = 0.65f;
+
+inline float CascadeSplit(int index, int count, float nearZ, float farZ, bool orthographic) {
+    if (count <= 0) return farZ;
+    if (index >= count - 1) return farZ;
+    const float p = static_cast<float>(index + 1) / static_cast<float>(count);
+    const float uni = nearZ + (farZ - nearZ) * p;
+    if (orthographic || !(nearZ > 0.0f))
+        return uni;
+    const float logSplit = nearZ * std::pow(farZ / nearZ, p);
+    return uni * (1.0f - kPerspectiveSplitLambda) + logSplit * kPerspectiveSplitLambda;
+}
+
+// Per-cascade receiver parameters (ShadowBuffer.ShadowParams[i] in LightingCommon.hlsli).
+// Biases are expressed in shadow-map texels of the cascade, so a coarse far cascade gets a
+// proportionally larger bias than a sharp near one instead of one value for all.
+//   constDepthBias  x: depth bias in normalised light depth (constant part)
+//   slopeDepthBias  y: depth bias per unit tan(angle between normal and light), same units;
+//                      replaces the ddx/ddy slope estimate (undefined in the cascade branches)
+//   normalOffset    z: world units the receiver is pushed along its normal before lookup
+//   blendWidth      w: view-space depth over which this cascade fades into the next one
+constexpr float kConstBiasTexels = 1.0f;
+constexpr float kSlopeBiasTexels = 1.0f;
+constexpr float kMaxSlopeTan = 4.0f;  // shader clamps tan(angle) to this
+constexpr float kNormalOffsetTexels = 1.5f;
+constexpr float kBlendFraction = 0.1f;   // of the cascade's depth span
+constexpr float kMinBlendWidth = 0.25f;
+
+struct ReceiverParams {
+    float constDepthBias = 0.0f;
+    float slopeDepthBias = 0.0f;
+    float normalOffset = 0.0f;
+    float blendWidth = kMinBlendWidth;
+};
+
+inline ReceiverParams CascadeReceiverParams(float texelWorld, float depthRange, float sliceNear,
+                                            float sliceFar) {
+    ReceiverParams r;
+    if (!(texelWorld > 0.0f) || !std::isfinite(texelWorld))
+        texelWorld = 0.0f;
+    const float invRange = (depthRange > 1e-4f && std::isfinite(depthRange)) ? 1.0f / depthRange : 0.0f;
+    r.constDepthBias = kConstBiasTexels * texelWorld * invRange;
+    r.slopeDepthBias = kSlopeBiasTexels * texelWorld * invRange;
+    r.normalOffset = kNormalOffsetTexels * texelWorld;
+    const float span = sliceFar - sliceNear;
+    float blend = (std::isfinite(span) && span > 0.0f) ? span * kBlendFraction : 0.0f;
+    if (blend < kMinBlendWidth) blend = kMinBlendWidth;
+    r.blendWidth = blend;
+    return r;
+}
+
+// Shadows fade to lit over the last part of the shadow distance instead of ending in a hard
+// line (kFadeFraction of the distance, at least kMinFadeLength).
+constexpr float kFadeFraction = 0.1f;
+constexpr float kMinFadeLength = 1.0f;
+
+inline float ShadowFadeLength(float shadowFar) {
+    if (!std::isfinite(shadowFar) || shadowFar <= 0.0f) return kMinFadeLength;
+    const float len = shadowFar * kFadeFraction;
+    return len < kMinFadeLength ? kMinFadeLength : len;
+}
+
+// CPU mirror of the shader's fade factor (0 = full shadow kept, 1 = fully faded to lit).
+inline float ShadowFadeAmount(float viewZ, float shadowFar, float fadeLength) {
+    const float len = fadeLength > 1e-3f ? fadeLength : 1e-3f;
+    const float t = (viewZ - (shadowFar - len)) / len;
+    return t < 0.0f ? 0.0f : (t > 1.0f ? 1.0f : t);
+}
+
+// CPU mirror of the shader's slope term: tan of the angle between normal and light,
+// clamped (grazing angles would otherwise need unbounded bias).
+inline float SlopeTan(float nDotL) {
+    const float c = nDotL < 1e-3f ? 1e-3f : (nDotL > 1.0f ? 1.0f : nDotL);
+    const float t = std::sqrt(1.0f - c * c) / c;
+    return t > kMaxSlopeTan ? kMaxSlopeTan : t;
 }
 
 }  // namespace csm_fit

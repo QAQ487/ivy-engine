@@ -1,5 +1,6 @@
 // Cascade fitting math (engine/rendering/lighting/csm_fit.h): rotation-invariant slice
-// spheres and world-anchored texel snapping.
+// spheres (perspective and orthographic), world-anchored texel snapping, splits,
+// per-cascade receiver bias / normal offset / blend width and the distance fade.
 // Build from the repo root:
 //   g++ -std=c++17 -Wall -Wextra -I. -o /tmp/csm_fit_test tests/csm_fit_test.cpp
 
@@ -169,10 +170,70 @@ int main() {
         Expect(same.x == c.x && same.y == c.y && same.z == c.z, "zero texel size leaves the centre alone");
     }
 
+    // Orthographic slices: box corners inside the sphere, radius independent of rotation.
+    {
+        const float hh = 5.0f;
+        const SliceSphere sp = FitSliceSphereOrtho(0.0f, 20.0f, hh, aspect);
+        Expect(sp.centerDist == 10.0f, "ortho sphere centred at mid-depth");
+        float worst = 0.0f;
+        for (int i = 0; i < 8; ++i) {
+            const float x = (i & 1) ? hh * aspect : -hh * aspect;
+            const float y = (i & 2) ? hh : -hh;
+            const float z = (i & 4) ? 20.0f : 0.0f;
+            const float d = std::sqrt(x * x + y * y + (z - 10.0f) * (z - 10.0f));
+            if (d > worst) worst = d;
+        }
+        Expect(worst <= sp.radius + 1e-4f, "ortho sphere contains the box corners");
+        Expect(FitSliceSphereOrtho(5.0f, 5.0f, hh, aspect).radius == kMinRadius, "empty ortho slice: minimum sphere");
+    }
+
+    // Splits: increasing, last one at the shadow distance, ortho uniform.
+    {
+        float prev = 0.5f;
+        for (int i = 0; i < 4; ++i) {
+            const float f = CascadeSplit(i, 4, 0.5f, 70.0f, false);
+            Expect(f > prev, "perspective splits increase");
+            prev = f;
+        }
+        Expect(CascadeSplit(3, 4, 0.5f, 70.0f, false) == 70.0f, "last split is the shadow distance");
+        Expect(CascadeSplit(0, 4, 0.5f, 70.0f, false) < CascadeSplit(0, 4, 0.5f, 70.0f, true),
+            "perspective first cascade is tighter than uniform");
+        Expect(Near(CascadeSplit(1, 4, 0.0f, 80.0f, true), 40.0f, 1e-4f), "ortho splits are uniform");
+        Expect(CascadeSplit(0, 1, 0.5f, 70.0f, false) == 70.0f, "single cascade covers everything");
+    }
+
+    // Receiver params scale with the cascade texel; blend width with the slice span.
+    {
+        const ReceiverParams nearC = CascadeReceiverParams(0.01f, 70.0f, 0.5f, 8.0f);
+        const ReceiverParams farC = CascadeReceiverParams(0.08f, 210.0f, 21.0f, 70.0f);
+        Expect(farC.normalOffset > nearC.normalOffset, "far cascade: larger normal offset");
+        Expect(Near(nearC.normalOffset, 0.015f, 1e-6f), "normal offset = 1.5 texels");
+        Expect(farC.constDepthBias * 210.0f > nearC.constDepthBias * 70.0f, "far cascade: larger world-space bias");
+        Expect(Near(nearC.constDepthBias * 70.0f, 0.01f, 1e-6f), "const bias = 1 texel of depth");
+        Expect(Near(farC.blendWidth, 4.9f, 1e-4f), "blend width = 10% of the span");
+        Expect(CascadeReceiverParams(0.01f, 70.0f, 0.5f, 1.0f).blendWidth == kMinBlendWidth, "blend width floor");
+        const ReceiverParams bad = CascadeReceiverParams(std::numeric_limits<float>::quiet_NaN(), 0.0f, 3.0f, 1.0f);
+        Expect(bad.constDepthBias == 0.0f && bad.normalOffset == 0.0f && bad.blendWidth == kMinBlendWidth,
+            "bad input: zero bias, minimum blend");
+    }
+
+    // Distance fade and slope term.
+    {
+        const float len = ShadowFadeLength(70.0f);
+        Expect(Near(len, 7.0f, 1e-5f), "fade over the last 10% of the shadow distance");
+        Expect(ShadowFadeLength(3.0f) == kMinFadeLength && ShadowFadeLength(-1.0f) == kMinFadeLength, "fade floor");
+        Expect(ShadowFadeAmount(10.0f, 70.0f, len) == 0.0f, "near: no fade");
+        Expect(Near(ShadowFadeAmount(66.5f, 70.0f, len), 0.5f, 1e-5f), "halfway through the fade");
+        Expect(ShadowFadeAmount(75.0f, 70.0f, len) == 1.0f, "past the shadow distance: lit");
+        Expect(SlopeTan(1.0f) == 0.0f, "light along the normal: no slope bias");
+        Expect(Near(SlopeTan(0.70710678f), 1.0f, 1e-4f), "45 degrees: tan = 1");
+        Expect(SlopeTan(0.0f) == kMaxSlopeTan && SlopeTan(-1.0f) == kMaxSlopeTan, "grazing / back-facing: clamped");
+    }
+
     if (g_failed) {
         std::fprintf(stderr, "%d check(s) failed\n", g_failed);
         return 1;
     }
-    std::printf("PASS: CSM cascade fit (rotation-invariant sphere, world-anchored texel snap)\n");
+    std::printf("PASS: CSM cascade fit (spheres, texel snap, splits, receiver params, fade)\n");
     return 0;
 }

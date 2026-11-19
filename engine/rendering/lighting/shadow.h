@@ -30,6 +30,8 @@ namespace Shadow {
         float nearClip = 0.5f;
         float farClip = 1000.0f;
         float aspect = 16.0f / 9.0f;
+        bool orthographic = false;    // orthographic camera: slices are boxes, splits uniform
+        float orthoHeight = 10.0f;    // full view height of an orthographic camera
     };
 
     bool Initialize(ID3D11Device* dev, ID3D11DeviceContext* ctx, UINT size = 1024, int cascadeCount = MAX_CASCADES);
@@ -55,7 +57,12 @@ namespace Shadow {
     int GetMaxCasters();
 
     DirectX::XMFLOAT4 GetCascadeSplits(); // view-space far Z per cascade (xyzw = 0..3)
-    float GetCascadeBlend();
+    // View-space depth over which shadows fade to lit before the shadow distance ends.
+    float GetShadowFadeLength();
+    // Per-cascade receiver parameters for ShadowBuffer.ShadowParams (csm_fit.h
+    // CascadeReceiverParams): x const depth bias, y slope depth bias, z normal offset
+    // (world units), w blend width into the next cascade (view depth).
+    DirectX::XMFLOAT4 GetCascadeReceiverParams(int cascadeIndex);
 
     DirectX::XMMATRIX GetLightView(int cascadeIndex);
     DirectX::XMMATRIX GetLightProj(int cascadeIndex);

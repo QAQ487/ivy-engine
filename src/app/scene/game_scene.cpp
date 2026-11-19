@@ -692,6 +692,8 @@ void GameScene::Object_Draw() {
 		cp.nearClip = cam.nearClip;
 		cp.farClip = cam.farClip;
 		cp.aspect = aspect;
+		cp.orthographic = cam.orthographic;
+		cp.orthoHeight = cam.orthographicHeight;
 		if (csmShadows)
 			Shadow::UpdateForCamera(cp, RenderSettings_GetShadowPreset().maxDistance);
 		// LOD distances use the main camera for both shadow and camera passes.
@@ -736,7 +738,10 @@ void GameScene::Object_Draw() {
 		vps.reserve(cascadeCount);
 		for (int i = 0; i < cascadeCount; ++i) vps.push_back(Shadow::GetLightViewProj(i));
 		Shader_SetShadowMatrices(vps.data(), cascadeCount, Shadow::GetReceiverBias());
-		Shader_SetShadowCascadeParams(Shadow::GetCascadeSplits(), Shadow::GetCascadeBlend());
+		Shader_SetShadowCascadeParams(Shadow::GetCascadeSplits(), Shadow::GetShadowFadeLength());
+		DirectX::XMFLOAT4 receiver[Shadow::MAX_CASCADES] = {};
+		for (int i = 0; i < cascadeCount; ++i) receiver[i] = Shadow::GetCascadeReceiverParams(i);
+		Shader_SetShadowReceiverParams(receiver, cascadeCount);
 		Shader_SetShadowLightIndex(Shadow::GetCasterLightIndex());
 		Shader_SetShadowAmbient(RenderSettings_GetConst().shadowAmbientStrength);
 
