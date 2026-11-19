@@ -15,7 +15,9 @@
 #include <shobjidl.h>
 #include <winioctl.h>
 
+#include "engine/editor/project_file_merge.h"
 #include <algorithm>
+#include <iterator>
 #include <cstddef>
 #include <cstring>
 #include <fstream>
@@ -499,6 +501,8 @@ bool ProjectManager::LoadProjectFile(const std::string& rootPath, ProjectData* o
 bool ProjectManager::WriteProjectFile(const std::string& rootPath, const ProjectData& data,
                                       std::string* errorOut) const {
     try {
+        // Patch of the fields the editor owns; everything else already in the
+        // file (save.*, keys from newer engines) is kept (project_file_merge.h).
         json j;
         j["name"] = data.name;
         j["version"] = data.version;
@@ -512,27 +516,42 @@ bool ProjectManager::WriteProjectFile(const std::string& rootPath, const Project
         j["editor"]["uiStylePreset"] = data.editor.uiStylePreset;
         j["editor"]["uiColorScheme"] = data.editor.uiColorScheme;
         j["physics"] = json::object();
-        j["physics"]["gravity"] = data.physics.gravity;
+        j["physics"]["gravity"] = project_file::FloatForJson(data.physics.gravity);
         j["audio"] = json::object();
-        j["audio"]["masterVolume"] = data.audio.masterVolume;
-        j["audio"]["bgmVolume"] = data.audio.bgmVolume;
-        j["audio"]["sfxVolume"] = data.audio.sfxVolume;
-        j["audio"]["voiceVolume"] = data.audio.voiceVolume;
+        j["audio"]["masterVolume"] = project_file::FloatForJson(data.audio.masterVolume);
+        j["audio"]["bgmVolume"] = project_file::FloatForJson(data.audio.bgmVolume);
+        j["audio"]["sfxVolume"] = project_file::FloatForJson(data.audio.sfxVolume);
+        j["audio"]["voiceVolume"] = project_file::FloatForJson(data.audio.voiceVolume);
         j["audio"]["uiClickSound"] = data.audio.uiClickSound;
-        if (data.build.packAllAssets || !data.build.alwaysInclude.empty()) {
-            j["build"] = json::object();
-            j["build"]["packAllAssets"] = data.build.packAllAssets;
-            j["build"]["alwaysInclude"] = data.build.alwaysInclude;
-        }
+        // build.* has no editor UI: it is edited by hand and read straight from
+        // the file by the package builder, so the editor leaves it untouched
+        // (writing the copy loaded at open would undo hand edits made since).
 
         const fs::path filePath = fs::path(rootPath) / kProjectFileName;
+        std::string existingText;
+        {
+            std::ifstream existing(filePath, std::ios::binary);
+            if (existing.is_open())
+                existingText.assign(std::istreambuf_iterator<char>(existing), std::istreambuf_iterator<char>());
+        }
+        const project_file::MergeResult merged = project_file::Merge(existingText, j);
+        if (!merged.ok) {
+            // Never replace a hand-edited file we cannot read: its other keys would be lost.
+            const std::string message = "project.json is not valid JSON, so it was not saved (" +
+                merged.error + "). Fix the file; the editor keeps the new values until the next save.";
+            hal::DebugWriteA(("[Project] " + message + "\n").c_str());
+            if (errorOut)
+                *errorOut = message;
+            return false;
+        }
+
         std::ofstream file(filePath, std::ios::trunc);
         if (!file.is_open()) {
             if (errorOut)
                 *errorOut = "Cannot write " + filePath.string();
             return false;
         }
-        file << j.dump(2);
+        file << merged.document.dump(2);
         WriteDefaultSceneFile(rootPath, data.defaultScene);
         return true;
     }

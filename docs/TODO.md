@@ -178,6 +178,7 @@
   - 未做：重建 device（全部 GPU 資源係全域靜態，要大改）；device lost 時 editor 未保存嘅改動會冇咗。
 - [x] **`WAVE_FORMAT_EXTENSIBLE` WAV**（source 已做；等 Windows 驗收）：`LoadWav` 之前只複製 fmt chunk 頭 18 bytes 入 `WAVEFORMATEX`，但 `cbSize` 仍然係 22，`CreateSourceVoice` 會讀超出 struct。而家 `Playback::format` 係 64 bytes union，按 `wav_parse::PlanFormatCopy` 複製 `18 + cbSize` bytes（EXTENSIBLE 40、MS ADPCM 50）；PCM／float 只複製 16 bytes 兼 `cbSize = 0`；`cbSize` 超出 fmt chunk 或 storage 就拒絕載入並 log。Linux：`tests/wav_parse_test.cpp`。驗收場景：`testbed/rom/scene/scene_audio_formats_fly.json`（`python3 tools/gen_audio_test_scene.py` 生成；8 條柱各有一個 WAV 變體：PCM mono／stereo＋單數 LIST chunk／垃圾 cbSize、float、EXTENSIBLE 16-bit／24-bit、中文檔名，第 8 條故意壞 cbSize 要靜音）。
 - [x] **`tools/check_2d_sample.py` 過時**：而家跟 `ResolveRomForRead` 一樣接受 `resources/` fallback（`irradiance.dds` 等），亦接受 `BUILTIN_ROM_PATHS` 舊寫法；冇參數時檢查 `testbed/`，已加入 `tools/run_linux_checks.sh`。
+- [x] **Editor 寫 `project.json` 會刪走唔識嘅欄位**（source 已做；等 Windows 驗收）：`WriteProjectFile` 之前由 `ProjectData` 重新砌成個檔，`save.folderName`（PR #50）同手加嘅鍵一 Save 就冇。而家用 JSON merge patch 只覆寫 editor 管嘅欄位（`engine/editor/project_file_merge.h`，Linux：`tests/project_file_merge_test.cpp`）。
 
 ### 結構風險
 

@@ -243,6 +243,9 @@
     <ClInclude Include="engine\editor\project_manager.h">
       <Filter>engine\editor</Filter>
     </ClInclude>
+    <ClInclude Include="engine\editor\project_file_merge.h">
+      <Filter>engine\editor</Filter>
+    </ClInclude>
     <ClInclude Include="engine\editor\playable_package_builder.h">
       <Filter>engine\editor</Filter>
     </ClInclude>

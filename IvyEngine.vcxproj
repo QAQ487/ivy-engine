@@ -312,6 +312,7 @@ exit /b 0</Command>
     <ClInclude Include="engine\editor\project_asset_index.h" />
     <ClInclude Include="engine\editor\agent_docs_export.h" />
     <ClInclude Include="engine\editor\project_manager.h" />
+    <ClInclude Include="engine\editor\project_file_merge.h" />
     <ClInclude Include="engine\editor\playable_package_builder.h" />
     <ClInclude Include="engine\editor\texture_cook.h" />
     <ClInclude Include="engine\editor\package_assets.h" />

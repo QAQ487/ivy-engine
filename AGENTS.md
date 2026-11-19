@@ -72,6 +72,7 @@ Linux-runnable checks (use what matches the change; none of these is a Windows p
 | Audio WAV parsing | `tests/wav_parse_test.cpp` |
 | Frame loop / device lost | `tests/frame_pacing_test.cpp`, `tests/device_lost_test.cpp` |
 | Script DLL layout check / scene search | `tests/script_abi_layout_test.cpp`, `tests/game_object_search_test.cpp` |
+| project.json merge on save | `tests/project_file_merge_test.cpp` |
 | Save data / host text buffers | `tests/save_store_test.cpp` (real files in a temp dir), `tests/host_text_test.cpp` |
 | Other unit tests | `tests/*_test.cpp` (single-file `g++ -std=c++20 -I.` builds; see each file header) |
 
@@ -111,7 +112,7 @@ A content project is a directory with `rom/` and usually `project.json`; the edi
 
 **Startup:** editor loads the first recent project that still has `rom/`; a Debug editor with none opens `testbed/` (Release does not). **File → Open Testbed** works in both. The engine repo root and exe output dirs are not content projects. `IvyEngineRuntime` launched from the engine OutDir (no `rom/scene` beside it) changes directory to `testbed/`. Editor startup scene: `project.json` `lastOpenedScene` → `defaultScene`. Runtime/package startup: `rom/scene/default_scene.txt` (synced by Save Project).
 
-`project.json` (version 1):
+`project.json` (version 1). The editor rewrites only the fields it owns and keeps every other key already in the file (JSON merge patch, `engine/editor/project_file_merge.h`, `tests/project_file_merge_test.cpp`); a file on disk that is not a valid JSON object is never overwritten (the save fails with the parse error):
 
 | Field | Meaning |
 |-------|---------|
@@ -123,9 +124,9 @@ A content project is a directory with `rom/` and usually `project.json`; the edi
 | `physics.gravity` | Applied in editor Play **and** runtime boot (ADR 0004) |
 | `audio.masterVolume` / `bgmVolume` / `sfxVolume` / `voiceVolume` | Bus levels, applied in editor and runtime (ADR 0001) |
 | `audio.uiClickSound` | UIButton click WAV |
-| `build.packAllAssets` | `true` = a package copies all of `rom/` (old behaviour). Default `false`: only referenced assets. Written only when set |
-| `save.folderName` | Folder name under Saved Games for the packaged game's saves (default: `name`, sanitised). Written only when set |
-| `build.alwaysInclude` | `rom/` files, folders or name prefixes a package keeps even when nothing references them (assets a script loads by a name built at runtime). Written only when non-empty |
+| `build.packAllAssets` | `true` = a package copies all of `rom/` (old behaviour). Default `false`: only referenced assets. Hand-edited; the editor never writes `build.*` |
+| `save.folderName` | Folder name under Saved Games for the packaged game's saves (default: `name`, sanitised). Hand-edited |
+| `build.alwaysInclude` | `rom/` files, folders or name prefixes a package keeps even when nothing references them (assets a script loads by a name built at runtime). Hand-edited |
 
 Other per-project editor state: `rom/editor/imgui_layout.ini` (dock layout), `rom/editor/ui_prefs.json`, `rom/tags.json`. Recent list: `%AppData%/GameEngine/recent_projects.json`.
 

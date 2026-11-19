@@ -1123,6 +1123,8 @@ The editor calls `SetCurrentDirectory` on that folder so relative paths like `ro
 
 `save.folderName` is optional: the Saved Games folder name for the packaged game's saves (default: `name`).
 
+The editor only rewrites the fields it manages when it saves `project.json` (Save Project, Project Settings); keys you add by hand, such as `save.folderName`, stay in the file. If a hand edit leaves `project.json` as invalid JSON (a missing or extra comma, say), the editor refuses to overwrite it: Save Project shows the error with its line number and Project Settings changes log it in the Console. Fix the file and save again.
+
 | Field | Meaning |
 |-------|---------|
 | `name` | Shown in the window title |
