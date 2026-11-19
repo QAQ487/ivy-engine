@@ -170,6 +170,7 @@ static MainStaticDestructionMarker s_mainStaticMarker;
 #include "engine/core/render_thread.h"
 #include "engine/input/mouse.h"
 #include "engine/input/controller.h"
+#include "engine/input/input_action_system.h"
 #include "debug_camera.h"
 #include "camera/third_person_camera.h"
 #include "engine/debug_draw/debug_text.h"
@@ -869,6 +870,8 @@ void Update(double current_time, double elapsed_time) {
 	// engine Update, while injection from PollAndApplyInput is still live.
 	ivy::testing::RuntimeTestControllerProbe_SampleFromGetters();
 #endif
+	// Input actions read the keyboard / pad / mouse state sampled above.
+	InputActionSystem_Update();
 
 #ifndef GAME_RUNTIME
 	// Editor-only debug hotkeys (never in IvyEngineRuntime / shipped build)

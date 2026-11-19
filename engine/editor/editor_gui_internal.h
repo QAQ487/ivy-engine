@@ -201,6 +201,7 @@ void DrawShortcutHintsWindow(bool* open);
 void DrawRenderingSettingsBody();
 void DrawProjectGravitySettings();
 void DrawProjectAudioSettings();
+void DrawProjectInputSettings();   // editor_input_settings.cpp
 void DrawProjectDefaultSceneSettings();
 bool DrawPlayablePackageConfigFields();
 void DrawProjectSettingsWindow();

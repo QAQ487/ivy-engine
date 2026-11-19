@@ -75,4 +75,41 @@ inline MergeResult Merge(std::string_view existingText, const nlohmann::json& pa
     return result;
 }
 
+// Replaces input.actions wholesale (a merge patch would keep deleted actions).
+// An empty actions object removes input.actions, and an emptied "input" is dropped.
+// The same refusal as Merge applies to an unreadable file.
+inline MergeResult ReplaceInputActions(std::string_view existingText, const nlohmann::json& actions) {
+    MergeResult result = Merge(existingText, nlohmann::json::object());
+    if (!result.ok)
+        return result;
+    nlohmann::json& doc = result.document;
+    if (!doc.contains("input") || !doc["input"].is_object())
+        doc["input"] = nlohmann::json::object();
+    if (actions.is_object() && !actions.empty())
+        doc["input"]["actions"] = actions;
+    else
+        doc["input"].erase("actions");
+    if (doc["input"].empty())
+        doc.erase("input");
+    return result;
+}
+
+// input.actions of a project.json text (null when absent); false when the text is unreadable.
+inline bool ReadInputActions(std::string_view text, nlohmann::json* outActions, std::string* error) {
+    const MergeResult r = Merge(text, nlohmann::json::object());
+    if (!r.ok) {
+        if (error) *error = r.error;
+        return false;
+    }
+    nlohmann::json actions;
+    const auto input = r.document.find("input");
+    if (input != r.document.end() && input->is_object()) {
+        const auto found = input->find("actions");
+        if (found != input->end())
+            actions = *found;
+    }
+    if (outActions) *outActions = std::move(actions);
+    return true;
+}
+
 }  // namespace project_file

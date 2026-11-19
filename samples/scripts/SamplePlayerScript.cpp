@@ -22,20 +22,27 @@ REGISTER_SCRIPT(SamplePlayerScript)
 namespace {
     DirectX::XMFLOAT3 GetMoveInput() {
         DirectX::XMFLOAT3 move = { 0.0f, 0.0f, 0.0f };
-        if (const Keyboard_State* state = Keyboard_GetState()) {
-            if (state->W || state->Up)
-                move.z += 1.0f;
-            if (state->S || state->Down)
-                move.z -= 1.0f;
-            if (state->A || state->Left)
-                move.x -= 1.0f;
-            if (state->D || state->Right)
-                move.x += 1.0f;
+        // Input actions from project.json (Project Settings > Input) when the
+        // project defines them; otherwise the fixed WASD / arrows / left stick.
+        if (ScriptApi_InputHasAction("MoveX") && ScriptApi_InputHasAction("MoveY")) {
+            move.x = ScriptApi_InputGetAxis("MoveX");
+            move.z = ScriptApi_InputGetAxis("MoveY");
         }
-
-        const DirectX::XMFLOAT2 stick = Controller_GetLeftStick(0);
-        move.x += stick.x;
-        move.z += stick.y;
+        else {
+            if (const Keyboard_State* state = Keyboard_GetState()) {
+                if (state->W || state->Up)
+                    move.z += 1.0f;
+                if (state->S || state->Down)
+                    move.z -= 1.0f;
+                if (state->A || state->Left)
+                    move.x -= 1.0f;
+                if (state->D || state->Right)
+                    move.x += 1.0f;
+            }
+            const DirectX::XMFLOAT2 stick = Controller_GetLeftStick(0);
+            move.x += stick.x;
+            move.z += stick.y;
+        }
 
         const float lenSq = move.x * move.x + move.z * move.z;
         if (lenSq > 1.0f) {
@@ -114,9 +121,15 @@ void SamplePlayerScript::OnCreate(engine::GameObject& self) {
 }
 
 void SamplePlayerScript::TryJump(engine::GameObject& self) {
-    const bool jumpHeld = KeyLogger_IsTrigger(KK_SPACE)
-        || (!m_wasJumpHeld && Controller_IsPressed(ControllerButton::A, 0));
-    m_wasJumpHeld = Controller_IsPressed(ControllerButton::A, 0);
+    bool jumpHeld = false;
+    if (ScriptApi_InputHasAction("Jump")) {
+        jumpHeld = ScriptApi_InputIsTriggered("Jump");
+    }
+    else {
+        jumpHeld = KeyLogger_IsTrigger(KK_SPACE)
+            || (!m_wasJumpHeld && Controller_IsPressed(ControllerButton::A, 0));
+        m_wasJumpHeld = Controller_IsPressed(ControllerButton::A, 0);
+    }
 
     if (!jumpHeld)
         return;

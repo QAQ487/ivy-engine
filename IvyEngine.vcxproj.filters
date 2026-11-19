@@ -333,6 +333,15 @@
     <ClInclude Include="engine\input\controller.h">
       <Filter>engine\input</Filter>
     </ClInclude>
+    <ClInclude Include="engine\input\key_names.h">
+      <Filter>engine\input</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\input\input_actions.h">
+      <Filter>engine\input</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\input\input_action_system.h">
+      <Filter>engine\input</Filter>
+    </ClInclude>
     <ClInclude Include="engine\input\controller_test_inject.h">
       <Filter>engine\input</Filter>
     </ClInclude>
@@ -818,6 +827,9 @@
     <ClCompile Include="engine\editor\editor_popups.cpp">
       <Filter>engine\editor</Filter>
     </ClCompile>
+    <ClCompile Include="engine\editor\editor_input_settings.cpp">
+      <Filter>engine\editor</Filter>
+    </ClCompile>
     <ClCompile Include="engine\editor\editor_start_screen.cpp">
       <Filter>engine\editor</Filter>
     </ClCompile>
@@ -846,6 +858,12 @@
       <Filter>engine\editor</Filter>
     </ClCompile>
     <ClCompile Include="engine\input\controller.cpp">
+      <Filter>engine\input</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\input\input_actions.cpp">
+      <Filter>engine\input</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\input\input_action_system.cpp">
       <Filter>engine\input</Filter>
     </ClCompile>
     <ClCompile Include="engine\input\key_logger.cpp">
@@ -1311,5 +1329,7 @@
     <ClCompile Include="samples\scripts\SampleParticleEmitterScript.cpp" />
     <ClInclude Include="samples\scripts\SampleSaveScript.h" />
     <ClCompile Include="samples\scripts\SampleSaveScript.cpp" />
+    <ClInclude Include="samples\scripts\SampleRebindScript.h" />
+    <ClCompile Include="samples\scripts\SampleRebindScript.cpp" />
   </ItemGroup>
 </Project>

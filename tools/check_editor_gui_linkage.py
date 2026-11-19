@@ -35,6 +35,7 @@ PHASE1_TUS = [
     ROOT / "engine/editor/editor_asset_panel.cpp",
     ROOT / "engine/editor/editor_menu_bar.cpp",
     ROOT / "engine/editor/editor_popups.cpp",
+    ROOT / "engine/editor/editor_input_settings.cpp",
     ROOT / "engine/editor/editor_start_screen.cpp",
     ROOT / "engine/editor/editor_tool_windows.cpp",
     ROOT / "engine/editor/editor_settings_windows.cpp",

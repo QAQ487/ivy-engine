@@ -1,0 +1,236 @@
+{
+  "version": 4,
+  "settings": {
+    "render": {
+      "clearColor": [
+        0.08,
+        0.09,
+        0.12,
+        1.0
+      ],
+      "defaultShader": "standard",
+      "fogEnabled": false,
+      "shadowQuality": "low",
+      "skyboxEnabled": false
+    },
+    "debugCamera": {
+      "mode": "orbit",
+      "enabledOnPlay": true,
+      "yawDeg": 0.0,
+      "pitchDeg": -20.0,
+      "position": {
+        "x": 0.0,
+        "y": 4.0,
+        "z": -8.0
+      }
+    }
+  },
+  "nodes": [
+    {
+      "name": "Directional Light",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 0,
+          "posY": 10,
+          "posZ": 0,
+          "rotX": 50,
+          "rotY": -35,
+          "rotZ": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "scaleZ": 1
+        },
+        "DirectionalLight": {
+          "enabled": true,
+          "castShadows": false,
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "intensity": 0.9,
+          "specColor": [
+            1,
+            1,
+            1
+          ],
+          "specPower": 32.0
+        }
+      }
+    },
+    {
+      "name": "Ground",
+      "tag": 2,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 0,
+          "posY": -0.5,
+          "posZ": 0,
+          "rotX": 0,
+          "rotY": 0,
+          "rotZ": 0,
+          "scaleX": 20,
+          "scaleY": 1,
+          "scaleZ": 20
+        },
+        "visual": {
+          "model": "rom/model/object/Box_Sand.fbx",
+          "shader": "standard"
+        }
+      }
+    },
+    {
+      "name": "Rebind Demo",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 0,
+          "posY": 0.5,
+          "posZ": 0,
+          "rotX": 0,
+          "rotY": 0,
+          "rotZ": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "scaleZ": 1
+        },
+        "visual": {
+          "model": "rom/model/object/Box_Blue.fbx",
+          "shader": "standard"
+        },
+        "Script": {
+          "scriptClass": "SampleRebindScript",
+          "properties": {
+            "action": "Jump",
+            "textElement": "RebindStatus"
+          }
+        }
+      }
+    }
+  ],
+  "canvas": {
+    "name": "scene",
+    "elements": [
+      {
+        "type": "text",
+        "name": "Title",
+        "anchor": "TOP_LEFT",
+        "position": {
+          "x": 24,
+          "y": 20
+        },
+        "pivot": {
+          "x": 0,
+          "y": 1
+        },
+        "alignment": "LEFT",
+        "text": "INPUT ACTION REBIND DEMO (SampleRebindScript, Debug build)",
+        "fontSize": 1.0,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "font": {
+          "texture": "builtin:font/IBMPlexMono-Regular.ttf",
+          "charWidth": 32,
+          "charHeight": 32,
+          "charsPerRow": 16
+        },
+        "visible": true
+      },
+      {
+        "type": "text",
+        "name": "Keys",
+        "anchor": "TOP_LEFT",
+        "position": {
+          "x": 24,
+          "y": 60
+        },
+        "pivot": {
+          "x": 0,
+          "y": 1
+        },
+        "alignment": "LEFT",
+        "text": "Press R to rebind Jump, Backspace for the project defaults, Enter to save.",
+        "fontSize": 0.9,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "font": {
+          "texture": "builtin:font/IBMPlexMono-Regular.ttf",
+          "charWidth": 32,
+          "charHeight": 32,
+          "charsPerRow": 16
+        },
+        "visible": true
+      },
+      {
+        "type": "text",
+        "name": "RebindStatus",
+        "anchor": "TOP_LEFT",
+        "position": {
+          "x": 24,
+          "y": 100
+        },
+        "pivot": {
+          "x": 0,
+          "y": 1
+        },
+        "alignment": "LEFT",
+        "text": "(waiting for Play)",
+        "fontSize": 0.9,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "font": {
+          "texture": "builtin:font/IBMPlexMono-Regular.ttf",
+          "charWidth": 32,
+          "charHeight": 32,
+          "charsPerRow": 16
+        },
+        "visible": true
+      },
+      {
+        "type": "text",
+        "name": "Where",
+        "anchor": "TOP_LEFT",
+        "position": {
+          "x": 24,
+          "y": 190
+        },
+        "pivot": {
+          "x": 0,
+          "y": 1
+        },
+        "alignment": "LEFT",
+        "text": "Defaults: Project Settings > Input (project.json input.actions). Saved rebinding: .ivy/saves/ivy_input.json",
+        "fontSize": 0.7,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "font": {
+          "texture": "builtin:font/IBMPlexMono-Regular.ttf",
+          "charWidth": 32,
+          "charHeight": 32,
+          "charsPerRow": 16
+        },
+        "visible": true
+      }
+    ]
+  }
+}

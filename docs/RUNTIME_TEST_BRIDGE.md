@@ -232,7 +232,7 @@ Bridge names (explicit table → `KK_*`; never raw VK codes). Digits are `"0"`�
 
 `BACK`, `TAB`, `ENTER`, `PAUSE`, `CAPSLOCK`, `KANA`, `KANJI`, `ESCAPE`, `IMECONVERT`, `IMENOCONVERT`, `SPACE`, `PAGEUP`, `PAGEDOWN`, `END`, `HOME`, `LEFT`, `UP`, `RIGHT`, `DOWN`, `SELECT`, `PRINT`, `EXECUTE`, `PRINTSCREEN`, `INSERT`, `DELETE`, `HELP`, `0`–`9`, `A`–`Z`, `APPS`, `SLEEP`, `NUMPAD0`–`NUMPAD9`, `MULTIPLY`, `ADD`, `SEPARATOR`, `SUBTRACT`, `DECIMAL`, `DIVIDE`, `F1`–`F24`, `NUMLOCK`, `SCROLL`, `LSHIFT`, `RSHIFT`, `LCTRL`, `RCTRL`, `LALT`, `RALT`, `BROWSERBACK`, `BROWSERFORWARD`, `BROWSERREFRESH`, `BROWSERSTOP`, `BROWSERSEARCH`, `BROWSERFAVORITES`, `BROWSERHOME`, `VOLUMEMUTE`, `VOLUMEDOWN`, `VOLUMEUP`, `MEDIANEXTTRACK`, `MEDIAPREVIOUSTRACK`, `MEDIASTOP`, `MEDIAPLAYPAUSE`, `LAUNCHMAIL`, `SELECTMEDIA`, `LAUNCHAPPLICATION1`, `LAUNCHAPPLICATION2`, `OEMSEMICOLON`, `OEMPLUS`, `OEMCOMMA`, `OEMMINUS`, `OEMPERIOD`, `OEMQUESTION`, `OEMTILDE`, `OEMOPENBRACKETS`, `OEMPIPE`, `OEMCLOSEBRACKETS`, `OEMQUOTES`, `OEM8`, `OEMBACKSLASH`, `PROCESSKEY`, `OEMCOPY`, `OEMAUTO`, `OEMENLW`, `ATTN`, `CRSEL`, `EXSEL`, `ERASEEOF`, `PLAY`, `ZOOM`, `PA1`, `OEMCLEAR`
 
-Canonical sources: `kBridgeKeyTable` in `engine/testing/runtime_test_bridge.cpp` and `KEYBOARD_KEYS` in `tools/runtime_bridge_keyboard_keys.py` (kept equal by `tools/runtime_bridge_keyboard_keys_check.py`).
+Canonical sources: `kKeyNames` in `engine/input/key_names.h` (also used by input action bindings) and `KEYBOARD_KEYS` in `tools/runtime_bridge_keyboard_keys.py` (kept equal by `tools/runtime_bridge_keyboard_keys_check.py`).
 
 ## Controller injection (`controller`)
 

@@ -1,12 +1,12 @@
 """Bridge keyboard key-name table shared by the Python client and scenario schema.
 
-Names map 1:1 to engine Keyboard_Keys (KK_*) via the C++ kBridgeKeyTable in
-engine/testing/runtime_test_bridge.cpp. Digits use "0".."9"; modifiers use
+Names map 1:1 to engine Keyboard_Keys (KK_*) via the C++ kKeyNames table in
+engine/input/key_names.h (shared with input action bindings). Digits use "0".."9"; modifiers use
 LCTRL/RCTRL/LSHIFT/RSHIFT/LALT/RALT. Win keys are omitted; ALT+F4 is rejected.
 """
 from __future__ import annotations
 
-# Keep in sync with kBridgeKeyTable in engine/testing/runtime_test_bridge.cpp.
+# Keep in sync with kKeyNames in engine/input/key_names.h.
 # tools/runtime_bridge_keyboard_keys_check.py parses both and fails on mismatch.
 KEYBOARD_KEYS = frozenset({
     "BACK", "TAB", "ENTER", "PAUSE", "CAPSLOCK", "KANA", "KANJI", "ESCAPE",

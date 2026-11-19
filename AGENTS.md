@@ -23,7 +23,7 @@ Ivy Engine is a from-scratch C++ / Direct3D 11 engine: an ImGui **editor** (`Ivy
 
 - **Development status:** engine development is fully unfrozen (ADR 0007, 2026-10-20). Any engine system may change within the requested task scope. `engine-v1.0-lock` is a historical tag, not a restriction.
 - **Compatibility still applies** unless the task explicitly changes it: existing content-project layout, scene/prefab JSON, and the `ScriptRuntimeApi` ABI.
-- **`ScriptRuntimeApi` is append-only.** Current version: **51** (`kScriptRuntimeApiVersion` in `engine/scripting/script_runtime_api.cpp`). New host functions go at the end, bump the version, keep older `ScriptRuntimeApi_Get*` entry points working, and scripts must check the version before calling newer entries.
+- **`ScriptRuntimeApi` is append-only.** Current version: **52** (`kScriptRuntimeApiVersion` in `engine/scripting/script_runtime_api.cpp`). New host functions go at the end, bump the version, keep older `ScriptRuntimeApi_Get*` entry points working, and scripts must check the version before calling newer entries.
 - **Engine vs game:** do not add game-specific logic to engine code. Game behavior belongs in content-project scripts/JSON. Use game files only as examples of how the engine is consumed.
 - **JSON names are contracts.** Component type names and field names are case-sensitive; preserve them unless the user asks for a migration (then also keep the loader accepting the old form).
 - **Never claim Windows verification from Linux.** This container cannot build MSVC / D3D11 or run named pipes. Report Linux checks as Linux checks; Windows Editor/Runtime acceptance is the owner's.
@@ -73,6 +73,7 @@ Linux-runnable checks (use what matches the change; none of these is a Windows p
 | Frame loop / device lost | `tests/frame_pacing_test.cpp`, `tests/device_lost_test.cpp` |
 | Script DLL layout check / scene search | `tests/script_abi_layout_test.cpp`, `tests/game_object_search_test.cpp` |
 | project.json merge on save | `tests/project_file_merge_test.cpp` |
+| Input actions / key names | `tests/input_actions_test.cpp`; key table sync: `python3 tools/runtime_bridge_keyboard_keys_check.py` |
 | Save data / host text buffers | `tests/save_store_test.cpp` (real files in a temp dir), `tests/host_text_test.cpp` |
 | Other unit tests | `tests/*_test.cpp` (single-file `g++ -std=c++20 -I.` builds; see each file header) |
 
@@ -89,13 +90,13 @@ Windows-only harnesses: `tools/run_*.cmd`, `tools/run_*.ps1` (2D regression, col
 | `engine/scripting/` | `Script`, `ScriptComponent`, `ScriptFactory`, DLL registration, `ScriptRuntimeApi`, `UICanvasScript` |
 | `engine/rendering/` | D3D11 renderer/shaders/post, models, sprites, billboards, particles, Effekseer, lighting/shadows, sky/IBL, culling |
 | `engine/physics/` | Custom 3D rigidbody + colliders; `2d/` Box2D adapter (ADR 0008) |
-| `engine/ui/`, `engine/input/`, `engine/audio/` | Canvas UI, keyboard/mouse/XInput, XAudio2 |
+| `engine/ui/`, `engine/input/`, `engine/audio/` | Canvas UI, keyboard/mouse/XInput + input actions (`input_actions` pure, `input_action_system`, shared `key_names.h`), XAudio2 |
 | `engine/save/` | Save slots: `save_store` (pure, Linux-tested), `save_system` (Windows folder + `MoveFileExW`) |
 | `engine/testing/` | Debug runtime test bridge |
 | `src/app/` | `main.cpp` (WinMain, loop, debug hotkeys), `scene/game_scene.cpp`, cameras (scene/debug/third/first person, director), fades/transitions |
 | `resources/` | Read-only engine defaults (shaders, fonts, branding, primitives, skybox/IBL), mirrored beside the exe |
 | `testbed/` | In-repo content project (sample + bridge fixture scenes, `scenarios/`); has no `GameScripts` |
-| `samples/scripts/` | Reference scripts. `SamplePlayerScript` and `SampleParticleEmitterScript` are compiled into the Debug editor and Debug runtime host (so the testbed player walks and the particle-culling scene emits without a `GameScripts` build); `SampleCheckpointScript` into the Debug runtime host only; the rest are not compiled in-repo |
+| `samples/scripts/` | Reference scripts. `SamplePlayerScript`, `SampleParticleEmitterScript`, `SampleSaveScript` and `SampleRebindScript` are compiled into the Debug editor and Debug runtime host (so the testbed player walks and the particle-culling scene emits without a `GameScripts` build); `SampleCheckpointScript` into the Debug runtime host only; the rest are not compiled in-repo |
 | `external_content_template/` | Starter for an external content project (`IvyEngine.props`, `GameScripts.vcxproj`, `deploy/deploy.bat`) |
 | `libraries/` | imgui (docking 1.92.5), imguizmo, nlohmann, fbxsdk, effekseer, directxtex, box2d |
 | `tools/`, `tests/` | Checks, generators, bridge clients, Linux Win32 shim |
@@ -125,6 +126,7 @@ A content project is a directory with `rom/` and usually `project.json`; the edi
 | `audio.masterVolume` / `bgmVolume` / `sfxVolume` / `voiceVolume` | Bus levels, applied in editor and runtime (ADR 0001) |
 | `audio.uiClickSound` | UIButton click WAV |
 | `build.packAllAssets` | `true` = a package copies all of `rom/` (old behaviour). Default `false`: only referenced assets. Hand-edited; the editor never writes `build.*` |
+| `input.actions` | Input action defaults: `{ "<name>": { "type": "button"/"axis", "bindings": [...] } }` (ADR 0010). Edited in Project Settings → Input, which replaces this object wholesale |
 | `save.folderName` | Folder name under Saved Games for the packaged game's saves (default: `name`, sanitised). Hand-edited |
 | `build.alwaysInclude` | `rom/` files, folders or name prefixes a package keeps even when nothing references them (assets a script loads by a name built at runtime). Hand-edited |
 
@@ -215,6 +217,7 @@ When adding a component: register it in `SceneLoader_RegisterComponentTypes()`, 
 - **Skinning** (ADR 0003): GPU vertex-shader skin must use the same formula as `SkinFromScratch` (kept as oracle); palette `meshCount * boneCount`; matrices stored as `FbxToXM`, transposed only in `Shader_SetSkinPalette`.
 - **UI:** canvas design space 1920×1080; element types `sprite`, `text`, `button`, `bar`; anchors `TOP_LEFT`…`BOTTOM_RIGHT`. Optional `pivot {x,y}` (bottom-left origin like world sprites) in shared UI data; absent → legacy layout/text alignment. Pivot is sidecar data (does not change UI class layout or vtables). Buttons use builtin `LoadScene` / `ExitGame` actions or a `UICanvasScript::OnClick`.
 - **Save data** (ADR 0009, `engine/save/`, `ScriptApi_Save*` v51): named slots (`[A-Za-z0-9_-]{1,32}`) of key-value JSON, one `<slot>.json` per slot (`{"format":"ivy-save","version":1,"savedAt","data"}`). `Set*` is memory-only; `ScriptApi_SaveCommit` writes `.tmp` → copies old to `.bak` → `MoveFileExW`; load falls back to `.bak`; >4 MiB refused; newer `version` read-only. Folder: runtime/package `FOLDERID_SavedGames\<save.folderName or name>`; editor Play `<content project>/.ivy/saves/` (`SaveSystem_Reset` on Stop drops uncommitted values). Host access is locked by `SaveSystem_Mutex()`; text crosses the DLL boundary through `host_text.h` buffers. Demo: `SampleSaveScript` (Debug builds) in testbed `scene_save_demo.json`.
+- **Input actions** (ADR 0010, `ScriptApi_Input*` v52): named button/axis actions over keyboard, pad 0 and mouse buttons; binding text `Key.SPACE`, `Pad.A`, `Pad.LT`, `Pad.LeftStickX[+|-]`, `Mouse.Left`, `A/B` pairs (axis). `engine/input/input_actions` is pure (parse, validate, per-frame state from a `Snapshot`, capture, overrides); `input_action_system.cpp` samples devices after `Controller_Update` in `main.cpp` `Update`, loads `project.json` `input.actions` (cwd, then exe dir) and the player overrides from save slot `ivy_input` (key `bindings`), and is reloaded on project open, Play stop and Input page saves. Lock order: `InputActionSystem_Mutex()` before `SaveSystem_Mutex()`. Key names are shared with the test bridge (`engine/input/key_names.h`). Editor page: `engine/editor/editor_input_settings.cpp`. Demos (Debug builds): `SampleRebindScript` in `scene_input_rebind_demo.json`; `SamplePlayerScript` uses MoveX / MoveY / Jump when defined.
 - **Audio:** XAudio2/X3DAudio; components preferred for authored content; tracked GameObjects must outlive their emitters/listener.
 - **Editor console:** `hal::DebugWriteA`/`dout` feed a thread-safe ring buffer shown in the dockable Console; engine logs route through `hal::DebugWriteA`.
 

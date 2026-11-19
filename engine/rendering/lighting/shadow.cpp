@@ -9,6 +9,7 @@
 
  ===========================================================================**/
 #include "shadow.h"
+#include "engine/rendering/d3d11/shader.h"
 #include <algorithm>
 #include <cfloat>
 #include <cmath>
@@ -297,6 +298,9 @@ namespace Shadow {
 	}
 
 	void Finalize() {
+		// The shader keeps raw pointers to the cascade SRVs for rebinding: drop them
+		// before the SRVs are released (quality change, scene teardown).
+		Shader_ClearShadowMaps();
 		if (g_ctx) {
 			if (g_savedRTV || g_savedDSV) g_ctx->OMSetRenderTargets(0, nullptr, nullptr);
 			if (g_rsSaved) { g_ctx->RSSetState(g_rsSaved); g_rsSaved->Release(); g_rsSaved = nullptr; }

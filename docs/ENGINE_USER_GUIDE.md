@@ -908,6 +908,23 @@ Or attach a **Billboard** component for persistent setup.
 
 ## 16. Input
 
+### Input actions (recommended for gameplay)
+
+Give each thing the player does a name — `Jump`, `MoveX`, `Fire` — and bind keys, pad inputs and mouse buttons to it in **Project Settings → Input**. Scripts read the action, so players can rebind it and your code does not change.
+
+- **Add action**, give it a name, pick **Button** (pressed / released) or **Axis** (-1 .. 1).
+- **Listen** records the next key, pad button, trigger or stick you press (Esc cancels). On axis actions, **+** / **-** record one side of a pair, e.g. `Key.D/Key.A`. You can also type a binding: `Key.SPACE`, `Pad.A`, `Pad.LT`, `Pad.LeftStickX`, `Pad.LeftStickY+`, `Mouse.Left`. Only the first pad (pad 0) is read.
+- Changes are written to `project.json` → `input.actions` straight away when the whole set is valid (no undo, like the other Project Settings pages); problems are shown in red and nothing is written until they are fixed. **Reload from project.json** picks up hand edits.
+
+```cpp
+if (ScriptApi_InputIsTriggered("Jump")) { /* jump */ }
+const float x = ScriptApi_InputGetAxis("MoveX");   // -1 .. 1
+```
+
+**Player rebinding** (an options menu): `ScriptApi_InputCaptureStart("Jump", 0)` waits for the next input, `ScriptApi_InputCaptureState()` tells you when it is done, `ScriptApi_InputResetBindings("Jump")` goes back to your defaults, and `ScriptApi_InputSaveBindings()` saves the player's choices (save slot `ivy_input`, see [Saving game data](#saving-game-data)); they load automatically next time. In editor Play, unsaved rebinding is dropped on Stop. Try testbed `scene_input_rebind_demo.json` (Debug build): **R** rebinds Jump, **Backspace** restores it, **Enter** saves. The testbed player (`SamplePlayerScript`) moves and jumps with the `MoveX` / `MoveY` / `Jump` actions from the testbed `project.json`.
+
+The raw device calls below still work for things that are not player controls (debug keys, cursor).
+
 ### Keyboard
 
 Virtual-key style enum `KK_A`, `KK_SPACE`, `KK_ESCAPE`, …
@@ -1117,9 +1134,16 @@ The editor calls `SetCurrentDirectory` on that folder so relative paths like `ro
   },
   "save": {
     "folderName": "MyGame"
+  },
+  "input": {
+    "actions": {
+      "Jump": { "type": "button", "bindings": ["Key.SPACE", "Pad.A"] }
+    }
   }
 }
 ```
+
+`input.actions` holds the input action defaults ([§16](#16-input)); Project Settings → Input edits it.
 
 `save.folderName` is optional: the Saved Games folder name for the packaged game's saves (default: `name`).
 

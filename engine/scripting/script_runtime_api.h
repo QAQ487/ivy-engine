@@ -285,6 +285,23 @@ struct ScriptRuntimeApi {
     bool (*saveSlotExists)(const char* slot);
     bool (*saveDeleteSlot)(const char* slot);
     int (*saveListSlots)(char* out, int capacity);
+
+    // v52 - input actions (engine/input/input_actions.h). Unknown actions read
+    // false / 0. Binding lists cross as '\n'-separated text; inputGetBindings
+    // returns -1 for an unknown action. inputCaptureState returns 0 idle,
+    // 1 listening, 2 done (binding copied to out), 3 cancelled. part: 0 whole,
+    // 1 positive, 2 negative side of an axis pair.
+    bool (*inputIsPressed)(const char* action);
+    bool (*inputIsTriggered)(const char* action);
+    bool (*inputIsReleased)(const char* action);
+    float (*inputGetAxis)(const char* action);
+    int (*inputGetBindings)(const char* action, char* out, int capacity);
+    bool (*inputSetBindings)(const char* action, const char* bindingsText);
+    bool (*inputCaptureStart)(const char* action, int index, int part, bool includeMouse);
+    int (*inputCaptureState)(char* outBinding, int capacity);
+    void (*inputCaptureCancel)();
+    bool (*inputResetBindings)(const char* action);
+    bool (*inputSaveBindings)();
 };
 
 const ScriptRuntimeApi* ScriptRuntimeApi_GetHost();
@@ -407,6 +424,36 @@ bool ScriptApi_SaveCommit(const char* slot);
 bool ScriptApi_SaveSlotExists(const char* slot);
 bool ScriptApi_SaveDeleteSlot(const char* slot);
 std::vector<std::string> ScriptApi_SaveListSlots();
+
+// Input actions (v52 host; older hosts read false / 0 and setters fail).
+// Actions and their default bindings live in project.json input.actions
+// (Project Settings > Input). Binding text: Key.SPACE, Pad.A, Pad.LT,
+// Pad.LeftStickX, Pad.LeftStickY+, Mouse.Left, or Key.D/Key.A pairs on axis
+// actions. States update once per frame before scripts run.
+bool ScriptApi_InputIsPressed(const char* action);
+bool ScriptApi_InputIsTriggered(const char* action);   // pressed this frame
+bool ScriptApi_InputIsReleased(const char* action);    // released this frame
+float ScriptApi_InputGetAxis(const char* action);      // -1..1 (button actions: 0 / 1)
+bool ScriptApi_InputHasAction(const char* action);
+std::vector<std::string> ScriptApi_InputGetBindings(const char* action);
+// Replaces the action's bindings (all must parse); not saved until InputSaveBindings.
+bool ScriptApi_InputSetBindings(const char* action, const std::vector<std::string>& bindings);
+
+enum class ScriptInputPart { Whole = 0, Positive = 1, Negative = 2 };
+enum class ScriptInputCaptureState { Idle = 0, Listening = 1, Done = 2, Cancelled = 3 };
+// "Press a key" rebinding: the next input that becomes active replaces binding
+// `index` (index == count appends); Escape cancels. Inputs held at the start
+// are ignored. Positive / Negative edit one side of a pair on axis actions.
+bool ScriptApi_InputCaptureStart(const char* action, int index,
+                                 ScriptInputPart part = ScriptInputPart::Whole, bool includeMouse = true);
+// Poll each frame; on Done the binding is already applied and copied to outBinding.
+ScriptInputCaptureState ScriptApi_InputCaptureState(std::string* outBinding = nullptr);
+void ScriptApi_InputCaptureCancel();
+// Back to the project defaults: one action, or all when action is null / "".
+bool ScriptApi_InputResetBindings(const char* action = nullptr);
+// Saves the player's bindings (differences from the defaults) to the save slot
+// "ivy_input"; they are loaded automatically at start.
+bool ScriptApi_InputSaveBindings();
 void ScriptApi_CameraSetPosition(DirectX::XMFLOAT3 position);
 void ScriptApi_CameraSetTarget(DirectX::XMFLOAT3 target);
 void ScriptApi_CameraSetUp(DirectX::XMFLOAT3 up);
