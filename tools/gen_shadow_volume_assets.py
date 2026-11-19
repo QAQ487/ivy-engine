@@ -13,6 +13,10 @@ The scene also reuses the closed LOD meshes from tools/gen_lod_test_assets.py
 same height function, so the shadows fall across slopes rather than a flat plane.
 One box keeps "shadowVolume": false to show that casting is per Visual.
 
+The torus and the large boulder carry SampleSpinScript (samples/scripts), compiled into
+the Debug editor and Debug runtime host, so in Play they turn and their shadows update
+every frame (a Release build without a GameScripts DLL leaves them still).
+
 Meshes are ASCII FBX 7.4 written by gen_lod_test_assets.write_fbx, which refuses
 non-manifold or inward-wound meshes, so every caster is closed (what the engine's
 shadow-volume builder requires). Needs numpy + Pillow (imported by that module).
@@ -139,12 +143,18 @@ def node(name, components, tag=0):
     return {"name": name, "tag": tag, "children": [], "components": components}
 
 
-def prop(name, model, x, z, sink=0.05, lift=0.0, rot=(0.0, 0.0, 0.0), scale=1.0, cast=True):
+def prop(name, model, x, z, sink=0.05, lift=0.0, rot=(0.0, 0.0, 0.0), scale=1.0, cast=True,
+         spin=0.0):
     y = terrain_height(x, z) - sink + lift
     visual = {"model": model, "shader": "standard"}
     if cast:
         visual["shadowVolume"] = True
-    return node(name, {"SceneTransform": transform(x, y, z, rot, scale), "visual": visual})
+    components = {"SceneTransform": transform(x, y, z, rot, scale), "visual": visual}
+    if spin:
+        # SampleSpinScript (samples/scripts) turns the object about world Y in Play.
+        components["Script"] = {"scriptClass": "SampleSpinScript",
+                                "properties": {"degreesPerSecond": spin, "busyMillis": 0.0}}
+    return node(name, components)
 
 
 def build_scene():
@@ -164,14 +174,16 @@ def build_scene():
     nodes = [
         light,
         terrain,
-        # Torus stands upright on the slope: its shadow keeps the hole.
+        # Torus stands upright on the slope and spins like a coin on edge: its shadow
+        # keeps the hole and morphs from a ring to a thin bar and back.
         prop("Caster_Torus", f"{MODEL_ROM}/Torus.fbx", 0.0, 4.0, sink=0.1, lift=1.32,
-             rot=(90.0, 25.0, 0.0), scale=1.0),
+             rot=(90.0, 25.0, 0.0), scale=1.0, spin=35.0),
         prop("Caster_Obelisk_A", f"{MODEL_ROM}/Obelisk.fbx", -4.5, 6.5, rot=(0.0, 20.0, 0.0)),
         prop("Caster_Obelisk_B", f"{MODEL_ROM}/Obelisk.fbx", 4.5, 9.0, rot=(0.0, -15.0, 0.0),
              scale=1.3),
         prop("Caster_Boulder_A", boulder, -2.0, 1.5, rot=(0.0, 40.0, 0.0), scale=2.2),
-        prop("Caster_Boulder_B", boulder, 6.5, 3.0, rot=(0.0, 130.0, 0.0), scale=3.0),
+        prop("Caster_Boulder_B", boulder, 6.5, 3.0, rot=(0.0, 130.0, 0.0), scale=3.0,
+             spin=-20.0),
         prop("Caster_Pine_A", pine, -7.5, 11.0, scale=1.2),
         prop("Caster_Pine_B", pine, -1.5, 13.0, rot=(0.0, 50.0, 0.0), scale=1.0),
         prop("Caster_Pine_C", pine, 8.5, 13.5, rot=(0.0, 110.0, 0.0), scale=1.4),

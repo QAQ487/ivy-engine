@@ -97,7 +97,7 @@ Windows-only harnesses: `tools/run_*.cmd`, `tools/run_*.ps1` (2D regression, col
 | `src/app/` | `main.cpp` (WinMain, loop, debug hotkeys), `scene/game_scene.cpp`, cameras (scene/debug/third/first person, director), fades/transitions |
 | `resources/` | Read-only engine defaults (shaders, fonts, branding, primitives, skybox/IBL), mirrored beside the exe |
 | `testbed/` | In-repo content project (sample + bridge fixture scenes, `scenarios/`); has no `GameScripts` |
-| `samples/scripts/` | Reference scripts. `SamplePlayerScript`, `SampleParticleEmitterScript`, `SampleSaveScript` and `SampleRebindScript` are compiled into the Debug editor and Debug runtime host (so the testbed player walks and the particle-culling scene emits without a `GameScripts` build); `SampleCheckpointScript` into the Debug runtime host only; the rest are not compiled in-repo |
+| `samples/scripts/` | Reference scripts. `SamplePlayerScript`, `SampleParticleEmitterScript`, `SampleSaveScript`, `SampleRebindScript` and `SampleSpinScript` are compiled into the Debug editor and Debug runtime host (so the testbed player walks, the particle-culling scene emits and the shadow-volume demo spins without a `GameScripts` build; a content project's own DLL copy of a class overrides the built-in one); `SampleCheckpointScript` into the Debug runtime host only; the rest are not compiled in-repo |
 | `external_content_template/` | Starter for an external content project (`IvyEngine.props`, `GameScripts.vcxproj`, `deploy/deploy.bat`) |
 | `libraries/` | imgui (docking 1.92.5), imguizmo, nlohmann, fbxsdk, effekseer, directxtex, box2d |
 | `tools/`, `tests/` | Checks, generators, bridge clients, Linux Win32 shim |

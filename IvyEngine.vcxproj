@@ -672,6 +672,8 @@ exit /b 0</Command>
     <ClCompile Include="samples\scripts\SamplePlayerScript.cpp" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
     <ClInclude Include="samples\scripts\SampleParticleEmitterScript.h" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
     <ClCompile Include="samples\scripts\SampleParticleEmitterScript.cpp" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
+    <ClInclude Include="samples\scripts\SampleSpinScript.h" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
+    <ClCompile Include="samples\scripts\SampleSpinScript.cpp" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
     <ClInclude Include="samples\scripts\SampleSaveScript.h" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
     <ClCompile Include="samples\scripts\SampleSaveScript.cpp" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
     <ClInclude Include="samples\scripts\SampleRebindScript.h" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />

@@ -817,6 +817,8 @@
     <ClCompile Include="samples\scripts\SamplePlayerScript.cpp" />
     <ClInclude Include="samples\scripts\SampleParticleEmitterScript.h" />
     <ClCompile Include="samples\scripts\SampleParticleEmitterScript.cpp" />
+    <ClInclude Include="samples\scripts\SampleSpinScript.h" />
+    <ClCompile Include="samples\scripts\SampleSpinScript.cpp" />
     <ClInclude Include="samples\scripts\SampleSaveScript.h" />
     <ClCompile Include="samples\scripts\SampleSaveScript.cpp" />
     <ClInclude Include="samples\scripts\SampleRebindScript.h" />

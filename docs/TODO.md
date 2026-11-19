@@ -14,7 +14,7 @@
 - [ ] **Stencil shadow volume 模式**（source 已做；等 Windows editor／runtime 驗收）
   - `settings.render.shadowMode`：`"csm"`（預設，舊場景不變）／`"volume"`／`"none"`；`shadowVolumeStrength`（0.55，0–1）。`visual.shadowVolume: true` 先會投 volume；只限封閉 FBX mesh，唔封閉會喺 Console log 一次並跳過。
   - 做法：`shadow_volume_mesh.h`（純邏輯：position weld、closed／manifold 檢查、outward winding、caps＋每條邊一個零面積 quad）；`VertexShaderShadowVolume.hlsl` 將背光 corner 推去無限遠（w=0）；z-fail stencil（背面 +1、正面 −1）、depth clip off、`LESS_EQUAL`；最後 fullscreen multiply darken。GPU skin 同 CPU skin 都支援。光源：第一盞 `castShadows` 嘅 DirectionalLight。
-  - 驗收場景：`testbed/rom/scene/scene_shadow_volume.json`（`python3 tools/gen_shadow_volume_assets.py` 生成）：起伏地形、企立圓環（陰影要見到窿）、兩條方尖柱、岩石、松樹；藍色箱冇 `shadowVolume`（只受影唔投影）。
+  - 驗收場景：`testbed/rom/scene/scene_shadow_volume.json`（`python3 tools/gen_shadow_volume_assets.py` 生成）：起伏地形、企立圓環（陰影要見到窿）、兩條方尖柱、岩石、松樹；藍色箱冇 `shadowVolume`（只受影唔投影）。Play 時圓環（35°/s）同大岩石（−20°/s）用 `SampleSpinScript` 自轉（Debug editor／runtime 已編入），陰影每幀跟住變形。
   - Linux：`tools/run_shadow_volume_check.sh`（topology＋CPU 版 extrusion 封閉／外向檢查、mode id、testbed caster 全部封閉）。
   - Windows 要驗：shader 編譯；影落喺斜坡；鏡頭行入影入面唔反轉；天空唔會被壓暗；caster 本身受光面冇 acne；轉光源方向即時更新；鏡像（負 scale）物件正確；Rendering 面板 counters；Release 打包包含兩個新 `.cso`。
   - 已知限制：硬邊、冇距離上限、fill-rate 隨 volume 大小上升；只得一盞 directional light；OBJ 唔支援；skinned 物件嘅 face normal 用 vertex 權重近似。

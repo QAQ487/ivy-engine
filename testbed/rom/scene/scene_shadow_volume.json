@@ -105,6 +105,13 @@
           "model": "rom/model/shadow_volume/Torus.fbx",
           "shader": "standard",
           "shadowVolume": true
+        },
+        "Script": {
+          "scriptClass": "SampleSpinScript",
+          "properties": {
+            "degreesPerSecond": 35.0,
+            "busyMillis": 0.0
+          }
         }
       }
     },
@@ -197,6 +204,13 @@
           "model": "rom/model/lod/Boulder_LOD1.fbx",
           "shader": "standard",
           "shadowVolume": true
+        },
+        "Script": {
+          "scriptClass": "SampleSpinScript",
+          "properties": {
+            "degreesPerSecond": -20.0,
+            "busyMillis": 0.0
+          }
         }
       }
     },
