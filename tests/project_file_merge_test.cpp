@@ -21,8 +21,8 @@ static void Expect(bool cond, const char* msg) {
     }
 }
 
-// Same shape as ProjectManager::WriteProjectFile's patch.
-static json EditorPatch(bool buildSet) {
+// Same shape as ProjectManager::WriteProjectFile's patch (build.* is not managed).
+static json EditorPatch() {
     json j;
     j["name"] = "MyGame";
     j["version"] = 1;
@@ -33,14 +33,6 @@ static json EditorPatch(bool buildSet) {
     j["physics"] = {{"gravity", 12.0}};
     j["audio"] = {{"masterVolume", 0.5}, {"bgmVolume", 1.0}, {"sfxVolume", 1.0}, {"voiceVolume", 1.0},
                   {"uiClickSound", ""}};
-    j["build"] = json::object();
-    if (buildSet) {
-        j["build"]["packAllAssets"] = false;
-        j["build"]["alwaysInclude"] = {"rom/levels/"};
-    } else {
-        j["build"]["packAllAssets"] = nullptr;
-        j["build"]["alwaysInclude"] = nullptr;
-    }
     return j;
 }
 
@@ -60,7 +52,7 @@ int main() {
 
     // Unmanaged fields survive; managed fields take the editor's values.
     {
-        const json out = MergeIntoExisting(existing, EditorPatch(false));
+        const json out = MergeIntoExisting(existing, EditorPatch());
         Expect(out["save"]["folderName"] == "MyGameSaves", "save.folderName kept");
         Expect(out["input"]["actions"]["Jump"]["bindings"][0] == "Key.SPACE", "input section kept");
         Expect(out["futureKey"] == json({1, 2, 3}), "unknown top-level key kept");
@@ -70,29 +62,25 @@ int main() {
         Expect(out["audio"]["duckingDb"] == -6, "unknown audio key kept");
         Expect(out["editor"]["uiZoomPercent"] == 125, "managed editor key overwritten");
         Expect(out["editor"]["newEditorOption"] == true, "unknown editor key kept");
-        // build not set: managed keys removed, unknown build key kept.
-        Expect(!out["build"].contains("packAllAssets") && !out["build"].contains("alwaysInclude"),
-               "unset build keys removed");
-        Expect(out["build"]["compressAudio"] == true, "unknown build key kept");
+        // build is not managed: left exactly as in the file.
+        Expect(out["build"]["packAllAssets"] == true && out["build"]["alwaysInclude"] == json({"rom/a/"}) &&
+               out["build"]["compressAudio"] == true, "build untouched");
         Expect(out.dump().find("null") == std::string::npos, "no null written");
     }
 
-    // build set: written (array replaced, not merged).
+    // Null in a patch removes a key, and a section emptied that way is dropped.
     {
-        const json out = MergeIntoExisting(existing, EditorPatch(true));
-        Expect(out["build"]["packAllAssets"] == false, "packAllAssets written");
-        Expect(out["build"]["alwaysInclude"] == json({"rom/levels/"}), "alwaysInclude replaced");
-    }
-
-    // build unset and nothing else in it: the section disappears.
-    {
-        const json out = MergeIntoExisting(R"({"build":{"packAllAssets":true}})", EditorPatch(false));
-        Expect(!out.contains("build"), "empty build dropped");
+        json patch = EditorPatch();
+        patch["build"] = {{"packAllAssets", nullptr}};
+        const json out = MergeIntoExisting(R"({"build":{"packAllAssets":true}})", patch);
+        Expect(!out.contains("build"), "emptied section dropped");
+        const json kept = MergeIntoExisting(R"({"build":{"packAllAssets":true,"x":1}})", patch);
+        Expect(kept["build"] == json({{"x", 1}}), "other keys of the section kept");
     }
 
     // No file / broken file / not an object: just the managed fields, no nulls, no empty build.
     for (const char* text : {"", "{ broken", "[1,2]", "42"}) {
-        const json out = MergeIntoExisting(text, EditorPatch(false));
+        const json out = MergeIntoExisting(text, EditorPatch());
         Expect(out.is_object() && out["name"] == "MyGame", "fresh file from patch");
         Expect(!out.contains("build"), "fresh file has no build");
         Expect(out.dump().find("null") == std::string::npos, "fresh file has no null");
@@ -100,7 +88,7 @@ int main() {
 
     // A managed section that was not an object is replaced by the editor's object.
     {
-        const json out = MergeIntoExisting(R"({"audio":"loud","save":{"folderName":"X"}})", EditorPatch(false));
+        const json out = MergeIntoExisting(R"({"audio":"loud","save":{"folderName":"X"}})", EditorPatch());
         Expect(out["audio"].is_object() && out["audio"]["masterVolume"] == 0.5, "non-object section replaced");
         Expect(out["save"]["folderName"] == "X", "save kept next to replaced section");
     }
@@ -108,7 +96,7 @@ int main() {
     // UTF-8 BOM at the start of the file.
     {
         const std::string withBom = "\xEF\xBB\xBF" R"({"save":{"folderName":"磁力場"}})";
-        const json out = MergeIntoExisting(withBom, EditorPatch(false));
+        const json out = MergeIntoExisting(withBom, EditorPatch());
         Expect(out.contains("save") && out["save"]["folderName"] == "磁力場", "BOM file parsed, UTF-8 kept");
     }
 

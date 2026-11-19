@@ -523,16 +523,9 @@ bool ProjectManager::WriteProjectFile(const std::string& rootPath, const Project
         j["audio"]["sfxVolume"] = data.audio.sfxVolume;
         j["audio"]["voiceVolume"] = data.audio.voiceVolume;
         j["audio"]["uiClickSound"] = data.audio.uiClickSound;
-        j["build"] = json::object();
-        if (data.build.packAllAssets || !data.build.alwaysInclude.empty()) {
-            j["build"]["packAllAssets"] = data.build.packAllAssets;
-            j["build"]["alwaysInclude"] = data.build.alwaysInclude;
-        }
-        else {
-            // Written only when set: remove them (an empty "build" is dropped).
-            j["build"]["packAllAssets"] = nullptr;
-            j["build"]["alwaysInclude"] = nullptr;
-        }
+        // build.* has no editor UI: it is edited by hand and read straight from
+        // the file by the package builder, so the editor leaves it untouched
+        // (writing the copy loaded at open would undo hand edits made since).
 
         const fs::path filePath = fs::path(rootPath) / kProjectFileName;
         std::string existingText;

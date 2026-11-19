@@ -124,9 +124,9 @@ A content project is a directory with `rom/` and usually `project.json`; the edi
 | `physics.gravity` | Applied in editor Play **and** runtime boot (ADR 0004) |
 | `audio.masterVolume` / `bgmVolume` / `sfxVolume` / `voiceVolume` | Bus levels, applied in editor and runtime (ADR 0001) |
 | `audio.uiClickSound` | UIButton click WAV |
-| `build.packAllAssets` | `true` = a package copies all of `rom/` (old behaviour). Default `false`: only referenced assets. Written only when set |
-| `save.folderName` | Folder name under Saved Games for the packaged game's saves (default: `name`, sanitised). Written only when set |
-| `build.alwaysInclude` | `rom/` files, folders or name prefixes a package keeps even when nothing references them (assets a script loads by a name built at runtime). Written only when non-empty |
+| `build.packAllAssets` | `true` = a package copies all of `rom/` (old behaviour). Default `false`: only referenced assets. Hand-edited; the editor never writes `build.*` |
+| `save.folderName` | Folder name under Saved Games for the packaged game's saves (default: `name`, sanitised). Hand-edited |
+| `build.alwaysInclude` | `rom/` files, folders or name prefixes a package keeps even when nothing references them (assets a script loads by a name built at runtime). Hand-edited |
 
 Other per-project editor state: `rom/editor/imgui_layout.ini` (dock layout), `rom/editor/ui_prefs.json`, `rom/tags.json`. Recent list: `%AppData%/GameEngine/recent_projects.json`.
 
