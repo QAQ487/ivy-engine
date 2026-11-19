@@ -15,7 +15,9 @@
 #include <shobjidl.h>
 #include <winioctl.h>
 
+#include "engine/editor/project_file_merge.h"
 #include <algorithm>
+#include <iterator>
 #include <cstddef>
 #include <cstring>
 #include <fstream>
@@ -499,6 +501,8 @@ bool ProjectManager::LoadProjectFile(const std::string& rootPath, ProjectData* o
 bool ProjectManager::WriteProjectFile(const std::string& rootPath, const ProjectData& data,
                                       std::string* errorOut) const {
     try {
+        // Patch of the fields the editor owns; everything else already in the
+        // file (save.*, keys from newer engines) is kept (project_file_merge.h).
         json j;
         j["name"] = data.name;
         j["version"] = data.version;
@@ -519,20 +523,33 @@ bool ProjectManager::WriteProjectFile(const std::string& rootPath, const Project
         j["audio"]["sfxVolume"] = data.audio.sfxVolume;
         j["audio"]["voiceVolume"] = data.audio.voiceVolume;
         j["audio"]["uiClickSound"] = data.audio.uiClickSound;
+        j["build"] = json::object();
         if (data.build.packAllAssets || !data.build.alwaysInclude.empty()) {
-            j["build"] = json::object();
             j["build"]["packAllAssets"] = data.build.packAllAssets;
             j["build"]["alwaysInclude"] = data.build.alwaysInclude;
         }
+        else {
+            // Written only when set: remove them (an empty "build" is dropped).
+            j["build"]["packAllAssets"] = nullptr;
+            j["build"]["alwaysInclude"] = nullptr;
+        }
 
         const fs::path filePath = fs::path(rootPath) / kProjectFileName;
+        std::string existingText;
+        {
+            std::ifstream existing(filePath, std::ios::binary);
+            if (existing.is_open())
+                existingText.assign(std::istreambuf_iterator<char>(existing), std::istreambuf_iterator<char>());
+        }
+        const json merged = project_file::MergeIntoExisting(existingText, j);
+
         std::ofstream file(filePath, std::ios::trunc);
         if (!file.is_open()) {
             if (errorOut)
                 *errorOut = "Cannot write " + filePath.string();
             return false;
         }
-        file << j.dump(2);
+        file << merged.dump(2);
         WriteDefaultSceneFile(rootPath, data.defaultScene);
         return true;
     }
