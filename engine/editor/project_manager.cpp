@@ -516,12 +516,12 @@ bool ProjectManager::WriteProjectFile(const std::string& rootPath, const Project
         j["editor"]["uiStylePreset"] = data.editor.uiStylePreset;
         j["editor"]["uiColorScheme"] = data.editor.uiColorScheme;
         j["physics"] = json::object();
-        j["physics"]["gravity"] = data.physics.gravity;
+        j["physics"]["gravity"] = project_file::FloatForJson(data.physics.gravity);
         j["audio"] = json::object();
-        j["audio"]["masterVolume"] = data.audio.masterVolume;
-        j["audio"]["bgmVolume"] = data.audio.bgmVolume;
-        j["audio"]["sfxVolume"] = data.audio.sfxVolume;
-        j["audio"]["voiceVolume"] = data.audio.voiceVolume;
+        j["audio"]["masterVolume"] = project_file::FloatForJson(data.audio.masterVolume);
+        j["audio"]["bgmVolume"] = project_file::FloatForJson(data.audio.bgmVolume);
+        j["audio"]["sfxVolume"] = project_file::FloatForJson(data.audio.sfxVolume);
+        j["audio"]["voiceVolume"] = project_file::FloatForJson(data.audio.voiceVolume);
         j["audio"]["uiClickSound"] = data.audio.uiClickSound;
         // build.* has no editor UI: it is edited by hand and read straight from
         // the file by the package builder, so the editor leaves it untouched

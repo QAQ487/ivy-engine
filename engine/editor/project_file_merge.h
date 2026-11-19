@@ -10,10 +10,29 @@
 
 #include "libraries/nlohmann/json.hpp"
 
+#include <charconv>
+#include <cmath>
+#include <system_error>
 #include <string>
 #include <string_view>
 
 namespace project_file {
+
+// A float field as the JSON number it reads as: 9.81f is stored as 9.81, not
+// 9.8100004196167 (the exact double of the float). Uses the shortest decimal
+// text that round-trips the float. Non-finite values pass through unchanged.
+inline double FloatForJson(float value) {
+    if (!std::isfinite(value))
+        return static_cast<double>(value);
+    // to_chars / from_chars are locale-independent (always '.').
+    char buf[32];
+    const auto written = std::to_chars(buf, buf + sizeof(buf), value);
+    if (written.ec != std::errc())
+        return static_cast<double>(value);
+    double out = 0.0;
+    const auto read = std::from_chars(buf, written.ptr, out);
+    return read.ec == std::errc() ? out : static_cast<double>(value);
+}
 
 struct MergeResult {
     bool ok = false;          // false: the file on disk must not be overwritten

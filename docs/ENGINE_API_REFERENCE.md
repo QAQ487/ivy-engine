@@ -1235,6 +1235,7 @@ Vendor header `WICTextureLoader11.h` is omitted.
 
 ### `engine/editor/project_file_merge.h`
 **Types:** MergeResult
+- `inline double FloatForJson(float value) { if (!std::isfinite(value)) return static_cast<double>(value);`
 
 ### `engine/editor/project_manager.h`
 **Types:** HWND__, ProjectManager, EditorSettings, PhysicsSettings, AudioSettings, BuildSettings, ProjectData

@@ -7,6 +7,7 @@
 
 #include "engine/editor/project_file_merge.h"
 
+#include <cmath>
 #include <cstdio>
 #include <string>
 
@@ -116,6 +117,23 @@ int main() {
         const std::string withBom = "\xEF\xBB\xBF" R"({"save":{"folderName":"磁力場"}})";
         const json out = MergeIntoExisting(withBom, EditorPatch());
         Expect(out.contains("save") && out["save"]["folderName"] == "磁力場", "BOM file parsed, UTF-8 kept");
+    }
+
+    // Float fields are written as the number they read as.
+    {
+        using project_file::FloatForJson;
+        Expect(FloatForJson(9.81f) == 9.81, "9.81f -> 9.81");
+        Expect(FloatForJson(0.3f) == 0.3, "0.3f -> 0.3");
+        Expect(FloatForJson(1.0f) == 1.0 && FloatForJson(0.0f) == 0.0, "whole numbers");
+        Expect(FloatForJson(-2.5f) == -2.5, "negative");
+        Expect(static_cast<float>(FloatForJson(0.1234567f)) == 0.1234567f, "round-trips the float");
+        Expect(std::isnan(FloatForJson(std::nanf(""))), "NaN passes through");
+        json j;
+        j["gravity"] = FloatForJson(9.81f);
+        Expect(j.dump() == R"({"gravity":9.81})", "dumped as 9.81");
+        json raw;
+        raw["gravity"] = 9.81f;
+        Expect(raw.dump() != R"({"gravity":9.81})", "plain float shows the long form (the bug)");
     }
 
     if (g_failed) {
