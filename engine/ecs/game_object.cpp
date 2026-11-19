@@ -19,6 +19,7 @@
 #include "engine/rendering/culling/shadow_cascade_cull.h"
 #include "engine/rendering/lighting/shadow.h"
 #include "engine/rendering/lighting/shadow_volume.h"
+#include "engine/rendering/lighting/shadow_volume_policy.h"
 #include "engine/audio/audio_manager.h"
 #include "engine/physics/core/physics_system.h"
 #include "engine/core/debug_system.h"
@@ -223,7 +224,9 @@ void GameObject::DrawVisual(bool useRealModel) {
         Model3D* model = (t && vc && vc->shadowVolume)
             ? (useRealModel ? vc->GetRealModel() : vc->GetModel())
             : nullptr;
-        if (model) {
+        const uint64_t serial = Lod_GetFrameSerial();
+        if (model && shadow_volume_policy::ShouldCast(
+                vc->shadowVolume, useRealModel, vc->lastDistanceCulledSerial, serial)) {
             XMFLOAT3 worldPos, worldRot, worldScale;
             t->GetWorldPositionRotationScale(worldPos, worldRot, worldScale);
             model->SetPosition(worldPos);
@@ -233,6 +236,8 @@ void GameObject::DrawVisual(bool useRealModel) {
                 ? vc->proxyModelPath : vc->modelPath;
             if (!model->DrawShadowVolume(name.c_str()))
                 ShadowVolume::RecordOpenMesh();
+            else if (shadow_volume_policy::StampsDrawn(useRealModel))
+                vc->lastDrawnSerial = serial;  // off-screen casters keep animating
         }
         for (const auto& child : m_children)
             if (child) child->DrawVisual(useRealModel);
@@ -312,6 +317,8 @@ void GameObject::DrawVisual(bool useRealModel) {
                 if (lodLevel == lod_select::kCulled) {
                     lodCulledByDistance = true;
                     lodLevel = 0;
+                    if (lodCounting)  // main camera pass: the volume pass reads this
+                        vc->lastDistanceCulledSerial = Lod_GetFrameSerial();
                 } else {
                     // Hysteresis memory keeps the camera's level; the shadow offset below
                     // only changes which mesh a cascade pass draws.

@@ -70,6 +70,8 @@ DirectX::XMMATRIX Shader_GetWorldMatrix();
 void Shader_SetShadowMatrix(const DirectX::XMMATRIX& lightViewProj, float bias = 0.0015f);
 void Shader_SetShadowMatrices(const DirectX::XMMATRIX* lightViewProjArray, int cascadeCount, float bias = 0.0015f, float slope = 1.5f);
 void Shader_SetShadowCascadeParams(const DirectX::XMFLOAT4& splits, float blend);
+// Which Lights[] slot EvalShadow shadows with the cascades (Shadow::GetCasterLightIndex()); -1 = none.
+void Shader_SetShadowLightIndex(int lightIndex);
 
 void Shader_BindShadowMap(ID3D11ShaderResourceView* shadowSRV);
 void Shader_BindShadowMaps(ID3D11ShaderResourceView* const* shadowSRVs, int lightCount);

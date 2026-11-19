@@ -37,7 +37,9 @@ namespace ShadowVolume {
     bool IsReady();
 
     // shineDirWS: direction the light travels (need not be normalised).
-    bool BeginPass(const DirectX::XMFLOAT3& shineDirWS);
+    // extrusionLength: world units the far side is pushed along the light
+    // (shadow_volume_policy::ExtrusionLength(camera far clip)).
+    bool BeginPass(const DirectX::XMFLOAT3& shineDirWS, float extrusionLength);
     bool IsPassActive();
 
     // Called by Model3D::DrawShadowVolume after it bound the volume VB/IB, set the world

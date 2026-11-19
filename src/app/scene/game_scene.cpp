@@ -24,6 +24,7 @@
 #include "engine/rendering/culling/shadow_cascade_cull.h"
 #include "engine/rendering/lighting/shadow.h"
 #include "engine/rendering/lighting/shadow_volume.h"
+#include "engine/rendering/lighting/shadow_volume_policy.h"
 #include "engine/physics/core/physics_system.h"
 #include "engine/physics/core/rigidbody.h"
 #include "engine/rendering/lighting/lighting.h"
@@ -677,7 +678,9 @@ void GameScene::Object_Draw() {
 	// CSM depth passes run only in "csm" mode; "volume" and "none" bind no cascades, so
 	// EvalShadow returns fully lit and the volume pass below (if any) does the shadowing.
 	const ShadowMode shadowMode = RenderSettings_GetConst().shadowMode;
-	const bool csmShadows = (shadowMode == ShadowMode::Csm);
+	// No DirectionalLight with castShadows -> no cascades either (they would use a stale
+	// light direction from an earlier scene or light).
+	const bool csmShadows = (shadowMode == ShadowMode::Csm) && Shadow::IsCasterActive();
 
 	{
 		const auto& cam = GetCamera();
@@ -734,6 +737,7 @@ void GameScene::Object_Draw() {
 		for (int i = 0; i < cascadeCount; ++i) vps.push_back(Shadow::GetLightViewProj(i));
 		Shader_SetShadowMatrices(vps.data(), cascadeCount, Shadow::GetReceiverBias());
 		Shader_SetShadowCascadeParams(Shadow::GetCascadeSplits(), Shadow::GetCascadeBlend());
+		Shader_SetShadowLightIndex(Shadow::GetCasterLightIndex());
 
 		ID3D11ShaderResourceView* srvs[Shadow::MAX_CASCADES] = {};
 		for (int i = 0; i < cascadeCount; ++i) srvs[i] = Shadow::GetShadowSRV(i);
@@ -750,7 +754,8 @@ void GameScene::Object_Draw() {
 
 		// Stencil shadow volumes over the opaque scene (before billboards / particles).
 		if (shadowMode == ShadowMode::Volume && Shadow::IsCasterActive()
-			&& ShadowVolume::BeginPass(Shadow::GetLightDirection(0))) {
+			&& ShadowVolume::BeginPass(Shadow::GetLightDirection(0),
+				shadow_volume_policy::ExtrusionLength(GetCamera().farClip))) {
 #ifdef GAME_RUNTIME
 			const bool useRealModel = true;
 #else

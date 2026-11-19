@@ -144,7 +144,8 @@ struct SHADOW_CB {
 	XMFLOAT4   ShadowParams[MAX_LIGHTS]; // x=bias, y=slope
 	UINT       CascadeCount;
 	float      CascadeBlend;
-	float      _padCascade[2];
+	int        ShadowLightIndex;  // Lights[] slot that receives CSM shadow; -1 = none
+	float      _padCascade;
 	XMFLOAT4   CascadeSplits;
 	XMFLOAT4X4 WorldView;
 };
@@ -155,6 +156,7 @@ static float    s_ShadowBias = 0.0015f;
 static float    s_ShadowSlope = 1.5f;
 static int      s_CascadeCount = 0;
 static float    s_CascadeBlend = 2.0f;
+static int      s_ShadowLightIndex = 0;
 static XMFLOAT4 s_CascadeSplits = { 0, 0, 0, 0 };
 
 // Shadow SRV array (t1..)
@@ -173,8 +175,8 @@ static void UpdateShadowCB() {
 	}
 	cb.CascadeCount = static_cast<UINT>(n);
 	cb.CascadeBlend = s_CascadeBlend;
-	cb._padCascade[0] = 0.0f;
-	cb._padCascade[1] = 0.0f;
+	cb.ShadowLightIndex = s_ShadowLightIndex;
+	cb._padCascade = 0.0f;
 	cb.CascadeSplits = s_CascadeSplits;
 	XMStoreFloat4x4(&cb.WorldView, XMMatrixTranspose(s_World3D * s_View3D));
 
@@ -601,6 +603,11 @@ void Shader_SetShadowMatrices(const XMMATRIX* lightViewProjArray, int cascadeCou
 	}
 	s_ShadowBias = bias;
 	s_ShadowSlope = slope;
+	UpdateShadowCB();
+}
+
+void Shader_SetShadowLightIndex(int lightIndex) {
+	s_ShadowLightIndex = (lightIndex < 0) ? -1 : lightIndex;
 	UpdateShadowCB();
 }
 

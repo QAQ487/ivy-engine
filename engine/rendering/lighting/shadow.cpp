@@ -34,7 +34,7 @@ namespace {
 	std::vector<CascadeMap> g_cascades;
 
 	DirectX::XMFLOAT3 g_lightDirWS {0.0f, -1.0f, 0.0f};
-	bool g_casterActive = true;
+	int g_casterLightIndex = 0;
 	float g_cascadeBlend = 2.0f;
 	float g_shadowDistance = 60.0f;
 
@@ -328,8 +328,9 @@ namespace Shadow {
 		DirectX::XMStoreFloat3(&g_lightDirWS, v);
 	}
 
-	void SetCasterActive(bool active) { g_casterActive = active; }
-	bool IsCasterActive() { return g_casterActive; }
+	void SetCasterLightIndex(int lightIndex) { g_casterLightIndex = (lightIndex < 0) ? -1 : lightIndex; }
+	int GetCasterLightIndex() { return g_casterLightIndex; }
+	bool IsCasterActive() { return g_casterLightIndex >= 0; }
 
 	DirectX::XMFLOAT3 GetLightDirection(int index) {
 		(void)index;

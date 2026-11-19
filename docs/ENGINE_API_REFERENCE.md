@@ -1731,6 +1731,7 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `void Shader_SetShadowMatrix(const DirectX::XMMATRIX& lightViewProj, float bias = 0.0015f);`
 - `void Shader_SetShadowMatrices(const DirectX::XMMATRIX* lightViewProjArray, int cascadeCount, float bias = 0.0015f, float slope = 1.5f);`
 - `void Shader_SetShadowCascadeParams(const DirectX::XMFLOAT4& splits, float blend);`
+- `void Shader_SetShadowLightIndex(int lightIndex);`
 - `void Shader_BindShadowMap(ID3D11ShaderResourceView* shadowSRV);`
 - `void Shader_BindShadowMaps(ID3D11ShaderResourceView* const* shadowSRVs, int lightCount);`
 - `void Shader_ClearShadowMaps();`
@@ -1868,7 +1869,8 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `bool Reconfigure(UINT size, int cascadeCount);`
 - `void Finalize();`
 - `void SetLightDirection(int index, const DirectX::XMFLOAT3& dir);`
-- `void SetCasterActive(bool active);`
+- `void SetCasterLightIndex(int lightIndex);`
+- `int GetCasterLightIndex();`
 - `bool IsCasterActive();`
 - `DirectX::XMFLOAT3 GetLightDirection(int index = 0);`
 - `void UpdateForCamera(const CameraShadowParams& cam, float maxShadowDistance = 60.0f);`
@@ -1895,7 +1897,7 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `bool Initialize(ID3D11Device* dev, ID3D11DeviceContext* ctx);`
 - `void Finalize();`
 - `bool IsReady();`
-- `bool BeginPass(const DirectX::XMFLOAT3& shineDirWS);`
+- `bool BeginPass(const DirectX::XMFLOAT3& shineDirWS, float extrusionLength);`
 - `bool IsPassActive();`
 - `void DrawVolume(const DirectX::XMMATRIX& world, UINT indexCount);`
 - `void RecordOpenMesh();`

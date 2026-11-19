@@ -75,6 +75,9 @@ public:
     // skip pose evaluation while nothing draws it. Not serialized.
     mutable uint64_t lastConsideredSerial = ~uint64_t{0};
     mutable uint64_t lastDrawnSerial = ~uint64_t{0};
+    // Frame serial when the main camera pass last hid this Visual by cullDistance; the
+    // shadow-volume pass (same frame, later) then casts nothing. Not serialized.
+    mutable uint64_t lastDistanceCulledSerial = ~uint64_t{0};
 
     // Shared-cache mesh for level (0 = modelPath). Falls back to level 0 when the
     // LOD mesh is missing or failed to load. nullptr only if level 0 is unavailable.

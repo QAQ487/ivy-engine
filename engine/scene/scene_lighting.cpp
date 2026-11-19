@@ -55,7 +55,7 @@ void ApplyFallbackLighting() {
     L0.specPower = 10.0f;
     Lighting::AddDirectionalLight(L0);
     Shadow::SetLightDirection(0, L0.directionWS);
-    Shadow::SetCasterActive(true);
+    Shadow::SetCasterLightIndex(0);  // the fallback light is Lights[0]
     Lighting::SetAmbientColor({ 0.6f, 0.7f, 0.8f });
 }
 
@@ -141,6 +141,7 @@ void SceneLightingSyncFromNodes(const std::vector<std::unique_ptr<GameObject>>& 
 
     Lighting::ClearLights();
     int shadowIndex = 0;
+    int casterLightIndex = -1;
     const int shadowCapacity = Shadow::GetMaxCasters();
 
     for (const SceneLightEntry& e : entries) {
@@ -162,10 +163,13 @@ void SceneLightingSyncFromNodes(const std::vector<std::unique_ptr<GameObject>>& 
             L.color = ScaledColor(e.directional->color, e.directional->intensity);
             L.specColor = e.directional->specColor;
             L.specPower = e.directional->specPower;
+            const int lightIndex = Lighting::GetParams().lightCount;  // slot AddDirectionalLight fills
             Lighting::AddDirectionalLight(L);
 
             if (e.directional->castShadows && shadowIndex < shadowCapacity) {
                 Shadow::SetLightDirection(shadowIndex, L.directionWS);
+                if (shadowIndex == 0)
+                    casterLightIndex = lightIndex;
                 ++shadowIndex;
             }
         }
@@ -198,6 +202,6 @@ void SceneLightingSyncFromNodes(const std::vector<std::unique_ptr<GameObject>>& 
         }
     }
 
-    Shadow::SetCasterActive(shadowIndex > 0);
+    Shadow::SetCasterLightIndex(casterLightIndex);
     Lighting::SetAmbientColor({ 0.6f, 0.7f, 0.8f });
 }

@@ -59,7 +59,9 @@ namespace {
 	struct ObjectCB {
 		DirectX::XMFLOAT4 shineDirOS;
 		DirectX::XMFLOAT4 capBiasOS;
+		DirectX::XMFLOAT4 extrudeParams;  // x: extrusion length (world units)
 	};
+	float g_extrusionLength = 1000.0f;
 	struct DarkenCB {
 		DirectX::XMFLOAT4 color;
 	};
@@ -257,7 +259,7 @@ namespace ShadowVolume {
 			&& g_dsDarken && g_rsVolume && g_bsNoColor && g_bsMultiply;
 	}
 
-	bool BeginPass(const DirectX::XMFLOAT3& shineDirWS) {
+	bool BeginPass(const DirectX::XMFLOAT3& shineDirWS, float extrusionLength) {
 		g_stats = {};
 		if (!IsReady() || g_passActive) {
 			g_lastStats = {};
@@ -271,6 +273,8 @@ namespace ShadowVolume {
 			return false;
 		}
 		XMStoreFloat3(&g_shineWS, XMVector3Normalize(shine));
+		g_extrusionLength = (std::isfinite(extrusionLength) && extrusionLength > 0.0f)
+			? extrusionLength : 1000.0f;
 
 		SaveState();
 		g_passActive = true;
@@ -309,6 +313,7 @@ namespace ShadowVolume {
 		XMStoreFloat4(&cb.capBiasOS, XMVector3TransformNormal(XMVectorScale(shineWS, kCapBiasWorld), invWorld));
 		cb.shineDirOS.w = 0.0f;
 		cb.capBiasOS.w = 0.0f;
+		cb.extrudeParams = XMFLOAT4(g_extrusionLength, 0.0f, 0.0f, 0.0f);
 		g_ctx->UpdateSubresource(g_cbObject, 0, nullptr, &cb, 0, 0);
 
 		// Re-assert our VS/IL: Model3D only updates constant buffers, but keep this

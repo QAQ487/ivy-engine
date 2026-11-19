@@ -3,14 +3,17 @@
 //
 // Input is the volume mesh built by engine/rendering/lighting/shadow_volume_mesh.h:
 // unshared triangle corners carrying their triangle's outward face normal, plus
-// zero-area quads on every edge. Corners whose face does not face the light are sent
-// to infinity along the light direction (w = 0); the rest stay put (nudged slightly
-// along the light so the near cap sits just inside the caster). Quads on silhouette
-// edges stretch into the volume's side walls.
+// zero-area quads on every edge. Corners whose face does not face the light are pushed
+// ExtrudeParams.x world units along the light direction (4x the camera far clip; see
+// shadow_volume_policy.h); the rest stay put (nudged slightly along the light so the
+// near cap sits just inside the caster). Quads on silhouette edges stretch into the
+// volume's side walls.
 //
-// The rasterizer runs with depth clip off, so the far cap clamps to the far plane
-// instead of being clipped; with the z-fail stencil count that keeps the result right
-// when the camera is inside a shadow.
+// A finite push (not a w = 0 point at infinity) keeps orthographic cameras working: an
+// orthographic projection keeps w = 0, so such points would be clipped away. The
+// rasterizer runs with depth clip off, so the far cap clamps onto the far plane instead
+// of being clipped; with the z-fail stencil count that keeps the result right when the
+// camera is inside a shadow.
 //
 // Works for static and GPU-skinned meshes: SkinPositionOS / SkinDirectionOS are the
 // identity when SkinEnabled == 0.
@@ -21,6 +24,7 @@ cbuffer ShadowVolumeObject : register(b7)
 {
     float4 ShineDirOS; // xyz: direction the light travels, in object space (not normalised)
     float4 CapBiasOS;  // xyz: near-cap offset along the light, object space
+    float4 ExtrudeParams; // x: extrusion length in world units (ShineDirOS maps world units to object space)
 }
 
 float3 SkinDirectionOS(float3 d, uint4 indices, float4 weights)
@@ -65,5 +69,5 @@ float4 main(in float3 inPosition : POSITION0,
     const float facing = -dot(faceN, ShineDirOS.xyz);
     if (facing > 0.0f)
         return mul(float4(posOS + CapBiasOS.xyz, 1.0f), WorldViewProjection);
-    return mul(float4(ShineDirOS.xyz, 0.0f), WorldViewProjection);
+    return mul(float4(posOS + ShineDirOS.xyz * ExtrudeParams.x, 1.0f), WorldViewProjection);
 }

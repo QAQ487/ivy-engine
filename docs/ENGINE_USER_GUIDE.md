@@ -413,9 +413,9 @@ Editor helpers: **View → 2D View** (orthographic XY editing; middle-drag or Al
 
 Add a light component to an empty (or dedicated) node with a transform:
 
-- **DirectionalLight** — sun; can cast shadows
+- **DirectionalLight** — sun; can cast shadows. Only the first Directional Light with **Cast Shadows** casts (CSM and shadow volumes); other directional lights light the scene without shadows, and with no light ticked no shadows are drawn
 - **PointLight** — omni with range / attenuation
-- **SpotLight** — cone; can cast shadows
+- **SpotLight** — cone (its **Cast Shadows** checkbox has no effect yet: spot shadows are not implemented)
 
 The scene syncs these into the GPU lighting buffer each frame.
 
@@ -769,7 +769,7 @@ Available variants include standard, hemisphere, rim, surface FX, toon (plus out
 1. Create an empty node.
 2. Add `DirectionalLight` (or point/spot).
 3. Aim it with `SceneTransform` rotation.
-4. Enable `castShadows` on directional/spot when needed.
+4. Enable `castShadows` on the directional light that should cast shadows (spot shadows are not implemented yet).
 
 Keep light count within the engine limit (a handful of active lights — see `Lighting::MAX_LIGHTS`).
 

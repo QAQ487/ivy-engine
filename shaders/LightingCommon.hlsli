@@ -12,7 +12,8 @@ cbuffer ShadowBuffer : register(b2)
     float4 ShadowParams[MAX_LIGHTS]; // x=constBias, y=slopeBias, z=receiverNormalOffset(OS)
     uint CascadeCount;
     float CascadeBlend;
-    float2 _padCascade;
+    int ShadowLightIndex; // Lights[] slot that casts the cascades; -1 = none
+    float _padCascade;
     float4 CascadeSplits; // view-space far Z for cascades 0..3
     matrix WorldView;     // object -> view (for cascade selection)
 }
@@ -218,7 +219,8 @@ float CascadeSplitFar(uint cascadeIndex)
     return result;
 }
 
-// Cascaded directional shadow. Only directional lights (Type < 0.5) sample CSM.
+// Cascaded directional shadow. Only the caster light (ShadowLightIndex, a directional
+// light) samples CSM; other lights are unshadowed.
 float EvalShadow(uint lightIndex, float3 inPosOS, float3 N)
 {
     float result = 1.0f;
@@ -226,7 +228,8 @@ float EvalShadow(uint lightIndex, float3 inPosOS, float3 N)
     {
         uint lightLoop = (uint)LightCountF;
         if (lightLoop > MAX_LIGHTS) lightLoop = MAX_LIGHTS;
-        if (lightIndex < lightLoop && Lights[lightIndex].Type < 0.5f)
+        if (lightIndex < lightLoop && (int)lightIndex == ShadowLightIndex
+            && Lights[lightIndex].Type < 0.5f)
         {
             float receiverNormalOffset = ShadowParams[0].z;
             float3 posForShadowOS = inPosOS + N * receiverNormalOffset;
