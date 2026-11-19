@@ -1,7 +1,7 @@
 # Ivy Engine — Complete Ability & API Reference
 
 Exhaustive catalog of **Ivy Engine** capabilities and public functions,
-scanned from every header under `engine/` and `src/app/` (187 headers; regenerate to refresh).
+scanned from every header under `engine/` and `src/app/` (188 headers; regenerate to refresh).
 
 **Learning how to use the engine?** Start with [`ENGINE_USER_GUIDE.md`](ENGINE_USER_GUIDE.md) (humans).  
 For JSON schemas, source map, and change rules, see [`AGENTS.md`](../AGENTS.md) (AI agents).
@@ -1848,6 +1848,14 @@ Vendor header `WICTextureLoader11.h` is omitted.
 ### `engine/rendering/environment/skybox_asset_path.h`
 - `return IsEligibleCubemapPath(std::string_view{path});`
 - `return RomPathFromAssetPath(std::string_view{path});`
+
+### `engine/rendering/lighting/csm_fit.h`
+**Types:** Vec3, SliceSphere, LightBasis
+- `inline float Length(Vec3 a) { return std::sqrt(Dot(a, a));`
+- `inline Vec3 Normalize(Vec3 a, Vec3 fallback) { const float len = Length(a);`
+- `return Scale(a, 1.0f / len);`
+- `inline float TexelWorldSize(float halfExtent, unsigned mapSize) { return (halfExtent * 2.0f) / static_cast<float>(mapSize == 0 ? 1u : mapSize);`
+- `return Add(centerWS, Add(Scale(basis.right, sx - x), Scale(basis.up, sy - y)));`
 
 ### `engine/rendering/lighting/lighting.h`
 **Types:** Light, Params

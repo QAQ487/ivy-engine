@@ -19,10 +19,10 @@
   - Windows 要驗：shader 編譯；影落喺斜坡；鏡頭行入影入面唔反轉；天空唔會被壓暗；caster 本身受光面冇 acne；轉光源方向即時更新；鏡像（負 scale）物件正確；Rendering 面板 counters；Release 打包包含兩個新 `.cso`。
   - 已知限制：硬邊、冇距離上限、fill-rate 隨 volume 大小上升；只得一盞 directional light；OBJ 唔支援；skinned 物件嘅 face normal 用 vertex 權重近似；volume 用 LOD0（遠處輪廓同畫面 LOD 有少少差）；volume pass 冇剔除。
   - 2026-11-19 審計修正（等 Windows 驗收）：畫面外動畫 caster 嘅影唔再凍結（volume 畫咗就 stamp `lastDrawnSerial`）；被 `cullDistance` 隱藏嘅物件唔再投影；extrusion 改為 4× far clip 有限長度，正交鏡頭唔再冇影。Linux：`tests/shadow_volume_policy_test.cpp`。
-- [ ] **CSM 審計跟進**（2026-11-19 source audit；`castShadows` 一項已修，其餘未修）
-  - Texel snap 喺跟住鏡頭移動嘅 light-space 原點做，所以冇效（鏡頭平移時陰影閃）；cascade 半徑跟鏡頭轉向改變（轉鏡頭時閃）——`shadow.cpp` `FitOrthoCascade`。
+- [ ] **CSM 審計跟進**（2026-11-19 source audit；`castShadows`、texel snap、旋轉半徑、depth clamp 已修，其餘未修）
+  - ~~Texel snap 喺跟住鏡頭移動嘅 light-space 原點做，所以冇效（鏡頭平移時陰影閃）；cascade 半徑跟鏡頭轉向改變（轉鏡頭時閃）——`shadow.cpp` `FitOrthoCascade`。~~ 已修（等 Windows 驗收）：`engine/rendering/lighting/csm_fit.h`（純邏輯，`tests/csm_fit_test.cpp`）——cascade 用 view slice 嘅最小包圍球（只取決於 near／far／FOV／aspect，轉鏡頭唔變）加一格 texel 邊；球心喺以世界原點為基準嘅 light-space 對齊到整數 texel。Windows 要驗：慢慢平移／轉鏡頭時陰影邊唔再閃爍、爬動；陰影清晰度同之前差唔多（新 cascade 比舊嘅細約 1–2%）。
   - ~~`castShadows` 全關時 CSM 照畫（用舊方向）；shader 對每盞 directional light 都套同一張 CSM。~~ 已修（等 Windows 驗收）：`Shadow::GetCasterLightIndex()`（-1 = 冇）閘住 cascade pass；`ShadowBuffer.ShadowLightIndex` 令 `EvalShadow` 只陰影 caster 嗰盞燈。Windows 要驗：全部 `castShadows` 關 → 冇影；兩盞 directional light 只有剔咗嗰盞有影、另一盞照亮影區（之前每個 pixel shader 最尾將成個顏色乘 `lerp(1, shadow, 0.65)`，連冇投影嗰盞燈都壓暗，所以睇唔出；已刪，改為只係環境光按 `render.shadowAmbientStrength`（預設 0.35，Rendering → Ambient In Shadow）縮放，emission 唔再被壓暗）。驗收場景：`testbed/rom/scene/scene_shadow_light_verify.json`。
-  - Shadow rasterizer `DepthClipEnable = TRUE` 同 open-near cascade cull 矛盾：離 slice 超過 `kZPadding`（25）嘅高物件影子被 clip 走。
+  - ~~Shadow rasterizer `DepthClipEnable = TRUE` 同 open-near cascade cull 矛盾：離 slice 超過 `kZPadding`（25）嘅高物件影子被 clip 走。~~ 已修（等 Windows 驗收）：shadow rasterizer `DepthClipEnable = FALSE`（pancaking）。Windows 要驗：好高嘅物件（例如 50 單位高柱）頂部喺鏡頭外，影仍然完整；冇新 shadow acne。
   - Receiver normal offset 永遠係 0；陰影最暗寫死 0.3；冇 shadow distance 淡出；cascade 交界 `ddx/ddy` 喺分歧 branch；blend 帶固定 1–4 單位；bias 冇按 cascade；正交鏡頭仍用 perspective 擬合；冇 alpha-test 陰影；SpotLight `castShadows` 冇效。
 - [ ] **World-space UI 編輯器支援**
   - 可以建立、擺位同編輯 world-space UI；與 screen-space canvas 分開。

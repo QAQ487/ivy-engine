@@ -258,6 +258,9 @@
     <ClInclude Include="engine\rendering\lighting\shadow_volume_mesh.h">
       <Filter>engine\rendering\lighting</Filter>
     </ClInclude>
+    <ClInclude Include="engine\rendering\lighting\csm_fit.h">
+      <Filter>engine\rendering\lighting</Filter>
+    </ClInclude>
     <ClInclude Include="engine\rendering\lighting\shadow_volume_policy.h">
       <Filter>engine\rendering\lighting</Filter>
     </ClInclude>

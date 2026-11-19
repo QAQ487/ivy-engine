@@ -505,6 +505,68 @@
           "metallic": 0.0
         }
       }
+    },
+    {
+      "name": "TallPillar_40m (depth clamp check)",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -4.5,
+          "posY": 20.0,
+          "posZ": 22.0,
+          "rotX": 0,
+          "rotY": 0,
+          "rotZ": 0,
+          "scaleX": 1.5,
+          "scaleY": 40.0,
+          "scaleZ": 1.5
+        },
+        "visual": {
+          "model": "rom/model/primitives/Cylinder.fbx",
+          "shader": "standard"
+        },
+        "Material": {
+          "color": [
+            0.6,
+            0.8,
+            0.6
+          ],
+          "roughness": 0.6,
+          "metallic": 0.0
+        }
+      }
+    },
+    {
+      "name": "Ground_back (tall pillar shadow)",
+      "tag": 2,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 0.0,
+          "posY": -0.1,
+          "posZ": 30.0,
+          "rotX": 0,
+          "rotY": 0,
+          "rotZ": 0,
+          "scaleX": 40.0,
+          "scaleY": 0.2,
+          "scaleZ": 24.0
+        },
+        "visual": {
+          "model": "rom/model/primitives/Cube.fbx",
+          "shader": "standard"
+        },
+        "Material": {
+          "color": [
+            0.9,
+            0.9,
+            0.9
+          ],
+          "roughness": 0.6,
+          "metallic": 0.0
+        }
+      }
     }
   ],
   "canvas": {}

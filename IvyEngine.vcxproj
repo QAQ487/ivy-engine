@@ -273,6 +273,7 @@ exit /b 0</Command>
     <ClInclude Include="engine\rendering\lighting\shadow.h" />
     <ClInclude Include="engine\rendering\lighting\shadow_volume.h" />
     <ClInclude Include="engine\rendering\lighting\shadow_volume_mesh.h" />
+    <ClInclude Include="engine\rendering\lighting\csm_fit.h" />
     <ClInclude Include="engine\rendering\lighting\shadow_volume_policy.h" />
     <ClInclude Include="engine\rendering\culling\frustum_cull.h" />
     <ClInclude Include="engine\rendering\culling\frustum_cull_math.h" />
