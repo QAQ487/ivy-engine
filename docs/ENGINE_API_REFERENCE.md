@@ -1,7 +1,7 @@
 # Ivy Engine — Complete Ability & API Reference
 
 Exhaustive catalog of **Ivy Engine** capabilities and public functions,
-scanned from every header under `engine/` and `src/app/` (181 headers; regenerate to refresh).
+scanned from every header under `engine/` and `src/app/` (184 headers; regenerate to refresh).
 
 **Learning how to use the engine?** Start with [`ENGINE_USER_GUIDE.md`](ENGINE_USER_GUIDE.md) (humans).  
 For JSON schemas, source map, and change rules, see [`AGENTS.md`](../AGENTS.md) (AI agents).
@@ -1049,6 +1049,7 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `void DrawRenderingSettingsBody();`
 - `void DrawProjectGravitySettings();`
 - `void DrawProjectAudioSettings();`
+- `void DrawProjectInputSettings();`
 - `void DrawProjectDefaultSceneSettings();`
 - `bool DrawPlayablePackageConfigFields();`
 - `void DrawProjectSettingsWindow();`
@@ -1236,6 +1237,8 @@ Vendor header `WICTextureLoader11.h` is omitted.
 ### `engine/editor/project_file_merge.h`
 **Types:** MergeResult
 - `inline double FloatForJson(float value) { if (!std::isfinite(value)) return static_cast<double>(value);`
+- `inline MergeResult ReplaceInputActions(std::string_view existingText, const nlohmann::json& actions) { MergeResult result = Merge(existingText, nlohmann::json::object());`
+- `inline bool ReadInputActions(std::string_view text, nlohmann::json* outActions, std::string* error) { const MergeResult r = Merge(text, nlohmann::json::object());`
 
 ### `engine/editor/project_manager.h`
 **Types:** HWND__, ProjectManager, EditorSettings, PhysicsSettings, AudioSettings, BuildSettings, ProjectData
@@ -1246,6 +1249,8 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `void CloseProject();`
 - `bool CreateProject(const std::string& parentDir, const std::string& projectName, std::string* errorOut = nullptr, bool template2D = false);`
 - `bool SaveProjectFile(std::string* errorOut = nullptr);`
+- `bool LoadInputActionsJson(std::string* actionsJson, std::string* errorOut = nullptr) const;`
+- `bool SaveInputActionsJson(const std::string& actionsJson, std::string* errorOut = nullptr);`
 - `void SetLastOpenedScene(const std::string& fileName);`
 - `void SetDefaultScene(const std::string& fileName);`
 - `void SetEditorUiZoomPercent(int percent);`
@@ -1322,6 +1327,54 @@ Vendor header `WICTextureLoader11.h` is omitted.
 ### `engine/input/controller_test_inject.h`
 **Types:** ControllerInjectSample, ControllerInjectOverlay
 
+### `engine/input/input_action_system.h`
+**Types:** ActionSet, Snapshot
+- `std::mutex& InputActionSystem_Mutex();`
+- `input_actions::ActionSet& InputActionSystem_Set();`
+- `const input_actions::Snapshot& InputActionSystem_LastSnapshot();`
+- `void InputActionSystem_Update();`
+- `void InputActionSystem_ReloadDefaults();`
+- `bool InputActionSystem_SaveOverrides(std::string* error);`
+- `void InputActionSystem_WarnUnknown(const char* name);`
+
+### `engine/input/input_actions.h`
+**Types:** Source, Binding, Snapshot, ActionDef, Issue, Capture, ActionSet, Runtime
+**Enums:** ActionType, SourceKind, CapturePart, State
+- `bool ParseSource(std::string_view text, Source* out, std::string* error = nullptr);`
+- `std::string SourceToString(const Source& source);`
+- `bool ParseBinding(std::string_view text, Binding* out, std::string* error = nullptr);`
+- `std::string BindingToString(const Binding& binding);`
+- `float SourceValue(const Source& source, const Snapshot& snapshot);`
+- `float BindingValue(const Binding& binding, const Snapshot& snapshot);`
+- `bool IsValidActionName(std::string_view name);`
+- `const char* ActionTypeName(ActionType type);`
+- `std::vector<ActionDef> ParseActions(const nlohmann::json& actions, std::vector<Issue>* issues = nullptr);`
+- `nlohmann::json ActionsToJson(const std::vector<ActionDef>& defs);`
+- `std::vector<Issue> Validate(const std::vector<ActionDef>& defs);`
+- `std::string ComposeCapturedBinding(ActionType type, CapturePart part, std::string_view existing, Source captured);`
+- `void Start(const Snapshot& now, bool includeMouse);`
+- `State Update(const Snapshot& now);`
+- `void Cancel();`
+- `void SetDefaults(std::vector<ActionDef> defaults, std::vector<Issue>* issues = nullptr);`
+- `bool HasAction(std::string_view name) const;`
+- `const std::vector<std::string>* Bindings(std::string_view name) const;`
+- `bool SetBindings(std::string_view name, const std::vector<std::string>& bindings, std::string* error = nullptr);`
+- `bool ResetBindings(std::string_view name);`
+- `nlohmann::json OverridesToJson() const;`
+- `int ApplyOverrides(const nlohmann::json& overrides, std::vector<Issue>* issues = nullptr);`
+- `void Update(const Snapshot& snapshot);`
+- `bool IsPressed(std::string_view name) const;`
+- `bool IsTriggered(std::string_view name) const;`
+- `bool IsReleased(std::string_view name) const;`
+- `float GetAxis(std::string_view name) const;`
+- `bool CaptureStart(std::string_view name, int index, CapturePart part, bool includeMouse, std::string* error = nullptr);`
+- `Capture::State CaptureState() const { return m_capture.GetState();`
+- `void CaptureCancel();`
+- `void Compile(Runtime& rt);`
+- `const Runtime* Find(std::string_view name) const;`
+- `Runtime* Find(std::string_view name);`
+- `void FinishCapture();`
+
 ### `engine/input/key_logger.h`
 - `void KeyLogger_Initialize();`
 - `void KeyLogger_Update(double now_time);`
@@ -1333,6 +1386,9 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `bool KeyLogger_IsRepeat(Keyboard_Keys key);`
 - `bool KeyLogger_IsLongPress(Keyboard_Keys key);`
 - `double KeyLogger_GetHoldTime(Keyboard_Keys key);`
+
+### `engine/input/key_names.h`
+**Types:** Entry
 
 ### `engine/input/keyboard.h`
 - `void Keyboard_Initialize(void);`
@@ -2199,6 +2255,7 @@ Vendor header `WICTextureLoader11.h` is omitted.
 
 ### `engine/scripting/script_runtime_api.h`
 **Types:** ScriptRuntimeApi
+**Enums:** ScriptInputPart, ScriptInputCaptureState
 - `unsigned int (*textureGetWidth)(int textureId);`
 - `unsigned int (*textureGetHeight)(int textureId);`
 - `const ScriptRuntimeApi* ScriptRuntimeApi_GetHost();`
@@ -2271,6 +2328,18 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `bool ScriptApi_SaveSlotExists(const char* slot);`
 - `bool ScriptApi_SaveDeleteSlot(const char* slot);`
 - `std::vector<std::string> ScriptApi_SaveListSlots();`
+- `bool ScriptApi_InputIsPressed(const char* action);`
+- `bool ScriptApi_InputIsTriggered(const char* action);`
+- `bool ScriptApi_InputIsReleased(const char* action);`
+- `float ScriptApi_InputGetAxis(const char* action);`
+- `bool ScriptApi_InputHasAction(const char* action);`
+- `std::vector<std::string> ScriptApi_InputGetBindings(const char* action);`
+- `bool ScriptApi_InputSetBindings(const char* action, const std::vector<std::string>& bindings);`
+- `bool ScriptApi_InputCaptureStart(const char* action, int index, ScriptInputPart part = ScriptInputPart::Whole, bool includeMouse = true);`
+- `ScriptInputCaptureState ScriptApi_InputCaptureState(std::string* outBinding = nullptr);`
+- `void ScriptApi_InputCaptureCancel();`
+- `bool ScriptApi_InputResetBindings(const char* action = nullptr);`
+- `bool ScriptApi_InputSaveBindings();`
 - `void ScriptApi_CameraSetPosition(DirectX::XMFLOAT3 position);`
 - `void ScriptApi_CameraSetTarget(DirectX::XMFLOAT3 target);`
 - `void ScriptApi_CameraSetUp(DirectX::XMFLOAT3 up);`

@@ -192,7 +192,7 @@
 - [x] 按名／tag 搵 GameObject：`ScriptApi_FindGameObjectByName`、`ScriptApi_FindGameObjectsByTag`（v50；深度優先、scene 次序、包括生成嘅 prefab；`engine/ecs/game_object_search.h`，Linux：`tests/game_object_search_test.cpp`）
 - [x] 時間：`ScriptApi_GetTimeScale`、`ScriptApi_GetRealTimeSeconds`（v50）
 - [x] 存檔／持久化（v51；source 已做，等 Windows 驗收）：slot 檔案 key-value＋JSON 值，`ScriptApi_SaveCommit` 先寫入（.tmp → .bak → `MoveFileExW`），讀取壞檔自動用 `.bak`；打包遊戲存去 Saved Games，editor Play 存去 `<project>/.ivy/saves/`（ADR 0009，`engine/save/`，Linux：`tests/save_store_test.cpp`）。示範：`scene_save_demo.json`＋`SampleSaveScript`。
-- [ ] 冇 input action 映射／按鍵重設
+- [x] Input action 映射／按鍵重設（v52；source 已做，等 Windows 驗收）：`project.json` `input.actions` 預設（Project Settings → Input 頁，Listen 錄入），`ScriptApi_Input*` 讀 action、capture 改鍵、`InputSaveBindings` 存去 slot `ivy_input`（ADR 0010，`engine/input/input_actions`，Linux：`tests/input_actions_test.cpp`）。示範：`scene_input_rebind_demo.json`；`SamplePlayerScript` 改用 MoveX／MoveY／Jump。未做：多個手掣／玩家、組合鍵、相機滑鼠視角。
 - [ ] 冇非同步載入場景
 
 ## 歷史 backlog（source audit 結果）
