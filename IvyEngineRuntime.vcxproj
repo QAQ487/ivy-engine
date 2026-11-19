@@ -296,6 +296,18 @@ exit /b 0</Command>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
     </FxCompile>
+    <FxCompile Include="shaders\VertexShaderShadowVolume.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
+    </FxCompile>
+    <FxCompile Include="shaders\PixelShaderShadowVolumeDarken.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
+    </FxCompile>
     <FxCompile Include="shaders\SkyboxPS.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
@@ -381,6 +393,8 @@ exit /b 0</Command>
     <ClInclude Include="engine\core\engine_gui.h" />
     <ClInclude Include="engine\rendering\lighting\lighting.h" />
     <ClInclude Include="engine\rendering\lighting\shadow.h" />
+    <ClInclude Include="engine\rendering\lighting\shadow_volume.h" />
+    <ClInclude Include="engine\rendering\lighting\shadow_volume_mesh.h" />
     <ClInclude Include="engine\rendering\culling\frustum_cull.h" />
     <ClInclude Include="engine\rendering\culling\frustum_cull_math.h" />
     <ClInclude Include="engine\rendering\culling\cull_settings_math.h" />
@@ -409,6 +423,7 @@ exit /b 0</Command>
     <ClInclude Include="engine\scene\scene_loader.h" />
     <ClInclude Include="engine\scene\scene_asset_preload.h" />
     <ClInclude Include="engine\scene\render_settings.h" />
+    <ClInclude Include="engine\scene\shadow_mode.h" />
     <ClInclude Include="engine\scene\render_setting_access.h" />
     <ClInclude Include="engine\rendering\environment\skybox.h" />
     <ClInclude Include="engine\rendering\environment\ibl.h" />
@@ -515,6 +530,7 @@ exit /b 0</Command>
     <ClCompile Include="engine\core\engine_gui_runtime.cpp" />
     <ClCompile Include="engine\rendering\lighting\lighting.cpp" />
     <ClCompile Include="engine\rendering\lighting\shadow.cpp" />
+    <ClCompile Include="engine\rendering\lighting\shadow_volume.cpp" />
     <ClCompile Include="engine\rendering\culling\frustum_cull.cpp" />
     <ClCompile Include="engine\rendering\culling\lod_state.cpp" />
     <ClCompile Include="engine\rendering\culling\fx_cull.cpp" />

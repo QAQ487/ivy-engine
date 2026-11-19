@@ -30,6 +30,7 @@
 #include "camera.h"
 #include "engine/rendering/d3d11/shader.h"
 #include "engine/rendering/lighting/shadow.h"
+#include "engine/rendering/lighting/shadow_volume.h"
 #include "engine/debug_draw/debug_ofstream.h"
 
 using namespace DirectX;
@@ -43,6 +44,9 @@ Model3D::Model3D() {}
 Model3D::~Model3D() { Release(); }
 
 void Model3D::Release() {
+	ReleaseShadowVolumeInstanceData();
+	// Drop this model's share of the volume data (instances keep theirs until released).
+	m_shadowVolume.reset();
 	if (m_isAnimInstance) {
 		if (m_pVB && !m_sharesCachedVB) { m_pVB->Release(); }
 		m_pVB = nullptr;
@@ -1258,6 +1262,174 @@ void Model3D::Draw() {
 		UnbindRampSlot();
 }
 
+/**===========================================================================
+   <Shadow volume>
+ ===========================================================================**/
+Model3D::ShadowVolumeData::~ShadowVolumeData() {
+	if (vb) { vb->Release(); vb = nullptr; }
+	if (ib) { ib->Release(); ib = nullptr; }
+}
+
+void Model3D::ReleaseShadowVolumeInstanceData() {
+	if (m_svDynamicVB) { m_svDynamicVB->Release(); m_svDynamicVB = nullptr; }
+	m_svScratch.clear();
+}
+
+bool Model3D::ShadowVolumeNeedsCpuRefresh() const {
+	// GPU skin deforms the bind-pose corners in the volume VS. CPU skin and rigid clips
+	// rewrite m_verticesCPU every update, so the corners are re-extracted per draw.
+	if (CanGpuSkin()) return false;
+	return m_vbDynamic || m_hasSkin || !m_rigidBake.empty();
+}
+
+bool Model3D::EnsureShadowVolume(const char* debugName) {
+	if (!m_shadowVolume)
+		m_shadowVolume = std::make_shared<ShadowVolumeData>();
+	ShadowVolumeData& sv = *m_shadowVolume;
+	if (sv.attempted)
+		return sv.closed && sv.ib && sv.vb;
+	sv.attempted = true;
+
+	const char* name = (debugName && *debugName) ? debugName : "(unnamed mesh)";
+	if (m_verticesCPU.empty()) {
+		char msg[512];
+		std::snprintf(msg, sizeof(msg),
+			"[ShadowVolume] %s: no CPU vertices (only FBX meshes can cast shadow volumes)\n", name);
+		hal::DebugWriteA(msg);
+		return false;
+	}
+
+	// FBX index buffers are the identity: vertex i is corner i.
+	std::vector<uint32_t> identity(m_verticesCPU.size());
+	for (size_t i = 0; i < identity.size(); ++i) identity[i] = static_cast<uint32_t>(i);
+	const auto posOf = [this](size_t i) {
+		const XMFLOAT3& p = m_verticesCPU[i].Position;
+		return shadow_volume::Vec3 { p.x, p.y, p.z };
+	};
+	sv.topology = shadow_volume::Build(m_verticesCPU.size(), posOf, identity.data(), identity.size());
+	const shadow_volume::BuildStats& st = sv.topology.stats;
+	if (!sv.topology.Closed()) {
+		char msg[512];
+		std::snprintf(msg, sizeof(msg),
+			"[ShadowVolume] %s: mesh is not closed (open edges %zu, non-manifold edges %zu, "
+			"triangles %zu); it casts no shadow volume\n",
+			name, st.openEdges, st.nonManifoldEdges, st.triangles);
+		hal::DebugWriteA(msg);
+		sv.topology = {};
+		return false;
+	}
+
+	std::vector<shadow_volume::Vec3> normals;
+	shadow_volume::FillCornerNormals(sv.topology, posOf, normals);
+	std::vector<VertexPNTC> corners(sv.topology.CornerCount());
+	for (size_t c = 0; c < corners.size(); ++c) {
+		corners[c] = m_verticesCPU[sv.topology.cornerSource[c]];
+		corners[c].Normal = XMFLOAT3(normals[c].x, normals[c].y, normals[c].z);
+	}
+
+	D3D11_BUFFER_DESC bd {};
+	bd.Usage = D3D11_USAGE_IMMUTABLE;
+	bd.ByteWidth = static_cast<UINT>(corners.size() * sizeof(VertexPNTC));
+	bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	D3D11_SUBRESOURCE_DATA init {};
+	init.pSysMem = corners.data();
+	if (FAILED(GetDevice()->CreateBuffer(&bd, &init, &sv.vb)) || !sv.vb) {
+		hal::DebugWriteA("[ShadowVolume] failed to create the volume vertex buffer\n");
+		return false;
+	}
+
+	bd.ByteWidth = static_cast<UINT>(sv.topology.indices.size() * sizeof(uint32_t));
+	bd.BindFlags = D3D11_BIND_INDEX_BUFFER;
+	init.pSysMem = sv.topology.indices.data();
+	if (FAILED(GetDevice()->CreateBuffer(&bd, &init, &sv.ib)) || !sv.ib) {
+		hal::DebugWriteA("[ShadowVolume] failed to create the volume index buffer\n");
+		sv.vb->Release();
+		sv.vb = nullptr;
+		return false;
+	}
+	sv.indexCount = static_cast<UINT>(sv.topology.indices.size());
+	sv.closed = true;
+
+	char msg[512];
+	std::snprintf(msg, sizeof(msg),
+		"[ShadowVolume] %s: %zu triangles, %zu edges -> %u volume indices%s\n",
+		name, st.triangles, st.edges, sv.indexCount,
+		st.flippedWinding ? " (inward winding flipped)" : "");
+	hal::DebugWriteA(msg);
+	return true;
+}
+
+bool Model3D::DrawShadowVolume(const char* debugName) {
+	if (!ShadowVolume::IsPassActive())
+		return true;
+	if (!EnsureShadowVolume(debugName))
+		return false;
+	ShadowVolumeData& sv = *m_shadowVolume;
+
+	ID3D11Buffer* vb = sv.vb;
+	if (ShadowVolumeNeedsCpuRefresh()) {
+		const auto& topo = sv.topology;
+		if (topo.cornerSource.empty())
+			return false;
+		const auto posOf = [this](size_t i) {
+			const XMFLOAT3& p = m_verticesCPU[i].Position;
+			return shadow_volume::Vec3 { p.x, p.y, p.z };
+		};
+		for (uint32_t src : topo.cornerSource)
+			if (src >= m_verticesCPU.size())
+				return false;  // vertex count changed under us; skip this frame
+		static thread_local std::vector<shadow_volume::Vec3> normals;
+		shadow_volume::FillCornerNormals(topo, posOf, normals);
+		m_svScratch.resize(topo.CornerCount());
+		for (size_t c = 0; c < m_svScratch.size(); ++c) {
+			m_svScratch[c] = m_verticesCPU[topo.cornerSource[c]];
+			m_svScratch[c].Normal = XMFLOAT3(normals[c].x, normals[c].y, normals[c].z);
+		}
+		const UINT bytes = static_cast<UINT>(m_svScratch.size() * sizeof(VertexPNTC));
+		if (!m_svDynamicVB) {
+			D3D11_BUFFER_DESC bd {};
+			bd.Usage = D3D11_USAGE_DYNAMIC;
+			bd.ByteWidth = bytes;
+			bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+			bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+			if (FAILED(GetDevice()->CreateBuffer(&bd, nullptr, &m_svDynamicVB)) || !m_svDynamicVB)
+				return true;  // closed mesh; transient failure, just skip this draw
+		}
+		D3D11_MAPPED_SUBRESOURCE mapped {};
+		if (FAILED(GetDeviceContext()->Map(m_svDynamicVB, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped)))
+			return true;
+		std::memcpy(mapped.pData, m_svScratch.data(), bytes);
+		GetDeviceContext()->Unmap(m_svDynamicVB, 0);
+		vb = m_svDynamicVB;
+	}
+
+	if (!Shader_IsExternalVP()) {
+		const auto& cam = GetCamera();
+		Shader_SetProjectionMatrix(cam.GetProjMatrix(GetRenderViewportWidth(), GetRenderViewportHeight()));
+		Shader_SetViewMatrix(cam.GetViewMatrix());
+	}
+	const XMMATRIX T = XMMatrixTranslation(m_position.x, m_position.y, m_position.z);
+	const XMMATRIX R = XMMatrixRotationRollPitchYaw(
+		XMConvertToRadians(m_rotateDeg.x),
+		XMConvertToRadians(m_rotateDeg.y),
+		XMConvertToRadians(m_rotateDeg.z));
+	const XMMATRIX S = XMMatrixScaling(m_scale.x, m_scale.y, m_scale.z);
+	const XMMATRIX world = S * R * T;
+	Shader_SetWorldMatrix(world);
+
+	if (CanGpuSkin())
+		Shader_SetSkinPalette(m_gpuPaletteFront.data(), (int)m_gpuPaletteFront.size(), true);
+	else
+		Shader_SetSkinPalette(nullptr, 0, false);
+
+	const UINT stride = sizeof(VertexPNTC);
+	const UINT offset = 0;
+	GetDeviceContext()->IASetVertexBuffers(0, 1, &vb, &stride, &offset);
+	GetDeviceContext()->IASetIndexBuffer(sv.ib, DXGI_FORMAT_R32_UINT, 0);
+	ShadowVolume::DrawVolume(world, sv.indexCount);
+	return true;
+}
+
 const Model3D::SkinMeshGeo* Model3D::FindGeoForCP(int cpi) const {
 	if (cpi < 0 || (size_t)cpi >= m_geoIndexPerCP.size()) return nullptr;
 	const int gi = m_geoIndexPerCP[(size_t)cpi];
@@ -2225,6 +2397,9 @@ std::unique_ptr<Model3D> Model3D::CreateAnimInstanceFrom(const Model3D& shared) 
 	inst->m_gpuPaletteFront = shared.m_gpuPaletteFront;
 	inst->m_gpuPaletteDirty = false;
 	inst->m_vbUploadDirty = false;
+	if (!shared.m_shadowVolume)
+		shared.m_shadowVolume = std::make_shared<ShadowVolumeData>();
+	inst->m_shadowVolume = shared.m_shadowVolume;
 
 	// Per-instance playback. GPU skin shares the cached bind-pose VB.
 	inst->m_verticesCPU = shared.m_verticesCPU;

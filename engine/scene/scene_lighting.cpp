@@ -55,6 +55,7 @@ void ApplyFallbackLighting() {
     L0.specPower = 10.0f;
     Lighting::AddDirectionalLight(L0);
     Shadow::SetLightDirection(0, L0.directionWS);
+    Shadow::SetCasterActive(true);
     Lighting::SetAmbientColor({ 0.6f, 0.7f, 0.8f });
 }
 
@@ -197,5 +198,6 @@ void SceneLightingSyncFromNodes(const std::vector<std::unique_ptr<GameObject>>& 
         }
     }
 
+    Shadow::SetCasterActive(shadowIndex > 0);
     Lighting::SetAmbientColor({ 0.6f, 0.7f, 0.8f });
 }

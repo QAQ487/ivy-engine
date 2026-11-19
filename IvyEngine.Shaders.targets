@@ -59,6 +59,12 @@
     <HlslShader Include="shaders\PixelShader3D_Outline.hlsl">
       <ShaderTarget>ps_5_0</ShaderTarget>
     </HlslShader>
+    <HlslShader Include="shaders\VertexShaderShadowVolume.hlsl">
+      <ShaderTarget>vs_5_0</ShaderTarget>
+    </HlslShader>
+    <HlslShader Include="shaders\PixelShaderShadowVolumeDarken.hlsl">
+      <ShaderTarget>ps_5_0</ShaderTarget>
+    </HlslShader>
     <HlslShader Include="shaders\SkyboxPS.hlsl">
       <ShaderTarget>ps_5_0</ShaderTarget>
     </HlslShader>

@@ -18,6 +18,7 @@
 #include <fbxsdk.h>
 #include <map>
 #include "engine/rendering/d3d11/shader.h"
+#include "engine/rendering/lighting/shadow_volume_mesh.h"
 
 namespace fbxsdk {
     class FbxScene;
@@ -120,6 +121,12 @@ public:
 
     void Draw();
 
+    // Stencil shadow volume of this mesh (ShadowVolume pass must be active). Builds the
+    // volume topology on first use (shared with anim instances). Returns false when the
+    // mesh is not closed (or has no CPU vertices: OBJ models are not supported) and
+    // therefore cannot cast; debugName is only used for the one-time warning.
+    bool DrawShadowVolume(const char* debugName = nullptr);
+
     void UpdateAnimation(double dtSec = 1.0 / 60.0);
     // Advance clip time (speed, loop, clamp) without sampling or skinning. Used for
     // animated Visuals nobody drew, so the clip phase stays continuous when they return.
@@ -139,6 +146,20 @@ public:
 
     // Per-draw playback instance sharing mesh/clip data from a cached asset.
     static std::unique_ptr<Model3D> CreateAnimInstanceFrom(const Model3D& shared);
+
+    // Shadow-volume data built lazily from the bind-pose mesh; shared by anim instances.
+    struct ShadowVolumeData {
+        bool attempted = false;
+        bool closed = false;
+        shadow_volume::Topology topology;
+        ID3D11Buffer* vb = nullptr;  // corners in bind pose (static / GPU-skinned meshes)
+        ID3D11Buffer* ib = nullptr;
+        UINT indexCount = 0;
+        ShadowVolumeData() = default;
+        ShadowVolumeData(const ShadowVolumeData&) = delete;
+        ShadowVolumeData& operator=(const ShadowVolumeData&) = delete;
+        ~ShadowVolumeData();
+    };
 
 private:
     bool LoadFBXInternal(const wchar_t* fbxPath, bool reportErrors);
@@ -186,6 +207,15 @@ private:
    
     std::vector<VertexPNTC> m_verticesCPU;
     bool m_vbDynamic = false;
+    // Created on first use; mutable so CreateAnimInstanceFrom(const&) can create it on the
+    // cached mesh before sharing it.
+    mutable std::shared_ptr<ShadowVolumeData> m_shadowVolume;
+    // CPU-animated meshes (CPU skin / rigid clips) re-extract corner positions per draw.
+    ID3D11Buffer* m_svDynamicVB = nullptr;
+    std::vector<VertexPNTC> m_svScratch;
+    bool  EnsureShadowVolume(const char* debugName);
+    bool  ShadowVolumeNeedsCpuRefresh() const;
+    void  ReleaseShadowVolumeInstanceData();
 
     struct Subset {
         UINT startIndex = 0;

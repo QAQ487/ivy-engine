@@ -23,6 +23,7 @@
 #include "engine/rendering/culling/lod_state.h"
 #include "engine/rendering/culling/shadow_cascade_cull.h"
 #include "engine/rendering/lighting/shadow.h"
+#include "engine/rendering/lighting/shadow_volume.h"
 #include "engine/physics/core/physics_system.h"
 #include "engine/physics/core/rigidbody.h"
 #include "engine/rendering/lighting/lighting.h"
@@ -302,7 +303,7 @@ bool s_scene3DReady=false;
 void ReleaseScene3D() {
     if(!s_scene3DReady) return;
     engine::ParticleSystem::Instance().Finalize(); Billboard::Finalize();
-    Ibl_Finalize(); Skybox_Finalize(); Shadow::Finalize();
+    Ibl_Finalize(); Skybox_Finalize(); Shadow::Finalize(); ShadowVolume::Finalize();
     s_scene3DReady=false;
 }
 void EnsureScene3D() {
@@ -316,6 +317,9 @@ void EnsureScene3D() {
 		}
 		Shadow::SetBackfaceDepth(false);
 	}
+	// Stencil shadow volumes (render.shadowMode = "volume"). Optional: a missing shader
+	// only disables the mode (logged), it does not stop the scene.
+	ShadowVolume::Initialize(GetDevice(), GetDeviceContext());
 
 	// Billboard system
 	if (!Skybox_Initialize()) {
@@ -670,6 +674,11 @@ void GameScene::Object_Draw() {
 	EngineGUI_GetGameViewportRect(vx, vy, vw, vh);
 	const float aspect = (vh > 1e-3f) ? (vw / vh) : (16.0f / 9.0f);
 
+	// CSM depth passes run only in "csm" mode; "volume" and "none" bind no cascades, so
+	// EvalShadow returns fully lit and the volume pass below (if any) does the shadowing.
+	const ShadowMode shadowMode = RenderSettings_GetConst().shadowMode;
+	const bool csmShadows = (shadowMode == ShadowMode::Csm);
+
 	{
 		const auto& cam = GetCamera();
 		Shadow::CameraShadowParams cp {};
@@ -680,13 +689,14 @@ void GameScene::Object_Draw() {
 		cp.nearClip = cam.nearClip;
 		cp.farClip = cam.farClip;
 		cp.aspect = aspect;
-		Shadow::UpdateForCamera(cp, RenderSettings_GetShadowPreset().maxDistance);
+		if (csmShadows)
+			Shadow::UpdateForCamera(cp, RenderSettings_GetShadowPreset().maxDistance);
 		// LOD distances use the main camera for both shadow and camera passes.
 		Lod_BeginFrame(cam.position, cam.orthographic ? 0.0f : cam.fov);
 	}
 
 	// Cascade depth passes (optional per-cascade light-ortho caster cull).
-	const int cascadeCount = Shadow::GetCascadeCount();
+	const int cascadeCount = csmShadows ? Shadow::GetCascadeCount() : 0;
 	ShadowCascadeCull_BeginFrame();
 	for (int i = 0; i < cascadeCount; ++i) {
 		Shadow::Begin(i);
@@ -737,6 +747,19 @@ void GameScene::Object_Draw() {
 		SetRenderObject(RENDER_MAIN);
 		FrustumCull_EndMainPass();
 		Lod_EndFrame();
+
+		// Stencil shadow volumes over the opaque scene (before billboards / particles).
+		if (shadowMode == ShadowMode::Volume && Shadow::IsCasterActive()
+			&& ShadowVolume::BeginPass(Shadow::GetLightDirection(0))) {
+#ifdef GAME_RUNTIME
+			const bool useRealModel = true;
+#else
+			const bool useRealModel = EngineGUI_PreferPlayVisuals();
+#endif
+			for (const auto& root : SceneLoader_GetSceneNodes())
+				if (root) root->DrawVisual(useRealModel);
+			ShadowVolume::EndPass(RenderSettings_GetConst().shadowVolumeStrength);
+		}
 	}
 
 	// Billboard pass

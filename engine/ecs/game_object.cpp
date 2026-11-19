@@ -18,6 +18,7 @@
 #include "engine/rendering/culling/lod_state.h"
 #include "engine/rendering/culling/shadow_cascade_cull.h"
 #include "engine/rendering/lighting/shadow.h"
+#include "engine/rendering/lighting/shadow_volume.h"
 #include "engine/audio/audio_manager.h"
 #include "engine/physics/core/physics_system.h"
 #include "engine/core/debug_system.h"
@@ -212,6 +213,31 @@ void GameObject::DrawVisual(bool useRealModel) {
     if (!m_isActive) return;
 
     SyncLegacyTransformFromComponents();
+
+    // Stencil shadow-volume pass: only opted-in Visuals, base mesh (no LOD, no
+    // camera-frustum cull: off-screen casters still throw visible shadows). Nothing
+    // else (debug colliders, LOD stamps) may draw while the stencil state is bound.
+    if (ShadowVolume::IsPassActive()) {
+        const engine::Transform* t = GetTransform();
+        auto* vc = GetComponent<VisualComponent>();
+        Model3D* model = (t && vc && vc->shadowVolume)
+            ? (useRealModel ? vc->GetRealModel() : vc->GetModel())
+            : nullptr;
+        if (model) {
+            XMFLOAT3 worldPos, worldRot, worldScale;
+            t->GetWorldPositionRotationScale(worldPos, worldRot, worldScale);
+            model->SetPosition(worldPos);
+            model->SetRotateEulerDeg(worldRot);
+            model->SetScale(worldScale);
+            const std::string& name = (!useRealModel && !vc->proxyModelPath.empty())
+                ? vc->proxyModelPath : vc->modelPath;
+            if (!model->DrawShadowVolume(name.c_str()))
+                ShadowVolume::RecordOpenMesh();
+        }
+        for (const auto& child : m_children)
+            if (child) child->DrawVisual(useRealModel);
+        return;
+    }
 
     if (const engine::Transform* t = GetTransform()) {
         if (auto* vc = GetComponent<VisualComponent>()) {

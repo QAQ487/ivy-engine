@@ -8,6 +8,7 @@
 #include "engine/rendering/culling/lod_select_math.h"
 #include "engine/rendering/culling/lod_state.h"
 #include "engine/rendering/lighting/lighting.h"
+#include "engine/rendering/lighting/shadow_volume.h"
 
 std::string ShaderVariantPreviewLabel(Shader3DVariant v) {
     const char* label = Shader3DVariantLabel(v);
@@ -325,6 +326,34 @@ void DrawRenderingSettingsBody() {
     ImGui::Text("Shadows");
     ImGui::Separator();
     {
+        ImGui::SetNextItemWidth(-1);
+        if (ImGui::BeginCombo("##ShadowMode", shadow_mode::Label(rs.shadowMode))) {
+            const ShadowMode modes[] = { ShadowMode::Csm, ShadowMode::Volume, ShadowMode::None };
+            for (ShadowMode m : modes) {
+                const bool selected = (m == rs.shadowMode);
+                if (ImGui::Selectable(shadow_mode::Label(m), selected))
+                    rs.shadowMode = m;
+                if (selected)
+                    ImGui::SetItemDefaultFocus();
+            }
+            ImGui::EndCombo();
+        }
+        if (rs.shadowMode == ShadowMode::Volume) {
+            ImGui::SliderFloat("Volume Shadow Strength", &rs.shadowVolumeStrength, 0.0f, 1.0f, "%.2f");
+            rs.shadowVolumeStrength = shadow_mode::ClampVolumeStrength(rs.shadowVolumeStrength);
+            ImGui::TextDisabled("Only Visuals with Shadow Volume ticked cast (closed meshes).");
+            ImGui::TextDisabled("Light: the first Directional Light with Cast Shadows.");
+            const ShadowVolume::Stats sv = ShadowVolume::GetLastStats();
+            ImGui::TextDisabled("volumes %d  |  open meshes skipped %d  |  tris %d",
+                sv.casters, sv.openMeshes, sv.triangles);
+            if (!ShadowVolume::IsReady())
+                ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.3f, 1.0f),
+                    "Shadow volume shaders missing: rebuild to generate the .cso files.");
+        } else if (rs.shadowMode == ShadowMode::None) {
+            ImGui::TextDisabled("No shadows are drawn.");
+        }
+    }
+    if (rs.shadowMode == ShadowMode::Csm) {
         const char* preview = RenderSettings_ShadowQualityLabel(rs.shadowQuality);
         ImGui::SetNextItemWidth(-1);
         if (ImGui::BeginCombo("##ShadowQuality", preview)) {

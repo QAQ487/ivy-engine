@@ -161,10 +161,13 @@ RenderSettingsData RenderSettings_ParseJson(const nlohmann::json& renderJson, Re
     auto types = RenderSettings_ToJson();
     // The legacy format accepts either a quality ID or an integer.
     types.erase("shadowQuality");
+    types.erase("shadowMode");
     SceneJson_ValidateTypes(renderJson, types, "settings.render");
     if (renderJson.contains("shadowQuality") && !renderJson["shadowQuality"].is_string()
         && !renderJson["shadowQuality"].is_number_integer())
         throw std::runtime_error("Invalid type: settings.render.shadowQuality");
+    if (renderJson.contains("shadowMode") && !renderJson["shadowMode"].is_string())
+        throw std::runtime_error("Invalid type: settings.render.shadowMode");
 
     settings.skyboxEnabled = renderJson.value("skyboxEnabled", settings.skyboxEnabled);
     settings.skyboxCubemapPath = renderJson.value(
@@ -205,6 +208,11 @@ RenderSettingsData RenderSettings_ParseJson(const nlohmann::json& renderJson, Re
             else settings.shadowQuality = ShadowQuality::Medium;
         }
     }
+
+    if (renderJson.contains("shadowMode"))
+        settings.shadowMode = shadow_mode::FromId(renderJson["shadowMode"].get<std::string>());
+    settings.shadowVolumeStrength = shadow_mode::ClampVolumeStrength(
+        renderJson.value("shadowVolumeStrength", settings.shadowVolumeStrength));
 
     settings.fogEnabled = renderJson.value("fogEnabled", settings.fogEnabled);
     if (renderJson.contains("fogColor"))
@@ -277,6 +285,8 @@ nlohmann::json RenderSettings_ToJson() {
     };
     render["defaultShader"] = g_renderSettings.defaultShader;
     render["shadowQuality"] = RenderSettings_ShadowQualityId(g_renderSettings.shadowQuality);
+    render["shadowMode"] = shadow_mode::Id(g_renderSettings.shadowMode);
+    render["shadowVolumeStrength"] = g_renderSettings.shadowVolumeStrength;
     render["fogEnabled"] = g_renderSettings.fogEnabled;
     render["fogColor"] = {
         g_renderSettings.fogColor.x,

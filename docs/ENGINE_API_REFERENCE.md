@@ -1,7 +1,7 @@
 # Ivy Engine — Complete Ability & API Reference
 
 Exhaustive catalog of **Ivy Engine** capabilities and public functions,
-scanned from every header under `engine/` and `src/app/` (184 headers; regenerate to refresh).
+scanned from every header under `engine/` and `src/app/` (187 headers; regenerate to refresh).
 
 **Learning how to use the engine?** Start with [`ENGINE_USER_GUIDE.md`](ENGINE_USER_GUIDE.md) (humans).  
 For JSON schemas, source map, and change rules, see [`AGENTS.md`](../AGENTS.md) (AI agents).
@@ -1868,6 +1868,8 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `bool Reconfigure(UINT size, int cascadeCount);`
 - `void Finalize();`
 - `void SetLightDirection(int index, const DirectX::XMFLOAT3& dir);`
+- `void SetCasterActive(bool active);`
+- `bool IsCasterActive();`
 - `DirectX::XMFLOAT3 GetLightDirection(int index = 0);`
 - `void UpdateForCamera(const CameraShadowParams& cam, float maxShadowDistance = 60.0f);`
 - `int GetCascadeCount();`
@@ -1888,8 +1890,27 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `void SetBackfaceDepth(bool enable);`
 - `bool IsBackfaceDepthEnabled();`
 
+### `engine/rendering/lighting/shadow_volume.h`
+**Types:** Stats
+- `bool Initialize(ID3D11Device* dev, ID3D11DeviceContext* ctx);`
+- `void Finalize();`
+- `bool IsReady();`
+- `bool BeginPass(const DirectX::XMFLOAT3& shineDirWS);`
+- `bool IsPassActive();`
+- `void DrawVolume(const DirectX::XMMATRIX& world, UINT indexCount);`
+- `void RecordOpenMesh();`
+- `void EndPass(float strength);`
+- `Stats GetLastStats();`
+
+### `engine/rendering/lighting/shadow_volume_mesh.h`
+**Types:** Vec3, BuildStats, Topology, Tri, EdgeUse
+- `inline Vec3 FaceNormal(const Vec3& a, const Vec3& b, const Vec3& c) { Vec3 n = Cross(Sub(b, a), Sub(c, a));`
+- `size_t CornerCount() const { return cornerSource.size();`
+- `std::vector<uint32_t> weld(vertexCount, 0);`
+- `void FillCornerNormals(const Topology& topo, PositionFn pos, std::vector<Vec3>& outNormals) { outNormals.resize(topo.cornerSource.size());`
+
 ### `engine/rendering/model/model.h`
-**Types:** FbxScene, FbxMesh, FbxNode, FbxTime, AnimationClip, Model3D, VertexPNTC, MaterialOverride, Subset, SkinMeshGeo, SkinClusterBake, SkinnedMeshBake, SkinBoneBake, RigidMeshBake, BakedAnimPose, BakedAnimClip
+**Types:** FbxScene, FbxMesh, FbxNode, FbxTime, AnimationClip, Model3D, VertexPNTC, MaterialOverride, ShadowVolumeData, Subset, SkinMeshGeo, SkinClusterBake, SkinnedMeshBake, SkinBoneBake, RigidMeshBake, BakedAnimPose, BakedAnimClip
 - `public: Model3D();`
 - `bool LoadOBJ(const wchar_t* objPath, const wchar_t* fallbackTex = nullptr);`
 - `bool LoadFBX(const wchar_t* fbxPath, const wchar_t* fallbackTex = nullptr);`
@@ -1903,6 +1924,7 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `void SetRotateEulerDeg(const DirectX::XMFLOAT3& rDeg);`
 - `void SetScale(const DirectX::XMFLOAT3& s);`
 - `void Draw();`
+- `bool DrawShadowVolume(const char* debugName = nullptr);`
 - `void UpdateAnimation(double dtSec = 1.0 / 60.0);`
 - `void AdvanceAnimationTime(double dtSec);`
 - `void UploadSkinnedVerticesIfDirty();`
@@ -1913,6 +1935,9 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `void PlayAnimation(const std::string& animName);`
 - `static std::unique_ptr<Model3D> CreateAnimInstanceFrom(const Model3D& shared);`
 - `bool LoadFBXInternal(const wchar_t* fbxPath, bool reportErrors);`
+- `bool EnsureShadowVolume(const char* debugName);`
+- `bool ShadowVolumeNeedsCpuRefresh() const;`
+- `void ReleaseShadowVolumeInstanceData();`
 - `void InitAnimationInfo();`
 - `void BakeSkinningData();`
 - `void BakeRigidMeshData();`
@@ -2199,6 +2224,9 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `void RegisterTree(GameObject* node, SceneBase* scene);`
 - `void UnregisterTree(GameObject* node, SceneBase* scene, bool destroyColliders);`
 - `void ApplyCollidersTree(GameObject* node);`
+
+### `engine/scene/shadow_mode.h`
+**Enums:** ShadowMode
 
 ### `engine/scripting/Script.h`
 **Types:** Script

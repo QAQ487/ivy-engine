@@ -38,6 +38,11 @@ namespace Shadow {
     void Finalize();
 
     void SetLightDirection(int index, const DirectX::XMFLOAT3& dir);
+    // Whether a light that casts shadows was found by the last lighting sync (a
+    // DirectionalLight with castShadows, or the fallback light of a scene without
+    // lights). Read by the shadow-volume pass; the CSM path does not use it yet.
+    void SetCasterActive(bool active);
+    bool IsCasterActive();
     DirectX::XMFLOAT3 GetLightDirection(int index = 0);
 
     // Rebuild cascade view/proj from the active camera (call once per frame before shadow passes).

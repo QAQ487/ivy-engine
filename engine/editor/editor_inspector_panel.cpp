@@ -475,6 +475,13 @@ void DrawEditorInspectorPanel(bool playVisuals, bool* open)
                     ImGui::TextDisabled("Play / runtime only; needs Mesh LOD on in Rendering.");
             }
 
+            if (ImGui::Checkbox("Shadow Volume", &vc->shadowVolume))
+                runtimeDirty = true;
+            if (vc->shadowVolume && RenderSettings_GetConst().shadowMode != ShadowMode::Volume)
+                ImGui::TextDisabled("Casts only when Rendering > Shadows > Mode is Shadow Volume.");
+            else if (vc->shadowVolume)
+                ImGui::TextDisabled("Needs a closed (watertight) mesh; open meshes cast nothing.");
+
             ImGui::Text("Shader");
             {
                 const int variantCount = Shader3DVariantCount();
