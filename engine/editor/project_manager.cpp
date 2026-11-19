@@ -534,7 +534,16 @@ bool ProjectManager::WriteProjectFile(const std::string& rootPath, const Project
             if (existing.is_open())
                 existingText.assign(std::istreambuf_iterator<char>(existing), std::istreambuf_iterator<char>());
         }
-        const json merged = project_file::MergeIntoExisting(existingText, j);
+        const project_file::MergeResult merged = project_file::Merge(existingText, j);
+        if (!merged.ok) {
+            // Never replace a hand-edited file we cannot read: its other keys would be lost.
+            const std::string message = "project.json is not valid JSON, so it was not saved (" +
+                merged.error + "). Fix the file; the editor keeps the new values until the next save.";
+            hal::DebugWriteA(("[Project] " + message + "\n").c_str());
+            if (errorOut)
+                *errorOut = message;
+            return false;
+        }
 
         std::ofstream file(filePath, std::ios::trunc);
         if (!file.is_open()) {
@@ -542,7 +551,7 @@ bool ProjectManager::WriteProjectFile(const std::string& rootPath, const Project
                 *errorOut = "Cannot write " + filePath.string();
             return false;
         }
-        file << merged.dump(2);
+        file << merged.document.dump(2);
         WriteDefaultSceneFile(rootPath, data.defaultScene);
         return true;
     }

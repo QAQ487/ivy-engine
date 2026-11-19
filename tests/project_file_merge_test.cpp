@@ -37,7 +37,11 @@ static json EditorPatch() {
 }
 
 int main() {
-    using project_file::MergeIntoExisting;
+    // Successful merge or an empty object (failing the checks that use it).
+    auto MergeIntoExisting = [](const std::string& text, const json& patch) {
+        const project_file::MergeResult r = project_file::Merge(text, patch);
+        return r.ok ? r.document : json::object();
+    };
 
     const std::string existing = R"({
       "name": "Old", "version": 1,
@@ -78,12 +82,26 @@ int main() {
         Expect(kept["build"] == json({{"x", 1}}), "other keys of the section kept");
     }
 
-    // No file / broken file / not an object: just the managed fields, no nulls, no empty build.
-    for (const char* text : {"", "{ broken", "[1,2]", "42"}) {
-        const json out = MergeIntoExisting(text, EditorPatch());
-        Expect(out.is_object() && out["name"] == "MyGame", "fresh file from patch");
-        Expect(!out.contains("build"), "fresh file has no build");
-        Expect(out.dump().find("null") == std::string::npos, "fresh file has no null");
+    // No file yet (empty / whitespace / BOM only): just the managed fields.
+    for (const char* text : {"", "  \n", "\xEF\xBB\xBF"}) {
+        const project_file::MergeResult r = project_file::Merge(text, EditorPatch());
+        Expect(r.ok && r.document["name"] == "MyGame", "empty file -> patch");
+        Expect(!r.document.contains("build"), "fresh file has no build");
+        Expect(r.document.dump().find("null") == std::string::npos, "fresh file has no null");
+    }
+
+    // A hand edit that broke the JSON is refused, never replaced.
+    {
+        const std::string missingComma = "{\n  \"name\": \"Old\"\n  \"save\": {\"folderName\": \"X\"}\n}";
+        const project_file::MergeResult r = project_file::Merge(missingComma, EditorPatch());
+        Expect(!r.ok, "missing comma refused");
+        Expect(r.error.find("line 3") != std::string::npos, "error names the line");
+        const std::string trailingComma = R"({"name":"Old","myNote":1,})";
+        Expect(!project_file::Merge(trailingComma, EditorPatch()).ok, "trailing comma refused");
+        Expect(!project_file::Merge("{ broken", EditorPatch()).ok, "truncated refused");
+        const project_file::MergeResult arr = project_file::Merge("[1,2]", EditorPatch());
+        Expect(!arr.ok && arr.error == "the file is not a JSON object", "array refused");
+        Expect(!project_file::Merge("42", EditorPatch()).ok, "number refused");
     }
 
     // A managed section that was not an object is replaced by the editor's object.

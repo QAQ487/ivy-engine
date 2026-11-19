@@ -1234,7 +1234,7 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `static bool IsValidLeafName(const std::string& name, std::string& error);`
 
 ### `engine/editor/project_file_merge.h`
-- `inline nlohmann::json MergeIntoExisting(std::string_view existingText, const nlohmann::json& patch) { nlohmann::json doc = nlohmann::json::parse(existingText.begin(), existingText.end(), nullptr, false);`
+**Types:** MergeResult
 
 ### `engine/editor/project_manager.h`
 **Types:** HWND__, ProjectManager, EditorSettings, PhysicsSettings, AudioSettings, BuildSettings, ProjectData

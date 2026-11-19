@@ -112,7 +112,7 @@ A content project is a directory with `rom/` and usually `project.json`; the edi
 
 **Startup:** editor loads the first recent project that still has `rom/`; a Debug editor with none opens `testbed/` (Release does not). **File → Open Testbed** works in both. The engine repo root and exe output dirs are not content projects. `IvyEngineRuntime` launched from the engine OutDir (no `rom/scene` beside it) changes directory to `testbed/`. Editor startup scene: `project.json` `lastOpenedScene` → `defaultScene`. Runtime/package startup: `rom/scene/default_scene.txt` (synced by Save Project).
 
-`project.json` (version 1). The editor rewrites only the fields it owns and keeps every other key already in the file (JSON merge patch, `engine/editor/project_file_merge.h`, `tests/project_file_merge_test.cpp`):
+`project.json` (version 1). The editor rewrites only the fields it owns and keeps every other key already in the file (JSON merge patch, `engine/editor/project_file_merge.h`, `tests/project_file_merge_test.cpp`); a file on disk that is not a valid JSON object is never overwritten (the save fails with the parse error):
 
 | Field | Meaning |
 |-------|---------|
