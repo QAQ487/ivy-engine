@@ -46,11 +46,9 @@ void main(
         sumLighting += lit * shadowFactor;
     }
 
-    float3 color = ambient + sumLighting + Emission.rgb;
+    ambient *= ShadowAmbientScale(overallShadow);
 
-    const float overlayStrength = 0.65f;
-    float overlay = lerp(1.0f, overallShadow, overlayStrength);
-    color *= overlay;
+    float3 color = ambient + sumLighting + Emission.rgb;
 
     color = ApplyHeightFog(color, inPosOS);
     outDiffuse = float4(color, base.alpha);

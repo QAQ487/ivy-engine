@@ -21,7 +21,7 @@
   - 2026-11-19 審計修正（等 Windows 驗收）：畫面外動畫 caster 嘅影唔再凍結（volume 畫咗就 stamp `lastDrawnSerial`）；被 `cullDistance` 隱藏嘅物件唔再投影；extrusion 改為 4× far clip 有限長度，正交鏡頭唔再冇影。Linux：`tests/shadow_volume_policy_test.cpp`。
 - [ ] **CSM 審計跟進**（2026-11-19 source audit；`castShadows` 一項已修，其餘未修）
   - Texel snap 喺跟住鏡頭移動嘅 light-space 原點做，所以冇效（鏡頭平移時陰影閃）；cascade 半徑跟鏡頭轉向改變（轉鏡頭時閃）——`shadow.cpp` `FitOrthoCascade`。
-  - ~~`castShadows` 全關時 CSM 照畫（用舊方向）；shader 對每盞 directional light 都套同一張 CSM。~~ 已修（等 Windows 驗收）：`Shadow::GetCasterLightIndex()`（-1 = 冇）閘住 cascade pass；`ShadowBuffer.ShadowLightIndex` 令 `EvalShadow` 只陰影 caster 嗰盞燈。Windows 要驗：全部 `castShadows` 關 → 冇影；兩盞 directional light 只有剔咗嗰盞有影、另一盞照亮影區。
+  - ~~`castShadows` 全關時 CSM 照畫（用舊方向）；shader 對每盞 directional light 都套同一張 CSM。~~ 已修（等 Windows 驗收）：`Shadow::GetCasterLightIndex()`（-1 = 冇）閘住 cascade pass；`ShadowBuffer.ShadowLightIndex` 令 `EvalShadow` 只陰影 caster 嗰盞燈。Windows 要驗：全部 `castShadows` 關 → 冇影；兩盞 directional light 只有剔咗嗰盞有影、另一盞照亮影區（之前每個 pixel shader 最尾將成個顏色乘 `lerp(1, shadow, 0.65)`，連冇投影嗰盞燈都壓暗，所以睇唔出；已刪，改為只係環境光按 `render.shadowAmbientStrength`（預設 0.35，Rendering → Ambient In Shadow）縮放，emission 唔再被壓暗）。
   - Shadow rasterizer `DepthClipEnable = TRUE` 同 open-near cascade cull 矛盾：離 slice 超過 `kZPadding`（25）嘅高物件影子被 clip 走。
   - Receiver normal offset 永遠係 0；陰影最暗寫死 0.3；冇 shadow distance 淡出；cascade 交界 `ddx/ddy` 喺分歧 branch；blend 帶固定 1–4 單位；bias 冇按 cascade；正交鏡頭仍用 perspective 擬合；冇 alpha-test 陰影；SpotLight `castShadows` 冇效。
 - [ ] **World-space UI 編輯器支援**

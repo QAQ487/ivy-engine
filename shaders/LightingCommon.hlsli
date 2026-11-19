@@ -13,7 +13,7 @@ cbuffer ShadowBuffer : register(b2)
     uint CascadeCount;
     float CascadeBlend;
     int ShadowLightIndex; // Lights[] slot that casts the cascades; -1 = none
-    float _padCascade;
+    float ShadowAmbient;  // ambient kept inside a CSM shadow (render.shadowAmbientStrength)
     float4 CascadeSplits; // view-space far Z for cascades 0..3
     matrix WorldView;     // object -> view (for cascade selection)
 }
@@ -270,6 +270,15 @@ float EvalShadow(uint lightIndex, float3 inPosOS, float3 N)
         }
     }
     return result;
+}
+
+// Scale for the ambient term at a pixel whose caster-light shadow factor is
+// casterShadow (1 = lit, 0 = fully shadowed). Only the caster light's own direct term
+// is multiplied by its shadow; other lights still light the shadow, and ambient keeps
+// ShadowAmbient of itself (1 = unaffected, 0 = black).
+float ShadowAmbientScale(float casterShadow)
+{
+    return lerp(saturate(ShadowAmbient), 1.0f, saturate(casterShadow));
 }
 
 float3 EvalHemisphereAmbient(float3 N, float3 baseRGB)

@@ -60,11 +60,9 @@ void main(
         lit = shadedAlbedo * (lightRGB / litFactor) * band;
 
     float rim = EvalLightFacingRim(N, V, inPosOS, RimStrength, 3.0f);
-    float3 color = ambient + lit + sumCelSpec + Emission.rgb + base.rgb * Specular.rgb * rim;
+    ambient *= ShadowAmbientScale(overallShadow);
 
-    const float overlayStrength = 0.65f;
-    float overlay = lerp(1.0f, overallShadow, overlayStrength);
-    color *= overlay;
+    float3 color = ambient + lit + sumCelSpec + Emission.rgb + base.rgb * Specular.rgb * rim;
 
     color = ApplyHeightFog(color, inPosOS);
     outDiffuse = float4(color, base.alpha);

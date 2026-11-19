@@ -213,6 +213,8 @@ RenderSettingsData RenderSettings_ParseJson(const nlohmann::json& renderJson, Re
         settings.shadowMode = shadow_mode::FromId(renderJson["shadowMode"].get<std::string>());
     settings.shadowVolumeStrength = shadow_mode::ClampVolumeStrength(
         renderJson.value("shadowVolumeStrength", settings.shadowVolumeStrength));
+    settings.shadowAmbientStrength = shadow_mode::ClampShadowAmbientStrength(
+        renderJson.value("shadowAmbientStrength", settings.shadowAmbientStrength));
 
     settings.fogEnabled = renderJson.value("fogEnabled", settings.fogEnabled);
     if (renderJson.contains("fogColor"))
@@ -287,6 +289,7 @@ nlohmann::json RenderSettings_ToJson() {
     render["shadowQuality"] = RenderSettings_ShadowQualityId(g_renderSettings.shadowQuality);
     render["shadowMode"] = shadow_mode::Id(g_renderSettings.shadowMode);
     render["shadowVolumeStrength"] = g_renderSettings.shadowVolumeStrength;
+    render["shadowAmbientStrength"] = g_renderSettings.shadowAmbientStrength;
     render["fogEnabled"] = g_renderSettings.fogEnabled;
     render["fogColor"] = {
         g_renderSettings.fogColor.x,

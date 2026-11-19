@@ -53,4 +53,17 @@ inline float ClampVolumeStrength(float v) {
     return v;
 }
 
+// How much of the ambient light stays inside a CSM shadow: 1 = ambient unaffected
+// (physically correct), 0 = black. Only the caster light's direct light is shadowed;
+// other lights always reach the shadow. 0.35 matches the look before this setting
+// (the old fixed 65 % darkening) for scenes with one light.
+constexpr float kDefaultShadowAmbientStrength = 0.35f;
+
+inline float ClampShadowAmbientStrength(float v) {
+    if (!std::isfinite(v)) return kDefaultShadowAmbientStrength;
+    if (v < 0.0f) return 0.0f;
+    if (v > 1.0f) return 1.0f;
+    return v;
+}
+
 }  // namespace shadow_mode

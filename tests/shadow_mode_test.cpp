@@ -33,6 +33,12 @@ int main() {
         Expect(std::strlen(Label(m)) > 0, "every mode has a label");
     }
 
+    Expect(ClampShadowAmbientStrength(0.6f) == 0.6f, "in-range ambient kept");
+    Expect(ClampShadowAmbientStrength(-0.5f) == 0.0f, "ambient clamped to 0");
+    Expect(ClampShadowAmbientStrength(3.0f) == 1.0f, "ambient clamped to 1");
+    Expect(ClampShadowAmbientStrength(std::numeric_limits<float>::infinity())
+            == kDefaultShadowAmbientStrength, "non-finite ambient -> default");
+    Expect(kDefaultShadowAmbientStrength == 0.35f, "default keeps the old 65 % darkening for ambient");
     Expect(ClampVolumeStrength(0.3f) == 0.3f, "in-range strength kept");
     Expect(ClampVolumeStrength(-1.0f) == 0.0f, "strength clamped to 0");
     Expect(ClampVolumeStrength(2.0f) == 1.0f, "strength clamped to 1");

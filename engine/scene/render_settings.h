@@ -44,6 +44,8 @@ struct RenderSettingsData {
     ShadowMode shadowMode = ShadowMode::Csm;
     // Shadow-volume darkening (0 = invisible, 1 = black). Clamped to [0, 1].
     float shadowVolumeStrength = shadow_mode::kDefaultVolumeStrength;
+    // CSM: ambient kept inside a shadow (1 = unaffected, 0 = black). Clamped to [0, 1].
+    float shadowAmbientStrength = shadow_mode::kDefaultShadowAmbientStrength;
 
     // Height fog (in-shader, opaque lit meshes)
     bool fogEnabled = false;

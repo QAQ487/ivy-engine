@@ -379,6 +379,11 @@ void DrawRenderingSettingsBody() {
             rs.shadowDistance > 0.0f ? "%.0f m" : "Preset");
         if (rs.shadowDistance > 0.0f && rs.shadowDistance < 5.0f)
             rs.shadowDistance = 5.0f;
+        ImGui::SliderFloat("Ambient In Shadow", &rs.shadowAmbientStrength, 0.0f, 1.0f, "%.2f");
+        rs.shadowAmbientStrength = shadow_mode::ClampShadowAmbientStrength(rs.shadowAmbientStrength);
+        if (ImGui::IsItemHovered())
+            ImGui::SetTooltip("Ambient light kept inside a shadow: 1 = unaffected, 0 = black.\n"
+                "Other lights without Cast Shadows still light the shadow.");
         const ShadowQualityPreset preset = RenderSettings_GetShadowPreset();
         ImGui::TextDisabled("%u px  |  %d cascades  |  range %.0f",
             preset.mapSize, preset.cascadeCount, preset.maxDistance);

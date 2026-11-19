@@ -45,6 +45,7 @@ From `api:SceneExecutionPolicy` + `api:RenderSettings_ToJson` / parse:
 | `render.shadowDistance` | number (default `0`, clamped 5–1000 when positive) — shadow range in world units; `0` uses the Shadow Quality preset (Low 40 / Medium 70 / High 90). Map size and cascade count still come from the preset |
 | `render.shadowMode` | string (default `"csm"`; unknown ids read as `"csm"`) — `"csm"` cascaded shadow maps; `"volume"` stencil shadow volumes cast only by Visuals with `"shadowVolume": true` (closed FBX meshes), from the first DirectionalLight with `castShadows`, CSM off; `"none"` no shadows |
 | `render.shadowVolumeStrength` | number (default `0.55`, clamped 0–1) — how much a shadow-volume shadow darkens the image (`"volume"` mode only) |
+| `render.shadowAmbientStrength` | number (default `0.35`, clamped 0–1) — `"csm"` only: ambient light kept inside a shadow (1 = unaffected, 0 = black); lights without `castShadows` always light the shadow |
 | `camera.mode` | JSON strings from `PrepareSceneSettings` in `engine/scene/scene_loader.cpp`: `"thirdPerson"`, `"firstPerson"`, or default `"scene"` (→ `api:CameraMode` `SceneCamera`). C++ also has `CameraMode::Intro`; it is **not** a JSON mode string |
 | `camera.node` | Preferred scene camera node name |
 | `debugCamera` | Same `.cpp` parser: `mode` (`"orbit"` default / `"fly"`), `enabledOnPlay`, `yawDeg`, `pitchDeg`, optional `position` object `{x,y,z}` |

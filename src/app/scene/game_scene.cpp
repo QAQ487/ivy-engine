@@ -738,6 +738,7 @@ void GameScene::Object_Draw() {
 		Shader_SetShadowMatrices(vps.data(), cascadeCount, Shadow::GetReceiverBias());
 		Shader_SetShadowCascadeParams(Shadow::GetCascadeSplits(), Shadow::GetCascadeBlend());
 		Shader_SetShadowLightIndex(Shadow::GetCasterLightIndex());
+		Shader_SetShadowAmbient(RenderSettings_GetConst().shadowAmbientStrength);
 
 		ID3D11ShaderResourceView* srvs[Shadow::MAX_CASCADES] = {};
 		for (int i = 0; i < cascadeCount; ++i) srvs[i] = Shadow::GetShadowSRV(i);

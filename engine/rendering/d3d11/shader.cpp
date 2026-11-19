@@ -145,7 +145,7 @@ struct SHADOW_CB {
 	UINT       CascadeCount;
 	float      CascadeBlend;
 	int        ShadowLightIndex;  // Lights[] slot that receives CSM shadow; -1 = none
-	float      _padCascade;
+	float      ShadowAmbient;     // ambient kept inside a CSM shadow (0..1)
 	XMFLOAT4   CascadeSplits;
 	XMFLOAT4X4 WorldView;
 };
@@ -157,6 +157,7 @@ static float    s_ShadowSlope = 1.5f;
 static int      s_CascadeCount = 0;
 static float    s_CascadeBlend = 2.0f;
 static int      s_ShadowLightIndex = 0;
+static float    s_ShadowAmbient = 0.35f;
 static XMFLOAT4 s_CascadeSplits = { 0, 0, 0, 0 };
 
 // Shadow SRV array (t1..)
@@ -176,7 +177,7 @@ static void UpdateShadowCB() {
 	cb.CascadeCount = static_cast<UINT>(n);
 	cb.CascadeBlend = s_CascadeBlend;
 	cb.ShadowLightIndex = s_ShadowLightIndex;
-	cb._padCascade = 0.0f;
+	cb.ShadowAmbient = s_ShadowAmbient;
 	cb.CascadeSplits = s_CascadeSplits;
 	XMStoreFloat4x4(&cb.WorldView, XMMatrixTranspose(s_World3D * s_View3D));
 
@@ -608,6 +609,13 @@ void Shader_SetShadowMatrices(const XMMATRIX* lightViewProjArray, int cascadeCou
 
 void Shader_SetShadowLightIndex(int lightIndex) {
 	s_ShadowLightIndex = (lightIndex < 0) ? -1 : lightIndex;
+	UpdateShadowCB();
+}
+
+void Shader_SetShadowAmbient(float ambientInShadow) {
+	if (!(ambientInShadow >= 0.0f)) ambientInShadow = 0.0f;  // also catches NaN
+	if (ambientInShadow > 1.0f) ambientInShadow = 1.0f;
+	s_ShadowAmbient = ambientInShadow;
 	UpdateShadowCB();
 }
 
