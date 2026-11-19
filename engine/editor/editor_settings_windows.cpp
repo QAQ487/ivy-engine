@@ -109,6 +109,8 @@ void DrawProjectSettingsPage(const char* id, bool buildJustShown)
         DrawProjectGravitySettings();
     else if (std::strcmp(id, "audio") == 0)
         DrawProjectAudioSettings();
+    else if (std::strcmp(id, "input") == 0)
+        DrawProjectInputSettings();
     else if (std::strcmp(id, "scenes") == 0)
         DrawProjectDefaultSceneSettings();
     else if (std::strcmp(id, "build") == 0)

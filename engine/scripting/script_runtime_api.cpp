@@ -40,6 +40,9 @@
 #include "engine/core/system_timer.h"
 #include "engine/save/save_store.h"
 #include "engine/save/save_system.h"
+#include "engine/input/input_actions.h"
+#include "engine/input/input_action_system.h"
+#include "engine/debug_draw/debug_ofstream.h"
 #endif
 #include "engine/rendering/d3d11/post_process.h"
 #include "engine/physics/core/physics_system.h"
@@ -54,7 +57,7 @@
 #include <vector>
 
 namespace {
-constexpr std::uint32_t kScriptRuntimeApiVersion = 51;
+constexpr std::uint32_t kScriptRuntimeApiVersion = 52;
 
 template <typename T>
 T* FindComponentByTypeName(GameObject& object, const char* typeName) {
@@ -843,6 +846,80 @@ bool Host_SaveSlotExists(const char* slot) {
 bool Host_SaveDeleteSlot(const char* slot) {
     return WithSaves([&](save_store::Store& s) { return s.DeleteSlot(Str(slot)); });
 }
+// --- v52 input actions -------------------------------------------------------
+template <class Fn>
+auto WithInput(Fn fn) {
+    std::lock_guard<std::mutex> lock(InputActionSystem_Mutex());
+    return fn(InputActionSystem_Set());
+}
+
+template <class Fn>
+auto ReadAction(const char* action, Fn fn) {
+    return WithInput([&](input_actions::ActionSet& set) {
+        if (!set.HasAction(Str(action)))
+            InputActionSystem_WarnUnknown(action);
+        return fn(set);
+    });
+}
+
+bool Host_InputIsPressed(const char* action) {
+    return ReadAction(action, [&](input_actions::ActionSet& s) { return s.IsPressed(Str(action)); });
+}
+bool Host_InputIsTriggered(const char* action) {
+    return ReadAction(action, [&](input_actions::ActionSet& s) { return s.IsTriggered(Str(action)); });
+}
+bool Host_InputIsReleased(const char* action) {
+    return ReadAction(action, [&](input_actions::ActionSet& s) { return s.IsReleased(Str(action)); });
+}
+float Host_InputGetAxis(const char* action) {
+    return ReadAction(action, [&](input_actions::ActionSet& s) { return s.GetAxis(Str(action)); });
+}
+int Host_InputGetBindings(const char* action, char* out, int capacity) {
+    return WithInput([&](input_actions::ActionSet& s) {
+        const std::vector<std::string>* b = s.Bindings(Str(action));
+        return b ? CopyOut(host_text::JoinLines(*b), out, capacity) : -1;
+    });
+}
+bool Host_InputSetBindings(const char* action, const char* bindingsText) {
+    const std::vector<std::string> bindings = host_text::SplitLines(Str(bindingsText));
+    return WithInput([&](input_actions::ActionSet& s) {
+        std::string error;
+        if (s.SetBindings(Str(action), bindings, &error)) return true;
+        hal::DebugWriteA(("[Input] SetBindings '" + std::string(Str(action)) + "': " + error + "\n").c_str());
+        return false;
+    });
+}
+bool Host_InputCaptureStart(const char* action, int index, int part, bool includeMouse) {
+    if (part < 0 || part > 2) return false;
+    return WithInput([&](input_actions::ActionSet& s) {
+        std::string error;
+        if (s.CaptureStart(Str(action), index, static_cast<input_actions::CapturePart>(part), includeMouse, &error))
+            return true;
+        hal::DebugWriteA(("[Input] CaptureStart '" + std::string(Str(action)) + "': " + error + "\n").c_str());
+        return false;
+    });
+}
+int Host_InputCaptureState(char* outBinding, int capacity) {
+    return WithInput([&](input_actions::ActionSet& s) {
+        const auto state = s.CaptureState();
+        if (state == input_actions::Capture::State::Done)
+            CopyOut(s.CaptureResult(), outBinding, capacity);
+        return static_cast<int>(state);
+    });
+}
+void Host_InputCaptureCancel() {
+    WithInput([&](input_actions::ActionSet& s) { s.CaptureCancel(); return 0; });
+}
+bool Host_InputResetBindings(const char* action) {
+    return WithInput([&](input_actions::ActionSet& s) { return s.ResetBindings(Str(action)); });
+}
+bool Host_InputSaveBindings() {
+    std::string error;
+    if (InputActionSystem_SaveOverrides(&error)) return true;
+    hal::DebugWriteA(("[Input] SaveBindings: " + error + "\n").c_str());
+    return false;
+}
+
 int Host_SaveListSlots(char* out, int capacity) {
     return WithSaves([&](save_store::Store& s) {
         return CopyOut(host_text::JoinLines(s.ListSlots()), out, capacity);
@@ -1010,6 +1087,17 @@ const ScriptRuntimeApi g_scriptRuntimeApi = {
     &Host_SaveSlotExists,
     &Host_SaveDeleteSlot,
     &Host_SaveListSlots,
+    &Host_InputIsPressed,
+    &Host_InputIsTriggered,
+    &Host_InputIsReleased,
+    &Host_InputGetAxis,
+    &Host_InputGetBindings,
+    &Host_InputSetBindings,
+    &Host_InputCaptureStart,
+    &Host_InputCaptureState,
+    &Host_InputCaptureCancel,
+    &Host_InputResetBindings,
+    &Host_InputSaveBindings,
 };
 #else
 using GetApiFn = const ScriptRuntimeApi* (*)();
@@ -1019,7 +1107,9 @@ const ScriptRuntimeApi* ResolveScriptRuntimeApi() {
     if (!module)
         return nullptr;
 
-    auto getApi = reinterpret_cast<GetApiFn>(GetProcAddress(module, "ScriptRuntimeApi_GetV51"));
+    auto getApi = reinterpret_cast<GetApiFn>(GetProcAddress(module, "ScriptRuntimeApi_GetV52"));
+    if (!getApi)
+        getApi = reinterpret_cast<GetApiFn>(GetProcAddress(module, "ScriptRuntimeApi_GetV51"));
     if (!getApi)
         getApi = reinterpret_cast<GetApiFn>(GetProcAddress(module, "ScriptRuntimeApi_GetV50"));
     if (!getApi)
@@ -1142,6 +1232,16 @@ const ScriptRuntimeApi* ScriptRuntimeApi_GetV50() {
 
 extern "C" __declspec(dllexport)
 const ScriptRuntimeApi* ScriptRuntimeApi_GetV51() {
+    static const ScriptRuntimeApi api = [] {
+        ScriptRuntimeApi copy = g_scriptRuntimeApi;
+        copy.version = 51;
+        return copy;
+    }();
+    return &api;
+}
+
+extern "C" __declspec(dllexport)
+const ScriptRuntimeApi* ScriptRuntimeApi_GetV52() {
     return &g_scriptRuntimeApi;
 }
 
@@ -1779,6 +1879,73 @@ std::vector<std::string> ScriptApi_SaveListSlots() {
         !ReadText([&](char* out, int cap) { return api->saveListSlots(out, cap); }, &joined))
         return {};
     return host_text::SplitLines(joined);
+}
+
+namespace {
+const ScriptRuntimeApi* InputApi() {
+    const auto* api = ScriptRuntimeApi_GetHost();
+    return (api && api->version >= 52) ? api : nullptr;
+}
+} // namespace
+
+bool ScriptApi_InputIsPressed(const char* action) {
+    const auto* api = InputApi();
+    return api && api->inputIsPressed && api->inputIsPressed(action);
+}
+bool ScriptApi_InputIsTriggered(const char* action) {
+    const auto* api = InputApi();
+    return api && api->inputIsTriggered && api->inputIsTriggered(action);
+}
+bool ScriptApi_InputIsReleased(const char* action) {
+    const auto* api = InputApi();
+    return api && api->inputIsReleased && api->inputIsReleased(action);
+}
+float ScriptApi_InputGetAxis(const char* action) {
+    const auto* api = InputApi();
+    return (api && api->inputGetAxis) ? api->inputGetAxis(action) : 0.0f;
+}
+bool ScriptApi_InputHasAction(const char* action) {
+    const auto* api = InputApi();
+    return api && api->inputGetBindings && api->inputGetBindings(action, nullptr, 0) >= 0;
+}
+std::vector<std::string> ScriptApi_InputGetBindings(const char* action) {
+    const auto* api = InputApi();
+    std::string joined;
+    if (!api || !api->inputGetBindings ||
+        !ReadText([&](char* out, int cap) { return api->inputGetBindings(action, out, cap); }, &joined))
+        return {};
+    return host_text::SplitLines(joined);
+}
+bool ScriptApi_InputSetBindings(const char* action, const std::vector<std::string>& bindings) {
+    const auto* api = InputApi();
+    return api && api->inputSetBindings && api->inputSetBindings(action, host_text::JoinLines(bindings).c_str());
+}
+bool ScriptApi_InputCaptureStart(const char* action, int index, ScriptInputPart part, bool includeMouse) {
+    const auto* api = InputApi();
+    return api && api->inputCaptureStart && api->inputCaptureStart(action, index, static_cast<int>(part), includeMouse);
+}
+ScriptInputCaptureState ScriptApi_InputCaptureState(std::string* outBinding) {
+    const auto* api = InputApi();
+    if (!api || !api->inputCaptureState)
+        return ScriptInputCaptureState::Idle;
+    char buf[128] = {};
+    const int state = api->inputCaptureState(buf, static_cast<int>(sizeof(buf)));
+    if (state == static_cast<int>(ScriptInputCaptureState::Done) && outBinding)
+        *outBinding = buf;
+    return (state >= 0 && state <= 3) ? static_cast<ScriptInputCaptureState>(state) : ScriptInputCaptureState::Idle;
+}
+void ScriptApi_InputCaptureCancel() {
+    const auto* api = InputApi();
+    if (api && api->inputCaptureCancel)
+        api->inputCaptureCancel();
+}
+bool ScriptApi_InputResetBindings(const char* action) {
+    const auto* api = InputApi();
+    return api && api->inputResetBindings && api->inputResetBindings(action ? action : "");
+}
+bool ScriptApi_InputSaveBindings() {
+    const auto* api = InputApi();
+    return api && api->inputSaveBindings && api->inputSaveBindings();
 }
 
 void ScriptApi_EngineGUIStopPlay() {

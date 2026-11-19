@@ -136,6 +136,25 @@ int main() {
         Expect(raw.dump() != R"({"gravity":9.81})", "plain float shows the long form (the bug)");
     }
 
+    // input.actions is replaced as a whole, other keys stay.
+    {
+        const std::string file = R"({"name":"G","input":{"actions":{"Jump":{},"Old":{}},"deadzone":0.2},"save":{"folderName":"S"}})";
+        const json actions = {{"Jump", {{"type", "button"}, {"bindings", {"Key.SPACE"}}}}};
+        const project_file::MergeResult r = project_file::ReplaceInputActions(file, actions);
+        Expect(r.ok && r.document["input"]["actions"] == actions, "actions replaced (Old removed)");
+        Expect(r.document["input"]["deadzone"] == 0.2 && r.document["save"]["folderName"] == "S", "other keys kept");
+        const project_file::MergeResult cleared = project_file::ReplaceInputActions(R"({"input":{"actions":{"A":{}}}})", json::object());
+        Expect(cleared.ok && !cleared.document.contains("input"), "empty actions drops input");
+        Expect(!project_file::ReplaceInputActions("{oops", actions).ok, "unreadable file refused");
+        const project_file::MergeResult fresh = project_file::ReplaceInputActions("", actions);
+        Expect(fresh.ok && fresh.document["input"]["actions"] == actions, "new file gets actions");
+        json read;
+        std::string error;
+        Expect(project_file::ReadInputActions(file, &read, &error) && read.contains("Old"), "read actions");
+        Expect(project_file::ReadInputActions("{}", &read, &error) && read.is_null(), "no actions -> null");
+        Expect(!project_file::ReadInputActions("[", &read, &error) && !error.empty(), "read refuses broken file");
+    }
+
     if (g_failed) {
         std::fprintf(stderr, "%d check(s) failed\n", g_failed);
         return 1;

@@ -62,9 +62,9 @@ static void ExpectCategories(
 
 static void TestProjectCategories()
 {
-    const char* ids[] = { "rendering", "physics", "audio", "scenes", "build" };
-    const char* labels[] = { "Rendering", "Physics", "Audio", "Scenes", "Build" };
-    ExpectCategories(EditorSettingsWindow::Project, ids, labels, 5, "project");
+    const char* ids[] = { "rendering", "physics", "audio", "input", "scenes", "build" };
+    const char* labels[] = { "Rendering", "Physics", "Audio", "Input", "Scenes", "Build" };
+    ExpectCategories(EditorSettingsWindow::Project, ids, labels, 6, "project");
 }
 
 static void TestPreferencesCategories()
@@ -107,9 +107,9 @@ static void TestClamp()
         "negative clamps to first");
     ExpectInt(EditorSettingsClampCategoryIndex(EditorSettingsWindow::Project, 0), 0,
         "zero stays");
-    ExpectInt(EditorSettingsClampCategoryIndex(EditorSettingsWindow::Project, 4), 4,
+    ExpectInt(EditorSettingsClampCategoryIndex(EditorSettingsWindow::Project, 5), 5,
         "last project index stays");
-    ExpectInt(EditorSettingsClampCategoryIndex(EditorSettingsWindow::Project, 40), 4,
+    ExpectInt(EditorSettingsClampCategoryIndex(EditorSettingsWindow::Project, 40), 5,
         "past-the-end clamps to last");
     ExpectInt(EditorSettingsClampCategoryIndex(EditorSettingsWindow::Preferences, 3), 0,
         "preferences clamps to its only page");

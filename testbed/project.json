@@ -5,5 +5,32 @@
   "defaultScene": "scene_sample_menu.json",
   "editor": {
     "uiZoomPercent": 100
+  },
+  "input": {
+    "actions": {
+      "Jump": {
+        "type": "button",
+        "bindings": [
+          "Key.SPACE",
+          "Pad.A"
+        ]
+      },
+      "MoveX": {
+        "type": "axis",
+        "bindings": [
+          "Key.D/Key.A",
+          "Key.RIGHT/Key.LEFT",
+          "Pad.LeftStickX"
+        ]
+      },
+      "MoveY": {
+        "type": "axis",
+        "bindings": [
+          "Key.W/Key.S",
+          "Key.UP/Key.DOWN",
+          "Pad.LeftStickY"
+        ]
+      }
+    }
   }
 }

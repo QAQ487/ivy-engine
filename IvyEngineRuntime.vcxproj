@@ -362,6 +362,9 @@ exit /b 0</Command>
     <ClInclude Include="engine\core\frame_transform_snapshot.h" />
     <ClInclude Include="engine\core\system_timer.h" />
     <ClInclude Include="engine\input\controller.h" />
+    <ClInclude Include="engine\input\key_names.h" />
+    <ClInclude Include="engine\input\input_actions.h" />
+    <ClInclude Include="engine\input\input_action_system.h" />
     <ClInclude Include="engine\input\controller_test_inject.h" />
     <ClInclude Include="engine\input\keyboard.h" />
     <ClInclude Include="engine\input\key_logger.h" />
@@ -496,6 +499,8 @@ exit /b 0</Command>
     <ClCompile Include="engine\core\frame_transform_snapshot.cpp" />
     <ClCompile Include="engine\core\system_timer.cpp" />
     <ClCompile Include="engine\input\controller.cpp" />
+    <ClCompile Include="engine\input\input_actions.cpp" />
+    <ClCompile Include="engine\input\input_action_system.cpp" />
     <ClCompile Include="engine\input\keyboard.cpp" />
     <ClCompile Include="engine\input\key_logger.cpp" />
     <ClCompile Include="engine\input\mouse.cpp" />
@@ -623,6 +628,8 @@ exit /b 0</Command>
     <ClCompile Include="samples\scripts\SampleParticleEmitterScript.cpp" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
     <ClInclude Include="samples\scripts\SampleSaveScript.h" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
     <ClCompile Include="samples\scripts\SampleSaveScript.cpp" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
+    <ClInclude Include="samples\scripts\SampleRebindScript.h" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
+    <ClCompile Include="samples\scripts\SampleRebindScript.cpp" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
     <ClInclude Include="samples\scripts\SampleCheckpointState.h" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
     <ClInclude Include="samples\scripts\SampleCheckpointScript.h" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
     <ClCompile Include="samples\scripts\SampleCheckpointScript.cpp" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />

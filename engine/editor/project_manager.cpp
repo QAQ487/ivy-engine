@@ -16,6 +16,8 @@
 #include <winioctl.h>
 
 #include "engine/editor/project_file_merge.h"
+#include "engine/save/save_system.h"
+#include "engine/input/input_action_system.h"
 #include <algorithm>
 #include <iterator>
 #include <cstddef>
@@ -607,6 +609,9 @@ bool ProjectManager::ActivateRoot(const std::string& rootPath, std::string* erro
     AudioManager::Instance().SetSFXVolume(m_data.audio.sfxVolume);
     AudioManager::Instance().SetVoiceVolume(m_data.audio.voiceVolume);
     AudioManager::Instance().SetUiClickSound(m_data.audio.uiClickSound);
+    // Saves and input actions belong to the project that is now open.
+    SaveSystem_Reset();
+    InputActionSystem_ReloadDefaults();
     TouchRecent(m_rootPath);
     return true;
 }
@@ -764,6 +769,64 @@ bool ProjectManager::CreateProject(const std::string& parentDir, const std::stri
         return false;
     }
     return ActivateRoot(root.string(), errorOut);
+}
+
+namespace {
+bool ReadTextFile(const fs::path& path, std::string* out) {
+    std::ifstream in(path, std::ios::binary);
+    if (!in.is_open())
+        return false;
+    out->assign(std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>());
+    return true;
+}
+} // namespace
+
+bool ProjectManager::LoadInputActionsJson(std::string* actionsJson, std::string* errorOut) const {
+    if (!m_open) {
+        if (errorOut) *errorOut = "No project is open";
+        return false;
+    }
+    std::string text;
+    ReadTextFile(fs::path(m_rootPath) / kProjectFileName, &text);
+    json actions;
+    std::string error;
+    if (!project_file::ReadInputActions(text, &actions, &error)) {
+        if (errorOut) *errorOut = "project.json is not valid JSON (" + error + ")";
+        return false;
+    }
+    if (actionsJson)
+        *actionsJson = actions.is_null() ? std::string() : actions.dump();
+    return true;
+}
+
+bool ProjectManager::SaveInputActionsJson(const std::string& actionsJson, std::string* errorOut) {
+    if (!m_open) {
+        if (errorOut) *errorOut = "No project is open";
+        return false;
+    }
+    const json actions = actionsJson.empty() ? json::object() : json::parse(actionsJson, nullptr, false);
+    if (actions.is_discarded() || !actions.is_object()) {
+        if (errorOut) *errorOut = "input actions are not a JSON object";
+        return false;
+    }
+    const fs::path filePath = fs::path(m_rootPath) / kProjectFileName;
+    std::string text;
+    ReadTextFile(filePath, &text);
+    const project_file::MergeResult merged = project_file::ReplaceInputActions(text, actions);
+    if (!merged.ok) {
+        const std::string message = "project.json is not valid JSON, so input actions were not saved (" +
+            merged.error + ")";
+        hal::DebugWriteA(("[Project] " + message + "\n").c_str());
+        if (errorOut) *errorOut = message;
+        return false;
+    }
+    std::ofstream file(filePath, std::ios::trunc);
+    if (!file.is_open()) {
+        if (errorOut) *errorOut = "Cannot write " + filePath.string();
+        return false;
+    }
+    file << merged.document.dump(2);
+    return static_cast<bool>(file);
 }
 
 bool ProjectManager::SaveProjectFile(std::string* errorOut) {

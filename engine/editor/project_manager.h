@@ -78,6 +78,12 @@ public:
                        std::string* errorOut = nullptr, bool template2D = false);
     // Writes project.json from current in-memory state (does not save the scene file).
     bool SaveProjectFile(std::string* errorOut = nullptr);
+    // input.actions as JSON text, read from / written to project.json on disk
+    // (Project Settings > Input). Load gives "" when the file has no actions.
+    // Save replaces input.actions only and keeps every other key; both refuse
+    // an unreadable file (errorOut says why).
+    bool LoadInputActionsJson(std::string* actionsJson, std::string* errorOut = nullptr) const;
+    bool SaveInputActionsJson(const std::string& actionsJson, std::string* errorOut = nullptr);
 
     void SetLastOpenedScene(const std::string& fileName);
     void SetDefaultScene(const std::string& fileName);

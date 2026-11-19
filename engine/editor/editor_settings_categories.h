@@ -25,6 +25,7 @@ inline const EditorSettingsCategory* EditorSettingsCategories(
         { "rendering", "Rendering" },
         { "physics", "Physics" },
         { "audio", "Audio" },
+        { "input", "Input" },
         { "scenes", "Scenes" },
         { "build", "Build" },
     };
