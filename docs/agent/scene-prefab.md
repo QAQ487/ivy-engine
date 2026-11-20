@@ -83,6 +83,24 @@ JSON type names come from each component's `GetTypeName()` (via `REGISTER_COMPON
 | `Camera` | `api:CameraComponent` |
 | `Audio` | `api:AudioComponent` |
 | `AudioListener` | `api:AudioListenerComponent` |
+| `Terrain` | `api:TerrainComponent` (heightmap terrain, ADR 0011; fields below) |
+
+### `Terrain` fields
+
+Heightmap terrain (ADR 0011). The node's position places the terrain's (0, 0) corner; rotation and scale are ignored. Missing or wrong-typed keys keep their defaults; numbers are clamped.
+
+| Key | Default | Meaning |
+|-----|---------|---------|
+| `heightmap` | `""` | `rom/...r16` file: N×N little-endian `uint16`, N = 2ⁿ+1 (33–4097). Empty = flat 129×129 placeholder |
+| `sizeX`, `sizeZ` | `256` | Metres along X / Z (1–100000) |
+| `heightScale`, `heightOffset` | `100`, `0` | Height = `heightOffset + sample / 65535 × heightScale` |
+| `chunkQuads` | `64` | Cells per chunk side (power of two 8–256, fitted to the map) |
+| `lodBias` | `1` | Multiplies `render.lodBias`; > 1 = coarser sooner |
+| `texture`, `textureTileSize` | `""`, `8` | Tiled albedo and metres per repeat |
+| `color` `{r,g,b}`, `roughness`, `metallic` | white, `0.9`, `0` | Material (same mapping as `Material`) |
+| `castShadows`, `enabled` | `true`, `true` | CSM caster / draw at all |
+
+Shaded by the scene's `render.defaultShader`. No collider yet: bodies fall through it until terrain step 3.
 
 ## Prefab formats (`api:PrefabSerializer`)
 

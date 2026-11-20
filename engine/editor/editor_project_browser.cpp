@@ -87,6 +87,7 @@ static const char* EntryKindIcon(ProjectAssetIndex::Kind kind) {
     case ProjectAssetIndex::Kind::Sound:            return ICON_FA_FILE_AUDIO;
     case ProjectAssetIndex::Kind::Script:           return ICON_FA_FILE_CODE;
     case ProjectAssetIndex::Kind::PhysicsMaterial:  return ICON_FA_FILE;
+    case ProjectAssetIndex::Kind::Heightmap:        return ICON_FA_MOUNTAIN;
     default:                                        return ICON_FA_FILE;
     }
 }
@@ -97,7 +98,8 @@ static bool EmitsAssetPath(ProjectAssetIndex::Kind kind) {
         kind == ProjectAssetIndex::Kind::Effect ||
         kind == ProjectAssetIndex::Kind::Sound ||
         kind == ProjectAssetIndex::Kind::Script ||
-        kind == ProjectAssetIndex::Kind::PhysicsMaterial;
+        kind == ProjectAssetIndex::Kind::PhysicsMaterial ||
+        kind == ProjectAssetIndex::Kind::Heightmap;
 }
 
 static bool KindHasOpenUse(ProjectAssetIndex::Kind kind) {
@@ -111,7 +113,8 @@ static bool KindNeedsReferenceScan(ProjectAssetIndex::Kind kind) {
         kind == ProjectAssetIndex::Kind::Prefab ||
         kind == ProjectAssetIndex::Kind::Script ||
         kind == ProjectAssetIndex::Kind::Texture ||
-        kind == ProjectAssetIndex::Kind::Sound;
+        kind == ProjectAssetIndex::Kind::Sound ||
+        kind == ProjectAssetIndex::Kind::Heightmap;
 }
 
 static std::string ParentRelativePath(const std::string& relPath) {

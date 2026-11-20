@@ -50,6 +50,7 @@
 #include "engine/scene/scene_runtime.h"
 #include "engine/ecs/prefab_runtime.h"
 #include "engine/ecs/visual_system.h"
+#include "engine/terrain/terrain_renderer.h"
 #include "engine/ecs/audio_system.h"
 #include "engine/ecs/effect_system_flush.h"
 #include "engine/core/job_system.h"
@@ -305,6 +306,7 @@ void ReleaseScene3D() {
     if(!s_scene3DReady) return;
     engine::ParticleSystem::Instance().Finalize(); Billboard::Finalize();
     Ibl_Finalize(); Skybox_Finalize(); Shadow::Finalize(); ShadowVolume::Finalize();
+    TerrainRenderer_Finalize();
     s_scene3DReady=false;
 }
 void EnsureScene3D() {

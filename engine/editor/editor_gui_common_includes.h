@@ -84,6 +84,7 @@
 #include "engine/rendering/effect/effect_system.h"
 #include "engine/ecs/visual_component.h"
 #include "engine/ecs/billboard_component.h"
+#include "engine/ecs/terrain_component.h"
 #include "engine/ecs/sprite_renderer_component.h"
 #include "engine/ecs/sprite_animator_component.h"
 #include "engine/ecs/material_component.h"

@@ -1,7 +1,7 @@
 # Ivy Engine — Complete Ability & API Reference
 
 Exhaustive catalog of **Ivy Engine** capabilities and public functions,
-scanned from every header under `engine/` and `src/app/` (189 headers; regenerate to refresh).
+scanned from every header under `engine/` and `src/app/` (193 headers; regenerate to refresh).
 
 **Learning how to use the engine?** Start with [`ENGINE_USER_GUIDE.md`](ENGINE_USER_GUIDE.md) (humans).  
 For JSON schemas, source map, and change rules, see [`AGENTS.md`](../AGENTS.md) (AI agents).
@@ -863,6 +863,19 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `bool CanRemove(int id) const;`
 - `bool RemoveTag(int id);`
 - `private: TagRegistry();`
+
+### `engine/ecs/terrain_component.h`
+**Types:** ID3D11ShaderResourceView, TerrainComponent
+- `std::string Serialize() const override;`
+- `void Deserialize(const std::string& jsonStr) override;`
+- `bool EnsureLoaded();`
+- `void InvalidateHeightmap();`
+- `void InvalidateTexture();`
+- `bool IsLoaded() const { return m_heightmap.IsValid();`
+- `ID3D11ShaderResourceView* GetTextureSRV();`
+- `void SetHeightSRV(ID3D11ShaderResourceView* srv);`
+- `void ReleaseHeightSRV();`
+- `void FitChunkGrid();`
 
 ### `engine/ecs/transform.h`
 **Types:** GameObject, Transform
@@ -2466,6 +2479,14 @@ Vendor header `WICTextureLoader11.h` is omitted.
 **Types:** TYPE
 - `void DllUICanvasScript_Register(const std::string& name, std::function<UICanvasScript*()> creator);`
 
+### `engine/terrain/terrain_draw_plan.h`
+**Types:** ChunkInstance, PassOptions
+- `int ChunkVertexCount(int chunkQuads);`
+- `bool BuildChunkMeshIndices(int chunkQuads, int stride, std::vector<std::uint32_t>& out);`
+- `float ChunkSkirtDepth(const Layout& layout, const Heightmap& map, const ChunkBounds& bounds);`
+- `void ChunkWorldBox(const Layout& layout, const Heightmap& map, const ChunkGrid& grid, const ChunkBounds& bounds, int chunkX, int chunkZ, const Float3& origin, Float3& outMin, Float3& outMax);`
+- `int PlanChunkDraws(const Layout& layout, const Heightmap& map, const ChunkGrid& grid, const std::vector<ChunkBounds>& bounds, const Float3& origin, const PassOptions& options, const std::function<bool(const Float3& boxMin, const Float3& boxMax)>& visible, std::vector<int>& lastLevels, std::vector<std::vector<ChunkInstance>>& outPerLevel);`
+
 ### `engine/terrain/terrain_heightmap.h`
 **Types:** Float3, Heightmap, Layout, ChunkGrid, ChunkBounds
 - `bool IsValidResolution(int resolution);`
@@ -2494,6 +2515,17 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `float DistanceToAabb(const Float3& point, const Float3& boxMin, const Float3& boxMax);`
 - `int SelectChunkLod(float distance, float chunkWorldSize, float lodBias, int maxLevel, int prevLevel);`
 - `bool BuildChunkIndices(int chunkQuads, int stride, std::vector<std::uint32_t>& out);`
+
+### `engine/terrain/terrain_renderer.h`
+**Types:** TerrainComponent
+- `void TerrainRenderer_Draw(TerrainComponent& terrain, const DirectX::XMFLOAT3& worldPosition);`
+- `void TerrainRenderer_Finalize();`
+
+### `engine/terrain/terrain_settings.h`
+**Types:** Settings
+- `Settings SanitizeSettings(const Settings& in);`
+- `nlohmann::json SettingsToJson(const Settings& s);`
+- `Settings SettingsFromJson(const nlohmann::json& j);`
 
 ### `engine/testing/controller_inject_protocol.h`
 **Types:** ControllerCommand, ControllerOperation

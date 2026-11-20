@@ -89,6 +89,7 @@ for py in \
   tools/runtime_bridge_world_manip_acceptance_check.py; do
   run "$py" python3 "$py"
 done
+run "tools/gen_terrain_demo.py --check" python3 tools/gen_terrain_demo.py --check
 run "python unittest (agent docs)" \
   python3 -m unittest tools/agent_docs_check_test.py tools/export_agent_docs_check.py
 

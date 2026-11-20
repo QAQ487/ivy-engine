@@ -161,6 +161,7 @@ Components are small data + behavior packs attached to an object. Important ones
 | `Rigidbody` | Gravity, mass, drag, kinematic flag (JSON-authored physics body) |
 | `Script` | Your C++ class by name (`scriptClass`) |
 | `Billboard` | Always-facing sprite in 3D |
+| `Terrain` | Heightmap ground (hills and valleys from an `.r16` file) |
 | `Effect` | Effekseer effect on the node |
 | `Camera` | Scene camera |
 | `Audio` | Play one WAV clip on this node (bus, loop, spatial 3D) |
@@ -427,6 +428,19 @@ Place a camera node with FOV / near / far. Activate it from scripts or editor ca
 
 - **Billboard** — textured quad that faces the camera (or ground-aligned)
 - **Effect** — Effekseer path on the node; play/stop from script
+
+### Terrain — `Terrain`
+
+A ground surface made from a **heightmap**: a square grid of heights stored in a `.r16` file (raw 16-bit, the format World Machine, Gaea and Unity export). Add it with **Add Component → Terrain**; with no heightmap it draws a flat 256 × 256 m placeholder.
+
+- **Heightmap** — drag an `.r16` from the Asset Browser (mountain icon) or type its `rom/` path. The file must be N × N samples with N = 33, 65, 129, 257, 513, 1025, 2049 or 4097. The line under the field shows the size, or the error when the file cannot be read. **Reload Heightmap** reads the file again (saving a changed `.r16` also reloads the scene).
+- **Size X / Size Z** (metres) and **Height Scale / Height Offset**: a sample of 0 is at `Height Offset`, the highest sample at `Height Offset + Height Scale`.
+- **Position** moves the terrain: the node's position is the terrain's corner (sample 0, 0), and the terrain extends along +X and +Z. Rotation and scale have no effect.
+- **Chunk Cells / LOD Bias** — the terrain is drawn in square chunks; far chunks use fewer triangles (the scene's LOD switch and LOD Bias in Rendering apply as well). Larger chunks mean fewer draw calls, smaller chunks finer culling.
+- **Texture / Texture Tile Size** — one texture repeated every *tile size* metres, tinted by **Color**; **Roughness / Metallic** as on Material. The terrain uses the scene's default shader (Rendering → Default Shader), receives shadows and, with **Cast Shadows**, casts them in CSM mode. In shadow-volume mode it receives shadows but casts none.
+- Not yet: collision (objects fall through until the terrain collider lands), sculpting brushes and painting several materials. Those are the next terrain steps.
+
+Try it: open `scene_terrain_demo.json` in the testbed (fly camera; 512 m of hills with trees and boulders). `python3 tools/gen_terrain_demo.py` regenerates its heightmap, texture and scene.
 
 ---
 

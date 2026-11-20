@@ -8,6 +8,8 @@
 #include "transform.h"
 #include "visual_component.h"
 #include "material_component.h"
+#include "terrain_component.h"
+#include "engine/terrain/terrain_renderer.h"
 #include "collider_component_access.h"
 #include "engine/scripting/script_component.h"
 #include "engine/scene/render_settings.h"
@@ -477,6 +479,10 @@ void GameObject::DrawVisual(bool useRealModel) {
                 }
             }
         }
+
+        // Heightmap terrain: position only (rotation / scale are ignored, ADR 0011).
+        if (auto* tc = GetComponent<TerrainComponent>())
+            TerrainRenderer_Draw(*tc, t->GetWorldPosition());
     }
 
     if (auto* cc = FindColliderComponent(this))

@@ -76,7 +76,7 @@ Linux-runnable checks (use what matches the change; none of these is a Windows p
 | project.json merge on save | `tests/project_file_merge_test.cpp` |
 | Input actions / key names | `tests/input_actions_test.cpp`; key table sync: `python3 tools/runtime_bridge_keyboard_keys_check.py` |
 | Save data / host text buffers | `tests/save_store_test.cpp` (real files in a temp dir), `tests/host_text_test.cpp` |
-| Terrain heightmap core | `tests/terrain_heightmap_test.cpp` |
+| Terrain | `tests/terrain_{heightmap,draw_plan,settings}_test.cpp`; demo assets in sync: `python3 tools/gen_terrain_demo.py --check` |
 | Other unit tests | `tests/*_test.cpp` (single-file `g++ -std=c++20 -I.` builds; see each file header) |
 
 Windows-only harnesses: `tools/run_*.cmd`, `tools/run_*.ps1` (2D regression, collider components, content reload, scene hot-load, play-scene switch, bridge acceptance).
@@ -94,7 +94,7 @@ Windows-only harnesses: `tools/run_*.cmd`, `tools/run_*.ps1` (2D regression, col
 | `engine/physics/` | Custom 3D rigidbody + colliders; `2d/` Box2D adapter (ADR 0008) |
 | `engine/ui/`, `engine/input/`, `engine/audio/` | Canvas UI, keyboard/mouse/XInput + input actions (`input_actions` pure, `input_action_system`, shared `key_names.h`), XAudio2 |
 | `engine/save/` | Save slots: `save_store` (pure, Linux-tested), `save_system` (Windows folder + `MoveFileExW`) |
-| `engine/terrain/` | Terrain (ADR 0011): `terrain_heightmap` (pure, Linux-tested: `.r16` heightmap, height / normal queries, chunk bounds, chunk LOD, chunk index buffers). No component, renderer or collider yet |
+| `engine/terrain/` | Terrain (ADR 0011): `terrain_heightmap` (`.r16`, height / normal queries, chunk bounds, chunk LOD), `terrain_draw_plan` (chunk mesh + skirts, per-pass cull / LOD grouping), `terrain_settings` (component JSON) — all pure, Linux-tested; `terrain_renderer` (D3D11). Component: `engine/ecs/terrain_component`. No collider yet |
 | `engine/testing/` | Debug runtime test bridge |
 | `src/app/` | `main.cpp` (WinMain, loop, debug hotkeys), `scene/game_scene.cpp`, cameras (scene/debug/third/first person, director), fades/transitions |
 | `resources/` | Read-only engine defaults (shaders, fonts, branding, primitives, skybox/IBL), mirrored beside the exe |
@@ -182,7 +182,7 @@ Saved by `SceneLoader_SaveToFile`:
 
 ### Registered component types
 
-`SceneTransform`, `BoxCollider`, `SphereCollider`, `CapsuleCollider`, `CylinderCollider`, `MeshCollider`, `Rigidbody2D`, `Collider2D`, `SpriteAnimator`, `SpriteRenderer`, `visual`, `Billboard`, `Material`, `Rigidbody`, `Script`, `Collider`, `Effect`, `DirectionalLight`, `PointLight`, `SpotLight`, `Camera`, `Audio`, `AudioListener`.
+`SceneTransform`, `BoxCollider`, `SphereCollider`, `CapsuleCollider`, `CylinderCollider`, `MeshCollider`, `Rigidbody2D`, `Collider2D`, `SpriteAnimator`, `SpriteRenderer`, `visual`, `Billboard`, `Material`, `Rigidbody`, `Script`, `Collider`, `Effect`, `DirectionalLight`, `PointLight`, `SpotLight`, `Camera`, `Audio`, `AudioListener`, `Terrain`.
 
 | Type | Source | JSON keys |
 |------|--------|-----------|
@@ -198,6 +198,7 @@ Saved by `SceneLoader_SaveToFile`:
 | `SpotLight` | `ecs/spot_light_component.h` | point-light keys + `innerAngleDeg`, `outerAngleDeg`, `castShadows` |
 | `Audio` | `ecs/audio_component.h` | `clipPath`, `bus` (`BGM`/`SFX`/`VOICE`), `volume`, `loop`, `autoPlay`, `spatial`, `distanceScale` |
 | `AudioListener` | `ecs/audio_listener_component.h` | none (`{}`); presence selects the listener |
+| `Terrain` | `ecs/terrain_component.h` (fields: `terrain/terrain_settings.h`) | `heightmap` (`rom/...r16`, "" = flat 129² placeholder), `sizeX`, `sizeZ`, `heightScale`, `heightOffset`, `chunkQuads`, `lodBias`, `texture`, `textureTileSize`, `color {r,g,b}`, `roughness`, `metallic`, `castShadows`, `enabled`. Position only (rotation / scale ignored); ADR 0011 |
 | `Material`, `Effect`, `Camera`, 2D types | their headers in `engine/ecs/` | See each component's `Serialize()` |
 
 When adding a component: register it in `SceneLoader_RegisterComponentTypes()`, add inspector + undo support, add it to this table and `docs/agent/scene-prefab.md`.
@@ -222,6 +223,7 @@ When adding a component: register it in `SceneLoader_RegisterComponentTypes()`, 
 - **UI:** canvas design space 1920×1080; element types `sprite`, `text`, `button`, `bar`; anchors `TOP_LEFT`…`BOTTOM_RIGHT`. Optional `pivot {x,y}` (bottom-left origin like world sprites) in shared UI data; absent → legacy layout/text alignment. Pivot is sidecar data (does not change UI class layout or vtables). Buttons use builtin `LoadScene` / `ExitGame` actions or a `UICanvasScript::OnClick`.
 - **Save data** (ADR 0009, `engine/save/`, `ScriptApi_Save*` v51): named slots (`[A-Za-z0-9_-]{1,32}`) of key-value JSON, one `<slot>.json` per slot (`{"format":"ivy-save","version":1,"savedAt","data"}`). `Set*` is memory-only; `ScriptApi_SaveCommit` writes `.tmp` → copies old to `.bak` → `MoveFileExW`; load falls back to `.bak`; >4 MiB refused; newer `version` read-only. Folder: runtime/package `FOLDERID_SavedGames\<save.folderName or name>`; editor Play `<content project>/.ivy/saves/` (`SaveSystem_Reset` on Stop drops uncommitted values). Host access is locked by `SaveSystem_Mutex()`; text crosses the DLL boundary through `host_text.h` buffers. Demo: `SampleSaveScript` (Debug builds) in testbed `scene_save_demo.json`.
 - **Input actions** (ADR 0010, `ScriptApi_Input*` v52): named button/axis actions over keyboard, pad 0 and mouse buttons; binding text `Key.SPACE`, `Pad.A`, `Pad.LT`, `Pad.LeftStickX[+|-]`, `Mouse.Left`, `A/B` pairs (axis). `engine/input/input_actions` is pure (parse, validate, per-frame state from a `Snapshot`, capture, overrides); `input_action_system.cpp` samples devices after `Controller_Update` in `main.cpp` `Update`, loads `project.json` `input.actions` (cwd, then exe dir) and the player overrides from save slot `ivy_input` (key `bindings`), and is reloaded on project open, Play stop and Input page saves. Lock order: `InputActionSystem_Mutex()` before `SaveSystem_Mutex()`. Key names are shared with the test bridge (`engine/input/key_names.h`). Editor page: `engine/editor/editor_input_settings.cpp`. Demos (Debug builds): `SampleRebindScript` in `scene_input_rebind_demo.json`; `SamplePlayerScript` uses MoveX / MoveY / Jump when defined.
+- **Terrain** (ADR 0011, `engine/terrain/`): `Terrain` component drawn from `GameObject::DrawVisual` by `TerrainRenderer_Draw` in the camera pass and CSM depth passes (not the shadow-volume pass: open surface, receives only). One shared grid mesh per `chunkQuads` (surface vertices + skirt copy; `terrain_draw_plan`), heights read in `VertexShaderTerrain.hlsl` from an R16_UNORM texture (VS `t10`, cbuffer `b6`) owned by the component; outputs match `VertexShader3D`, so the scene's default lit pixel shader shades it (SurfaceFX falls back to Standard). Visible chunks (camera frustum / open-near cascade frustum, per-chunk box incl. skirt) are grouped by LOD and drawn with one `DrawIndexedInstanced` per level (instance = chunk origin + skirt depth). LOD: `SelectChunkLod` from the camera distance to the chunk box, `lodBias × render.lodBias`, `render.lodEnabled`, `render.shadowLodOffset` in cascades; hysteresis memory per chunk is updated by the camera pass only. Shared GPU objects are released in `ReleaseScene3D` (`TerrainRenderer_Finalize`). A changed `.r16` reloads the scene through the content monitor. `.r16` is `binary` in `.gitattributes` and never texture-cooked. No collider yet (step 3).
 - **Audio:** XAudio2/X3DAudio; components preferred for authored content; tracked GameObjects must outlive their emitters/listener.
 - **Editor console:** `hal::DebugWriteA`/`dout` feed a thread-safe ring buffer shown in the dockable Console; engine logs route through `hal::DebugWriteA`.
 

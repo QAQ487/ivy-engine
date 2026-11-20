@@ -62,6 +62,9 @@
     <HlslShader Include="shaders\VertexShaderShadowVolume.hlsl">
       <ShaderTarget>vs_5_0</ShaderTarget>
     </HlslShader>
+    <HlslShader Include="shaders\VertexShaderTerrain.hlsl">
+      <ShaderTarget>vs_5_0</ShaderTarget>
+    </HlslShader>
     <HlslShader Include="shaders\PixelShaderShadowVolumeDarken.hlsl">
       <ShaderTarget>ps_5_0</ShaderTarget>
     </HlslShader>
