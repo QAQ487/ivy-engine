@@ -20,6 +20,7 @@ public:
         Sound,
         Script,
         PhysicsMaterial,
+        Heightmap,  // terrain .r16 (ADR 0011)
         Other
     };
 

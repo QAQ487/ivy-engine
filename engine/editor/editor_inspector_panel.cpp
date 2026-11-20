@@ -2,6 +2,7 @@
 // Extracted from engine/core/engine_gui.cpp (phase-1 editor UI split; behaviour-preserving).
 
 #include "editor_gui_common_includes.h"
+#include "engine/editor/terrain_editor.h"
 namespace fs = std::filesystem;
 using json = nlohmann::json;
 
@@ -1382,6 +1383,152 @@ void DrawEditorInspectorPanel(bool playVisuals, bool* open)
                 ImGui::Spacing();
             }
 
+            if (TerrainComponent* tc = g_selNode->GetComponent<TerrainComponent>()) {
+                ImGui::Separator();
+                ImGui::Text("Terrain");
+                ImGui::PushID("TerrainSection");
+                EditorUndo_BeginComponentEdit(g_selNode, "Terrain");
+                terrain::Settings& ts = tc->settings;
+
+                char hmBuf[256];
+                strncpy_s(hmBuf, ts.heightmap.c_str(), sizeof(hmBuf) - 1);
+                hmBuf[sizeof(hmBuf) - 1] = '\0';
+                ImGui::Text("Heightmap (.r16, empty = flat)");
+                if (ImGui::InputText("##TerrainHeightmap", hmBuf, sizeof(hmBuf))) {
+                    ts.heightmap = hmBuf;
+                    tc->InvalidateHeightmap();
+                    runtimeDirty = true;
+                }
+                {
+                    const char* hmExts[] = { ".r16" };
+                    std::string droppedPath;
+                    if (AcceptAssetPathDrop(hmExts, IM_ARRAYSIZE(hmExts), droppedPath)) {
+                        ts.heightmap = droppedPath;
+                        tc->InvalidateHeightmap();
+                        runtimeDirty = true;
+                    }
+                }
+                if (ImGui::Button("Reload Heightmap"))
+                    tc->InvalidateHeightmap();
+                tc->EnsureLoaded();
+                if (tc->IsLoaded()) {
+                    const terrain::ChunkGrid& grid = tc->GetChunkGrid();
+                    ImGui::TextDisabled("%d x %d samples, %d x %d chunks of %d cells",
+                        tc->GetHeightmap().resolution, tc->GetHeightmap().resolution,
+                        grid.chunksPerSide, grid.chunksPerSide, grid.chunkQuads);
+                } else if (!tc->GetLoadError().empty()) {
+                    ImGui::TextColored(ImVec4(1.0f, 0.45f, 0.35f, 1.0f), "%s", tc->GetLoadError().c_str());
+                }
+
+                if (ImGui::DragFloat("Size X", &ts.layout.sizeX, 1.0f, terrain::kMinSize, terrain::kMaxSize))
+                    runtimeDirty = true;
+                if (ImGui::DragFloat("Size Z", &ts.layout.sizeZ, 1.0f, terrain::kMinSize, terrain::kMaxSize))
+                    runtimeDirty = true;
+                if (ImGui::DragFloat("Height Scale", &ts.layout.heightScale, 0.5f, 0.0f, terrain::kMaxHeightScale))
+                    runtimeDirty = true;
+                if (ImGui::DragFloat("Height Offset", &ts.layout.heightOffset, 0.5f,
+                        -terrain::kMaxHeightOffset, terrain::kMaxHeightOffset))
+                    runtimeDirty = true;
+                ImGui::TextDisabled("Position moves the terrain; rotation and scale are ignored.");
+
+                {
+                    static const int kChunkSizes[] = { 8, 16, 32, 64, 128, 256 };
+                    char preview[16];
+                    snprintf(preview, sizeof(preview), "%d", ts.chunkQuads);
+                    if (ImGui::BeginCombo("Chunk Cells", preview)) {
+                        for (int q : kChunkSizes) {
+                            char label[16];
+                            snprintf(label, sizeof(label), "%d", q);
+                            if (ImGui::Selectable(label, ts.chunkQuads == q)) {
+                                ts.chunkQuads = q;
+                                runtimeDirty = true;
+                            }
+                        }
+                        ImGui::EndCombo();
+                    }
+                }
+                if (ImGui::DragFloat("LOD Bias##Terrain", &ts.lodBias, 0.05f, terrain::kMinLodBias, terrain::kMaxLodBias))
+                    runtimeDirty = true;
+
+                {
+                    // Paint layers (ADR 0011 step 5). Layer 0 mirrors the legacy texture fields.
+                    ImGui::Text("Layers (paint them with the Paint tool below)");
+                    std::vector<terrain::LayerSettings> layers = terrain::EffectiveLayers(ts);
+                    bool layersChanged = false;
+                    for (int i = 0; i < static_cast<int>(layers.size()); ++i) {
+                        ImGui::PushID(i);
+                        char layerBuf[256];
+                        strncpy_s(layerBuf, layers[i].texture.c_str(), sizeof(layerBuf) - 1);
+                        layerBuf[sizeof(layerBuf) - 1] = '\0';
+                        ImGui::Text("Layer %d", i + 1);
+                        if (ImGui::InputText("##TerrainLayerTex", layerBuf, sizeof(layerBuf))) {
+                            layers[i].texture = layerBuf;
+                            layersChanged = true;
+                        }
+                        const char* texExts[] = { ".png", ".jpg", ".jpeg", ".tga", ".bmp", ".dds" };
+                        std::string droppedPath;
+                        if (AcceptAssetPathDrop(texExts, IM_ARRAYSIZE(texExts), droppedPath)) {
+                            layers[i].texture = droppedPath;
+                            layersChanged = true;
+                        }
+                        if (ImGui::DragFloat("Tile Size (m)", &layers[i].tileSize, 0.1f,
+                                terrain::kMinTextureTileSize, terrain::kMaxTextureTileSize))
+                            layersChanged = true;
+                        ImGui::PopID();
+                    }
+                    if (layers.size() < static_cast<size_t>(terrain::kMaxLayers) && ImGui::Button("Add Layer")) {
+                        layers.push_back(terrain::LayerSettings{});
+                        layersChanged = true;
+                    }
+                    if (layers.size() > 1) {
+                        if (layers.size() < static_cast<size_t>(terrain::kMaxLayers)) ImGui::SameLine();
+                        if (ImGui::Button("Remove Last Layer")) {
+                            layers.pop_back();
+                            layersChanged = true;
+                        }
+                    }
+                    if (layersChanged) {
+                        ts.layers = layers;
+                        ts.texture = layers[0].texture;
+                        ts.textureTileSize = layers[0].tileSize;
+                        tc->InvalidateTexture();
+                        runtimeDirty = true;
+                    }
+                }
+                {
+                    float color[3] = { ts.colorR, ts.colorG, ts.colorB };
+                    if (ImGui::ColorEdit3("Color##Terrain", color)) {
+                        ts.colorR = color[0];
+                        ts.colorG = color[1];
+                        ts.colorB = color[2];
+                        runtimeDirty = true;
+                    }
+                }
+                if (ImGui::SliderFloat("Roughness##Terrain", &ts.roughness, 0.0f, 1.0f))
+                    runtimeDirty = true;
+                if (ImGui::SliderFloat("Metallic##Terrain", &ts.metallic, 0.0f, 1.0f))
+                    runtimeDirty = true;
+                if (ImGui::Checkbox("Cast Shadows##Terrain", &ts.castShadows))
+                    runtimeDirty = true;
+                if (ImGui::Checkbox("Enabled##Terrain", &ts.enabled))
+                    runtimeDirty = true;
+                if (ImGui::Checkbox("Collision##Terrain", &ts.collision))
+                    runtimeDirty = true;
+                if (ts.collision && FindColliderComponent(g_selNode))
+                    ImGui::TextDisabled("This object's collider component is used instead.");
+                ts = terrain::SanitizeSettings(ts);
+
+                EditorUndo_EndComponentEdit(g_selNode, "Terrain");
+                TerrainEditor_DrawInspector(g_selNode, *tc);
+                if (ImGui::Button("Remove Terrain")) {
+                    EditorUndo_PushRemoveComponent(g_selNode, "Terrain");
+                    g_selNode->RemoveComponent<TerrainComponent>();
+                    runtimeDirty = true;
+                }
+                ImGui::PopID();
+                ImGui::Spacing();
+            }
+
             ImGui::Separator();
             ImGui::Text("Components:");
             for (const auto& kv : g_selNode->GetComponents())
@@ -1409,6 +1556,7 @@ void DrawEditorInspectorPanel(bool playVisuals, bool* open)
                 option("Sprite Renderer","SpriteRenderer",!g_selNode->GetComponent<SpriteRendererComponent>(),[&] {g_selNode->AddComponent<SpriteRendererComponent>();});
                 option("Sprite Animator","SpriteAnimator",!g_selNode->GetComponent<SpriteAnimatorComponent>(),[&] {g_selNode->AddComponent<SpriteAnimatorComponent>();});
                 option("Billboard","Billboard",!g_selNode->GetComponent<BillboardComponent>(),[&] {g_selNode->AddComponent<BillboardComponent>();});
+                option("Terrain","Terrain",!g_selNode->GetComponent<TerrainComponent>(),[&] {g_selNode->AddComponent<TerrainComponent>();});
                 option("Material","Material",!g_selNode->GetComponent<MaterialComponent>(),[&] {g_selNode->AddComponent<MaterialComponent>();});
                 option("Camera","Camera",!g_selNode->GetComponent<CameraComponent>(),[&] {g_selNode->AddComponent<CameraComponent>();});
                 option("Directional Light","DirectionalLight",!g_selNode->GetComponent<DirectionalLightComponent>(),[&] {g_selNode->AddComponent<DirectionalLightComponent>();});

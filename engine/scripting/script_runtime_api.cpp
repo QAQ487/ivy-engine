@@ -43,6 +43,7 @@
 #include "engine/input/input_actions.h"
 #include "engine/input/input_action_system.h"
 #include "engine/debug_draw/debug_ofstream.h"
+#include "engine/ecs/terrain_component.h"
 #endif
 #include "engine/rendering/d3d11/post_process.h"
 #include "engine/physics/core/physics_system.h"
@@ -57,7 +58,7 @@
 #include <vector>
 
 namespace {
-constexpr std::uint32_t kScriptRuntimeApiVersion = 52;
+constexpr std::uint32_t kScriptRuntimeApiVersion = 53;
 
 template <typename T>
 T* FindComponentByTypeName(GameObject& object, const char* typeName) {
@@ -920,6 +921,47 @@ bool Host_InputSaveBindings() {
     return false;
 }
 
+// --- v53 terrain -------------------------------------------------------------
+namespace {
+void SampleTerrainTree(GameObject* node, float x, float z, bool& found, float& bestHeight,
+                       DirectX::XMFLOAT3& bestNormal) {
+    if (!node || !node->IsActive()) return;
+    if (const TerrainComponent* tc = node->GetComponent<TerrainComponent>()) {
+        if (tc->settings.enabled && tc->IsLoaded()) {
+            // Same placement as TerrainCollider: the physics position, rotation / scale ignored.
+            const DirectX::XMFLOAT3 origin = node->GetPosition();
+            const terrain::Layout layout = terrain::SanitizeLayout(tc->settings.layout);
+            float h = 0.0f;
+            terrain::Float3 n;
+            if (terrain::SampleHeight(layout, tc->GetHeightmap(), x - origin.x, z - origin.z, h) &&
+                terrain::SampleSurfaceNormal(layout, tc->GetHeightmap(), x - origin.x, z - origin.z, n)) {
+                h += origin.y;
+                if (!found || h > bestHeight) {
+                    found = true;
+                    bestHeight = h;
+                    bestNormal = { n.x, n.y, n.z };
+                }
+            }
+        }
+    }
+    for (const auto& child : node->GetChildren())
+        SampleTerrainTree(child.get(), x, z, found, bestHeight, bestNormal);
+}
+} // namespace
+
+bool Host_TerrainSampleHeight(float x, float z, float* outHeight, DirectX::XMFLOAT3* outNormal) {
+    if (!std::isfinite(x) || !std::isfinite(z)) return false;
+    bool found = false;
+    float height = 0.0f;
+    DirectX::XMFLOAT3 normal{ 0.0f, 1.0f, 0.0f };
+    for (const auto& root : SceneLoader_GetSceneNodes())
+        SampleTerrainTree(root.get(), x, z, found, height, normal);
+    if (!found) return false;
+    if (outHeight) *outHeight = height;
+    if (outNormal) *outNormal = normal;
+    return true;
+}
+
 int Host_SaveListSlots(char* out, int capacity) {
     return WithSaves([&](save_store::Store& s) {
         return CopyOut(host_text::JoinLines(s.ListSlots()), out, capacity);
@@ -1098,6 +1140,7 @@ const ScriptRuntimeApi g_scriptRuntimeApi = {
     &Host_InputCaptureCancel,
     &Host_InputResetBindings,
     &Host_InputSaveBindings,
+    &Host_TerrainSampleHeight,
 };
 #else
 using GetApiFn = const ScriptRuntimeApi* (*)();
@@ -1107,7 +1150,9 @@ const ScriptRuntimeApi* ResolveScriptRuntimeApi() {
     if (!module)
         return nullptr;
 
-    auto getApi = reinterpret_cast<GetApiFn>(GetProcAddress(module, "ScriptRuntimeApi_GetV52"));
+    auto getApi = reinterpret_cast<GetApiFn>(GetProcAddress(module, "ScriptRuntimeApi_GetV53"));
+    if (!getApi)
+        getApi = reinterpret_cast<GetApiFn>(GetProcAddress(module, "ScriptRuntimeApi_GetV52"));
     if (!getApi)
         getApi = reinterpret_cast<GetApiFn>(GetProcAddress(module, "ScriptRuntimeApi_GetV51"));
     if (!getApi)
@@ -1242,6 +1287,16 @@ const ScriptRuntimeApi* ScriptRuntimeApi_GetV51() {
 
 extern "C" __declspec(dllexport)
 const ScriptRuntimeApi* ScriptRuntimeApi_GetV52() {
+    static const ScriptRuntimeApi api = [] {
+        ScriptRuntimeApi copy = g_scriptRuntimeApi;
+        copy.version = 52;
+        return copy;
+    }();
+    return &api;
+}
+
+extern "C" __declspec(dllexport)
+const ScriptRuntimeApi* ScriptRuntimeApi_GetV53() {
     return &g_scriptRuntimeApi;
 }
 
@@ -1946,6 +2001,12 @@ bool ScriptApi_InputResetBindings(const char* action) {
 bool ScriptApi_InputSaveBindings() {
     const auto* api = InputApi();
     return api && api->inputSaveBindings && api->inputSaveBindings();
+}
+
+bool ScriptApi_TerrainSampleHeight(float x, float z, float* outHeight, DirectX::XMFLOAT3* outNormal) {
+    const ScriptRuntimeApi* api = ScriptRuntimeApi_GetHost();
+    if (!api || api->version < 53 || !api->terrainSampleHeight) return false;
+    return api->terrainSampleHeight(x, z, outHeight, outNormal);
 }
 
 void ScriptApi_EngineGUIStopPlay() {

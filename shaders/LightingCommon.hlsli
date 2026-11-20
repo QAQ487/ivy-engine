@@ -73,6 +73,7 @@ struct BaseColorResult
     float alpha;
 };
 
+#ifndef TERRAIN_SPLAT
 BaseColorResult SampleBaseColor(float4 inDiffuse, float2 inTexCoord)
 {
     BaseColorResult r;
@@ -82,6 +83,45 @@ BaseColorResult SampleBaseColor(float4 inDiffuse, float2 inTexCoord)
     r.alpha = inDiffuse.a * lerp(1.0, texCol.a, hasTex);
     return r;
 }
+#else
+// Terrain (ADR 0011 step 5): inTexCoord is the terrain-local XZ position in metres.
+// Up to 4 layer textures (layer 0 in g_Texture, white when a layer has no texture),
+// each tiled by its own size, blended by the splat map weights (R, G, B, A).
+cbuffer TerrainPixelBuffer : register(b7)
+{
+    float4 TerrainLayerTileInv;  // 1 / tile size per layer
+    float2 TerrainSizeInv;       // 1 / (sizeX, sizeZ)
+    float  TerrainLayerCount;    // 1..4
+    float  TerrainSplatTexels;   // splat resolution (for half-texel clamping)
+}
+Texture2D g_TerrainSplat  : register(t11);
+Texture2D g_TerrainLayer1 : register(t12);
+Texture2D g_TerrainLayer2 : register(t13);
+Texture2D g_TerrainLayer3 : register(t14);
+
+BaseColorResult SampleBaseColor(float4 inDiffuse, float2 inTexCoord)
+{
+    // Texel centres sit on the grid corners: texel (0,0) at the terrain's (0,0) corner.
+    const float n = max(TerrainSplatTexels, 2.0f);
+    const float2 g = saturate(inTexCoord * TerrainSizeInv);
+    const float2 splatUv = (g * (n - 1.0f) + 0.5f) / n;
+    float4 w = g_TerrainSplat.SampleLevel(g_SamplerState, splatUv, 0);
+    const float4 used = float4(1.0f, TerrainLayerCount > 1.5f, TerrainLayerCount > 2.5f, TerrainLayerCount > 3.5f);
+    w *= used;
+    const float sum = dot(w, float4(1.0f, 1.0f, 1.0f, 1.0f));
+    w = (sum > 1e-4f) ? w / sum : float4(1, 0, 0, 0);
+
+    float3 c = w.x * g_Texture.Sample(g_SamplerState, inTexCoord * TerrainLayerTileInv.x).rgb;
+    if (w.y > 0.0f) c += w.y * g_TerrainLayer1.Sample(g_SamplerState, inTexCoord * TerrainLayerTileInv.y).rgb;
+    if (w.z > 0.0f) c += w.z * g_TerrainLayer2.Sample(g_SamplerState, inTexCoord * TerrainLayerTileInv.z).rgb;
+    if (w.w > 0.0f) c += w.w * g_TerrainLayer3.Sample(g_SamplerState, inTexCoord * TerrainLayerTileInv.w).rgb;
+
+    BaseColorResult r;
+    r.rgb = inDiffuse.rgb * Diffuse.rgb * c;
+    r.alpha = 1.0f;
+    return r;
+}
+#endif
 
 // Cotangent-frame normal mapping (no mesh tangents required).
 float3x3 CotangentFrame(float3 N, float3 p, float2 uv)

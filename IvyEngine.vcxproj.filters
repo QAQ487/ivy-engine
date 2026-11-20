@@ -7,6 +7,9 @@
     <Filter Include="engine\save">
       <UniqueIdentifier>{3380e21b-811d-4e9a-838f-40127696c427}</UniqueIdentifier>
     </Filter>
+    <Filter Include="engine\terrain">
+      <UniqueIdentifier>{fcd88a06-5447-4a80-92e3-8e0d9969b1d9}</UniqueIdentifier>
+    </Filter>
     <Filter Include="engine\audio">
       <UniqueIdentifier>{9f2374de-4953-4a7f-b510-b837d2ba05be}</UniqueIdentifier>
     </Filter>
@@ -213,6 +216,9 @@
     <ClInclude Include="engine\ecs\billboard_component.h">
       <Filter>engine\ecs</Filter>
     </ClInclude>
+    <ClInclude Include="engine\ecs\terrain_component.h">
+      <Filter>engine\ecs</Filter>
+    </ClInclude>
     <ClInclude Include="engine\ecs\material_component.h">
       <Filter>engine\ecs</Filter>
     </ClInclude>
@@ -322,6 +328,9 @@
       <Filter>engine\editor</Filter>
     </ClInclude>
     <ClInclude Include="engine\editor\transform_gizmo.h">
+      <Filter>engine\editor</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\editor\terrain_editor.h">
       <Filter>engine\editor</Filter>
     </ClInclude>
     <ClInclude Include="engine\editor\ui_gizmo.h">
@@ -513,6 +522,27 @@
     <ClInclude Include="engine\save\save_store.h">
       <Filter>engine\save</Filter>
     </ClInclude>
+    <ClInclude Include="engine\terrain\terrain_heightmap.h">
+      <Filter>engine\terrain</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\terrain\terrain_draw_plan.h">
+      <Filter>engine\terrain</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\terrain\terrain_settings.h">
+      <Filter>engine\terrain</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\terrain\terrain_renderer.h">
+      <Filter>engine\terrain</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\terrain\terrain_collision.h">
+      <Filter>engine\terrain</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\terrain\terrain_brush.h">
+      <Filter>engine\terrain</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\terrain\terrain_splat.h">
+      <Filter>engine\terrain</Filter>
+    </ClInclude>
     <ClInclude Include="engine\save\save_system.h">
       <Filter>engine\save</Filter>
     </ClInclude>
@@ -677,6 +707,27 @@
     <ClCompile Include="engine\save\save_store.cpp">
       <Filter>engine\save</Filter>
     </ClCompile>
+    <ClCompile Include="engine\terrain\terrain_heightmap.cpp">
+      <Filter>engine\terrain</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\terrain\terrain_draw_plan.cpp">
+      <Filter>engine\terrain</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\terrain\terrain_settings.cpp">
+      <Filter>engine\terrain</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\terrain\terrain_renderer.cpp">
+      <Filter>engine\terrain</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\terrain\terrain_collision.cpp">
+      <Filter>engine\terrain</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\terrain\terrain_brush.cpp">
+      <Filter>engine\terrain</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\terrain\terrain_splat.cpp">
+      <Filter>engine\terrain</Filter>
+    </ClCompile>
     <ClCompile Include="engine\save\save_system.cpp">
       <Filter>engine\save</Filter>
     </ClCompile>
@@ -761,6 +812,9 @@
     <ClCompile Include="engine\ecs\billboard_component.cpp">
       <Filter>engine\ecs</Filter>
     </ClCompile>
+    <ClCompile Include="engine\ecs\terrain_component.cpp">
+      <Filter>engine\ecs</Filter>
+    </ClCompile>
     <ClCompile Include="engine\ecs\material_component.cpp">
       <Filter>engine\ecs</Filter>
     </ClCompile>
@@ -837,6 +891,9 @@
       <Filter>engine\editor</Filter>
     </ClCompile>
     <ClCompile Include="engine\editor\editor_menu_bar.cpp">
+      <Filter>engine\editor</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\editor\terrain_editor.cpp">
       <Filter>engine\editor</Filter>
     </ClCompile>
     <ClCompile Include="engine\editor\editor_popups.cpp">
@@ -1200,6 +1257,18 @@
       <Filter>shaders</Filter>
     </None>
     <None Include="shaders\VertexShaderShadowVolume.hlsl">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\VertexShaderTerrain.hlsl">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\PixelShaderTerrain.hlsl">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\PixelShaderTerrain_PBR.hlsl">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\PixelShaderTerrain_Toon.hlsl">
       <Filter>shaders</Filter>
     </None>
     <None Include="shaders\PixelShaderShadowVolumeDarken.hlsl">

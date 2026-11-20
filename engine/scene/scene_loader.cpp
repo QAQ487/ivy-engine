@@ -32,6 +32,7 @@
 #include "engine/ecs/visual_component.h"
 #include "engine/ecs/model_asset_cache.h"
 #include "engine/ecs/billboard_component.h"
+#include "engine/ecs/terrain_component.h"
 #include "engine/ecs/material_component.h"
 #include "engine/ecs/rigidbody_component.h"
 #include "engine/ecs/camera_component.h"
@@ -262,6 +263,10 @@ void SceneLoader_RegisterComponentTypes() {
     ComponentFactory::Instance().Register("AudioListener",
         []() -> std::unique_ptr<Component> {
             return std::make_unique<AudioListenerComponent>();
+        });
+    ComponentFactory::Instance().Register("Terrain",
+        []() -> std::unique_ptr<Component> {
+            return std::make_unique<TerrainComponent>();
         });
 }
 

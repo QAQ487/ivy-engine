@@ -7,6 +7,9 @@
     <Filter Include="engine\save">
       <UniqueIdentifier>{facd360b-8714-41e7-aa2e-864693fcf26e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="engine\terrain">
+      <UniqueIdentifier>{e472ac4e-5ffd-4f27-9b13-8d70001be0b7}</UniqueIdentifier>
+    </Filter>
     <Filter Include="engine\audio">
       <UniqueIdentifier>{210a5ca0-9969-47d4-b589-04579a4dc8ad}</UniqueIdentifier>
     </Filter>
@@ -183,6 +186,9 @@
     <ClInclude Include="engine\ecs\billboard_component.h">
       <Filter>engine\ecs</Filter>
     </ClInclude>
+    <ClInclude Include="engine\ecs\terrain_component.h">
+      <Filter>engine\ecs</Filter>
+    </ClInclude>
     <ClInclude Include="engine\ecs\material_component.h">
       <Filter>engine\ecs</Filter>
     </ClInclude>
@@ -342,6 +348,27 @@
     <ClInclude Include="engine\save\save_store.h">
       <Filter>engine\save</Filter>
     </ClInclude>
+    <ClInclude Include="engine\terrain\terrain_heightmap.h">
+      <Filter>engine\terrain</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\terrain\terrain_draw_plan.h">
+      <Filter>engine\terrain</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\terrain\terrain_settings.h">
+      <Filter>engine\terrain</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\terrain\terrain_renderer.h">
+      <Filter>engine\terrain</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\terrain\terrain_collision.h">
+      <Filter>engine\terrain</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\terrain\terrain_brush.h">
+      <Filter>engine\terrain</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\terrain\terrain_splat.h">
+      <Filter>engine\terrain</Filter>
+    </ClInclude>
     <ClInclude Include="engine\save\save_system.h">
       <Filter>engine\save</Filter>
     </ClInclude>
@@ -468,6 +495,27 @@
     <ClCompile Include="engine\save\save_store.cpp">
       <Filter>engine\save</Filter>
     </ClCompile>
+    <ClCompile Include="engine\terrain\terrain_heightmap.cpp">
+      <Filter>engine\terrain</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\terrain\terrain_draw_plan.cpp">
+      <Filter>engine\terrain</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\terrain\terrain_settings.cpp">
+      <Filter>engine\terrain</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\terrain\terrain_renderer.cpp">
+      <Filter>engine\terrain</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\terrain\terrain_collision.cpp">
+      <Filter>engine\terrain</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\terrain\terrain_brush.cpp">
+      <Filter>engine\terrain</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\terrain\terrain_splat.cpp">
+      <Filter>engine\terrain</Filter>
+    </ClCompile>
     <ClCompile Include="engine\save\save_system.cpp">
       <Filter>engine\save</Filter>
     </ClCompile>
@@ -544,6 +592,9 @@
       <Filter>engine\ecs</Filter>
     </ClCompile>
     <ClCompile Include="engine\ecs\billboard_component.cpp">
+      <Filter>engine\ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\ecs\terrain_component.cpp">
       <Filter>engine\ecs</Filter>
     </ClCompile>
     <ClCompile Include="engine\ecs\material_component.cpp">
@@ -800,6 +851,10 @@
     <FxCompile Include="shaders\VertexShader3D_Outline.hlsl" />
     <FxCompile Include="shaders\PixelShader3D_Outline.hlsl" />
     <FxCompile Include="shaders\VertexShaderShadowVolume.hlsl" />
+    <FxCompile Include="shaders\VertexShaderTerrain.hlsl" />
+    <FxCompile Include="shaders\PixelShaderTerrain.hlsl" />
+    <FxCompile Include="shaders\PixelShaderTerrain_PBR.hlsl" />
+    <FxCompile Include="shaders\PixelShaderTerrain_Toon.hlsl" />
     <FxCompile Include="shaders\PixelShaderShadowVolumeDarken.hlsl" />
     <FxCompile Include="shaders\SkyboxPS.hlsl" />
     <FxCompile Include="shaders\SkyboxVS.hlsl" />

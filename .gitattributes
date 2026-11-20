@@ -61,3 +61,10 @@
 #*.PDF   diff=astextplain
 #*.rtf   diff=astextplain
 #*.RTF   diff=astextplain
+
+###############################################################################
+# Raw terrain heightmaps (ADR 0011): never treat as text, so line-ending
+# conversion cannot corrupt them.
+###############################################################################
+*.r16 binary
+*.splat binary

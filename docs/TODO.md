@@ -68,6 +68,40 @@
   - Linux：`./tools/run_editor_theme_check.sh`。Windows 要目視每組 preset×scheme、zoom 清晰度、Asset Browser CJK 檔名、Play／Stop 色。
 
 
+## Terrain build system（ADR 0011）
+
+目標：editor 入面加一塊地形，用筆刷雕山谷、塗材質，Play 時角色可以喺上面行，打包照用。v1 = 單塊地形（最大 4097² 樣本），步驟 1–4；步驟 5 係 v1.1。每步一個 PR，Windows 驗收後先做下一步。
+
+- [x] **步驟 1：地基**（source 已做；純邏輯，冇 Windows 改動要驗）：`engine/terrain/terrain_heightmap.{h,cpp}`——`.r16` 讀寫（解像度由檔案大小推算）、`Layout` sanitise、高度／樣本換算、三角形插值高度（同對角線分割）、surface／vertex normal、chunk 大小同 min/max bounds（局部更新）、chunk LOD 選擇（hysteresis）、chunk index buffer。已加入兩個 `.vcxproj`（未有人用；MSVC 編譯等下次 Windows build 順便確認）。Linux：`tests/terrain_heightmap_test.cpp`（亦用 ASan／UBSan 跑過）。
+- [x] **步驟 2：睇到地形**（Terry 喺 Windows 驗收通過，2026-11-20：下面「Windows 要驗」全部項目）
+  - `Terrain` component（`engine/ecs/terrain_component`；JSON 欄位喺 `engine/terrain/terrain_settings`）：已註冊、inspector（heightmap／大小／高度／chunk／LOD bias／texture／顏色／roughness／metallic／cast shadows／enabled，讀檔錯誤會顯示）、Add Component、undo。Asset Browser 識 `.r16`（山形 icon，可以拖去 Heightmap 欄）。
+  - 渲染（`engine/terrain/terrain_renderer.cpp`＋`shaders/VertexShaderTerrain.hlsl`）：heightmap 上傳做 R16 texture，VS 讀高度同計 normal；輸出同 `VertexShader3D` 一樣，所以直接用場景嘅 default lit PS（冇另寫 `PixelShaderTerrain`，splat 留返步驟 5）。每個 chunk 用 camera frustum／cascade open-near frustum 剔除，按 LOD 分組，每個 level 一個 `DrawIndexedInstanced`；skirt 遮 LOD 接縫；CSM 投影同受影；`"volume"` 模式只受影。純邏輯：`terrain_draw_plan`、`terrain_settings`（Linux 測試）。
+  - 示範：`testbed/rom/scene/scene_terrain_demo.json`（`python3 tools/gen_terrain_demo.py` 生成 512 m 山地、地面 texture、松樹同石；`--check` 已入 `run_linux_checks.sh`）。`.r16` 喺 `.gitattributes` 設咗 `binary`。
+  - Windows 已驗：`VertexShaderTerrain.cso` 有編譯同複製；示範場景見到山、texture 平鋪、陰影（樹影落山坡、山自己投影）；行遠啲 chunk 變粗但冇裂縫（skirt）；Rendering 面板關 LOD／frustum culling 畫面一致；改 Default Shader（PBR／Toon）地形跟住變；Add Component → Terrain 出平地；拖 `.r16` 入 Heightmap；改 Size／Height Scale 即時更新；Undo；Save 後重開；Play 同 runtime 一樣畫到；打包後 `.r16` 有入包。
+  - 已知限制：未有碰撞（步驟 3）；未揀到（viewport click 唔會選中地形，要喺 Hierarchy 揀）；只有一張 texture；chunk 數多（例如 4097² 配 64 cells = 4096 個 chunk）時 CPU 規劃成本未量度過。
+- [x] **步驟 3：喺上面行**（Terry 喺 Windows 驗收，2026-11-20：所有物件都唔會穿過地形；碰撞手感未夠好，另開下面「地形碰撞審計」）
+  - 碰撞：`TerrainCollider`（`ColliderType::TERRAIN` 加喺 enum 尾，唔會寫入 JSON）由 `Terrain` component 自己裝上（`collision` 欄，預設開；物件有自己嘅 collider component 就用嗰個）；地形物件嘅 Rigidbody 會設成 kinematic。純邏輯 `engine/terrain/terrain_collision`：raycast 沿格仔行（同逐個三角形試嘅結果對過 400 條隨機 ray）、sphere 精確（腳下每個三角形最近點；中心跌咗落地底就沿 normal 推返上嚟，所以唔會穿過）、capsule＝沿線段幾個 sphere、box／mesh 用 26 個角／邊／面點、cylinder 用邊緣同兩端中心點。`physics_system.cpp` 嘅 broadphase、sweep-and-prune、raycast 預篩都特別處理 TERRAIN（地形嘅 collider 中心喺角落，唔啱用球形估算）。
+  - Script：`ScriptApi_TerrainSampleHeight(x, z, &h, &normal)`（ScriptRuntimeApi v53；v52 export 照留）。
+  - 示範：`scene_terrain_demo.json` 加咗玩家（`SamplePlayerScript`，第三人稱鏡頭）同四件會跌落斜坡嘅物件（sphere／box／capsule／cylinder，顯示 collider）。
+  - Windows 已驗（穿透）：Debug editor 撳 Play，玩家企喺山坡上、行上行落、跳完落返地；四件物件跌落後停喺地面或者沿斜坡滾，唔會穿過；F11 碰撞顯示正常；Release／runtime 同樣；舊 GameScripts DLL（v52）照載入；Inspector 有 Collision checkbox，熄咗物件會穿過；地形物件加 BoxCollider 之後用 box。
+  - 已知限制：box／cylinder 用取樣點，好尖嘅山峰比 box 窄就會穿入 box 中間；地形物件冇 Rigidbody component 時會自動加一個（kinematic），存場景時會寫入；editor viewport 點擊選取未查（如果點擊用 physics raycast，而家應該揀到地形）。
+- [ ] **地形碰撞審計**（暫緩，Terry 2026-11-20：「collider are not great」；唔穿透，但手感要改）：之後逐項睇——box／cylinder 取樣點 vs 真正嘅 box-triangle 測試、斜坡上滑動／磨擦、物件喺地形上抖動或者唔停、capsule 用幾粒 sphere 近似嘅接觸點、一次只解最深一個接觸（冇 manifold）、地形物件自動加 Rigidbody component。先喺 Windows 記低具體現象再改。
+- [x] **步驟 4：雕刻工具**（Terry 喺 Windows 驗收，2026-11-20）
+  - Terrain inspector 尾加「Sculpt」：Off／Raise／Lower／Smooth／Flatten、Brush Radius（m）、Strength、Falloff；Reset to Flat（33–4097 解像度＋高度，唔可以 undo，有確認框）；未存檔時有黃色提示。純邏輯 `engine/terrain/terrain_brush`（Linux 測試）。
+  - Viewport：揀咗地形＋開咗工具，左鍵拖就雕；地面有筆刷圈（雕緊變橙；內圈＝falloff 開始）；Alt＋拖照舊轉鏡頭；工具開住時 click 地形唔會轉選取，同時收埋移動 gizmo。每一筆＝一個 Undo（只記改過嘅長方形）。GPU 只上傳改過嘅長方形。
+  - 存檔：Save Scene 先寫 `.r16` 再寫場景 JSON；未有檔案嘅地形自動用 `rom/terrain/<場景>_<物件>.r16`；`.tmp` 再 rename；寫失敗就唔存場景（Console 有原因）。editor 自己寫嘅 `.r16` 唔會觸發場景重載。
+  - GameObject → 3D Object → Terrain：256×256 m、置中、地面喺 0、高度 −20 至 80 m。冇檔案嘅地形而家平放喺高度 0（以前喺最低點）。
+  - Windows 已驗：建立地形、四種筆刷手感（速度、平滑、falloff 圈）、Undo／Redo、Save Scene 寫出 `.r16`（路徑寫入場景）、重開場景地形保持、Play／Stop 保留未存嘅雕刻、雕緊時唔會揀走地形或者郁到 gizmo、Reset to Flat、大地圖（2049／4097）雕刻有冇卡。
+  - 已知限制：筆刷每次只改一個地形；Undo 會喺 stroke 開始時複製成張地圖（4097² ≈ 33 MB，一筆一次）；複製／prefab 化嘅地形讀返檔案，唔帶未存嘅雕刻；未有「匯入 16-bit PNG」（`.r16` 照用路徑欄）。
+- [ ] **步驟 5：塗材質**（source 已做；等 Windows editor／runtime 驗收）
+  - JSON：`layers`（最多 4 個 `{texture, tileSize}`）＋`splatmap`（`.splat`：N×N RGBA8 權重，無 header，唔會 BC7）。舊場景嘅 `texture` 當第 1 層，唔加新 key。純邏輯 `engine/terrain/terrain_splat`（Linux 測試）。
+  - Shader：`PixelShaderTerrain{,_PBR,_Toon}.hlsl` = 原本嘅 lit PS 加 `TERRAIN_SPLAT`（`LightingCommon.hlsli` 嘅 `SampleBaseColor` 改為按 splat 混 4 層），所以燈光／陰影／霧／IBL 照舊；其他 default shader 用 Standard 版。VS 而家輸出地形本地 XZ（米），每層自己 tile。
+  - Editor：Inspector「Layers」（Add Layer／Remove Last Layer；第 1 層同步返舊 `texture`）；Sculpt 多咗 **Paint** 工具＋揀層；每筆一個 Undo；GPU 只上傳改過嘅長方形；Save Scene 寫 `rom/terrain/<場景>_<物件>_splat.splat`；自己寫嘅 `.splat` 唔觸發重載。
+  - 示範：`scene_terrain_demo.json` 有 4 層（草、斜坡石、盆地沙、山脊雪），splat 由 `tools/gen_terrain_demo.py` 按斜度／高度生成。
+  - Windows 要驗：三個新 `.cso` 編譯；示範場景見到 4 層而且過渡平滑；Default Shader 換 PBR／Toon 地形跟住；Paint 工具手感、Undo、Save 後重開；Add／Remove Layer；舊場景（只有 `texture`）同步驟 2 一樣；打包後 `.splat` 有入包、圖層正常。
+  - 已知限制：冇每層 normal map／roughness（全部層共用 Color／Roughness／Metallic）；移除只可以移最後一層；splat 解像度新地形跟 heightmap，Reset to Flat 唔會改 splat 解像度。
+- 之後（未排）：植被散佈（要先做 mesh instancing）、地形挖洞、多塊地形／串流、NavMesh。
+
 ## AI 系統套件（source audit：引擎內全部 missing）
 
 `engine/`、`src/`、`game/` 冇 Blackboard、BehaviorTree、Perception、EQS、Waypoint、NavMesh、pathfinding。Village & Goblin 嘅源碼唔喺呢個 repo，遊戲自己有冇 A* 無法喺度核實。
@@ -246,6 +280,7 @@ PBR 球場已由引擎待辦移除：倉庫只有 PBR shader 同 `testbed/rom/sc
 
 ## 建議優先次序
 
+0. **Terrain build system**（Terry 揀嘅下一個主線，ADR 0011）：按「Terrain build system」一節步驟 2 → 3 → 4 做；3D 時間模型（掉幀變慢鏡）建議喺步驟 3 前後處理，因為地形場景較易掉幀。
 1. PR #7 視覺檢查（lighting、CSM、post-process、gizmo）喺 Windows 做（ImGuizmo AddPolyline 已驗收）。
 2. 重做 Properties Panel／Inspector（先有 UI 草案；現有編輯同 Undo 要保住）。
    Culling／LOD 跟進（獨立 PR，順序：`DrawVisual` 先剔除、離屏動畫降頻 → 燈光揀選 → billboard／粒子／effect 剔除）見「Culling／LOD 缺口盤點」。

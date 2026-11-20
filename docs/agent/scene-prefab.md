@@ -83,6 +83,27 @@ JSON type names come from each component's `GetTypeName()` (via `REGISTER_COMPON
 | `Camera` | `api:CameraComponent` |
 | `Audio` | `api:AudioComponent` |
 | `AudioListener` | `api:AudioListenerComponent` |
+| `Terrain` | `api:TerrainComponent` (heightmap terrain, ADR 0011; fields below) |
+
+### `Terrain` fields
+
+Heightmap terrain (ADR 0011). The node's position places the terrain's (0, 0) corner; rotation and scale are ignored. Missing or wrong-typed keys keep their defaults; numbers are clamped.
+
+| Key | Default | Meaning |
+|-----|---------|---------|
+| `heightmap` | `""` | `rom/...r16` file: N×N little-endian `uint16`, N = 2ⁿ+1 (33–4097). Empty = flat 129×129 placeholder at height 0 (editor Save Scene writes sculpted ones to `rom/terrain/<scene>_<object>.r16` and fills this in) |
+| `sizeX`, `sizeZ` | `256` | Metres along X / Z (1–100000) |
+| `heightScale`, `heightOffset` | `100`, `0` | Height = `heightOffset + sample / 65535 × heightScale` |
+| `chunkQuads` | `64` | Cells per chunk side (power of two 8–256, fitted to the map) |
+| `lodBias` | `1` | Multiplies `render.lodBias`; > 1 = coarser sooner |
+| `texture`, `textureTileSize` | `""`, `8` | Layer 0 texture and metres per repeat (kept equal to `layers[0]`; the only layer when `layers` is absent) |
+| `layers` | absent | Up to 4 `{ "texture", "tileSize" }` paint layers |
+| `splatmap` | absent / `""` | `rom/...splat`: N×N RGBA8 layer weights (R..A = layers 1..4, sum 255), N = 2ⁿ+1, no header; empty = all layer 1. Editor Save Scene writes painted ones to `rom/terrain/<scene>_<object>_splat.splat` |
+| `color` `{r,g,b}`, `roughness`, `metallic` | white, `0.9`, `0` | Material (same mapping as `Material`) |
+| `castShadows`, `enabled` | `true`, `true` | CSM caster / draw (and collide) at all |
+| `collision` | `true` | Static heightfield collider on this object, unless it has its own collider component; makes its rigidbody kinematic |
+
+Shaded by the scene's `render.defaultShader`. Script height queries: `api:ScriptApi_TerrainSampleHeight` (v53).
 
 ## Prefab formats (`api:PrefabSerializer`)
 

@@ -8,6 +8,7 @@
 #include "engine/ecs/audio_component.h"
 #include "engine/ecs/audio_listener_component.h"
 #include "engine/ecs/billboard_component.h"
+#include "engine/ecs/terrain_component.h"
 #include "engine/ecs/sprite_renderer_component.h"
 #include "engine/ecs/sprite_animator_component.h"
 #include "engine/ecs/camera_component.h"
@@ -468,6 +469,7 @@ void RemoveComponentByTypeName(GameObject* node, const std::string& typeName) {
 	else if (typeName == "Rigidbody") node->RemoveComponent<RigidbodyComponent>();
 	else if (IsColliderComponentType(typeName)) RemoveColliderComponent(node);
 	else if (typeName == "Billboard") node->RemoveComponent<BillboardComponent>();
+	else if (typeName == "Terrain") node->RemoveComponent<TerrainComponent>();
 	else if (typeName == "SpriteRenderer") node->RemoveComponent<SpriteRendererComponent>();
 	else if (typeName == "SpriteAnimator") node->RemoveComponent<SpriteAnimatorComponent>();
 	else if (typeName == "Effect") node->RemoveComponent<EffectComponent>();

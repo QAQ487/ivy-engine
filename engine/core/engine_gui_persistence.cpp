@@ -4,8 +4,19 @@
 #include "engine_gui.h"
 #include "engine_gui_internal.h"
 #include "engine/scene/scene_loader.h"
+#include "engine/editor/terrain_editor.h"
+#include "engine/debug_draw/debug_ofstream.h"
+
+#include <string>
 
 bool EngineGUI_SaveToFile(const char* filename) {
+    // Sculpted heightmaps first: a terrain without a file gets its path here, and the
+    // scene JSON written next must name it.
+    std::string error;
+    if (!TerrainEditor_SaveEditedTerrains(&error)) {
+        hal::DebugWriteA(("[Terrain] scene not saved: " + error + "\n").c_str());
+        return false;
+    }
     return SceneLoader_SaveToFile(filename);
 }
 

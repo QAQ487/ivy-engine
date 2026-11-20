@@ -161,6 +161,7 @@ Components are small data + behavior packs attached to an object. Important ones
 | `Rigidbody` | Gravity, mass, drag, kinematic flag (JSON-authored physics body) |
 | `Script` | Your C++ class by name (`scriptClass`) |
 | `Billboard` | Always-facing sprite in 3D |
+| `Terrain` | Heightmap ground (hills and valleys from an `.r16` file) |
 | `Effect` | Effekseer effect on the node |
 | `Camera` | Scene camera |
 | `Audio` | Play one WAV clip on this node (bus, loop, spatial 3D) |
@@ -427,6 +428,24 @@ Place a camera node with FOV / near / far. Activate it from scripts or editor ca
 
 - **Billboard** — textured quad that faces the camera (or ground-aligned)
 - **Effect** — Effekseer path on the node; play/stop from script
+
+### Terrain — `Terrain`
+
+A ground surface made from a **heightmap**: a square grid of heights stored in a `.r16` file (raw 16-bit, the format World Machine, Gaea and Unity export). Create one with **GameObject → 3D Object → Terrain** (256 × 256 m, centred on the origin, flat at height 0, heights −20 to 80 m), or **Add Component → Terrain** on any object. With no heightmap file it is flat (129 × 129 samples) at height 0 until you sculpt or load one.
+
+- **Heightmap** — drag an `.r16` from the Asset Browser (mountain icon) or type its `rom/` path. The file must be N × N samples with N = 33, 65, 129, 257, 513, 1025, 2049 or 4097. The line under the field shows the size, or the error when the file cannot be read. **Reload Heightmap** reads the file again (saving a changed `.r16` also reloads the scene).
+- **Size X / Size Z** (metres) and **Height Scale / Height Offset**: a sample of 0 is at `Height Offset`, the highest sample at `Height Offset + Height Scale`.
+- **Position** moves the terrain: the node's position is the terrain's corner (sample 0, 0), and the terrain extends along +X and +Z. Rotation and scale have no effect.
+- **Chunk Cells / LOD Bias** — the terrain is drawn in square chunks; far chunks use fewer triangles (the scene's LOD switch and LOD Bias in Rendering apply as well). Larger chunks mean fewer draw calls, smaller chunks finer culling.
+- **Layers** — up to 4 ground materials, each a texture repeated every *Tile Size* metres (**Add Layer** / **Remove Last Layer**). All layers are tinted by **Color**; **Roughness / Metallic** as on Material. Older scenes with one texture show it as Layer 1. The terrain uses the scene's default shader (Rendering → Default Shader), receives shadows and, with **Cast Shadows**, casts them in CSM mode. In shadow-volume mode it receives shadows but casts none.
+- **Collision** (on by default): objects with a Sphere, Capsule, Box, Cylinder or Mesh collider and a Rigidbody land on the terrain and roll down its slopes, and raycasts (`ScriptApi_Physics_Raycast`, so the sample player's jump check too) hit it. The terrain object needs no collider component; if you give it one, that collider is used instead. Adding collision makes the terrain object's Rigidbody kinematic (it never moves). Boxes and cylinders touch the ground at sample points on their corners, edges and rims, so a sharp peak narrower than the box can poke through its middle.
+- From scripts, `ScriptApi_TerrainSampleHeight(x, z, &height, &normal)` (ScriptRuntimeApi v53) returns the ground height under a world position, e.g. to place spawned objects on the ground.
+- **Sculpt** (bottom of the Terrain section): pick **Raise**, **Lower**, **Smooth** or **Flatten**, then left-drag on the terrain in the viewport. A circle shows the brush on the ground (orange while painting; the inner circle is where the falloff starts). **Brush Radius** is in metres; **Strength** is metres per second for Raise / Lower and how quickly Smooth / Flatten blend; **Falloff** 0 is a hard edge, 1 fades from the centre. Flatten levels to the height under the cursor when you start the stroke. Alt + drag still moves the camera, and clicks on the terrain do not change the selection while a tool is on; pick **Off** to get the move gizmo back. Each stroke is one **Undo** step (Ctrl+Z / Ctrl+Y).
+- **Saving sculpt edits:** they live in memory until **Save Scene**, which writes the heightmap first. A terrain that has no file yet gets `rom/terrain/<scene>_<object>.r16` and the scene remembers that path. The section shows a yellow note while edits are unsaved. Edits survive Play / Stop.
+- **Reset to Flat** replaces the whole map with a flat one at the chosen resolution (33 to 4097 samples per side) and height. It cannot be undone. Use it to start sculpting at a higher resolution than the placeholder.
+- **Paint**: the **Paint** tool (next to the sculpt tools) paints the chosen layer with the same brush (radius, strength = how many full layers per second, falloff). Each stroke is one Undo step. The layer mix is stored in a `.splat` file: Save Scene writes `rom/terrain/<scene>_<object>_splat.splat` the first time. A new terrain starts all Layer 1.
+
+Try it: open `scene_terrain_demo.json` in the testbed (512 m of hills with trees and boulders, painted with grass, rock on the steep slopes, sand in the basin and snow on the ridge). Press Play (Debug build): the sample player walks the hills with the third-person camera (WASD / stick, Space to jump) and a sphere, box, capsule and cylinder drop onto the slope in front of it. F1 switches to the fly camera. `python3 tools/gen_terrain_demo.py` regenerates its heightmap, texture and scene.
 
 ---
 

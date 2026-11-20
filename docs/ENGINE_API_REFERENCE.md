@@ -1,7 +1,7 @@
 # Ivy Engine — Complete Ability & API Reference
 
 Exhaustive catalog of **Ivy Engine** capabilities and public functions,
-scanned from every header under `engine/` and `src/app/` (188 headers; regenerate to refresh).
+scanned from every header under `engine/` and `src/app/` (197 headers; regenerate to refresh).
 
 **Learning how to use the engine?** Start with [`ENGINE_USER_GUIDE.md`](ENGINE_USER_GUIDE.md) (humans).  
 For JSON schemas, source map, and change rules, see [`AGENTS.md`](../AGENTS.md) (AI agents).
@@ -864,6 +864,31 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `bool RemoveTag(int id);`
 - `private: TagRegistry();`
 
+### `engine/ecs/terrain_component.h`
+**Types:** ID3D11ShaderResourceView, TerrainComponent, LayerTexture
+- `std::string Serialize() const override;`
+- `void Deserialize(const std::string& jsonStr) override;`
+- `bool EnsureLoaded();`
+- `void InvalidateHeightmap();`
+- `void InvalidateTexture();`
+- `bool IsLoaded() const { return m_heightmap.IsValid();`
+- `ID3D11ShaderResourceView* GetTextureSRV();`
+- `void ApplyColliderToOwner();`
+- `static void ClearTerrainCollider(GameObject* owner);`
+- `void NotifyHeightsChanged(const terrain::SampleRect& rect);`
+- `bool ResetFlat(int resolution, float height);`
+- `void AdoptHeightmapPath(const std::string& romPath);`
+- `bool SaveHeightmap(std::string* error, std::vector<std::uint8_t>* outBytes = nullptr);`
+- `bool EnsureSplatLoaded();`
+- `void NotifySplatChanged(const terrain::SampleRect& rect);`
+- `void AdoptSplatPath(const std::string& romPath);`
+- `bool SaveSplat(std::string* error, std::vector<std::uint8_t>* outBytes = nullptr);`
+- `void SetSplatSRV(ID3D11ShaderResourceView* srv);`
+- `ID3D11ShaderResourceView* GetLayerSRV(int index);`
+- `void SetHeightSRV(ID3D11ShaderResourceView* srv);`
+- `void ReleaseHeightSRV();`
+- `void FitChunkGrid();`
+
 ### `engine/ecs/transform.h`
 **Types:** GameObject, Transform
 - `void OnAttach() override;`
@@ -1279,6 +1304,15 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `static std::string Utf8FromWide(const std::wstring& wide);`
 - `static std::wstring WideFromUtf8(const std::string& utf8);`
 
+### `engine/editor/terrain_editor.h`
+**Types:** GameObject, TerrainComponent, TerrainViewportInput
+- `void TerrainEditor_DrawInspector(GameObject* node, TerrainComponent& terrain);`
+- `bool TerrainEditor_HandleViewport(GameObject* selected, const TerrainViewportInput& input);`
+- `bool TerrainEditor_IsSculpting(const GameObject* node);`
+- `bool TerrainEditor_SaveEditedTerrains(std::string* error);`
+- `bool TerrainEditor_IsOwnWrite(const std::string& romPath);`
+- `std::unique_ptr<GameObject> TerrainEditor_CreateTerrainObject();`
+
 ### `engine/editor/texture_cook.h`
 **Types:** Stats
 - `bool CookPackageTextures(const std::filesystem::path& packageRom, const std::function<void(const std::string&)>& log, Stats* stats, std::string* error);`
@@ -1451,7 +1485,7 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `void End(b2ShapeId a,b2ShapeId b);`
 
 ### `engine/physics/collider/collider.h`
-**Types:** GameObject, Model3D, ContactInfo, Collider, BoxCollider, SphereCollider, CapsuleCollider, CylinderCollider, MeshCollider
+**Types:** GameObject, Model3D, ContactInfo, Collider, BoxCollider, SphereCollider, CapsuleCollider, CylinderCollider, MeshCollider, TerrainCollider
 **Enums:** Tag, ColliderType
 - `DirectX::XMFLOAT3 GetScaledLocalCenter() const;`
 - `DirectX::XMFLOAT3 GetWorldCenter() const;`
@@ -1492,6 +1526,11 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `void CalculateBoundingSphere();`
 - `bool RayIntersectsTriangle(const DirectX::XMFLOAT3& rayOrigin, const DirectX::XMFLOAT3& rayDir, const DirectX::XMFLOAT3& v0, const DirectX::XMFLOAT3& v1, const DirectX::XMFLOAT3& v2, float& t) const;`
 - `bool TriangleIntersectsSphere(const DirectX::XMFLOAT3& v0, const DirectX::XMFLOAT3& v1, const DirectX::XMFLOAT3& v2, const DirectX::XMFLOAT3& sphereCenter, float sphereRadius, DirectX::XMFLOAT3& outNormal, float& outPenetration) const;`
+- `explicit TerrainCollider(GameObject* owner) : Collider(ColliderType::TERRAIN, owner) {} bool GetWorldBounds(DirectX::XMFLOAT3& outMin, DirectX::XMFLOAT3& outMax) const;`
+- `bool CheckCollision(const Collider* other) const override;`
+- `void ResolveCollision(Collider* other) override;`
+- `bool RayIntersect(const DirectX::XMFLOAT3& origin, const DirectX::XMFLOAT3& dir, float maxDistance, float& outT, DirectX::XMFLOAT3& outNormal) const override;`
+- `void DebugDraw(const DirectX::XMFLOAT4& = { 0.0f, 1.0f, 0.0f, 1.0f }) override {} bool FindContact(const Collider* other, DirectX::XMFLOAT3& outPoint, DirectX::XMFLOAT3& outNormal, float& outDepth) const;`
 - `DirectX::XMFLOAT3 Collider_ComputeLocalInverseInertia( const Collider* collider, float mass, bool kinematic);`
 
 ### `engine/physics/collider/cylinder_pair.h`
@@ -2383,6 +2422,7 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `void ScriptApi_InputCaptureCancel();`
 - `bool ScriptApi_InputResetBindings(const char* action = nullptr);`
 - `bool ScriptApi_InputSaveBindings();`
+- `bool ScriptApi_TerrainSampleHeight(float x, float z, float* outHeight, DirectX::XMFLOAT3* outNormal = nullptr);`
 - `void ScriptApi_CameraSetPosition(DirectX::XMFLOAT3 position);`
 - `void ScriptApi_CameraSetTarget(DirectX::XMFLOAT3 target);`
 - `void ScriptApi_CameraSetUp(DirectX::XMFLOAT3 up);`
@@ -2465,6 +2505,89 @@ Vendor header `WICTextureLoader11.h` is omitted.
 ### `engine/scripting/ui_canvas_script_register.h`
 **Types:** TYPE
 - `void DllUICanvasScript_Register(const std::string& name, std::function<UICanvasScript*()> creator);`
+
+### `engine/terrain/terrain_brush.h`
+**Types:** Brush, SampleRect
+**Enums:** BrushMode
+- `Brush SanitizeBrush(const Brush& brush);`
+- `SampleRect UnionRect(const SampleRect& a, const SampleRect& b);`
+- `SampleRect ClipRect(const SampleRect& rect, const Heightmap& map);`
+- `float BrushWeight(float distance, float radius, float falloff);`
+- `SampleRect BrushRect(const Layout& layout, const Heightmap& map, float x, float z, float radius);`
+- `SampleRect ApplyBrush(const Layout& layout, Heightmap& map, const Brush& brush, float x, float z, float dt);`
+- `std::vector<std::uint16_t> CopyRect(const Heightmap& map, const SampleRect& rect);`
+- `bool PasteRect(Heightmap& map, const SampleRect& rect, const std::vector<std::uint16_t>& data);`
+
+### `engine/terrain/terrain_collision.h`
+**Types:** SurfaceContact
+- `void SampleRange(const Heightmap& map, std::uint16_t& outLow, std::uint16_t& outHigh);`
+- `bool Raycast(const Layout& layout, const Heightmap& map, const Float3& origin, const Float3& dir, float maxDistance, float& outT, Float3& outNormal);`
+- `bool Raycast(const Layout& layout, const Heightmap& map, std::uint16_t lowSample, std::uint16_t highSample, const Float3& origin, const Float3& dir, float maxDistance, float& outT, Float3& outNormal);`
+- `bool PointsContact(const Layout& layout, const Heightmap& map, const Float3* points, int count, SurfaceContact& out);`
+- `bool SphereContact(const Layout& layout, const Heightmap& map, const Float3& center, float radius, SurfaceContact& out);`
+- `bool CapsuleContact(const Layout& layout, const Heightmap& map, const Float3& a, const Float3& b, float radius, SurfaceContact& out);`
+
+### `engine/terrain/terrain_draw_plan.h`
+**Types:** ChunkInstance, PassOptions
+- `int ChunkVertexCount(int chunkQuads);`
+- `bool BuildChunkMeshIndices(int chunkQuads, int stride, std::vector<std::uint32_t>& out);`
+- `float ChunkSkirtDepth(const Layout& layout, const Heightmap& map, const ChunkBounds& bounds);`
+- `void ChunkWorldBox(const Layout& layout, const Heightmap& map, const ChunkGrid& grid, const ChunkBounds& bounds, int chunkX, int chunkZ, const Float3& origin, Float3& outMin, Float3& outMax);`
+- `int PlanChunkDraws(const Layout& layout, const Heightmap& map, const ChunkGrid& grid, const std::vector<ChunkBounds>& bounds, const Float3& origin, const PassOptions& options, const std::function<bool(const Float3& boxMin, const Float3& boxMax)>& visible, std::vector<int>& lastLevels, std::vector<std::vector<ChunkInstance>>& outPerLevel);`
+
+### `engine/terrain/terrain_heightmap.h`
+**Types:** Float3, Heightmap, Layout, ChunkGrid, ChunkBounds
+- `bool IsValidResolution(int resolution);`
+- `int ResolutionFromR16ByteCount(std::size_t byteCount);`
+- `bool IsValid() const;`
+- `std::uint16_t At(int x, int z) const;`
+- `void Set(int x, int z, std::uint16_t value);`
+- `bool CreateFlat(int resolution, std::uint16_t value, Heightmap& out);`
+- `bool DecodeR16(const std::uint8_t* data, std::size_t size, Heightmap& out, std::string* error);`
+- `std::vector<std::uint8_t> EncodeR16(const Heightmap& map);`
+- `Layout SanitizeLayout(const Layout& layout);`
+- `float SampleToHeight(const Layout& layout, std::uint16_t sample);`
+- `std::uint16_t HeightToSample(const Layout& layout, float height);`
+- `float CellSizeX(const Layout& layout, const Heightmap& map);`
+- `float CellSizeZ(const Layout& layout, const Heightmap& map);`
+- `Float3 SamplePosition(const Layout& layout, const Heightmap& map, int x, int z);`
+- `bool SampleHeight(const Layout& layout, const Heightmap& map, float x, float z, float& outHeight);`
+- `bool SampleSurfaceNormal(const Layout& layout, const Heightmap& map, float x, float z, Float3& outNormal);`
+- `Float3 SampleVertexNormal(const Layout& layout, const Heightmap& map, int x, int z);`
+- `bool IsValidChunkQuads(int chunkQuads, int resolution);`
+- `int ResolveChunkQuads(int requested, int resolution);`
+- `bool MakeChunkGrid(int resolution, int chunkQuads, ChunkGrid& out);`
+- `void ComputeChunkBounds(const Heightmap& map, const ChunkGrid& grid, std::vector<ChunkBounds>& out);`
+- `void UpdateChunkBounds(const Heightmap& map, const ChunkGrid& grid, int x0, int z0, int x1, int z1, std::vector<ChunkBounds>& inOut);`
+- `int MaxLodLevel(int chunkQuads);`
+- `float DistanceToAabb(const Float3& point, const Float3& boxMin, const Float3& boxMax);`
+- `int SelectChunkLod(float distance, float chunkWorldSize, float lodBias, int maxLevel, int prevLevel);`
+- `bool BuildChunkIndices(int chunkQuads, int stride, std::vector<std::uint32_t>& out);`
+
+### `engine/terrain/terrain_renderer.h`
+**Types:** TerrainComponent
+- `void TerrainRenderer_Draw(TerrainComponent& terrain, const DirectX::XMFLOAT3& worldPosition);`
+- `void TerrainRenderer_Finalize();`
+
+### `engine/terrain/terrain_settings.h`
+**Types:** LayerSettings, Settings
+- `std::vector<LayerSettings> EffectiveLayers(const Settings& s);`
+- `Settings SanitizeSettings(const Settings& in);`
+- `nlohmann::json SettingsToJson(const Settings& s);`
+- `Settings SettingsFromJson(const nlohmann::json& j);`
+
+### `engine/terrain/terrain_splat.h`
+**Types:** SplatMap
+- `bool IsValid() const;`
+- `std::uint8_t Weight(int x, int z, int layer) const;`
+- `bool CreateSplat(int resolution, int layer, SplatMap& out);`
+- `bool DecodeSplat(const std::uint8_t* data, std::size_t size, SplatMap& out, std::string* error);`
+- `std::vector<std::uint8_t> EncodeSplat(const SplatMap& map);`
+- `SampleRect PaintSplat(const Layout& layout, SplatMap& map, int layer, const Brush& brush, float x, float z, float dt);`
+- `SampleRect SplatBrushRect(const Layout& layout, const SplatMap& map, float x, float z, float radius);`
+- `SampleRect ClipSplatRect(const SampleRect& rect, const SplatMap& map);`
+- `std::vector<std::uint8_t> CopySplatRect(const SplatMap& map, const SampleRect& rect);`
+- `bool PasteSplatRect(SplatMap& map, const SampleRect& rect, const std::vector<std::uint8_t>& data);`
 
 ### `engine/testing/controller_inject_protocol.h`
 **Types:** ControllerCommand, ControllerOperation

@@ -135,6 +135,8 @@ ProjectAssetIndex::Kind ProjectAssetIndex::ClassifyFile(const std::string& relat
         return Kind::Texture;
     if (ext == ".wav" || ext == ".mp3" || ext == ".ogg")
         return Kind::Sound;
+    if (ext == ".r16")
+        return Kind::Heightmap;
     if (ext == ".cpp" && StartsWithPath(relativePath, kScriptsFolder))
         return Kind::Script;
     return Kind::Other;
