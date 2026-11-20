@@ -1,7 +1,11 @@
 // editor_inspector_panel.cpp
-// Extracted from engine/core/engine_gui.cpp (phase-1 editor UI split; behaviour-preserving).
+// Properties (inspector) panel. Every section is built from the width-safe
+// insp:: widgets (inspector_widgets.h): icon rows with short words, colored XYZ
+// fields, icon toggles, and a collapsible header per component with an enable
+// toggle and a Reset / Copy JSON / Remove menu. Nothing is wider than the panel.
 
 #include "editor_gui_common_includes.h"
+#include "engine/editor/inspector_widgets.h"
 #include "engine/editor/terrain_editor.h"
 namespace fs = std::filesystem;
 using json = nlohmann::json;
@@ -52,11 +56,10 @@ bool AcceptAssetPathDrop(const char* const* extensions, int count, std::string& 
 bool DrawScriptPropertyField(GameObject* editNode,
                                     const std::string& key,
                                     nlohmann::json& val) {
-    std::string wid = "##SC_" + key;
+    insp::PropRow row(nullptr, key.c_str());
     if (val.is_number_float()) {
         float f = val.get<float>();
-        ImGui::Text("%s:", key.c_str()); ImGui::SameLine(80);
-        if (ImGui::DragFloat(wid.c_str(), &f, 0.1f)) { val = f; return true; }
+        if (ImGui::DragFloat("##v", &f, 0.1f)) { val = f; return true; }
         if (ImGui::IsItemHovered()) {
             float wheel = ImGui::GetIO().MouseWheel;
             if (wheel != 0.0f) { f += wheel * 0.1f * g_scrollSensitivity; val = f; return true; }
@@ -64,26 +67,21 @@ bool DrawScriptPropertyField(GameObject* editNode,
     }
     else if (val.is_number_integer() || val.is_number_unsigned()) {
         int iv = val.get<int>();
-        ImGui::Text("%s:", key.c_str()); ImGui::SameLine(80);
-        ImGui::SetNextItemWidth(-1);
-        if (ImGui::InputInt(wid.c_str(), &iv)) { val = iv; return true; }
+        if (ImGui::InputInt("##v", &iv)) { val = iv; return true; }
     }
     else if (val.is_boolean()) {
         bool bv = val.get<bool>();
-        ImGui::Text("%s:", key.c_str()); ImGui::SameLine(80);
-        if (ImGui::Checkbox(wid.c_str(), &bv)) { val = bv; return true; }
+        if (ImGui::Checkbox("##v", &bv)) { val = bv; return true; }
     }
     else if (val.is_string()) {
         static GameObject* s_editNode = nullptr;
         static std::string s_editKey;
         static char s_strBuf[256] = {};
-        ImGui::Text("%s:", key.c_str()); ImGui::SameLine(80);
-        ImGui::SetNextItemWidth(-1);
         if (s_editNode != editNode || s_editKey != key) {
             s_editNode = editNode; s_editKey = key;
             strncpy_s(s_strBuf, val.get<std::string>().c_str(), sizeof(s_strBuf) - 1);
         }
-        if (ImGui::InputText(wid.c_str(), s_strBuf, sizeof(s_strBuf),
+        if (ImGui::InputText("##v", s_strBuf, sizeof(s_strBuf),
             ImGuiInputTextFlags_EnterReturnsTrue)) {
             val = std::string(s_strBuf);
             return true;
@@ -91,18 +89,1261 @@ bool DrawScriptPropertyField(GameObject* editNode,
         if (!ImGui::IsItemActive())
             strncpy_s(s_strBuf, val.get<std::string>().c_str(), sizeof(s_strBuf) - 1);
     }
+    else {
+        ImGui::TextDisabled("-");
+    }
     return false;
 }
 void DrawPropertiesEmptyState() {
-    ImGui::TextDisabled("No object selected");
     ImGui::Spacing();
-    ImGui::TextWrapped("Use GameObject menu to create objects or UI elements.");
-    ImGui::Spacing();
-    ImGui::TextWrapped("Use the Asset Browser below to browse rom/ assets.");
-    ImGui::Spacing();
-    ImGui::TextWrapped("Use Edit > Project Settings > Rendering for skybox, shadows, and render defaults.");
+    insp::ReadOnlyRow(ICON_FA_ARROW_POINTER, "Select", "Pick an object in the Hierarchy or viewport",
+        "Nothing selected");
 }
 
+namespace {
+
+const char* const kTextureExts[] = { ".png", ".jpg", ".jpeg", ".tga", ".bmp", ".dds" };
+const char* const kModelExts[] = { ".fbx", ".obj", ".gltf", ".glb" };
+
+std::string Vec3Text(const DirectX::XMFLOAT3& v) {
+    char buf[64];
+    std::snprintf(buf, sizeof(buf), "%.2f  %.2f  %.2f", v.x, v.y, v.z);
+    return buf;
+}
+
+// One component section: undo bracket + header, then Finish() handles the
+// header menu actions (Reset / Remove) after the undo bracket closes.
+class Section {
+public:
+    Section(GameObject* node, const char* type, const char* icon, const char* name,
+            insp::Accent accent, Component* comp, bool* enabled, bool& dirty,
+            bool canRemove = true, bool canReset = true,
+            void (*extraMenu)(void*) = nullptr)
+        : m_node(node), m_type(type), m_comp(comp), m_dirty(dirty)
+    {
+        EditorUndo_BeginComponentEdit(node, type);
+        m_header = insp::ComponentHeader(type, icon, name, accent, enabled, comp,
+            canRemove, canReset && comp != nullptr, extraMenu, nullptr);
+        if (m_header.changed)
+            m_dirty = true;
+        ImGui::PushID(type);
+    }
+    bool Open() const { return m_header.open; }
+    void EndEdit() {
+        if (m_ended)
+            return;
+        m_ended = true;
+        ImGui::PopID();
+        EditorUndo_EndComponentEdit(m_node, m_type);
+    }
+    // Returns true when the component was removed (do not touch it afterwards).
+    template <class Remove>
+    bool Finish(Remove remove) {
+        EndEdit();
+        if (m_header.action == insp::HeaderAction::Reset && m_comp) {
+            const std::string before = m_comp->Serialize();
+            if (std::unique_ptr<Component> fresh = ComponentFactory::Instance().Create(m_type)) {
+                m_comp->Deserialize(fresh->Serialize());
+                std::string after = m_comp->Serialize();
+                if (after != before) {
+                    EditorUndo_PushComponentEdit(m_node, m_type, before, std::move(after));
+                    m_dirty = true;
+                }
+            }
+        }
+        else if (m_header.action == insp::HeaderAction::Remove) {
+            EditorUndo_PushRemoveComponent(m_node, m_type);
+            remove();
+            m_dirty = true;
+            return true;
+        }
+        return false;
+    }
+private:
+    GameObject* m_node;
+    const char* m_type;
+    Component* m_comp;
+    bool& m_dirty;
+    insp::HeaderResult m_header;
+    bool m_ended = false;
+};
+
+void Mark(bool edited, bool& dirty) {
+    if (edited)
+        dirty = true;
+}
+
+// ---------------------------------------------------------------- Node header
+
+void DrawNodeHeader(GameObject* n, char* nameBuf, size_t nameBufSize, bool& dirty) {
+    const ImGuiStyle& st = ImGui::GetStyle();
+    const float frameH = ImGui::GetFrameHeight();
+    const std::string& prefab = n->GetPrefabAssetPath();
+
+    // Name (+ prefab link icon).
+    ImGui::SetNextItemWidth(prefab.empty() ? -FLT_MIN
+        : (std::max)(1.0f, ImGui::GetContentRegionAvail().x - frameH - st.ItemInnerSpacing.x));
+    if (ImGui::InputTextWithHint("##NodeName", "Name", nameBuf, nameBufSize,
+        ImGuiInputTextFlags_EnterReturnsTrue)) {
+        const std::string oldName = n->GetName();
+        const std::string newName(nameBuf);
+        n->SetName(newName);
+        EditorUndo_PushRename(n, oldName, newName);
+        EngineGUI_MarkSceneDirty();
+    }
+    if (!ImGui::IsItemActive())
+        strncpy_s(nameBuf, nameBufSize, n->GetName().c_str(), nameBufSize - 1);
+    if (!prefab.empty()) {
+        ImGui::SameLine(0.0f, st.ItemInnerSpacing.x);
+        insp::HintIcon(ICON_FA_LINK, insp::InfoColor(), prefab.c_str());
+    }
+
+    // Tag.
+    TagRegistry& tags = TagRegistry::Instance();
+    int currentTag = n->GetTagId();
+    if (!tags.IsValid(currentTag))
+        currentTag = static_cast<int>(Tag::TAG_NONE);
+    {
+        insp::PropRow row(ICON_FA_TAG, "Tag");
+        if (ImGui::BeginCombo("##v", tags.GetName(currentTag), ImGuiComboFlags_HeightLarge)) {
+            const float removeW = ImGui::GetFrameHeight();
+            const float spacing = st.ItemInnerSpacing.x;
+            const int noneId = static_cast<int>(Tag::TAG_NONE);
+            for (int i = 0; i < tags.GetCount(); ++i) {
+                ImGui::PushID(i);
+                const bool selected = (i == currentTag);
+                const bool showRemove = (i != noneId);
+                const bool canRemove = tags.CanRemove(i);
+                const char* name = tags.GetName(i);
+                const float labelW = showRemove
+                    ? ImGui::GetContentRegionAvail().x - removeW - spacing : 0.0f;
+                if (ImGui::Selectable(name, selected, 0,
+                        ImVec2(showRemove ? (std::max)(labelW, 1.0f) : 0.0f, 0.0f))) {
+                    const int oldTag = n->GetTagId();
+                    n->SetTag(i);
+                    EditorUndo_PushTag(n, oldTag, i);
+                    dirty = true;
+                }
+                if (selected)
+                    ImGui::SetItemDefaultFocus();
+                if (showRemove) {
+                    ImGui::SameLine(0.0f, spacing);
+                    if (!canRemove)
+                        ImGui::BeginDisabled();
+                    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+                    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.85f, 0.25f, 0.25f, 0.55f));
+                    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.9f, 0.2f, 0.2f, 0.75f));
+                    if (insp::IconButton(ICON_FA_XMARK "##RemoveTag", nullptr, removeW)) {
+                        g_pendingDeleteTagId = i;
+                        g_showDeleteTagPopup = true;
+                        ImGui::CloseCurrentPopup();
+                    }
+                    ImGui::PopStyleColor(3);
+                    if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled |
+                            ImGuiHoveredFlags_DelayShort))
+                        ImGui::SetTooltip(canRemove ? "Delete tag" : "Built-in");
+                    if (!canRemove)
+                        ImGui::EndDisabled();
+                }
+                ImGui::PopID();
+            }
+            ImGui::Separator();
+            if (ImGui::Selectable(ICON_FA_PLUS "  New")) {
+                g_newTagName[0] = '\0';
+                g_showAddTagPopup = true;
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::EndCombo();
+        }
+    }
+
+    // Draw order.
+    insp::RowLabel(ICON_FA_SORT, "Order", "Later = drawn on top");
+    static const char* const kOrderIcons[] = { ICON_FA_ANGLES_DOWN, ICON_FA_ARROW_DOWN,
+                                               ICON_FA_ARROW_UP, ICON_FA_ANGLES_UP };
+    static const char* const kOrderTips[] = { "Back", "Down", "Up", "Top" };
+    switch (insp::IconButtonRow("order", kOrderIcons, kOrderTips, 4)) {
+    case 0: Mark(UndoableReorderNode(n, MoveNodeToBack), dirty); break;
+    case 1: Mark(UndoableReorderNode(n, [](GameObject* g) { return MoveNodeOrder(g, -1); }), dirty); break;
+    case 2: Mark(UndoableReorderNode(n, [](GameObject* g) { return MoveNodeOrder(g, 1); }), dirty); break;
+    case 3: Mark(UndoableReorderNode(n, MoveNodeToFront), dirty); break;
+    default: break;
+    }
+}
+
+// ------------------------------------------------------------------ Transform
+
+void TransformMenu(void*) {
+    ImGui::SetNextItemWidth(ImGui::GetFontSize() * 8.0f);
+    ImGui::SliderFloat(ICON_FA_COMPUTER_MOUSE "  Wheel", &g_scrollSensitivity, 0.1f, 5.0f, "%.1f");
+    if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort))
+        ImGui::SetTooltip("Mouse wheel step");
+}
+
+void DrawTransform(GameObject* n, engine::Transform* t, bool& dirty) {
+    Section s(n, "SceneTransform", ICON_FA_ARROWS_UP_DOWN_LEFT_RIGHT, "Transform",
+        insp::Accent::Transform, t, nullptr, dirty, false, true, &TransformMenu);
+    if (s.Open()) {
+        const float before[9] = {
+            t->localPosition.x, t->localPosition.y, t->localPosition.z,
+            t->localRotation.x, t->localRotation.y, t->localRotation.z,
+            t->localScale.x, t->localScale.y, t->localScale.z };
+        bool edited = false;
+        edited |= insp::DragVecN(ICON_FA_LOCATION_DOT, "Pos", "Position (local)",
+            &t->localPosition.x, 3, 0.1f, 0.0f, 0.0f, 0.0f, 0.1f * g_scrollSensitivity);
+        edited |= insp::DragVecN(ICON_FA_ROTATE, "Rot", "Rotation (deg, local)",
+            &t->localRotation.x, 3, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f * g_scrollSensitivity, "%.1f");
+        edited |= insp::DragVecN(ICON_FA_UP_RIGHT_AND_DOWN_LEFT_FROM_CENTER, "Scale", "Scale (local)",
+            &t->localScale.x, 3, 0.1f, 0.001f, 1000.0f, 1.0f, 0.1f * g_scrollSensitivity);
+        const float after[9] = {
+            t->localPosition.x, t->localPosition.y, t->localPosition.z,
+            t->localRotation.x, t->localRotation.y, t->localRotation.z,
+            t->localScale.x, t->localScale.y, t->localScale.z };
+        if (edited && JsonFloat_TransformChanged(before, after))
+            dirty = true;
+        else if (edited) {
+            // A change that does not survive 3dp — keep the original bits.
+            t->localPosition = { before[0], before[1], before[2] };
+            t->localRotation = { before[3], before[4], before[5] };
+            t->localScale    = { before[6], before[7], before[8] };
+        }
+        n->SyncLegacyTransformFromComponents();
+    }
+    s.Finish([] {});
+    n->SyncLegacyTransformFromComponents();
+}
+
+// --------------------------------------------------------------------- Visual
+
+void DrawVisual(GameObject* n, VisualComponent* vc, bool& dirty) {
+    Section s(n, "visual", ICON_FA_CUBE, "Visual", insp::Accent::Render, vc, nullptr, dirty);
+    if (s.Open()) {
+        // Mesh
+        const auto& defs = ModelAssetCache::Instance().GetObjectDefinitions();
+        int currentIdx = -1;
+        for (int i = 0; i < (int)defs.size(); ++i)
+            if (defs[i].assetPath == vc->modelPath) { currentIdx = i; break; }
+        std::string preview = vc->modelPath.empty() ? std::string("None")
+            : (currentIdx >= 0 ? defs[currentIdx].displayName
+                               : std::string(ICON_FA_TRIANGLE_EXCLAMATION " ") + vc->modelPath);
+        {
+            insp::PropRow row(ICON_FA_CUBE, "Mesh");
+            if (ImGui::BeginCombo("##v", preview.c_str())) {
+                for (int i = 0; i < (int)defs.size(); ++i) {
+                    const bool selected = (i == currentIdx);
+                    if (!selected && ModelAssetCache::IsHiddenPrimitiveAlias(defs[i].assetPath))
+                        continue;
+                    if (ImGui::Selectable(defs[i].displayName.c_str(), selected) &&
+                        vc->modelPath != defs[i].assetPath) {
+                        vc->modelPath = defs[i].assetPath;
+                        dirty = true;
+                    }
+                    if (selected)
+                        ImGui::SetItemDefaultFocus();
+                }
+                ImGui::EndCombo();
+            }
+            if (!vc->modelPath.empty() && ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort))
+                ImGui::SetTooltip(currentIdx < 0 ? "Missing / custom\n%s" : "%s", vc->modelPath.c_str());
+            std::string dropped;
+            if (AcceptAssetPathDrop(kModelExts, IM_ARRAYSIZE(kModelExts), dropped) &&
+                vc->modelPath != dropped) {
+                vc->modelPath = dropped;
+                dirty = true;
+            }
+        }
+
+        const bool volumeMode = RenderSettings_GetConst().shadowMode == ShadowMode::Volume;
+        insp::Toggle toggles[] = {
+            { ICON_FA_PERSON_WALKING, "Animate", &vc->playAnimation },
+            { ICON_FA_CLOUD, "Shadow Vol", &vc->shadowVolume,
+              vc->shadowVolume && !volumeMode ? "Needs Shadow Mode: Volume" : nullptr },
+        };
+        Mark(insp::ToggleRow(toggles, IM_ARRAYSIZE(toggles)), dirty);
+
+        // Shader
+        {
+            const bool useDefault = vc->shaderOverride.empty();
+            const Shader3DVariant sceneDefault = RenderSettings_GetDefaultShader();
+            const Shader3DVariant current = useDefault ? sceneDefault : Shader3DVariantFromId(vc->shaderOverride);
+            const std::string label = useDefault
+                ? std::string("Default: ") + Shader3DVariantLabel(sceneDefault)
+                : ShaderVariantPreviewLabel(current);
+            insp::PropRow row(ICON_FA_PALETTE, "Shader");
+            if (ImGui::BeginCombo("##v", label.c_str())) {
+                if (ImGui::Selectable("Default", useDefault)) {
+                    vc->shaderOverride.clear();
+                    dirty = true;
+                }
+                for (int i = 0; i < Shader3DVariantCount(); ++i) {
+                    const Shader3DVariant v = Shader3DVariantByIndex(i);
+                    if (!Shader3DVariantIsUserVisible(v))
+                        continue;
+                    const bool selected = !useDefault && Shader3DVariantId(v) == vc->shaderOverride;
+                    if (ImGui::Selectable(Shader3DVariantLabel(v), selected)) {
+                        vc->shaderOverride = Shader3DVariantId(v);
+                        if (v == Shader3DVariant::SurfaceFX)
+                            vc->hasSurfaceFx = true;
+                        dirty = true;
+                    }
+                }
+                ImGui::EndCombo();
+            }
+            if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort))
+                ImGui::SetTooltip("Scene default: %s", Shader3DVariantLabel(sceneDefault));
+
+            if (current == Shader3DVariant::SurfaceFX) {
+                vc->hasSurfaceFx = true;
+                insp::SubHeading(ICON_FA_WAND_MAGIC_SPARKLES, "Surface FX",
+                    "Detail texture scrolls (not the normal map)", false);
+                std::string tex = vc->surfaceFxTexturePath;
+                if (insp::AssetField(ICON_FA_IMAGE, "Detail", nullptr, tex, kTextureExts, IM_ARRAYSIZE(kTextureExts))) {
+                    vc->surfaceFxTexturePath = tex;
+                    dirty = true;
+                }
+                auto& fx = vc->surfaceFx;
+                { insp::PropRow r(ICON_FA_PALETTE, "Color 1"); Mark(ImGui::ColorEdit4("##v", &fx.Color1.x), dirty); }
+                { insp::PropRow r(ICON_FA_PALETTE, "Color 2"); Mark(ImGui::ColorEdit4("##v", &fx.Color2.x), dirty); }
+                Mark(insp::DragVecN(ICON_FA_WIND, "Scroll 1", "Scroll speed 1", &fx.ScrollSpeed1.x, 2, 0.001f), dirty);
+                Mark(insp::DragVecN(ICON_FA_WIND, "Scroll 2", "Scroll speed 2", &fx.ScrollSpeed2.x, 2, 0.001f), dirty);
+                { insp::PropRow r(ICON_FA_EXPAND, "UV"); Mark(ImGui::DragFloat("##v", &fx.UvScale, 0.001f, 0.001f, 10.0f), dirty); }
+                { insp::PropRow r(ICON_FA_CIRCLE_HALF_STROKE, "Fresnel"); Mark(ImGui::DragFloat("##v", &fx.FresnelPower, 0.05f, 0.1f, 16.0f), dirty); }
+                { insp::PropRow r(ICON_FA_SUN, "Emission"); Mark(ImGui::DragFloat("##v", &fx.EmissionStrength, 0.01f, 0.0f, 5.0f), dirty); }
+                { insp::PropRow r(nullptr, "Grad In", "Gradient start"); Mark(ImGui::DragFloat("##v", &fx.GradientStart, 0.01f, 0.0f, 1.0f), dirty); }
+                { insp::PropRow r(nullptr, "Grad Out", "Gradient end"); Mark(ImGui::DragFloat("##v", &fx.GradientEnd, 0.01f, 0.0f, 1.0f), dirty); }
+                { insp::PropRow r(nullptr, "Edge In", "Edge fade start"); Mark(ImGui::DragFloat("##v", &fx.EdgeFadeStart, 0.01f, 0.0f, 1.0f), dirty); }
+                { insp::PropRow r(nullptr, "Edge Out", "Edge fade end"); Mark(ImGui::DragFloat("##v", &fx.EdgeFadeEnd, 0.01f, 0.0f, 1.0f), dirty); }
+            }
+        }
+
+        // LOD
+        {
+            const char* lodHint = nullptr;
+            if (vc->playAnimation && !vc->lods.empty())
+                lodHint = "Ignored while Animate is on";
+            else if (!vc->lods.empty() || vc->cullDistance > 0.0f)
+                lodHint = "Play / runtime only (Rendering > Mesh LOD)";
+            insp::SubHeading(ICON_FA_LAYER_GROUP, "LOD", lodHint, vc->playAnimation && !vc->lods.empty());
+
+            auto sortLods = [vc]() {
+                if (vc->lodScreenSize)
+                    std::stable_sort(vc->lods.begin(), vc->lods.end(),
+                        [](const VisualComponent::LodLevel& a, const VisualComponent::LodLevel& b) {
+                            return a.screenHeight > b.screenHeight; });
+                else
+                    std::stable_sort(vc->lods.begin(), vc->lods.end(),
+                        [](const VisualComponent::LodLevel& a, const VisualComponent::LodLevel& b) {
+                            return a.maxDistance < b.maxDistance; });
+            };
+            insp::RowLabel(ICON_FA_RULER, "Mode", "LOD switch rule");
+            static const char* const kModeIcons[] = { ICON_FA_RULER, ICON_FA_EXPAND };
+            static const char* const kModeTips[] = { "Distance", "Screen" };
+            int mode = vc->lodScreenSize ? 1 : 0;
+            if (insp::ChoiceBar("lodmode", kModeIcons, kModeTips, 2, &mode)) {
+                vc->lodScreenSize = (mode == 1);
+                if (vc->lodScreenSize) {
+                    // Seed unset rows so switching modes never leaves a level that cannot switch.
+                    float h = 0.25f;
+                    for (VisualComponent::LodLevel& l : vc->lods) {
+                        if (l.screenHeight <= 0.0f) l.screenHeight = h;
+                        h *= 0.5f;
+                    }
+                }
+                sortLods();
+                vc->lodLastLevel = -1;
+                dirty = true;
+            }
+
+            const ImGuiStyle& st = ImGui::GetStyle();
+            const float frameH = ImGui::GetFrameHeight();
+            int removeIdx = -1;
+            for (int i = 0; i < static_cast<int>(vc->lods.size()); ++i) {
+                VisualComponent::LodLevel& lod = vc->lods[static_cast<size_t>(i)];
+                ImGui::PushID(i);
+                char word[16];
+                std::snprintf(word, sizeof(word), "LOD %d", i + 1);
+                const float fieldW = insp::RowLabel(nullptr, word,
+                    vc->lodScreenSize ? "Switch below screen height" : "Switch at distance");
+                ImGui::SetNextItemWidth((std::max)(1.0f, fieldW - frameH - st.ItemInnerSpacing.x));
+                if (vc->lodScreenSize) {
+                    float percent = lod.screenHeight * 100.0f;
+                    if (ImGui::DragFloat("##LodScreen", &percent, 0.1f, 0.0f, 100.0f, "%.1f %%")) {
+                        lod.screenHeight = std::min(std::max(percent, 0.0f), 100.0f) * 0.01f;
+                        dirty = true;
+                    }
+                } else if (ImGui::DragFloat("##LodDist", &lod.maxDistance, 0.5f, 0.0f, 100000.0f, "%.1f m")) {
+                    if (lod.maxDistance < 0.0f) lod.maxDistance = 0.0f;
+                    dirty = true;
+                }
+                if (ImGui::IsItemDeactivatedAfterEdit())
+                    sortLods();
+                ImGui::SameLine(0.0f, st.ItemInnerSpacing.x);
+                if (insp::IconButton(ICON_FA_XMARK "##rm", "Remove"))
+                    removeIdx = i;
+                std::string path = lod.modelPath;
+                if (insp::AssetField(ICON_FA_CUBE, "Mesh", nullptr, path, kModelExts, IM_ARRAYSIZE(kModelExts))) {
+                    lod.modelPath = path;
+                    dirty = true;
+                }
+                ImGui::PopID();
+            }
+            if (removeIdx >= 0) {
+                vc->lods.erase(vc->lods.begin() + removeIdx);
+                dirty = true;
+            }
+            if (static_cast<int>(vc->lods.size()) < kLodMaxLevels - 1 && insp::WideButton(ICON_FA_PLUS, "LOD")) {
+                VisualComponent::LodLevel lod;
+                lod.maxDistance = vc->lods.empty() ? 20.0f : vc->lods.back().maxDistance + 30.0f;
+                lod.screenHeight = vc->lods.empty() ? 0.25f
+                    : std::max(vc->lods.back().screenHeight * 0.5f, 0.005f);
+                vc->lods.push_back(lod);
+                dirty = true;
+            }
+            {
+                insp::PropRow row(ICON_FA_EYE_SLASH, "Cull", "Hide beyond distance (0 = never)");
+                if (ImGui::DragFloat("##v", &vc->cullDistance, 1.0f, 0.0f, 100000.0f,
+                        vc->cullDistance > 0.0f ? "%.1f m" : "Never")) {
+                    if (vc->cullDistance < 0.0f) vc->cullDistance = 0.0f;
+                    dirty = true;
+                }
+            }
+        }
+    }
+    s.Finish([n] { n->RemoveComponent<VisualComponent>(); });
+}
+
+// --------------------------------------------------------------------- Lights
+
+void LightColorRows(DirectX::XMFLOAT3& color, float& intensity, DirectX::XMFLOAT3& spec,
+                    float& specPower, bool& dirty) {
+    { insp::PropRow r(ICON_FA_PALETTE, "Color"); Mark(ImGui::ColorEdit3("##v", &color.x), dirty); }
+    { insp::PropRow r(ICON_FA_SUN, "Intensity"); Mark(ImGui::DragFloat("##v", &intensity, 0.05f, 0.0f, 10.0f), dirty); }
+    { insp::PropRow r(ICON_FA_GEM, "Specular"); Mark(ImGui::ColorEdit3("##v", &spec.x), dirty); }
+    { insp::PropRow r(ICON_FA_BULLSEYE, "Spec Pow", "Specular power"); Mark(ImGui::DragFloat("##v", &specPower, 1.0f, 1.0f, 256.0f), dirty); }
+}
+
+void DrawDirectionalLight(GameObject* n, DirectionalLightComponent* dl, bool& dirty) {
+    Section s(n, "DirectionalLight", ICON_FA_SUN, "Directional", insp::Accent::Light, dl, &dl->enabled, dirty);
+    if (s.Open()) {
+        LightColorRows(dl->color, dl->intensity, dl->specColor, dl->specPower, dirty);
+        insp::Toggle toggles[] = { { ICON_FA_CLOUD, "Shadows", &dl->castShadows } };
+        Mark(insp::ToggleRow(toggles, 1), dirty);
+        if (const engine::Transform* t = n->GetComponent<engine::Transform>())
+            insp::ReadOnlyRow(ICON_FA_LOCATION_ARROW, "Dir", "Rotate Transform to aim (+Z)",
+                Vec3Text(DirectionalLightComponent::ComputeDirectionWS(t)).c_str());
+    }
+    s.Finish([n] { n->RemoveComponent<DirectionalLightComponent>(); });
+}
+
+void DrawPointLight(GameObject* n, PointLightComponent* pl, bool& dirty) {
+    Section s(n, "PointLight", ICON_FA_LIGHTBULB, "Point Light", insp::Accent::Light, pl, &pl->enabled, dirty);
+    if (s.Open()) {
+        LightColorRows(pl->color, pl->intensity, pl->specColor, pl->specPower, dirty);
+        { insp::PropRow r(ICON_FA_RULER, "Range"); Mark(ImGui::DragFloat("##v", &pl->range, 0.1f, 0.1f, 100.0f), dirty); }
+        { insp::PropRow r(ICON_FA_CHART_LINE, "Atten", "Attenuation kc, kl, kq"); Mark(ImGui::DragFloat3("##v", &pl->attenuation.x, 0.01f, 0.0f, 10.0f), dirty); }
+    }
+    s.Finish([n] { n->RemoveComponent<PointLightComponent>(); });
+}
+
+void DrawSpotLight(GameObject* n, SpotLightComponent* sl, bool& dirty) {
+    Section s(n, "SpotLight", ICON_FA_LIGHTBULB, "Spot Light", insp::Accent::Light, sl, &sl->enabled, dirty);
+    if (s.Open()) {
+        LightColorRows(sl->color, sl->intensity, sl->specColor, sl->specPower, dirty);
+        { insp::PropRow r(ICON_FA_RULER, "Range"); Mark(ImGui::DragFloat("##v", &sl->range, 0.1f, 0.1f, 100.0f), dirty); }
+        { insp::PropRow r(ICON_FA_CIRCLE_DOT, "Inner", "Inner angle (deg)"); Mark(ImGui::DragFloat("##v", &sl->innerAngleDeg, 0.5f, 0.0f, 89.0f), dirty); }
+        { insp::PropRow r(ICON_FA_CIRCLE, "Outer", "Outer angle (deg)"); Mark(ImGui::DragFloat("##v", &sl->outerAngleDeg, 0.5f, 0.0f, 89.0f), dirty); }
+        { insp::PropRow r(ICON_FA_CHART_LINE, "Atten", "Attenuation kc, kl, kq"); Mark(ImGui::DragFloat3("##v", &sl->attenuation.x, 0.01f, 0.0f, 10.0f), dirty); }
+        insp::Toggle toggles[] = { { ICON_FA_CLOUD, "Shadows", &sl->castShadows } };
+        Mark(insp::ToggleRow(toggles, 1), dirty);
+        if (const engine::Transform* t = n->GetComponent<engine::Transform>())
+            insp::ReadOnlyRow(ICON_FA_LOCATION_ARROW, "Dir", "Rotate Transform to aim (+Z)",
+                Vec3Text(LightGizmo::GetShineDirectionWS(t)).c_str());
+    }
+    s.Finish([n] { n->RemoveComponent<SpotLightComponent>(); });
+}
+
+// --------------------------------------------------------------------- Camera
+
+void DrawCamera(GameObject* n, CameraComponent* cam, bool& dirty) {
+    Section s(n, "Camera", ICON_FA_VIDEO, "Camera", insp::Accent::Camera, cam, &cam->enabled, dirty);
+    if (s.Open()) {
+        insp::RowLabel(ICON_FA_EYE, "View", "Projection");
+        static const char* const kProjIcons[] = { ICON_FA_VIDEO, ICON_FA_BORDER_ALL };
+        static const char* const kProjTips[] = { "Persp", "Ortho" };
+        int proj = cam->orthographic ? 1 : 0;
+        if (insp::ChoiceBar("proj", kProjIcons, kProjTips, 2, &proj)) {
+            cam->orthographic = (proj == 1);
+            dirty = true;
+        }
+        if (cam->orthographic) {
+            insp::PropRow r(ICON_FA_ARROWS_UP_DOWN, "Height", "View height");
+            Mark(ImGui::DragFloat("##v", &cam->orthographicHeight, 0.1f, 0.01f, 100000.0f), dirty);
+        } else {
+            insp::PropRow r(ICON_FA_CIRCLE_HALF_STROKE, "FOV", "Vertical FOV (deg)");
+            Mark(ImGui::DragFloat("##v", &cam->fov, 0.5f, 1.0f, 179.0f), dirty);
+        }
+        { insp::PropRow r(ICON_FA_ANGLES_DOWN, "Near", "Near clip"); Mark(ImGui::DragFloat("##v", &cam->nearClip, 0.01f, 0.01f, 100.0f), dirty); }
+        { insp::PropRow r(ICON_FA_ANGLES_UP, "Far", "Far clip"); Mark(ImGui::DragFloat("##v", &cam->farClip, 1.0f, 1.0f, 100000.0f), dirty); }
+        insp::Toggle toggles[] = { { ICON_FA_GAMEPAD, "Fly", &cam->debugFly } };
+        Mark(insp::ToggleRow(toggles, 1), dirty);
+        if (const engine::Transform* t = n->GetComponent<engine::Transform>()) {
+            const std::string up = "Up " + Vec3Text(CameraComponent::ComputeUpWS(t)) +
+                "\nRight " + Vec3Text(CameraComponent::ComputeRightWS(t)) +
+                "\nAim with Transform (+Z)";
+            insp::ReadOnlyRow(ICON_FA_LOCATION_ARROW, "Fwd", up.c_str(),
+                Vec3Text(CameraComponent::ComputeForwardWS(t)).c_str());
+        }
+    }
+    s.Finish([n] { n->RemoveComponent<CameraComponent>(); });
+}
+
+// ------------------------------------------------------------------ Collider
+
+void DrawCollider(GameObject* n, ColliderComponent* cc, bool& dirty) {
+    static const char* const kNames[] = { "Collider", "Box Collider", "Sphere Collider",
+        "Capsule Collider", "Mesh Collider", "Cylinder Collider" };
+    static const char* const kIcons[] = { ICON_FA_SHAPES, ICON_FA_VECTOR_SQUARE, ICON_FA_CIRCLE,
+        ICON_FA_CAPSULES, ICON_FA_DRAW_POLYGON, ICON_FA_DATABASE };
+    const int idx = static_cast<int>(cc->colliderType);
+    const bool known = idx >= 0 && idx < IM_ARRAYSIZE(kNames);
+    const char* type = cc->GetTypeName();
+    Section s(n, type, known ? kIcons[idx] : kIcons[0], known ? kNames[idx] : kNames[0],
+        insp::Accent::Physics, cc, nullptr, dirty);
+    if (s.Open()) {
+        if (cc->colliderType != ColliderType::NONE)
+            Mark(insp::DragVecN(ICON_FA_CROSSHAIRS, "Center", nullptr, &cc->colliderCenter.x, 3, 0.1f,
+                0.0f, 0.0f, 0.0f, 0.1f * g_scrollSensitivity), dirty);
+        switch (cc->colliderType) {
+        case ColliderType::BOX:
+            Mark(insp::DragVecN(ICON_FA_EXPAND, "Half", "Half extents", &cc->halfExtents.x, 3, 0.1f), dirty);
+            break;
+        case ColliderType::SPHERE:
+            { insp::PropRow r(ICON_FA_CIRCLE, "Radius"); Mark(ImGui::DragFloat("##v", &cc->radius, 0.1f), dirty); }
+            break;
+        case ColliderType::CAPSULE:
+        case ColliderType::CYLINDER:
+            { insp::PropRow r(ICON_FA_CIRCLE, "Radius"); Mark(ImGui::DragFloat("##v", &cc->radius, 0.1f), dirty); }
+            { insp::PropRow r(ICON_FA_ARROWS_UP_DOWN, "Height"); Mark(ImGui::DragFloat("##v", &cc->height, 0.1f), dirty); }
+            break;
+        case ColliderType::MESH:
+            { insp::PropRow r(ICON_FA_EXPAND, "Padding", "Mesh size padding"); Mark(ImGui::DragFloat("##v", &cc->meshSizePadding, 0.01f, 0.0f, 10.0f), dirty); }
+            break;
+        default:
+            break;
+        }
+
+        insp::Toggle toggles[] = {
+            { ICON_FA_EYE, "Debug", &cc->showDebugCollider },
+            { ICON_FA_GHOST, "Trigger", &cc->isTrigger },
+        };
+        if (insp::ToggleRow(toggles, IM_ARRAYSIZE(toggles))) {
+            n->m_debugCollider = cc->showDebugCollider;
+            dirty = true;
+        }
+
+        if (cc->colliderType == ColliderType::BOX || cc->colliderType == ColliderType::SPHERE ||
+            cc->colliderType == ColliderType::CAPSULE || cc->colliderType == ColliderType::CYLINDER) {
+            static GameObject* s_autoFitFailNode = nullptr;
+            const bool failed = (s_autoFitFailNode == n);
+            const float frameH = ImGui::GetFrameHeight();
+            const float sp = ImGui::GetStyle().ItemInnerSpacing.x;
+            const float w = failed ? (std::max)(1.0f, ImGui::GetContentRegionAvail().x - frameH - sp) : -FLT_MIN;
+            if (ImGui::Button(ICON_FA_WAND_MAGIC_SPARKLES "  Fit", ImVec2(w, 0.0f))) {
+                if (AutoFitColliderToMesh(n, cc)) {
+                    s_autoFitFailNode = nullptr;
+                    dirty = true;
+                    ImGui::MarkItemEdited(ImGui::GetItemID());
+                } else {
+                    s_autoFitFailNode = n;
+                }
+            }
+            if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort))
+                ImGui::SetTooltip("Auto-fit to mesh");
+            if (failed) {
+                ImGui::SameLine(0.0f, sp);
+                insp::HintIcon(ICON_FA_TRIANGLE_EXCLAMATION, insp::WarningColor(), "No usable mesh vertices");
+            }
+        }
+
+        static const char* const kPhysMatExts[] = { ".physmat" };
+        std::string mat = cc->physicsMaterial;
+        if (insp::AssetField(ICON_FA_DROPLET, "PhysMat", "Physics material (.physmat)", mat,
+                kPhysMatExts, IM_ARRAYSIZE(kPhysMatExts))) {
+            cc->physicsMaterial = mat;
+            dirty = true;
+        }
+        if (Collider* col = n->GetCollider()) {
+            const ContactSurface& surface = col->GetContactSurface();
+            if (surface.assigned) {
+                char buf[96];
+                std::snprintf(buf, sizeof(buf), "%.2f / %.2f / %.2f",
+                    surface.staticFriction, surface.dynamicFriction, surface.restitution);
+                insp::ReadOnlyRow(nullptr, "Surface", "Static / dynamic friction / restitution", buf);
+            } else if (!cc->physicsMaterial.empty()) {
+                const ImVec4 warn = insp::WarningColor();
+                insp::ReadOnlyRow(nullptr, "Surface", "Using rigidbody friction / restitution",
+                    ICON_FA_TRIANGLE_EXCLAMATION " Not loaded", &warn);
+            }
+        }
+    }
+    s.Finish([n] { RemoveColliderComponent(n); });
+}
+
+// ----------------------------------------------------------------- Rigidbody
+
+void DrawRigidbody(GameObject* n, RigidbodyComponent* rbc, bool& dirty) {
+    Section s(n, "Rigidbody", ICON_FA_WEIGHT_HANGING, "Rigidbody", insp::Accent::Physics, rbc, nullptr, dirty);
+    if (s.Open()) {
+        Rigidbody& rb = rbc->Body();
+        bool useGravity = rb.UseGravity();
+        bool isKinematic = rb.IsKinematic();
+        insp::Toggle toggles[] = {
+            { ICON_FA_ARROW_DOWN, "Gravity", &useGravity },
+            { ICON_FA_HAND, "Kinematic", &isKinematic },
+        };
+        if (insp::ToggleRow(toggles, IM_ARRAYSIZE(toggles))) {
+            rb.SetUseGravity(useGravity);
+            rb.SetIsKinematic(isKinematic);
+            dirty = true;
+        }
+        auto row = [&](const char* icon, const char* word, const char* tip, float value, float speed,
+                       float lo, float hi, void (Rigidbody::*set)(float)) {
+            insp::PropRow r(icon, word, tip);
+            if (ImGui::DragFloat("##v", &value, speed, lo, hi)) {
+                (rb.*set)(value);
+                dirty = true;
+            }
+        };
+        row(ICON_FA_WEIGHT_HANGING, "Mass", nullptr, rb.GetMass(), 0.05f, 0.001f, 1000.0f, &Rigidbody::SetMass);
+        row(ICON_FA_WIND, "Drag", nullptr, rb.GetDrag(), 0.01f, 0.0f, 50.0f, &Rigidbody::SetDrag);
+        row(ICON_FA_ROTATE, "Ang Drag", "Angular drag", rb.GetAngularDrag(), 0.01f, 0.0f, 50.0f, &Rigidbody::SetAngularDrag);
+        row(ICON_FA_ARROWS_UP_DOWN, "Bounce", "Restitution", rb.GetRestitution(), 0.01f, 0.0f, 2.0f, &Rigidbody::SetRestitution);
+        row(ICON_FA_HAND, "Friction", nullptr, rb.GetFriction(), 0.01f, 0.0f, 10.0f, &Rigidbody::SetFriction);
+    }
+    s.Finish([n] { n->RemoveComponent<RigidbodyComponent>(); });
+}
+
+// ------------------------------------------------------------------ Material
+
+void DrawMaterial(GameObject* n, MaterialComponent* mc, bool& dirty) {
+    Section s(n, "Material", ICON_FA_FILL_DRIP, "Material", insp::Accent::Render, mc, nullptr, dirty);
+    if (s.Open()) {
+        { insp::PropRow r(ICON_FA_PALETTE, "Color"); Mark(ImGui::ColorEdit3("##v", &mc->color.x), dirty); }
+        { insp::PropRow r(ICON_FA_CIRCLE_HALF_STROKE, "Rough", "Roughness"); Mark(ImGui::DragFloat("##v", &mc->roughness, 0.01f, 0.0f, 1.0f), dirty); }
+        { insp::PropRow r(ICON_FA_GEM, "Metal", "Metallic"); Mark(ImGui::DragFloat("##v", &mc->metallic, 0.01f, 0.0f, 1.0f), dirty); }
+        std::string normal = mc->normalMapPath;
+        if (insp::AssetField(ICON_FA_IMAGE, "Normal", "Normal map", normal, kTextureExts, IM_ARRAYSIZE(kTextureExts))) {
+            mc->normalMapPath = normal;
+            dirty = true;
+        }
+        { insp::PropRow r(ICON_FA_GAUGE, "Strength", "Normal strength"); Mark(ImGui::DragFloat("##v", &mc->normalStrength, 0.05f, 0.0f, 4.0f), dirty); }
+
+        VisualComponent* vc = n->GetComponent<VisualComponent>();
+        const bool isToon = vc && (vc->shaderOverride == "toon" ||
+            (vc->shaderOverride.empty() && RenderSettings_GetDefaultShader() == Shader3DVariant::Toon));
+        bool showToon = isToon;
+        if (isToon)
+            insp::SubHeading(ICON_FA_PAINTBRUSH, "Toon");
+        else
+            showToon = ImGui::TreeNodeEx("##ToonSection", ImGuiTreeNodeFlags_NoTreePushOnOpen, "%s", ICON_FA_PAINTBRUSH "  Toon");
+        if (showToon) {
+            { insp::PropRow r(ICON_FA_LAYER_GROUP, "Steps", "Shade steps"); Mark(ImGui::DragFloat("##v", &mc->shadeSteps, 0.1f, 1.0f, 8.0f), dirty); }
+            { insp::PropRow r(ICON_FA_WAVE_SQUARE, "Smooth", "Shade smoothness"); Mark(ImGui::DragFloat("##v", &mc->shadeSmoothness, 0.005f, 0.0f, 0.5f), dirty); }
+            { insp::PropRow r(ICON_FA_GEM, "Spec", "Specular threshold"); Mark(ImGui::DragFloat("##v", &mc->specularThreshold, 0.01f, 0.0f, 1.0f), dirty); }
+            { insp::PropRow r(ICON_FA_CIRCLE_HALF_STROKE, "Rim", "Rim strength"); Mark(ImGui::DragFloat("##v", &mc->rimStrength, 0.01f, 0.0f, 2.0f), dirty); }
+            { insp::PropRow r(ICON_FA_CLOUD, "Shadow", "Shadow tint"); Mark(ImGui::ColorEdit3("##v", &mc->shadowTint.x), dirty); }
+            { insp::PropRow r(ICON_FA_PEN, "Outline", "Outline width"); Mark(ImGui::DragFloat("##v", &mc->outlineWidth, 0.0005f, 0.0f, 0.05f, "%.4f"), dirty); }
+            { insp::PropRow r(ICON_FA_PALETTE, "Line Col", "Outline color"); Mark(ImGui::ColorEdit4("##v", &mc->outlineColor.x), dirty); }
+            std::string ramp = mc->rampTexturePath;
+            if (insp::AssetField(ICON_FA_IMAGE, "Ramp", "Ramp texture (optional)", ramp, kTextureExts, IM_ARRAYSIZE(kTextureExts))) {
+                mc->rampTexturePath = ramp;
+                dirty = true;
+            }
+        }
+    }
+    s.Finish([n] { n->RemoveComponent<MaterialComponent>(); });
+}
+
+// -------------------------------------------------------------------- Effect
+
+void DrawEffect(GameObject* n, EffectComponent* ec, bool& dirty) {
+    Section s(n, "Effect", ICON_FA_WAND_MAGIC_SPARKLES, "Effect", insp::Accent::Effect, ec, nullptr, dirty);
+    if (s.Open()) {
+        static const char* const kEffectExts[] = { ".efk", ".efkefc" };
+        std::string path = ec->effectPath;
+        if (insp::AssetField(ICON_FA_WAND_MAGIC_SPARKLES, "File", "Effekseer file", path, kEffectExts, IM_ARRAYSIZE(kEffectExts))) {
+            ec->SetEffectPath(path.c_str());
+            dirty = true;
+        }
+        { insp::PropRow r(ICON_FA_GAUGE_HIGH, "Speed"); Mark(ImGui::SliderFloat("##v", &ec->speed, 0.0f, 5.0f), dirty); }
+        insp::Toggle toggles[] = {
+            { ICON_FA_PLAY, "Auto Play", &ec->autoPlay },
+            { ICON_FA_TRASH_CAN, "Auto Destroy", &ec->autoDestroy },
+        };
+        Mark(insp::ToggleRow(toggles, IM_ARRAYSIZE(toggles)), dirty);
+        static const char* const kIcons[] = { ICON_FA_PLAY, ICON_FA_STOP };
+        static const char* const kTips[] = { "Play", "Stop" };
+        switch (insp::IconButtonRow("fxplay", kIcons, kTips, 2)) {
+        case 0: ec->Play(); break;
+        case 1: ec->Stop(); break;
+        default: break;
+        }
+    }
+    s.Finish([n] { n->RemoveComponent<EffectComponent>(); });
+}
+
+// --------------------------------------------------------------------- Audio
+
+void DrawAudio(GameObject* n, AudioComponent* ac, bool& dirty) {
+    Section s(n, "Audio", ICON_FA_VOLUME_HIGH, "Audio", insp::Accent::Audio, ac, nullptr, dirty);
+    if (s.Open()) {
+        static const char* const kWavExts[] = { ".wav" };
+        std::string clip = ac->clipPath;
+        if (insp::AssetField(ICON_FA_FILE_AUDIO, "Clip", "WAV file", clip, kWavExts, IM_ARRAYSIZE(kWavExts))) {
+            ac->SetClipPath(clip);
+            dirty = true;
+        }
+        insp::RowLabel(ICON_FA_SLIDERS, "Bus", nullptr);
+        static const char* const kBusIcons[] = { ICON_FA_MUSIC, ICON_FA_BOLT, ICON_FA_MICROPHONE };
+        static const char* const kBusTips[] = { "BGM", "SFX", "Voice" };
+        int bus = ac->bus == AudioType::BGM ? 0 : (ac->bus == AudioType::VOICE ? 2 : 1);
+        if (insp::ChoiceBar("bus", kBusIcons, kBusTips, 3, &bus)) {
+            ac->bus = bus == 0 ? AudioType::BGM : (bus == 2 ? AudioType::VOICE : AudioType::SFX);
+            dirty = true;
+        }
+        {
+            insp::PropRow r(ICON_FA_VOLUME_HIGH, "Volume");
+            if (ImGui::SliderFloat("##v", &ac->volume, 0.0f, 1.0f, "%.2f")) {
+                ac->ApplyLiveSettings();
+                dirty = true;
+            }
+        }
+        insp::Toggle toggles[] = {
+            { ICON_FA_REPEAT, "Loop", &ac->loop },
+            { ICON_FA_PLAY, "Awake", &ac->autoPlay },
+            { ICON_FA_CUBE, "3D", &ac->spatial },
+        };
+        Mark(insp::ToggleRow(toggles, IM_ARRAYSIZE(toggles)), dirty);
+        if (ac->spatial) {
+            insp::PropRow r(ICON_FA_RULER, "Range", "Distance scale");
+            if (ImGui::DragFloat("##v", &ac->distanceScale, 0.5f, 0.1f, 500.0f, "%.1f")) {
+                ac->ApplyLiveSettings();
+                dirty = true;
+            }
+        }
+        static const char* const kIcons[] = { ICON_FA_PLAY, ICON_FA_STOP };
+        static const char* const kTips[] = { "Play", "Stop" };
+        switch (insp::IconButtonRow("audioplay", kIcons, kTips, 2)) {
+        case 0: ac->Play(); break;
+        case 1: ac->Stop(); break;
+        default: break;
+        }
+    }
+    s.Finish([n] { n->RemoveComponent<AudioComponent>(); });
+}
+
+void DrawAudioListener(GameObject* n, AudioListenerComponent* alc, bool& dirty) {
+    Section s(n, "AudioListener", ICON_FA_EAR_LISTEN, "Listener", insp::Accent::Audio, alc, nullptr,
+        dirty, true, false);
+    s.Finish([n] { n->RemoveComponent<AudioListenerComponent>(); });
+}
+
+// -------------------------------------------------------------------- Script
+
+void DrawScript(GameObject* n, ScriptComponent* sc, bool& dirty) {
+    const std::string cls = sc->GetScriptClass();
+    Section s(n, "Script", ICON_FA_CODE, cls.empty() ? "Script" : cls.c_str(), insp::Accent::Script, sc,
+        nullptr, dirty, true, false);
+    if (s.Open()) {
+        if (Script* script = sc->GetScript()) {
+            (void)script;
+            nlohmann::json props = sc->GetEditableProperties();
+            if (props.is_object() && !props.empty()) {
+                bool changed = false;
+                for (auto& [key, val] : props.items())
+                    changed |= DrawScriptPropertyField(n, key, val);
+                if (changed) {
+                    sc->ApplyProperties(props);
+                    dirty = true;
+                }
+            }
+        } else {
+            const ImVec4 warn = insp::WarningColor();
+            insp::ReadOnlyRow(ICON_FA_TRIANGLE_EXCLAMATION, "State", "Script class not in GameScripts",
+                "Not loaded", &warn);
+        }
+    }
+    s.Finish([n] { n->RemoveComponent<ScriptComponent>(); });
+}
+
+// ------------------------------------------------------------------------ 2D
+
+void DrawRigidbody2D(GameObject* n, Rigidbody2DComponent* body, bool& dirty) {
+    const bool playing = EngineGUI_IsPlaying();
+    Section s(n, "Rigidbody2D", ICON_FA_WEIGHT_HANGING, "Rigidbody 2D", insp::Accent::Physics, body,
+        nullptr, dirty, !playing, !playing);
+    if (s.Open()) {
+        ImGui::BeginDisabled(playing);
+        insp::RowLabel(ICON_FA_SHAPES, "Type", "Dynamic / kinematic: root, uniform +XY scale");
+        static const char* const kIcons[] = { ICON_FA_LOCK, ICON_FA_FEATHER, ICON_FA_HAND };
+        static const char* const kTips[] = { "Static", "Dynamic", "Kinematic" };
+        int type = static_cast<int>(body->bodyType);
+        if (insp::ChoiceBar("type", kIcons, kTips, 3, &type)) {
+            body->bodyType = static_cast<BodyType2D>(type);
+            dirty = true;
+        }
+        { insp::PropRow r(ICON_FA_WEIGHT_HANGING, "Mass"); Mark(ImGui::DragFloat("##v", &body->mass, 0.01f, 0.001f, 100000.0f), dirty); }
+        { insp::PropRow r(ICON_FA_ARROW_DOWN, "Gravity", "Gravity scale"); Mark(ImGui::DragFloat("##v", &body->gravityScale, 0.01f, -100.0f, 100.0f), dirty); }
+        { insp::PropRow r(ICON_FA_WIND, "Damping", "Linear damping"); Mark(ImGui::DragFloat("##v", &body->linearDamping, 0.01f, 0.0f, 100.0f), dirty); }
+        Mark(insp::DragVecN(ICON_FA_ARROW_TREND_UP, "Velocity", "Initial velocity", &body->initialVelocity.x, 2, 0.01f), dirty);
+        insp::Toggle toggles[] = {
+            { ICON_FA_LOCK, "Fix Rot", &body->fixedRotation },
+            { ICON_FA_BOLT, "CCD", &body->bullet },
+        };
+        Mark(insp::ToggleRow(toggles, IM_ARRAYSIZE(toggles)), dirty);
+        ImGui::EndDisabled();
+    }
+    s.Finish([n] { n->RemoveComponent<Rigidbody2DComponent>(); });
+}
+
+void DrawCollider2D(GameObject* n, Collider2DComponent* collider, bool& dirty) {
+    const bool playing = EngineGUI_IsPlaying();
+    Section s(n, "Collider2D", collider->shape == Shape2D::Box ? ICON_FA_SQUARE : ICON_FA_CIRCLE,
+        "Collider 2D", insp::Accent::Physics, collider, playing ? nullptr : &collider->enabled, dirty,
+        !playing, !playing);
+    if (s.Open()) {
+        if (playing) {
+            insp::Toggle toggles[] = { { ICON_FA_EYE, "Debug", &collider->showDebugCollider } };
+            Mark(insp::ToggleRow(toggles, 1), dirty);
+        } else {
+            insp::Toggle toggles[] = {
+                { ICON_FA_EYE, "Debug", &collider->showDebugCollider },
+                { ICON_FA_GHOST, "Trigger", &collider->isTrigger },
+            };
+            Mark(insp::ToggleRow(toggles, IM_ARRAYSIZE(toggles)), dirty);
+        }
+        ImGui::BeginDisabled(playing);
+        insp::RowLabel(ICON_FA_SHAPES, "Shape", "Local units; uniform +XY scale");
+        static const char* const kIcons[] = { ICON_FA_SQUARE, ICON_FA_CIRCLE };
+        static const char* const kTips[] = { "Box", "Circle" };
+        int shape = static_cast<int>(collider->shape);
+        if (insp::ChoiceBar("shape", kIcons, kTips, 2, &shape)) {
+            collider->shape = static_cast<Shape2D>(shape);
+            dirty = true;
+        }
+        if (collider->shape == Shape2D::Box)
+            Mark(insp::DragVecN(ICON_FA_EXPAND, "Size", nullptr, &collider->size.x, 2, 0.01f, 0.001f, 100000.0f, 1.0f), dirty);
+        else {
+            insp::PropRow r(ICON_FA_CIRCLE, "Radius");
+            Mark(ImGui::DragFloat("##v", &collider->radius, 0.01f, 0.001f, 100000.0f), dirty);
+        }
+        Mark(insp::DragVecN(ICON_FA_CROSSHAIRS, "Offset", nullptr, &collider->offset.x, 2, 0.01f), dirty);
+        { insp::PropRow r(ICON_FA_HAND, "Friction"); Mark(ImGui::DragFloat("##v", &collider->friction, 0.01f, 0.0f, 1.0f), dirty); }
+        { insp::PropRow r(ICON_FA_ARROWS_UP_DOWN, "Bounce", "Restitution"); Mark(ImGui::DragFloat("##v", &collider->restitution, 0.01f, 0.0f, 1.0f), dirty); }
+        { insp::PropRow r(ICON_FA_HASHTAG, "Category", "Category bits (hex)");
+          Mark(ImGui::InputScalar("##v", ImGuiDataType_U32, &collider->categoryBits, nullptr, nullptr, "%08X", ImGuiInputTextFlags_CharsHexadecimal), dirty); }
+        { insp::PropRow r(ICON_FA_FILTER, "Mask", "Mask bits (hex)");
+          Mark(ImGui::InputScalar("##v", ImGuiDataType_U32, &collider->maskBits, nullptr, nullptr, "%08X", ImGuiInputTextFlags_CharsHexadecimal), dirty); }
+        ImGui::EndDisabled();
+    }
+    s.Finish([n] { n->RemoveComponent<Collider2DComponent>(); });
+}
+
+void DrawSpriteRenderer(GameObject* n, SpriteRendererComponent* sprite, bool& dirty) {
+    Section s(n, "SpriteRenderer", ICON_FA_IMAGE, "Sprite", insp::Accent::Render, sprite, nullptr, dirty);
+    if (s.Open()) {
+        static const char* const kExts[] = { ".png", ".jpg", ".jpeg", ".bmp" };
+        std::string tex = sprite->texturePath;
+        if (insp::AssetField(ICON_FA_IMAGE, "Texture", nullptr, tex, kExts, IM_ARRAYSIZE(kExts))) {
+            sprite->texturePath = tex;
+            dirty = true;
+        }
+        { insp::PropRow r(ICON_FA_RULER_COMBINED, "PPU", "Pixels per unit"); Mark(ImGui::DragFloat("##v", &sprite->pixelsPerUnit, 1.0f, 0.01f, 100000.0f), dirty); }
+        { insp::PropRow r(ICON_FA_BORDER_ALL, "Rect", "Source x, y, w, h (px); 0 size = full");
+          Mark(ImGui::DragFloat4("##v", &sprite->sourceRect.x, 1.0f, 0.0f, 100000.0f), dirty); }
+        Mark(insp::PivotRow(&sprite->pivot.x, sprite), dirty);
+        { insp::PropRow r(ICON_FA_PALETTE, "Tint"); Mark(ImGui::ColorEdit4("##v", &sprite->tint.x), dirty); }
+        insp::Toggle toggles[] = {
+            { ICON_FA_ARROWS_LEFT_RIGHT, "Flip X", &sprite->flipX },
+            { ICON_FA_ARROWS_UP_DOWN, "Flip Y", &sprite->flipY },
+        };
+        Mark(insp::ToggleRow(toggles, IM_ARRAYSIZE(toggles)), dirty);
+        { insp::PropRow r(ICON_FA_LAYER_GROUP, "Layer", "Sorting layer"); Mark(ImGui::InputInt("##v", &sprite->sortingLayer), dirty); }
+        { insp::PropRow r(ICON_FA_SORT, "Order", "Order in layer"); Mark(ImGui::InputInt("##v", &sprite->orderInLayer), dirty); }
+    }
+    s.Finish([n] { n->RemoveComponent<SpriteRendererComponent>(); });
+}
+
+// Text field + icon button on one row. Returns true when the button was pressed.
+bool TextWithButton(const char* icon, const char* word, const char* tip, char* buf, size_t size,
+                    const char* buttonIcon, const char* buttonTip) {
+    ImGui::PushID(word);
+    const float frameH = ImGui::GetFrameHeight();
+    const float sp = ImGui::GetStyle().ItemInnerSpacing.x;
+    const float fieldW = insp::RowLabel(icon, word, tip);
+    ImGui::SetNextItemWidth((std::max)(1.0f, fieldW - frameH - sp));
+    ImGui::InputText("##v", buf, size);
+    ImGui::SameLine(0.0f, sp);
+    char id[64];
+    std::snprintf(id, sizeof(id), "%s##btn", buttonIcon);
+    const bool pressed = insp::IconButton(id, buttonTip);
+    ImGui::PopID();
+    return pressed;
+}
+
+void DrawSpriteAnimator(GameObject* n, SpriteAnimatorComponent* animator, bool& dirty) {
+    Section s(n, "SpriteAnimator", ICON_FA_FILM, "Animator", insp::Accent::Render, animator, nullptr,
+        dirty, true, false);
+    if (s.Open()) {
+        bool changed = false;
+        {
+            char defaultName[256];
+            strncpy_s(defaultName, animator->defaultClip.c_str(), _TRUNCATE);
+            insp::PropRow r(ICON_FA_STAR, "Default", "Default clip");
+            if (ImGui::InputText("##v", defaultName, sizeof(defaultName))) {
+                animator->defaultClip = defaultName;
+                changed = true;
+            }
+        }
+        insp::Toggle toggles[] = { { ICON_FA_PLAY, "Auto Play", &animator->autoPlay } };
+        changed |= insp::ToggleRow(toggles, 1);
+
+        static char newClipName[256] = "idle";
+        if (TextWithButton(ICON_FA_PLUS, "New", "New clip name", newClipName, sizeof(newClipName),
+                ICON_FA_PLUS, "Add clip") && newClipName[0])
+            changed |= animator->clips.emplace(newClipName, SpriteAnimationClip{}).second;
+
+        static std::string metadataPath;
+        static char importName[256] = "idle";
+        static bool importFailed = false;
+        static const char* const kJsonExts[] = { ".json" };
+        insp::AssetField(ICON_FA_FILE_CODE, "Sheet", "Sheet metadata JSON", metadataPath, kJsonExts, 1);
+        if (TextWithButton(ICON_FA_FILE_IMPORT, "Import", "Import clip name", importName, sizeof(importName),
+                ICON_FA_FILE_IMPORT, "Import sheet")) {
+            const bool imported = animator->ImportSheet(metadataPath.c_str(), importName);
+            importFailed = !imported;
+            changed |= imported;
+        }
+        if (importFailed) {
+            const ImVec4 err = insp::ErrorColor();
+            insp::ReadOnlyRow(ICON_FA_TRIANGLE_EXCLAMATION, "Import", "Check metadata path and frame rects",
+                "Failed", &err);
+        }
+
+        static const char* const kTexExts[] = { ".png", ".jpg", ".jpeg", ".bmp" };
+        const float frameH = ImGui::GetFrameHeight();
+        const float sp = ImGui::GetStyle().ItemInnerSpacing.x;
+        for (auto it = animator->clips.begin(); it != animator->clips.end();) {
+            ImGui::PushID(it->first.c_str());
+            bool removeClip = false;
+            const std::string shown = insp::Ellipsize(it->first,
+                (std::max)(1.0f, ImGui::GetContentRegionAvail().x - ImGui::GetFontSize() * 3.0f));
+            if (ImGui::TreeNodeEx("clip", ImGuiTreeNodeFlags_NoTreePushOnOpen, "%s  %s", ICON_FA_FILM, shown.c_str())) {
+                auto& clip = it->second;
+                std::string tex = clip.texture;
+                if (insp::AssetField(ICON_FA_IMAGE, "Texture", nullptr, tex, kTexExts, IM_ARRAYSIZE(kTexExts))) {
+                    clip.texture = tex;
+                    changed = true;
+                }
+                float fps = static_cast<float>(clip.fps);
+                {
+                    insp::PropRow r(ICON_FA_STOPWATCH, "FPS");
+                    if (ImGui::DragFloat("##v", &fps, 0.1f, 0.01f, 1000.0f)) {
+                        clip.fps = (std::max)(0.01f, fps);
+                        changed = true;
+                    }
+                }
+                insp::Toggle loop[] = { { ICON_FA_REPEAT, "Loop", &clip.loop } };
+                changed |= insp::ToggleRow(loop, 1);
+                for (size_t i = 0; i < clip.frames.size();) {
+                    ImGui::PushID(static_cast<int>(i));
+                    auto& frame = clip.frames[i];
+                    float rect[] = { frame.x, frame.y, frame.w, frame.h };
+                    char word[16];
+                    std::snprintf(word, sizeof(word), "#%zu", i + 1);
+                    const float fieldW = insp::RowLabel(nullptr, word, "Frame x, y, w, h (px)");
+                    ImGui::SetNextItemWidth((std::max)(1.0f, fieldW - frameH - sp));
+                    if (ImGui::DragFloat4("##f", rect, 1.0f, 0.0f, 100000.0f)) {
+                        frame = { rect[0], rect[1], (std::max)(1.0f, rect[2]), (std::max)(1.0f, rect[3]) };
+                        changed = true;
+                    }
+                    ImGui::SameLine(0.0f, sp);
+                    const bool removeFrame = insp::IconButton(ICON_FA_XMARK "##rm", "Remove frame");
+                    ImGui::PopID();
+                    if (removeFrame) {
+                        clip.frames.erase(clip.frames.begin() + i);
+                        changed = true;
+                    } else ++i;
+                }
+                static const char* const kIcons[] = { ICON_FA_PLUS, ICON_FA_TRASH_CAN };
+                static const char* const kTips[] = { "Frame", "Delete clip" };
+                switch (insp::IconButtonRow("clipops", kIcons, kTips, 2)) {
+                case 0: clip.frames.push_back(SpriteAnimationFrame{}); changed = true; break;
+                case 1: removeClip = true; break;
+                default: break;
+                }
+            }
+            ImGui::PopID();
+            if (removeClip) {
+                if (animator->defaultClip == it->first) animator->defaultClip.clear();
+                it = animator->clips.erase(it);
+                changed = true;
+            } else ++it;
+        }
+        if (changed) {
+            animator->OnReset();
+            dirty = true;
+        }
+    }
+    s.Finish([n] { n->RemoveComponent<SpriteAnimatorComponent>(); });
+}
+
+// ----------------------------------------------------------------- Billboard
+
+void DrawBillboard(GameObject* n, BillboardComponent* bbc, bool& dirty) {
+    Section s(n, "Billboard", ICON_FA_IMAGE, "Billboard", insp::Accent::Render, bbc, &bbc->enabled, dirty);
+    if (s.Open()) {
+        std::string tex = bbc->texturePath;
+        if (insp::AssetField(ICON_FA_IMAGE, "Texture", nullptr, tex, kTextureExts, IM_ARRAYSIZE(kTextureExts))) {
+            bbc->texturePath = tex;
+            bbc->InvalidateTextureCache();
+            dirty = true;
+        }
+        float size[2] = { bbc->sizeX, bbc->sizeY };
+        if (insp::DragVecN(ICON_FA_EXPAND, "Size", nullptr, size, 2, 0.05f, 0.01f, 1000.0f, 1.0f)) {
+            bbc->sizeX = size[0];
+            bbc->sizeY = size[1];
+            dirty = true;
+        }
+        { insp::PropRow r(ICON_FA_PALETTE, "Color"); Mark(ImGui::ColorEdit4("##v", &bbc->color.x), dirty); }
+        { insp::PropRow r(ICON_FA_ROTATE, "Rot", "Rotation (deg)"); Mark(ImGui::DragFloat("##v", &bbc->rotation, 0.5f), dirty); }
+        insp::Toggle toggles[] = { { ICON_FA_MAP, "Ground", &bbc->groundAligned } };
+        Mark(insp::ToggleRow(toggles, 1), dirty);
+    }
+    s.Finish([n] { n->RemoveComponent<BillboardComponent>(); });
+}
+
+// ------------------------------------------------------------------- Terrain
+
+void DrawTerrain(GameObject* n, TerrainComponent* tc, bool& dirty) {
+    terrain::Settings& ts = tc->settings;
+    Section s(n, "Terrain", ICON_FA_MOUNTAIN, "Terrain", insp::Accent::Render, tc, &ts.enabled, dirty,
+        true, false);
+    if (s.Open()) {
+        static const char* const kHmExts[] = { ".r16" };
+        std::string hm = ts.heightmap;
+        if (insp::AssetField(ICON_FA_MOUNTAIN, "Height", ".r16 heightmap; empty = flat", hm, kHmExts, 1)) {
+            ts.heightmap = hm;
+            tc->InvalidateHeightmap();
+            dirty = true;
+        }
+        tc->EnsureLoaded();
+        {
+            char info[96] = "";
+            const ImVec4 err = insp::ErrorColor();
+            const ImVec4* color = nullptr;
+            const char* tip = "Reload";
+            if (tc->IsLoaded()) {
+                const terrain::ChunkGrid& grid = tc->GetChunkGrid();
+                std::snprintf(info, sizeof(info), "%d\xC2\xB2 \xC2\xB7 %d\xC2\xB2 x %d",
+                    tc->GetHeightmap().resolution, grid.chunksPerSide, grid.chunkQuads);
+                tip = "Samples / chunks x cells";
+            } else if (!tc->GetLoadError().empty()) {
+                std::snprintf(info, sizeof(info), "%s", tc->GetLoadError().c_str());
+                color = &err;
+            }
+            const float frameH = ImGui::GetFrameHeight();
+            const float sp = ImGui::GetStyle().ItemInnerSpacing.x;
+            const float fieldW = insp::RowLabel(ICON_FA_TABLE_CELLS, "Grid", tip);
+            const ImVec2 p = ImGui::GetCursorScreenPos();
+            const float textW = (std::max)(1.0f, fieldW - frameH - sp);
+            ImGui::Dummy(ImVec2(textW, frameH));
+            if (info[0] && ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort))
+                ImGui::SetTooltip("%s", info);
+            ImDrawList* dl = ImGui::GetWindowDrawList();
+            dl->PushClipRect(p, ImVec2(p.x + textW, p.y + frameH), true);
+            dl->AddText(ImVec2(p.x, p.y + ImGui::GetStyle().FramePadding.y),
+                color ? ImGui::ColorConvertFloat4ToU32(*color) : ImGui::GetColorU32(ImGuiCol_TextDisabled), info);
+            dl->PopClipRect();
+            ImGui::SameLine(0.0f, sp);
+            if (insp::IconButton(ICON_FA_ARROWS_ROTATE "##reload", "Reload heightmap"))
+                tc->InvalidateHeightmap();
+        }
+
+        insp::SubHeading(ICON_FA_RULER_COMBINED, "Shape", "Position moves it; rotation / scale ignored", false);
+        {
+            float size[2] = { ts.layout.sizeX, ts.layout.sizeZ };
+            if (insp::DragVecN(ICON_FA_EXPAND, "Size", "Size X / Z (m)", size, 2, 1.0f,
+                    terrain::kMinSize, terrain::kMaxSize, 256.0f, 0.0f, "%.1f", "XZ")) {
+                ts.layout.sizeX = size[0];
+                ts.layout.sizeZ = size[1];
+                dirty = true;
+            }
+        }
+        { insp::PropRow r(ICON_FA_ARROWS_UP_DOWN, "Height", "Height scale (m)");
+          Mark(ImGui::DragFloat("##v", &ts.layout.heightScale, 0.5f, 0.0f, terrain::kMaxHeightScale), dirty); }
+        { insp::PropRow r(ICON_FA_ARROW_UP, "Offset", "Height offset (m)");
+          Mark(ImGui::DragFloat("##v", &ts.layout.heightOffset, 0.5f, -terrain::kMaxHeightOffset, terrain::kMaxHeightOffset), dirty); }
+        {
+            static const int kChunkSizes[] = { 8, 16, 32, 64, 128, 256 };
+            char preview[16];
+            snprintf(preview, sizeof(preview), "%d", ts.chunkQuads);
+            insp::PropRow r(ICON_FA_BORDER_ALL, "Chunk", "Cells per chunk");
+            if (ImGui::BeginCombo("##v", preview)) {
+                for (int q : kChunkSizes) {
+                    char label[16];
+                    snprintf(label, sizeof(label), "%d", q);
+                    if (ImGui::Selectable(label, ts.chunkQuads == q)) {
+                        ts.chunkQuads = q;
+                        dirty = true;
+                    }
+                }
+                ImGui::EndCombo();
+            }
+        }
+        { insp::PropRow r(ICON_FA_LAYER_GROUP, "LOD Bias");
+          Mark(ImGui::DragFloat("##v", &ts.lodBias, 0.05f, terrain::kMinLodBias, terrain::kMaxLodBias), dirty); }
+
+        // Paint layers (ADR 0011 step 5). Layer 0 mirrors the legacy texture fields.
+        insp::SubHeading(ICON_FA_PAINTBRUSH, "Layers", "Paint with the Paint tool", false);
+        std::vector<terrain::LayerSettings> layers = terrain::EffectiveLayers(ts);
+        bool layersChanged = false;
+        for (int i = 0; i < static_cast<int>(layers.size()); ++i) {
+            ImGui::PushID(i);
+            char word[16];
+            snprintf(word, sizeof(word), "L%d", i + 1);
+            layersChanged |= insp::AssetField(ICON_FA_IMAGE, word, "Layer texture", layers[i].texture,
+                kTextureExts, IM_ARRAYSIZE(kTextureExts));
+            {
+                insp::PropRow r(nullptr, "Tile", "Tile size (m)");
+                layersChanged |= ImGui::DragFloat("##v", &layers[i].tileSize, 0.1f,
+                    terrain::kMinTextureTileSize, terrain::kMaxTextureTileSize);
+            }
+            ImGui::PopID();
+        }
+        {
+            const bool canAdd = layers.size() < static_cast<size_t>(terrain::kMaxLayers);
+            const bool canRemove = layers.size() > 1;
+            static const char* const kIcons[] = { ICON_FA_PLUS, ICON_FA_MINUS };
+            static const char* const kTips[] = { "Layer", "Last" };
+            ImGui::BeginDisabled(!canAdd && !canRemove);
+            const int pressed = insp::IconButtonRow("layerops", kIcons, kTips, 2);
+            ImGui::EndDisabled();
+            if (pressed == 0 && canAdd) {
+                layers.push_back(terrain::LayerSettings{});
+                layersChanged = true;
+            } else if (pressed == 1 && canRemove) {
+                layers.pop_back();
+                layersChanged = true;
+            }
+        }
+        if (layersChanged) {
+            ts.layers = layers;
+            ts.texture = layers[0].texture;
+            ts.textureTileSize = layers[0].tileSize;
+            tc->InvalidateTexture();
+            dirty = true;
+        }
+
+        insp::SubHeading(ICON_FA_PALETTE, "Surface");
+        {
+            float color[3] = { ts.colorR, ts.colorG, ts.colorB };
+            insp::PropRow r(ICON_FA_PALETTE, "Color");
+            if (ImGui::ColorEdit3("##v", color)) {
+                ts.colorR = color[0];
+                ts.colorG = color[1];
+                ts.colorB = color[2];
+                dirty = true;
+            }
+        }
+        { insp::PropRow r(ICON_FA_CIRCLE_HALF_STROKE, "Rough", "Roughness"); Mark(ImGui::SliderFloat("##v", &ts.roughness, 0.0f, 1.0f), dirty); }
+        { insp::PropRow r(ICON_FA_GEM, "Metal", "Metallic"); Mark(ImGui::SliderFloat("##v", &ts.metallic, 0.0f, 1.0f), dirty); }
+        insp::Toggle toggles[] = {
+            { ICON_FA_CLOUD, "Shadows", &ts.castShadows },
+            { ICON_FA_SHIELD, "Collide", &ts.collision,
+              ts.collision && FindColliderComponent(n) ? "Collider component used instead" : nullptr },
+        };
+        Mark(insp::ToggleRow(toggles, IM_ARRAYSIZE(toggles)), dirty);
+    }
+    ts = terrain::SanitizeSettings(ts);
+    s.EndEdit();
+    if (s.Open())
+        TerrainEditor_DrawInspector(n, *tc);
+    s.Finish([n] { n->RemoveComponent<TerrainComponent>(); });
+}
+
+// -------------------------------------------------------------- Add component
+
+void DrawAddComponent(GameObject* n, bool& dirty) {
+    ImGui::Spacing();
+    if (insp::WideButton(ICON_FA_PLUS, "Add", "Add component"))
+        ImGui::OpenPopup("##AddComponentPopup");
+    ImGui::SetNextWindowSizeConstraints(ImVec2(ImGui::GetFontSize() * 12.0f, 0.0f),
+        ImVec2(FLT_MAX, ImGui::GetFontSize() * 30.0f));
+    if (!ImGui::BeginPopup("##AddComponentPopup"))
+        return;
+    static ImGuiTextFilter filter;
+    if (ImGui::IsWindowAppearing()) {
+        filter.Clear();
+        ImGui::SetKeyboardFocusHere();
+    }
+    filter.Draw("##ComponentSearch", -FLT_MIN);
+    ImGui::Separator();
+    int shown = 0;
+    const char* group = nullptr;
+    auto option = [&](const char* groupName, const char* icon, const char* label, const char* typeName,
+                      bool available, auto create) {
+        if (!available || !filter.PassFilter(label))
+            return;
+        if (!group || std::strcmp(group, groupName) != 0) {
+            group = groupName;
+            ImGui::TextDisabled("%s", groupName);
+        }
+        ++shown;
+        char text[96];
+        std::snprintf(text, sizeof(text), "%s  %s", icon, label);
+        if (ImGui::Selectable(text)) {
+            create();
+            EditorUndo_PushAddComponent(n, typeName);
+            dirty = true;
+            ImGui::CloseCurrentPopup();
+        }
+    };
+    const auto* currentCollider = FindColliderComponent(n);
+    const bool canAdd3D = !currentCollider || currentCollider->colliderType == ColliderType::NONE;
+    auto removeEmptyCollider = [&] { if (currentCollider) RemoveColliderComponent(n); };
+    const bool has2D = n->GetComponent<Collider2DComponent>() != nullptr;
+
+    option("Core", ICON_FA_ARROWS_UP_DOWN_LEFT_RIGHT, "Transform", "SceneTransform", !n->GetComponent<engine::Transform>(), [&] { n->AddComponent<engine::Transform>(); });
+    option("Core", ICON_FA_CODE, "Script", "Script", !n->GetComponent<ScriptComponent>(), [&] { n->AddComponent<ScriptComponent>(); });
+    option("Render", ICON_FA_CUBE, "Visual", "visual", !n->GetComponent<VisualComponent>(), [&] { n->AddComponent<VisualComponent>(); });
+    option("Render", ICON_FA_FILL_DRIP, "Material", "Material", !n->GetComponent<MaterialComponent>(), [&] { n->AddComponent<MaterialComponent>(); });
+    option("Render", ICON_FA_IMAGE, "Sprite Renderer", "SpriteRenderer", !n->GetComponent<SpriteRendererComponent>(), [&] { n->AddComponent<SpriteRendererComponent>(); });
+    option("Render", ICON_FA_FILM, "Sprite Animator", "SpriteAnimator", !n->GetComponent<SpriteAnimatorComponent>(), [&] { n->AddComponent<SpriteAnimatorComponent>(); });
+    option("Render", ICON_FA_IMAGE, "Billboard", "Billboard", !n->GetComponent<BillboardComponent>(), [&] { n->AddComponent<BillboardComponent>(); });
+    option("Render", ICON_FA_MOUNTAIN, "Terrain", "Terrain", !n->GetComponent<TerrainComponent>(), [&] { n->AddComponent<TerrainComponent>(); });
+    option("Render", ICON_FA_WAND_MAGIC_SPARKLES, "Effect", "Effect", !n->GetComponent<EffectComponent>(), [&] { n->AddComponent<EffectComponent>(); });
+    option("Light", ICON_FA_VIDEO, "Camera", "Camera", !n->GetComponent<CameraComponent>(), [&] { n->AddComponent<CameraComponent>(); });
+    option("Light", ICON_FA_SUN, "Directional Light", "DirectionalLight", !n->GetComponent<DirectionalLightComponent>(), [&] { n->AddComponent<DirectionalLightComponent>(); });
+    option("Light", ICON_FA_LIGHTBULB, "Point Light", "PointLight", !n->GetComponent<PointLightComponent>(), [&] { n->AddComponent<PointLightComponent>(); });
+    option("Light", ICON_FA_LIGHTBULB, "Spot Light", "SpotLight", !n->GetComponent<SpotLightComponent>(), [&] { n->AddComponent<SpotLightComponent>(); });
+    option("Physics", ICON_FA_WEIGHT_HANGING, "Rigidbody 3D", "Rigidbody", !n->GetComponent<RigidbodyComponent>(), [&] { n->AddComponent<RigidbodyComponent>(); });
+    option("Physics", ICON_FA_VECTOR_SQUARE, "Box Collider 3D", "BoxCollider", canAdd3D, [&] { removeEmptyCollider(); n->AddComponent<BoxColliderComponent>(); });
+    option("Physics", ICON_FA_CIRCLE, "Sphere Collider 3D", "SphereCollider", canAdd3D, [&] { removeEmptyCollider(); n->AddComponent<SphereColliderComponent>(); });
+    option("Physics", ICON_FA_CAPSULES, "Capsule Collider 3D", "CapsuleCollider", canAdd3D, [&] { removeEmptyCollider(); n->AddComponent<CapsuleColliderComponent>(); });
+    option("Physics", ICON_FA_DATABASE, "Cylinder Collider 3D", "CylinderCollider", canAdd3D, [&] { removeEmptyCollider(); n->AddComponent<CylinderColliderComponent>(); });
+    option("Physics", ICON_FA_DRAW_POLYGON, "Mesh Collider 3D", "MeshCollider", canAdd3D, [&] { removeEmptyCollider(); n->AddComponent<MeshColliderComponent>(); });
+    option("Physics", ICON_FA_WEIGHT_HANGING, "Rigidbody 2D", "Rigidbody2D", !n->GetComponent<Rigidbody2DComponent>(), [&] { n->AddComponent<Rigidbody2DComponent>(); });
+    option("Physics", ICON_FA_SQUARE, "Box Collider 2D", "Collider2D", !has2D, [&] { n->AddComponent<Collider2DComponent>()->shape = Shape2D::Box; });
+    option("Physics", ICON_FA_CIRCLE, "Circle Collider 2D", "Collider2D", !has2D, [&] { n->AddComponent<Collider2DComponent>()->shape = Shape2D::Circle; });
+    option("Audio", ICON_FA_VOLUME_HIGH, "Audio", "Audio", !n->GetComponent<AudioComponent>(), [&] { n->AddComponent<AudioComponent>(); });
+    option("Audio", ICON_FA_EAR_LISTEN, "Audio Listener", "AudioListener", !n->GetComponent<AudioListenerComponent>(), [&] { n->AddComponent<AudioListenerComponent>(); });
+    if (!shown)
+        ImGui::TextDisabled("None");
+    ImGui::EndPopup();
+}
+
+} // namespace
 
 void DrawEditorInspectorPanel(bool playVisuals, bool* open)
 {
@@ -114,12 +1355,15 @@ void DrawEditorInspectorPanel(bool playVisuals, bool* open)
         ImGui::End();
         return;
     }
+    // Every widget fills the remaining row width; nothing reserves a right-hand
+    // label column, so the panel never needs horizontal scrolling.
+    ImGui::PushItemWidth(-FLT_MIN);
     {
         if (playVisuals)
             ImGui::BeginDisabled(true);
 
         if (g_selNode) {
-            bool runtimeDirty = false;
+            bool dirty = false;
             static GameObject* s_lastSelNode = nullptr;
             static char nodeNameBuf[128] = {};
             if (g_selNode != s_lastSelNode) {
@@ -127,1482 +1371,59 @@ void DrawEditorInspectorPanel(bool playVisuals, bool* open)
                 s_lastSelNode = g_selNode;
                 strncpy_s(nodeNameBuf, g_selNode->GetName().c_str(), sizeof(nodeNameBuf) - 1);
             }
+            GameObject* n = g_selNode;
+
+            DrawNodeHeader(n, nodeNameBuf, sizeof(nodeNameBuf), dirty);
 
             // Do not auto-add Visual on select/inspect — that marked scenes dirty
-            // without a user edit. Add via the component combo instead.
-            VisualComponent* vc = g_selNode->GetComponent<VisualComponent>();
-
-            ImGui::Text("Node: %s", g_selNode->GetName().c_str());
-            ImGui::Separator();
-            ImGui::SetNextItemWidth(-1);
-            if (ImGui::InputText("##NodeName", nodeNameBuf, sizeof(nodeNameBuf),
-                ImGuiInputTextFlags_EnterReturnsTrue)) {
-                const std::string oldName = g_selNode->GetName();
-                const std::string newName(nodeNameBuf);
-                g_selNode->SetName(newName);
-                EditorUndo_PushRename(g_selNode, oldName, newName);
-                EngineGUI_MarkSceneDirty();
-            }
-            if (!ImGui::IsItemActive())
-                strncpy_s(nodeNameBuf, g_selNode->GetName().c_str(), sizeof(nodeNameBuf) - 1);
-            ImGui::Spacing();
-
-            ImGui::Text("Hierarchy Order");
-            if (ImGui::Button("Back", ImVec2(Ui(70.0f), 0)))
-            {
-                if (UndoableReorderNode(g_selNode, MoveNodeToBack))
-                    runtimeDirty = true;
-            }
-            ImGui::SameLine();
-            if (ImGui::Button("Down", ImVec2(Ui(70.0f), 0)))
-            {
-                if (UndoableReorderNode(g_selNode, [](GameObject* n) {
-                    return MoveNodeOrder(n, -1);
-                }))
-                    runtimeDirty = true;
-            }
-            ImGui::SameLine();
-            if (ImGui::Button("Up", ImVec2(Ui(70.0f), 0)))
-            {
-                if (UndoableReorderNode(g_selNode, [](GameObject* n) {
-                    return MoveNodeOrder(n, 1);
-                }))
-                    runtimeDirty = true;
-            }
-            ImGui::SameLine();
-            if (ImGui::Button("Top", ImVec2(Ui(70.0f), 0)))
-            {
-                if (UndoableReorderNode(g_selNode, MoveNodeToFront))
-                    runtimeDirty = true;
-            }
-            ImGui::TextDisabled("Later items draw later; UI later items appear on top.");
-            ImGui::Spacing();
-
-            // Transform
-            if (engine::Transform* t = g_selNode->GetComponent<engine::Transform>()) {
-                ImGui::Text("Transform");
-                ImGui::Separator();
-                EditorUndo_BeginComponentEdit(g_selNode, "SceneTransform");
-                const float xformBefore[9] = {
-                    t->localPosition.x, t->localPosition.y, t->localPosition.z,
-                    t->localRotation.x, t->localRotation.y, t->localRotation.z,
-                    t->localScale.x, t->localScale.y, t->localScale.z
-                };
-                bool xformEdited = false;
-                ImGui::Text("Position");
-                ImGui::Text("X:"); ImGui::SameLine(40);
-                xformEdited |= ImGui::DragFloat("##NPX", &t->localPosition.x, 0.1f);
-                xformEdited |= ScrollValue(&t->localPosition.x);
-                ImGui::Text("Y:"); ImGui::SameLine(40);
-                xformEdited |= ImGui::DragFloat("##NPY", &t->localPosition.y, 0.1f);
-                xformEdited |= ScrollValue(&t->localPosition.y);
-                ImGui::Text("Z:"); ImGui::SameLine(40);
-                xformEdited |= ImGui::DragFloat("##NPZ", &t->localPosition.z, 0.1f);
-                xformEdited |= ScrollValue(&t->localPosition.z);
-                ImGui::Spacing();
-                ImGui::Text("Rotation");
-                ImGui::Text("X:"); ImGui::SameLine(40);
-                xformEdited |= ImGui::DragFloat("##NRX", &t->localRotation.x, 1.0f);
-                xformEdited |= ScrollValue(&t->localRotation.x, 1.0f);
-                ImGui::Text("Y:"); ImGui::SameLine(40);
-                xformEdited |= ImGui::DragFloat("##NRY", &t->localRotation.y, 1.0f);
-                xformEdited |= ScrollValue(&t->localRotation.y, 1.0f);
-                ImGui::Text("Z:"); ImGui::SameLine(40);
-                xformEdited |= ImGui::DragFloat("##NRZ", &t->localRotation.z, 1.0f);
-                xformEdited |= ScrollValue(&t->localRotation.z, 1.0f);
-                ImGui::Spacing();
-                ImGui::Text("Scale");
-                ImGui::Text("X:"); ImGui::SameLine(40);
-                xformEdited |= ImGui::DragFloat("##NSX", &t->localScale.x, 0.1f, 0.001f, 1000.0f);
-                xformEdited |= ScrollValue(&t->localScale.x);
-                ImGui::Text("Y:"); ImGui::SameLine(40);
-                xformEdited |= ImGui::DragFloat("##NSY", &t->localScale.y, 0.1f, 0.001f, 1000.0f);
-                xformEdited |= ScrollValue(&t->localScale.y);
-                ImGui::Text("Z:"); ImGui::SameLine(40);
-                xformEdited |= ImGui::DragFloat("##NSZ", &t->localScale.z, 0.1f, 0.001f, 1000.0f);
-                xformEdited |= ScrollValue(&t->localScale.z);
-                ImGui::Spacing();
-                const float xformAfter[9] = {
-                    t->localPosition.x, t->localPosition.y, t->localPosition.z,
-                    t->localRotation.x, t->localRotation.y, t->localRotation.z,
-                    t->localScale.x, t->localScale.y, t->localScale.z
-                };
-                if (xformEdited && JsonFloat_TransformChanged(xformBefore, xformAfter))
-                    runtimeDirty = true;
-                else if (xformEdited && !JsonFloat_TransformChanged(xformBefore, xformAfter)) {
-                    // DragFloat/Scroll reported a change that does not survive 3dp — keep bits.
-                    t->localPosition = { xformBefore[0], xformBefore[1], xformBefore[2] };
-                    t->localRotation = { xformBefore[3], xformBefore[4], xformBefore[5] };
-                    t->localScale    = { xformBefore[6], xformBefore[7], xformBefore[8] };
-                }
-                g_selNode->SyncLegacyTransformFromComponents();
-                EditorUndo_EndComponentEdit(g_selNode, "SceneTransform");
-            }
-
-            ImGui::Text("Scroll Sensitivity");
-            ImGui::SliderFloat("##Sens", &g_scrollSensitivity, 0.1f, 5.0f, "%.1f");
-            ImGui::Separator();
-
-            ImGui::Text("Tag");
-            {
-                TagRegistry& tags = TagRegistry::Instance();
-                int currentTag = g_selNode->GetTagId();
-                if (!tags.IsValid(currentTag))
-                    currentTag = static_cast<int>(Tag::TAG_NONE);
-
-                ImGui::SameLine(80);
-                ImGui::SetNextItemWidth(-1);
-                const char* preview = tags.GetName(currentTag);
-                if (ImGui::BeginCombo("##Tag", preview, ImGuiComboFlags_HeightLarge)) {
-                    const float removeW = ImGui::GetFrameHeight();
-                    const float spacing = ImGui::GetStyle().ItemInnerSpacing.x;
-                    const int noneId = static_cast<int>(Tag::TAG_NONE);
-
-                    for (int i = 0; i < tags.GetCount(); ++i) {
-                        ImGui::PushID(i);
-                        const bool selected = (i == currentTag);
-                        const bool showRemove = (i != noneId);
-                        const bool canRemove = tags.CanRemove(i);
-                        const char* name = tags.GetName(i);
-
-                        if (showRemove) {
-                            const float labelW =
-                                ImGui::GetContentRegionAvail().x - removeW - spacing;
-                            if (ImGui::Selectable(name, selected, 0,
-                                    ImVec2((labelW > 1.0f) ? labelW : 1.0f, 0.0f))) {
-                                const int oldTag = g_selNode->GetTagId();
-                                g_selNode->SetTag(i);
-                                EditorUndo_PushTag(g_selNode, oldTag, i);
-                                runtimeDirty = true;
-                            }
-                            if (selected)
-                                ImGui::SetItemDefaultFocus();
-
-                            ImGui::SameLine(0.0f, spacing);
-                            if (!canRemove)
-                                ImGui::BeginDisabled();
-                            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
-                            ImGui::PushStyleColor(ImGuiCol_ButtonHovered,
-                                ImVec4(0.85f, 0.25f, 0.25f, 0.55f));
-                            ImGui::PushStyleColor(ImGuiCol_ButtonActive,
-                                ImVec4(0.9f, 0.2f, 0.2f, 0.75f));
-                            if (ImGui::Button(ICON_FA_XMARK "##RemoveTag",
-                                    ImVec2(removeW, removeW))) {
-                                g_pendingDeleteTagId = i;
-                                g_showDeleteTagPopup = true;
-                                ImGui::CloseCurrentPopup();
-                            }
-                            ImGui::PopStyleColor(3);
-                            if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled |
-                                    ImGuiHoveredFlags_DelayShort)) {
-                                ImGui::SetTooltip(canRemove
-                                    ? "Delete tag"
-                                    : "Built-in tags cannot be deleted");
-                            }
-                            if (!canRemove)
-                                ImGui::EndDisabled();
-                        }
-                        else {
-                            if (ImGui::Selectable(name, selected)) {
-                                const int oldTag = g_selNode->GetTagId();
-                                g_selNode->SetTag(i);
-                                EditorUndo_PushTag(g_selNode, oldTag, i);
-                                runtimeDirty = true;
-                            }
-                            if (selected)
-                                ImGui::SetItemDefaultFocus();
-                        }
-                        ImGui::PopID();
-                    }
-
-                    ImGui::Separator();
-                    if (ImGui::Selectable(ICON_FA_PLUS "  Add New")) {
-                        g_newTagName[0] = '\0';
-                        g_showAddTagPopup = true;
-                        ImGui::CloseCurrentPopup();
-                    }
-                    ImGui::EndCombo();
-                }
-            }
-            ImGui::Spacing();
-
-            if (vc) {
-            ImGui::Separator();
-            ImGui::Text("Visual");
-            EditorUndo_BeginComponentEdit(g_selNode, "visual");
-
-            ImGui::Text("Mesh");
-            {
-                const auto& defs = ModelAssetCache::Instance().GetObjectDefinitions();
-                int currentIdx = -1;
-                for (int i = 0; i < (int)defs.size(); ++i) {
-                    if (defs[i].assetPath == vc->modelPath) {
-                        currentIdx = i;
-                        break;
-                    }
-                }
-                const char* preview = vc->modelPath.empty()
-                    ? "(None)"
-                    : (currentIdx >= 0 ? defs[currentIdx].displayName.c_str() : vc->modelPath.c_str());
-                ImGui::SetNextItemWidth(-1);
-                if (ImGui::BeginCombo("##Mesh", preview)) {
-                    for (int i = 0; i < (int)defs.size(); ++i) {
-                        const bool selected = (i == currentIdx);
-                        if (!selected &&
-                            ModelAssetCache::IsHiddenPrimitiveAlias(defs[i].assetPath))
-                            continue;
-                        if (ImGui::Selectable(defs[i].displayName.c_str(), selected)) {
-                            if (vc->modelPath != defs[i].assetPath) {
-                                vc->modelPath = defs[i].assetPath;
-                                runtimeDirty = true;
-                            }
-                        }
-                        if (selected)
-                            ImGui::SetItemDefaultFocus();
-                    }
-                    ImGui::EndCombo();
-                }
-                {
-                    const char* modelExts[] = { ".fbx", ".obj", ".gltf", ".glb" };
-                    std::string droppedPath;
-                    if (AcceptAssetPathDrop(modelExts, IM_ARRAYSIZE(modelExts), droppedPath)) {
-                        if (vc->modelPath != droppedPath) {
-                            vc->modelPath = droppedPath;
-                            runtimeDirty = true;
-                        }
-                    }
-                }
-                if (currentIdx < 0 && !vc->modelPath.empty())
-                    ImGui::TextDisabled("Custom / missing asset: %s", vc->modelPath.c_str());
-            }
-
-            bool animate = vc->playAnimation;
-            if (ImGui::Checkbox("Animate", &animate)) {
-                vc->playAnimation = animate;
-                runtimeDirty = true;
-            }
-
-            ImGui::Text("LOD");
-            {
-                // Level 0 is the Mesh above; each row switches TO that level at its
-                // distance. Applies in Play / runtime only.
-                const char* lodExts[] = { ".fbx", ".obj", ".gltf", ".glb" };
-                int removeIdx = -1;
-                auto sortLods = [vc]() {
-                    if (vc->lodScreenSize) {
-                        std::stable_sort(vc->lods.begin(), vc->lods.end(),
-                            [](const VisualComponent::LodLevel& a, const VisualComponent::LodLevel& b) {
-                                return a.screenHeight > b.screenHeight; });
-                    } else {
-                        std::stable_sort(vc->lods.begin(), vc->lods.end(),
-                            [](const VisualComponent::LodLevel& a, const VisualComponent::LodLevel& b) {
-                                return a.maxDistance < b.maxDistance; });
-                    }
-                };
-                if (ImGui::Checkbox("Screen Size Mode", &vc->lodScreenSize)) {
-                    if (vc->lodScreenSize) {
-                        // Seed unset rows so switching modes never leaves a level that cannot switch.
-                        float h = 0.25f;
-                        for (VisualComponent::LodLevel& l : vc->lods) {
-                            if (l.screenHeight <= 0.0f) l.screenHeight = h;
-                            h *= 0.5f;
-                        }
-                    }
-                    sortLods();
-                    vc->lodLastLevel = -1;
-                    runtimeDirty = true;
-                }
-                ImGui::SameLine();
-                ImGui::TextDisabled(vc->lodScreenSize
-                    ? "(switch by projected height)" : "(switch by distance)");
-                for (int i = 0; i < static_cast<int>(vc->lods.size()); ++i) {
-                    VisualComponent::LodLevel& lod = vc->lods[static_cast<size_t>(i)];
-                    ImGui::PushID(i);
-                    ImGui::AlignTextToFramePadding();
-                    ImGui::Text("LOD %d", i + 1);
-                    ImGui::SameLine();
-                    ImGui::SetNextItemWidth(90.0f);
-                    if (vc->lodScreenSize) {
-                        float percent = lod.screenHeight * 100.0f;
-                        if (ImGui::DragFloat("##LodScreen", &percent, 0.1f, 0.0f, 100.0f, "%.1f %%")) {
-                            lod.screenHeight = std::min(std::max(percent, 0.0f), 100.0f) * 0.01f;
-                            runtimeDirty = true;
-                        }
-                    } else if (ImGui::DragFloat("##LodDist", &lod.maxDistance, 0.5f, 0.0f, 100000.0f, "%.1f m")) {
-                        if (lod.maxDistance < 0.0f) lod.maxDistance = 0.0f;
-                        runtimeDirty = true;
-                    }
-                    if (ImGui::IsItemDeactivatedAfterEdit())
-                        sortLods();
-                    ImGui::SameLine();
-                    if (ImGui::SmallButton("X"))
-                        removeIdx = i;
-                    char pathBuf[512];
-                    std::snprintf(pathBuf, sizeof(pathBuf), "%s", lod.modelPath.c_str());
-                    ImGui::SetNextItemWidth(-1);
-                    if (ImGui::InputText("##LodPath", pathBuf, sizeof(pathBuf))) {
-                        lod.modelPath = pathBuf;
-                        runtimeDirty = true;
-                    }
-                    std::string droppedLod;
-                    if (AcceptAssetPathDrop(lodExts, IM_ARRAYSIZE(lodExts), droppedLod)) {
-                        lod.modelPath = droppedLod;
-                        runtimeDirty = true;
-                    }
-                    ImGui::PopID();
-                }
-                if (removeIdx >= 0) {
-                    vc->lods.erase(vc->lods.begin() + removeIdx);
-                    runtimeDirty = true;
-                }
-                if (static_cast<int>(vc->lods.size()) < kLodMaxLevels - 1) {
-                    if (ImGui::SmallButton("Add LOD")) {
-                        VisualComponent::LodLevel lod;
-                        lod.maxDistance = vc->lods.empty() ? 20.0f : vc->lods.back().maxDistance + 30.0f;
-                        lod.screenHeight = vc->lods.empty() ? 0.25f
-                            : std::max(vc->lods.back().screenHeight * 0.5f, 0.005f);
-                        vc->lods.push_back(lod);
-                        runtimeDirty = true;
-                    }
-                }
-                if (ImGui::DragFloat("Cull Distance", &vc->cullDistance, 1.0f, 0.0f, 100000.0f,
-                        vc->cullDistance > 0.0f ? "%.1f m" : "Never")) {
-                    if (vc->cullDistance < 0.0f) vc->cullDistance = 0.0f;
-                    runtimeDirty = true;
-                }
-                if (vc->playAnimation && !vc->lods.empty())
-                    ImGui::TextDisabled("LOD levels ignored while Animate is on.");
-                else if (!vc->lods.empty() || vc->cullDistance > 0.0f)
-                    ImGui::TextDisabled("Play / runtime only; needs Mesh LOD on in Rendering.");
-            }
-
-            if (ImGui::Checkbox("Shadow Volume", &vc->shadowVolume))
-                runtimeDirty = true;
-            if (vc->shadowVolume && RenderSettings_GetConst().shadowMode != ShadowMode::Volume)
-                ImGui::TextDisabled("Casts only when Rendering > Shadows > Mode is Shadow Volume.");
-            else if (vc->shadowVolume)
-                ImGui::TextDisabled("Needs a closed (watertight) mesh; open meshes cast nothing.");
-
-            ImGui::Text("Shader");
-            {
-                const int variantCount = Shader3DVariantCount();
-                const bool useSceneDefault = vc->shaderOverride.empty();
-                const Shader3DVariant currentVariant = useSceneDefault
-                    ? RenderSettings_GetDefaultShader()
-                    : Shader3DVariantFromId(vc->shaderOverride);
-                const std::string preview = useSceneDefault
-                    ? "Use Scene Default"
-                    : ShaderVariantPreviewLabel(currentVariant);
-                ImGui::SetNextItemWidth(-1);
-                if (ImGui::BeginCombo("##ObjectShader", preview.c_str())) {
-                    if (ImGui::Selectable("Use Scene Default", useSceneDefault)) {
-                        vc->shaderOverride.clear();
-                        runtimeDirty = true;
-                    }
-                    for (int i = 0; i < variantCount; ++i) {
-                        const Shader3DVariant v = Shader3DVariantByIndex(i);
-                        if (!Shader3DVariantIsUserVisible(v))
-                            continue;
-                        const bool selected = !useSceneDefault
-                            && (Shader3DVariantId(v) == vc->shaderOverride);
-                        if (ImGui::Selectable(Shader3DVariantLabel(v), selected)) {
-                            vc->shaderOverride = Shader3DVariantId(v);
-                            if (v == Shader3DVariant::SurfaceFX)
-                                vc->hasSurfaceFx = true;
-                            runtimeDirty = true;
-                        }
-                    }
-                    ImGui::EndCombo();
-                }
-                if (!useSceneDefault) {
-                    ImGui::TextDisabled("Scene default: %s",
-                        Shader3DVariantLabel(RenderSettings_GetDefaultShader()));
-                }
-
-                if (currentVariant == Shader3DVariant::SurfaceFX) {
-                    vc->hasSurfaceFx = true;
-                    ImGui::Separator();
-                    ImGui::Text("Surface FX");
-
-                    char texBuf[256];
-                    strncpy_s(texBuf, vc->surfaceFxTexturePath.c_str(), sizeof(texBuf) - 1);
-                    texBuf[sizeof(texBuf) - 1] = '\0';
-                    ImGui::Text("Detail Texture");
-                    if (ImGui::InputText("##SfxTex", texBuf, sizeof(texBuf))) {
-                        vc->surfaceFxTexturePath = texBuf;
-                        runtimeDirty = true;
-                    }
-                    {
-                        const char* texExts[] = { ".png", ".jpg", ".jpeg", ".tga", ".bmp", ".dds" };
-                        std::string droppedPath;
-                        if (AcceptAssetPathDrop(texExts, IM_ARRAYSIZE(texExts), droppedPath)) {
-                            vc->surfaceFxTexturePath = droppedPath;
-                            runtimeDirty = true;
-                        }
-                    }
-
-                    if (ImGui::ColorEdit4("Color 1", &vc->surfaceFx.Color1.x))
-                        runtimeDirty = true;
-                    if (ImGui::ColorEdit4("Color 2", &vc->surfaceFx.Color2.x))
-                        runtimeDirty = true;
-                    if (ImGui::DragFloat2("Scroll Speed 1", &vc->surfaceFx.ScrollSpeed1.x, 0.001f))
-                        runtimeDirty = true;
-                    if (ImGui::DragFloat2("Scroll Speed 2", &vc->surfaceFx.ScrollSpeed2.x, 0.001f))
-                        runtimeDirty = true;
-                    if (ImGui::DragFloat("UV Scale", &vc->surfaceFx.UvScale, 0.001f, 0.001f, 10.0f))
-                        runtimeDirty = true;
-                    if (ImGui::DragFloat("Fresnel Power", &vc->surfaceFx.FresnelPower, 0.05f, 0.1f, 16.0f))
-                        runtimeDirty = true;
-                    if (ImGui::DragFloat("Emission Strength", &vc->surfaceFx.EmissionStrength, 0.01f, 0.0f, 5.0f))
-                        runtimeDirty = true;
-                    if (ImGui::DragFloat("Gradient Start", &vc->surfaceFx.GradientStart, 0.01f, 0.0f, 1.0f))
-                        runtimeDirty = true;
-                    if (ImGui::DragFloat("Gradient End", &vc->surfaceFx.GradientEnd, 0.01f, 0.0f, 1.0f))
-                        runtimeDirty = true;
-                    if (ImGui::DragFloat("Edge Fade Start", &vc->surfaceFx.EdgeFadeStart, 0.01f, 0.0f, 1.0f))
-                        runtimeDirty = true;
-                    if (ImGui::DragFloat("Edge Fade End", &vc->surfaceFx.EdgeFadeEnd, 0.01f, 0.0f, 1.0f))
-                        runtimeDirty = true;
-                    ImGui::TextDisabled("Detail texture scrolls; not Material normal map.");
-                }
-            }
-            EditorUndo_EndComponentEdit(g_selNode, "visual");
-            }
-
-            ImGui::Spacing();
-
-            if (DirectionalLightComponent* dl = g_selNode->GetComponent<DirectionalLightComponent>()) {
-                ImGui::Separator();
-                ImGui::Text("Directional Light");
-                EditorUndo_BeginComponentEdit(g_selNode, "DirectionalLight");
-                if (ImGui::Checkbox("Enabled", &dl->enabled))
-                    runtimeDirty = true;
-                if (ImGui::ColorEdit3("Color", &dl->color.x))
-                    runtimeDirty = true;
-                if (ImGui::DragFloat("Intensity", &dl->intensity, 0.05f, 0.0f, 10.0f))
-                    runtimeDirty = true;
-                if (ImGui::ColorEdit3("Specular", &dl->specColor.x))
-                    runtimeDirty = true;
-                if (ImGui::DragFloat("Spec Power", &dl->specPower, 1.0f, 1.0f, 256.0f))
-                    runtimeDirty = true;
-                if (ImGui::Checkbox("Cast Shadows", &dl->castShadows))
-                    runtimeDirty = true;
-
-                if (const engine::Transform* t = g_selNode->GetComponent<engine::Transform>()) {
-                    const DirectX::XMFLOAT3 dir = DirectionalLightComponent::ComputeDirectionWS(t);
-                    ImGui::Text("Direction: (%.2f, %.2f, %.2f)", dir.x, dir.y, dir.z);
-                    ImGui::TextDisabled("Rotate Transform to aim light (+Z forward).");
-                }
-                ImGui::TextDisabled("Shader: Directional (Pixel) on Visual component.");
-                EditorUndo_EndComponentEdit(g_selNode, "DirectionalLight");
-                ImGui::Spacing();
-            }
-
-            if (CameraComponent* cam = g_selNode->GetComponent<CameraComponent>()) {
-                ImGui::Separator();
-                ImGui::Text("Camera");
-                EditorUndo_BeginComponentEdit(g_selNode, "Camera");
-                if (ImGui::Checkbox("Enabled", &cam->enabled))
-                    runtimeDirty = true;
-                if (ImGui::Checkbox("Editor Camera Controls on Play", &cam->debugFly)) runtimeDirty = true;
-                if (ImGui::Checkbox("Orthographic", &cam->orthographic))
-                    runtimeDirty = true;
-                if (cam->orthographic) {
-                    if (ImGui::DragFloat("View Height", &cam->orthographicHeight, 0.1f, 0.01f, 100000.0f))
-                        runtimeDirty = true;
-                }
-                else if (ImGui::DragFloat("FOV", &cam->fov, 0.5f, 1.0f, 179.0f))
-                    runtimeDirty = true;
-                if (ImGui::DragFloat("Near Clip", &cam->nearClip, 0.01f, 0.01f, 100.0f))
-                    runtimeDirty = true;
-                if (ImGui::DragFloat("Far Clip", &cam->farClip, 1.0f, 1.0f, 100000.0f))
-                    runtimeDirty = true;
-                if (const engine::Transform* t = g_selNode->GetComponent<engine::Transform>()) {
-                    const DirectX::XMFLOAT3 fwd = CameraComponent::ComputeForwardWS(t);
-                    const DirectX::XMFLOAT3 up = CameraComponent::ComputeUpWS(t);
-                    const DirectX::XMFLOAT3 right = CameraComponent::ComputeRightWS(t);
-                    ImGui::Text("Forward: (%.2f, %.2f, %.2f)", fwd.x, fwd.y, fwd.z);
-                    ImGui::Text("Up:      (%.2f, %.2f, %.2f)", up.x, up.y, up.z);
-                    ImGui::Text("Right:   (%.2f, %.2f, %.2f)", right.x, right.y, right.z);
-                    ImGui::TextDisabled("Wire: blue=fwd green=up red=right. Aim with Transform (+Z).");
-                    ImGui::TextDisabled("View uses world-up bank (no upside-down past 90 pitch).");
-                }
-                EditorUndo_EndComponentEdit(g_selNode, "Camera");
-                ImGui::Spacing();
-            }
-
-            if (PointLightComponent* pl = g_selNode->GetComponent<PointLightComponent>()) {
-                ImGui::Separator();
-                ImGui::Text("Point Light");
-                EditorUndo_BeginComponentEdit(g_selNode, "PointLight");
-                if (ImGui::Checkbox("Enabled", &pl->enabled)) runtimeDirty = true;
-                if (ImGui::ColorEdit3("Color", &pl->color.x)) runtimeDirty = true;
-                if (ImGui::DragFloat("Intensity", &pl->intensity, 0.05f, 0.0f, 10.0f)) runtimeDirty = true;
-                if (ImGui::ColorEdit3("Specular", &pl->specColor.x)) runtimeDirty = true;
-                if (ImGui::DragFloat("Spec Power", &pl->specPower, 1.0f, 1.0f, 256.0f)) runtimeDirty = true;
-                if (ImGui::DragFloat("Range", &pl->range, 0.1f, 0.1f, 100.0f)) runtimeDirty = true;
-                ImGui::Text("Attenuation (kc, kl, kq)");
-                if (ImGui::DragFloat3("##PtAtten", &pl->attenuation.x, 0.01f, 0.0f, 10.0f)) runtimeDirty = true;
-                ImGui::TextDisabled("Shader: Point (Pixel) on Visual component.");
-                EditorUndo_EndComponentEdit(g_selNode, "PointLight");
-                ImGui::Spacing();
-            }
-
-            if (SpotLightComponent* sl = g_selNode->GetComponent<SpotLightComponent>()) {
-                ImGui::Separator();
-                ImGui::Text("Spot Light");
-                EditorUndo_BeginComponentEdit(g_selNode, "SpotLight");
-                if (ImGui::Checkbox("Enabled", &sl->enabled)) runtimeDirty = true;
-                if (ImGui::ColorEdit3("Color", &sl->color.x)) runtimeDirty = true;
-                if (ImGui::DragFloat("Intensity", &sl->intensity, 0.05f, 0.0f, 10.0f)) runtimeDirty = true;
-                if (ImGui::ColorEdit3("Specular", &sl->specColor.x)) runtimeDirty = true;
-                if (ImGui::DragFloat("Spec Power", &sl->specPower, 1.0f, 1.0f, 256.0f)) runtimeDirty = true;
-                if (ImGui::DragFloat("Range", &sl->range, 0.1f, 0.1f, 100.0f)) runtimeDirty = true;
-                if (ImGui::DragFloat("Inner Angle", &sl->innerAngleDeg, 0.5f, 0.0f, 89.0f)) runtimeDirty = true;
-                if (ImGui::DragFloat("Outer Angle", &sl->outerAngleDeg, 0.5f, 0.0f, 89.0f)) runtimeDirty = true;
-                if (ImGui::Checkbox("Cast Shadows", &sl->castShadows)) runtimeDirty = true;
-                ImGui::Text("Attenuation (kc, kl, kq)");
-                if (ImGui::DragFloat3("##SpAtten", &sl->attenuation.x, 0.01f, 0.0f, 10.0f)) runtimeDirty = true;
-                if (const engine::Transform* t = g_selNode->GetComponent<engine::Transform>()) {
-                    const DirectX::XMFLOAT3 shine = LightGizmo::GetShineDirectionWS(t);
-                    ImGui::Text("Direction: (%.2f, %.2f, %.2f)", shine.x, shine.y, shine.z);
-                    ImGui::TextDisabled("Rotate Transform to aim spot (+Z forward).");
-                }
-                ImGui::TextDisabled("Shader: Spot (Pixel) on Visual component.");
-                EditorUndo_EndComponentEdit(g_selNode, "SpotLight");
-                ImGui::Spacing();
-            }
-
-            if (ColliderComponent* cc = FindColliderComponent(g_selNode)) {
-                ImGui::Separator();
-                const char* colliderTypeName=cc->GetTypeName();
-                const char* colliderLabels[]={"Collider (Legacy)","Box Collider","Sphere Collider","Capsule Collider","Mesh Collider","Cylinder Collider"};
-                const int colliderIndex=static_cast<int>(cc->colliderType);
-                ImGui::TextUnformatted(colliderIndex>=0&&colliderIndex<IM_ARRAYSIZE(colliderLabels)?colliderLabels[colliderIndex]:"Collider (Legacy)");
-                EditorUndo_BeginComponentEdit(g_selNode, colliderTypeName);
-                auto noteColliderEdit = [&](bool edited) {
-                    if (edited)
-                        runtimeDirty = true;
-                };
-                if (cc->colliderType != ColliderType::NONE) {
-                    ImGui::Text("Center");
-                    ImGui::Text("X:"); ImGui::SameLine(40);
-                    noteColliderEdit(ImGui::DragFloat("##CCX", &cc->colliderCenter.x, 0.1f));
-                    noteColliderEdit(ScrollValue(&cc->colliderCenter.x));
-                    ImGui::Text("Y:"); ImGui::SameLine(40);
-                    noteColliderEdit(ImGui::DragFloat("##CCY", &cc->colliderCenter.y, 0.1f));
-                    noteColliderEdit(ScrollValue(&cc->colliderCenter.y));
-                    ImGui::Text("Z:"); ImGui::SameLine(40);
-                    noteColliderEdit(ImGui::DragFloat("##CCZ", &cc->colliderCenter.z, 0.1f));
-                    noteColliderEdit(ScrollValue(&cc->colliderCenter.z));
-                }
-                if (cc->colliderType == ColliderType::BOX) {
-                    ImGui::Text("Half Extents");
-                    ImGui::Text("X:"); ImGui::SameLine(40);
-                    noteColliderEdit(ImGui::DragFloat("##HEX", &cc->halfExtents.x, 0.1f));
-                    ImGui::Text("Y:"); ImGui::SameLine(40);
-                    noteColliderEdit(ImGui::DragFloat("##HEY", &cc->halfExtents.y, 0.1f));
-                    ImGui::Text("Z:"); ImGui::SameLine(40);
-                    noteColliderEdit(ImGui::DragFloat("##HEZ", &cc->halfExtents.z, 0.1f));
-                }
-                else if (cc->colliderType == ColliderType::SPHERE) {
-                    ImGui::Text("Radius:"); ImGui::SameLine(80);
-                    noteColliderEdit(ImGui::DragFloat("##Rad", &cc->radius, 0.1f));
-                }
-                else if (cc->colliderType == ColliderType::CAPSULE) {
-                    ImGui::Text("Radius:"); ImGui::SameLine(80);
-                    noteColliderEdit(ImGui::DragFloat("##CRad", &cc->radius, 0.1f));
-                    ImGui::Text("Height:"); ImGui::SameLine(80);
-                    noteColliderEdit(ImGui::DragFloat("##CHei", &cc->height, 0.1f));
-                }
-                else if (cc->colliderType == ColliderType::CYLINDER) {
-                    ImGui::Text("Radius:"); ImGui::SameLine(80);
-                    noteColliderEdit(ImGui::DragFloat("##CyRad", &cc->radius, 0.1f));
-                    ImGui::Text("Height:"); ImGui::SameLine(80);
-                    noteColliderEdit(ImGui::DragFloat("##CyHei", &cc->height, 0.1f));
-                }
-                else if (cc->colliderType == ColliderType::MESH) {
-                    ImGui::Text("Size Padding:"); ImGui::SameLine(100);
-                    noteColliderEdit(ImGui::DragFloat("##MSP", &cc->meshSizePadding, 0.01f, 0.0f, 10.0f));
-                }
-                if (cc->colliderType == ColliderType::BOX
-                    || cc->colliderType == ColliderType::SPHERE
-                    || cc->colliderType == ColliderType::CAPSULE
-                    || cc->colliderType == ColliderType::CYLINDER) {
-                    static GameObject* s_autoFitFailNode = nullptr;
-                    if (ImGui::Button("Auto-Fit")) {
-                        if (AutoFitColliderToMesh(g_selNode, cc)) {
-                            s_autoFitFailNode = nullptr;
-                            runtimeDirty = true;
-                            ImGui::MarkItemEdited(ImGui::GetItemID());
-                        } else {
-                            s_autoFitFailNode = g_selNode;
-                        }
-                    }
-                    if (s_autoFitFailNode == g_selNode)
-                        ImGui::TextDisabled("Auto-Fit: no usable mesh vertices.");
-                }
-                if (ImGui::Checkbox("Show Debug Collider", &cc->showDebugCollider)) {
-                    g_selNode->m_debugCollider = cc->showDebugCollider;
-                    runtimeDirty = true;
-                }
-                if (ImGui::Checkbox("Is Trigger", &cc->isTrigger)) {
-                    runtimeDirty = true;
-                }
-                {
-                    ImGui::Text("Physics Material");
-                    char matBuf[256];
-                    strncpy_s(matBuf, cc->physicsMaterial.c_str(), sizeof(matBuf) - 1);
-                    matBuf[sizeof(matBuf) - 1] = '\0';
-                    ImGui::SameLine(140);
-                    if (ImGui::InputText("##PhysMat", matBuf, sizeof(matBuf))) {
-                        cc->physicsMaterial = matBuf;
-                        runtimeDirty = true;
-                    }
-                    const char* physMatExts[] = { ".physmat" };
-                    std::string droppedPath;
-                    if (AcceptAssetPathDrop(physMatExts, IM_ARRAYSIZE(physMatExts), droppedPath)) {
-                        cc->physicsMaterial = droppedPath;
-                        runtimeDirty = true;
-                    }
-                    if (!cc->physicsMaterial.empty()) {
-                        ImGui::SameLine();
-                        if (ImGui::Button("Clear##PhysMat")) {
-                            cc->physicsMaterial.clear();
-                            runtimeDirty = true;
-                        }
-                    }
-                    if (Collider* col = g_selNode->GetCollider()) {
-                        const ContactSurface& surface = col->GetContactSurface();
-                        if (surface.assigned) {
-                            ImGui::TextDisabled(
-                                "Static %.3f  Dynamic %.3f  Restitution %.3f",
-                                surface.staticFriction, surface.dynamicFriction, surface.restitution);
-                        } else if (!cc->physicsMaterial.empty()) {
-                            ImGui::TextDisabled("Not loaded; using rigidbody friction/restitution.");
-                        }
-                    }
-                }
-                EditorUndo_EndComponentEdit(g_selNode, colliderTypeName);
-                if (ImGui::Button("Remove Collider")) {
-                    EditorUndo_PushRemoveComponent(g_selNode, colliderTypeName);
-                    RemoveColliderComponent(g_selNode);
-                    runtimeDirty = true;
-                }
-                ImGui::Spacing();
-            }
-
-            if (RigidbodyComponent* rbc = g_selNode->GetComponent<RigidbodyComponent>()) {
-                ImGui::Separator();
-                ImGui::Text("Rigidbody");
-                EditorUndo_BeginComponentEdit(g_selNode, "Rigidbody");
-                Rigidbody& rb = rbc->Body();
-
-                bool useGravity = rb.UseGravity();
-                if (ImGui::Checkbox("Use Gravity", &useGravity)) {
-                    rb.SetUseGravity(useGravity);
-                    runtimeDirty = true;
-                }
-
-                bool isKinematic = rb.IsKinematic();
-                if (ImGui::Checkbox("Is Kinematic", &isKinematic)) {
-                    rb.SetIsKinematic(isKinematic);
-                    runtimeDirty = true;
-                }
-
-                float mass = rb.GetMass();
-                if (ImGui::DragFloat("Mass", &mass, 0.05f, 0.001f, 1000.0f)) {
-                    rb.SetMass(mass);
-                    runtimeDirty = true;
-                }
-
-                float drag = rb.GetDrag();
-                if (ImGui::DragFloat("Drag", &drag, 0.01f, 0.0f, 50.0f)) {
-                    rb.SetDrag(drag);
-                    runtimeDirty = true;
-                }
-
-                float angularDrag = rb.GetAngularDrag();
-                if (ImGui::DragFloat("Angular Drag", &angularDrag, 0.01f, 0.0f, 50.0f)) {
-                    rb.SetAngularDrag(angularDrag);
-                    runtimeDirty = true;
-                }
-
-                float restitution = rb.GetRestitution();
-                if (ImGui::DragFloat("Restitution", &restitution, 0.01f, 0.0f, 2.0f)) {
-                    rb.SetRestitution(restitution);
-                    runtimeDirty = true;
-                }
-
-                float friction = rb.GetFriction();
-                if (ImGui::DragFloat("Friction", &friction, 0.01f, 0.0f, 10.0f)) {
-                    rb.SetFriction(friction);
-                    runtimeDirty = true;
-                }
-
-                EditorUndo_EndComponentEdit(g_selNode, "Rigidbody");
-                if (ImGui::Button("Remove Rigidbody")) {
-                    EditorUndo_PushRemoveComponent(g_selNode, "Rigidbody");
-                    g_selNode->RemoveComponent<RigidbodyComponent>();
-                    runtimeDirty = true;
-                }
-                ImGui::Spacing();
-            }
-
-            // Material property editor
-            if (MaterialComponent* mc = g_selNode->GetComponent<MaterialComponent>()) {
-                ImGui::Separator();
-                ImGui::Text("Material");
-                EditorUndo_BeginComponentEdit(g_selNode, "Material");
-
-                if (ImGui::ColorEdit3("Color", &mc->color.x))
-                    runtimeDirty = true;
-                if (ImGui::DragFloat("Roughness", &mc->roughness, 0.01f, 0.0f, 1.0f))
-                    runtimeDirty = true;
-                if (ImGui::DragFloat("Metallic", &mc->metallic, 0.01f, 0.0f, 1.0f))
-                    runtimeDirty = true;
-
-                char nbuf[256];
-                strncpy_s(nbuf, mc->normalMapPath.c_str(), sizeof(nbuf) - 1);
-                nbuf[sizeof(nbuf) - 1] = '\0';
-                ImGui::Text("Normal Map");
-                if (ImGui::InputText("##MatNormal", nbuf, sizeof(nbuf))) {
-                    mc->normalMapPath = nbuf;
-                    runtimeDirty = true;
-                }
-                {
-                    const char* texExts[] = { ".png", ".jpg", ".jpeg", ".tga", ".bmp", ".dds" };
-                    std::string droppedPath;
-                    if (AcceptAssetPathDrop(texExts, IM_ARRAYSIZE(texExts), droppedPath)) {
-                        mc->normalMapPath = droppedPath;
-                        runtimeDirty = true;
-                    }
-                }
-                if (ImGui::DragFloat("Normal Strength", &mc->normalStrength, 0.05f, 0.0f, 4.0f))
-                    runtimeDirty = true;
-
-                // Toon fields (useful when shader is "toon"; harmless otherwise)
-                {
-                    VisualComponent* vc = g_selNode->GetComponent<VisualComponent>();
-                    const bool isToon = vc && (
-                        vc->shaderOverride == "toon"
-                        || (vc->shaderOverride.empty()
-                            && RenderSettings_GetDefaultShader() == Shader3DVariant::Toon));
-                    if (isToon || ImGui::TreeNode("Toon / Outline")) {
-                        if (isToon)
-                            ImGui::TextDisabled("Toon / Outline");
-                        if (ImGui::DragFloat("Shade Steps", &mc->shadeSteps, 0.1f, 1.0f, 8.0f))
-                            runtimeDirty = true;
-                        if (ImGui::DragFloat("Shade Smoothness", &mc->shadeSmoothness, 0.005f, 0.0f, 0.5f))
-                            runtimeDirty = true;
-                        if (ImGui::DragFloat("Spec Threshold", &mc->specularThreshold, 0.01f, 0.0f, 1.0f))
-                            runtimeDirty = true;
-                        if (ImGui::DragFloat("Rim Strength", &mc->rimStrength, 0.01f, 0.0f, 2.0f))
-                            runtimeDirty = true;
-                        if (ImGui::ColorEdit3("Shadow Tint", &mc->shadowTint.x))
-                            runtimeDirty = true;
-                        if (ImGui::DragFloat("Outline Width", &mc->outlineWidth, 0.0005f, 0.0f, 0.05f, "%.4f"))
-                            runtimeDirty = true;
-                        if (ImGui::ColorEdit4("Outline Color", &mc->outlineColor.x))
-                            runtimeDirty = true;
-
-                        char rbuf[256];
-                        strncpy_s(rbuf, mc->rampTexturePath.c_str(), sizeof(rbuf) - 1);
-                        rbuf[sizeof(rbuf) - 1] = '\0';
-                        ImGui::Text("Ramp Texture (optional)");
-                        if (ImGui::InputText("##MatRamp", rbuf, sizeof(rbuf))) {
-                            mc->rampTexturePath = rbuf;
-                            runtimeDirty = true;
-                        }
-                        {
-                            const char* texExts[] = { ".png", ".jpg", ".jpeg", ".tga", ".bmp", ".dds" };
-                            std::string droppedPath;
-                            if (AcceptAssetPathDrop(texExts, IM_ARRAYSIZE(texExts), droppedPath)) {
-                                mc->rampTexturePath = droppedPath;
-                                runtimeDirty = true;
-                            }
-                        }
-                        if (!isToon)
-                            ImGui::TreePop();
-                    }
-                }
-
-                EditorUndo_EndComponentEdit(g_selNode, "Material");
-                if (ImGui::Button("Remove Material")) {
-                    EditorUndo_PushRemoveComponent(g_selNode, "Material");
-                    g_selNode->RemoveComponent<MaterialComponent>();
-                    runtimeDirty = true;
-                }
-                ImGui::Spacing();
-            }
-
-            // Effect property editor
-            if (EffectComponent* ec = g_selNode->GetComponent<EffectComponent>()) {
-                ImGui::Separator();
-                ImGui::Text("Effect");
-                EditorUndo_BeginComponentEdit(g_selNode, "Effect");
-
-                std::string path = ec->effectPath;
-                char buf[256];
-                strncpy_s(buf, path.c_str(), sizeof(buf) - 1);
-                buf[sizeof(buf) - 1] = '\0';
-                ImGui::Text("Path"); ImGui::SameLine(60);
-                if (ImGui::InputText("##EffPath", buf, sizeof(buf))) {
-                    ec->SetEffectPath(buf);
-                    runtimeDirty = true;
-                }
-                {
-                    const char* effectExts[] = { ".efk", ".efkefc" };
-                    std::string droppedPath;
-                    if (AcceptAssetPathDrop(effectExts, IM_ARRAYSIZE(effectExts), droppedPath)) {
-                        ec->SetEffectPath(droppedPath.c_str());
-                        runtimeDirty = true;
-                    }
-                }
-
-                if (ImGui::Checkbox("Auto Play", &ec->autoPlay)) {
-                    runtimeDirty = true;
-                }
-
-                if (ImGui::Checkbox("Auto Destroy", &ec->autoDestroy)) {
-                    runtimeDirty = true;
-                }
-
-                ImGui::Text("Speed"); ImGui::SameLine(60);
-                if (ImGui::SliderFloat("##EffSpeed", &ec->speed, 0.0f, 5.0f)) {
-                    runtimeDirty = true;
-                }
-
-                if (ImGui::Button("Play")) {
-                    ec->Play();
-                }
-                ImGui::SameLine();
-                if (ImGui::Button("Stop")) {
-                    ec->Stop();
-                }
-
-                EditorUndo_EndComponentEdit(g_selNode, "Effect");
-                if (ImGui::Button("Remove Effect")) {
-                    EditorUndo_PushRemoveComponent(g_selNode, "Effect");
-                    g_selNode->RemoveComponent<EffectComponent>();
-                    runtimeDirty = true;
-                }
-                ImGui::Spacing();
-            }
-
-            if (AudioComponent* ac = g_selNode->GetComponent<AudioComponent>()) {
-                ImGui::Separator();
-                ImGui::Text("Audio");
-                EditorUndo_BeginComponentEdit(g_selNode, "Audio");
-
-                std::string path = ac->clipPath;
-                char buf[256];
-                strncpy_s(buf, path.c_str(), sizeof(buf) - 1);
-                buf[sizeof(buf) - 1] = '\0';
-                ImGui::Text("Clip"); ImGui::SameLine(80);
-                if (ImGui::InputText("##AudioClip", buf, sizeof(buf))) {
-                    ac->SetClipPath(buf);
-                    runtimeDirty = true;
-                }
-                {
-                    const char* wavExts[] = { ".wav" };
-                    std::string droppedPath;
-                    if (AcceptAssetPathDrop(wavExts, IM_ARRAYSIZE(wavExts), droppedPath)) {
-                        ac->SetClipPath(droppedPath);
-                        runtimeDirty = true;
-                    }
-                }
-
-                const char* busPreview = "SFX";
-                if (ac->bus == AudioType::BGM) busPreview = "BGM";
-                else if (ac->bus == AudioType::VOICE) busPreview = "Voice";
-                ImGui::Text("Bus"); ImGui::SameLine(80);
-                if (ImGui::BeginCombo("##AudioBus", busPreview)) {
-                    if (ImGui::Selectable("BGM", ac->bus == AudioType::BGM)) {
-                        ac->bus = AudioType::BGM;
-                        runtimeDirty = true;
-                    }
-                    if (ImGui::Selectable("SFX", ac->bus == AudioType::SFX)) {
-                        ac->bus = AudioType::SFX;
-                        runtimeDirty = true;
-                    }
-                    if (ImGui::Selectable("Voice", ac->bus == AudioType::VOICE)) {
-                        ac->bus = AudioType::VOICE;
-                        runtimeDirty = true;
-                    }
-                    ImGui::EndCombo();
-                }
-
-                ImGui::Text("Volume"); ImGui::SameLine(80);
-                if (ImGui::SliderFloat("##AudioVol", &ac->volume, 0.0f, 1.0f, "%.2f")) {
-                    ac->ApplyLiveSettings();
-                    runtimeDirty = true;
-                }
-
-                if (ImGui::Checkbox("Loop", &ac->loop))
-                    runtimeDirty = true;
-                if (ImGui::Checkbox("Play On Awake", &ac->autoPlay))
-                    runtimeDirty = true;
-                if (ImGui::Checkbox("3D", &ac->spatial))
-                    runtimeDirty = true;
-                if (ac->spatial) {
-                    ImGui::Text("Range"); ImGui::SameLine(80);
-                    if (ImGui::DragFloat("##AudioRange", &ac->distanceScale, 0.5f, 0.1f, 500.0f, "%.1f")) {
-                        ac->ApplyLiveSettings();
-                        runtimeDirty = true;
-                    }
-                }
-
-                if (ImGui::Button("Play##Audio"))
-                    ac->Play();
-                ImGui::SameLine();
-                if (ImGui::Button("Stop##Audio"))
-                    ac->Stop();
-
-                EditorUndo_EndComponentEdit(g_selNode, "Audio");
-                if (ImGui::Button("Remove Audio")) {
-                    EditorUndo_PushRemoveComponent(g_selNode, "Audio");
-                    g_selNode->RemoveComponent<AudioComponent>();
-                    runtimeDirty = true;
-                }
-                ImGui::Spacing();
-            }
-
-            if (AudioListenerComponent* alc = g_selNode->GetComponent<AudioListenerComponent>()) {
-                (void)alc;
-                ImGui::Separator();
-                ImGui::Text("AudioListener");
-                ImGui::TextDisabled("3D ear. Active camera's listener is used.");
-                if (ImGui::Button("Remove AudioListener")) {
-                    EditorUndo_PushRemoveComponent(g_selNode, "AudioListener");
-                    g_selNode->RemoveComponent<AudioListenerComponent>();
-                    runtimeDirty = true;
-                }
-                ImGui::Spacing();
-            }
-
-            // Script property editor
-            if (ScriptComponent* sc = g_selNode->GetComponent<ScriptComponent>()) {
-                Script* script = sc->GetScript();
-                ImGui::Separator();
-                ImGui::TextColored(ImVec4(0.3f, 0.8f, 1.0f, 1.0f),
-                    "Script: %s", sc->GetScriptClass().c_str());
-                if (script) {
-                    EditorUndo_BeginComponentEdit(g_selNode, "Script");
-                    nlohmann::json props = sc->GetEditableProperties();
-                    if (props.is_object() && !props.empty()) {
-                        bool changed = false;
-                        for (auto& [key, val] : props.items()) {
-                            if (DrawScriptPropertyField(g_selNode, key, val))
-                                changed = true;
-                        }
-                        if (changed) {
-                            sc->ApplyProperties(props);
-                            runtimeDirty = true;
-                        }
-                    }
-                    else {
-                        ImGui::TextDisabled("(no editable properties)");
-                    }
-                    EditorUndo_EndComponentEdit(g_selNode, "Script");
-                }
-                else {
-                    ImGui::TextDisabled("(script not loaded)");
-                }
-                if (ImGui::Button("Remove Script")) {
-                    EditorUndo_PushRemoveComponent(g_selNode, "Script");
-                    g_selNode->RemoveComponent<ScriptComponent>();
-                    runtimeDirty = true;
-                }
-                ImGui::Spacing();
-            }
-
-            // 2D physics settings are authored before Play; runtime owns the bodies.
-            if (auto* body = g_selNode->GetComponent<Rigidbody2DComponent>()) {
-                ImGui::Separator();
-                ImGui::TextUnformatted("Rigidbody 2D");
-                ImGui::PushID("Rigidbody2D");
-                ImGui::BeginDisabled(EngineGUI_IsPlaying());
-                EditorUndo_BeginComponentEdit(g_selNode, "Rigidbody2D");
-                ImGui::PushItemWidth(-1);
-                ImGui::TextUnformatted("Body Type");
-                int type = static_cast<int>(body->bodyType);
-                if (ImGui::Combo("##Type", &type, "Static\0Dynamic\0Kinematic\0")) {
-                    body->bodyType = static_cast<BodyType2D>(type);
-                    runtimeDirty = true;
-                }
-                auto number = [&](const char* label, float* value, float minimum, float maximum) {
-                    ImGui::TextUnformatted(label);
-                    std::string id = std::string("##") + label;
-                    if (ImGui::DragFloat(id.c_str(), value, 0.01f, minimum, maximum)) runtimeDirty = true;
-                };
-                number("Mass", &body->mass, 0.001f, 100000.0f);
-                number("Gravity Scale", &body->gravityScale, -100.0f, 100.0f);
-                number("Linear Damping", &body->linearDamping, 0.0f, 100.0f);
-                ImGui::TextUnformatted("Initial Velocity (XY)");
-                if (ImGui::DragFloat2("##Velocity", &body->initialVelocity.x, 0.01f)) runtimeDirty = true;
-                if (ImGui::Checkbox("Fixed Rotation", &body->fixedRotation)) runtimeDirty = true;
-                if (ImGui::Checkbox("Continuous Collision", &body->bullet)) runtimeDirty = true;
-                ImGui::PopItemWidth();
-                ImGui::TextWrapped("Dynamic and kinematic bodies must be root objects with uniform positive XY scale. Edit physics settings before Play.");
-                EditorUndo_EndComponentEdit(g_selNode, "Rigidbody2D");
-                if (ImGui::Button("Remove Rigidbody 2D")) {
-                    EditorUndo_PushRemoveComponent(g_selNode, "Rigidbody2D");
-                    g_selNode->RemoveComponent<Rigidbody2DComponent>();
-                    runtimeDirty = true;
-                }
-                ImGui::EndDisabled();
-                ImGui::PopID();
-            }
-            if (auto* collider = g_selNode->GetComponent<Collider2DComponent>()) {
-                ImGui::Separator();
-                ImGui::TextUnformatted("Collider 2D");
-                ImGui::PushID("Collider2D");
-                EditorUndo_BeginComponentEdit(g_selNode, "Collider2D");
-                if (ImGui::Checkbox("Show Debug Collider", &collider->showDebugCollider)) runtimeDirty = true;
-                EditorUndo_EndComponentEdit(g_selNode, "Collider2D");
-                ImGui::BeginDisabled(EngineGUI_IsPlaying());
-                EditorUndo_BeginComponentEdit(g_selNode, "Collider2D");
-                ImGui::PushItemWidth(-1);
-                if (ImGui::Checkbox("Enabled", &collider->enabled)) runtimeDirty = true;
-                ImGui::TextUnformatted("Shape");
-                int shape = static_cast<int>(collider->shape);
-                if (ImGui::Combo("##Shape", &shape, "Box\0Circle\0")) {
-                    collider->shape = static_cast<Shape2D>(shape);
-                    runtimeDirty = true;
-                }
-                if (collider->shape == Shape2D::Box) {
-                    ImGui::TextUnformatted("Size (XY)");
-                    if (ImGui::DragFloat2("##Size", &collider->size.x, 0.01f, 0.001f, 100000.0f)) runtimeDirty = true;
-                } else {
-                    ImGui::TextUnformatted("Radius");
-                    if (ImGui::DragFloat("##Radius", &collider->radius, 0.01f, 0.001f, 100000.0f)) runtimeDirty = true;
-                }
-                ImGui::TextUnformatted("Offset (XY)");
-                if (ImGui::DragFloat2("##Offset", &collider->offset.x, 0.01f)) runtimeDirty = true;
-                if (ImGui::Checkbox("Trigger", &collider->isTrigger)) runtimeDirty = true;
-                ImGui::TextUnformatted("Friction");
-                if (ImGui::DragFloat("##Friction", &collider->friction, 0.01f, 0.0f, 1.0f)) runtimeDirty = true;
-                ImGui::TextUnformatted("Restitution");
-                if (ImGui::DragFloat("##Restitution", &collider->restitution, 0.01f, 0.0f, 1.0f)) runtimeDirty = true;
-                ImGui::TextUnformatted("Category Bits (hex)");
-                if (ImGui::InputScalar("##Category", ImGuiDataType_U32, &collider->categoryBits, nullptr, nullptr, "%08X", ImGuiInputTextFlags_CharsHexadecimal)) runtimeDirty = true;
-                ImGui::TextUnformatted("Mask Bits (hex)");
-                if (ImGui::InputScalar("##Mask", ImGuiDataType_U32, &collider->maskBits, nullptr, nullptr, "%08X", ImGuiInputTextFlags_CharsHexadecimal)) runtimeDirty = true;
-                ImGui::PopItemWidth();
-                ImGui::TextWrapped("Box size and circle radius use local world units. Use uniform positive XY scale; settings are locked during Play.");
-                EditorUndo_EndComponentEdit(g_selNode, "Collider2D");
-                if (ImGui::Button("Remove Collider 2D")) {
-                    EditorUndo_PushRemoveComponent(g_selNode, "Collider2D");
-                    g_selNode->RemoveComponent<Collider2DComponent>();
-                    runtimeDirty = true;
-                }
-                ImGui::EndDisabled();
-                ImGui::PopID();
-            }
-
-            if (SpriteRendererComponent* sprite = g_selNode->GetComponent<SpriteRendererComponent>()) {
-                ImGui::Separator();
-                ImGui::Text("Sprite Renderer");
-                ImGui::PushID("SpriteRenderer");
-                EditorUndo_BeginComponentEdit(g_selNode, "SpriteRenderer");
-                char textureBuf[1024];
-                strncpy_s(textureBuf, sprite->texturePath.c_str(), _TRUNCATE);
-                if (ImGui::InputText("Texture", textureBuf, sizeof(textureBuf))) {
-                    sprite->texturePath = textureBuf;
-                    runtimeDirty = true;
-                }
-                const char* extensions[] = { ".png", ".jpg", ".jpeg", ".bmp" };
-                std::string droppedPath;
-                if (AcceptAssetPathDrop(extensions, IM_ARRAYSIZE(extensions), droppedPath)) {
-                    sprite->texturePath = droppedPath;
-                    runtimeDirty = true;
-                }
-                if (ImGui::DragFloat("Pixels Per Unit", &sprite->pixelsPerUnit, 1.0f, 0.01f, 100000.0f))
-                    runtimeDirty = true;
-                if (ImGui::DragFloat4("Source Rect", &sprite->sourceRect.x, 1.0f, 0.0f, 100000.0f))
-                    runtimeDirty = true;
-                ImGui::TextDisabled("Source rect: x, y, width, height in pixels. Zero size uses full texture.");
-                if(DrawPivotPreset("Pivot",sprite->pivot,sprite)) runtimeDirty=true;
-                if (ImGui::ColorEdit4("Tint", &sprite->tint.x)) runtimeDirty = true;
-                if (ImGui::Checkbox("Flip X", &sprite->flipX)) runtimeDirty = true;
-                if (ImGui::Checkbox("Flip Y", &sprite->flipY)) runtimeDirty = true;
-                if (ImGui::InputInt("Sorting Layer", &sprite->sortingLayer)) runtimeDirty = true;
-                if (ImGui::InputInt("Order In Layer", &sprite->orderInLayer)) runtimeDirty = true;
-                EditorUndo_EndComponentEdit(g_selNode, "SpriteRenderer");
-                if (ImGui::Button("Remove Sprite Renderer")) {
-                    EditorUndo_PushRemoveComponent(g_selNode, "SpriteRenderer");
-                    g_selNode->RemoveComponent<SpriteRendererComponent>();
-                    runtimeDirty = true;
-                }
-                ImGui::PopID();
-                ImGui::Spacing();
-            }
-
-            if (auto* animator = g_selNode->GetComponent<SpriteAnimatorComponent>()) {
-                ImGui::Separator();
-                ImGui::Text("Sprite Animator");
-                ImGui::PushID("SpriteAnimator");
-                EditorUndo_BeginComponentEdit(g_selNode, "SpriteAnimator");
-                bool changed = false;
-                char defaultName[256];
-                strncpy_s(defaultName, animator->defaultClip.c_str(), _TRUNCATE);
-                if (ImGui::InputText("Default Clip", defaultName, sizeof(defaultName))) {
-                    animator->defaultClip = defaultName;
-                    changed = true;
-                }
-                changed |= ImGui::Checkbox("Auto Play", &animator->autoPlay);
-                static char newClipName[256] = "idle";
-                ImGui::InputText("New Clip Name", newClipName, sizeof(newClipName));
-                if (ImGui::Button("Add Clip") && newClipName[0]) {
-                    changed |= animator->clips.emplace(newClipName, SpriteAnimationClip{}).second;
-                }
-                static char metadataPath[1024] = "";
-                static char importName[256] = "idle";
-                static bool importFailed = false;
-                ImGui::InputText("Sheet Metadata JSON", metadataPath, sizeof(metadataPath));
-                const char* jsonExtensions[] = { ".json" };
-                std::string metadataDrop;
-                if (AcceptAssetPathDrop(jsonExtensions, IM_ARRAYSIZE(jsonExtensions), metadataDrop))
-                    strncpy_s(metadataPath, metadataDrop.c_str(), _TRUNCATE);
-                ImGui::InputText("Import Clip Name", importName, sizeof(importName));
-                if (ImGui::Button("Import Sheet")) {
-                    const bool imported = animator->ImportSheet(metadataPath, importName);
-                    importFailed = !imported;
-                    changed |= imported;
-                }
-                if (importFailed) ImGui::TextDisabled("Import failed. Check metadata path and frame rectangles.");
-                for (auto it = animator->clips.begin(); it != animator->clips.end();) {
-                    ImGui::PushID(it->first.c_str());
-                    bool removeClip = false;
-                    if (ImGui::TreeNode("Clip", "%s", it->first.c_str())) {
-                        auto& clip = it->second;
-                        char texture[1024];
-                        strncpy_s(texture, clip.texture.c_str(), _TRUNCATE);
-                        if (ImGui::InputText("Texture", texture, sizeof(texture))) {
-                            clip.texture = texture;
-                            changed = true;
-                        }
-                        const char* extensions[] = { ".png", ".jpg", ".jpeg", ".bmp" };
-                        std::string droppedPath;
-                        if (AcceptAssetPathDrop(extensions, IM_ARRAYSIZE(extensions), droppedPath)) {
-                            clip.texture = droppedPath;
-                            changed = true;
-                        }
-                        float fps = static_cast<float>(clip.fps);
-                        if (ImGui::DragFloat("FPS", &fps, 0.1f, 0.01f, 1000.0f)) {
-                            clip.fps = (std::max)(0.01f, fps);
-                            changed = true;
-                        }
-                        changed |= ImGui::Checkbox("Loop", &clip.loop);
-                        for (size_t i = 0; i < clip.frames.size();) {
-                            ImGui::PushID(static_cast<int>(i));
-                            auto& frame = clip.frames[i];
-                            float rect[] = {frame.x, frame.y, frame.w, frame.h};
-                            if (ImGui::DragFloat4("Frame XYWH", rect, 1.0f, 0.0f, 100000.0f)) {
-                                frame = {rect[0], rect[1], (std::max)(1.0f, rect[2]), (std::max)(1.0f, rect[3])};
-                                changed = true;
-                            }
-                            const bool removeFrame = ImGui::Button("Remove Frame");
-                            ImGui::PopID();
-                            if (removeFrame) {
-                                clip.frames.erase(clip.frames.begin() + i);
-                                changed = true;
-                            } else ++i;
-                        }
-                        if (ImGui::Button("Add Frame")) {
-                            clip.frames.push_back(SpriteAnimationFrame{});
-                            changed = true;
-                        }
-                        removeClip = ImGui::Button("Remove Clip");
-                        ImGui::TreePop();
-                    }
-                    ImGui::PopID();
-                    if (removeClip) {
-                        if (animator->defaultClip == it->first) animator->defaultClip.clear();
-                        it = animator->clips.erase(it);
-                        changed = true;
-                    } else ++it;
-                }
-                if (changed) {
-                    animator->OnReset();
-                    runtimeDirty = true;
-                }
-                EditorUndo_EndComponentEdit(g_selNode, "SpriteAnimator");
-                if (ImGui::Button("Remove Sprite Animator")) {
-                    EditorUndo_PushRemoveComponent(g_selNode, "SpriteAnimator");
-                    g_selNode->RemoveComponent<SpriteAnimatorComponent>();
-                    runtimeDirty = true;
-                }
-                ImGui::PopID();
-                ImGui::Spacing();
-            }
-
-            if (BillboardComponent* bbc = g_selNode->GetComponent<BillboardComponent>()) {
-                ImGui::Separator();
-                ImGui::Text("Billboard");
-                EditorUndo_BeginComponentEdit(g_selNode, "Billboard");
-
-                char texBuf[256];
-                strncpy_s(texBuf, bbc->texturePath.c_str(), sizeof(texBuf) - 1);
-                texBuf[sizeof(texBuf) - 1] = '\0';
-                ImGui::Text("Texture");
-                if (ImGui::InputText("##BillboardTex", texBuf, sizeof(texBuf))) {
-                    bbc->texturePath = texBuf;
-                    bbc->InvalidateTextureCache();
-                    runtimeDirty = true;
-                }
-                {
-                    const char* texExts[] = { ".png", ".jpg", ".jpeg", ".tga", ".bmp", ".dds" };
-                    std::string droppedPath;
-                    if (AcceptAssetPathDrop(texExts, IM_ARRAYSIZE(texExts), droppedPath)) {
-                        bbc->texturePath = droppedPath;
-                        bbc->InvalidateTextureCache();
-                        runtimeDirty = true;
-                    }
-                }
-                if (ImGui::DragFloat("Size X", &bbc->sizeX, 0.05f, 0.01f, 1000.0f))
-                    runtimeDirty = true;
-                if (ImGui::DragFloat("Size Y", &bbc->sizeY, 0.05f, 0.01f, 1000.0f))
-                    runtimeDirty = true;
-                if (ImGui::ColorEdit4("Color##Billboard", &bbc->color.x))
-                    runtimeDirty = true;
-                if (ImGui::DragFloat("Rotation##Billboard", &bbc->rotation, 0.5f))
-                    runtimeDirty = true;
-                if (ImGui::Checkbox("Ground Aligned", &bbc->groundAligned))
-                    runtimeDirty = true;
-                if (ImGui::Checkbox("Enabled##Billboard", &bbc->enabled))
-                    runtimeDirty = true;
-
-                EditorUndo_EndComponentEdit(g_selNode, "Billboard");
-                if (ImGui::Button("Remove Billboard")) {
-                    EditorUndo_PushRemoveComponent(g_selNode, "Billboard");
-                    g_selNode->RemoveComponent<BillboardComponent>();
-                    runtimeDirty = true;
-                }
-                ImGui::Spacing();
-            }
-
-            if (TerrainComponent* tc = g_selNode->GetComponent<TerrainComponent>()) {
-                ImGui::Separator();
-                ImGui::Text("Terrain");
-                ImGui::PushID("TerrainSection");
-                EditorUndo_BeginComponentEdit(g_selNode, "Terrain");
-                terrain::Settings& ts = tc->settings;
-
-                char hmBuf[256];
-                strncpy_s(hmBuf, ts.heightmap.c_str(), sizeof(hmBuf) - 1);
-                hmBuf[sizeof(hmBuf) - 1] = '\0';
-                ImGui::Text("Heightmap (.r16, empty = flat)");
-                if (ImGui::InputText("##TerrainHeightmap", hmBuf, sizeof(hmBuf))) {
-                    ts.heightmap = hmBuf;
-                    tc->InvalidateHeightmap();
-                    runtimeDirty = true;
-                }
-                {
-                    const char* hmExts[] = { ".r16" };
-                    std::string droppedPath;
-                    if (AcceptAssetPathDrop(hmExts, IM_ARRAYSIZE(hmExts), droppedPath)) {
-                        ts.heightmap = droppedPath;
-                        tc->InvalidateHeightmap();
-                        runtimeDirty = true;
-                    }
-                }
-                if (ImGui::Button("Reload Heightmap"))
-                    tc->InvalidateHeightmap();
-                tc->EnsureLoaded();
-                if (tc->IsLoaded()) {
-                    const terrain::ChunkGrid& grid = tc->GetChunkGrid();
-                    ImGui::TextDisabled("%d x %d samples, %d x %d chunks of %d cells",
-                        tc->GetHeightmap().resolution, tc->GetHeightmap().resolution,
-                        grid.chunksPerSide, grid.chunksPerSide, grid.chunkQuads);
-                } else if (!tc->GetLoadError().empty()) {
-                    ImGui::TextColored(ImVec4(1.0f, 0.45f, 0.35f, 1.0f), "%s", tc->GetLoadError().c_str());
-                }
-
-                if (ImGui::DragFloat("Size X", &ts.layout.sizeX, 1.0f, terrain::kMinSize, terrain::kMaxSize))
-                    runtimeDirty = true;
-                if (ImGui::DragFloat("Size Z", &ts.layout.sizeZ, 1.0f, terrain::kMinSize, terrain::kMaxSize))
-                    runtimeDirty = true;
-                if (ImGui::DragFloat("Height Scale", &ts.layout.heightScale, 0.5f, 0.0f, terrain::kMaxHeightScale))
-                    runtimeDirty = true;
-                if (ImGui::DragFloat("Height Offset", &ts.layout.heightOffset, 0.5f,
-                        -terrain::kMaxHeightOffset, terrain::kMaxHeightOffset))
-                    runtimeDirty = true;
-                ImGui::TextDisabled("Position moves the terrain; rotation and scale are ignored.");
-
-                {
-                    static const int kChunkSizes[] = { 8, 16, 32, 64, 128, 256 };
-                    char preview[16];
-                    snprintf(preview, sizeof(preview), "%d", ts.chunkQuads);
-                    if (ImGui::BeginCombo("Chunk Cells", preview)) {
-                        for (int q : kChunkSizes) {
-                            char label[16];
-                            snprintf(label, sizeof(label), "%d", q);
-                            if (ImGui::Selectable(label, ts.chunkQuads == q)) {
-                                ts.chunkQuads = q;
-                                runtimeDirty = true;
-                            }
-                        }
-                        ImGui::EndCombo();
-                    }
-                }
-                if (ImGui::DragFloat("LOD Bias##Terrain", &ts.lodBias, 0.05f, terrain::kMinLodBias, terrain::kMaxLodBias))
-                    runtimeDirty = true;
-
-                {
-                    // Paint layers (ADR 0011 step 5). Layer 0 mirrors the legacy texture fields.
-                    ImGui::Text("Layers (paint them with the Paint tool below)");
-                    std::vector<terrain::LayerSettings> layers = terrain::EffectiveLayers(ts);
-                    bool layersChanged = false;
-                    for (int i = 0; i < static_cast<int>(layers.size()); ++i) {
-                        ImGui::PushID(i);
-                        char layerBuf[256];
-                        strncpy_s(layerBuf, layers[i].texture.c_str(), sizeof(layerBuf) - 1);
-                        layerBuf[sizeof(layerBuf) - 1] = '\0';
-                        ImGui::Text("Layer %d", i + 1);
-                        if (ImGui::InputText("##TerrainLayerTex", layerBuf, sizeof(layerBuf))) {
-                            layers[i].texture = layerBuf;
-                            layersChanged = true;
-                        }
-                        const char* texExts[] = { ".png", ".jpg", ".jpeg", ".tga", ".bmp", ".dds" };
-                        std::string droppedPath;
-                        if (AcceptAssetPathDrop(texExts, IM_ARRAYSIZE(texExts), droppedPath)) {
-                            layers[i].texture = droppedPath;
-                            layersChanged = true;
-                        }
-                        if (ImGui::DragFloat("Tile Size (m)", &layers[i].tileSize, 0.1f,
-                                terrain::kMinTextureTileSize, terrain::kMaxTextureTileSize))
-                            layersChanged = true;
-                        ImGui::PopID();
-                    }
-                    if (layers.size() < static_cast<size_t>(terrain::kMaxLayers) && ImGui::Button("Add Layer")) {
-                        layers.push_back(terrain::LayerSettings{});
-                        layersChanged = true;
-                    }
-                    if (layers.size() > 1) {
-                        if (layers.size() < static_cast<size_t>(terrain::kMaxLayers)) ImGui::SameLine();
-                        if (ImGui::Button("Remove Last Layer")) {
-                            layers.pop_back();
-                            layersChanged = true;
-                        }
-                    }
-                    if (layersChanged) {
-                        ts.layers = layers;
-                        ts.texture = layers[0].texture;
-                        ts.textureTileSize = layers[0].tileSize;
-                        tc->InvalidateTexture();
-                        runtimeDirty = true;
-                    }
-                }
-                {
-                    float color[3] = { ts.colorR, ts.colorG, ts.colorB };
-                    if (ImGui::ColorEdit3("Color##Terrain", color)) {
-                        ts.colorR = color[0];
-                        ts.colorG = color[1];
-                        ts.colorB = color[2];
-                        runtimeDirty = true;
-                    }
-                }
-                if (ImGui::SliderFloat("Roughness##Terrain", &ts.roughness, 0.0f, 1.0f))
-                    runtimeDirty = true;
-                if (ImGui::SliderFloat("Metallic##Terrain", &ts.metallic, 0.0f, 1.0f))
-                    runtimeDirty = true;
-                if (ImGui::Checkbox("Cast Shadows##Terrain", &ts.castShadows))
-                    runtimeDirty = true;
-                if (ImGui::Checkbox("Enabled##Terrain", &ts.enabled))
-                    runtimeDirty = true;
-                if (ImGui::Checkbox("Collision##Terrain", &ts.collision))
-                    runtimeDirty = true;
-                if (ts.collision && FindColliderComponent(g_selNode))
-                    ImGui::TextDisabled("This object's collider component is used instead.");
-                ts = terrain::SanitizeSettings(ts);
-
-                EditorUndo_EndComponentEdit(g_selNode, "Terrain");
-                TerrainEditor_DrawInspector(g_selNode, *tc);
-                if (ImGui::Button("Remove Terrain")) {
-                    EditorUndo_PushRemoveComponent(g_selNode, "Terrain");
-                    g_selNode->RemoveComponent<TerrainComponent>();
-                    runtimeDirty = true;
-                }
-                ImGui::PopID();
-                ImGui::Spacing();
-            }
-
-            ImGui::Separator();
-            ImGui::Text("Components:");
-            for (const auto& kv : g_selNode->GetComponents())
-                ImGui::BulletText("%s", kv.second->GetTypeName());
-            ImGui::SetNextItemWidth(-1);
-            if (ImGui::BeginCombo("##AddComponent", "Add Component...", ImGuiComboFlags_HeightLarge)) {
-                static ImGuiTextFilter componentFilter;
-                const bool opening=ImGui::IsWindowAppearing();
-                if(opening) {componentFilter.Clear();ImGui::SetKeyboardFocusHere();}
-                componentFilter.Draw("##ComponentSearch", -1);
-                ImGui::Separator();
-                int availableCount=0;
-                auto option=[&](const char* label,const char* typeName,bool available,auto create) {
-                    if(!available||!componentFilter.PassFilter(label))return;
-                    ++availableCount;
-                    if(ImGui::Selectable(label)) {
-                        create();
-                        EditorUndo_PushAddComponent(g_selNode,typeName);
-                        runtimeDirty=true;
-                        ImGui::CloseCurrentPopup();
-                    }
-                };
-                option("Transform","SceneTransform",!g_selNode->GetComponent<engine::Transform>(),[&] {g_selNode->AddComponent<engine::Transform>();});
-                option("Visual","visual",!g_selNode->GetComponent<VisualComponent>(),[&] {g_selNode->AddComponent<VisualComponent>();});
-                option("Sprite Renderer","SpriteRenderer",!g_selNode->GetComponent<SpriteRendererComponent>(),[&] {g_selNode->AddComponent<SpriteRendererComponent>();});
-                option("Sprite Animator","SpriteAnimator",!g_selNode->GetComponent<SpriteAnimatorComponent>(),[&] {g_selNode->AddComponent<SpriteAnimatorComponent>();});
-                option("Billboard","Billboard",!g_selNode->GetComponent<BillboardComponent>(),[&] {g_selNode->AddComponent<BillboardComponent>();});
-                option("Terrain","Terrain",!g_selNode->GetComponent<TerrainComponent>(),[&] {g_selNode->AddComponent<TerrainComponent>();});
-                option("Material","Material",!g_selNode->GetComponent<MaterialComponent>(),[&] {g_selNode->AddComponent<MaterialComponent>();});
-                option("Camera","Camera",!g_selNode->GetComponent<CameraComponent>(),[&] {g_selNode->AddComponent<CameraComponent>();});
-                option("Directional Light","DirectionalLight",!g_selNode->GetComponent<DirectionalLightComponent>(),[&] {g_selNode->AddComponent<DirectionalLightComponent>();});
-                option("Point Light","PointLight",!g_selNode->GetComponent<PointLightComponent>(),[&] {g_selNode->AddComponent<PointLightComponent>();});
-                option("Spot Light","SpotLight",!g_selNode->GetComponent<SpotLightComponent>(),[&] {g_selNode->AddComponent<SpotLightComponent>();});
-                option("Rigidbody 3D","Rigidbody",!g_selNode->GetComponent<RigidbodyComponent>(),[&] {g_selNode->AddComponent<RigidbodyComponent>();});
-                option("Rigidbody 2D","Rigidbody2D",!g_selNode->GetComponent<Rigidbody2DComponent>(),[&] {g_selNode->AddComponent<Rigidbody2DComponent>();});
-                option("Script","Script",!g_selNode->GetComponent<ScriptComponent>(),[&] {g_selNode->AddComponent<ScriptComponent>();});
-                option("Effect","Effect",!g_selNode->GetComponent<EffectComponent>(),[&] {g_selNode->AddComponent<EffectComponent>();});
-                option("Audio","Audio",!g_selNode->GetComponent<AudioComponent>(),[&] {g_selNode->AddComponent<AudioComponent>();});
-                option("Audio Listener","AudioListener",!g_selNode->GetComponent<AudioListenerComponent>(),[&] {g_selNode->AddComponent<AudioListenerComponent>();});
-                const auto* currentCollider=FindColliderComponent(g_selNode);
-                const bool canAdd3D=!currentCollider||currentCollider->colliderType==ColliderType::NONE;
-                auto removeEmptyCollider=[&] {if(currentCollider)RemoveColliderComponent(g_selNode);};
-                option("Box Collider 3D","BoxCollider",canAdd3D,[&] {removeEmptyCollider();g_selNode->AddComponent<BoxColliderComponent>();});
-                option("Sphere Collider 3D","SphereCollider",canAdd3D,[&] {removeEmptyCollider();g_selNode->AddComponent<SphereColliderComponent>();});
-                option("Capsule Collider 3D","CapsuleCollider",canAdd3D,[&] {removeEmptyCollider();g_selNode->AddComponent<CapsuleColliderComponent>();});
-                option("Cylinder Collider 3D","CylinderCollider",canAdd3D,[&] {removeEmptyCollider();g_selNode->AddComponent<CylinderColliderComponent>();});
-                option("Mesh Collider 3D","MeshCollider",canAdd3D,[&] {removeEmptyCollider();g_selNode->AddComponent<MeshColliderComponent>();});
-                option("Box Collider 2D","Collider2D",!g_selNode->GetComponent<Collider2DComponent>(),[&] {g_selNode->AddComponent<Collider2DComponent>()->shape=Shape2D::Box;});
-                option("Circle Collider 2D","Collider2D",!g_selNode->GetComponent<Collider2DComponent>(),[&] {g_selNode->AddComponent<Collider2DComponent>()->shape=Shape2D::Circle;});
-                if(!availableCount)ImGui::TextDisabled("No matching components available.");
-                ImGui::EndCombo();
-            }
-            ImGui::Spacing();
-
-            if (runtimeDirty) {
+            // without a user edit. Add via Add Component instead.
+            if (auto* t = n->GetComponent<engine::Transform>()) DrawTransform(n, t, dirty);
+            if (auto* vc = n->GetComponent<VisualComponent>()) DrawVisual(n, vc, dirty);
+            if (auto* dl = n->GetComponent<DirectionalLightComponent>()) DrawDirectionalLight(n, dl, dirty);
+            if (auto* cam = n->GetComponent<CameraComponent>()) DrawCamera(n, cam, dirty);
+            if (auto* pl = n->GetComponent<PointLightComponent>()) DrawPointLight(n, pl, dirty);
+            if (auto* sl = n->GetComponent<SpotLightComponent>()) DrawSpotLight(n, sl, dirty);
+            if (auto* cc = FindColliderComponent(n)) DrawCollider(n, cc, dirty);
+            if (auto* rb = n->GetComponent<RigidbodyComponent>()) DrawRigidbody(n, rb, dirty);
+            if (auto* mc = n->GetComponent<MaterialComponent>()) DrawMaterial(n, mc, dirty);
+            if (auto* ec = n->GetComponent<EffectComponent>()) DrawEffect(n, ec, dirty);
+            if (auto* ac = n->GetComponent<AudioComponent>()) DrawAudio(n, ac, dirty);
+            if (auto* al = n->GetComponent<AudioListenerComponent>()) DrawAudioListener(n, al, dirty);
+            if (auto* sc = n->GetComponent<ScriptComponent>()) DrawScript(n, sc, dirty);
+            if (auto* b2 = n->GetComponent<Rigidbody2DComponent>()) DrawRigidbody2D(n, b2, dirty);
+            if (auto* c2 = n->GetComponent<Collider2DComponent>()) DrawCollider2D(n, c2, dirty);
+            if (auto* sr = n->GetComponent<SpriteRendererComponent>()) DrawSpriteRenderer(n, sr, dirty);
+            if (auto* sa = n->GetComponent<SpriteAnimatorComponent>()) DrawSpriteAnimator(n, sa, dirty);
+            if (auto* bb = n->GetComponent<BillboardComponent>()) DrawBillboard(n, bb, dirty);
+            if (auto* tc = n->GetComponent<TerrainComponent>()) DrawTerrain(n, tc, dirty);
+
+            DrawAddComponent(n, dirty);
+
+            if (dirty) {
                 EngineGUI_MarkSceneDirty();
                 SyncSceneRuntime();
             }
 
-            // Save as prefab
+            ImGui::Spacing();
             ImGui::Separator();
-            if (ImGui::Button("Save as Prefab", ImVec2(-1, 0))) {
+            static const char* const kIcons[] = { ICON_FA_FLOPPY_DISK, ICON_FA_TRASH_CAN };
+            static const char* const kTips[] = { "Prefab", "Delete" };
+            switch (insp::IconButtonRow("nodeops", kIcons, kTips, 2)) {
+            case 0: {
                 if (!fs::exists(PREFAB_DIR)) fs::create_directories(PREFAB_DIR);
                 std::string prefabName = g_selNode->GetName();
                 for (char& c : prefabName)
                     if (c == ' ' || c == '/' || c == '\\') c = '_';
                 PrefabSerializer::SaveToFile(*g_selNode, PREFAB_DIR + prefabName + ".json");
+                break;
             }
-
-            ImGui::Separator();
-            if (ImGui::Button("Delete Node", ImVec2(-1, 30))) {
+            case 1:
                 EditorUndo_DiscardComponentEdit();
                 s_lastSelNode = nullptr;
                 DeleteGameObject(g_selNode);
+                break;
+            default:
+                break;
             }
         }
         else if (g_selUiElement) {
@@ -1618,5 +1439,6 @@ void DrawEditorInspectorPanel(bool playVisuals, bool* open)
         if (playVisuals)
             ImGui::EndDisabled();
     }
+    ImGui::PopItemWidth();
     ImGui::End();
 }
