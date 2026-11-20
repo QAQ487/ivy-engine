@@ -12,11 +12,13 @@
 #include "engine/ecs/transform.h"
 #include "engine/editor/editor_layout.h"
 #include "engine/editor/editor_undo.h"
+#include "engine/editor/inspector_widgets.h"
 #include "engine/scene/scene_loader.h"
 #include "engine/terrain/terrain_brush.h"
 #include "engine/terrain/terrain_collision.h"
 #include "engine/terrain/terrain_splat.h"
 #include "imgui/imgui.h"
+#include "imgui/icons_font_awesome.h"
 
 #include <algorithm>
 #include <cmath>
@@ -256,91 +258,90 @@ void ForEachTerrain(const std::function<void(GameObject*, TerrainComponent&)>& f
 
 void TerrainEditor_DrawInspector(GameObject* node, TerrainComponent& tc) {
     ImGui::PushID("TerrainSculpt");
-    // Wrap every hint / status line at the panel edge instead of widening the window.
-    ImGui::PushTextWrapPos(0.0f);
-    ImGui::SeparatorText("Sculpt");
     if (!tc.IsLoaded()) {
-        ImGui::TextDisabled("Load a heightmap (or clear the path for a flat one) to sculpt.");
-        ImGui::PopTextWrapPos();
+        insp::SubHeading(ICON_FA_PAINTBRUSH, "Sculpt", "Load a heightmap (or clear the path) to sculpt");
         ImGui::PopID();
         return;
     }
+    const char* toolHint = nullptr;
+    if (g_state.tool == Tool::Flatten)
+        toolHint = "LMB drag in viewport (Alt = camera)\nFlattens to the height under the cursor at stroke start";
+    else if (g_state.tool != Tool::None)
+        toolHint = "LMB drag in viewport (Alt = camera)";
+    insp::SubHeading(ICON_FA_PAINTBRUSH, "Sculpt", toolHint, false);
 
     const Tool tools[] = { Tool::None, Tool::Raise, Tool::Lower, Tool::Smooth, Tool::Flatten, Tool::Paint };
     {
+        static const char* const kToolIcons[] = { ICON_FA_ARROW_POINTER, ICON_FA_ARROW_UP, ICON_FA_ARROW_DOWN,
+                                                  ICON_FA_WATER, ICON_FA_RULER_HORIZONTAL, ICON_FA_PAINTBRUSH };
         const char* toolLabels[6];
         int toolIndex = 0;
         for (int i = 0; i < 6; ++i) {
             toolLabels[i] = ToolLabel(tools[i]);
             if (g_state.tool == tools[i]) toolIndex = i;
         }
-        // 3 per row: stays inside the panel however narrow it is.
-        if (InspectorToggleGrid(toolLabels, 6, &toolIndex, 3)) {
+        if (insp::ChoiceBar("tool", kToolIcons, toolLabels, 6, &toolIndex)) {
             EndStroke();
             g_state.tool = tools[toolIndex];
         }
     }
     terrain::Brush& b = g_state.brush;
     {
-        InspectorRow row("Brush Radius (m)");
+        insp::PropRow row(ICON_FA_CIRCLE, "Radius", "Brush radius (m)");
         ImGui::DragFloat("##v", &b.radius, 0.1f, terrain::kMinBrushRadius, terrain::kMaxBrushRadius, "%.1f");
     }
-    const char* strengthLabel = (g_state.tool == Tool::Raise || g_state.tool == Tool::Lower)
-        ? "Strength (m/s)" : (g_state.tool == Tool::Paint ? "Strength (full layers/s)" : "Strength (blends/s)");
+    const char* strengthTip = (g_state.tool == Tool::Raise || g_state.tool == Tool::Lower)
+        ? "m/s" : (g_state.tool == Tool::Paint ? "Full layers/s" : "Blends/s");
     if (g_state.tool == Tool::Paint) {
         const int layerCount = static_cast<int>(terrain::EffectiveLayers(tc.settings).size());
         g_state.paintLayer = std::min(g_state.paintLayer, layerCount - 1);
-        char layerLabelBuf[8][16];
+        char layerLabelBuf[8][8];
         const char* layerLabels[8];
+        const char* layerIcons[8];
         const int shown = std::min(layerCount, 8);
         for (int i = 0; i < shown; ++i) {
-            std::snprintf(layerLabelBuf[i], sizeof(layerLabelBuf[i]), "Layer %d", i + 1);
+            std::snprintf(layerLabelBuf[i], sizeof(layerLabelBuf[i]), "L%d", i + 1);
             layerLabels[i] = layerLabelBuf[i];
+            layerIcons[i] = ICON_FA_IMAGE;
         }
-        InspectorToggleGrid(layerLabels, shown, &g_state.paintLayer, 4);
-        if (layerCount < 2)
-            ImGui::TextDisabled("Add a second layer above to paint.");
-        if (!tc.EnsureSplatLoaded() && !tc.GetSplatError().empty())
-            ImGui::TextColored(ImVec4(1.0f, 0.45f, 0.35f, 1.0f), "%s", tc.GetSplatError().c_str());
+        insp::RowLabel(ICON_FA_LAYER_GROUP, "Layer", layerCount < 2 ? "Add a second layer to paint" : "Paint layer");
+        insp::ChoiceBar("paintlayer", layerIcons, layerLabels, shown, &g_state.paintLayer);
+        if (!tc.EnsureSplatLoaded() && !tc.GetSplatError().empty()) {
+            const ImVec4 err = insp::ErrorColor();
+            insp::ReadOnlyRow(ICON_FA_TRIANGLE_EXCLAMATION, "Splat", nullptr, tc.GetSplatError().c_str(), &err);
+        }
     }
     {
-        InspectorRow row("Strength");
+        insp::PropRow row(ICON_FA_GAUGE, "Strength", strengthTip);
         ImGui::DragFloat("##v", &b.strength, 0.05f, 0.0f, terrain::kMaxBrushStrength, "%.2f");
-        ImGui::SetItemTooltip("%s", strengthLabel);
     }
     {
-        InspectorRow row("Falloff");
+        insp::PropRow row(ICON_FA_CHART_LINE, "Falloff");
         ImGui::SliderFloat("##v", &b.falloff, 0.0f, 1.0f, "%.2f");
     }
     b = terrain::SanitizeBrush(b);
-    if (g_state.tool == Tool::Flatten)
-        ImGui::TextDisabled("Flattens to the height under the cursor when the stroke starts.");
-    if (g_state.tool != Tool::None)
-        ImGui::TextDisabled("Left-drag on the terrain in the viewport. Alt + drag moves the camera.");
 
     const terrain::Heightmap& map = tc.GetHeightmap();
+    const ImVec4 warn = insp::WarningColor();
     if (tc.HasUnsavedHeights()) {
-        if (tc.settings.heightmap.empty()) {
-            ImGui::TextColored(ImVec4(1.0f, 0.8f, 0.3f, 1.0f),
-                "Unsaved sculpt edits: Save Scene writes rom/terrain/%s_%s.r16",
-                SceneStem().c_str(), SanitiseFileStem(node ? node->GetName() : "terrain").c_str());
-        } else {
-            ImGui::TextColored(ImVec4(1.0f, 0.8f, 0.3f, 1.0f),
-                "Unsaved sculpt edits: Save Scene writes %s", tc.settings.heightmap.c_str());
-        }
+        const std::string target = tc.settings.heightmap.empty()
+            ? "rom/terrain/" + SceneStem() + "_" + SanitiseFileStem(node ? node->GetName() : "terrain") + ".r16"
+            : tc.settings.heightmap;
+        const std::string tip = "Save Scene writes " + target;
+        insp::ReadOnlyRow(ICON_FA_FLOPPY_DISK, "Heights", tip.c_str(), "Unsaved", &warn);
     }
-
     if (tc.HasUnsavedSplat()) {
-        ImGui::TextColored(ImVec4(1.0f, 0.8f, 0.3f, 1.0f), "Unsaved paint: Save Scene writes %s",
-            tc.settings.splatmap.empty() ? "rom/terrain/<scene>_<object>_splat.splat" : tc.settings.splatmap.c_str());
+        const std::string tip = std::string("Save Scene writes ") +
+            (tc.settings.splatmap.empty() ? "rom/terrain/<scene>_<object>_splat.splat" : tc.settings.splatmap.c_str());
+        insp::ReadOnlyRow(ICON_FA_FLOPPY_DISK, "Paint", tip.c_str(), "Unsaved", &warn);
     }
 
-    if (ImGui::TreeNode("Reset to Flat")) {
+    if (ImGui::TreeNodeEx(ICON_FA_ROTATE_LEFT "  Flat", ImGuiTreeNodeFlags_NoTreePushOnOpen)) {
         static const int kResolutions[] = { 33, 65, 129, 257, 513, 1025, 2049, 4097 };
         char preview[16];
         std::snprintf(preview, sizeof(preview), "%d", g_state.flatResolution);
         {
-            InspectorRow row("Resolution");
+            insp::PropRow row(ICON_FA_TABLE_CELLS, "Size", "Samples per side");
             if (ImGui::BeginCombo("##v", preview)) {
                 for (int r : kResolutions) {
                     char label[16];
@@ -352,12 +353,16 @@ void TerrainEditor_DrawInspector(GameObject* node, TerrainComponent& tc) {
             }
         }
         {
-            InspectorRow row("Height (m)");
+            insp::PropRow row(ICON_FA_ARROWS_UP_DOWN, "Height", "m");
             ImGui::DragFloat("##v", &g_state.flatHeight, 0.1f);
         }
-        ImGui::TextDisabled("Current: %d x %d samples. Replaces the whole map; cannot be undone.",
-                            map.resolution, map.resolution);
-        if (ImGui::Button("Reset to Flat"))
+        char current[48];
+        std::snprintf(current, sizeof(current), "%d x %d", map.resolution, map.resolution);
+        insp::ReadOnlyRow(ICON_FA_TABLE_CELLS, "Now", "Current samples", current);
+        ImGui::PushStyleColor(ImGuiCol_Text, warn);
+        const bool resetClicked = insp::WideButton(ICON_FA_ROTATE_LEFT, "Flat", "Replace the whole map (no undo)");
+        ImGui::PopStyleColor();
+        if (resetClicked)
             ImGui::OpenPopup("ConfirmTerrainReset");
         if (ImGui::BeginPopupModal("ConfirmTerrainReset", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
             ImGui::Text("Replace the terrain with a flat %d x %d map? This cannot be undone.",
@@ -373,9 +378,7 @@ void TerrainEditor_DrawInspector(GameObject* node, TerrainComponent& tc) {
                 ImGui::CloseCurrentPopup();
             ImGui::EndPopup();
         }
-        ImGui::TreePop();
     }
-    ImGui::PopTextWrapPos();
     ImGui::PopID();
 }
 

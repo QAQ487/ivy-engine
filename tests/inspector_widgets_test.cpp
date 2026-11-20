@@ -44,7 +44,13 @@ void DrawAll()
     insp::IconButtonRow("ord", icons, tips, 3);
     insp::AssetField(ICON_FA_IMAGE, "Texture", nullptr, path, exts, 1);
     insp::WideButton(ICON_FA_PLUS, "Add");
-    insp::SubHeading(ICON_FA_LAYER_GROUP, "LOD");
+    insp::SubHeading(ICON_FA_LAYER_GROUP, "LOD", "warn");
+    insp::ReadOnlyRow(ICON_FA_LOCATION_ARROW, "Dir", "tip", "0.123 0.456 0.789 and a long tail");
+    insp::DragVecN(nullptr, "Size", nullptr, v3, 2, 0.1f, 0.0f, 0.0f, 1.0f, 0.0f, "%.2f", "XZ");
+    insp::Toggle warnToggle[] = { { ICON_FA_CLOUD, "Shadows", &a, "needs mode" } };
+    insp::ToggleRow(warnToggle, 1);
+    { const std::string e = insp::Ellipsize("AVeryLongClipNameThatNeedsCutting", ImGui::GetFontSize() * 5.0f);
+      if (ImGui::CalcTextSize(e.c_str()).x > ImGui::GetFontSize() * 5.0f || e.size() < 4) { std::printf("FAIL ellipsize\n"); ++g_fail; } }
     ImGui::TextUnformatted(ICON_FA_CUBE);
     insp::HintIconSameLine(ICON_FA_TRIANGLE_EXCLAMATION, insp::WarningColor(), "warn");
 }

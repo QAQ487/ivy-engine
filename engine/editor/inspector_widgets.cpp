@@ -68,7 +68,8 @@ bool HasExtension(const char* path, const char* const* exts, int count)
 }
 
 // Button that shows "icon word" when it fits, else the icon only.
-bool LabelledButton(const char* id, const char* icon, const char* word, float w, bool active)
+bool LabelledButton(const char* id, const char* icon, const char* word, float w, bool active,
+                    const char* warn = nullptr)
 {
     const ImGuiStyle& st = ImGui::GetStyle();
     char label[160];
@@ -85,11 +86,15 @@ bool LabelledButton(const char* id, const char* icon, const char* word, float w,
         ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(a.x, a.y, a.z, 0.7f));
         ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(a.x, a.y, a.z, 0.85f));
     }
+    if (warn)
+        ImGui::PushStyleColor(ImGuiCol_Text, WarningColor());
     const bool pressed = ImGui::Button(label, ImVec2(w, 0.0f));
+    if (warn)
+        ImGui::PopStyleColor();
     if (active)
         ImGui::PopStyleColor(3);
     if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort))
-        Tooltip(word, nullptr);
+        Tooltip(word, warn);
     return pressed;
 }
 
@@ -257,12 +262,18 @@ PropRow::~PropRow()
 
 bool DragVecN(const char* icon, const char* word, const char* tip, float* v, int n,
               float speed, float vmin, float vmax, float resetValue, float wheelStep,
-              const char* fmt)
+              const char* fmt, const char* axes)
 {
-    static const ImVec4 kAxis[4] = {
-        ImVec4(0.86f, 0.30f, 0.30f, 1.0f), ImVec4(0.40f, 0.74f, 0.30f, 1.0f),
-        ImVec4(0.30f, 0.52f, 0.92f, 1.0f), ImVec4(0.55f, 0.55f, 0.58f, 1.0f) };
-    static const char* kAxisName[4] = { "X", "Y", "Z", "W" };
+    auto axisColor = [](char a) {
+        switch (a) {
+        case 'X': return ImVec4(0.86f, 0.30f, 0.30f, 1.0f);
+        case 'Y': return ImVec4(0.40f, 0.74f, 0.30f, 1.0f);
+        case 'Z': return ImVec4(0.30f, 0.52f, 0.92f, 1.0f);
+        default:  return ImVec4(0.55f, 0.55f, 0.58f, 1.0f);
+        }
+    };
+    if (!axes || std::strlen(axes) < static_cast<size_t>(std::clamp(n, 1, 4)))
+        axes = "XYZW";
     n = std::clamp(n, 1, 4);
 
     const ImGuiStyle& st = ImGui::GetStyle();
@@ -294,17 +305,18 @@ bool DragVecN(const char* icon, const char* word, const char* tip, float* v, int
                 ImGui::MarkItemEdited(ImGui::GetItemID());
             }
         }
+        const char axisName[2] = { axes[i], 0 };
         if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort))
-            ImGui::SetTooltip("%s = %g", kAxisName[i], resetValue);
+            ImGui::SetTooltip("%s = %g", axisName, resetValue);
         ImDrawList* dl = ImGui::GetWindowDrawList();
-        ImVec4 c = kAxis[i];
+        ImVec4 c = axisColor(axes[i]);
         if (ImGui::IsItemHovered())
             c = ImVec4((std::min)(1.0f, c.x * 1.2f), (std::min)(1.0f, c.y * 1.2f), (std::min)(1.0f, c.z * 1.2f), 1.0f);
         dl->AddRectFilled(cp, ImVec2(cp.x + chipW, cp.y + frameH), U32(c), st.FrameRounding,
             ImDrawFlags_RoundCornersLeft);
-        const ImVec2 ts = ImGui::CalcTextSize(kAxisName[i]);
+        const ImVec2 ts = ImGui::CalcTextSize(axisName);
         dl->AddText(ImVec2(cp.x + (chipW - ts.x) * 0.5f, cp.y + (frameH - ts.y) * 0.5f),
-            IM_COL32(255, 255, 255, 235), kAxisName[i]);
+            IM_COL32(255, 255, 255, 235), axisName);
 
         ImGui::SameLine(0.0f, 0.0f);
         ImGui::SetNextItemWidth((std::max)(1.0f, cellW - chipW));
@@ -341,7 +353,8 @@ bool ToggleRow(const Toggle* toggles, int count)
         char id[16];
         std::snprintf(id, sizeof(id), "t%d", i);
         bool* value = toggles[i].value;
-        if (LabelledButton(id, toggles[i].icon, toggles[i].tip, w, value && *value) && value) {
+        if (LabelledButton(id, toggles[i].icon, toggles[i].tip, w, value && *value, toggles[i].warn) &&
+            value) {
             *value = !*value;
             changed = true;
             ImGui::MarkItemEdited(ImGui::GetItemID());
@@ -462,7 +475,7 @@ bool WideButton(const char* icon, const char* word, const char* tip)
     return pressed;
 }
 
-void SubHeading(const char* icon, const char* word)
+void SubHeading(const char* icon, const char* word, const char* hint, bool hintIsWarning)
 {
     // Like SeparatorText, but clipped to the available width.
     const float avail = (std::max)(1.0f, ImGui::GetContentRegionAvail().x);
@@ -483,11 +496,58 @@ void SubHeading(const char* icon, const char* word)
         x += ImGui::CalcTextSize(word).x;
     }
     x += ImGui::GetFontSize() * 0.5f;
-    if (x < p.x + avail) {
+    float lineEnd = p.x + avail;
+    if (hint) {
+        const char* hintIcon = hintIsWarning ? ICON_FA_TRIANGLE_EXCLAMATION : ICON_FA_CIRCLE_INFO;
+        const float iw = ImGui::CalcTextSize(hintIcon).x;
+        const ImVec2 hp(p.x + avail - iw, y);
+        dl->AddText(hp, U32(hintIsWarning ? WarningColor() : InfoColor()), hintIcon);
+        lineEnd = hp.x - ImGui::GetFontSize() * 0.4f;
+        if (ImGui::IsMouseHoveringRect(ImVec2(hp.x, p.y), ImVec2(p.x + avail, p.y + h)) &&
+            ImGui::IsWindowHovered())
+            ImGui::SetTooltip("%s", hint);
+    }
+    if (x < lineEnd) {
         const float ly = static_cast<float>(static_cast<int>(p.y + h * 0.5f));
-        dl->AddLine(ImVec2(x, ly), ImVec2(p.x + avail, ly), ImGui::GetColorU32(ImGuiCol_Separator));
+        dl->AddLine(ImVec2(x, ly), ImVec2(lineEnd, ly), ImGui::GetColorU32(ImGuiCol_Separator));
     }
     dl->PopClipRect();
+}
+
+void ReadOnlyRow(const char* icon, const char* word, const char* tip, const char* text,
+                 const ImVec4* color)
+{
+    ImGui::PushID(word ? word : (icon ? icon : "ro"));
+    const float fieldW = RowLabel(icon, word, tip);
+    const float frameH = ImGui::GetFrameHeight();
+    const ImVec2 p = ImGui::GetCursorScreenPos();
+    ImGui::Dummy(ImVec2(fieldW, frameH));
+    const bool hovered = ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort);
+    ImDrawList* dl = ImGui::GetWindowDrawList();
+    dl->PushClipRect(p, ImVec2(p.x + fieldW, p.y + frameH), true);
+    dl->AddText(ImVec2(p.x, p.y + ImGui::GetStyle().FramePadding.y),
+        color ? U32(*color) : ImGui::GetColorU32(ImGuiCol_TextDisabled), text ? text : "");
+    dl->PopClipRect();
+    if (hovered && text && text[0])
+        Tooltip(text, tip);
+    ImGui::PopID();
+}
+
+std::string Ellipsize(const std::string& text, float maxW)
+{
+    if (ImGui::CalcTextSize(text.c_str()).x <= maxW)
+        return text;
+    const float dotsW = ImGui::CalcTextSize("...").x;
+    std::string out = text;
+    while (!out.empty() && ImGui::CalcTextSize(out.c_str()).x + dotsW > maxW) {
+        out.pop_back();
+        // Do not cut inside a UTF-8 sequence.
+        while (!out.empty() && (static_cast<unsigned char>(out.back()) & 0xC0) == 0x80)
+            out.pop_back();
+        if (!out.empty() && (static_cast<unsigned char>(out.back()) & 0xC0) == 0xC0)
+            out.pop_back();
+    }
+    return out + "...";
 }
 
 } // namespace insp

@@ -52,11 +52,12 @@ public:
 float RowLabel(const char* icon, const char* word, const char* tip);
 
 // Three (or two) colored axis fields (X red, Y green, Z blue, W gray) in one
-// row; stacks one axis per line when too narrow. Clicking an axis chip sets
+// row (axes picks the chip letters, e.g. "XZ"); stacks one axis per line when too narrow. Clicking an axis chip sets
 // that axis to resetValue. wheelStep > 0 lets the mouse wheel nudge a field.
 bool DragVecN(const char* icon, const char* word, const char* tip, float* v, int n,
               float speed, float vmin = 0.0f, float vmax = 0.0f,
-              float resetValue = 0.0f, float wheelStep = 0.0f, const char* fmt = "%.3f");
+              float resetValue = 0.0f, float wheelStep = 0.0f, const char* fmt = "%.3f",
+              const char* axes = "XYZW");
 
 // One row of equal icon toggle buttons (wraps to more rows when narrow).
 // Each toggle shows its tooltip on hover. Returns true when any value changed.
@@ -64,6 +65,7 @@ struct Toggle {
     const char* icon;
     const char* tip;
     bool* value;
+    const char* warn = nullptr;  // non-null: warning tint + extra tooltip line
 };
 bool ToggleRow(const Toggle* toggles, int count);
 
@@ -91,8 +93,17 @@ bool WideButton(const char* icon, const char* word, const char* tip = nullptr);
 // Equal-width icon buttons in one row (wraps). Returns the index pressed or -1.
 int IconButtonRow(const char* id, const char* const* icons, const char* const* tips, int count);
 
-// Small sub-heading line inside a component body (icon + word, muted).
-void SubHeading(const char* icon, const char* word);
+// Small sub-heading line inside a component body (icon + word, muted, rule).
+// hint: optional icon at the right end with that tooltip (warning or info).
+void SubHeading(const char* icon, const char* word, const char* hint = nullptr,
+                bool hintIsWarning = true);
+
+// Read-only value row (clipped text, full text in the tooltip).
+void ReadOnlyRow(const char* icon, const char* word, const char* tip, const char* text,
+                 const ImVec4* color = nullptr);
+
+// Shorten text with "..." so it fits maxW pixels at the current font.
+std::string Ellipsize(const std::string& text, float maxW);
 
 ImVec4 WarningColor();
 ImVec4 InfoColor();
