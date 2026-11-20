@@ -73,11 +73,11 @@
 目標：editor 入面加一塊地形，用筆刷雕山谷、塗材質，Play 時角色可以喺上面行，打包照用。v1 = 單塊地形（最大 4097² 樣本），步驟 1–4；步驟 5 係 v1.1。每步一個 PR，Windows 驗收後先做下一步。
 
 - [x] **步驟 1：地基**（source 已做；純邏輯，冇 Windows 改動要驗）：`engine/terrain/terrain_heightmap.{h,cpp}`——`.r16` 讀寫（解像度由檔案大小推算）、`Layout` sanitise、高度／樣本換算、三角形插值高度（同對角線分割）、surface／vertex normal、chunk 大小同 min/max bounds（局部更新）、chunk LOD 選擇（hysteresis）、chunk index buffer。已加入兩個 `.vcxproj`（未有人用；MSVC 編譯等下次 Windows build 順便確認）。Linux：`tests/terrain_heightmap_test.cpp`（亦用 ASan／UBSan 跑過）。
-- [ ] **步驟 2：睇到地形**（source 已做；等 Windows editor／runtime 驗收）
+- [x] **步驟 2：睇到地形**（Terry 喺 Windows 驗收通過，2026-11-20：下面「Windows 要驗」全部項目）
   - `Terrain` component（`engine/ecs/terrain_component`；JSON 欄位喺 `engine/terrain/terrain_settings`）：已註冊、inspector（heightmap／大小／高度／chunk／LOD bias／texture／顏色／roughness／metallic／cast shadows／enabled，讀檔錯誤會顯示）、Add Component、undo。Asset Browser 識 `.r16`（山形 icon，可以拖去 Heightmap 欄）。
   - 渲染（`engine/terrain/terrain_renderer.cpp`＋`shaders/VertexShaderTerrain.hlsl`）：heightmap 上傳做 R16 texture，VS 讀高度同計 normal；輸出同 `VertexShader3D` 一樣，所以直接用場景嘅 default lit PS（冇另寫 `PixelShaderTerrain`，splat 留返步驟 5）。每個 chunk 用 camera frustum／cascade open-near frustum 剔除，按 LOD 分組，每個 level 一個 `DrawIndexedInstanced`；skirt 遮 LOD 接縫；CSM 投影同受影；`"volume"` 模式只受影。純邏輯：`terrain_draw_plan`、`terrain_settings`（Linux 測試）。
   - 示範：`testbed/rom/scene/scene_terrain_demo.json`（`python3 tools/gen_terrain_demo.py` 生成 512 m 山地、地面 texture、松樹同石；`--check` 已入 `run_linux_checks.sh`）。`.r16` 喺 `.gitattributes` 設咗 `binary`。
-  - Windows 要驗：`VertexShaderTerrain.cso` 有編譯同複製；示範場景見到山、texture 平鋪、陰影（樹影落山坡、山自己投影）；行遠啲 chunk 變粗但冇裂縫（skirt）；Rendering 面板關 LOD／frustum culling 畫面一致；改 Default Shader（PBR／Toon）地形跟住變；Add Component → Terrain 出平地；拖 `.r16` 入 Heightmap；改 Size／Height Scale 即時更新；Undo；Save 後重開；Play 同 runtime 一樣畫到；打包後 `.r16` 有入包。
+  - Windows 已驗：`VertexShaderTerrain.cso` 有編譯同複製；示範場景見到山、texture 平鋪、陰影（樹影落山坡、山自己投影）；行遠啲 chunk 變粗但冇裂縫（skirt）；Rendering 面板關 LOD／frustum culling 畫面一致；改 Default Shader（PBR／Toon）地形跟住變；Add Component → Terrain 出平地；拖 `.r16` 入 Heightmap；改 Size／Height Scale 即時更新；Undo；Save 後重開；Play 同 runtime 一樣畫到；打包後 `.r16` 有入包。
   - 已知限制：未有碰撞（步驟 3）；未揀到（viewport click 唔會選中地形，要喺 Hierarchy 揀）；只有一張 texture；chunk 數多（例如 4097² 配 64 cells = 4096 個 chunk）時 CPU 規劃成本未量度過。
 - [ ] **步驟 3：喺上面行**：heightfield collider（新 `ColliderType` 加喺尾，只測 body 底下嘅格仔；raycast 行 grid）；`ScriptApi_TerrainSampleHeight`（v53，append-only）；`SamplePlayerScript` 喺地形上行。
 - [ ] **步驟 4：雕刻工具**：editor 地形面板（升／降／平滑／壓平、半徑／力度／falloff）、viewport 筆刷圈、dirty-rect undo command、Save Scene 時寫 `.r16`、GameObject → 3D → Terrain、匯入 raw heightmap。
