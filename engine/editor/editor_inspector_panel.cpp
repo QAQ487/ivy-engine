@@ -745,7 +745,7 @@ void DrawMaterial(GameObject* n, MaterialComponent* mc, bool& dirty) {
         if (isToon)
             insp::SubHeading(ICON_FA_PAINTBRUSH, "Toon");
         else
-            showToon = ImGui::TreeNodeEx(ICON_FA_PAINTBRUSH "  Toon", ImGuiTreeNodeFlags_NoTreePushOnOpen);
+            showToon = ImGui::TreeNodeEx("##ToonSection", ImGuiTreeNodeFlags_NoTreePushOnOpen, "%s", ICON_FA_PAINTBRUSH "  Toon");
         if (showToon) {
             { insp::PropRow r(ICON_FA_LAYER_GROUP, "Steps", "Shade steps"); Mark(ImGui::DragFloat("##v", &mc->shadeSteps, 0.1f, 1.0f, 8.0f), dirty); }
             { insp::PropRow r(ICON_FA_WAVE_SQUARE, "Smooth", "Shade smoothness"); Mark(ImGui::DragFloat("##v", &mc->shadeSmoothness, 0.005f, 0.0f, 0.5f), dirty); }

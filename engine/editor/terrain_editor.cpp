@@ -336,7 +336,7 @@ void TerrainEditor_DrawInspector(GameObject* node, TerrainComponent& tc) {
         insp::ReadOnlyRow(ICON_FA_FLOPPY_DISK, "Paint", tip.c_str(), "Unsaved", &warn);
     }
 
-    if (ImGui::TreeNodeEx(ICON_FA_ROTATE_LEFT "  Flat", ImGuiTreeNodeFlags_NoTreePushOnOpen)) {
+    if (ImGui::TreeNodeEx("##FlatSection", ImGuiTreeNodeFlags_NoTreePushOnOpen, "%s", ICON_FA_ROTATE_LEFT "  Flat")) {
         static const int kResolutions[] = { 33, 65, 129, 257, 513, 1025, 2049, 4097 };
         char preview[16];
         std::snprintf(preview, sizeof(preview), "%d", g_state.flatResolution);
