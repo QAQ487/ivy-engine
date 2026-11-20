@@ -44,6 +44,12 @@ Find / mutate via script API:
 - `bool ScriptApi_TryGetColliderFootprint(const Collider& collider, DirectX::XMFLOAT3& outCenter, DirectX::XMFLOAT3& outSize)` — `api:ScriptApi_TryGetColliderFootprint`
 - Ignore rules: `api:ScriptApi_GameObjectAddIgnoreCollisionTag`, `api:ScriptApi_GameObjectRemoveIgnoreCollisionTag`, `api:ScriptApi_GameObjectAddIgnoreCollisionObject`, `api:ScriptApi_GameObjectRemoveIgnoreCollisionObject`, `api:ScriptApi_GameObjectClearIgnoreCollisionObjects`
 
+## Terrain (v53)
+
+A `Terrain` component (JSON in [`../scene-prefab.md`](../scene-prefab.md)) with `collision: true` gives its object a static heightfield collider (`api:TerrainCollider`, `ColliderType::TERRAIN`) unless that object has its own collider component. Bodies with Sphere / Capsule / Box / Cylinder / Mesh colliders land on it, and `api:ScriptApi_Physics_Raycast` hits it like any collider. The terrain object's rigidbody is forced kinematic.
+
+- `bool ScriptApi_TerrainSampleHeight(float x, float z, float* outHeight, DirectX::XMFLOAT3* outNormal = nullptr)` — `api:ScriptApi_TerrainSampleHeight`: surface height (and up-facing normal) of the highest loaded, enabled terrain under world (x, z); `false` off the terrain or on a host older than v53. Cheap (one grid cell): fine every frame for placing objects or snapping to the ground.
+
 ## Raycast / debug
 
 - `bool ScriptApi_Physics_Raycast(const DirectX::XMFLOAT3& origin, const DirectX::XMFLOAT3& dir, float maxDistance, DirectX::XMFLOAT3* outPoint, DirectX::XMFLOAT3* outNormal, float* outDistance)` — `api:ScriptApi_Physics_Raycast`

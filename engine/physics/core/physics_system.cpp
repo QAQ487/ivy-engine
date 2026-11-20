@@ -86,6 +86,17 @@ namespace {
 		return !rb.IsKinematic() && rb.GetMass() > 0.0f;
 	}
 
+	inline bool IsTerrain(const Collider* c) {
+		return c && c->GetType() == ColliderType::TERRAIN;
+	}
+
+	// Terrain broadphase: the terrain's world box (inflated by the body's radius)
+	// against the segment from the body's previous to current collider centre. The
+	// centre-plus-radius sphere used for other shapes does not fit a heightmap: its
+	// collider centre is the corner of the map, not its middle.
+	inline bool TerrainBroadPass(const Collider* terrainCollider, const XMFLOAT3& prevCenter,
+	                             const Collider* body);
+
 	// Approx bounding-sphere radius per collider (broadphase)
 	inline float GetApproxRadius(const Collider* c) {
 		if (!c) return 0.0f;
@@ -119,14 +130,36 @@ namespace {
 				const float hh = 0.5f * cy->GetHeight();
 				return std::sqrt(cy->GetRadius() * cy->GetRadius() + hh * hh);
 			}
+			case ColliderType::TERRAIN:
+			{
+				XMFLOAT3 mn, mx;
+				if (!static_cast<const TerrainCollider*>(c)->GetWorldBounds(mn, mx)) return 0.0f;
+				const float dx = mx.x - mn.x, dy = mx.y - mn.y, dz = mx.z - mn.z;
+				return 0.5f * std::sqrt(dx * dx + dy * dy + dz * dz);
+			}
 			default:
 				return 0.0f;
 		}
 	}
 
+	inline bool TerrainBroadPass(const Collider* terrainCollider, const XMFLOAT3& prevCenter,
+	                             const Collider* body) {
+		XMFLOAT3 mn, mx;
+		if (!static_cast<const TerrainCollider*>(terrainCollider)->GetWorldBounds(mn, mx))
+			return false;
+		const XMFLOAT3 cur = body->GetWorldCenter();
+		const float r = GetApproxRadius(body) + 0.05f;
+		return (std::max)(prevCenter.x, cur.x) + r >= mn.x && (std::min)(prevCenter.x, cur.x) - r <= mx.x
+			&& (std::max)(prevCenter.y, cur.y) + r >= mn.y && (std::min)(prevCenter.y, cur.y) - r <= mx.y
+			&& (std::max)(prevCenter.z, cur.z) + r >= mn.z && (std::min)(prevCenter.z, cur.z) - r <= mx.z;
+	}
+
 	// Broadphase (approximate distance test)
 	inline bool BroadPhasePass(const Collider* ca, const Collider* cb) {
 		if (!ca || !cb) return false;
+		if (IsTerrain(ca) && IsTerrain(cb)) return false;
+		if (IsTerrain(ca)) return TerrainBroadPass(ca, cb->GetWorldCenter(), cb);
+		if (IsTerrain(cb)) return TerrainBroadPass(cb, ca->GetWorldCenter(), ca);
 
 		const auto aC = ca->GetWorldCenter();
 		const auto bC = cb->GetWorldCenter();
@@ -147,6 +180,8 @@ namespace {
 	inline bool BroadPhasePassSwept(const Collider* ca, const XMFLOAT3& prevCenterA,
 	                                 const Collider* cb) {
 		if (!ca || !cb) return false;
+		if (IsTerrain(cb)) return TerrainBroadPass(cb, prevCenterA, ca);
+		if (IsTerrain(ca)) return TerrainBroadPass(ca, cb->GetWorldCenter(), cb);
 
 		const XMFLOAT3 curCenterA = ca->GetWorldCenter();
 		const XMFLOAT3 bC         = cb->GetWorldCenter();
@@ -436,6 +471,13 @@ void PhysicsSystem_ResolveCollisions() {
 		const XMFLOAT3 curCenter = c->GetWorldCenter();
 		float minX = curCenter.x - radius;
 		float maxX = curCenter.x + radius;
+		if (IsTerrain(c)) {
+			// Heightmap: its X extent is the map, not a sphere around the corner.
+			XMFLOAT3 mn, mx;
+			if (!static_cast<const TerrainCollider*>(c)->GetWorldBounds(mn, mx)) continue;
+			minX = mn.x;
+			maxX = mx.x;
+		}
 
 		if (e.isDynamic) {
 			// Same previous-collider-center approximation as BroadPhasePassSwept
@@ -561,24 +603,27 @@ bool PhysicsSystem_Raycast(const DirectX::XMFLOAT3& origin,
 		if (!c) continue;
 		if (skipTriggers && c->IsTrigger()) continue;
 
-		const XMFLOAT3 center = c->GetWorldCenter();
-		const float radius = GetApproxRadius(c);
-		// Closest point on ray to sphere center; cull if beyond radius + maxDistance.
-		XMVECTOR vOrig = XMLoadFloat3(&origin);
-		XMVECTOR vC = XMLoadFloat3(&center);
-		XMVECTOR toC = XMVectorSubtract(vC, vOrig);
-		float tClosest = XMVectorGetX(XMVector3Dot(toC, vDirN));
-		if (tClosest + radius < 0.0f) continue;
-		if (tClosest - radius > bestT) continue;
-		XMVECTOR closest = XMVectorAdd(vOrig, XMVectorScale(vDirN, tClosest));
-		XMVECTOR diff = XMVectorSubtract(closest, vC);
-		float dist2 = XMVectorGetX(XMVector3LengthSq(diff));
-		if (dist2 > (radius + 0.05f) * (radius + 0.05f) &&
-			(tClosest < 0.0f || tClosest > bestT)) {
-			// Still allow RayIntersect if sphere could clip the segment ? use
-			// conservative: only skip when clearly outside enlarged sphere of segment.
-			float segR = radius + 0.05f;
-			if (dist2 > segR * segR) continue;
+		// Terrain clips the ray to its own box; the sphere cull below assumes a centred shape.
+		if (!IsTerrain(c)) {
+			const XMFLOAT3 center = c->GetWorldCenter();
+			const float radius = GetApproxRadius(c);
+			// Closest point on ray to sphere center; cull if beyond radius + maxDistance.
+			XMVECTOR vOrig = XMLoadFloat3(&origin);
+			XMVECTOR vC = XMLoadFloat3(&center);
+			XMVECTOR toC = XMVectorSubtract(vC, vOrig);
+			float tClosest = XMVectorGetX(XMVector3Dot(toC, vDirN));
+			if (tClosest + radius < 0.0f) continue;
+			if (tClosest - radius > bestT) continue;
+			XMVECTOR closest = XMVectorAdd(vOrig, XMVectorScale(vDirN, tClosest));
+			XMVECTOR diff = XMVectorSubtract(closest, vC);
+			float dist2 = XMVectorGetX(XMVector3LengthSq(diff));
+			if (dist2 > (radius + 0.05f) * (radius + 0.05f) &&
+				(tClosest < 0.0f || tClosest > bestT)) {
+				// Still allow RayIntersect if sphere could clip the segment ? use
+				// conservative: only skip when clearly outside enlarged sphere of segment.
+				float segR = radius + 0.05f;
+				if (dist2 > segR * segR) continue;
+			}
 		}
 
 		float t = 0.0f;

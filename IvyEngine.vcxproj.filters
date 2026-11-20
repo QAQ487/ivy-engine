@@ -531,6 +531,9 @@
     <ClInclude Include="engine\terrain\terrain_renderer.h">
       <Filter>engine\terrain</Filter>
     </ClInclude>
+    <ClInclude Include="engine\terrain\terrain_collision.h">
+      <Filter>engine\terrain</Filter>
+    </ClInclude>
     <ClInclude Include="engine\save\save_system.h">
       <Filter>engine\save</Filter>
     </ClInclude>
@@ -705,6 +708,9 @@
       <Filter>engine\terrain</Filter>
     </ClCompile>
     <ClCompile Include="engine\terrain\terrain_renderer.cpp">
+      <Filter>engine\terrain</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\terrain\terrain_collision.cpp">
       <Filter>engine\terrain</Filter>
     </ClCompile>
     <ClCompile Include="engine\save\save_system.cpp">

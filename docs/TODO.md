@@ -79,7 +79,12 @@
   - 示範：`testbed/rom/scene/scene_terrain_demo.json`（`python3 tools/gen_terrain_demo.py` 生成 512 m 山地、地面 texture、松樹同石；`--check` 已入 `run_linux_checks.sh`）。`.r16` 喺 `.gitattributes` 設咗 `binary`。
   - Windows 已驗：`VertexShaderTerrain.cso` 有編譯同複製；示範場景見到山、texture 平鋪、陰影（樹影落山坡、山自己投影）；行遠啲 chunk 變粗但冇裂縫（skirt）；Rendering 面板關 LOD／frustum culling 畫面一致；改 Default Shader（PBR／Toon）地形跟住變；Add Component → Terrain 出平地；拖 `.r16` 入 Heightmap；改 Size／Height Scale 即時更新；Undo；Save 後重開；Play 同 runtime 一樣畫到；打包後 `.r16` 有入包。
   - 已知限制：未有碰撞（步驟 3）；未揀到（viewport click 唔會選中地形，要喺 Hierarchy 揀）；只有一張 texture；chunk 數多（例如 4097² 配 64 cells = 4096 個 chunk）時 CPU 規劃成本未量度過。
-- [ ] **步驟 3：喺上面行**：heightfield collider（新 `ColliderType` 加喺尾，只測 body 底下嘅格仔；raycast 行 grid）；`ScriptApi_TerrainSampleHeight`（v53，append-only）；`SamplePlayerScript` 喺地形上行。
+- [ ] **步驟 3：喺上面行**（source 已做；等 Windows editor／runtime 驗收）
+  - 碰撞：`TerrainCollider`（`ColliderType::TERRAIN` 加喺 enum 尾，唔會寫入 JSON）由 `Terrain` component 自己裝上（`collision` 欄，預設開；物件有自己嘅 collider component 就用嗰個）；地形物件嘅 Rigidbody 會設成 kinematic。純邏輯 `engine/terrain/terrain_collision`：raycast 沿格仔行（同逐個三角形試嘅結果對過 400 條隨機 ray）、sphere 精確（腳下每個三角形最近點；中心跌咗落地底就沿 normal 推返上嚟，所以唔會穿過）、capsule＝沿線段幾個 sphere、box／mesh 用 26 個角／邊／面點、cylinder 用邊緣同兩端中心點。`physics_system.cpp` 嘅 broadphase、sweep-and-prune、raycast 預篩都特別處理 TERRAIN（地形嘅 collider 中心喺角落，唔啱用球形估算）。
+  - Script：`ScriptApi_TerrainSampleHeight(x, z, &h, &normal)`（ScriptRuntimeApi v53；v52 export 照留）。
+  - 示範：`scene_terrain_demo.json` 加咗玩家（`SamplePlayerScript`，第三人稱鏡頭）同四件會跌落斜坡嘅物件（sphere／box／capsule／cylinder，顯示 collider）。
+  - Windows 要驗：Debug editor 撳 Play，玩家企喺山坡上、行上行落、跳完落返地；四件物件跌落後停喺地面或者沿斜坡滾，唔會穿過；F11 碰撞顯示正常；Release／runtime 同樣；舊 GameScripts DLL（v52）照載入；Inspector 有 Collision checkbox，熄咗物件會穿過；地形物件加 BoxCollider 之後用 box。
+  - 已知限制：box／cylinder 用取樣點，好尖嘅山峰比 box 窄就會穿入 box 中間；地形物件冇 Rigidbody component 時會自動加一個（kinematic），存場景時會寫入；editor viewport 點擊選取未查（如果點擊用 physics raycast，而家應該揀到地形）。
 - [ ] **步驟 4：雕刻工具**：editor 地形面板（升／降／平滑／壓平、半徑／力度／falloff）、viewport 筆刷圈、dirty-rect undo command、Save Scene 時寫 `.r16`、GameObject → 3D → Terrain、匯入 raw heightmap。
 - [ ] **步驟 5（v1.1）：塗材質同收尾**：最多 4 層 splat（albedo＋normal＋tiling）、筆刷畫圖層、splat map 唔做 BC7；content hot reload；打包（`.r16` 保留）；user guide／`docs/agent/scene-prefab.md`／component 表。
 - 之後（未排）：植被散佈（要先做 mesh instancing）、地形挖洞、多塊地形／串流、NavMesh。

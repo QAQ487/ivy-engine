@@ -5,12 +5,17 @@ Everything here is original procedural content (no third-party assets):
 
   testbed/rom/terrain/terrain_demo.r16            257 x 257 heightmap (raw 16-bit LE)
   testbed/rom/texture/terrain/ground_demo.png     128 x 128 tileable ground texture
-  testbed/rom/scene/scene_terrain_demo.json       Terrain component, CSM sun, props, fly camera
+  testbed/rom/scene/scene_terrain_demo.json       Terrain component, CSM sun, props, player
 
 The terrain is 512 x 512 m, heights -10 .. 50 m, centred on the origin, drawn in 8 x 8
 chunks of 32 cells (LOD levels 0..4). Pines and boulders from tools/gen_lod_test_assets.py
 stand on the surface: their Y comes from sample_height(), which follows the engine's
 triangle split (terrain::SampleHeight), so they sit exactly on what is drawn.
+
+Terrain step 3 (collision): Play puts SamplePlayerScript's sphere player on the hills
+with the ThirdPerson camera (compiled into the Debug editor / runtime host), and drops a
+sphere, box, capsule and cylinder (engine primitives, colliders shown) onto the slope in
+front of it, so they land and roll on the heightfield collider. F1 toggles the fly camera.
 
 Run from the repo root:
 
@@ -38,6 +43,8 @@ HEIGHT_OFFSET = -10.0
 CHUNK_QUADS = 32
 ORIGIN = (-SIZE * 0.5, 0.0, -SIZE * 0.5)  # GameObject position: terrain centred on (0, 0)
 TAG_GROUND = 2
+TAG_PLAYER = 5
+PLAYER_XZ = (0.0, 6.0)
 
 
 def height_function(x, z):
@@ -180,6 +187,8 @@ def build_scene(samples):
                        "lods": boulder_lods, "cullDistance": 300.0},
         }))
 
+    nodes += physics_nodes(samples)
+
     cam_y = sample_height(samples, 0.0 - ORIGIN[0], -30.0 - ORIGIN[2]) + 18.0
     return {
         "version": 4,
@@ -195,13 +204,66 @@ def build_scene(samples):
                 "shadowDistance": 160.0,
                 "fogEnabled": False,
             },
+            "camera": {"mode": "thirdPerson"},
             "debugCamera": {
-                "mode": "fly", "enabledOnPlay": True, "yawDeg": 0.0, "pitchDeg": -14.0,
+                "mode": "fly", "enabledOnPlay": False, "yawDeg": 0.0, "pitchDeg": -14.0,
                 "position": {"x": 0.0, "y": round(cam_y, 3), "z": -30.0},
             },
         },
         "nodes": nodes,
     }
+
+
+def legacy_collider(collider_type, radius=0.5, height=1.0, half=0.5):
+    """Generic "Collider" JSON (still loaded; the editor rewrites it shape-specific)."""
+    return {"colliderCenter": {"x": 0.0, "y": 0.0, "z": 0.0}, "colliderType": collider_type,
+            "halfExtents": {"x": half, "y": half, "z": half}, "height": height, "isTrigger": False,
+            "meshSizePadding": 0.0, "radius": radius, "showDebugCollider": True}
+
+
+def physics_nodes(samples):
+    """Player plus falling primitives (engine primitives are 1 m: sphere / cube / cylinder
+    r 0.5, cylinder height 1, capsule r 0.5 with a 1 m segment)."""
+    px, pz = PLAYER_XZ
+    py = sample_height(samples, px - ORIGIN[0], pz - ORIGIN[2]) + 1.0
+    player = {
+        "name": "Player", "tag": TAG_PLAYER,
+        "components": {
+            "Collider": legacy_collider(2) | {"showDebugCollider": False},
+            "SceneTransform": transform(px, py, pz),
+            "Script": {"scriptClass": "SamplePlayerScript"},
+        },
+        "children": [node("Player_Model", {
+            "SceneTransform": {"posX": 0.0, "posY": -0.5, "posZ": 0.0, "rotX": 0.0, "rotY": 0.0,
+                               "rotZ": 0.0, "scaleX": 0.01, "scaleY": 0.01, "scaleZ": 0.01},
+            "visual": {"active_clip": "idle", "animate": True,
+                       "animations": {"idle": "rom/model/player/Idle.fbx",
+                                      "jump": "rom/model/player/Jump01.fbx",
+                                      "run": "rom/model/player/Running.fbx"},
+                       "model": "rom/model/player/Y Bot_white.fbx", "shader": "standard"},
+        }, tag=TAG_PLAYER)],
+    }
+    bodies = [
+        # name, model, collider type, radius, height, colour, x offset
+        ("Drop Sphere", "Sphere.fbx", 2, 0.5, 1.0, [0.9, 0.3, 0.2], -4.5),
+        ("Drop Box", "Cube.fbx", 1, 0.5, 1.0, [0.25, 0.55, 0.95], -1.5),
+        ("Drop Capsule", "Capsule.fbx", 3, 0.5, 1.0, [0.95, 0.8, 0.2], 1.5),
+        ("Drop Cylinder", "Cylinder.fbx", 5, 0.5, 1.0, [0.35, 0.85, 0.4], 4.5),
+    ]
+    out = [player]
+    for i, (name, model, ctype, radius, height, color, dx) in enumerate(bodies):
+        x, z = px + dx, pz + 9.0
+        y = sample_height(samples, x - ORIGIN[0], z - ORIGIN[2]) + 6.0
+        t = transform(x, y, z) | {"rotX": 20.0 * (i % 2), "rotZ": 15.0 * ((i + 1) % 2)}
+        out.append(node(name, {
+            "SceneTransform": t,
+            "visual": {"model": "rom/model/primitives/" + model, "shader": "standard"},
+            "Material": {"color": color, "metallic": 0.0, "roughness": 0.5},
+            "Collider": legacy_collider(ctype, radius, height),
+            "Rigidbody": {"useGravity": True, "isKinematic": False, "mass": 1.0, "drag": 0.05,
+                          "angularDrag": 0.2, "restitution": 0.1, "friction": 0.6},
+        }))
+    return out
 
 
 def outputs():

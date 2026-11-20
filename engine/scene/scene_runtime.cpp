@@ -3,6 +3,7 @@
 
 #include "scene_runtime.h"
 #include "engine/ecs/collider_component_access.h"
+#include "engine/ecs/terrain_component.h"
 #include "scene_manager.h"
 
 #include <algorithm>
@@ -19,6 +20,8 @@ void SceneRuntime::Clear(SceneBase* scene, bool destroyColliders) {
         if (destroyColliders) {
             if (auto* cc = FindColliderComponent(obj))
                 cc->ClearFromOwner();
+            else
+                TerrainComponent::ClearTerrainCollider(obj);
         }
         scene->RemoveObject(obj);
     }
@@ -32,6 +35,8 @@ void SceneRuntime::ApplyCollidersTree(GameObject* node) {
 
     if (auto* cc = FindColliderComponent(node))
         cc->ApplyToOwner();
+    else if (auto* tc = node->GetComponent<TerrainComponent>())
+        tc->ApplyColliderToOwner();
 
     for (const auto& child : node->GetChildren())
         ApplyCollidersTree(child.get());
@@ -51,6 +56,13 @@ void SceneRuntime::RegisterTree(GameObject* node, SceneBase* scene) {
 
     if (auto* cc = FindColliderComponent(node)) {
         cc->ApplyToOwner();
+        if (node->GetCollider()) {
+            scene->AddObject(node);
+            m_registered.push_back(node);
+        }
+    } else if (auto* tc = node->GetComponent<TerrainComponent>()) {
+        // Heightmap terrain provides its own static collider (ADR 0011).
+        tc->ApplyColliderToOwner();
         if (node->GetCollider()) {
             scene->AddObject(node);
             m_registered.push_back(node);
@@ -81,6 +93,8 @@ void SceneRuntime::UnregisterTree(GameObject* node, SceneBase* scene, bool destr
         if (destroyColliders) {
             if (auto* cc = FindColliderComponent(node))
                 cc->ClearFromOwner();
+            else
+                TerrainComponent::ClearTerrainCollider(node);
         }
         scene->RemoveObject(node);
         m_registered.erase(it);

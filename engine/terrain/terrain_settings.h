@@ -13,7 +13,8 @@
 //     "textureTileSize": 8,                    // metres per texture repeat
 //     "color": { "r": 1, "g": 1, "b": 1 },
 //     "roughness": 0.9, "metallic": 0,
-//     "castShadows": true, "enabled": true
+//     "castShadows": true, "enabled": true,
+//     "collision": true                        // static heightfield collider (step 3)
 //   }
 
 #pragma once
@@ -44,6 +45,8 @@ struct Settings {
     float metallic = 0.0f;
     bool castShadows = true;
     bool enabled = true;
+    // Static heightfield collider on the owner (unless it has its own collider component).
+    bool collision = true;
 };
 
 // Clamps every number (NaN -> default); the layout goes through SanitizeLayout.

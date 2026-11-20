@@ -21,8 +21,11 @@
 #include "engine/rendering/d3d11/renderer.h"
 #include "engine/core/debug_system.h"
 #include "engine/physics/core/physics_system.h"
+#include "engine/ecs/terrain_component.h"
+#include "engine/terrain/terrain_collision.h"
 #include <cmath>
 #include <cfloat>
+#include <cstdint>
 
 using namespace DirectX;
 
@@ -1091,6 +1094,7 @@ static void ResolveContact(GameObject* self, GameObject* other,
 //-----------------------------------------------
 bool BoxCollider::CheckCollision(const Collider* other) const {
     if (!other || !m_owner || !other->GetOwner()) return false;
+    if (other->GetType() == ColliderType::TERRAIN) return other->CheckCollision(this);
 
     XMFLOAT3 rotA = m_owner->GetRotation();
     XMMATRIX rotMatrixA = XMMatrixRotationRollPitchYaw(
@@ -1371,6 +1375,7 @@ static int CollectBoxContactManifold(
 
 void BoxCollider::ResolveCollision(Collider* other) {
     if (!other || !m_owner || !other->GetOwner()) return;
+    if (other->GetType() == ColliderType::TERRAIN) { other->ResolveCollision(this); return; }
     if (m_isTrigger || other->IsTrigger()) {
         return;
     }
@@ -1585,6 +1590,7 @@ void BoxCollider::DebugDraw(const XMFLOAT4& color) {
 //-----------------------------------------------
 bool SphereCollider::CheckCollision(const Collider* other) const {
     if (!other || !m_owner || !other->GetOwner()) return false;
+    if (other->GetType() == ColliderType::TERRAIN) return other->CheckCollision(this);
     XMFLOAT3 cA = GetWorldCenter();
     float rA = GetRadius();
     switch (other->GetType()) {
@@ -1611,6 +1617,7 @@ bool SphereCollider::CheckCollision(const Collider* other) const {
 
 void SphereCollider::ResolveCollision(Collider* other) {
     if (!other || !m_owner || !other->GetOwner()) return;
+    if (other->GetType() == ColliderType::TERRAIN) { other->ResolveCollision(this); return; }
     if (m_isTrigger || other->IsTrigger()) {
         return;
     }
@@ -1754,6 +1761,7 @@ void SphereCollider::DebugDraw(const XMFLOAT4& color) {
 //-----------------------------------------------
 bool CapsuleCollider::CheckCollision(const Collider* other) const {
     if (!other || !m_owner || !other->GetOwner()) return false;
+    if (other->GetType() == ColliderType::TERRAIN) return other->CheckCollision(this);
 
     XMFLOAT3 centerA = GetWorldCenter();
     float radiusA = GetRadius();
@@ -1862,6 +1870,7 @@ bool CapsuleCollider::CheckCollision(const Collider* other) const {
 
 void CapsuleCollider::ResolveCollision(Collider* other) {
     if (!other || !m_owner || !other->GetOwner()) return;
+    if (other->GetType() == ColliderType::TERRAIN) { other->ResolveCollision(this); return; }
     if (m_isTrigger || other->IsTrigger()) {
         return;
     }
@@ -1988,6 +1997,7 @@ void CapsuleCollider::DebugDraw(const XMFLOAT4& color) {
 //-----------------------------------------------
 bool CylinderCollider::CheckCollision(const Collider* other) const {
     if (!other || !m_owner || !other->GetOwner()) return false;
+    if (other->GetType() == ColliderType::TERRAIN) return other->CheckCollision(this);
 
     const CylinderWorldFrame frame = BuildCylinderWorldFrame(this);
 
@@ -2050,6 +2060,7 @@ bool CylinderCollider::CheckCollision(const Collider* other) const {
 
 void CylinderCollider::ResolveCollision(Collider* other) {
     if (!other || !m_owner || !other->GetOwner()) return;
+    if (other->GetType() == ColliderType::TERRAIN) { other->ResolveCollision(this); return; }
     if (m_isTrigger || other->IsTrigger()) {
         return;
     }
@@ -2281,6 +2292,7 @@ float MeshCollider::GetWorldBoundingSphereRadius() const {
 
 bool MeshCollider::CheckCollision(const Collider* other) const {
     if (!other || m_vertices.empty() || m_indices.empty()) return false;
+    if (other->GetType() == ColliderType::TERRAIN) return other->CheckCollision(this);
 
     // Broad phase: Bounding sphere test
     XMFLOAT3 ownerPos, ownerRot, ownerScale;
@@ -2433,6 +2445,7 @@ bool MeshCollider::CheckCollision(const Collider* other) const {
 
 void MeshCollider::ResolveCollision(Collider* other) {
     if (!other || !m_owner || m_vertices.empty() || m_indices.empty()) return;
+    if (other->GetType() == ColliderType::TERRAIN) { other->ResolveCollision(this); return; }
 
     GameObject* otherObj = other->GetOwner();
     if (!otherObj || m_isTrigger || other->IsTrigger()) {
@@ -2947,4 +2960,178 @@ bool MeshCollider::TriangleIntersectsSphere(const XMFLOAT3& v0,
         return true;
     }
     return false;
+}
+//-----------------------------------------------
+// Terrain Collider (ADR 0011)
+//-----------------------------------------------
+namespace {
+
+struct TerrainView {
+    const TerrainComponent* component = nullptr;
+    terrain::Layout layout;
+    XMFLOAT3 origin{ 0.0f, 0.0f, 0.0f };
+};
+
+// The owner's loaded, collidable terrain; false otherwise. Read-only: loading happens
+// on the main thread (TerrainComponent::ApplyColliderToOwner / inspector / draw).
+bool GetTerrainView(const GameObject* owner, TerrainView& out) {
+    if (!owner) return false;
+    const TerrainComponent* tc = owner->GetComponent<TerrainComponent>();
+    if (!tc || !tc->settings.enabled || !tc->settings.collision || !tc->IsLoaded())
+        return false;
+    out.component = tc;
+    out.layout = terrain::SanitizeLayout(tc->settings.layout);
+    out.origin = owner->GetPosition();
+    return true;
+}
+
+terrain::Float3 ToLocal(const XMFLOAT3& p, const TerrainView& v) {
+    return { p.x - v.origin.x, p.y - v.origin.y, p.z - v.origin.z };
+}
+
+XMFLOAT3 ToWorld(const terrain::Float3& p, const TerrainView& v) {
+    return { p.x + v.origin.x, p.y + v.origin.y, p.z + v.origin.z };
+}
+
+// Corner, edge-midpoint and face-centre points of an oriented box (26 points).
+int BoxSamplePoints(const XMFLOAT3& center, const XMFLOAT3& size, const XMFLOAT3& rotDeg,
+                    terrain::Float3* out, const TerrainView& v) {
+    const XMMATRIX R = XMMatrixRotationRollPitchYaw(
+        XMConvertToRadians(rotDeg.x), XMConvertToRadians(rotDeg.y), XMConvertToRadians(rotDeg.z));
+    const XMFLOAT3 h{ size.x * 0.5f, size.y * 0.5f, size.z * 0.5f };
+    int n = 0;
+    for (int sx = -1; sx <= 1; ++sx)
+        for (int sy = -1; sy <= 1; ++sy)
+            for (int sz = -1; sz <= 1; ++sz) {
+                if (sx == 0 && sy == 0 && sz == 0) continue;
+                XMFLOAT3 w;
+                XMStoreFloat3(&w, XMVector3TransformNormal(
+                    XMVectorSet(sx * h.x, sy * h.y, sz * h.z, 0.0f), R) + XMLoadFloat3(&center));
+                out[n++] = ToLocal(w, v);
+            }
+    return n;
+}
+
+} // namespace
+
+bool TerrainCollider::GetWorldBounds(XMFLOAT3& outMin, XMFLOAT3& outMax) const {
+    TerrainView v;
+    if (!GetTerrainView(m_owner, v)) return false;
+    // Cached at load: this runs several times per body per physics pass.
+    const std::uint16_t lo = v.component->GetLowSample();
+    const std::uint16_t hi = v.component->GetHighSample();
+    outMin = { v.origin.x, v.origin.y + terrain::SampleToHeight(v.layout, lo), v.origin.z };
+    outMax = { v.origin.x + v.layout.sizeX, v.origin.y + terrain::SampleToHeight(v.layout, hi),
+               v.origin.z + v.layout.sizeZ };
+    return true;
+}
+
+bool TerrainCollider::FindContact(const Collider* other, XMFLOAT3& outPoint,
+                                  XMFLOAT3& outNormal, float& outDepth) const {
+    if (!other || other == this || !other->GetOwner()) return false;
+    TerrainView v;
+    if (!GetTerrainView(m_owner, v)) return false;
+    const terrain::Heightmap& map = v.component->GetHeightmap();
+    terrain::SurfaceContact c;
+    bool hit = false;
+
+    switch (other->GetType()) {
+    case ColliderType::SPHERE: {
+        const auto* s = static_cast<const SphereCollider*>(other);
+        hit = terrain::SphereContact(v.layout, map, ToLocal(s->GetWorldCenter(), v), s->GetRadius(), c);
+        break;
+    }
+    case ColliderType::CAPSULE: {
+        const auto* cap = static_cast<const CapsuleCollider*>(other);
+        const XMFLOAT3 center = cap->GetWorldCenter();
+        const XMFLOAT3 rot = cap->GetOwner()->GetRotation();
+        const XMMATRIX R = XMMatrixRotationRollPitchYaw(
+            XMConvertToRadians(rot.x), XMConvertToRadians(rot.y), XMConvertToRadians(rot.z));
+        XMFLOAT3 axis;
+        XMStoreFloat3(&axis, XMVector3Normalize(XMVector3TransformNormal(XMVectorSet(0, 1, 0, 0), R)));
+        const float hh = cap->GetHeight() * 0.5f;
+        const XMFLOAT3 p1{ center.x - axis.x * hh, center.y - axis.y * hh, center.z - axis.z * hh };
+        const XMFLOAT3 p2{ center.x + axis.x * hh, center.y + axis.y * hh, center.z + axis.z * hh };
+        hit = terrain::CapsuleContact(v.layout, map, ToLocal(p1, v), ToLocal(p2, v), cap->GetRadius(), c);
+        break;
+    }
+    case ColliderType::BOX: {
+        const auto* box = static_cast<const BoxCollider*>(other);
+        terrain::Float3 pts[26];
+        const int n = BoxSamplePoints(box->GetWorldCenter(), box->GetSize(),
+                                      box->GetOwner()->GetRotation(), pts, v);
+        hit = terrain::PointsContact(v.layout, map, pts, n, c);
+        break;
+    }
+    case ColliderType::CYLINDER: {
+        const CylinderWorldFrame f = BuildCylinderWorldFrame(static_cast<const CylinderCollider*>(other));
+        terrain::Float3 pts[18];
+        int n = 0;
+        for (int cap = -1; cap <= 1; cap += 2) {
+            const float y = cap * f.halfHeight;
+            pts[n++] = ToLocal(CylinderLocalToWorld({ 0.0f, y, 0.0f }, f), v);
+            for (int k = 0; k < 8; ++k) {
+                const float a = k * (XM_2PI / 8.0f);
+                pts[n++] = ToLocal(CylinderLocalToWorld(
+                    { std::cos(a) * f.radius, y, std::sin(a) * f.radius }, f), v);
+            }
+        }
+        hit = terrain::PointsContact(v.layout, map, pts, n, c);
+        break;
+    }
+    case ColliderType::MESH: {
+        // Dynamic mesh bodies: their world box sampled like a box (axis-aligned).
+        const auto* mesh = static_cast<const MeshCollider*>(other);
+        XMFLOAT3 center, size;
+        mesh->GetWorldAABB(center, size);
+        terrain::Float3 pts[26];
+        const int n = BoxSamplePoints(center, size, { 0.0f, 0.0f, 0.0f }, pts, v);
+        hit = terrain::PointsContact(v.layout, map, pts, n, c);
+        break;
+    }
+    default:
+        return false; // terrain vs terrain: both static
+    }
+
+    if (!hit || !(c.depth > 0.0f)) return false;
+    outPoint = ToWorld(c.point, v);
+    outNormal = { c.normal.x, c.normal.y, c.normal.z };
+    outDepth = c.depth;
+    return true;
+}
+
+bool TerrainCollider::CheckCollision(const Collider* other) const {
+    XMFLOAT3 point, normal;
+    float depth = 0.0f;
+    return FindContact(other, point, normal, depth);
+}
+
+void TerrainCollider::ResolveCollision(Collider* other) {
+    if (!other || !m_owner || !other->GetOwner()) return;
+    if (m_isTrigger || other->IsTrigger()) return;
+    GameObject* body = other->GetOwner();
+    if (CollisionPairIgnored(m_owner, body)) return;
+    // Const access: does not add a RigidbodyComponent to the body.
+    if (static_cast<const GameObject*>(body)->GetRigidbody().IsKinematic()) return;
+
+    XMFLOAT3 point, normal;
+    float depth = 0.0f;
+    if (!FindContact(other, point, normal, depth)) return;
+    // Normal points from the terrain to the body: ResolveContact(self = body, other = terrain).
+    ResolveContact(body, m_owner, normal, depth, 0.0005f, &point);
+}
+
+bool TerrainCollider::RayIntersect(const XMFLOAT3& origin, const XMFLOAT3& dir, float maxDistance,
+                                   float& outT, XMFLOAT3& outNormal) const {
+    TerrainView v;
+    if (!GetTerrainView(m_owner, v)) return false;
+    terrain::Float3 n;
+    float t = 0.0f;
+    if (!terrain::Raycast(v.layout, v.component->GetHeightmap(), v.component->GetLowSample(),
+                          v.component->GetHighSample(), ToLocal(origin, v),
+                          { dir.x, dir.y, dir.z }, maxDistance, t, n))
+        return false;
+    outT = t;
+    outNormal = { n.x, n.y, n.z };
+    return true;
 }

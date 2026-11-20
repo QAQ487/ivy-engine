@@ -4,6 +4,11 @@
  *****************************************************/
 #include "terrain_component.h"
 #include "string_utils.h"
+#include "game_object.h"
+#include "collider_component_access.h"
+#include "rigidbody_component.h"
+#include "engine/physics/collider/collider.h"
+#include "engine/terrain/terrain_collision.h"
 #include "engine/core/content_path.h"
 #include "engine/debug_draw/debug_ofstream.h"
 #include "engine/rendering/sprite/texture.h"
@@ -91,15 +96,49 @@ bool TerrainComponent::EnsureLoaded() {
         m_grid = terrain::ChunkGrid{};
         m_bounds.clear();
         m_lodMemory.clear();
+        m_lowSample = m_highSample = 0;
         ReleaseHeightSRV();
         return false;
     }
 
     m_heightmap = std::move(loaded);
+    terrain::SampleRange(m_heightmap, m_lowSample, m_highSample);
     m_grid = terrain::ChunkGrid{};
     ReleaseHeightSRV(); // renderer uploads the new map on the next draw
     FitChunkGrid();
     return m_grid.chunkQuads > 0;
+}
+
+void TerrainComponent::ClearTerrainCollider(GameObject* node) {
+    if (!node || !node->m_collider || node->m_colliderOwnedByHost)
+        return;
+    if (node->m_collider->GetType() != ColliderType::TERRAIN)
+        return;
+    delete node->m_collider;
+    node->m_collider = nullptr;
+}
+
+void TerrainComponent::ApplyColliderToOwner() {
+    if (!owner)
+        return;
+    // A collider component on the same object wins (one 3D collider per GameObject).
+    if (!settings.collision || FindColliderComponent(owner)) {
+        ClearTerrainCollider(owner);
+        return;
+    }
+    if (owner->m_collider && owner->m_collider->GetType() != ColliderType::TERRAIN) {
+        hal::DebugWriteA("[Terrain] object already has a collider; terrain collision skipped\n");
+        return;
+    }
+    EnsureLoaded();
+    if (!owner->m_collider) {
+        owner->m_collider = new TerrainCollider(owner);
+        owner->m_colliderOwnedByHost = false;
+    }
+    // ResolveContact reads the terrain's rigidbody: it must be static, never pushed.
+    Rigidbody& rb = owner->GetRigidbody();
+    rb.SetIsKinematic(true);
+    rb.SetUseGravity(false);
 }
 
 ID3D11ShaderResourceView* TerrainComponent::GetTextureSRV() {

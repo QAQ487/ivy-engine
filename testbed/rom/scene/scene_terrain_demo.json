@@ -17,9 +17,12 @@
       "shadowDistance": 160.0,
       "fogEnabled": false
     },
+    "camera": {
+      "mode": "thirdPerson"
+    },
     "debugCamera": {
       "mode": "fly",
-      "enabledOnPlay": true,
+      "enabledOnPlay": false,
       "yawDeg": 0.0,
       "pitchDeg": -14.0,
       "position": {
@@ -913,6 +916,307 @@
             }
           ],
           "cullDistance": 300.0
+        }
+      }
+    },
+    {
+      "name": "Player",
+      "tag": 5,
+      "components": {
+        "Collider": {
+          "colliderCenter": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "colliderType": 2,
+          "halfExtents": {
+            "x": 0.5,
+            "y": 0.5,
+            "z": 0.5
+          },
+          "height": 1.0,
+          "isTrigger": false,
+          "meshSizePadding": 0.0,
+          "radius": 0.5,
+          "showDebugCollider": false
+        },
+        "SceneTransform": {
+          "posX": 0.0,
+          "posY": 16.3349,
+          "posZ": 6.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "Script": {
+          "scriptClass": "SamplePlayerScript"
+        }
+      },
+      "children": [
+        {
+          "name": "Player_Model",
+          "tag": 5,
+          "children": [],
+          "components": {
+            "SceneTransform": {
+              "posX": 0.0,
+              "posY": -0.5,
+              "posZ": 0.0,
+              "rotX": 0.0,
+              "rotY": 0.0,
+              "rotZ": 0.0,
+              "scaleX": 0.01,
+              "scaleY": 0.01,
+              "scaleZ": 0.01
+            },
+            "visual": {
+              "active_clip": "idle",
+              "animate": true,
+              "animations": {
+                "idle": "rom/model/player/Idle.fbx",
+                "jump": "rom/model/player/Jump01.fbx",
+                "run": "rom/model/player/Running.fbx"
+              },
+              "model": "rom/model/player/Y Bot_white.fbx",
+              "shader": "standard"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Drop Sphere",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -4.5,
+          "posY": 19.5786,
+          "posZ": 15.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 15.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "visual": {
+          "model": "rom/model/primitives/Sphere.fbx",
+          "shader": "standard"
+        },
+        "Material": {
+          "color": [
+            0.9,
+            0.3,
+            0.2
+          ],
+          "metallic": 0.0,
+          "roughness": 0.5
+        },
+        "Collider": {
+          "colliderCenter": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "colliderType": 2,
+          "halfExtents": {
+            "x": 0.5,
+            "y": 0.5,
+            "z": 0.5
+          },
+          "height": 1.0,
+          "isTrigger": false,
+          "meshSizePadding": 0.0,
+          "radius": 0.5,
+          "showDebugCollider": true
+        },
+        "Rigidbody": {
+          "useGravity": true,
+          "isKinematic": false,
+          "mass": 1.0,
+          "drag": 0.05,
+          "angularDrag": 0.2,
+          "restitution": 0.1,
+          "friction": 0.6
+        }
+      }
+    },
+    {
+      "name": "Drop Box",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -1.5,
+          "posY": 19.5191,
+          "posZ": 15.0,
+          "rotX": 20.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "visual": {
+          "model": "rom/model/primitives/Cube.fbx",
+          "shader": "standard"
+        },
+        "Material": {
+          "color": [
+            0.25,
+            0.55,
+            0.95
+          ],
+          "metallic": 0.0,
+          "roughness": 0.5
+        },
+        "Collider": {
+          "colliderCenter": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "colliderType": 1,
+          "halfExtents": {
+            "x": 0.5,
+            "y": 0.5,
+            "z": 0.5
+          },
+          "height": 1.0,
+          "isTrigger": false,
+          "meshSizePadding": 0.0,
+          "radius": 0.5,
+          "showDebugCollider": true
+        },
+        "Rigidbody": {
+          "useGravity": true,
+          "isKinematic": false,
+          "mass": 1.0,
+          "drag": 0.05,
+          "angularDrag": 0.2,
+          "restitution": 0.1,
+          "friction": 0.6
+        }
+      }
+    },
+    {
+      "name": "Drop Capsule",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 1.5,
+          "posY": 19.4413,
+          "posZ": 15.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 15.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "visual": {
+          "model": "rom/model/primitives/Capsule.fbx",
+          "shader": "standard"
+        },
+        "Material": {
+          "color": [
+            0.95,
+            0.8,
+            0.2
+          ],
+          "metallic": 0.0,
+          "roughness": 0.5
+        },
+        "Collider": {
+          "colliderCenter": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "colliderType": 3,
+          "halfExtents": {
+            "x": 0.5,
+            "y": 0.5,
+            "z": 0.5
+          },
+          "height": 1.0,
+          "isTrigger": false,
+          "meshSizePadding": 0.0,
+          "radius": 0.5,
+          "showDebugCollider": true
+        },
+        "Rigidbody": {
+          "useGravity": true,
+          "isKinematic": false,
+          "mass": 1.0,
+          "drag": 0.05,
+          "angularDrag": 0.2,
+          "restitution": 0.1,
+          "friction": 0.6
+        }
+      }
+    },
+    {
+      "name": "Drop Cylinder",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 4.5,
+          "posY": 19.3067,
+          "posZ": 15.0,
+          "rotX": 20.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "visual": {
+          "model": "rom/model/primitives/Cylinder.fbx",
+          "shader": "standard"
+        },
+        "Material": {
+          "color": [
+            0.35,
+            0.85,
+            0.4
+          ],
+          "metallic": 0.0,
+          "roughness": 0.5
+        },
+        "Collider": {
+          "colliderCenter": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "colliderType": 5,
+          "halfExtents": {
+            "x": 0.5,
+            "y": 0.5,
+            "z": 0.5
+          },
+          "height": 1.0,
+          "isTrigger": false,
+          "meshSizePadding": 0.0,
+          "radius": 0.5,
+          "showDebugCollider": true
+        },
+        "Rigidbody": {
+          "useGravity": true,
+          "isKinematic": false,
+          "mass": 1.0,
+          "drag": 0.05,
+          "angularDrag": 0.2,
+          "restitution": 0.1,
+          "friction": 0.6
         }
       }
     }

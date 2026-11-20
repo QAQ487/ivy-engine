@@ -27,6 +27,7 @@ enum class ColliderType {
     CAPSULE,
     MESH,
     CYLINDER,
+    TERRAIN,   // heightmap terrain (ADR 0011); created by TerrainComponent, never serialized
 };
 
 struct ContactInfo {
@@ -242,6 +243,36 @@ private:
                                   float sphereRadius,
                                   DirectX::XMFLOAT3& outNormal,
                                   float& outPenetration) const;
+};
+
+//-----------------------------------------------
+// Terrain Collider - heightmap surface of the owner's TerrainComponent (ADR 0011).
+// Static: the owner is kinematic. Uses the owner's position only (rotation and scale
+// are ignored, like the terrain itself) and reads the component's loaded heightmap on
+// every query, so it simply stops colliding when the component is removed or not
+// loaded. Contacts only test the cells under the other shape (sphere / capsule exactly,
+// box / cylinder / mesh by corner and rim points), raycasts walk the grid.
+//-----------------------------------------------
+class TerrainCollider : public Collider {
+public:
+    explicit TerrainCollider(GameObject* owner) : Collider(ColliderType::TERRAIN, owner) {}
+
+    // World box of the loaded terrain; false when nothing is loaded.
+    bool GetWorldBounds(DirectX::XMFLOAT3& outMin, DirectX::XMFLOAT3& outMax) const;
+
+    bool CheckCollision(const Collider* other) const override;
+    // Pushes `other` (the dynamic body) out of the surface; the terrain never moves.
+    void ResolveCollision(Collider* other) override;
+    bool RayIntersect(const DirectX::XMFLOAT3& origin,
+        const DirectX::XMFLOAT3& dir, float maxDistance,
+        float& outT, DirectX::XMFLOAT3& outNormal) const override;
+    // The terrain is drawn anyway; nothing extra for the collision visualizer.
+    void DebugDraw(const DirectX::XMFLOAT4& /*color*/ = { 0.0f, 1.0f, 0.0f, 1.0f }) override {}
+
+    // Deepest contact of `other` with the surface (world space; normal from the
+    // surface towards `other`). False when they do not touch.
+    bool FindContact(const Collider* other, DirectX::XMFLOAT3& outPoint,
+        DirectX::XMFLOAT3& outNormal, float& outDepth) const;
 };
 
 // Body-space inverse inertia for a collider. Kinematic / non-positive mass

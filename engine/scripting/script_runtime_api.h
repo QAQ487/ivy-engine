@@ -302,6 +302,10 @@ struct ScriptRuntimeApi {
     void (*inputCaptureCancel)();
     bool (*inputResetBindings)(const char* action);
     bool (*inputSaveBindings)();
+
+    // v53 - terrain (ADR 0011): surface height and up-facing normal of the highest
+    // enabled, loaded Terrain under world (x, z). False when no terrain covers it.
+    bool (*terrainSampleHeight)(float x, float z, float* outHeight, DirectX::XMFLOAT3* outNormal);
 };
 
 const ScriptRuntimeApi* ScriptRuntimeApi_GetHost();
@@ -454,6 +458,12 @@ bool ScriptApi_InputResetBindings(const char* action = nullptr);
 // Saves the player's bindings (differences from the defaults) to the save slot
 // "ivy_input"; they are loaded automatically at start.
 bool ScriptApi_InputSaveBindings();
+
+// Terrain (v53 host; older hosts return false). Height of the terrain surface under
+// world (x, z) and, optionally, its up-facing unit normal. With several terrains the
+// highest surface wins; false when no loaded terrain covers the point.
+bool ScriptApi_TerrainSampleHeight(float x, float z, float* outHeight,
+                                   DirectX::XMFLOAT3* outNormal = nullptr);
 void ScriptApi_CameraSetPosition(DirectX::XMFLOAT3 position);
 void ScriptApi_CameraSetTarget(DirectX::XMFLOAT3 target);
 void ScriptApi_CameraSetUp(DirectX::XMFLOAT3 up);

@@ -98,9 +98,10 @@ Heightmap terrain (ADR 0011). The node's position places the terrain's (0, 0) co
 | `lodBias` | `1` | Multiplies `render.lodBias`; > 1 = coarser sooner |
 | `texture`, `textureTileSize` | `""`, `8` | Tiled albedo and metres per repeat |
 | `color` `{r,g,b}`, `roughness`, `metallic` | white, `0.9`, `0` | Material (same mapping as `Material`) |
-| `castShadows`, `enabled` | `true`, `true` | CSM caster / draw at all |
+| `castShadows`, `enabled` | `true`, `true` | CSM caster / draw (and collide) at all |
+| `collision` | `true` | Static heightfield collider on this object, unless it has its own collider component; makes its rigidbody kinematic |
 
-Shaded by the scene's `render.defaultShader`. No collider yet: bodies fall through it until terrain step 3.
+Shaded by the scene's `render.defaultShader`. Script height queries: `api:ScriptApi_TerrainSampleHeight` (v53).
 
 ## Prefab formats (`api:PrefabSerializer`)
 

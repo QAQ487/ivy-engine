@@ -1487,6 +1487,10 @@ void DrawEditorInspectorPanel(bool playVisuals, bool* open)
                     runtimeDirty = true;
                 if (ImGui::Checkbox("Enabled##Terrain", &ts.enabled))
                     runtimeDirty = true;
+                if (ImGui::Checkbox("Collision##Terrain", &ts.collision))
+                    runtimeDirty = true;
+                if (ts.collision && FindColliderComponent(g_selNode))
+                    ImGui::TextDisabled("This object's collider component is used instead.");
                 ts = terrain::SanitizeSettings(ts);
 
                 EditorUndo_EndComponentEdit(g_selNode, "Terrain");

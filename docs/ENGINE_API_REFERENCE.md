@@ -1,7 +1,7 @@
 # Ivy Engine — Complete Ability & API Reference
 
 Exhaustive catalog of **Ivy Engine** capabilities and public functions,
-scanned from every header under `engine/` and `src/app/` (193 headers; regenerate to refresh).
+scanned from every header under `engine/` and `src/app/` (194 headers; regenerate to refresh).
 
 **Learning how to use the engine?** Start with [`ENGINE_USER_GUIDE.md`](ENGINE_USER_GUIDE.md) (humans).  
 For JSON schemas, source map, and change rules, see [`AGENTS.md`](../AGENTS.md) (AI agents).
@@ -873,6 +873,8 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `void InvalidateTexture();`
 - `bool IsLoaded() const { return m_heightmap.IsValid();`
 - `ID3D11ShaderResourceView* GetTextureSRV();`
+- `void ApplyColliderToOwner();`
+- `static void ClearTerrainCollider(GameObject* owner);`
 - `void SetHeightSRV(ID3D11ShaderResourceView* srv);`
 - `void ReleaseHeightSRV();`
 - `void FitChunkGrid();`
@@ -1464,7 +1466,7 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `void End(b2ShapeId a,b2ShapeId b);`
 
 ### `engine/physics/collider/collider.h`
-**Types:** GameObject, Model3D, ContactInfo, Collider, BoxCollider, SphereCollider, CapsuleCollider, CylinderCollider, MeshCollider
+**Types:** GameObject, Model3D, ContactInfo, Collider, BoxCollider, SphereCollider, CapsuleCollider, CylinderCollider, MeshCollider, TerrainCollider
 **Enums:** Tag, ColliderType
 - `DirectX::XMFLOAT3 GetScaledLocalCenter() const;`
 - `DirectX::XMFLOAT3 GetWorldCenter() const;`
@@ -1505,6 +1507,11 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `void CalculateBoundingSphere();`
 - `bool RayIntersectsTriangle(const DirectX::XMFLOAT3& rayOrigin, const DirectX::XMFLOAT3& rayDir, const DirectX::XMFLOAT3& v0, const DirectX::XMFLOAT3& v1, const DirectX::XMFLOAT3& v2, float& t) const;`
 - `bool TriangleIntersectsSphere(const DirectX::XMFLOAT3& v0, const DirectX::XMFLOAT3& v1, const DirectX::XMFLOAT3& v2, const DirectX::XMFLOAT3& sphereCenter, float sphereRadius, DirectX::XMFLOAT3& outNormal, float& outPenetration) const;`
+- `explicit TerrainCollider(GameObject* owner) : Collider(ColliderType::TERRAIN, owner) {} bool GetWorldBounds(DirectX::XMFLOAT3& outMin, DirectX::XMFLOAT3& outMax) const;`
+- `bool CheckCollision(const Collider* other) const override;`
+- `void ResolveCollision(Collider* other) override;`
+- `bool RayIntersect(const DirectX::XMFLOAT3& origin, const DirectX::XMFLOAT3& dir, float maxDistance, float& outT, DirectX::XMFLOAT3& outNormal) const override;`
+- `void DebugDraw(const DirectX::XMFLOAT4& = { 0.0f, 1.0f, 0.0f, 1.0f }) override {} bool FindContact(const Collider* other, DirectX::XMFLOAT3& outPoint, DirectX::XMFLOAT3& outNormal, float& outDepth) const;`
 - `DirectX::XMFLOAT3 Collider_ComputeLocalInverseInertia( const Collider* collider, float mass, bool kinematic);`
 
 ### `engine/physics/collider/cylinder_pair.h`
@@ -2396,6 +2403,7 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `void ScriptApi_InputCaptureCancel();`
 - `bool ScriptApi_InputResetBindings(const char* action = nullptr);`
 - `bool ScriptApi_InputSaveBindings();`
+- `bool ScriptApi_TerrainSampleHeight(float x, float z, float* outHeight, DirectX::XMFLOAT3* outNormal = nullptr);`
 - `void ScriptApi_CameraSetPosition(DirectX::XMFLOAT3 position);`
 - `void ScriptApi_CameraSetTarget(DirectX::XMFLOAT3 target);`
 - `void ScriptApi_CameraSetUp(DirectX::XMFLOAT3 up);`
@@ -2478,6 +2486,15 @@ Vendor header `WICTextureLoader11.h` is omitted.
 ### `engine/scripting/ui_canvas_script_register.h`
 **Types:** TYPE
 - `void DllUICanvasScript_Register(const std::string& name, std::function<UICanvasScript*()> creator);`
+
+### `engine/terrain/terrain_collision.h`
+**Types:** SurfaceContact
+- `void SampleRange(const Heightmap& map, std::uint16_t& outLow, std::uint16_t& outHigh);`
+- `bool Raycast(const Layout& layout, const Heightmap& map, const Float3& origin, const Float3& dir, float maxDistance, float& outT, Float3& outNormal);`
+- `bool Raycast(const Layout& layout, const Heightmap& map, std::uint16_t lowSample, std::uint16_t highSample, const Float3& origin, const Float3& dir, float maxDistance, float& outT, Float3& outNormal);`
+- `bool PointsContact(const Layout& layout, const Heightmap& map, const Float3* points, int count, SurfaceContact& out);`
+- `bool SphereContact(const Layout& layout, const Heightmap& map, const Float3& center, float radius, SurfaceContact& out);`
+- `bool CapsuleContact(const Layout& layout, const Heightmap& map, const Float3& a, const Float3& b, float radius, SurfaceContact& out);`
 
 ### `engine/terrain/terrain_draw_plan.h`
 **Types:** ChunkInstance, PassOptions

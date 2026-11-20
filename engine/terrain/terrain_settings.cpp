@@ -76,6 +76,7 @@ nlohmann::json SettingsToJson(const Settings& s) {
     j["metallic"] = s.metallic;
     j["castShadows"] = s.castShadows;
     j["enabled"] = s.enabled;
+    j["collision"] = s.collision;
     return j;
 }
 
@@ -102,6 +103,7 @@ Settings SettingsFromJson(const nlohmann::json& j) {
     s.metallic = ReadFloat(j, "metallic", s.metallic);
     s.castShadows = ReadBool(j, "castShadows", s.castShadows);
     s.enabled = ReadBool(j, "enabled", s.enabled);
+    s.collision = ReadBool(j, "collision", s.collision);
     return SanitizeSettings(s);
 }
 

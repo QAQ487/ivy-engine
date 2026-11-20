@@ -438,9 +438,11 @@ A ground surface made from a **heightmap**: a square grid of heights stored in a
 - **Position** moves the terrain: the node's position is the terrain's corner (sample 0, 0), and the terrain extends along +X and +Z. Rotation and scale have no effect.
 - **Chunk Cells / LOD Bias** — the terrain is drawn in square chunks; far chunks use fewer triangles (the scene's LOD switch and LOD Bias in Rendering apply as well). Larger chunks mean fewer draw calls, smaller chunks finer culling.
 - **Texture / Texture Tile Size** — one texture repeated every *tile size* metres, tinted by **Color**; **Roughness / Metallic** as on Material. The terrain uses the scene's default shader (Rendering → Default Shader), receives shadows and, with **Cast Shadows**, casts them in CSM mode. In shadow-volume mode it receives shadows but casts none.
-- Not yet: collision (objects fall through until the terrain collider lands), sculpting brushes and painting several materials. Those are the next terrain steps.
+- **Collision** (on by default): objects with a Sphere, Capsule, Box, Cylinder or Mesh collider and a Rigidbody land on the terrain and roll down its slopes, and raycasts (`ScriptApi_Physics_Raycast`, so the sample player's jump check too) hit it. The terrain object needs no collider component; if you give it one, that collider is used instead. Adding collision makes the terrain object's Rigidbody kinematic (it never moves). Boxes and cylinders touch the ground at sample points on their corners, edges and rims, so a sharp peak narrower than the box can poke through its middle.
+- From scripts, `ScriptApi_TerrainSampleHeight(x, z, &height, &normal)` (ScriptRuntimeApi v53) returns the ground height under a world position, e.g. to place spawned objects on the ground.
+- Not yet: sculpting brushes and painting several materials. Those are the next terrain steps.
 
-Try it: open `scene_terrain_demo.json` in the testbed (fly camera; 512 m of hills with trees and boulders). `python3 tools/gen_terrain_demo.py` regenerates its heightmap, texture and scene.
+Try it: open `scene_terrain_demo.json` in the testbed (512 m of hills with trees and boulders). Press Play (Debug build): the sample player walks the hills with the third-person camera (WASD / stick, Space to jump) and a sphere, box, capsule and cylinder drop onto the slope in front of it. F1 switches to the fly camera. `python3 tools/gen_terrain_demo.py` regenerates its heightmap, texture and scene.
 
 ---
 

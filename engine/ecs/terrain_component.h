@@ -13,6 +13,7 @@
 #include "engine/terrain/terrain_heightmap.h"
 #include "engine/terrain/terrain_settings.h"
 
+#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -43,6 +44,9 @@ public:
 
     bool IsLoaded() const { return m_heightmap.IsValid(); }
     const std::string& GetLoadError() const { return m_loadError; }
+    // Lowest / highest sample of the loaded map (cached at load; 0, 0 when not loaded).
+    std::uint16_t GetLowSample() const { return m_lowSample; }
+    std::uint16_t GetHighSample() const { return m_highSample; }
     const terrain::Heightmap& GetHeightmap() const { return m_heightmap; }
     const terrain::ChunkGrid& GetChunkGrid() const { return m_grid; }
     const std::vector<terrain::ChunkBounds>& GetChunkBounds() const { return m_bounds; }
@@ -51,6 +55,14 @@ public:
 
     // Tiled albedo (settings.texture); null when empty or unloadable.
     ID3D11ShaderResourceView* GetTextureSRV();
+
+    // Static heightfield collider (TerrainCollider) on the owner when settings.collision
+    // is on and the owner has no collider component of its own; loads the heightmap
+    // first. Makes the owner's rigidbody kinematic without gravity (terrain never moves).
+    // Called by SceneRuntime when the scene registers its colliders (main thread).
+    void ApplyColliderToOwner();
+    // Deletes the owner's collider if it is a terrain collider this engine allocated.
+    static void ClearTerrainCollider(GameObject* owner);
 
     // Heightmap GPU copy, owned here and created by the renderer (null = rebuild).
     ID3D11ShaderResourceView* GetHeightSRV() const { return m_heightSrv; }
@@ -67,6 +79,8 @@ private:
     std::string m_loadedPath;  // path the current map (or failure) belongs to
     bool m_loadAttempted = false;
     std::string m_loadError;
+    std::uint16_t m_lowSample = 0;
+    std::uint16_t m_highSample = 0;
 
     ID3D11ShaderResourceView* m_heightSrv = nullptr;
 

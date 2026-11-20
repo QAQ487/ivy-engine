@@ -30,7 +30,7 @@ static void TestDefaults() {
     Expect(d.chunkQuads == kDefaultChunkQuads, "default chunk size");
     Expect(d.lodBias == 1.0f && d.textureTileSize == 8.0f, "default bias / tiling");
     Expect(d.roughness == 0.9f && d.metallic == 0.0f, "default material");
-    Expect(d.castShadows && d.enabled, "default flags");
+    Expect(d.castShadows && d.enabled && d.collision, "default flags");
 
     const Settings notObject = SettingsFromJson(json::array());
     Expect(notObject.layout.sizeX == 256.0f, "non-object JSON gives defaults");
@@ -54,6 +54,7 @@ static void TestRoundTrip() {
     s.metallic = 0.1f;
     s.castShadows = false;
     s.enabled = false;
+    s.collision = false;
 
     const json j = SettingsToJson(s);
     Expect(j["color"]["g"].get<float>() == 0.6f, "color written as an object");
@@ -64,7 +65,7 @@ static void TestRoundTrip() {
     Expect(b.chunkQuads == 32 && b.lodBias == 2.0f && b.textureTileSize == 4.0f, "numbers survive");
     Expect(b.colorR == 0.5f && b.colorG == 0.6f && b.colorB == 0.7f, "color survives");
     Expect(b.roughness == 0.4f && b.metallic == 0.1f, "material survives");
-    Expect(!b.castShadows && !b.enabled, "flags survive");
+    Expect(!b.castShadows && !b.enabled && !b.collision, "flags survive");
 }
 
 static void TestSanitising() {
