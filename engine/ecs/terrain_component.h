@@ -13,6 +13,7 @@
 #include "engine/terrain/terrain_brush.h"
 #include "engine/terrain/terrain_heightmap.h"
 #include "engine/terrain/terrain_settings.h"
+#include "engine/terrain/terrain_splat.h"
 
 #include <cstdint>
 #include <string>
@@ -82,6 +83,25 @@ public:
     // project) through a temporary file, and clears the unsaved flag. outBytes, when
     // given, receives the written file.
     bool SaveHeightmap(std::string* error, std::vector<std::uint8_t>* outBytes = nullptr);
+    // --- Paint layers (step 5) ------------------------------------------------------
+    // Loads settings.splatmap, or an all-layer-0 map at the heightmap's resolution when
+    // it is empty. False while no splat map could be loaded (GetSplatError).
+    bool EnsureSplatLoaded();
+    const terrain::SplatMap& GetSplat() const { return m_splat; }
+    terrain::SplatMap& EditSplat() { return m_splat; }
+    const std::string& GetSplatError() const { return m_splatError; }
+    void NotifySplatChanged(const terrain::SampleRect& rect);
+    bool HasUnsavedSplat() const { return m_unsavedSplat; }
+    void AdoptSplatPath(const std::string& romPath);
+    bool SaveSplat(std::string* error, std::vector<std::uint8_t>* outBytes = nullptr);
+    void InvalidateSplat() { m_splatAttempted = false; }
+    const terrain::SampleRect& PendingSplatRect() const { return m_pendingSplatRect; }
+    void ClearPendingSplatRect() { m_pendingSplatRect = terrain::SampleRect{}; }
+    ID3D11ShaderResourceView* GetSplatSRV() const { return m_splatSrv; }
+    void SetSplatSRV(ID3D11ShaderResourceView* srv); // takes ownership
+    // Texture of effective layer `index` (null when empty / unloadable).
+    ID3D11ShaderResourceView* GetLayerSRV(int index);
+
     // Samples changed since the renderer last uploaded them (renderer only).
     const terrain::SampleRect& PendingGpuRect() const { return m_pendingGpuRect; }
     void ClearPendingGpuRect() { m_pendingGpuRect = terrain::SampleRect{}; }
@@ -107,6 +127,20 @@ private:
     terrain::SampleRect m_pendingGpuRect;
 
     ID3D11ShaderResourceView* m_heightSrv = nullptr;
+
+    terrain::SplatMap m_splat;
+    std::string m_splatLoadedPath;
+    bool m_splatAttempted = false;
+    std::string m_splatError;
+    bool m_unsavedSplat = false;
+    terrain::SampleRect m_pendingSplatRect;
+    ID3D11ShaderResourceView* m_splatSrv = nullptr;
+    struct LayerTexture {
+        std::string path;
+        int id = -1;
+        bool attempted = false;
+    };
+    LayerTexture m_layerTextures[terrain::kMaxLayers];
 
     std::string m_texturePathLoaded;
     int m_textureId = -1;

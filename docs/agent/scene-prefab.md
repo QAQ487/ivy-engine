@@ -96,7 +96,9 @@ Heightmap terrain (ADR 0011). The node's position places the terrain's (0, 0) co
 | `heightScale`, `heightOffset` | `100`, `0` | Height = `heightOffset + sample / 65535 × heightScale` |
 | `chunkQuads` | `64` | Cells per chunk side (power of two 8–256, fitted to the map) |
 | `lodBias` | `1` | Multiplies `render.lodBias`; > 1 = coarser sooner |
-| `texture`, `textureTileSize` | `""`, `8` | Tiled albedo and metres per repeat |
+| `texture`, `textureTileSize` | `""`, `8` | Layer 0 texture and metres per repeat (kept equal to `layers[0]`; the only layer when `layers` is absent) |
+| `layers` | absent | Up to 4 `{ "texture", "tileSize" }` paint layers |
+| `splatmap` | absent / `""` | `rom/...splat`: N×N RGBA8 layer weights (R..A = layers 1..4, sum 255), N = 2ⁿ+1, no header; empty = all layer 1. Editor Save Scene writes painted ones to `rom/terrain/<scene>_<object>_splat.splat` |
 | `color` `{r,g,b}`, `roughness`, `metallic` | white, `0.9`, `0` | Material (same mapping as `Material`) |
 | `castShadows`, `enabled` | `true`, `true` | CSM caster / draw (and collide) at all |
 | `collision` | `true` | Static heightfield collider on this object, unless it has its own collider component; makes its rigidbody kinematic |

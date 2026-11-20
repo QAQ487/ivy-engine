@@ -366,6 +366,9 @@
     <ClInclude Include="engine\terrain\terrain_brush.h">
       <Filter>engine\terrain</Filter>
     </ClInclude>
+    <ClInclude Include="engine\terrain\terrain_splat.h">
+      <Filter>engine\terrain</Filter>
+    </ClInclude>
     <ClInclude Include="engine\save\save_system.h">
       <Filter>engine\save</Filter>
     </ClInclude>
@@ -508,6 +511,9 @@
       <Filter>engine\terrain</Filter>
     </ClCompile>
     <ClCompile Include="engine\terrain\terrain_brush.cpp">
+      <Filter>engine\terrain</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\terrain\terrain_splat.cpp">
       <Filter>engine\terrain</Filter>
     </ClCompile>
     <ClCompile Include="engine\save\save_system.cpp">
@@ -846,6 +852,9 @@
     <FxCompile Include="shaders\PixelShader3D_Outline.hlsl" />
     <FxCompile Include="shaders\VertexShaderShadowVolume.hlsl" />
     <FxCompile Include="shaders\VertexShaderTerrain.hlsl" />
+    <FxCompile Include="shaders\PixelShaderTerrain.hlsl" />
+    <FxCompile Include="shaders\PixelShaderTerrain_PBR.hlsl" />
+    <FxCompile Include="shaders\PixelShaderTerrain_Toon.hlsl" />
     <FxCompile Include="shaders\PixelShaderShadowVolumeDarken.hlsl" />
     <FxCompile Include="shaders\SkyboxPS.hlsl" />
     <FxCompile Include="shaders\SkyboxVS.hlsl" />

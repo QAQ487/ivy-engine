@@ -1450,27 +1450,51 @@ void DrawEditorInspectorPanel(bool playVisuals, bool* open)
                 if (ImGui::DragFloat("LOD Bias##Terrain", &ts.lodBias, 0.05f, terrain::kMinLodBias, terrain::kMaxLodBias))
                     runtimeDirty = true;
 
-                char texBuf[256];
-                strncpy_s(texBuf, ts.texture.c_str(), sizeof(texBuf) - 1);
-                texBuf[sizeof(texBuf) - 1] = '\0';
-                ImGui::Text("Texture");
-                if (ImGui::InputText("##TerrainTexture", texBuf, sizeof(texBuf))) {
-                    ts.texture = texBuf;
-                    tc->InvalidateTexture();
-                    runtimeDirty = true;
-                }
                 {
-                    const char* texExts[] = { ".png", ".jpg", ".jpeg", ".tga", ".bmp", ".dds" };
-                    std::string droppedPath;
-                    if (AcceptAssetPathDrop(texExts, IM_ARRAYSIZE(texExts), droppedPath)) {
-                        ts.texture = droppedPath;
+                    // Paint layers (ADR 0011 step 5). Layer 0 mirrors the legacy texture fields.
+                    ImGui::Text("Layers (paint them with the Paint tool below)");
+                    std::vector<terrain::LayerSettings> layers = terrain::EffectiveLayers(ts);
+                    bool layersChanged = false;
+                    for (int i = 0; i < static_cast<int>(layers.size()); ++i) {
+                        ImGui::PushID(i);
+                        char layerBuf[256];
+                        strncpy_s(layerBuf, layers[i].texture.c_str(), sizeof(layerBuf) - 1);
+                        layerBuf[sizeof(layerBuf) - 1] = '\0';
+                        ImGui::Text("Layer %d", i + 1);
+                        if (ImGui::InputText("##TerrainLayerTex", layerBuf, sizeof(layerBuf))) {
+                            layers[i].texture = layerBuf;
+                            layersChanged = true;
+                        }
+                        const char* texExts[] = { ".png", ".jpg", ".jpeg", ".tga", ".bmp", ".dds" };
+                        std::string droppedPath;
+                        if (AcceptAssetPathDrop(texExts, IM_ARRAYSIZE(texExts), droppedPath)) {
+                            layers[i].texture = droppedPath;
+                            layersChanged = true;
+                        }
+                        if (ImGui::DragFloat("Tile Size (m)", &layers[i].tileSize, 0.1f,
+                                terrain::kMinTextureTileSize, terrain::kMaxTextureTileSize))
+                            layersChanged = true;
+                        ImGui::PopID();
+                    }
+                    if (layers.size() < static_cast<size_t>(terrain::kMaxLayers) && ImGui::Button("Add Layer")) {
+                        layers.push_back(terrain::LayerSettings{});
+                        layersChanged = true;
+                    }
+                    if (layers.size() > 1) {
+                        if (layers.size() < static_cast<size_t>(terrain::kMaxLayers)) ImGui::SameLine();
+                        if (ImGui::Button("Remove Last Layer")) {
+                            layers.pop_back();
+                            layersChanged = true;
+                        }
+                    }
+                    if (layersChanged) {
+                        ts.layers = layers;
+                        ts.texture = layers[0].texture;
+                        ts.textureTileSize = layers[0].tileSize;
                         tc->InvalidateTexture();
                         runtimeDirty = true;
                     }
                 }
-                if (ImGui::DragFloat("Texture Tile Size", &ts.textureTileSize, 0.1f,
-                        terrain::kMinTextureTileSize, terrain::kMaxTextureTileSize))
-                    runtimeDirty = true;
                 {
                     float color[3] = { ts.colorR, ts.colorG, ts.colorB };
                     if (ImGui::ColorEdit3("Color##Terrain", color)) {

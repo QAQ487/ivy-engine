@@ -57,6 +57,10 @@ Settings SanitizeSettings(const Settings& in) {
     s.colorB = Clamp(in.colorB, 0.0f, 1.0f, d.colorB);
     s.roughness = Clamp(in.roughness, 0.0f, 1.0f, d.roughness);
     s.metallic = Clamp(in.metallic, 0.0f, 1.0f, d.metallic);
+    if (s.layers.size() > 4)
+        s.layers.resize(4);
+    for (auto& layer : s.layers)
+        layer.tileSize = Clamp(layer.tileSize, kMinTextureTileSize, kMaxTextureTileSize, d.textureTileSize);
     return s;
 }
 
@@ -77,6 +81,14 @@ nlohmann::json SettingsToJson(const Settings& s) {
     j["castShadows"] = s.castShadows;
     j["enabled"] = s.enabled;
     j["collision"] = s.collision;
+    if (!s.layers.empty()) {
+        nlohmann::json layers = nlohmann::json::array();
+        for (const auto& layer : s.layers)
+            layers.push_back({{"texture", layer.texture}, {"tileSize", layer.tileSize}});
+        j["layers"] = layers;
+    }
+    if (!s.splatmap.empty())
+        j["splatmap"] = s.splatmap;
     return j;
 }
 
@@ -104,7 +116,28 @@ Settings SettingsFromJson(const nlohmann::json& j) {
     s.castShadows = ReadBool(j, "castShadows", s.castShadows);
     s.enabled = ReadBool(j, "enabled", s.enabled);
     s.collision = ReadBool(j, "collision", s.collision);
+    auto layers = j.find("layers");
+    if (layers != j.end() && layers->is_array()) {
+        for (const auto& item : *layers) {
+            if (!item.is_object() || s.layers.size() >= 4)
+                continue;
+            LayerSettings layer;
+            layer.texture = ReadString(item, "texture");
+            layer.tileSize = ReadFloat(item, "tileSize", layer.tileSize);
+            s.layers.push_back(layer);
+        }
+    }
+    s.splatmap = ReadString(j, "splatmap");
     return SanitizeSettings(s);
+}
+
+std::vector<LayerSettings> EffectiveLayers(const Settings& s) {
+    if (!s.layers.empty())
+        return s.layers;
+    LayerSettings legacy;
+    legacy.texture = s.texture;
+    legacy.tileSize = s.textureTileSize;
+    return {legacy};
 }
 
 } // namespace terrain

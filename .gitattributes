@@ -67,3 +67,4 @@
 # conversion cannot corrupt them.
 ###############################################################################
 *.r16 binary
+*.splat binary

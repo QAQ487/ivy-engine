@@ -2028,7 +2028,7 @@ void EngineGUI_Update(double elapsed_time) {
                     }
                     if (ext == ".dll") continue; // ScriptFactory owns DLL validation and module lifetime.
                     // The editor's own heightmap save (Save Scene): the terrain already holds it.
-                    if (ext == ".r16" && !change.removed && TerrainEditor_IsOwnWrite(path)) continue;
+                    if ((ext == ".r16" || ext == ".splat") && !change.removed && TerrainEditor_IsOwnWrite(path)) continue;
                     if (path.rfind("rom/skybox/cache/", 0) == 0) {
                         if (!change.removed && ext == ".dds") {
                             const auto widePath = PathFromUtf8(path).wstring();

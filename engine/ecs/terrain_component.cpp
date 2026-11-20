@@ -20,8 +20,44 @@
 #include <fstream>
 #include <iterator>
 
+namespace {
+// Writes bytes to a rom/ path in the content project through a temporary file.
+bool WriteRomFile(const std::string& romPath, const std::vector<std::uint8_t>& bytes, std::string* error) {
+    auto fail = [&](const std::string& message) {
+        if (error) *error = message;
+        return false;
+    };
+    if (romPath.empty())
+        return fail("no file path");
+    const std::filesystem::path target = content_path::WritableFileCurrent(romPath);
+    if (target.empty())
+        return fail("not a writable rom/ path: " + romPath);
+    std::error_code ec;
+    if (target.has_parent_path())
+        std::filesystem::create_directories(target.parent_path(), ec);
+    std::filesystem::path temp = target;
+    temp += ".tmp";
+    {
+        std::ofstream out(temp, std::ios::binary | std::ios::trunc);
+        if (!out)
+            return fail("cannot write " + romPath);
+        out.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
+        if (!out)
+            return fail("writing " + romPath + " failed");
+    }
+    std::filesystem::rename(temp, target, ec); // replaces an existing file
+    if (ec) {
+        std::filesystem::remove(temp, ec);
+        return fail("cannot replace " + romPath);
+    }
+    return true;
+}
+} // namespace
+
 TerrainComponent::~TerrainComponent() {
     ReleaseHeightSRV();
+    if (m_splatSrv)
+        m_splatSrv->Release();
 }
 
 std::string TerrainComponent::Serialize() const {
@@ -43,6 +79,8 @@ void TerrainComponent::Deserialize(const std::string& jsonStr) {
         InvalidateHeightmap();
     if (settings.texture != oldTexture)
         InvalidateTexture();
+    if (settings.splatmap != m_splatLoadedPath)
+        InvalidateSplat();
 }
 
 void TerrainComponent::InvalidateHeightmap() {
@@ -161,39 +199,107 @@ void TerrainComponent::AdoptHeightmapPath(const std::string& romPath) {
 }
 
 bool TerrainComponent::SaveHeightmap(std::string* error, std::vector<std::uint8_t>* outBytes) {
-    auto fail = [&](const std::string& message) {
-        if (error) *error = message;
+    if (!m_heightmap.IsValid()) {
+        if (error) *error = "no heightmap loaded";
         return false;
-    };
-    if (!m_heightmap.IsValid())
-        return fail("no heightmap loaded");
-    if (settings.heightmap.empty())
-        return fail("no heightmap path");
-    const std::filesystem::path target = content_path::WritableFileCurrent(settings.heightmap);
-    if (target.empty())
-        return fail("not a writable rom/ path: " + settings.heightmap);
+    }
     const std::vector<std::uint8_t> bytes = terrain::EncodeR16(m_heightmap);
-    std::error_code ec;
-    if (target.has_parent_path())
-        std::filesystem::create_directories(target.parent_path(), ec);
-    std::filesystem::path temp = target;
-    temp += ".tmp";
-    {
-        std::ofstream out(temp, std::ios::binary | std::ios::trunc);
-        if (!out)
-            return fail("cannot write " + settings.heightmap);
-        out.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
-        if (!out)
-            return fail("writing " + settings.heightmap + " failed");
-    }
-    std::filesystem::rename(temp, target, ec); // replaces an existing file
-    if (ec) {
-        std::filesystem::remove(temp, ec);
-        return fail("cannot replace " + settings.heightmap);
-    }
+    if (!WriteRomFile(settings.heightmap, bytes, error))
+        return false;
     m_unsavedHeights = false;
     if (outBytes) *outBytes = bytes;
     return true;
+}
+
+bool TerrainComponent::EnsureSplatLoaded() {
+    if (m_splatAttempted && m_splatLoadedPath == settings.splatmap)
+        return m_splat.IsValid();
+    m_splatAttempted = true;
+    m_splatLoadedPath = settings.splatmap;
+    m_splatError.clear();
+    m_unsavedSplat = false;
+    m_pendingSplatRect = terrain::SampleRect{};
+    if (m_splatSrv) {
+        m_splatSrv->Release();
+        m_splatSrv = nullptr;
+    }
+    terrain::SplatMap loaded;
+    if (settings.splatmap.empty()) {
+        const int res = m_heightmap.IsValid() ? m_heightmap.resolution : terrain::kPlaceholderResolution;
+        terrain::CreateSplat(res, 0, loaded);
+    } else {
+        std::ifstream file(content_path::ReadableFileCurrent(settings.splatmap), std::ios::binary);
+        if (!file) {
+            m_splatError = "cannot open " + settings.splatmap;
+        } else {
+            const std::vector<std::uint8_t> bytes((std::istreambuf_iterator<char>(file)),
+                                                  std::istreambuf_iterator<char>());
+            std::string error;
+            if (!terrain::DecodeSplat(bytes.data(), bytes.size(), loaded, &error))
+                m_splatError = settings.splatmap + ": " + error;
+        }
+    }
+    if (!m_splatError.empty()) {
+        hal::DebugWriteA(("[Terrain] " + m_splatError + "\n").c_str());
+        m_splat = terrain::SplatMap{};
+        return false;
+    }
+    m_splat = std::move(loaded);
+    return true;
+}
+
+void TerrainComponent::NotifySplatChanged(const terrain::SampleRect& rect) {
+    const terrain::SampleRect r = terrain::ClipSplatRect(rect, m_splat);
+    if (r.Empty())
+        return;
+    m_pendingSplatRect = terrain::UnionRect(m_pendingSplatRect, r);
+    m_unsavedSplat = true;
+}
+
+void TerrainComponent::AdoptSplatPath(const std::string& romPath) {
+    settings.splatmap = romPath;
+    m_splatLoadedPath = romPath;
+    m_splatAttempted = true;
+}
+
+bool TerrainComponent::SaveSplat(std::string* error, std::vector<std::uint8_t>* outBytes) {
+    if (!m_splat.IsValid()) {
+        if (error) *error = "no splat map loaded";
+        return false;
+    }
+    const std::vector<std::uint8_t> bytes = terrain::EncodeSplat(m_splat);
+    if (!WriteRomFile(settings.splatmap, bytes, error))
+        return false;
+    m_unsavedSplat = false;
+    if (outBytes) *outBytes = bytes;
+    return true;
+}
+
+void TerrainComponent::SetSplatSRV(ID3D11ShaderResourceView* srv) {
+    if (srv == m_splatSrv)
+        return;
+    if (m_splatSrv)
+        m_splatSrv->Release();
+    m_splatSrv = srv;
+}
+
+ID3D11ShaderResourceView* TerrainComponent::GetLayerSRV(int index) {
+    if (index < 0 || index >= terrain::kMaxLayers)
+        return nullptr;
+    const std::vector<terrain::LayerSettings> layers = terrain::EffectiveLayers(settings);
+    const std::string path = index < static_cast<int>(layers.size()) ? layers[index].texture : std::string();
+    LayerTexture& slot = m_layerTextures[index];
+    if (!slot.attempted || slot.path != path) {
+        slot.attempted = true;
+        slot.path = path;
+        slot.id = -1;
+        if (!path.empty()) {
+            const std::wstring wpath = ToWString(path);
+            if (!wpath.empty())
+                slot.id = TextureLoad(wpath.c_str(), true);
+        }
+    }
+    return slot.id >= 0 ? TextureGetSRV(slot.id) : nullptr;
 }
 
 void TerrainComponent::ClearTerrainCollider(GameObject* node) {

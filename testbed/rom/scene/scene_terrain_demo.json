@@ -93,6 +93,25 @@
           "lodBias": 1.0,
           "texture": "rom/texture/terrain/ground_demo.png",
           "textureTileSize": 6.0,
+          "layers": [
+            {
+              "texture": "rom/texture/terrain/ground_demo.png",
+              "tileSize": 6.0
+            },
+            {
+              "texture": "rom/texture/terrain/rock_demo.png",
+              "tileSize": 9.0
+            },
+            {
+              "texture": "rom/texture/terrain/sand_demo.png",
+              "tileSize": 5.0
+            },
+            {
+              "texture": "rom/texture/terrain/snow_demo.png",
+              "tileSize": 7.0
+            }
+          ],
+          "splatmap": "rom/terrain/terrain_demo.splat",
           "color": {
             "r": 1.0,
             "g": 1.0,

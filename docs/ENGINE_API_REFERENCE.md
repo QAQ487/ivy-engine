@@ -1,7 +1,7 @@
 # Ivy Engine — Complete Ability & API Reference
 
 Exhaustive catalog of **Ivy Engine** capabilities and public functions,
-scanned from every header under `engine/` and `src/app/` (196 headers; regenerate to refresh).
+scanned from every header under `engine/` and `src/app/` (197 headers; regenerate to refresh).
 
 **Learning how to use the engine?** Start with [`ENGINE_USER_GUIDE.md`](ENGINE_USER_GUIDE.md) (humans).  
 For JSON schemas, source map, and change rules, see [`AGENTS.md`](../AGENTS.md) (AI agents).
@@ -865,7 +865,7 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `private: TagRegistry();`
 
 ### `engine/ecs/terrain_component.h`
-**Types:** ID3D11ShaderResourceView, TerrainComponent
+**Types:** ID3D11ShaderResourceView, TerrainComponent, LayerTexture
 - `std::string Serialize() const override;`
 - `void Deserialize(const std::string& jsonStr) override;`
 - `bool EnsureLoaded();`
@@ -879,6 +879,12 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `bool ResetFlat(int resolution, float height);`
 - `void AdoptHeightmapPath(const std::string& romPath);`
 - `bool SaveHeightmap(std::string* error, std::vector<std::uint8_t>* outBytes = nullptr);`
+- `bool EnsureSplatLoaded();`
+- `void NotifySplatChanged(const terrain::SampleRect& rect);`
+- `void AdoptSplatPath(const std::string& romPath);`
+- `bool SaveSplat(std::string* error, std::vector<std::uint8_t>* outBytes = nullptr);`
+- `void SetSplatSRV(ID3D11ShaderResourceView* srv);`
+- `ID3D11ShaderResourceView* GetLayerSRV(int index);`
 - `void SetHeightSRV(ID3D11ShaderResourceView* srv);`
 - `void ReleaseHeightSRV();`
 - `void FitChunkGrid();`
@@ -2564,10 +2570,24 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `void TerrainRenderer_Finalize();`
 
 ### `engine/terrain/terrain_settings.h`
-**Types:** Settings
+**Types:** LayerSettings, Settings
+- `std::vector<LayerSettings> EffectiveLayers(const Settings& s);`
 - `Settings SanitizeSettings(const Settings& in);`
 - `nlohmann::json SettingsToJson(const Settings& s);`
 - `Settings SettingsFromJson(const nlohmann::json& j);`
+
+### `engine/terrain/terrain_splat.h`
+**Types:** SplatMap
+- `bool IsValid() const;`
+- `std::uint8_t Weight(int x, int z, int layer) const;`
+- `bool CreateSplat(int resolution, int layer, SplatMap& out);`
+- `bool DecodeSplat(const std::uint8_t* data, std::size_t size, SplatMap& out, std::string* error);`
+- `std::vector<std::uint8_t> EncodeSplat(const SplatMap& map);`
+- `SampleRect PaintSplat(const Layout& layout, SplatMap& map, int layer, const Brush& brush, float x, float z, float dt);`
+- `SampleRect SplatBrushRect(const Layout& layout, const SplatMap& map, float x, float z, float radius);`
+- `SampleRect ClipSplatRect(const SampleRect& rect, const SplatMap& map);`
+- `std::vector<std::uint8_t> CopySplatRect(const SplatMap& map, const SampleRect& rect);`
+- `bool PasteSplatRect(SplatMap& map, const SampleRect& rect, const std::vector<std::uint8_t>& data);`
 
 ### `engine/testing/controller_inject_protocol.h`
 **Types:** ControllerCommand, ControllerOperation

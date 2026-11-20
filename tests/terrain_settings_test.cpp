@@ -102,7 +102,36 @@ static void TestSanitising() {
     Expect(c.chunkQuads == kMinChunkQuads, "negative chunk size clamped");
 }
 
+static void TestLayers() {
+    Settings legacy;
+    legacy.texture = "rom/texture/grass.png";
+    legacy.textureTileSize = 3.0f;
+    const auto eff = EffectiveLayers(legacy);
+    Expect(eff.size() == 1 && eff[0].texture == legacy.texture && eff[0].tileSize == 3.0f,
+           "no layers -> legacy texture is layer 0");
+    Expect(!SettingsToJson(legacy).contains("layers") && !SettingsToJson(legacy).contains("splatmap"),
+           "legacy scenes do not gain new keys");
+
+    const json j = {{"layers", json::array({{{"texture", "a.png"}, {"tileSize", 4}},
+                                            {{"texture", "b.png"}},
+                                            42,
+                                            {{"texture", "c.png"}, {"tileSize", -1}},
+                                            {{"texture", "d.png"}},
+                                            {{"texture", "e.png"}}})},
+                    {"splatmap", "rom/terrain/x.splat"}};
+    const Settings s = SettingsFromJson(j);
+    Expect(s.layers.size() == 4, "at most 4 layers, non-objects skipped");
+    Expect(s.layers[0].tileSize == 4.0f && s.layers[1].tileSize == 8.0f, "tile size and default");
+    Expect(s.layers[2].tileSize == kMinTextureTileSize, "tile size clamped");
+    Expect(s.layers[3].texture == "d.png", "order kept");
+    Expect(s.splatmap == "rom/terrain/x.splat", "splat path");
+    const Settings b = SettingsFromJson(json::parse(SettingsToJson(s).dump()));
+    Expect(b.layers.size() == 4 && b.layers[1].texture == "b.png" && b.splatmap == s.splatmap, "round trip");
+    Expect(EffectiveLayers(b).size() == 4, "explicit layers used");
+}
+
 int main() {
+    TestLayers();
     TestDefaults();
     TestRoundTrip();
     TestSanitising();

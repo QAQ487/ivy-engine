@@ -86,14 +86,20 @@
   - Windows 已驗（穿透）：Debug editor 撳 Play，玩家企喺山坡上、行上行落、跳完落返地；四件物件跌落後停喺地面或者沿斜坡滾，唔會穿過；F11 碰撞顯示正常；Release／runtime 同樣；舊 GameScripts DLL（v52）照載入；Inspector 有 Collision checkbox，熄咗物件會穿過；地形物件加 BoxCollider 之後用 box。
   - 已知限制：box／cylinder 用取樣點，好尖嘅山峰比 box 窄就會穿入 box 中間；地形物件冇 Rigidbody component 時會自動加一個（kinematic），存場景時會寫入；editor viewport 點擊選取未查（如果點擊用 physics raycast，而家應該揀到地形）。
 - [ ] **地形碰撞審計**（暫緩，Terry 2026-11-20：「collider are not great」；唔穿透，但手感要改）：之後逐項睇——box／cylinder 取樣點 vs 真正嘅 box-triangle 測試、斜坡上滑動／磨擦、物件喺地形上抖動或者唔停、capsule 用幾粒 sphere 近似嘅接觸點、一次只解最深一個接觸（冇 manifold）、地形物件自動加 Rigidbody component。先喺 Windows 記低具體現象再改。
-- [ ] **步驟 4：雕刻工具**（source 已做；等 Windows editor 驗收）
+- [x] **步驟 4：雕刻工具**（Terry 喺 Windows 驗收，2026-11-20）
   - Terrain inspector 尾加「Sculpt」：Off／Raise／Lower／Smooth／Flatten、Brush Radius（m）、Strength、Falloff；Reset to Flat（33–4097 解像度＋高度，唔可以 undo，有確認框）；未存檔時有黃色提示。純邏輯 `engine/terrain/terrain_brush`（Linux 測試）。
   - Viewport：揀咗地形＋開咗工具，左鍵拖就雕；地面有筆刷圈（雕緊變橙；內圈＝falloff 開始）；Alt＋拖照舊轉鏡頭；工具開住時 click 地形唔會轉選取，同時收埋移動 gizmo。每一筆＝一個 Undo（只記改過嘅長方形）。GPU 只上傳改過嘅長方形。
   - 存檔：Save Scene 先寫 `.r16` 再寫場景 JSON；未有檔案嘅地形自動用 `rom/terrain/<場景>_<物件>.r16`；`.tmp` 再 rename；寫失敗就唔存場景（Console 有原因）。editor 自己寫嘅 `.r16` 唔會觸發場景重載。
   - GameObject → 3D Object → Terrain：256×256 m、置中、地面喺 0、高度 −20 至 80 m。冇檔案嘅地形而家平放喺高度 0（以前喺最低點）。
-  - Windows 要驗：建立地形、四種筆刷手感（速度、平滑、falloff 圈）、Undo／Redo、Save Scene 寫出 `.r16`（路徑寫入場景）、重開場景地形保持、Play／Stop 保留未存嘅雕刻、雕緊時唔會揀走地形或者郁到 gizmo、Reset to Flat、大地圖（2049／4097）雕刻有冇卡。
+  - Windows 已驗：建立地形、四種筆刷手感（速度、平滑、falloff 圈）、Undo／Redo、Save Scene 寫出 `.r16`（路徑寫入場景）、重開場景地形保持、Play／Stop 保留未存嘅雕刻、雕緊時唔會揀走地形或者郁到 gizmo、Reset to Flat、大地圖（2049／4097）雕刻有冇卡。
   - 已知限制：筆刷每次只改一個地形；Undo 會喺 stroke 開始時複製成張地圖（4097² ≈ 33 MB，一筆一次）；複製／prefab 化嘅地形讀返檔案，唔帶未存嘅雕刻；未有「匯入 16-bit PNG」（`.r16` 照用路徑欄）。
-- [ ] **步驟 5（v1.1）：塗材質同收尾**：最多 4 層 splat（albedo＋normal＋tiling）、筆刷畫圖層、splat map 唔做 BC7；content hot reload；打包（`.r16` 保留）；user guide／`docs/agent/scene-prefab.md`／component 表。
+- [ ] **步驟 5：塗材質**（source 已做；等 Windows editor／runtime 驗收）
+  - JSON：`layers`（最多 4 個 `{texture, tileSize}`）＋`splatmap`（`.splat`：N×N RGBA8 權重，無 header，唔會 BC7）。舊場景嘅 `texture` 當第 1 層，唔加新 key。純邏輯 `engine/terrain/terrain_splat`（Linux 測試）。
+  - Shader：`PixelShaderTerrain{,_PBR,_Toon}.hlsl` = 原本嘅 lit PS 加 `TERRAIN_SPLAT`（`LightingCommon.hlsli` 嘅 `SampleBaseColor` 改為按 splat 混 4 層），所以燈光／陰影／霧／IBL 照舊；其他 default shader 用 Standard 版。VS 而家輸出地形本地 XZ（米），每層自己 tile。
+  - Editor：Inspector「Layers」（Add Layer／Remove Last Layer；第 1 層同步返舊 `texture`）；Sculpt 多咗 **Paint** 工具＋揀層；每筆一個 Undo；GPU 只上傳改過嘅長方形；Save Scene 寫 `rom/terrain/<場景>_<物件>_splat.splat`；自己寫嘅 `.splat` 唔觸發重載。
+  - 示範：`scene_terrain_demo.json` 有 4 層（草、斜坡石、盆地沙、山脊雪），splat 由 `tools/gen_terrain_demo.py` 按斜度／高度生成。
+  - Windows 要驗：三個新 `.cso` 編譯；示範場景見到 4 層而且過渡平滑；Default Shader 換 PBR／Toon 地形跟住；Paint 工具手感、Undo、Save 後重開；Add／Remove Layer；舊場景（只有 `texture`）同步驟 2 一樣；打包後 `.splat` 有入包、圖層正常。
+  - 已知限制：冇每層 normal map／roughness（全部層共用 Color／Roughness／Metallic）；移除只可以移最後一層；splat 解像度新地形跟 heightmap，Reset to Flat 唔會改 splat 解像度。
 - 之後（未排）：植被散佈（要先做 mesh instancing）、地形挖洞、多塊地形／串流、NavMesh。
 
 ## AI 系統套件（source audit：引擎內全部 missing）

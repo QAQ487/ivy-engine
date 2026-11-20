@@ -18,7 +18,7 @@ cbuffer TerrainBuffer : register(b6)
     float  TerrainHeightScale; // metres for sample 65535
     float  TerrainHeightOffset;
     float  TerrainLastSample;  // resolution - 1
-    float  TerrainTileSize;    // metres per texture repeat
+    float  TerrainTileSize;    // unused since step 5 (per-layer tiling in the pixel shader)
     float2 TerrainPad;
 }
 
@@ -59,7 +59,7 @@ void main(in float3 inGrid   : POSITION0,  // x, z = vertex in the chunk grid; y
 
     outPosition = mul(float4(posOS, 1.0f), WorldViewProjection);
     outNormal   = normalize(float3(-dhdx, 1.0f, -dhdz));
-    outTexCoord = posOS.xz / TerrainTileSize;
+    outTexCoord = posOS.xz; // metres; PixelShaderTerrain*.hlsl tiles each layer itself
     outDiffuse  = float4(1.0f, 1.0f, 1.0f, 1.0f);
     outPosOS    = posOS;
 }

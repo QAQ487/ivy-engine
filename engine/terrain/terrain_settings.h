@@ -14,7 +14,9 @@
 //     "color": { "r": 1, "g": 1, "b": 1 },
 //     "roughness": 0.9, "metallic": 0,
 //     "castShadows": true, "enabled": true,
-//     "collision": true                        // static heightfield collider (step 3)
+//     "collision": true,                       // static heightfield collider (step 3)
+//     "layers": [ { "texture": "<image>", "tileSize": 6 }, ... ],  // up to 4 (step 5)
+//     "splatmap": "<.splat path under rom/>"   // layer weights; "" = all layer 0
 //   }
 
 #pragma once
@@ -23,6 +25,7 @@
 #include "libraries/nlohmann/json.hpp"
 
 #include <string>
+#include <vector>
 
 namespace terrain {
 
@@ -30,6 +33,12 @@ namespace terrain {
 inline constexpr int kPlaceholderResolution = 129;
 inline constexpr float kMinTextureTileSize = 0.01f;
 inline constexpr float kMaxTextureTileSize = 10000.0f;
+
+// One paintable material layer (step 5).
+struct LayerSettings {
+    std::string texture;
+    float tileSize = 8.0f; // metres per texture repeat
+};
 
 struct Settings {
     std::string heightmap;
@@ -47,7 +56,14 @@ struct Settings {
     bool enabled = true;
     // Static heightfield collider on the owner (unless it has its own collider component).
     bool collision = true;
+    // Paint layers (at most 4). Empty: one layer from `texture` / `textureTileSize`
+    // (scenes from before step 5).
+    std::vector<LayerSettings> layers;
+    std::string splatmap;
 };
+
+// Layers the renderer uses: `layers`, or the single legacy texture when it is empty.
+std::vector<LayerSettings> EffectiveLayers(const Settings& s);
 
 // Clamps every number (NaN -> default); the layout goes through SanitizeLayout.
 // chunkQuads is only range-clamped here; ResolveChunkQuads fits it to the map.

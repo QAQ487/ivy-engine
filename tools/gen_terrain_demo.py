@@ -4,7 +4,12 @@
 Everything here is original procedural content (no third-party assets):
 
   testbed/rom/terrain/terrain_demo.r16            257 x 257 heightmap (raw 16-bit LE)
-  testbed/rom/texture/terrain/ground_demo.png     128 x 128 tileable ground texture
+  testbed/rom/texture/terrain/ground_demo.png     128 x 128 tileable grass / soil texture
+  testbed/rom/texture/terrain/rock_demo.png       128 x 128 tileable rock (layer 2)
+  testbed/rom/texture/terrain/sand_demo.png       128 x 128 tileable sand (layer 3)
+  testbed/rom/texture/terrain/snow_demo.png       128 x 128 tileable snow (layer 4)
+  testbed/rom/terrain/terrain_demo.splat          257 x 257 layer weights (raw RGBA8): rock on
+                                                  steep slopes, sand in the basin, snow up high
   testbed/rom/scene/scene_terrain_demo.json       Terrain component, CSM sun, props, player
 
 The terrain is 512 x 512 m, heights -10 .. 50 m, centred on the origin, drawn in 8 x 8
@@ -35,6 +40,13 @@ TEXTURE_PATH = ROOT / "testbed/rom/texture/terrain/ground_demo.png"
 SCENE_PATH = ROOT / "testbed/rom/scene/scene_terrain_demo.json"
 R16_ROM = "rom/terrain/terrain_demo.r16"
 TEXTURE_ROM = "rom/texture/terrain/ground_demo.png"
+SPLAT_PATH = ROOT / "testbed/rom/terrain/terrain_demo.splat"
+SPLAT_ROM = "rom/terrain/terrain_demo.splat"
+EXTRA_LAYERS = (  # name, colours (dark, light), tile size
+    ("rock", (0.36, 0.35, 0.33), (0.55, 0.54, 0.50), 9.0),
+    ("sand", (0.70, 0.62, 0.45), (0.82, 0.75, 0.58), 5.0),
+    ("snow", (0.86, 0.89, 0.93), (0.97, 0.98, 1.00), 7.0),
+)
 
 RESOLUTION = 257
 SIZE = 512.0
@@ -130,6 +142,56 @@ def ground_texture():
     return png_bytes(n, n, rows)
 
 
+def layer_texture(dark, light, seed):
+    """128 x 128 tileable two-tone noise (integer periods, so it repeats seamlessly)."""
+    n = 128
+    rows = []
+    for y in range(n):
+        row = []
+        for x in range(n):
+            u, v = 2 * math.pi * x / n, 2 * math.pi * y / n
+            k = (0.45 * math.sin(2 * u + seed) * math.cos(3 * v - seed)
+                 + 0.35 * math.sin(9 * u + 7 * v + 2 * seed)
+                 + 0.2 * math.cos(17 * u - 13 * v + seed))
+            t = min(max(0.5 + 0.5 * k, 0.0), 1.0)
+            row += [int(round((a + (b - a) * t) * 255)) for a, b in zip(dark, light)]
+        rows.append(row)
+    return png_bytes(n, n, rows)
+
+
+def smoothstep(e0, e1, x):
+    t = min(max((x - e0) / (e1 - e0), 0.0), 1.0)
+    return t * t * (3 - 2 * t)
+
+
+def build_splat(samples):
+    """Weights per heightmap sample: grass, rock (slope), sand (low), snow (high)."""
+    cell = SIZE / (RESOLUTION - 1)
+
+    def h(x, z):
+        x = min(max(x, 0), RESOLUTION - 1)
+        z = min(max(z, 0), RESOLUTION - 1)
+        return HEIGHT_OFFSET + samples[z * RESOLUTION + x] / 65535.0 * HEIGHT_SCALE
+
+    out = bytearray()
+    for z in range(RESOLUTION):
+        for x in range(RESOLUTION):
+            height = h(x, z)
+            dx = (h(x + 1, z) - h(x - 1, z)) / (2 * cell)
+            dz = (h(x, z + 1) - h(x, z - 1)) / (2 * cell)
+            slope = math.hypot(dx, dz)  # 1.0 = 45 degrees
+            rock = smoothstep(0.35, 0.6, slope)
+            snow = smoothstep(30.0, 36.0, height) * (1.0 - rock)
+            sand = smoothstep(4.0, 0.0, height) * (1.0 - rock)
+            grass = max(0.0, 1.0 - rock - snow - sand)
+            w = [grass, rock, sand, snow]
+            total = sum(w) or 1.0
+            q = [int(round(255 * v / total)) for v in w]
+            q[0] += 255 - sum(q)  # keep the sum at 255
+            out += bytes(q)
+    return bytes(out)
+
+
 def transform(x, y, z, rot_y=0.0, scale=1.0):
     return {"posX": round(x, 4), "posY": round(y, 4), "posZ": round(z, 4),
             "rotX": 0.0, "rotY": rot_y, "rotZ": 0.0,
@@ -154,6 +216,10 @@ def build_scene(samples):
                 "heightScale": HEIGHT_SCALE, "heightOffset": HEIGHT_OFFSET,
                 "chunkQuads": CHUNK_QUADS, "lodBias": 1.0,
                 "texture": TEXTURE_ROM, "textureTileSize": 6.0,
+                "layers": [{"texture": TEXTURE_ROM, "tileSize": 6.0}] + [
+                    {"texture": "rom/texture/terrain/%s_demo.png" % name, "tileSize": tile}
+                    for name, _, _, tile in EXTRA_LAYERS],
+                "splatmap": SPLAT_ROM,
                 "color": {"r": 1.0, "g": 1.0, "b": 1.0},
                 "roughness": 0.95, "metallic": 0.0,
                 "castShadows": True, "enabled": True,
@@ -269,11 +335,15 @@ def physics_nodes(samples):
 def outputs():
     samples = build_samples()
     scene = json.dumps(build_scene(samples), indent=2) + "\n"
-    return {
+    files = {
         R16_PATH: encode_r16(samples),
         TEXTURE_PATH: ground_texture(),
+        SPLAT_PATH: build_splat(samples),
         SCENE_PATH: scene.encode("utf-8"),
     }
+    for i, (name, dark, light, _) in enumerate(EXTRA_LAYERS):
+        files[ROOT / ("testbed/rom/texture/terrain/%s_demo.png" % name)] = layer_texture(dark, light, 1.3 + i)
+    return files
 
 
 def main(argv):

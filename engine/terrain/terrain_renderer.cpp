@@ -14,6 +14,7 @@
 #include "engine/rendering/d3d11/shader.h"
 #include "engine/rendering/lighting/shadow.h"
 #include "engine/rendering/lighting/shadow_volume.h"
+#include "engine/rendering/sprite/texture.h"
 #include "engine/scene/render_settings.h"
 #include "camera.h"
 
@@ -40,8 +41,20 @@ struct TerrainCB {
 };
 static_assert(sizeof(TerrainCB) % 16 == 0, "TerrainCB must be 16-byte aligned");
 
+// Must match TerrainPixelBuffer in LightingCommon.hlsli (TERRAIN_SPLAT).
+struct TerrainPixelCB {
+    float layerTileInv[4];
+    float sizeInvX;
+    float sizeInvZ;
+    float layerCount;
+    float splatTexels;
+};
+static_assert(sizeof(TerrainPixelCB) % 16 == 0, "TerrainPixelCB must be 16-byte aligned");
+
 constexpr UINT kTerrainCBSlot = 6;
 constexpr UINT kHeightSrvSlot = 10;
+constexpr UINT kTerrainPixelCBSlot = 7;
+constexpr UINT kSplatSrvSlot = 11;   // layers 1..3 at 12..14, layer 0 at t0
 
 struct ChunkMesh {
     ID3D11Buffer* vb = nullptr;
@@ -53,6 +66,9 @@ struct ChunkMesh {
 ID3D11VertexShader* s_vs = nullptr;
 ID3D11InputLayout* s_il = nullptr;
 ID3D11Buffer* s_cb = nullptr;
+ID3D11Buffer* s_pixelCb = nullptr;
+// Terrain pixel shaders: Standard, PBR, Toon (other scene shaders use Standard).
+ID3D11PixelShader* s_ps[3] = {};
 ID3D11Buffer* s_instances = nullptr;
 UINT s_instanceCapacity = 0;
 bool s_sharedFailed = false;
@@ -65,7 +81,7 @@ template <class T> void SafeRelease(T*& p) {
 }
 
 bool EnsureShared() {
-    if (s_vs && s_il && s_cb)
+    if (s_vs && s_il && s_cb && s_pixelCb && s_ps[0] && s_ps[1] && s_ps[2])
         return true;
     if (s_sharedFailed)
         return false;
@@ -96,14 +112,33 @@ bool EnsureShared() {
     cbd.ByteWidth = sizeof(TerrainCB);
     cbd.Usage = D3D11_USAGE_DEFAULT;
     cbd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-    const bool ok = SUCCEEDED(dev->CreateVertexShader(code.data(), code.size(), nullptr, &s_vs))
+    D3D11_BUFFER_DESC pcbd = cbd;
+    pcbd.ByteWidth = sizeof(TerrainPixelCB);
+    bool ok = SUCCEEDED(dev->CreateVertexShader(code.data(), code.size(), nullptr, &s_vs))
         && SUCCEEDED(dev->CreateInputLayout(layout, ARRAYSIZE(layout), code.data(), code.size(), &s_il))
-        && SUCCEEDED(dev->CreateBuffer(&cbd, nullptr, &s_cb));
+        && SUCCEEDED(dev->CreateBuffer(&cbd, nullptr, &s_cb))
+        && SUCCEEDED(dev->CreateBuffer(&pcbd, nullptr, &s_pixelCb));
+    const char* psFiles[3] = { "rom/shader/PixelShaderTerrain.cso", "rom/shader/PixelShaderTerrain_PBR.cso",
+                               "rom/shader/PixelShaderTerrain_Toon.cso" };
+    for (int i = 0; ok && i < 3; ++i) {
+        std::ifstream pf(content_path::ReadableFileCurrent(psFiles[i]), std::ios::binary | std::ios::ate);
+        std::vector<char> ps;
+        if (pf) {
+            ps.resize(static_cast<size_t>(pf.tellg()));
+            pf.seekg(0, std::ios::beg);
+            pf.read(ps.data(), static_cast<std::streamsize>(ps.size()));
+        }
+        ok = pf && !ps.empty() && SUCCEEDED(dev->CreatePixelShader(ps.data(), ps.size(), nullptr, &s_ps[i]));
+        if (!ok)
+            hal::DebugWriteA((std::string("[Terrain] cannot load ") + psFiles[i] + "\n").c_str());
+    }
     if (!ok) {
-        hal::DebugWriteA("[Terrain] creating the terrain shader failed; terrain is not drawn\n");
+        hal::DebugWriteA("[Terrain] creating the terrain shaders failed; terrain is not drawn\n");
         SafeRelease(s_vs);
         SafeRelease(s_il);
         SafeRelease(s_cb);
+        SafeRelease(s_pixelCb);
+        for (auto*& p : s_ps) SafeRelease(p);
         s_sharedFailed = true;
         return false;
     }
@@ -237,6 +272,59 @@ ID3D11ShaderResourceView* EnsureHeightSrv(TerrainComponent& t) {
     return srv;
 }
 
+ID3D11ShaderResourceView* EnsureSplatSrv(TerrainComponent& t) {
+    if (!t.EnsureSplatLoaded())
+        return nullptr;
+    const terrain::SplatMap& map = t.GetSplat();
+    if (ID3D11ShaderResourceView* srv = t.GetSplatSRV()) {
+        const terrain::SampleRect r = terrain::ClipSplatRect(t.PendingSplatRect(), map);
+        if (!r.Empty()) {
+            ID3D11Resource* res = nullptr;
+            srv->GetResource(&res);
+            if (res) {
+                D3D11_BOX box {};
+                box.left = static_cast<UINT>(r.x0);
+                box.top = static_cast<UINT>(r.z0);
+                box.right = static_cast<UINT>(r.x1 + 1);
+                box.bottom = static_cast<UINT>(r.z1 + 1);
+                box.back = 1;
+                GetDeviceContext()->UpdateSubresource(res, 0, &box,
+                    &map.rgba[(static_cast<size_t>(r.z0) * map.resolution + r.x0) * 4],
+                    static_cast<UINT>(map.resolution) * 4, 0);
+                res->Release();
+            }
+        }
+        t.ClearPendingSplatRect();
+        return srv;
+    }
+    t.ClearPendingSplatRect();
+    ID3D11Device* dev = GetDevice();
+    if (!dev)
+        return nullptr;
+    D3D11_TEXTURE2D_DESC td {};
+    td.Width = static_cast<UINT>(map.resolution);
+    td.Height = static_cast<UINT>(map.resolution);
+    td.MipLevels = 1;
+    td.ArraySize = 1;
+    td.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    td.SampleDesc.Count = 1;
+    td.Usage = D3D11_USAGE_DEFAULT; // paint strokes update rectangles in place
+    td.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+    D3D11_SUBRESOURCE_DATA init {};
+    init.pSysMem = map.rgba.data();
+    init.SysMemPitch = static_cast<UINT>(map.resolution) * 4;
+    ID3D11Texture2D* tex = nullptr;
+    ID3D11ShaderResourceView* srv = nullptr;
+    if (FAILED(dev->CreateTexture2D(&td, &init, &tex)))
+        return nullptr;
+    const HRESULT hr = dev->CreateShaderResourceView(tex, nullptr, &srv);
+    tex->Release();
+    if (FAILED(hr))
+        return nullptr;
+    t.SetSplatSRV(srv);
+    return srv;
+}
+
 MATERIAL TerrainMaterial(const terrain::Settings& s, bool hasTexture) {
     MATERIAL m {};
     m.Diffuse = XMFLOAT4(s.colorR, s.colorG, s.colorB, hasTexture ? 1.0f : 0.0f);
@@ -359,12 +447,36 @@ void TerrainRenderer_Draw(TerrainComponent& t, const XMFLOAT3& worldPosition) {
     ctx->VSSetShaderResources(kHeightSrvSlot, 1, &heightSrv);
 
     if (!shadowPass) {
-        ID3D11ShaderResourceView* albedo = t.GetTextureSRV();
-        Shader_SetMaterial(TerrainMaterial(t.settings, albedo != nullptr));
+        // Terrain pixel shader for the scene's lighting model; layers blended by the splat map.
+        const int psIndex = (variant == Shader3DVariant::PBR) ? 1 : (variant == Shader3DVariant::Toon ? 2 : 0);
+        ctx->PSSetShader(s_ps[psIndex], nullptr, 0);
+
+        const std::vector<terrain::LayerSettings> layers = terrain::EffectiveLayers(t.settings);
+        ID3D11ShaderResourceView* white = TextureGetSRV(TextureGetWhiteTexture());
+        ID3D11ShaderResourceView* layerSrv[terrain::kMaxLayers] = {};
+        TerrainPixelCB pcb {};
+        for (int i = 0; i < terrain::kMaxLayers; ++i) {
+            ID3D11ShaderResourceView* srv = i < static_cast<int>(layers.size()) ? t.GetLayerSRV(i) : nullptr;
+            layerSrv[i] = srv ? srv : white;
+            const float tile = i < static_cast<int>(layers.size()) ? layers[i].tileSize : 8.0f;
+            pcb.layerTileInv[i] = 1.0f / (tile > 0.0f ? tile : 8.0f);
+        }
+        ID3D11ShaderResourceView* splat = EnsureSplatSrv(t);
+        pcb.sizeInvX = 1.0f / layout.sizeX;
+        pcb.sizeInvZ = 1.0f / layout.sizeZ;
+        // Without a usable splat map only layer 0 shows.
+        pcb.layerCount = splat ? static_cast<float>(layers.size()) : 1.0f;
+        pcb.splatTexels = splat ? static_cast<float>(t.GetSplat().resolution) : 2.0f;
+        ctx->UpdateSubresource(s_pixelCb, 0, nullptr, &pcb, 0, 0);
+        ctx->PSSetConstantBuffers(kTerrainPixelCBSlot, 1, &s_pixelCb);
+
+        Shader_SetMaterial(TerrainMaterial(t.settings, true));
         ID3D11ShaderResourceView* nullSrv = nullptr;
-        ctx->PSSetShaderResources(0, 1, &albedo);
+        ctx->PSSetShaderResources(0, 1, &layerSrv[0]);
         ctx->PSSetShaderResources(5, 1, &nullSrv); // no normal map
         ctx->PSSetShaderResources(6, 1, &nullSrv); // no toon ramp
+        ID3D11ShaderResourceView* extra[4] = { splat ? splat : white, layerSrv[1], layerSrv[2], layerSrv[3] };
+        ctx->PSSetShaderResources(kSplatSrvSlot, 4, extra);
     }
 
     ID3D11Buffer* buffers[2] = {mesh->vb, s_instances};
@@ -385,6 +497,8 @@ void TerrainRenderer_Draw(TerrainComponent& t, const XMFLOAT3& worldPosition) {
     // Leave nothing terrain-specific bound for the next draw.
     ID3D11ShaderResourceView* nullSrv = nullptr;
     ctx->VSSetShaderResources(kHeightSrvSlot, 1, &nullSrv);
+    ID3D11ShaderResourceView* nullExtra[4] = {};
+    ctx->PSSetShaderResources(kSplatSrvSlot, 4, nullExtra);
     ID3D11Buffer* nullBuffer = nullptr;
     const UINT zero = 0;
     ctx->IASetVertexBuffers(1, 1, &nullBuffer, &zero, &zero);
@@ -400,6 +514,8 @@ void TerrainRenderer_Finalize() {
     SafeRelease(s_instances);
     s_instanceCapacity = 0;
     SafeRelease(s_cb);
+    SafeRelease(s_pixelCb);
+    for (auto*& p : s_ps) SafeRelease(p);
     SafeRelease(s_il);
     SafeRelease(s_vs);
     s_sharedFailed = false;

@@ -14,6 +14,7 @@
 #include "engine/scene/scene_loader.h"
 #include "engine/terrain/terrain_brush.h"
 #include "engine/terrain/terrain_collision.h"
+#include "engine/terrain/terrain_splat.h"
 #include "imgui/imgui.h"
 
 #include <algorithm>
@@ -29,11 +30,12 @@
 
 namespace {
 
-enum class Tool { None, Raise, Lower, Smooth, Flatten };
+enum class Tool { None, Raise, Lower, Smooth, Flatten, Paint };
 
 struct ToolState {
     Tool tool = Tool::None;
     terrain::Brush brush;
+    int paintLayer = 0; // Paint tool: layer that gains weight
     // "Reset to flat" options.
     int flatResolution = 257;
     float flatHeight = 0.0f;
@@ -44,7 +46,9 @@ struct Stroke {
     bool active = false;
     NodeRef node;
     int resolution = 0;
-    std::vector<std::uint16_t> before; // whole map at stroke start
+    std::vector<std::uint16_t> before; // whole map at stroke start (sculpt)
+    std::vector<std::uint8_t> splatBefore; // whole splat map at stroke start (paint)
+    bool paint = false;
     terrain::SampleRect dirty;
 };
 Stroke g_stroke;
@@ -58,6 +62,7 @@ const char* ToolLabel(Tool t) {
     case Tool::Lower: return "Lower";
     case Tool::Smooth: return "Smooth";
     case Tool::Flatten: return "Flatten";
+    case Tool::Paint: return "Paint";
     default: return "Off";
     }
 }
@@ -120,12 +125,49 @@ private:
     std::string m_label;
 };
 
+class TerrainPaintCommand : public EditorCommand {
+public:
+    TerrainPaintCommand(NodeRef node, int resolution, terrain::SampleRect rect,
+                        std::vector<std::uint8_t> before, std::vector<std::uint8_t> after)
+        : m_node(std::move(node)), m_resolution(resolution), m_rect(rect),
+          m_before(std::move(before)), m_after(std::move(after)) {}
+
+    void Undo() override { Apply(m_before); }
+    void Redo() override { Apply(m_after); }
+    std::string Describe() const override { return "Paint Terrain"; }
+
+private:
+    void Apply(const std::vector<std::uint8_t>& data) {
+        GameObject* node = ResolveNode(m_node);
+        TerrainComponent* tc = node ? node->GetComponent<TerrainComponent>() : nullptr;
+        if (!tc || tc->GetSplat().resolution != m_resolution)
+            return;
+        if (terrain::PasteSplatRect(tc->EditSplat(), m_rect, data))
+            tc->NotifySplatChanged(m_rect);
+    }
+
+    NodeRef m_node;
+    int m_resolution;
+    terrain::SampleRect m_rect;
+    std::vector<std::uint8_t> m_before;
+    std::vector<std::uint8_t> m_after;
+};
+
 void EndStroke() {
     if (!g_stroke.active)
         return;
     GameObject* node = ResolveNode(g_stroke.node);
     TerrainComponent* tc = node ? node->GetComponent<TerrainComponent>() : nullptr;
-    if (tc && !g_stroke.dirty.Empty() && tc->GetHeightmap().resolution == g_stroke.resolution) {
+    if (tc && g_stroke.paint && !g_stroke.dirty.Empty() && tc->GetSplat().resolution == g_stroke.resolution) {
+        terrain::SplatMap original;
+        original.resolution = g_stroke.resolution;
+        original.rgba = std::move(g_stroke.splatBefore);
+        std::vector<std::uint8_t> before = terrain::CopySplatRect(original, g_stroke.dirty);
+        std::vector<std::uint8_t> after = terrain::CopySplatRect(tc->GetSplat(), g_stroke.dirty);
+        EditorUndoStack::Instance().Push(std::make_unique<TerrainPaintCommand>(
+            g_stroke.node, g_stroke.resolution, g_stroke.dirty, std::move(before), std::move(after)));
+        EngineGUI_MarkSceneDirty();
+    } else if (tc && !g_stroke.paint && !g_stroke.dirty.Empty() && tc->GetHeightmap().resolution == g_stroke.resolution) {
         terrain::Heightmap original;
         original.resolution = g_stroke.resolution;
         original.samples = std::move(g_stroke.before);
@@ -182,18 +224,19 @@ std::string SceneStem() {
     return SanitiseFileStem(name);
 }
 
-// rom/terrain/<scene>_<object>[_N].r16 that no file and no other terrain uses yet.
-std::string NewHeightmapPath(const std::string& objectName, const std::vector<std::string>& taken) {
-    const std::string base = "rom/terrain/" + SceneStem() + "_" + SanitiseFileStem(objectName);
+// rom/terrain/<scene>_<object><suffix>[_N]<ext> that no file and no other terrain uses yet.
+std::string NewRomPath(const std::string& objectName, const std::string& suffix, const std::string& ext,
+                       const std::vector<std::string>& taken) {
+    const std::string base = "rom/terrain/" + SceneStem() + "_" + SanitiseFileStem(objectName) + suffix;
     for (int n = 1; n < 1000; ++n) {
-        const std::string candidate = base + (n == 1 ? std::string() : "_" + std::to_string(n)) + ".r16";
+        const std::string candidate = base + (n == 1 ? std::string() : "_" + std::to_string(n)) + ext;
         const bool usedByScene = std::find(taken.begin(), taken.end(), NormaliseRomPath(candidate)) != taken.end();
         std::error_code ec;
         const bool onDisk = std::filesystem::exists(content_path::WritableFileCurrent(candidate), ec);
         if (!usedByScene && !onDisk)
             return candidate;
     }
-    return base + "_new.r16";
+    return base + "_new" + ext;
 }
 
 void ForEachTerrain(const std::function<void(GameObject*, TerrainComponent&)>& fn) {
@@ -219,8 +262,8 @@ void TerrainEditor_DrawInspector(GameObject* node, TerrainComponent& tc) {
         return;
     }
 
-    const Tool tools[] = { Tool::None, Tool::Raise, Tool::Lower, Tool::Smooth, Tool::Flatten };
-    for (int i = 0; i < 5; ++i) {
+    const Tool tools[] = { Tool::None, Tool::Raise, Tool::Lower, Tool::Smooth, Tool::Flatten, Tool::Paint };
+    for (int i = 0; i < 6; ++i) {
         if (i > 0) ImGui::SameLine();
         if (ImGui::RadioButton(ToolLabel(tools[i]), g_state.tool == tools[i])) {
             EndStroke();
@@ -230,7 +273,22 @@ void TerrainEditor_DrawInspector(GameObject* node, TerrainComponent& tc) {
     terrain::Brush& b = g_state.brush;
     ImGui::DragFloat("Brush Radius (m)", &b.radius, 0.1f, terrain::kMinBrushRadius, terrain::kMaxBrushRadius, "%.1f");
     const char* strengthLabel = (g_state.tool == Tool::Raise || g_state.tool == Tool::Lower)
-        ? "Strength (m/s)" : "Strength (blends/s)";
+        ? "Strength (m/s)" : (g_state.tool == Tool::Paint ? "Strength (full layers/s)" : "Strength (blends/s)");
+    if (g_state.tool == Tool::Paint) {
+        const int layerCount = static_cast<int>(terrain::EffectiveLayers(tc.settings).size());
+        g_state.paintLayer = std::min(g_state.paintLayer, layerCount - 1);
+        for (int i = 0; i < layerCount; ++i) {
+            if (i > 0) ImGui::SameLine();
+            char label[16];
+            std::snprintf(label, sizeof(label), "Layer %d", i + 1);
+            if (ImGui::RadioButton(label, g_state.paintLayer == i))
+                g_state.paintLayer = i;
+        }
+        if (layerCount < 2)
+            ImGui::TextDisabled("Add a second layer above to paint.");
+        if (!tc.EnsureSplatLoaded() && !tc.GetSplatError().empty())
+            ImGui::TextColored(ImVec4(1.0f, 0.45f, 0.35f, 1.0f), "%s", tc.GetSplatError().c_str());
+    }
     ImGui::DragFloat(strengthLabel, &b.strength, 0.05f, 0.0f, terrain::kMaxBrushStrength, "%.2f");
     ImGui::SliderFloat("Falloff", &b.falloff, 0.0f, 1.0f, "%.2f");
     b = terrain::SanitizeBrush(b);
@@ -249,6 +307,11 @@ void TerrainEditor_DrawInspector(GameObject* node, TerrainComponent& tc) {
             ImGui::TextColored(ImVec4(1.0f, 0.8f, 0.3f, 1.0f),
                 "Unsaved sculpt edits: Save Scene writes %s", tc.settings.heightmap.c_str());
         }
+    }
+
+    if (tc.HasUnsavedSplat()) {
+        ImGui::TextColored(ImVec4(1.0f, 0.8f, 0.3f, 1.0f), "Unsaved paint: Save Scene writes %s",
+            tc.settings.splatmap.empty() ? "rom/terrain/<scene>_<object>_splat.splat" : tc.settings.splatmap.c_str());
     }
 
     if (ImGui::TreeNode("Reset to Flat")) {
@@ -328,7 +391,26 @@ bool TerrainEditor_HandleViewport(GameObject* selected, const TerrainViewportInp
                              DirectX::XMFLOAT4{0.3f, 0.85f, 1.0f, 0.45f});
     }
 
-    if (painting && hit) {
+    if (painting && hit && g_state.tool == Tool::Paint) {
+        if (tc->EnsureSplatLoaded()) {
+            terrain::SplatMap& splat = tc->EditSplat();
+            if (!g_stroke.active) {
+                g_stroke.active = true;
+                g_stroke.paint = true;
+                g_stroke.node = MakeNodeRef(selected);
+                g_stroke.resolution = splat.resolution;
+                g_stroke.splatBefore = splat.rgba;
+                g_stroke.dirty = terrain::SampleRect{};
+            }
+            const float dt = std::min(std::max(in.dt, 0.0f), 0.1f);
+            const terrain::SampleRect changed = terrain::PaintSplat(layout, splat, g_state.paintLayer,
+                                                                    g_state.brush, hitLocal.x, hitLocal.z, dt);
+            if (!changed.Empty()) {
+                tc->NotifySplatChanged(changed);
+                g_stroke.dirty = terrain::UnionRect(g_stroke.dirty, changed);
+            }
+        }
+    } else if (painting && hit) {
         terrain::Heightmap& map = tc->EditHeightmap();
         if (!g_stroke.active) {
             g_stroke.active = true;
@@ -364,6 +446,8 @@ bool TerrainEditor_SaveEditedTerrains(std::string* error) {
     ForEachTerrain([&](GameObject*, TerrainComponent& tc) {
         if (!tc.settings.heightmap.empty())
             taken.push_back(NormaliseRomPath(tc.settings.heightmap));
+        if (!tc.settings.splatmap.empty())
+            taken.push_back(NormaliseRomPath(tc.settings.splatmap));
     });
 
     bool ok = true;
@@ -371,7 +455,7 @@ bool TerrainEditor_SaveEditedTerrains(std::string* error) {
         if (!ok || !tc.HasUnsavedHeights())
             return;
         if (tc.settings.heightmap.empty()) {
-            const std::string path = NewHeightmapPath(node->GetName(), taken);
+            const std::string path = NewRomPath(node->GetName(), "", ".r16", taken);
             taken.push_back(NormaliseRomPath(path));
             tc.AdoptHeightmapPath(path);
         }
@@ -384,6 +468,24 @@ bool TerrainEditor_SaveEditedTerrains(std::string* error) {
         }
         g_ownWrites[NormaliseRomPath(tc.settings.heightmap)] = HashBytes(bytes);
         hal::DebugWriteA(("[Terrain] saved " + tc.settings.heightmap + "\n").c_str());
+    });
+    ForEachTerrain([&](GameObject* node, TerrainComponent& tc) {
+        if (!ok || !tc.HasUnsavedSplat())
+            return;
+        if (tc.settings.splatmap.empty()) {
+            const std::string path = NewRomPath(node->GetName(), "_splat", ".splat", taken);
+            taken.push_back(NormaliseRomPath(path));
+            tc.AdoptSplatPath(path);
+        }
+        std::string message;
+        std::vector<std::uint8_t> bytes;
+        if (!tc.SaveSplat(&message, &bytes)) {
+            ok = false;
+            if (error) *error = "Terrain \"" + node->GetName() + "\" paint: " + message;
+            return;
+        }
+        g_ownWrites[NormaliseRomPath(tc.settings.splatmap)] = HashBytes(bytes);
+        hal::DebugWriteA(("[Terrain] saved " + tc.settings.splatmap + "\n").c_str());
     });
     return ok;
 }
