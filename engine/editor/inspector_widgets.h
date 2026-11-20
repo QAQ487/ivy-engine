@@ -79,6 +79,10 @@ bool ChoiceBar(const char* id, const char* const* icons, const char* const* tips
 bool AssetField(const char* icon, const char* word, const char* tip, std::string& path,
                 const char* const* exts, int extCount);
 
+// Square icon-only button, glyph centered by its ink box; tooltip on hover.
+// iconId may carry a "##id" suffix. size <= 0 = frame height.
+bool IconButton(const char* iconId, const char* tip, float size = 0.0f);
+
 // Small inline icon (after SameLine) with a hover tooltip, colored.
 void HintIcon(const char* icon, const ImVec4& color, const char* tip);
 inline void HintIconSameLine(const char* icon, const ImVec4& color, const char* tip)

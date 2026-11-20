@@ -233,7 +233,7 @@ void DrawNodeHeader(GameObject* n, char* nameBuf, size_t nameBufSize, bool& dirt
                     ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
                     ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.85f, 0.25f, 0.25f, 0.55f));
                     ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.9f, 0.2f, 0.2f, 0.75f));
-                    if (ImGui::Button(ICON_FA_XMARK "##RemoveTag", ImVec2(removeW, removeW))) {
+                    if (insp::IconButton(ICON_FA_XMARK "##RemoveTag", nullptr, removeW)) {
                         g_pendingDeleteTagId = i;
                         g_showDeleteTagPopup = true;
                         ImGui::CloseCurrentPopup();
@@ -478,10 +478,8 @@ void DrawVisual(GameObject* n, VisualComponent* vc, bool& dirty) {
                 if (ImGui::IsItemDeactivatedAfterEdit())
                     sortLods();
                 ImGui::SameLine(0.0f, st.ItemInnerSpacing.x);
-                if (ImGui::Button(ICON_FA_XMARK "##rm", ImVec2(frameH, frameH)))
+                if (insp::IconButton(ICON_FA_XMARK "##rm", "Remove"))
                     removeIdx = i;
-                if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort))
-                    ImGui::SetTooltip("Remove");
                 std::string path = lod.modelPath;
                 if (insp::AssetField(ICON_FA_CUBE, "Mesh", nullptr, path, kModelExts, IM_ARRAYSIZE(kModelExts))) {
                     lod.modelPath = path;
@@ -1013,9 +1011,7 @@ bool TextWithButton(const char* icon, const char* word, const char* tip, char* b
     ImGui::SameLine(0.0f, sp);
     char id[64];
     std::snprintf(id, sizeof(id), "%s##btn", buttonIcon);
-    const bool pressed = ImGui::Button(id, ImVec2(frameH, frameH));
-    if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort))
-        ImGui::SetTooltip("%s", buttonTip);
+    const bool pressed = insp::IconButton(id, buttonTip);
     ImGui::PopID();
     return pressed;
 }
@@ -1097,9 +1093,7 @@ void DrawSpriteAnimator(GameObject* n, SpriteAnimatorComponent* animator, bool& 
                         changed = true;
                     }
                     ImGui::SameLine(0.0f, sp);
-                    const bool removeFrame = ImGui::Button(ICON_FA_XMARK "##rm", ImVec2(frameH, frameH));
-                    if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort))
-                        ImGui::SetTooltip("Remove frame");
+                    const bool removeFrame = insp::IconButton(ICON_FA_XMARK "##rm", "Remove frame");
                     ImGui::PopID();
                     if (removeFrame) {
                         clip.frames.erase(clip.frames.begin() + i);
@@ -1197,10 +1191,8 @@ void DrawTerrain(GameObject* n, TerrainComponent* tc, bool& dirty) {
                 color ? ImGui::ColorConvertFloat4ToU32(*color) : ImGui::GetColorU32(ImGuiCol_TextDisabled), info);
             dl->PopClipRect();
             ImGui::SameLine(0.0f, sp);
-            if (ImGui::Button(ICON_FA_ARROWS_ROTATE "##reload", ImVec2(frameH, frameH)))
+            if (insp::IconButton(ICON_FA_ARROWS_ROTATE "##reload", "Reload heightmap"))
                 tc->InvalidateHeightmap();
-            if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort))
-                ImGui::SetTooltip("Reload heightmap");
         }
 
         insp::SubHeading(ICON_FA_RULER_COMBINED, "Shape", "Position moves it; rotation / scale ignored", false);

@@ -5,6 +5,7 @@
 #include "engine/editor/inspector_widgets.h"
 
 #include "engine/ecs/component.h"
+#include "engine/editor/editor_icon_button.h"
 #include "engine/editor/inspector_layout_math.h"
 #include "imgui/icons_font_awesome.h"
 #include "imgui/imgui_internal.h"
@@ -41,6 +42,51 @@ ImU32 U32(const ImVec4& c) { return ImGui::ColorConvertFloat4ToU32(c); }
 // Fixed slot for a row/header icon so the words after it line up.
 float IconSlot() { return ImGui::GetFontSize() * 1.35f; }
 
+// Draw a single icon glyph centered by its ink box (not its advance) inside
+// [x0, x0 + w] x [y0, y0 + h]. Font Awesome glyphs have uneven side bearings,
+// so advance-based centering leaves them visibly off-center.
+void DrawIconCentered(ImDrawList* dl, float x0, float y0, float w, float h, ImU32 col, const char* icon)
+{
+    if (!icon || !icon[0])
+        return;
+    const char* end = icon + std::strlen(icon);
+    unsigned int cp = 0;
+    const int bytes = ImTextCharFromUtf8(&cp, icon, end);
+    ImFont* font = ImGui::GetFont();
+    const float size = ImGui::GetFontSize();
+    ImFontBaked* baked = font ? font->GetFontBaked(size) : nullptr;
+    const ImFontGlyph* g = (baked && bytes > 0 && cp) ? baked->FindGlyph((ImWchar)cp) : nullptr;
+    if (g && g->Visible) {
+        const float scale = baked->Size > 0.0f ? size / baked->Size : 1.0f;
+        float x = 0.0f, y = 0.0f;
+        editor_icon_button::CenteredGlyphDrawPos(x0, y0, x0 + w, y0 + h,
+            g->X0, g->Y0, g->X1, g->Y1, scale, &x, &y);
+        dl->AddText(font, size, ImVec2(x, y), col, icon, icon + bytes);
+    } else {
+        const ImVec2 ts = ImGui::CalcTextSize(icon);
+        dl->AddText(ImVec2(x0 + (w - ts.x) * 0.5f, y0 + (h - ts.y) * 0.5f), col, icon);
+    }
+}
+
+bool WordFits(const char* icon, const char* word, float w)
+{
+    const ImGuiStyle& st = ImGui::GetStyle();
+    return word && word[0] &&
+        ImGui::CalcTextSize(icon).x + ImGui::CalcTextSize(word).x + ImGui::GetFontSize() * 0.4f +
+            st.FramePadding.x * 2.0f <= w;
+}
+
+// Words are shown for a whole row of buttons or for none of them.
+bool AllWordsFit(const char* const* icons, const char* const* words, int count, float w)
+{
+    if (!words)
+        return false;
+    for (int i = 0; i < count; ++i)
+        if (!WordFits(icons[i], words[i], w))
+            return false;
+    return true;
+}
+
 void Tooltip(const char* word, const char* tip)
 {
     if (word && tip && tip[0] && std::strcmp(word, tip) != 0)
@@ -69,17 +115,8 @@ bool HasExtension(const char* path, const char* const* exts, int count)
 
 // Button that shows "icon word" when it fits, else the icon only.
 bool LabelledButton(const char* id, const char* icon, const char* word, float w, bool active,
-                    const char* warn = nullptr)
+                    bool showWord, const char* warn = nullptr)
 {
-    const ImGuiStyle& st = ImGui::GetStyle();
-    char label[160];
-    const bool wordFits = word && word[0] &&
-        ImGui::CalcTextSize(icon).x + ImGui::CalcTextSize(word).x + ImGui::GetFontSize() * 0.4f +
-            st.FramePadding.x * 2.0f <= w;
-    if (wordFits)
-        std::snprintf(label, sizeof(label), "%s %s##%s", icon, word, id);
-    else
-        std::snprintf(label, sizeof(label), "%s##%s", icon, id);
     if (active) {
         ImVec4 a = g_currentAccent;
         ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(a.x, a.y, a.z, 0.55f));
@@ -88,7 +125,16 @@ bool LabelledButton(const char* id, const char* icon, const char* word, float w,
     }
     if (warn)
         ImGui::PushStyleColor(ImGuiCol_Text, WarningColor());
-    const bool pressed = ImGui::Button(label, ImVec2(w, 0.0f));
+    char label[160];
+    bool pressed = false;
+    if (showWord) {
+        std::snprintf(label, sizeof(label), "%s %s##%s", icon, word, id);
+        pressed = ImGui::Button(label, ImVec2(w, ImGui::GetFrameHeight()));
+    } else {
+        std::snprintf(label, sizeof(label), "%s##%s", icon, id);
+        // Active state is carried by the pushed Button color, so draw as a plain button.
+        pressed = editor_icon_button::IconButton(label, ImVec2(w, ImGui::GetFrameHeight()));
+    }
     if (warn)
         ImGui::PopStyleColor();
     if (active)
@@ -163,7 +209,7 @@ HeaderResult ComponentHeader(const char* id, const char* icon, const char* name,
     dl->PushClipRect(ImVec2(textX, mn.y), ImVec2(textMaxX, mx.y), true);
     const float textY = mn.y + (mx.y - mn.y - font) * 0.5f;
     if (icon)
-        dl->AddText(ImVec2(textX, textY), U32(iconCol), icon);
+        DrawIconCentered(dl, textX, mn.y, font * 1.1f, mx.y - mn.y, U32(iconCol), icon);
     if (name)
         dl->AddText(ImVec2(textX + (icon ? IconSlot() : 0.0f), textY), U32(textCol), name);
     dl->PopClipRect();
@@ -174,7 +220,7 @@ HeaderResult ComponentHeader(const char* id, const char* icon, const char* name,
         ImGui::SetCursorScreenPos(ImVec2(bx, mn.y));
         ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
         ImGui::PushStyleColor(ImGuiCol_Text, *enabled ? acc : ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled));
-        if (ImGui::Button(*enabled ? ICON_FA_TOGGLE_ON "##en" : ICON_FA_TOGGLE_OFF "##en", ImVec2(frameH, frameH))) {
+        if (editor_icon_button::IconButton(*enabled ? ICON_FA_TOGGLE_ON "##en" : ICON_FA_TOGGLE_OFF "##en", ImVec2(frameH, frameH))) {
             *enabled = !*enabled;
             result.changed = true;
             ImGui::MarkItemEdited(ImGui::GetItemID());
@@ -186,7 +232,7 @@ HeaderResult ComponentHeader(const char* id, const char* icon, const char* name,
     }
     ImGui::SetCursorScreenPos(ImVec2(bx, mn.y));
     ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
-    const bool menuClicked = ImGui::Button(ICON_FA_ELLIPSIS_VERTICAL "##menu", ImVec2(frameH, frameH));
+    const bool menuClicked = editor_icon_button::IconButton(ICON_FA_ELLIPSIS_VERTICAL "##menu", ImVec2(frameH, frameH));
     ImGui::PopStyleColor();
     if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort))
         ImGui::SetTooltip("Menu");
@@ -232,7 +278,7 @@ float RowLabel(const char* icon, const char* word, const char* tip)
     dl->PushClipRect(p, ImVec2(p.x + L.labelW, p.y + frameH), true);
     float x = p.x;
     if (icon) {
-        dl->AddText(ImVec2(x, y), U32(g_currentAccent), icon);
+        DrawIconCentered(dl, x, p.y, ImGui::GetFontSize() * 1.1f, frameH, U32(g_currentAccent), icon);
         x += IconSlot();
     }
     bool clipped = !L.showText;
@@ -346,6 +392,9 @@ bool ToggleRow(const Toggle* toggles, int count)
     const int cols = inspector_layout::WrapColumns(avail, ImGui::GetFrameHeight() * 1.6f,
         st.ItemSpacing.x, count);
     const float w = inspector_layout::SplitWidth(avail, cols, st.ItemSpacing.x);
+    bool words = true;
+    for (int i = 0; i < count; ++i)
+        words = words && WordFits(toggles[i].icon, toggles[i].tip, w);
     bool changed = false;
     for (int i = 0; i < count; ++i) {
         if (i % cols != 0)
@@ -353,7 +402,7 @@ bool ToggleRow(const Toggle* toggles, int count)
         char id[16];
         std::snprintf(id, sizeof(id), "t%d", i);
         bool* value = toggles[i].value;
-        if (LabelledButton(id, toggles[i].icon, toggles[i].tip, w, value && *value, toggles[i].warn) &&
+        if (LabelledButton(id, toggles[i].icon, toggles[i].tip, w, value && *value, words, toggles[i].warn) &&
             value) {
             *value = !*value;
             changed = true;
@@ -373,6 +422,7 @@ bool ChoiceBar(const char* id, const char* const* icons, const char* const* tips
     const int cols = inspector_layout::WrapColumns(avail, ImGui::GetFrameHeight() * 1.4f,
         st.ItemInnerSpacing.x, count);
     const float w = inspector_layout::SplitWidth(avail, cols, st.ItemInnerSpacing.x);
+    const bool words = AllWordsFit(icons, tips, count, w);
     bool changed = false;
     ImGui::PushID(id);
     for (int i = 0; i < count; ++i) {
@@ -381,7 +431,7 @@ bool ChoiceBar(const char* id, const char* const* icons, const char* const* tips
         char bid[16];
         std::snprintf(bid, sizeof(bid), "c%d", i);
         const bool active = (*selected == i);
-        if (LabelledButton(bid, icons[i], tips ? tips[i] : nullptr, w, active) && !active) {
+        if (LabelledButton(bid, icons[i], tips ? tips[i] : nullptr, w, active, words) && !active) {
             *selected = i;
             changed = true;
             ImGui::MarkItemEdited(ImGui::GetItemID());
@@ -400,6 +450,7 @@ int IconButtonRow(const char* id, const char* const* icons, const char* const* t
     const int cols = inspector_layout::WrapColumns(avail, ImGui::GetFrameHeight() * 1.4f,
         st.ItemSpacing.x, count);
     const float w = inspector_layout::SplitWidth(avail, cols, st.ItemSpacing.x);
+    const bool words = AllWordsFit(icons, tips, count, w);
     int pressed = -1;
     ImGui::PushID(id);
     for (int i = 0; i < count; ++i) {
@@ -407,7 +458,7 @@ int IconButtonRow(const char* id, const char* const* icons, const char* const* t
             ImGui::SameLine();
         char bid[16];
         std::snprintf(bid, sizeof(bid), "b%d", i);
-        if (LabelledButton(bid, icons[i], tips ? tips[i] : nullptr, w, false))
+        if (LabelledButton(bid, icons[i], tips ? tips[i] : nullptr, w, false, words))
             pressed = i;
     }
     ImGui::PopID();
@@ -446,7 +497,7 @@ bool AssetField(const char* icon, const char* word, const char* tip, std::string
     }
     if (has) {
         ImGui::SameLine(0.0f, st.ItemInnerSpacing.x);
-        if (ImGui::Button(ICON_FA_XMARK "##clr", ImVec2(frameH, frameH))) {
+        if (editor_icon_button::IconButton(ICON_FA_XMARK "##clr", ImVec2(frameH, frameH))) {
             path.clear();
             changed = true;
             ImGui::MarkItemEdited(ImGui::GetItemID());
@@ -456,6 +507,15 @@ bool AssetField(const char* icon, const char* word, const char* tip, std::string
     }
     ImGui::PopID();
     return changed;
+}
+
+bool IconButton(const char* iconId, const char* tip, float size)
+{
+    const float s = size > 0.0f ? size : ImGui::GetFrameHeight();
+    const bool pressed = editor_icon_button::IconButton(iconId, ImVec2(s, s));
+    if (tip && ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort | ImGuiHoveredFlags_AllowWhenDisabled))
+        ImGui::SetTooltip("%s", tip);
+    return pressed;
 }
 
 void HintIcon(const char* icon, const ImVec4& color, const char* tip)
@@ -488,7 +548,7 @@ void SubHeading(const char* icon, const char* word, const char* hint, bool hintI
     dl->PushClipRect(p, ImVec2(p.x + avail, p.y + h), true);
     float x = p.x;
     if (icon) {
-        dl->AddText(ImVec2(x, y), U32(g_currentAccent), icon);
+        DrawIconCentered(dl, x, p.y, ImGui::GetFontSize() * 1.1f, h, U32(g_currentAccent), icon);
         x += IconSlot();
     }
     if (word) {
@@ -501,7 +561,7 @@ void SubHeading(const char* icon, const char* word, const char* hint, bool hintI
         const char* hintIcon = hintIsWarning ? ICON_FA_TRIANGLE_EXCLAMATION : ICON_FA_CIRCLE_INFO;
         const float iw = ImGui::CalcTextSize(hintIcon).x;
         const ImVec2 hp(p.x + avail - iw, y);
-        dl->AddText(hp, U32(hintIsWarning ? WarningColor() : InfoColor()), hintIcon);
+        DrawIconCentered(dl, hp.x, p.y, iw, h, U32(hintIsWarning ? WarningColor() : InfoColor()), hintIcon);
         lineEnd = hp.x - ImGui::GetFontSize() * 0.4f;
         if (ImGui::IsMouseHoveringRect(ImVec2(hp.x, p.y), ImVec2(p.x + avail, p.y + h)) &&
             ImGui::IsWindowHovered())
