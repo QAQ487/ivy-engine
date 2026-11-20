@@ -342,6 +342,8 @@ exit /b 0</Command>
     <ClInclude Include="engine\editor\editor_ui_panel.h" />
     <ClInclude Include="engine\editor\editor_undo.h" />
     <ClInclude Include="engine\editor\editor_layout.h" />
+    <ClInclude Include="engine\editor\inspector_layout_math.h" />
+    <ClInclude Include="engine\editor\inspector_widgets.h" />
     <ClInclude Include="engine\editor\editor_docking.h" />
     <ClInclude Include="engine\editor\editor_docking_math.h" />
     <ClInclude Include="engine\editor\editor_ui_scale_math.h" />
@@ -540,6 +542,7 @@ exit /b 0</Command>
     <ClCompile Include="engine\editor\editor_ui_panel.cpp" />
     <ClCompile Include="engine\editor\editor_undo.cpp" />
     <ClCompile Include="engine\editor\editor_layout.cpp" />
+    <ClCompile Include="engine\editor\inspector_widgets.cpp" />
     <ClCompile Include="engine\editor\editor_docking.cpp" />
     <ClCompile Include="engine\editor\editor_toolbar.cpp" />
     <ClCompile Include="engine\editor\editor_hierarchy_panel.cpp" />

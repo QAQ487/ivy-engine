@@ -294,6 +294,12 @@
     <ClInclude Include="engine\editor\editor_undo.h">
       <Filter>engine\editor</Filter>
     </ClInclude>
+    <ClInclude Include="engine\editor\inspector_layout_math.h">
+      <Filter>engine\editor</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\editor\inspector_widgets.h">
+      <Filter>engine\editor</Filter>
+    </ClInclude>
     <ClInclude Include="engine\editor\editor_layout.h">
       <Filter>engine\editor</Filter>
     </ClInclude>
@@ -870,6 +876,9 @@
       <Filter>engine\editor</Filter>
     </ClCompile>
     <ClCompile Include="engine\editor\editor_undo.cpp">
+      <Filter>engine\editor</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\editor\inspector_widgets.cpp">
       <Filter>engine\editor</Filter>
     </ClCompile>
     <ClCompile Include="engine\editor\editor_layout.cpp">
