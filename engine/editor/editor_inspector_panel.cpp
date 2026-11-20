@@ -114,6 +114,10 @@ void DrawEditorInspectorPanel(bool playVisuals, bool* open)
         ImGui::End();
         return;
     }
+    // Default widget width: fill the panel but keep a label column on the right,
+    // so labelled fields and unlabelled SameLine(offset) fields never exceed the
+    // window width (which caused horizontal scrolling and clipped controls).
+    ImGui::PushItemWidth(-Ui(160.0f));
     {
         if (playVisuals)
             ImGui::BeginDisabled(true);
@@ -148,13 +152,16 @@ void DrawEditorInspectorPanel(bool playVisuals, bool* open)
             ImGui::Spacing();
 
             ImGui::Text("Hierarchy Order");
-            if (ImGui::Button("Back", ImVec2(Ui(70.0f), 0)))
+            // Four equal buttons that always fit the panel width.
+            const float orderBtnW = std::max(1.0f,
+                (ImGui::GetContentRegionAvail().x - ImGui::GetStyle().ItemSpacing.x * 3.0f) * 0.25f);
+            if (ImGui::Button("Back", ImVec2(orderBtnW, 0)))
             {
                 if (UndoableReorderNode(g_selNode, MoveNodeToBack))
                     runtimeDirty = true;
             }
             ImGui::SameLine();
-            if (ImGui::Button("Down", ImVec2(Ui(70.0f), 0)))
+            if (ImGui::Button("Down", ImVec2(orderBtnW, 0)))
             {
                 if (UndoableReorderNode(g_selNode, [](GameObject* n) {
                     return MoveNodeOrder(n, -1);
@@ -162,7 +169,7 @@ void DrawEditorInspectorPanel(bool playVisuals, bool* open)
                     runtimeDirty = true;
             }
             ImGui::SameLine();
-            if (ImGui::Button("Up", ImVec2(Ui(70.0f), 0)))
+            if (ImGui::Button("Up", ImVec2(orderBtnW, 0)))
             {
                 if (UndoableReorderNode(g_selNode, [](GameObject* n) {
                     return MoveNodeOrder(n, 1);
@@ -170,7 +177,7 @@ void DrawEditorInspectorPanel(bool playVisuals, bool* open)
                     runtimeDirty = true;
             }
             ImGui::SameLine();
-            if (ImGui::Button("Top", ImVec2(Ui(70.0f), 0)))
+            if (ImGui::Button("Top", ImVec2(orderBtnW, 0)))
             {
                 if (UndoableReorderNode(g_selNode, MoveNodeToFront))
                     runtimeDirty = true;
@@ -755,6 +762,7 @@ void DrawEditorInspectorPanel(bool playVisuals, bool* open)
                     strncpy_s(matBuf, cc->physicsMaterial.c_str(), sizeof(matBuf) - 1);
                     matBuf[sizeof(matBuf) - 1] = '\0';
                     ImGui::SameLine(140);
+                    ImGui::SetNextItemWidth(cc->physicsMaterial.empty() ? -1.0f : -Ui(60.0f));
                     if (ImGui::InputText("##PhysMat", matBuf, sizeof(matBuf))) {
                         cc->physicsMaterial = matBuf;
                         runtimeDirty = true;
@@ -1618,5 +1626,6 @@ void DrawEditorInspectorPanel(bool playVisuals, bool* open)
         if (playVisuals)
             ImGui::EndDisabled();
     }
+    ImGui::PopItemWidth();
     ImGui::End();
 }
