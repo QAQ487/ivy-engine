@@ -68,6 +68,17 @@
   - Linux：`./tools/run_editor_theme_check.sh`。Windows 要目視每組 preset×scheme、zoom 清晰度、Asset Browser CJK 檔名、Play／Stop 色。
 
 
+## Terrain build system（ADR 0011）
+
+目標：editor 入面加一塊地形，用筆刷雕山谷、塗材質，Play 時角色可以喺上面行，打包照用。v1 = 單塊地形（最大 4097² 樣本），步驟 1–4；步驟 5 係 v1.1。每步一個 PR，Windows 驗收後先做下一步。
+
+- [x] **步驟 1：地基**（source 已做；純邏輯，冇 Windows 改動要驗）：`engine/terrain/terrain_heightmap.{h,cpp}`——`.r16` 讀寫（解像度由檔案大小推算）、`Layout` sanitise、高度／樣本換算、三角形插值高度（同對角線分割）、surface／vertex normal、chunk 大小同 min/max bounds（局部更新）、chunk LOD 選擇（hysteresis）、chunk index buffer。已加入兩個 `.vcxproj`（未有人用；MSVC 編譯等下次 Windows build 順便確認）。Linux：`tests/terrain_heightmap_test.cpp`（亦用 ASan／UBSan 跑過）。
+- [ ] **步驟 2：睇到地形**：`Terrain` component（JSON 欄位、inspector、undo、`SceneLoader_RegisterComponentTypes`）；R16 texture＋`VertexShaderTerrain.hlsl`／`PixelShaderTerrain.hlsl`（include `LightingCommon.hlsli`）；每 chunk frustum cull＋LOD＋skirt；CSM caster；`"volume"` 模式只受影唔投影；testbed 示範場景＋生成 `.r16` 嘅 tool。
+- [ ] **步驟 3：喺上面行**：heightfield collider（新 `ColliderType` 加喺尾，只測 body 底下嘅格仔；raycast 行 grid）；`ScriptApi_TerrainSampleHeight`（v53，append-only）；`SamplePlayerScript` 喺地形上行。
+- [ ] **步驟 4：雕刻工具**：editor 地形面板（升／降／平滑／壓平、半徑／力度／falloff）、viewport 筆刷圈、dirty-rect undo command、Save Scene 時寫 `.r16`、GameObject → 3D → Terrain、匯入 raw heightmap。
+- [ ] **步驟 5（v1.1）：塗材質同收尾**：最多 4 層 splat（albedo＋normal＋tiling）、筆刷畫圖層、splat map 唔做 BC7；content hot reload；打包（`.r16` 保留）；user guide／`docs/agent/scene-prefab.md`／component 表。
+- 之後（未排）：植被散佈（要先做 mesh instancing）、地形挖洞、多塊地形／串流、NavMesh。
+
 ## AI 系統套件（source audit：引擎內全部 missing）
 
 `engine/`、`src/`、`game/` 冇 Blackboard、BehaviorTree、Perception、EQS、Waypoint、NavMesh、pathfinding。Village & Goblin 嘅源碼唔喺呢個 repo，遊戲自己有冇 A* 無法喺度核實。
@@ -246,6 +257,7 @@ PBR 球場已由引擎待辦移除：倉庫只有 PBR shader 同 `testbed/rom/sc
 
 ## 建議優先次序
 
+0. **Terrain build system**（Terry 揀嘅下一個主線，ADR 0011）：按「Terrain build system」一節步驟 2 → 3 → 4 做；3D 時間模型（掉幀變慢鏡）建議喺步驟 3 前後處理，因為地形場景較易掉幀。
 1. PR #7 視覺檢查（lighting、CSM、post-process、gizmo）喺 Windows 做（ImGuizmo AddPolyline 已驗收）。
 2. 重做 Properties Panel／Inspector（先有 UI 草案；現有編輯同 Undo 要保住）。
    Culling／LOD 跟進（獨立 PR，順序：`DrawVisual` 先剔除、離屏動畫降頻 → 燈光揀選 → billboard／粒子／effect 剔除）見「Culling／LOD 缺口盤點」。

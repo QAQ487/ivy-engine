@@ -76,6 +76,7 @@ Linux-runnable checks (use what matches the change; none of these is a Windows p
 | project.json merge on save | `tests/project_file_merge_test.cpp` |
 | Input actions / key names | `tests/input_actions_test.cpp`; key table sync: `python3 tools/runtime_bridge_keyboard_keys_check.py` |
 | Save data / host text buffers | `tests/save_store_test.cpp` (real files in a temp dir), `tests/host_text_test.cpp` |
+| Terrain heightmap core | `tests/terrain_heightmap_test.cpp` |
 | Other unit tests | `tests/*_test.cpp` (single-file `g++ -std=c++20 -I.` builds; see each file header) |
 
 Windows-only harnesses: `tools/run_*.cmd`, `tools/run_*.ps1` (2D regression, collider components, content reload, scene hot-load, play-scene switch, bridge acceptance).
@@ -93,6 +94,7 @@ Windows-only harnesses: `tools/run_*.cmd`, `tools/run_*.ps1` (2D regression, col
 | `engine/physics/` | Custom 3D rigidbody + colliders; `2d/` Box2D adapter (ADR 0008) |
 | `engine/ui/`, `engine/input/`, `engine/audio/` | Canvas UI, keyboard/mouse/XInput + input actions (`input_actions` pure, `input_action_system`, shared `key_names.h`), XAudio2 |
 | `engine/save/` | Save slots: `save_store` (pure, Linux-tested), `save_system` (Windows folder + `MoveFileExW`) |
+| `engine/terrain/` | Terrain (ADR 0011): `terrain_heightmap` (pure, Linux-tested: `.r16` heightmap, height / normal queries, chunk bounds, chunk LOD, chunk index buffers). No component, renderer or collider yet |
 | `engine/testing/` | Debug runtime test bridge |
 | `src/app/` | `main.cpp` (WinMain, loop, debug hotkeys), `scene/game_scene.cpp`, cameras (scene/debug/third/first person, director), fades/transitions |
 | `resources/` | Read-only engine defaults (shaders, fonts, branding, primitives, skybox/IBL), mirrored beside the exe |

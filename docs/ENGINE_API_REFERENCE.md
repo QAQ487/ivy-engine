@@ -1,7 +1,7 @@
 # Ivy Engine — Complete Ability & API Reference
 
 Exhaustive catalog of **Ivy Engine** capabilities and public functions,
-scanned from every header under `engine/` and `src/app/` (188 headers; regenerate to refresh).
+scanned from every header under `engine/` and `src/app/` (189 headers; regenerate to refresh).
 
 **Learning how to use the engine?** Start with [`ENGINE_USER_GUIDE.md`](ENGINE_USER_GUIDE.md) (humans).  
 For JSON schemas, source map, and change rules, see [`AGENTS.md`](../AGENTS.md) (AI agents).
@@ -2465,6 +2465,35 @@ Vendor header `WICTextureLoader11.h` is omitted.
 ### `engine/scripting/ui_canvas_script_register.h`
 **Types:** TYPE
 - `void DllUICanvasScript_Register(const std::string& name, std::function<UICanvasScript*()> creator);`
+
+### `engine/terrain/terrain_heightmap.h`
+**Types:** Float3, Heightmap, Layout, ChunkGrid, ChunkBounds
+- `bool IsValidResolution(int resolution);`
+- `int ResolutionFromR16ByteCount(std::size_t byteCount);`
+- `bool IsValid() const;`
+- `std::uint16_t At(int x, int z) const;`
+- `void Set(int x, int z, std::uint16_t value);`
+- `bool CreateFlat(int resolution, std::uint16_t value, Heightmap& out);`
+- `bool DecodeR16(const std::uint8_t* data, std::size_t size, Heightmap& out, std::string* error);`
+- `std::vector<std::uint8_t> EncodeR16(const Heightmap& map);`
+- `Layout SanitizeLayout(const Layout& layout);`
+- `float SampleToHeight(const Layout& layout, std::uint16_t sample);`
+- `std::uint16_t HeightToSample(const Layout& layout, float height);`
+- `float CellSizeX(const Layout& layout, const Heightmap& map);`
+- `float CellSizeZ(const Layout& layout, const Heightmap& map);`
+- `Float3 SamplePosition(const Layout& layout, const Heightmap& map, int x, int z);`
+- `bool SampleHeight(const Layout& layout, const Heightmap& map, float x, float z, float& outHeight);`
+- `bool SampleSurfaceNormal(const Layout& layout, const Heightmap& map, float x, float z, Float3& outNormal);`
+- `Float3 SampleVertexNormal(const Layout& layout, const Heightmap& map, int x, int z);`
+- `bool IsValidChunkQuads(int chunkQuads, int resolution);`
+- `int ResolveChunkQuads(int requested, int resolution);`
+- `bool MakeChunkGrid(int resolution, int chunkQuads, ChunkGrid& out);`
+- `void ComputeChunkBounds(const Heightmap& map, const ChunkGrid& grid, std::vector<ChunkBounds>& out);`
+- `void UpdateChunkBounds(const Heightmap& map, const ChunkGrid& grid, int x0, int z0, int x1, int z1, std::vector<ChunkBounds>& inOut);`
+- `int MaxLodLevel(int chunkQuads);`
+- `float DistanceToAabb(const Float3& point, const Float3& boxMin, const Float3& boxMax);`
+- `int SelectChunkLod(float distance, float chunkWorldSize, float lodBias, int maxLevel, int prevLevel);`
+- `bool BuildChunkIndices(int chunkQuads, int stride, std::vector<std::uint32_t>& out);`
 
 ### `engine/testing/controller_inject_protocol.h`
 **Types:** ControllerCommand, ControllerOperation

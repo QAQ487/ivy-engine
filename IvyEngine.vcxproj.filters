@@ -7,6 +7,9 @@
     <Filter Include="engine\save">
       <UniqueIdentifier>{3380e21b-811d-4e9a-838f-40127696c427}</UniqueIdentifier>
     </Filter>
+    <Filter Include="engine\terrain">
+      <UniqueIdentifier>{fcd88a06-5447-4a80-92e3-8e0d9969b1d9}</UniqueIdentifier>
+    </Filter>
     <Filter Include="engine\audio">
       <UniqueIdentifier>{9f2374de-4953-4a7f-b510-b837d2ba05be}</UniqueIdentifier>
     </Filter>
@@ -513,6 +516,9 @@
     <ClInclude Include="engine\save\save_store.h">
       <Filter>engine\save</Filter>
     </ClInclude>
+    <ClInclude Include="engine\terrain\terrain_heightmap.h">
+      <Filter>engine\terrain</Filter>
+    </ClInclude>
     <ClInclude Include="engine\save\save_system.h">
       <Filter>engine\save</Filter>
     </ClInclude>
@@ -676,6 +682,9 @@
     </ClCompile>
     <ClCompile Include="engine\save\save_store.cpp">
       <Filter>engine\save</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\terrain\terrain_heightmap.cpp">
+      <Filter>engine\terrain</Filter>
     </ClCompile>
     <ClCompile Include="engine\save\save_system.cpp">
       <Filter>engine\save</Filter>
