@@ -15,6 +15,57 @@ static constexpr float kToolbarItemSpacingX = 4.0f;
 
 float Ui(float px) { return px * g_uiZoom; }
 
+InspectorRow::InspectorRow(const char* label)
+{
+    ImGui::PushID(label);
+    const float startX = ImGui::GetCursorPosX();
+    const float colW = (std::max)(Ui(64.0f), ImGui::GetContentRegionAvail().x * 0.4f);
+    const float gap = ImGui::GetStyle().ItemSpacing.x;
+    const ImVec2 p = ImGui::GetCursorScreenPos();
+
+    ImGui::AlignTextToFramePadding();
+    ImGui::PushClipRect(p, ImVec2(p.x + colW - gap, p.y + ImGui::GetFrameHeight()), true);
+    ImGui::TextUnformatted(label);
+    ImGui::PopClipRect();
+    if (ImGui::GetItemRectSize().x > colW - gap && ImGui::IsItemHovered())
+        ImGui::SetTooltip("%s", label);
+
+    ImGui::SameLine(startX + colW);
+    ImGui::SetNextItemWidth(-FLT_MIN);
+}
+
+InspectorRow::~InspectorRow()
+{
+    ImGui::PopID();
+}
+
+bool InspectorToggleGrid(const char* const* labels, int count, int* selected, int columns)
+{
+    if (!labels || !selected || count <= 0)
+        return false;
+    columns = (std::max)(1, (std::min)(columns, count));
+    const float spacing = ImGui::GetStyle().ItemSpacing.x;
+    const float w = (std::max)(1.0f,
+        (ImGui::GetContentRegionAvail().x - spacing * static_cast<float>(columns - 1)) /
+            static_cast<float>(columns));
+
+    bool changed = false;
+    for (int i = 0; i < count; ++i) {
+        if (i % columns != 0)
+            ImGui::SameLine();
+        const bool active = (*selected == i);
+        if (active)
+            ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive));
+        if (ImGui::Button(labels[i], ImVec2(w, 0.0f)) && !active) {
+            *selected = i;
+            changed = true;
+        }
+        if (active)
+            ImGui::PopStyleColor();
+    }
+    return changed;
+}
+
 ImVec2 ToolbarWindowPadding()
 {
     return ImVec2(Ui(kToolbarWindowPadX), Ui(kToolbarWindowPadY));

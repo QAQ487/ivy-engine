@@ -10,6 +10,7 @@
 #include "engine/ecs/game_object.h"
 #include "engine/ecs/terrain_component.h"
 #include "engine/ecs/transform.h"
+#include "engine/editor/editor_layout.h"
 #include "engine/editor/editor_undo.h"
 #include "engine/scene/scene_loader.h"
 #include "engine/terrain/terrain_brush.h"
@@ -255,42 +256,62 @@ void ForEachTerrain(const std::function<void(GameObject*, TerrainComponent&)>& f
 
 void TerrainEditor_DrawInspector(GameObject* node, TerrainComponent& tc) {
     ImGui::PushID("TerrainSculpt");
+    // Wrap every hint / status line at the panel edge instead of widening the window.
+    ImGui::PushTextWrapPos(0.0f);
     ImGui::SeparatorText("Sculpt");
     if (!tc.IsLoaded()) {
         ImGui::TextDisabled("Load a heightmap (or clear the path for a flat one) to sculpt.");
+        ImGui::PopTextWrapPos();
         ImGui::PopID();
         return;
     }
 
     const Tool tools[] = { Tool::None, Tool::Raise, Tool::Lower, Tool::Smooth, Tool::Flatten, Tool::Paint };
-    for (int i = 0; i < 6; ++i) {
-        if (i > 0) ImGui::SameLine();
-        if (ImGui::RadioButton(ToolLabel(tools[i]), g_state.tool == tools[i])) {
+    {
+        const char* toolLabels[6];
+        int toolIndex = 0;
+        for (int i = 0; i < 6; ++i) {
+            toolLabels[i] = ToolLabel(tools[i]);
+            if (g_state.tool == tools[i]) toolIndex = i;
+        }
+        // 3 per row: stays inside the panel however narrow it is.
+        if (InspectorToggleGrid(toolLabels, 6, &toolIndex, 3)) {
             EndStroke();
-            g_state.tool = tools[i];
+            g_state.tool = tools[toolIndex];
         }
     }
     terrain::Brush& b = g_state.brush;
-    ImGui::DragFloat("Brush Radius (m)", &b.radius, 0.1f, terrain::kMinBrushRadius, terrain::kMaxBrushRadius, "%.1f");
+    {
+        InspectorRow row("Brush Radius (m)");
+        ImGui::DragFloat("##v", &b.radius, 0.1f, terrain::kMinBrushRadius, terrain::kMaxBrushRadius, "%.1f");
+    }
     const char* strengthLabel = (g_state.tool == Tool::Raise || g_state.tool == Tool::Lower)
         ? "Strength (m/s)" : (g_state.tool == Tool::Paint ? "Strength (full layers/s)" : "Strength (blends/s)");
     if (g_state.tool == Tool::Paint) {
         const int layerCount = static_cast<int>(terrain::EffectiveLayers(tc.settings).size());
         g_state.paintLayer = std::min(g_state.paintLayer, layerCount - 1);
-        for (int i = 0; i < layerCount; ++i) {
-            if (i > 0) ImGui::SameLine();
-            char label[16];
-            std::snprintf(label, sizeof(label), "Layer %d", i + 1);
-            if (ImGui::RadioButton(label, g_state.paintLayer == i))
-                g_state.paintLayer = i;
+        char layerLabelBuf[8][16];
+        const char* layerLabels[8];
+        const int shown = std::min(layerCount, 8);
+        for (int i = 0; i < shown; ++i) {
+            std::snprintf(layerLabelBuf[i], sizeof(layerLabelBuf[i]), "Layer %d", i + 1);
+            layerLabels[i] = layerLabelBuf[i];
         }
+        InspectorToggleGrid(layerLabels, shown, &g_state.paintLayer, 4);
         if (layerCount < 2)
             ImGui::TextDisabled("Add a second layer above to paint.");
         if (!tc.EnsureSplatLoaded() && !tc.GetSplatError().empty())
             ImGui::TextColored(ImVec4(1.0f, 0.45f, 0.35f, 1.0f), "%s", tc.GetSplatError().c_str());
     }
-    ImGui::DragFloat(strengthLabel, &b.strength, 0.05f, 0.0f, terrain::kMaxBrushStrength, "%.2f");
-    ImGui::SliderFloat("Falloff", &b.falloff, 0.0f, 1.0f, "%.2f");
+    {
+        InspectorRow row("Strength");
+        ImGui::DragFloat("##v", &b.strength, 0.05f, 0.0f, terrain::kMaxBrushStrength, "%.2f");
+        ImGui::SetItemTooltip("%s", strengthLabel);
+    }
+    {
+        InspectorRow row("Falloff");
+        ImGui::SliderFloat("##v", &b.falloff, 0.0f, 1.0f, "%.2f");
+    }
     b = terrain::SanitizeBrush(b);
     if (g_state.tool == Tool::Flatten)
         ImGui::TextDisabled("Flattens to the height under the cursor when the stroke starts.");
@@ -318,16 +339,22 @@ void TerrainEditor_DrawInspector(GameObject* node, TerrainComponent& tc) {
         static const int kResolutions[] = { 33, 65, 129, 257, 513, 1025, 2049, 4097 };
         char preview[16];
         std::snprintf(preview, sizeof(preview), "%d", g_state.flatResolution);
-        if (ImGui::BeginCombo("Resolution", preview)) {
-            for (int r : kResolutions) {
-                char label[16];
-                std::snprintf(label, sizeof(label), "%d", r);
-                if (ImGui::Selectable(label, g_state.flatResolution == r))
-                    g_state.flatResolution = r;
+        {
+            InspectorRow row("Resolution");
+            if (ImGui::BeginCombo("##v", preview)) {
+                for (int r : kResolutions) {
+                    char label[16];
+                    std::snprintf(label, sizeof(label), "%d", r);
+                    if (ImGui::Selectable(label, g_state.flatResolution == r))
+                        g_state.flatResolution = r;
+                }
+                ImGui::EndCombo();
             }
-            ImGui::EndCombo();
         }
-        ImGui::DragFloat("Height (m)", &g_state.flatHeight, 0.1f);
+        {
+            InspectorRow row("Height (m)");
+            ImGui::DragFloat("##v", &g_state.flatHeight, 0.1f);
+        }
         ImGui::TextDisabled("Current: %d x %d samples. Replaces the whole map; cannot be undone.",
                             map.resolution, map.resolution);
         if (ImGui::Button("Reset to Flat"))
@@ -348,6 +375,7 @@ void TerrainEditor_DrawInspector(GameObject* node, TerrainComponent& tc) {
         }
         ImGui::TreePop();
     }
+    ImGui::PopTextWrapPos();
     ImGui::PopID();
 }
 
