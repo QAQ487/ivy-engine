@@ -10,6 +10,7 @@
  *****************************************************/
 #pragma once
 #include "component.h"
+#include "engine/terrain/terrain_brush.h"
 #include "engine/terrain/terrain_heightmap.h"
 #include "engine/terrain/terrain_settings.h"
 
@@ -64,6 +65,27 @@ public:
     // Deletes the owner's collider if it is a terrain collider this engine allocated.
     static void ClearTerrainCollider(GameObject* owner);
 
+    // --- Editing (editor sculpt tools, main thread) -------------------------------
+    // Mutable map for brushes; call NotifyHeightsChanged with the touched rectangle.
+    terrain::Heightmap& EditHeightmap() { return m_heightmap; }
+    // Updates chunk bounds and the cached height range, queues the rectangle for the
+    // GPU copy and marks the map unsaved.
+    void NotifyHeightsChanged(const terrain::SampleRect& rect);
+    // Replaces the map with a flat one of `resolution` samples at terrain-local
+    // `height` (clamped to the height range). Marks it unsaved. Not undoable.
+    bool ResetFlat(int resolution, float height);
+    // Edits not yet written to settings.heightmap.
+    bool HasUnsavedHeights() const { return m_unsavedHeights; }
+    // Uses `romPath` as the heightmap file for the map already in memory (no reload).
+    void AdoptHeightmapPath(const std::string& romPath);
+    // Writes the map to settings.heightmap (a rom/ path, written into the content
+    // project) through a temporary file, and clears the unsaved flag. outBytes, when
+    // given, receives the written file.
+    bool SaveHeightmap(std::string* error, std::vector<std::uint8_t>* outBytes = nullptr);
+    // Samples changed since the renderer last uploaded them (renderer only).
+    const terrain::SampleRect& PendingGpuRect() const { return m_pendingGpuRect; }
+    void ClearPendingGpuRect() { m_pendingGpuRect = terrain::SampleRect{}; }
+
     // Heightmap GPU copy, owned here and created by the renderer (null = rebuild).
     ID3D11ShaderResourceView* GetHeightSRV() const { return m_heightSrv; }
     void SetHeightSRV(ID3D11ShaderResourceView* srv); // takes ownership, releases the old one
@@ -81,6 +103,8 @@ private:
     std::string m_loadError;
     std::uint16_t m_lowSample = 0;
     std::uint16_t m_highSample = 0;
+    bool m_unsavedHeights = false;
+    terrain::SampleRect m_pendingGpuRect;
 
     ID3D11ShaderResourceView* m_heightSrv = nullptr;
 

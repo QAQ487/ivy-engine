@@ -2,6 +2,7 @@
 // Extracted from engine/core/engine_gui.cpp (phase-1 editor UI split; behaviour-preserving).
 
 #include "editor_gui_common_includes.h"
+#include "engine/editor/terrain_editor.h"
 namespace fs = std::filesystem;
 using json = nlohmann::json;
 
@@ -1494,6 +1495,7 @@ void DrawEditorInspectorPanel(bool playVisuals, bool* open)
                 ts = terrain::SanitizeSettings(ts);
 
                 EditorUndo_EndComponentEdit(g_selNode, "Terrain");
+                TerrainEditor_DrawInspector(g_selNode, *tc);
                 if (ImGui::Button("Remove Terrain")) {
                     EditorUndo_PushRemoveComponent(g_selNode, "Terrain");
                     g_selNode->RemoveComponent<TerrainComponent>();

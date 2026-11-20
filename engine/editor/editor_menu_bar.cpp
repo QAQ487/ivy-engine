@@ -2,6 +2,7 @@
 // Extracted from engine/core/engine_gui.cpp (phase-1 editor UI split; behaviour-preserving).
 
 #include "editor_gui_common_includes.h"
+#include "engine/editor/terrain_editor.h"
 
 static std::unique_ptr<GameObject> CreateModelGameObject(
     const std::string& modelName, const std::string& displayName)
@@ -146,6 +147,9 @@ void DrawEditorMenuBar() {
                 if (ImGui::MenuItem(spec.menuLabel))
                     SpawnRootGameObject(CreatePrimitiveGameObject(spec));
             }
+            ImGui::Separator();
+            if (ImGui::MenuItem("Terrain"))
+                SpawnRootGameObject(TerrainEditor_CreateTerrainObject());
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu("Camera")) {

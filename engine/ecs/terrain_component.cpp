@@ -15,6 +15,8 @@
 #include "libraries/nlohmann/json.hpp"
 
 #include <d3d11.h>
+#include <algorithm>
+#include <filesystem>
 #include <fstream>
 #include <iterator>
 
@@ -76,7 +78,9 @@ bool TerrainComponent::EnsureLoaded() {
     terrain::Heightmap loaded;
 
     if (settings.heightmap.empty()) {
-        terrain::CreateFlat(terrain::kPlaceholderResolution, 0, loaded);
+        // Flat at terrain-local height 0 (the bottom when 0 is below the height range).
+        terrain::CreateFlat(terrain::kPlaceholderResolution,
+                            terrain::HeightToSample(terrain::SanitizeLayout(settings.layout), 0.0f), loaded);
     } else {
         std::ifstream file(content_path::ReadableFileCurrent(settings.heightmap), std::ios::binary);
         if (!file) {
@@ -97,6 +101,8 @@ bool TerrainComponent::EnsureLoaded() {
         m_bounds.clear();
         m_lodMemory.clear();
         m_lowSample = m_highSample = 0;
+        m_unsavedHeights = false;
+        m_pendingGpuRect = terrain::SampleRect{};
         ReleaseHeightSRV();
         return false;
     }
@@ -104,9 +110,90 @@ bool TerrainComponent::EnsureLoaded() {
     m_heightmap = std::move(loaded);
     terrain::SampleRange(m_heightmap, m_lowSample, m_highSample);
     m_grid = terrain::ChunkGrid{};
+    m_unsavedHeights = false;
+    m_pendingGpuRect = terrain::SampleRect{};
     ReleaseHeightSRV(); // renderer uploads the new map on the next draw
     FitChunkGrid();
     return m_grid.chunkQuads > 0;
+}
+
+void TerrainComponent::NotifyHeightsChanged(const terrain::SampleRect& rect) {
+    const terrain::SampleRect r = terrain::ClipRect(rect, m_heightmap);
+    if (r.Empty())
+        return;
+    FitChunkGrid();
+    terrain::UpdateChunkBounds(m_heightmap, m_grid, r.x0, r.z0, r.x1, r.z1, m_bounds);
+    // Exact range from the chunk bounds (they cover every sample).
+    if (!m_bounds.empty()) {
+        m_lowSample = terrain::kMaxSample;
+        m_highSample = 0;
+        for (const auto& b : m_bounds) {
+            m_lowSample = std::min(m_lowSample, b.minSample);
+            m_highSample = std::max(m_highSample, b.maxSample);
+        }
+    }
+    m_pendingGpuRect = terrain::UnionRect(m_pendingGpuRect, r);
+    m_unsavedHeights = true;
+}
+
+bool TerrainComponent::ResetFlat(int resolution, float height) {
+    terrain::Heightmap flat;
+    const terrain::Layout layout = terrain::SanitizeLayout(settings.layout);
+    if (!terrain::CreateFlat(resolution, terrain::HeightToSample(layout, height), flat))
+        return false;
+    m_heightmap = std::move(flat);
+    m_loadAttempted = true;
+    m_loadedPath = settings.heightmap;
+    m_loadError.clear();
+    terrain::SampleRange(m_heightmap, m_lowSample, m_highSample);
+    m_grid = terrain::ChunkGrid{};
+    m_pendingGpuRect = terrain::SampleRect{};
+    ReleaseHeightSRV(); // new size: the renderer creates a new texture
+    FitChunkGrid();
+    m_unsavedHeights = true;
+    return true;
+}
+
+void TerrainComponent::AdoptHeightmapPath(const std::string& romPath) {
+    settings.heightmap = romPath;
+    m_loadedPath = romPath;
+    m_loadAttempted = true;
+}
+
+bool TerrainComponent::SaveHeightmap(std::string* error, std::vector<std::uint8_t>* outBytes) {
+    auto fail = [&](const std::string& message) {
+        if (error) *error = message;
+        return false;
+    };
+    if (!m_heightmap.IsValid())
+        return fail("no heightmap loaded");
+    if (settings.heightmap.empty())
+        return fail("no heightmap path");
+    const std::filesystem::path target = content_path::WritableFileCurrent(settings.heightmap);
+    if (target.empty())
+        return fail("not a writable rom/ path: " + settings.heightmap);
+    const std::vector<std::uint8_t> bytes = terrain::EncodeR16(m_heightmap);
+    std::error_code ec;
+    if (target.has_parent_path())
+        std::filesystem::create_directories(target.parent_path(), ec);
+    std::filesystem::path temp = target;
+    temp += ".tmp";
+    {
+        std::ofstream out(temp, std::ios::binary | std::ios::trunc);
+        if (!out)
+            return fail("cannot write " + settings.heightmap);
+        out.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
+        if (!out)
+            return fail("writing " + settings.heightmap + " failed");
+    }
+    std::filesystem::rename(temp, target, ec); // replaces an existing file
+    if (ec) {
+        std::filesystem::remove(temp, ec);
+        return fail("cannot replace " + settings.heightmap);
+    }
+    m_unsavedHeights = false;
+    if (outBytes) *outBytes = bytes;
+    return true;
 }
 
 void TerrainComponent::ClearTerrainCollider(GameObject* node) {

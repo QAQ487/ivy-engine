@@ -1,7 +1,7 @@
 # Ivy Engine — Complete Ability & API Reference
 
 Exhaustive catalog of **Ivy Engine** capabilities and public functions,
-scanned from every header under `engine/` and `src/app/` (194 headers; regenerate to refresh).
+scanned from every header under `engine/` and `src/app/` (196 headers; regenerate to refresh).
 
 **Learning how to use the engine?** Start with [`ENGINE_USER_GUIDE.md`](ENGINE_USER_GUIDE.md) (humans).  
 For JSON schemas, source map, and change rules, see [`AGENTS.md`](../AGENTS.md) (AI agents).
@@ -875,6 +875,10 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `ID3D11ShaderResourceView* GetTextureSRV();`
 - `void ApplyColliderToOwner();`
 - `static void ClearTerrainCollider(GameObject* owner);`
+- `void NotifyHeightsChanged(const terrain::SampleRect& rect);`
+- `bool ResetFlat(int resolution, float height);`
+- `void AdoptHeightmapPath(const std::string& romPath);`
+- `bool SaveHeightmap(std::string* error, std::vector<std::uint8_t>* outBytes = nullptr);`
 - `void SetHeightSRV(ID3D11ShaderResourceView* srv);`
 - `void ReleaseHeightSRV();`
 - `void FitChunkGrid();`
@@ -1293,6 +1297,15 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `static std::string RecentListPath();`
 - `static std::string Utf8FromWide(const std::wstring& wide);`
 - `static std::wstring WideFromUtf8(const std::string& utf8);`
+
+### `engine/editor/terrain_editor.h`
+**Types:** GameObject, TerrainComponent, TerrainViewportInput
+- `void TerrainEditor_DrawInspector(GameObject* node, TerrainComponent& terrain);`
+- `bool TerrainEditor_HandleViewport(GameObject* selected, const TerrainViewportInput& input);`
+- `bool TerrainEditor_IsSculpting(const GameObject* node);`
+- `bool TerrainEditor_SaveEditedTerrains(std::string* error);`
+- `bool TerrainEditor_IsOwnWrite(const std::string& romPath);`
+- `std::unique_ptr<GameObject> TerrainEditor_CreateTerrainObject();`
 
 ### `engine/editor/texture_cook.h`
 **Types:** Stats
@@ -2486,6 +2499,18 @@ Vendor header `WICTextureLoader11.h` is omitted.
 ### `engine/scripting/ui_canvas_script_register.h`
 **Types:** TYPE
 - `void DllUICanvasScript_Register(const std::string& name, std::function<UICanvasScript*()> creator);`
+
+### `engine/terrain/terrain_brush.h`
+**Types:** Brush, SampleRect
+**Enums:** BrushMode
+- `Brush SanitizeBrush(const Brush& brush);`
+- `SampleRect UnionRect(const SampleRect& a, const SampleRect& b);`
+- `SampleRect ClipRect(const SampleRect& rect, const Heightmap& map);`
+- `float BrushWeight(float distance, float radius, float falloff);`
+- `SampleRect BrushRect(const Layout& layout, const Heightmap& map, float x, float z, float radius);`
+- `SampleRect ApplyBrush(const Layout& layout, Heightmap& map, const Brush& brush, float x, float z, float dt);`
+- `std::vector<std::uint16_t> CopyRect(const Heightmap& map, const SampleRect& rect);`
+- `bool PasteRect(Heightmap& map, const SampleRect& rect, const std::vector<std::uint16_t>& data);`
 
 ### `engine/terrain/terrain_collision.h`
 **Types:** SurfaceContact

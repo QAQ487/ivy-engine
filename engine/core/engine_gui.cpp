@@ -95,6 +95,7 @@
 #include "engine/editor/playable_package_builder.h"
 #include "engine/audio/audio_manager.h"
 #include "engine/editor/transform_gizmo.h"
+#include "engine/editor/terrain_editor.h"
 #include "engine/editor/ui_gizmo.h"
 #include "engine/editor/camera_orientation_gizmo.h"
 #include "engine/editor/editor_undo.h"
@@ -2026,6 +2027,8 @@ void EngineGUI_Update(double elapsed_time) {
                         continue;
                     }
                     if (ext == ".dll") continue; // ScriptFactory owns DLL validation and module lifetime.
+                    // The editor's own heightmap save (Save Scene): the terrain already holds it.
+                    if (ext == ".r16" && !change.removed && TerrainEditor_IsOwnWrite(path)) continue;
                     if (path.rfind("rom/skybox/cache/", 0) == 0) {
                         if (!change.removed && ext == ".dds") {
                             const auto widePath = PathFromUtf8(path).wstring();
@@ -2251,6 +2254,33 @@ void EngineGUI_Update(double elapsed_time) {
             FocusSelectedObjectWithCamera(t);
     }
 
+    // Terrain sculpting (ADR 0011 step 4): while a brush is over the selected terrain it
+    // owns the left mouse button, so click-to-select below is skipped.
+    bool terrainOwnsMouse = false;
+    {
+        using namespace DirectX;
+        TerrainViewportInput tin;
+        tin.enabled = !g_isPlaying && g_editMode == EditorEditMode::Scene3D
+            && !IsSceneLoadBusy() && !SceneLoader_Is2D();
+        if (tin.enabled) {
+            int mx, my;
+            Mouse_GetPosition(mx, my);
+            XMVECTOR ro, rd;
+            if (BuildPickRay(mx, my, ro, rd)) {
+                tin.hasRay = true;
+                XMStoreFloat3(&tin.rayOrigin, ro);
+                XMStoreFloat3(&tin.rayDir, rd);
+            }
+        }
+        tin.mouseDown = Mouse_IsLeftDown();
+        tin.mouseBlocked = EditorDocking_WantCaptureMouseForGame()
+            || TransformGizmo::IsInteracting()
+            || CameraOrientationGizmo::IsInteracting()
+            || Keyboard_IsKeyDown(KK_LEFTALT) || Keyboard_IsKeyDown(KK_RIGHTALT);
+        tin.dt = ImGui::GetIO().DeltaTime;
+        terrainOwnsMouse = TerrainEditor_HandleViewport(g_selNode, tin);
+    }
+
     // Left-click picking
     {
         static bool s_prevLDown = false;
@@ -2259,7 +2289,7 @@ void EngineGUI_Update(double elapsed_time) {
         s_prevLDown = lDown;
         bool altHeld = Keyboard_IsKeyDown(KK_LEFTALT) || Keyboard_IsKeyDown(KK_RIGHTALT);
 
-        if (clicked && !EditorDocking_WantCaptureMouseForGame()
+        if (clicked && !terrainOwnsMouse && !EditorDocking_WantCaptureMouseForGame()
             && !TransformGizmo::IsInteracting()
             && !UiGizmo::IsInteracting()
             && !CameraOrientationGizmo::IsInteracting()
@@ -2734,7 +2764,7 @@ void EngineGUI_Draw() {
     }
     if (!sceneLoadBusy && !playVisuals && g_editMode == EditorEditMode::Scene3D) {
         TransformGizmo::HandleHotkeys();
-        if (g_selNode)
+        if (g_selNode && !TerrainEditor_IsSculpting(g_selNode))
             TransformGizmo::Draw(g_selNode);
         if(!DebugCamera_Is2DView()) CameraOrientationGizmo::Draw();
     }

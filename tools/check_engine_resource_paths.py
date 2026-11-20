@@ -28,6 +28,7 @@ OPTIONAL_PREFIXES = (
     "rom/texture/sprite_demo/",
     "rom/physics/",
     "rom/audio/",
+    "rom/terrain/",  # heightmaps the editor writes for sculpted terrains (ADR 0011)
 )
 OPTIONAL_EXACT = {
     "rom/tags.json",  # project tag list; built-in names already load

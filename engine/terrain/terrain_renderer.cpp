@@ -181,8 +181,32 @@ bool EnsureInstanceCapacity(UINT count) {
 }
 
 ID3D11ShaderResourceView* EnsureHeightSrv(TerrainComponent& t) {
-    if (ID3D11ShaderResourceView* srv = t.GetHeightSRV())
+    if (ID3D11ShaderResourceView* srv = t.GetHeightSRV()) {
+        // Sculpt edits: upload only the changed rectangle.
+        const terrain::SampleRect r = terrain::ClipRect(t.PendingGpuRect(), t.GetHeightmap());
+        if (!r.Empty()) {
+            ID3D11Resource* res = nullptr;
+            srv->GetResource(&res);
+            if (res) {
+                const terrain::Heightmap& map = t.GetHeightmap();
+                D3D11_BOX box {};
+                box.left = static_cast<UINT>(r.x0);
+                box.top = static_cast<UINT>(r.z0);
+                box.front = 0;
+                box.right = static_cast<UINT>(r.x1 + 1);
+                box.bottom = static_cast<UINT>(r.z1 + 1);
+                box.back = 1;
+                const std::uint16_t* first =
+                    &map.samples[static_cast<size_t>(r.z0) * map.resolution + r.x0];
+                GetDeviceContext()->UpdateSubresource(res, 0, &box, first,
+                    static_cast<UINT>(map.resolution) * sizeof(std::uint16_t), 0);
+                res->Release();
+            }
+        }
+        t.ClearPendingGpuRect();
         return srv;
+    }
+    t.ClearPendingGpuRect(); // the new texture below holds every sample
     ID3D11Device* dev = GetDevice();
     const terrain::Heightmap& map = t.GetHeightmap();
     if (!dev || !map.IsValid())

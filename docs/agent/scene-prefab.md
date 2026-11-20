@@ -91,7 +91,7 @@ Heightmap terrain (ADR 0011). The node's position places the terrain's (0, 0) co
 
 | Key | Default | Meaning |
 |-----|---------|---------|
-| `heightmap` | `""` | `rom/...r16` file: N×N little-endian `uint16`, N = 2ⁿ+1 (33–4097). Empty = flat 129×129 placeholder |
+| `heightmap` | `""` | `rom/...r16` file: N×N little-endian `uint16`, N = 2ⁿ+1 (33–4097). Empty = flat 129×129 placeholder at height 0 (editor Save Scene writes sculpted ones to `rom/terrain/<scene>_<object>.r16` and fills this in) |
 | `sizeX`, `sizeZ` | `256` | Metres along X / Z (1–100000) |
 | `heightScale`, `heightOffset` | `100`, `0` | Height = `heightOffset + sample / 65535 × heightScale` |
 | `chunkQuads` | `64` | Cells per chunk side (power of two 8–256, fitted to the map) |
