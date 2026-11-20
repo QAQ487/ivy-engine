@@ -16,7 +16,7 @@
 
 ### Highlights
 
-- **Rendering** — D3D11 forward renderer with 8 shader variants: PBR (Cook-Torrance BRDF, energy-conserving), toon, fog, PostFX pipeline (bloom, vignette, chromatic aberration, RGB burst), cascaded-ready shadow path
+- **Rendering** — D3D11 forward renderer with 8 shader variants: PBR (Cook-Torrance BRDF, energy-conserving), toon, fog, PostFX pipeline (bloom, vignette, chromatic aberration, RGB burst), cascaded shadow maps (rotation-stable, texel-snapped cascades with per-cascade bias and distance fade), plus an optional stencil shadow-volume mode (`render.shadowMode: "volume"`)
 - **Editor** — full ImGui editor: hierarchy, inspector, asset browser with context menus, transform gizmos, UI canvas, **undo/redo** (command pattern, 100-deep stack), scene transitions, and a branded start screen
 - **Gameplay runtime** — ECS architecture; play mode (F3) runs the exact same components as the deployed game
 - **Culling & LOD** — main-camera frustum, shadow-cascade, 2D sprite, billboard / particle / Effekseer culling, off-screen animation culling, scene light selection, and distance- or screen-size-based mesh LOD with debug labels and editor range gizmos; every option has a Rendering-panel toggle for A/B checks

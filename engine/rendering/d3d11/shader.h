@@ -69,7 +69,16 @@ DirectX::XMMATRIX Shader_GetWorldMatrix();
 
 void Shader_SetShadowMatrix(const DirectX::XMMATRIX& lightViewProj, float bias = 0.0015f);
 void Shader_SetShadowMatrices(const DirectX::XMMATRIX* lightViewProjArray, int cascadeCount, float bias = 0.0015f, float slope = 1.5f);
-void Shader_SetShadowCascadeParams(const DirectX::XMFLOAT4& splits, float blend);
+// splits: view-space far depth per cascade; fadeLength: depth over which shadows fade to
+// lit before the last split (Shadow::GetShadowFadeLength()).
+void Shader_SetShadowCascadeParams(const DirectX::XMFLOAT4& splits, float fadeLength);
+// Per-cascade ShadowParams (Shadow::GetCascadeReceiverParams): x const depth bias,
+// y slope depth bias, z normal offset (world units), w blend width (view depth).
+void Shader_SetShadowReceiverParams(const DirectX::XMFLOAT4* perCascade, int count);
+// Which Lights[] slot EvalShadow shadows with the cascades (Shadow::GetCasterLightIndex()); -1 = none.
+void Shader_SetShadowLightIndex(int lightIndex);
+// Ambient kept inside a CSM shadow, 0..1 (render.shadowAmbientStrength); clamped.
+void Shader_SetShadowAmbient(float ambientInShadow);
 
 void Shader_BindShadowMap(ID3D11ShaderResourceView* shadowSRV);
 void Shader_BindShadowMaps(ID3D11ShaderResourceView* const* shadowSRVs, int lightCount);

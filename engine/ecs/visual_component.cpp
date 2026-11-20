@@ -309,6 +309,8 @@ std::string VisualComponent::Serialize() const {
     }
     if (cullDistance > 0.0f)
         j["cullDistance"] = cullDistance;
+    if (shadowVolume)
+        j["shadowVolume"] = true;
     if (hasSurfaceFx) {
         nlohmann::json sfx;
         if (!surfaceFxTexturePath.empty())
@@ -378,6 +380,8 @@ void VisualComponent::Deserialize(const std::string& jsonStr) {
                     [](const LodLevel& a, const LodLevel& b) { return a.maxDistance < b.maxDistance; });
             }
         }
+        shadowVolume = j.contains("shadowVolume") && j["shadowVolume"].is_boolean()
+            && j["shadowVolume"].get<bool>();
         cullDistance = 0.0f;
         if (j.contains("cullDistance") && j["cullDistance"].is_number()) {
             const float d = j["cullDistance"].get<float>();

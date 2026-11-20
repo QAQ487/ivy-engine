@@ -11,6 +11,26 @@
   - 目標：分區／欄位清晰、編輯穩定，保留現有功能。
   - 現況：`engine/editor/editor_inspector_panel.cpp` 的 `"Properties"` 已有 Transform、Tag、Visual、Light、Camera、Collider、Rigidbody、Material、Effect、Audio 同 script properties；Undo 已接 `editor_undo.cpp`。呢項係 UI 重做，唔係由零寫 inspector。
   - 驗收：常用欄位編輯／保存／重載正常；Undo/Redo 有效；新增／移除 component、資產選擇無回歸。
+- [ ] **Stencil shadow volume 模式**（source 已做；等 Windows editor／runtime 驗收）
+  - `settings.render.shadowMode`：`"csm"`（預設，舊場景不變）／`"volume"`／`"none"`；`shadowVolumeStrength`（0.55，0–1）。`visual.shadowVolume: true` 先會投 volume；只限封閉 FBX mesh，唔封閉會喺 Console log 一次並跳過。
+  - 做法：`shadow_volume_mesh.h`（純邏輯：position weld、closed／manifold 檢查、outward winding、caps＋每條邊一個零面積 quad）；`VertexShaderShadowVolume.hlsl` 將背光 corner 沿光方向推 4× far clip（有限長度，正交鏡頭都啱）；z-fail stencil（背面 +1、正面 −1）、depth clip off、`LESS_EQUAL`；最後 fullscreen multiply darken。GPU skin 同 CPU skin 都支援。光源：第一盞 `castShadows` 嘅 DirectionalLight。
+  - 驗收場景：`testbed/rom/scene/scene_shadow_volume.json`（`python3 tools/gen_shadow_volume_assets.py` 生成）：起伏地形、企立圓環（陰影要見到窿）、兩條方尖柱、岩石、松樹；藍色箱冇 `shadowVolume`（只受影唔投影）。Play 時圓環（35°/s）同大岩石（−20°/s）用 `SampleSpinScript` 自轉（Debug editor／runtime 已編入），陰影每幀跟住變形。
+  - Linux：`tools/run_shadow_volume_check.sh`（topology＋CPU 版 extrusion 封閉／外向檢查、mode id、testbed caster 全部封閉）。
+  - Windows 要驗：shader 編譯；影落喺斜坡；鏡頭行入影入面唔反轉；天空唔會被壓暗；caster 本身受光面冇 acne；轉光源方向即時更新；鏡像（負 scale）物件正確；Rendering 面板 counters；Release 打包包含兩個新 `.cso`。
+  - 已知限制：硬邊、冇距離上限、fill-rate 隨 volume 大小上升；只得一盞 directional light；OBJ 唔支援；skinned 物件嘅 face normal 用 vertex 權重近似；volume 用 LOD0（遠處輪廓同畫面 LOD 有少少差）；volume pass 冇剔除。
+  - 2026-11-19 審計修正（Terry 2026-11-19 Windows 驗收）：畫面外動畫 caster 嘅影唔再凍結（volume 畫咗就 stamp `lastDrawnSerial`）；被 `cullDistance` 隱藏嘅物件唔再投影；extrusion 改為 4× far clip 有限長度，正交鏡頭唔再冇影。Linux：`tests/shadow_volume_policy_test.cpp`。
+- [ ] **CSM 審計跟進**（2026-11-19 source audit；主要項目全部已修；下面「未修」係低優先）
+  - ~~Texel snap 喺跟住鏡頭移動嘅 light-space 原點做，所以冇效（鏡頭平移時陰影閃）；cascade 半徑跟鏡頭轉向改變（轉鏡頭時閃）——`shadow.cpp` `FitOrthoCascade`。~~ 已修（Terry 2026-11-19 Windows 驗收）：`engine/rendering/lighting/csm_fit.h`（純邏輯，`tests/csm_fit_test.cpp`）——cascade 用 view slice 嘅最小包圍球（只取決於 near／far／FOV／aspect，轉鏡頭唔變）加一格 texel 邊；球心喺以世界原點為基準嘅 light-space 對齊到整數 texel。Windows 要驗：慢慢平移／轉鏡頭時陰影邊唔再閃爍、爬動；陰影清晰度同之前差唔多（新 cascade 比舊嘅細約 1–2%）。
+  - ~~`castShadows` 全關時 CSM 照畫（用舊方向）；shader 對每盞 directional light 都套同一張 CSM。~~ 已修（Terry 2026-11-19 Windows 驗收）：`Shadow::GetCasterLightIndex()`（-1 = 冇）閘住 cascade pass；`ShadowBuffer.ShadowLightIndex` 令 `EvalShadow` 只陰影 caster 嗰盞燈。Windows 要驗：全部 `castShadows` 關 → 冇影；兩盞 directional light 只有剔咗嗰盞有影、另一盞照亮影區（之前每個 pixel shader 最尾將成個顏色乘 `lerp(1, shadow, 0.65)`，連冇投影嗰盞燈都壓暗，所以睇唔出；已刪，改為只係環境光按 `render.shadowAmbientStrength`（預設 0.35，Rendering → Ambient In Shadow）縮放，emission 唔再被壓暗）。驗收場景：`testbed/rom/scene/scene_shadow_light_verify.json`。
+  - ~~Shadow rasterizer `DepthClipEnable = TRUE` 同 open-near cascade cull 矛盾：離 slice 超過 `kZPadding`（25）嘅高物件影子被 clip 走。~~ 已修（Terry 2026-11-19 Windows 驗收）：shadow rasterizer `DepthClipEnable = FALSE`（pancaking）。Windows 要驗：好高嘅物件（例如 50 單位高柱）頂部喺鏡頭外，影仍然完整；冇新 shadow acne。
+  - ~~Receiver normal offset 永遠係 0；陰影最暗寫死 0.3；冇 shadow distance 淡出；cascade 交界 `ddx/ddy` 喺分歧 branch；blend 帶固定 1–4 單位；bias 冇按 cascade；正交鏡頭仍用 perspective 擬合。~~ 已修（Windows 已編譯並試過；shadow distance 淡出喺短距離／Toon 似硬切，Terry 接受；未做完整驗收）：`csm_fit.h` `CascadeReceiverParams` 每個 cascade 按自己 texel 大小計 normal offset（1.5 texel）、常數 bias（1 texel）、slope bias（1 texel × tan(N,L)，上限 4；用 N·L 代替 `ddx/ddy`）同 blend 帶（cascade 深度 10%）；`ShadowParams[i]` 傳入 shader。陰影最暗唔再寫死 0.3（投影燈喺影入面完全擋住，暗度由 `shadowAmbientStrength` 控制）。最後 10% shadow distance 淡出（`ShadowFadeLength`，用咗原本 `CascadeBlend` 嘅位）。正交鏡頭：slice 係長方體、`FitSliceSphereOrtho`、均勻分段。Windows 要驗：冇 shadow acne／冇明顯 peter-panning（影離開物件底）、cascade 交界冇硬線、陰影喺 shadow distance 尾段慢慢淡走、正交鏡頭有影；陰影會比之前暗（可以調高 Ambient In Shadow）。
+  - 未修（低優先）：
+    - 冇 alpha-test 陰影（透明貼圖位都會投影）；SpotLight `castShadows` 冇效。
+    - Edit 視圖用 `proxy_model` 投 CSM，Play 用真模型，兩者影子形狀可能唔同。
+    - Shadow constant buffer 每個 draw 都 `UpdateSubresource`（`UpdateShadowCB` 跟 world matrix 一齊更新），有多餘成本。
+    - `Shadow::SetLightDirection` 收到零向量會 normalize 出 NaN（cascade 擬合有 fallback，但 `g_lightDirWS` 本身冇保護）。
+    - `Shadow::Begin` 只保存一個 RTV（多 render target 時會漏還原）。
+    - Shadow distance 淡出：而家按 view 深度、最後 10%（最少 1 m），切口係橫過畫面嘅直線，短距離時似硬切；Toon shader 色帶會令淡出變硬邊。可考慮按同鏡頭距離淡出（同 sphere 擬合配合）同 20% 淡出（`csm_fit.h` `kFadeFraction`／`kMinFadeLength`）。
 - [ ] **World-space UI 編輯器支援**
   - 可以建立、擺位同編輯 world-space UI；與 screen-space canvas 分開。
   - 現況：`UIElement` 係 screen overlay（anchor + `XMFLOAT2`）；場景只有一個 `UICanvas`。Billboard／sprite 唔算 UI canvas。

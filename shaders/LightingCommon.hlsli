@@ -9,10 +9,12 @@
 cbuffer ShadowBuffer : register(b2)
 {
     matrix LightViewProjection[MAX_LIGHTS]; // per-cascade World*LightVP
-    float4 ShadowParams[MAX_LIGHTS]; // x=constBias, y=slopeBias, z=receiverNormalOffset(OS)
+    float4 ShadowParams[MAX_LIGHTS]; // per cascade (csm_fit.h CascadeReceiverParams): x const depth bias,
+                                     // y depth bias per tan(N,L), z normal offset (world), w blend width (view)
     uint CascadeCount;
-    float CascadeBlend;
-    float2 _padCascade;
+    float ShadowFadeLength; // view depth over which shadows fade to lit before the last split
+    int ShadowLightIndex; // Lights[] slot that casts the cascades; -1 = none
+    float ShadowAmbient;  // ambient kept inside a CSM shadow (render.shadowAmbientStrength)
     float4 CascadeSplits; // view-space far Z for cascades 0..3
     matrix WorldView;     // object -> view (for cascade selection)
 }
@@ -130,82 +132,97 @@ float PCF3x3(Texture2D<float> sm, SamplerComparisonState cmpSamp, float2 uv, flo
     return sum / 9.0f;
 }
 
-float SampleCascadeShadow0(float3 posForShadowOS)
+float SampleCascadeShadow0(float3 posOS, float3 N, float invWorldScale, float slopeTan)
 {
-    float4 sp = mul(float4(posForShadowOS, 1.0f), LightViewProjection[0]);
+    // Normal offset is given in world units; invWorldScale turns it into object units.
+    const float3 p = posOS + N * (ShadowParams[0].z * invWorldScale);
+    float4 sp = mul(float4(p, 1.0f), LightViewProjection[0]);
     float3 proj = sp.xyz / max(sp.w, 1e-6f);
-    float slope = max(abs(ddx(proj.z)), abs(ddy(proj.z)));
     float2 uv = float2(proj.x * 0.5f + 0.5f, -proj.y * 0.5f + 0.5f);
     float result = 1.0f;
     if (!(any(uv < 0.0f) || any(uv > 1.0f)))
     {
-        float bias = ShadowParams[0].x + slope * ShadowParams[0].y;
+        float bias = ShadowParams[0].x + slopeTan * ShadowParams[0].y;
         uint smw = 0, smh = 0;
         g_ShadowMap[0].GetDimensions(smw, smh);
         float2 texel = 1.0f / float2(max(1.0f, (float)smw), max(1.0f, (float)smh));
-        result = lerp(0.3f, 1.0f, PCF3x3(g_ShadowMap[0], g_ShadowSampler, uv, proj.z - bias, texel));
+        result = PCF3x3(g_ShadowMap[0], g_ShadowSampler, uv, proj.z - bias, texel);
     }
     return result;
 }
-float SampleCascadeShadow1(float3 posForShadowOS)
+float SampleCascadeShadow1(float3 posOS, float3 N, float invWorldScale, float slopeTan)
 {
-    float4 sp = mul(float4(posForShadowOS, 1.0f), LightViewProjection[1]);
+    // Normal offset is given in world units; invWorldScale turns it into object units.
+    const float3 p = posOS + N * (ShadowParams[1].z * invWorldScale);
+    float4 sp = mul(float4(p, 1.0f), LightViewProjection[1]);
     float3 proj = sp.xyz / max(sp.w, 1e-6f);
-    float slope = max(abs(ddx(proj.z)), abs(ddy(proj.z)));
     float2 uv = float2(proj.x * 0.5f + 0.5f, -proj.y * 0.5f + 0.5f);
     float result = 1.0f;
     if (!(any(uv < 0.0f) || any(uv > 1.0f)))
     {
-        float bias = ShadowParams[1].x + slope * ShadowParams[1].y;
+        float bias = ShadowParams[1].x + slopeTan * ShadowParams[1].y;
         uint smw = 0, smh = 0;
         g_ShadowMap[1].GetDimensions(smw, smh);
         float2 texel = 1.0f / float2(max(1.0f, (float)smw), max(1.0f, (float)smh));
-        result = lerp(0.3f, 1.0f, PCF3x3(g_ShadowMap[1], g_ShadowSampler, uv, proj.z - bias, texel));
+        result = PCF3x3(g_ShadowMap[1], g_ShadowSampler, uv, proj.z - bias, texel);
     }
     return result;
 }
-float SampleCascadeShadow2(float3 posForShadowOS)
+float SampleCascadeShadow2(float3 posOS, float3 N, float invWorldScale, float slopeTan)
 {
-    float4 sp = mul(float4(posForShadowOS, 1.0f), LightViewProjection[2]);
+    // Normal offset is given in world units; invWorldScale turns it into object units.
+    const float3 p = posOS + N * (ShadowParams[2].z * invWorldScale);
+    float4 sp = mul(float4(p, 1.0f), LightViewProjection[2]);
     float3 proj = sp.xyz / max(sp.w, 1e-6f);
-    float slope = max(abs(ddx(proj.z)), abs(ddy(proj.z)));
     float2 uv = float2(proj.x * 0.5f + 0.5f, -proj.y * 0.5f + 0.5f);
     float result = 1.0f;
     if (!(any(uv < 0.0f) || any(uv > 1.0f)))
     {
-        float bias = ShadowParams[2].x + slope * ShadowParams[2].y;
+        float bias = ShadowParams[2].x + slopeTan * ShadowParams[2].y;
         uint smw = 0, smh = 0;
         g_ShadowMap[2].GetDimensions(smw, smh);
         float2 texel = 1.0f / float2(max(1.0f, (float)smw), max(1.0f, (float)smh));
-        result = lerp(0.3f, 1.0f, PCF3x3(g_ShadowMap[2], g_ShadowSampler, uv, proj.z - bias, texel));
+        result = PCF3x3(g_ShadowMap[2], g_ShadowSampler, uv, proj.z - bias, texel);
     }
     return result;
 }
-float SampleCascadeShadow3(float3 posForShadowOS)
+float SampleCascadeShadow3(float3 posOS, float3 N, float invWorldScale, float slopeTan)
 {
-    float4 sp = mul(float4(posForShadowOS, 1.0f), LightViewProjection[3]);
+    // Normal offset is given in world units; invWorldScale turns it into object units.
+    const float3 p = posOS + N * (ShadowParams[3].z * invWorldScale);
+    float4 sp = mul(float4(p, 1.0f), LightViewProjection[3]);
     float3 proj = sp.xyz / max(sp.w, 1e-6f);
-    float slope = max(abs(ddx(proj.z)), abs(ddy(proj.z)));
     float2 uv = float2(proj.x * 0.5f + 0.5f, -proj.y * 0.5f + 0.5f);
     float result = 1.0f;
     if (!(any(uv < 0.0f) || any(uv > 1.0f)))
     {
-        float bias = ShadowParams[3].x + slope * ShadowParams[3].y;
+        float bias = ShadowParams[3].x + slopeTan * ShadowParams[3].y;
         uint smw = 0, smh = 0;
         g_ShadowMap[3].GetDimensions(smw, smh);
         float2 texel = 1.0f / float2(max(1.0f, (float)smw), max(1.0f, (float)smh));
-        result = lerp(0.3f, 1.0f, PCF3x3(g_ShadowMap[3], g_ShadowSampler, uv, proj.z - bias, texel));
+        result = PCF3x3(g_ShadowMap[3], g_ShadowSampler, uv, proj.z - bias, texel);
     }
     return result;
 }
 
-float SampleCascadeShadowByIndex(uint cascadeIndex, float3 posForShadowOS)
+// No ddx/ddy inside: callers pick the cascade per pixel, so derivatives taken in these
+// branches would be undefined where neighbouring pixels choose different cascades.
+float SampleCascadeShadowByIndex(uint cascadeIndex, float3 posOS, float3 N, float invWorldScale, float slopeTan)
 {
     float result = 1.0f;
-    if (cascadeIndex == 0) result = SampleCascadeShadow0(posForShadowOS);
-    else if (cascadeIndex == 1) result = SampleCascadeShadow1(posForShadowOS);
-    else if (cascadeIndex == 2) result = SampleCascadeShadow2(posForShadowOS);
-    else if (cascadeIndex == 3) result = SampleCascadeShadow3(posForShadowOS);
+    if (cascadeIndex == 0) result = SampleCascadeShadow0(posOS, N, invWorldScale, slopeTan);
+    else if (cascadeIndex == 1) result = SampleCascadeShadow1(posOS, N, invWorldScale, slopeTan);
+    else if (cascadeIndex == 2) result = SampleCascadeShadow2(posOS, N, invWorldScale, slopeTan);
+    else if (cascadeIndex == 3) result = SampleCascadeShadow3(posOS, N, invWorldScale, slopeTan);
+    return result;
+}
+
+float CascadeBlendWidth(uint cascadeIndex)
+{
+    float result = ShadowParams[3].w;
+    if (cascadeIndex == 0) result = ShadowParams[0].w;
+    else if (cascadeIndex == 1) result = ShadowParams[1].w;
+    else if (cascadeIndex == 2) result = ShadowParams[2].w;
     return result;
 }
 
@@ -218,7 +235,11 @@ float CascadeSplitFar(uint cascadeIndex)
     return result;
 }
 
-// Cascaded directional shadow. Only directional lights (Type < 0.5) sample CSM.
+// Cascaded directional shadow. Only the caster light (ShadowLightIndex, a directional
+// light) samples CSM; other lights are unshadowed. Returns 1 (lit) .. 0 (fully blocked).
+// Receiver offsets per cascade (csm_fit.h): normal offset, constant + slope depth bias
+// (slope from N.L, not screen derivatives), a blend into the next cascade, and a fade to
+// lit over the last ShadowFadeLength of the shadow distance.
 float EvalShadow(uint lightIndex, float3 inPosOS, float3 N)
 {
     float result = 1.0f;
@@ -226,10 +247,17 @@ float EvalShadow(uint lightIndex, float3 inPosOS, float3 N)
     {
         uint lightLoop = (uint)LightCountF;
         if (lightLoop > MAX_LIGHTS) lightLoop = MAX_LIGHTS;
-        if (lightIndex < lightLoop && Lights[lightIndex].Type < 0.5f)
+        if (lightIndex < lightLoop && (int)lightIndex == ShadowLightIndex
+            && Lights[lightIndex].Type < 0.5f)
         {
-            float receiverNormalOffset = ShadowParams[0].z;
-            float3 posForShadowOS = inPosOS + N * receiverNormalOffset;
+            const float3 L = normalize(Lights[lightIndex].DirOS);
+            const float c = clamp(dot(N, L), 1e-3f, 1.0f);
+            const float slopeTan = min(sqrt(1.0f - c * c) / c, 4.0f); // csm_fit::kMaxSlopeTan
+
+            // World length of the object-space normal (object scale along N; the view part
+            // of WorldView is rigid), to express the world-unit normal offset in object units.
+            const float worldScale = length(mul(float4(N, 0.0f), WorldView).xyz);
+            const float invWorldScale = 1.0f / max(worldScale, 1e-4f);
 
             float viewZ = abs(mul(float4(inPosOS, 1.0f), WorldView).z);
 
@@ -240,33 +268,40 @@ float EvalShadow(uint lightIndex, float3 inPosOS, float3 N)
             if (cascade >= CascadeCount)
                 cascade = CascadeCount - 1;
 
-            float shadow0 = 1.0f;
-            if (cascade == 0) shadow0 = SampleCascadeShadow0(posForShadowOS);
-            else if (cascade == 1) shadow0 = SampleCascadeShadow1(posForShadowOS);
-            else if (cascade == 2) shadow0 = SampleCascadeShadow2(posForShadowOS);
-            else shadow0 = SampleCascadeShadow3(posForShadowOS);
+            float shadow0 = SampleCascadeShadowByIndex(cascade, inPosOS, N, invWorldScale, slopeTan);
 
             if (cascade + 1 < CascadeCount)
             {
                 float splitFar = CascadeSplitFar(cascade);
-                float blendWidth = max(CascadeBlend, 1e-3f);
+                float blendWidth = max(CascadeBlendWidth(cascade), 1e-3f);
                 float t = saturate((splitFar - viewZ) / blendWidth);
                 if (t < 1.0f)
                 {
-                    float shadow1 = 1.0f;
-                    uint nextC = cascade + 1;
-                    if (nextC == 0) shadow1 = SampleCascadeShadow0(posForShadowOS);
-                    else if (nextC == 1) shadow1 = SampleCascadeShadow1(posForShadowOS);
-                    else if (nextC == 2) shadow1 = SampleCascadeShadow2(posForShadowOS);
-                    else shadow1 = SampleCascadeShadow3(posForShadowOS);
+                    float shadow1 = SampleCascadeShadowByIndex(cascade + 1, inPosOS, N, invWorldScale, slopeTan);
                     shadow0 = lerp(shadow1, shadow0, t);
                 }
+            }
+
+            if (ShadowFadeLength > 0.0f)
+            {
+                float lastFar = CascadeSplitFar(CascadeCount - 1);
+                float fade = saturate((viewZ - (lastFar - ShadowFadeLength)) / ShadowFadeLength);
+                shadow0 = lerp(shadow0, 1.0f, fade);
             }
 
             result = shadow0;
         }
     }
     return result;
+}
+
+// Scale for the ambient term at a pixel whose caster-light shadow factor is
+// casterShadow (1 = lit, 0 = fully shadowed). Only the caster light's own direct term
+// is multiplied by its shadow; other lights still light the shadow, and ambient keeps
+// ShadowAmbient of itself (1 = unaffected, 0 = black).
+float ShadowAmbientScale(float casterShadow)
+{
+    return lerp(saturate(ShadowAmbient), 1.0f, saturate(casterShadow));
 }
 
 float3 EvalHemisphereAmbient(float3 N, float3 baseRGB)

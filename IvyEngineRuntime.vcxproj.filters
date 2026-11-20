@@ -252,6 +252,18 @@
     <ClInclude Include="engine\rendering\lighting\shadow.h">
       <Filter>engine\rendering\lighting</Filter>
     </ClInclude>
+    <ClInclude Include="engine\rendering\lighting\shadow_volume.h">
+      <Filter>engine\rendering\lighting</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\rendering\lighting\shadow_volume_mesh.h">
+      <Filter>engine\rendering\lighting</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\rendering\lighting\csm_fit.h">
+      <Filter>engine\rendering\lighting</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\rendering\lighting\shadow_volume_policy.h">
+      <Filter>engine\rendering\lighting</Filter>
+    </ClInclude>
     <ClInclude Include="engine\rendering\culling\frustum_cull.h">
       <Filter>engine\rendering\culling</Filter>
     </ClInclude>
@@ -431,6 +443,7 @@
     <ClInclude Include="engine\ecs\effect_system_flush.h" />
     <ClInclude Include="engine\ecs\visual_system.h" />
     <ClInclude Include="engine\scene\render_settings.h" />
+    <ClInclude Include="engine\scene\shadow_mode.h" />
     <ClInclude Include="engine\scene\render_setting_access.h" />
     <ClInclude Include="engine\rendering\environment\skybox.h" />
     <ClInclude Include="engine\rendering\environment\ibl.h" />
@@ -594,6 +607,9 @@
       <Filter>engine\rendering\lighting</Filter>
     </ClCompile>
     <ClCompile Include="engine\rendering\lighting\shadow.cpp">
+      <Filter>engine\rendering\lighting</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\rendering\lighting\shadow_volume.cpp">
       <Filter>engine\rendering\lighting</Filter>
     </ClCompile>
     <ClCompile Include="engine\rendering\culling\frustum_cull.cpp">
@@ -783,6 +799,8 @@
     <FxCompile Include="shaders\PixelShader3D_PBR.hlsl" />
     <FxCompile Include="shaders\VertexShader3D_Outline.hlsl" />
     <FxCompile Include="shaders\PixelShader3D_Outline.hlsl" />
+    <FxCompile Include="shaders\VertexShaderShadowVolume.hlsl" />
+    <FxCompile Include="shaders\PixelShaderShadowVolumeDarken.hlsl" />
     <FxCompile Include="shaders\SkyboxPS.hlsl" />
     <FxCompile Include="shaders\SkyboxVS.hlsl" />
   </ItemGroup>
@@ -805,6 +823,8 @@
     <ClCompile Include="samples\scripts\SamplePlayerScript.cpp" />
     <ClInclude Include="samples\scripts\SampleParticleEmitterScript.h" />
     <ClCompile Include="samples\scripts\SampleParticleEmitterScript.cpp" />
+    <ClInclude Include="samples\scripts\SampleSpinScript.h" />
+    <ClCompile Include="samples\scripts\SampleSpinScript.cpp" />
     <ClInclude Include="samples\scripts\SampleSaveScript.h" />
     <ClCompile Include="samples\scripts\SampleSaveScript.cpp" />
     <ClInclude Include="samples\scripts\SampleRebindScript.h" />

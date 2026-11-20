@@ -1,0 +1,573 @@
+{
+  "version": 4,
+  "settings": {
+    "renderPath": "3d",
+    "physicsMode": "none",
+    "render": {
+      "clearColor": [
+        0.69,
+        0.77,
+        0.87,
+        1.0
+      ],
+      "defaultShader": "standard",
+      "fogEnabled": false,
+      "skyboxEnabled": true,
+      "skyboxCubemap": "rom/skybox/MySkybox.dds",
+      "shadowMode": "csm",
+      "shadowQuality": "high",
+      "shadowDistance": 60.0,
+      "shadowAmbientStrength": 0.35
+    },
+    "debugCamera": {
+      "mode": "fly",
+      "enabledOnPlay": true,
+      "yawDeg": 0.0,
+      "pitchDeg": -32.0,
+      "position": {
+        "x": 0.0,
+        "y": 10.0,
+        "z": -8.0
+      }
+    }
+  },
+  "nodes": [
+    {
+      "name": "Light_A_CastShadows (white)",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 0,
+          "posY": 15,
+          "posZ": 0,
+          "rotX": 38,
+          "rotY": -45,
+          "rotZ": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "scaleZ": 1
+        },
+        "DirectionalLight": {
+          "enabled": true,
+          "castShadows": true,
+          "color": [
+            1.0,
+            0.97,
+            0.92
+          ],
+          "intensity": 1.0,
+          "specColor": [
+            1,
+            1,
+            1
+          ],
+          "specPower": 32.0
+        }
+      }
+    },
+    {
+      "name": "Light_B_NoShadow (blue)",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 0,
+          "posY": 15,
+          "posZ": 0,
+          "rotX": 140,
+          "rotY": 45,
+          "rotZ": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "scaleZ": 1
+        },
+        "DirectionalLight": {
+          "enabled": true,
+          "castShadows": false,
+          "color": [
+            0.35,
+            0.55,
+            1.0
+          ],
+          "intensity": 1.0,
+          "specColor": [
+            1,
+            1,
+            1
+          ],
+          "specPower": 32.0
+        }
+      }
+    },
+    {
+      "name": "Light_C_CastShadows_Disabled (red)",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 0,
+          "posY": 15,
+          "posZ": 0,
+          "rotX": 55,
+          "rotY": 45,
+          "rotZ": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "scaleZ": 1
+        },
+        "DirectionalLight": {
+          "enabled": false,
+          "castShadows": true,
+          "color": [
+            1.0,
+            0.3,
+            0.25
+          ],
+          "intensity": 1.0,
+          "specColor": [
+            1,
+            1,
+            1
+          ],
+          "specPower": 32.0
+        }
+      }
+    },
+    {
+      "name": "Ground_standard",
+      "tag": 2,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -13.5,
+          "posY": -0.1,
+          "posZ": 8,
+          "rotX": 0,
+          "rotY": 0,
+          "rotZ": 0,
+          "scaleX": 8,
+          "scaleY": 0.2,
+          "scaleZ": 8
+        },
+        "visual": {
+          "model": "rom/model/primitives/Cube.fbx",
+          "shader": "standard"
+        },
+        "Material": {
+          "color": [
+            0.9,
+            0.9,
+            0.9
+          ],
+          "roughness": 0.6,
+          "metallic": 0.0
+        }
+      }
+    },
+    {
+      "name": "Pillar_standard",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -15.0,
+          "posY": 1.5,
+          "posZ": 9,
+          "rotX": 0,
+          "rotY": 0,
+          "rotZ": 0,
+          "scaleX": 1,
+          "scaleY": 3,
+          "scaleZ": 1
+        },
+        "visual": {
+          "model": "rom/model/primitives/Cylinder.fbx",
+          "shader": "standard"
+        },
+        "Material": {
+          "color": [
+            0.85,
+            0.75,
+            0.6
+          ],
+          "roughness": 0.6,
+          "metallic": 0.0
+        }
+      }
+    },
+    {
+      "name": "Ball_standard",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -12.0,
+          "posY": 0.75,
+          "posZ": 7,
+          "rotX": 0,
+          "rotY": 0,
+          "rotZ": 0,
+          "scaleX": 1.5,
+          "scaleY": 1.5,
+          "scaleZ": 1.5
+        },
+        "visual": {
+          "model": "rom/model/primitives/Sphere.fbx",
+          "shader": "standard"
+        },
+        "Material": {
+          "color": [
+            0.8,
+            0.3,
+            0.3
+          ],
+          "roughness": 0.6,
+          "metallic": 0.0
+        }
+      }
+    },
+    {
+      "name": "Ground_pbr",
+      "tag": 2,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -4.5,
+          "posY": -0.1,
+          "posZ": 8,
+          "rotX": 0,
+          "rotY": 0,
+          "rotZ": 0,
+          "scaleX": 8,
+          "scaleY": 0.2,
+          "scaleZ": 8
+        },
+        "visual": {
+          "model": "rom/model/primitives/Cube.fbx",
+          "shader": "pbr"
+        },
+        "Material": {
+          "color": [
+            0.9,
+            0.9,
+            0.9
+          ],
+          "roughness": 0.6,
+          "metallic": 0.0
+        }
+      }
+    },
+    {
+      "name": "Pillar_pbr",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -6.0,
+          "posY": 1.5,
+          "posZ": 9,
+          "rotX": 0,
+          "rotY": 0,
+          "rotZ": 0,
+          "scaleX": 1,
+          "scaleY": 3,
+          "scaleZ": 1
+        },
+        "visual": {
+          "model": "rom/model/primitives/Cylinder.fbx",
+          "shader": "pbr"
+        },
+        "Material": {
+          "color": [
+            0.85,
+            0.75,
+            0.6
+          ],
+          "roughness": 0.6,
+          "metallic": 0.0
+        }
+      }
+    },
+    {
+      "name": "Ball_pbr",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -3.0,
+          "posY": 0.75,
+          "posZ": 7,
+          "rotX": 0,
+          "rotY": 0,
+          "rotZ": 0,
+          "scaleX": 1.5,
+          "scaleY": 1.5,
+          "scaleZ": 1.5
+        },
+        "visual": {
+          "model": "rom/model/primitives/Sphere.fbx",
+          "shader": "pbr"
+        },
+        "Material": {
+          "color": [
+            0.8,
+            0.3,
+            0.3
+          ],
+          "roughness": 0.6,
+          "metallic": 0.0
+        }
+      }
+    },
+    {
+      "name": "Ground_toon",
+      "tag": 2,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 4.5,
+          "posY": -0.1,
+          "posZ": 8,
+          "rotX": 0,
+          "rotY": 0,
+          "rotZ": 0,
+          "scaleX": 8,
+          "scaleY": 0.2,
+          "scaleZ": 8
+        },
+        "visual": {
+          "model": "rom/model/primitives/Cube.fbx",
+          "shader": "toon"
+        },
+        "Material": {
+          "color": [
+            0.9,
+            0.9,
+            0.9
+          ],
+          "roughness": 0.6,
+          "metallic": 0.0
+        }
+      }
+    },
+    {
+      "name": "Pillar_toon",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 3.0,
+          "posY": 1.5,
+          "posZ": 9,
+          "rotX": 0,
+          "rotY": 0,
+          "rotZ": 0,
+          "scaleX": 1,
+          "scaleY": 3,
+          "scaleZ": 1
+        },
+        "visual": {
+          "model": "rom/model/primitives/Cylinder.fbx",
+          "shader": "toon"
+        },
+        "Material": {
+          "color": [
+            0.85,
+            0.75,
+            0.6
+          ],
+          "roughness": 0.6,
+          "metallic": 0.0
+        }
+      }
+    },
+    {
+      "name": "Ball_toon",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 6.0,
+          "posY": 0.75,
+          "posZ": 7,
+          "rotX": 0,
+          "rotY": 0,
+          "rotZ": 0,
+          "scaleX": 1.5,
+          "scaleY": 1.5,
+          "scaleZ": 1.5
+        },
+        "visual": {
+          "model": "rom/model/primitives/Sphere.fbx",
+          "shader": "toon"
+        },
+        "Material": {
+          "color": [
+            0.8,
+            0.3,
+            0.3
+          ],
+          "roughness": 0.6,
+          "metallic": 0.0
+        }
+      }
+    },
+    {
+      "name": "Ground_directional_pixel",
+      "tag": 2,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 13.5,
+          "posY": -0.1,
+          "posZ": 8,
+          "rotX": 0,
+          "rotY": 0,
+          "rotZ": 0,
+          "scaleX": 8,
+          "scaleY": 0.2,
+          "scaleZ": 8
+        },
+        "visual": {
+          "model": "rom/model/primitives/Cube.fbx",
+          "shader": "directional_pixel"
+        },
+        "Material": {
+          "color": [
+            0.9,
+            0.9,
+            0.9
+          ],
+          "roughness": 0.6,
+          "metallic": 0.0
+        }
+      }
+    },
+    {
+      "name": "Pillar_directional_pixel",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 12.0,
+          "posY": 1.5,
+          "posZ": 9,
+          "rotX": 0,
+          "rotY": 0,
+          "rotZ": 0,
+          "scaleX": 1,
+          "scaleY": 3,
+          "scaleZ": 1
+        },
+        "visual": {
+          "model": "rom/model/primitives/Cylinder.fbx",
+          "shader": "directional_pixel"
+        },
+        "Material": {
+          "color": [
+            0.85,
+            0.75,
+            0.6
+          ],
+          "roughness": 0.6,
+          "metallic": 0.0
+        }
+      }
+    },
+    {
+      "name": "Ball_directional_pixel",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 15.0,
+          "posY": 0.75,
+          "posZ": 7,
+          "rotX": 0,
+          "rotY": 0,
+          "rotZ": 0,
+          "scaleX": 1.5,
+          "scaleY": 1.5,
+          "scaleZ": 1.5
+        },
+        "visual": {
+          "model": "rom/model/primitives/Sphere.fbx",
+          "shader": "directional_pixel"
+        },
+        "Material": {
+          "color": [
+            0.8,
+            0.3,
+            0.3
+          ],
+          "roughness": 0.6,
+          "metallic": 0.0
+        }
+      }
+    },
+    {
+      "name": "TallPillar_40m (depth clamp check)",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -4.5,
+          "posY": 20.0,
+          "posZ": 22.0,
+          "rotX": 0,
+          "rotY": 0,
+          "rotZ": 0,
+          "scaleX": 1.5,
+          "scaleY": 40.0,
+          "scaleZ": 1.5
+        },
+        "visual": {
+          "model": "rom/model/primitives/Cylinder.fbx",
+          "shader": "standard"
+        },
+        "Material": {
+          "color": [
+            0.6,
+            0.8,
+            0.6
+          ],
+          "roughness": 0.6,
+          "metallic": 0.0
+        }
+      }
+    },
+    {
+      "name": "Ground_back (tall pillar shadow)",
+      "tag": 2,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 0.0,
+          "posY": -0.1,
+          "posZ": 30.0,
+          "rotX": 0,
+          "rotY": 0,
+          "rotZ": 0,
+          "scaleX": 40.0,
+          "scaleY": 0.2,
+          "scaleZ": 24.0
+        },
+        "visual": {
+          "model": "rom/model/primitives/Cube.fbx",
+          "shader": "standard"
+        },
+        "Material": {
+          "color": [
+            0.9,
+            0.9,
+            0.9
+          ],
+          "roughness": 0.6,
+          "metallic": 0.0
+        }
+      }
+    }
+  ],
+  "canvas": {}
+}

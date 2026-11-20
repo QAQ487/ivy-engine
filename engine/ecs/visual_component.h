@@ -65,6 +65,9 @@ public:
     std::vector<LodLevel> lods;
     // Beyond this camera distance the object is not drawn. 0 = never.
     float cullDistance = 0.0f;
+    // Cast a stencil shadow volume when the scene's render.shadowMode is "volume".
+    // The mesh must be closed (watertight); open meshes log a warning and cast nothing.
+    bool shadowVolume = false;
     // Hysteresis memory for LOD selection (not serialized).
     mutable int lodLastLevel = -1;
     // Frame serials (Lod_GetFrameSerial) stamped by GameObject::DrawVisual: last frame
@@ -72,6 +75,9 @@ public:
     // skip pose evaluation while nothing draws it. Not serialized.
     mutable uint64_t lastConsideredSerial = ~uint64_t{0};
     mutable uint64_t lastDrawnSerial = ~uint64_t{0};
+    // Frame serial when the main camera pass last hid this Visual by cullDistance; the
+    // shadow-volume pass (same frame, later) then casts nothing. Not serialized.
+    mutable uint64_t lastDistanceCulledSerial = ~uint64_t{0};
 
     // Shared-cache mesh for level (0 = modelPath). Falls back to level 0 when the
     // LOD mesh is missing or failed to load. nullptr only if level 0 is unavailable.

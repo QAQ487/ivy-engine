@@ -207,6 +207,8 @@ exit /b 0</Command>
     <None Include="shaders\PixelShader3D_PBR.hlsl" />
     <None Include="shaders\VertexShader3D_Outline.hlsl" />
     <None Include="shaders\PixelShader3D_Outline.hlsl" />
+    <None Include="shaders\VertexShaderShadowVolume.hlsl" />
+    <None Include="shaders\PixelShaderShadowVolumeDarken.hlsl" />
     <None Include="shaders\SkyboxPS.hlsl" />
     <None Include="shaders\SkyboxVS.hlsl" />
     <None Include="shaders\FullscreenVS.hlsl" />
@@ -269,6 +271,10 @@ exit /b 0</Command>
     <ClInclude Include="engine\core\engine_gui_internal.h" />
     <ClInclude Include="engine\rendering\lighting\lighting.h" />
     <ClInclude Include="engine\rendering\lighting\shadow.h" />
+    <ClInclude Include="engine\rendering\lighting\shadow_volume.h" />
+    <ClInclude Include="engine\rendering\lighting\shadow_volume_mesh.h" />
+    <ClInclude Include="engine\rendering\lighting\csm_fit.h" />
+    <ClInclude Include="engine\rendering\lighting\shadow_volume_policy.h" />
     <ClInclude Include="engine\rendering\culling\frustum_cull.h" />
     <ClInclude Include="engine\rendering\culling\frustum_cull_math.h" />
     <ClInclude Include="engine\rendering\culling\cull_settings_math.h" />
@@ -298,6 +304,7 @@ exit /b 0</Command>
     <ClInclude Include="engine\scene\json_float.h" />
     <ClInclude Include="engine\scene\scene_asset_preload.h" />
     <ClInclude Include="engine\scene\render_settings.h" />
+    <ClInclude Include="engine\scene\shadow_mode.h" />
     <ClInclude Include="engine\scene\render_setting_access.h" />
     <ClInclude Include="engine\rendering\environment\skybox.h" />
     <ClInclude Include="engine\rendering\environment\ibl.h" />
@@ -452,6 +459,7 @@ exit /b 0</Command>
     <ClCompile Include="engine\core\engine_gui_persistence.cpp" />
     <ClCompile Include="engine\rendering\lighting\lighting.cpp" />
     <ClCompile Include="engine\rendering\lighting\shadow.cpp" />
+    <ClCompile Include="engine\rendering\lighting\shadow_volume.cpp" />
     <ClCompile Include="engine\rendering\culling\frustum_cull.cpp" />
     <ClCompile Include="engine\rendering\culling\lod_state.cpp" />
     <ClCompile Include="engine\rendering\culling\fx_cull.cpp" />
@@ -666,6 +674,8 @@ exit /b 0</Command>
     <ClCompile Include="samples\scripts\SamplePlayerScript.cpp" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
     <ClInclude Include="samples\scripts\SampleParticleEmitterScript.h" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
     <ClCompile Include="samples\scripts\SampleParticleEmitterScript.cpp" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
+    <ClInclude Include="samples\scripts\SampleSpinScript.h" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
+    <ClCompile Include="samples\scripts\SampleSpinScript.cpp" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
     <ClInclude Include="samples\scripts\SampleSaveScript.h" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
     <ClCompile Include="samples\scripts\SampleSaveScript.cpp" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
     <ClInclude Include="samples\scripts\SampleRebindScript.h" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />

@@ -1,0 +1,310 @@
+{
+  "version": 4,
+  "settings": {
+    "render": {
+      "clearColor": [
+        0.69,
+        0.77,
+        0.87,
+        1.0
+      ],
+      "defaultShader": "standard",
+      "fogEnabled": false,
+      "shadowQuality": "medium",
+      "shadowMode": "volume",
+      "shadowVolumeStrength": 0.55,
+      "skyboxCubemap": "rom/skybox/MySkybox.dds",
+      "skyboxEnabled": true
+    },
+    "debugCamera": {
+      "mode": "fly",
+      "enabledOnPlay": true,
+      "yawDeg": 0.0,
+      "pitchDeg": -18.0,
+      "position": {
+        "x": 0.0,
+        "y": 6.5,
+        "z": -9.0
+      }
+    }
+  },
+  "nodes": [
+    {
+      "name": "Directional Light",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 0.0,
+          "posY": 12.0,
+          "posZ": 0.0,
+          "rotX": 34.0,
+          "rotY": -40.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "DirectionalLight": {
+          "enabled": true,
+          "castShadows": true,
+          "color": [
+            1.0,
+            0.96,
+            0.9
+          ],
+          "intensity": 1.15,
+          "specColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "specPower": 32.0
+        }
+      }
+    },
+    {
+      "name": "Terrain",
+      "tag": 2,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 0.0,
+          "posY": 0.0,
+          "posZ": 0.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "visual": {
+          "model": "rom/model/shadow_volume/Terrain.fbx",
+          "shader": "standard"
+        }
+      }
+    },
+    {
+      "name": "Caster_Torus",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 0.0,
+          "posY": 2.5395,
+          "posZ": 4.0,
+          "rotX": 90.0,
+          "rotY": 25.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "visual": {
+          "model": "rom/model/shadow_volume/Torus.fbx",
+          "shader": "standard",
+          "shadowVolume": true
+        },
+        "Script": {
+          "scriptClass": "SampleSpinScript",
+          "properties": {
+            "degreesPerSecond": 35.0,
+            "busyMillis": 0.0
+          }
+        }
+      }
+    },
+    {
+      "name": "Caster_Obelisk_A",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -4.5,
+          "posY": -0.0484,
+          "posZ": 6.5,
+          "rotX": 0.0,
+          "rotY": 20.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "visual": {
+          "model": "rom/model/shadow_volume/Obelisk.fbx",
+          "shader": "standard",
+          "shadowVolume": true
+        }
+      }
+    },
+    {
+      "name": "Caster_Obelisk_B",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 4.5,
+          "posY": -0.2172,
+          "posZ": 9.0,
+          "rotX": 0.0,
+          "rotY": -15.0,
+          "rotZ": 0.0,
+          "scaleX": 1.3,
+          "scaleY": 1.3,
+          "scaleZ": 1.3
+        },
+        "visual": {
+          "model": "rom/model/shadow_volume/Obelisk.fbx",
+          "shader": "standard",
+          "shadowVolume": true
+        }
+      }
+    },
+    {
+      "name": "Caster_Boulder_A",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -2.0,
+          "posY": 0.345,
+          "posZ": 1.5,
+          "rotX": 0.0,
+          "rotY": 40.0,
+          "rotZ": 0.0,
+          "scaleX": 2.2,
+          "scaleY": 2.2,
+          "scaleZ": 2.2
+        },
+        "visual": {
+          "model": "rom/model/lod/Boulder_LOD1.fbx",
+          "shader": "standard",
+          "shadowVolume": true
+        }
+      }
+    },
+    {
+      "name": "Caster_Boulder_B",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 6.5,
+          "posY": 1.8141,
+          "posZ": 3.0,
+          "rotX": 0.0,
+          "rotY": 130.0,
+          "rotZ": 0.0,
+          "scaleX": 3.0,
+          "scaleY": 3.0,
+          "scaleZ": 3.0
+        },
+        "visual": {
+          "model": "rom/model/lod/Boulder_LOD1.fbx",
+          "shader": "standard",
+          "shadowVolume": true
+        },
+        "Script": {
+          "scriptClass": "SampleSpinScript",
+          "properties": {
+            "degreesPerSecond": -20.0,
+            "busyMillis": 0.0
+          }
+        }
+      }
+    },
+    {
+      "name": "Caster_Pine_A",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -7.5,
+          "posY": 0.5856,
+          "posZ": 11.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.2,
+          "scaleY": 1.2,
+          "scaleZ": 1.2
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD1.fbx",
+          "shader": "standard",
+          "shadowVolume": true
+        }
+      }
+    },
+    {
+      "name": "Caster_Pine_B",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": -1.5,
+          "posY": 0.0321,
+          "posZ": 13.0,
+          "rotX": 0.0,
+          "rotY": 50.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD1.fbx",
+          "shader": "standard",
+          "shadowVolume": true
+        }
+      }
+    },
+    {
+      "name": "Caster_Pine_C",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 8.5,
+          "posY": 0.2018,
+          "posZ": 13.5,
+          "rotX": 0.0,
+          "rotY": 110.0,
+          "rotZ": 0.0,
+          "scaleX": 1.4,
+          "scaleY": 1.4,
+          "scaleZ": 1.4
+        },
+        "visual": {
+          "model": "rom/model/lod/PineTree_LOD1.fbx",
+          "shader": "standard",
+          "shadowVolume": true
+        }
+      }
+    },
+    {
+      "name": "NoVolume_Box",
+      "tag": 0,
+      "children": [],
+      "components": {
+        "SceneTransform": {
+          "posX": 2.5,
+          "posY": 2.0797,
+          "posZ": -1.0,
+          "rotX": 0.0,
+          "rotY": 0.0,
+          "rotZ": 0.0,
+          "scaleX": 1.0,
+          "scaleY": 1.0,
+          "scaleZ": 1.0
+        },
+        "visual": {
+          "model": "rom/model/object/Box_Blue.fbx",
+          "shader": "standard"
+        }
+      }
+    }
+  ],
+  "canvas": {}
+}

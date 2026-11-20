@@ -43,6 +43,9 @@ From `api:SceneExecutionPolicy` + `api:RenderSettings_ToJson` / parse:
 | `render.lodDebugLabels` | bool (default `false`) — debug aid: draws a label above every LOD-tracked mesh the camera drew (`L<level> <distance>m <screen height>%`, green / yellow / orange / red for L0–L3; a magenta `CULLED <distance>m > <limit>m` label marks a mesh hidden by its `cullDistance`). Play / runtime only |
 | `render.cullDistanceScale` | number (default `1`, clamped 0.1–10) — multiplies every `visual.cullDistance` (`0` / absent stays "never"); >1 keeps objects visible further out, <1 culls sooner. Needs `lodEnabled` |
 | `render.shadowDistance` | number (default `0`, clamped 5–1000 when positive) — shadow range in world units; `0` uses the Shadow Quality preset (Low 40 / Medium 70 / High 90). Map size and cascade count still come from the preset |
+| `render.shadowMode` | string (default `"csm"`; unknown ids read as `"csm"`) — `"csm"` cascaded shadow maps; `"volume"` stencil shadow volumes cast only by Visuals with `"shadowVolume": true` (closed FBX meshes), from the first DirectionalLight with `castShadows`, CSM off; `"none"` no shadows |
+| `render.shadowVolumeStrength` | number (default `0.55`, clamped 0–1) — how much a shadow-volume shadow darkens the image (`"volume"` mode only) |
+| `render.shadowAmbientStrength` | number (default `0.35`, clamped 0–1) — `"csm"` only: ambient light kept inside a shadow (1 = unaffected, 0 = black); lights without `castShadows` always light the shadow |
 | `camera.mode` | JSON strings from `PrepareSceneSettings` in `engine/scene/scene_loader.cpp`: `"thirdPerson"`, `"firstPerson"`, or default `"scene"` (→ `api:CameraMode` `SceneCamera`). C++ also has `CameraMode::Intro`; it is **not** a JSON mode string |
 | `camera.node` | Preferred scene camera node name |
 | `debugCamera` | Same `.cpp` parser: `mode` (`"orbit"` default / `"fly"`), `enabledOnPlay`, `yawDeg`, `pitchDeg`, optional `position` object `{x,y,z}` |
@@ -115,6 +118,8 @@ Node JSON (recursive), from `prefab_serializer.h`:
 - Shadow passes use the same level as the main camera pass (unless `render.shadowLodOffset` > 0).
 - Ignored while `animate` is `true` (levels > 0 are skipped); `cullDistance` still applies. LOD only applies in Play / runtime, never to `proxy_model` edit view. A missing LOD mesh falls back to level 0.
 - LOD meshes should share the base mesh pivot and scale, or the switch will visibly jump.
+
+`visual.shadowVolume` (bool, default `false`, written only when `true`): cast a stencil shadow volume when `render.shadowMode` is `"volume"`. The mesh must be a closed (watertight) FBX: vertices split for UV / normal seams are welded by position, but any open or non-manifold edge makes the engine log `[ShadowVolume] <model>: mesh is not closed` once and skip the object. OBJ models cannot cast. The volume uses the base mesh (no LOD, no camera-frustum cull) and follows GPU / CPU skinning. Check testbed casters on Linux with `tools/run_shadow_volume_check.sh`.
 
 Files written by `api:PrefabSerializer` `SaveToFile` use the scene-style wrapper:
 

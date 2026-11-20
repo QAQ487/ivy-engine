@@ -8,6 +8,7 @@
 #include <string>
 #include "engine/rendering/d3d11/shader.h"
 #include "engine/core/builtin_paths.h"
+#include "engine/scene/shadow_mode.h"
 
 enum class ShadowQuality {
     Low = 0,
@@ -38,6 +39,13 @@ struct RenderSettingsData {
     DirectX::XMFLOAT4 clearColor = { 0.69f, 0.77f, 0.87f, 1.0f };
     std::string defaultShader = "standard";
     ShadowQuality shadowQuality = ShadowQuality::Medium;
+    // Shadow technique: CSM (default), stencil shadow volumes for Visuals with
+    // shadowVolume = true, or none. See engine/scene/shadow_mode.h.
+    ShadowMode shadowMode = ShadowMode::Csm;
+    // Shadow-volume darkening (0 = invisible, 1 = black). Clamped to [0, 1].
+    float shadowVolumeStrength = shadow_mode::kDefaultVolumeStrength;
+    // CSM: ambient kept inside a shadow (1 = unaffected, 0 = black). Clamped to [0, 1].
+    float shadowAmbientStrength = shadow_mode::kDefaultShadowAmbientStrength;
 
     // Height fog (in-shader, opaque lit meshes)
     bool fogEnabled = false;
