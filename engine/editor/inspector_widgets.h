@@ -18,6 +18,9 @@ namespace insp {
 enum class Accent { Transform, Render, Light, Camera, Physics, Audio, Script, Effect, Neutral };
 ImVec4 AccentColor(Accent accent);
 
+// Accent used by row / sub-heading icons when there is no ComponentHeader.
+void SetAccent(Accent accent);
+
 enum class HeaderAction { None, Remove, Reset };
 
 struct HeaderResult {
@@ -76,8 +79,13 @@ bool ChoiceBar(const char* id, const char* const* icons, const char* const* tips
 // Asset path field inside a PropRow: full path editable, tooltip shows it, an
 // X button clears it, and dropping an "ASSET_PATH" payload with one of exts
 // assigns it. Returns true when path changed.
+// commitOnEnter: typed text applies only on Enter (drop / clear apply at once).
 bool AssetField(const char* icon, const char* word, const char* tip, std::string& path,
-                const char* const* exts, int extCount);
+                const char* const* exts, int extCount, bool commitOnEnter = false);
+
+// Pivot preset combo (Center, corners, edges, Custom) + XY fields for Custom.
+// xy = {x, y} in 0-1 from the bottom-left. owner keeps "Custom" open per object.
+bool PivotRow(float* xy, const void* owner);
 
 // Square icon-only button, glyph centered by its ink box; tooltip on hover.
 // iconId may carry a "##id" suffix. size <= 0 = frame height.

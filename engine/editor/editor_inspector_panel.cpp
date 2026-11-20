@@ -949,31 +949,6 @@ void DrawCollider2D(GameObject* n, Collider2DComponent* collider, bool& dirty) {
     s.Finish([n] { n->RemoveComponent<Collider2DComponent>(); });
 }
 
-bool PivotRow(DirectX::XMFLOAT2& pivot, const void* owner) {
-    static const char* names[] = { "Center", "Top Left", "Top", "Top Right", "Left", "Right",
-        "Bottom Left", "Bottom", "Bottom Right", "Custom" };
-    static const DirectX::XMFLOAT2 values[] = { {.5f, .5f}, {0, 1}, {.5f, 1}, {1, 1},
-        {0, .5f}, {1, .5f}, {0, 0}, {.5f, 0}, {1, 0} };
-    static const void* lastOwner = nullptr;
-    static bool custom = false;
-    if (lastOwner != owner) { lastOwner = owner; custom = false; }
-    int current = 9;
-    for (int i = 0; i < 9; ++i)
-        if (std::fabs(pivot.x - values[i].x) < .00001f && std::fabs(pivot.y - values[i].y) < .00001f) { current = i; break; }
-    if (custom) current = 9;
-    bool changed = false;
-    {
-        insp::PropRow r(ICON_FA_CROSSHAIRS, "Pivot");
-        if (ImGui::Combo("##v", &current, names, IM_ARRAYSIZE(names))) {
-            custom = current == 9;
-            if (!custom) { pivot = values[current]; changed = true; }
-        }
-    }
-    if (current == 9)
-        changed |= insp::DragVecN(nullptr, "Custom", "Pivot (0-1, bottom-left)", &pivot.x, 2, 0.01f, 0.0f, 1.0f, 0.5f);
-    return changed;
-}
-
 void DrawSpriteRenderer(GameObject* n, SpriteRendererComponent* sprite, bool& dirty) {
     Section s(n, "SpriteRenderer", ICON_FA_IMAGE, "Sprite", insp::Accent::Render, sprite, nullptr, dirty);
     if (s.Open()) {
@@ -986,7 +961,7 @@ void DrawSpriteRenderer(GameObject* n, SpriteRendererComponent* sprite, bool& di
         { insp::PropRow r(ICON_FA_RULER_COMBINED, "PPU", "Pixels per unit"); Mark(ImGui::DragFloat("##v", &sprite->pixelsPerUnit, 1.0f, 0.01f, 100000.0f), dirty); }
         { insp::PropRow r(ICON_FA_BORDER_ALL, "Rect", "Source x, y, w, h (px); 0 size = full");
           Mark(ImGui::DragFloat4("##v", &sprite->sourceRect.x, 1.0f, 0.0f, 100000.0f), dirty); }
-        Mark(PivotRow(sprite->pivot, sprite), dirty);
+        Mark(insp::PivotRow(&sprite->pivot.x, sprite), dirty);
         { insp::PropRow r(ICON_FA_PALETTE, "Tint"); Mark(ImGui::ColorEdit4("##v", &sprite->tint.x), dirty); }
         insp::Toggle toggles[] = {
             { ICON_FA_ARROWS_LEFT_RIGHT, "Flip X", &sprite->flipX },

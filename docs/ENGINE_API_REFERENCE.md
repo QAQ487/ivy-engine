@@ -1210,13 +1210,16 @@ Vendor header `WICTextureLoader11.h` is omitted.
 **Types:** Component, HeaderResult, PropRow, Toggle
 **Enums:** Accent, HeaderAction
 - `ImVec4 AccentColor(Accent accent);`
+- `void SetAccent(Accent accent);`
 - `HeaderResult ComponentHeader(const char* id, const char* icon, const char* name, Accent accent, bool* enabled, const Component* component, bool canRemove = true, bool canReset = true, void (*extraMenu)(void*) = nullptr, void* extraMenuUser = nullptr);`
 - `public: PropRow(const char* icon, const char* word, const char* tip = nullptr);`
 - `float RowLabel(const char* icon, const char* word, const char* tip);`
 - `bool DragVecN(const char* icon, const char* word, const char* tip, float* v, int n, float speed, float vmin = 0.0f, float vmax = 0.0f, float resetValue = 0.0f, float wheelStep = 0.0f, const char* fmt = "%.3f", const char* axes = "XYZW");`
 - `bool ToggleRow(const Toggle* toggles, int count);`
 - `bool ChoiceBar(const char* id, const char* const* icons, const char* const* tips, int count, int* selected);`
-- `bool AssetField(const char* icon, const char* word, const char* tip, std::string& path, const char* const* exts, int extCount);`
+- `bool AssetField(const char* icon, const char* word, const char* tip, std::string& path, const char* const* exts, int extCount, bool commitOnEnter = false);`
+- `bool PivotRow(float* xy, const void* owner);`
+- `bool IconButton(const char* iconId, const char* tip, float size = 0.0f);`
 - `void HintIcon(const char* icon, const ImVec4& color, const char* tip);`
 - `inline void HintIconSameLine(const char* icon, const ImVec4& color, const char* tip) { ImGui::SameLine();`
 - `bool WideButton(const char* icon, const char* word, const char* tip = nullptr);`

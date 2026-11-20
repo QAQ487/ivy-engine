@@ -12,8 +12,8 @@
   - 現況：`engine/editor/editor_inspector_panel.cpp` 的 `"Properties"` 已有 Transform、Tag、Visual、Light、Camera、Collider、Rigidbody、Material、Effect、Audio 同 script properties；Undo 已接 `editor_undo.cpp`。呢項係 UI 重做，唔係由零寫 inspector。
   - 驗收：常用欄位編輯／保存／重載正常；Undo/Redo 有效；新增／移除 component、資產選擇無回歸。
   - 2026-11-20 source 已做（等 Windows 驗收）：`engine/editor/inspector_widgets`（`insp::`）＋純邏輯 `inspector_layout_math.h`；每個 component 一個 `Draw*` 函式（`Section` 包住 undo＋header）。Header 有分類色條、enabled 開關（只限有 `enabled` 欄位嘅 component）、⋮ 選單 Reset（undoable，Script／Terrain／Animator／Listener 冇）／Copy JSON／Remove。Row 用 icon＋短字（窄過 14×字高只顯示 icon），hover 睇名同描述；XYZ 紅綠藍 chip（撳 reset）；bool 改 icon toggle；提示句改 ⚠／ⓘ icon tooltip。Terrain 雕刻工具同樣改。Linux：`tests/inspector_layout_math_test.cpp`、`tools/run_inspector_widgets_check.sh`（headless ImGui 120–900 px、1–2× 字體冇超闊）。
-  - Windows 要驗：五個 color scheme 下 icon／色條睇得清；Dock 到好窄（~150 px）都冇橫向捲軸；Undo：header 開關、toggle、axis chip reset、Reset 選單；Remove 後冇 crash；Add 彈出清單；Terrain 雕刻／塗層；UI element（canvas）properties 未改版（仍係舊排版）。
-  - 未做：GameObject active 開關（`m_isActive` 未入 scene JSON，存唔到）；UI canvas element properties（`editor_ui_panel.cpp`）未改用 `insp::`。
+  - Windows 要驗：五個 color scheme 下 icon／色條睇得清；Dock 到好窄（~150 px）都冇橫向捲軸；Undo：header 開關、toggle、axis chip reset、Reset 選單；Remove 後冇 crash；Add 彈出清單；Terrain 雕刻／塗層；UI element（canvas）properties：Layout／Sprite／Text／Button／Bar／Script 分區、Align icon、PNG atlas 先顯示 Cell／Per Row、路徑 Enter 先生效。
+  - 未做：GameObject active 開關（`m_isActive` 未入 scene JSON，存唔到）。2026-11-20 UI canvas element properties（`editor_ui_panel.cpp`）都改用 `insp::`。
 - [ ] **Stencil shadow volume 模式**（source 已做；等 Windows editor／runtime 驗收）
   - `settings.render.shadowMode`：`"csm"`（預設，舊場景不變）／`"volume"`／`"none"`；`shadowVolumeStrength`（0.55，0–1）。`visual.shadowVolume: true` 先會投 volume；只限封閉 FBX mesh，唔封閉會喺 Console log 一次並跳過。
   - 做法：`shadow_volume_mesh.h`（純邏輯：position weld、closed／manifold 檢查、outward winding、caps＋每條邊一個零面積 quad）；`VertexShaderShadowVolume.hlsl` 將背光 corner 沿光方向推 4× far clip（有限長度，正交鏡頭都啱）；z-fail stencil（背面 +1、正面 −1）、depth clip off、`LESS_EQUAL`；最後 fullscreen multiply darken。GPU skin 同 CPU skin 都支援。光源：第一盞 `castShadows` 嘅 DirectionalLight。

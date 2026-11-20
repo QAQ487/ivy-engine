@@ -163,6 +163,36 @@ ImVec4 AccentColor(Accent accent)
     return AdaptToBackground(c);
 }
 
+void SetAccent(Accent accent) { g_currentAccent = AccentColor(accent); }
+
+bool PivotRow(float* xy, const void* owner)
+{
+    static const char* names[] = { "Center", "Top Left", "Top", "Top Right", "Left", "Right",
+        "Bottom Left", "Bottom", "Bottom Right", "Custom" };
+    static const float values[9][2] = { {.5f, .5f}, {0, 1}, {.5f, 1}, {1, 1},
+        {0, .5f}, {1, .5f}, {0, 0}, {.5f, 0}, {1, 0} };
+    static const void* lastOwner = nullptr;
+    static bool custom = false;
+    if (lastOwner != owner) { lastOwner = owner; custom = false; }
+    int current = 9;
+    for (int i = 0; i < 9; ++i) {
+        const float dx = xy[0] - values[i][0], dy = xy[1] - values[i][1];
+        if (dx * dx < 1e-10f && dy * dy < 1e-10f) { current = i; break; }
+    }
+    if (custom) current = 9;
+    bool changed = false;
+    {
+        PropRow r(ICON_FA_CROSSHAIRS, "Pivot");
+        if (ImGui::Combo("##v", &current, names, IM_ARRAYSIZE(names))) {
+            custom = current == 9;
+            if (!custom) { xy[0] = values[current][0]; xy[1] = values[current][1]; changed = true; }
+        }
+    }
+    if (current == 9)
+        changed |= DragVecN(nullptr, "Custom", "Pivot (0-1, bottom-left)", xy, 2, 0.01f, 0.0f, 1.0f, 0.5f);
+    return changed;
+}
+
 ImVec4 WarningColor() { return AdaptToBackground(ImVec4(0.98f, 0.72f, 0.22f, 1.0f)); }
 ImVec4 InfoColor()    { return AdaptToBackground(ImVec4(0.45f, 0.70f, 1.00f, 1.0f)); }
 ImVec4 ErrorColor()   { return AdaptToBackground(ImVec4(1.00f, 0.45f, 0.35f, 1.0f)); }
@@ -466,7 +496,7 @@ int IconButtonRow(const char* id, const char* const* icons, const char* const* t
 }
 
 bool AssetField(const char* icon, const char* word, const char* tip, std::string& path,
-                const char* const* exts, int extCount)
+                const char* const* exts, int extCount, bool commitOnEnter)
 {
     const ImGuiStyle& st = ImGui::GetStyle();
     const float frameH = ImGui::GetFrameHeight();
@@ -479,7 +509,8 @@ bool AssetField(const char* icon, const char* word, const char* tip, std::string
     char buf[512];
     std::snprintf(buf, sizeof(buf), "%s", path.c_str());
     ImGui::SetNextItemWidth((std::max)(1.0f, fieldW - clearW));
-    if (ImGui::InputTextWithHint("##p", "None", buf, sizeof(buf))) {
+    if (ImGui::InputTextWithHint("##p", "None", buf, sizeof(buf),
+            commitOnEnter ? ImGuiInputTextFlags_EnterReturnsTrue : 0)) {
         path = buf;
         changed = true;
     }

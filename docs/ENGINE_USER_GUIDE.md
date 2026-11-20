@@ -838,7 +838,7 @@ In the editor, switch to **UI** edit mode to select and drag canvas elements wit
 
 ### Anchor, Position and Pivot
 
-UI Text and Button **Font Path** accepts a `.ttf` / `.otf` (drag one from the Asset Browser) or a PNG atlas. The engine's default UI font is built into the exe, so it is not in your project's `rom/` and the Asset Browser does not list it: click **Use engine built-in font** under the Font Path field (it fills in `builtin:font/IBMPlexMono-Regular.ttf`, a path that never refers to a file in your project). New Text and Buttons already start with it.
+UI Text and Button **Font** (under the Font sub-heading) accepts a `.ttf` / `.otf` (drag one from the Asset Browser) or a PNG atlas. The engine's default UI font is built into the exe, so it is not in your project's `rom/` and the Asset Browser does not list it: click **Built-in** under the Font field (it fills in `builtin:font/IBMPlexMono-Regular.ttf`, a path that never refers to a file in your project). New Text and Buttons already start with it. **Cell** (char width / height) and **Per Row** appear only for a PNG atlas; TTF / OTF fonts use glyph advances. Path fields apply typed text on Enter; dropping an asset or ✕ applies at once.
 
 UI Sprite, Button, Bar, Text and world Sprites share a **Pivot** dropdown: Center, Top Left, Top Center, Top Right, Middle Left, Middle Right, Bottom Left, Bottom Center, Bottom Right, Custom.
 
@@ -848,7 +848,7 @@ UI Sprite, Button, Bar, Text and world Sprites share a **Pivot** dropdown: Cente
 
 Example: Anchor = Center, Position = (0,0), Pivot = Center centers the element. Switching Pivot to Top Left puts the element's top-left corner at the canvas center; Position is kept, so the element moves relative to its origin.
 
-The UI gizmo's move arrows sit on the pivot; scale handles sit on the bounding-box corners and compensate Position while dragging. Rotated UI Sprites rotate around the pivot; resize them with Width / Height in Properties. For Text, the pivot applies to the whole text block (including multi-line height) and replaces the old Alignment option. A Bar's pivot uses the bar body; its label can still show above it.
+The UI gizmo's move arrows sit on the pivot; scale handles sit on the bounding-box corners and compensate Position while dragging. Rotated UI Sprites rotate around the pivot; resize them with **Size** (W / H) in Properties. For Text, the pivot applies to the whole text block (including multi-line height) and replaces the old **Align** buttons (greyed out while a pivot is set). A Bar's pivot uses the bar body; its label can still show above it.
 
 Compatibility: scenes saved without a `pivot` field keep their original layout and text alignment. Only an explicitly set pivot (`pivot: {x, y}` in the element data) uses the new layout. Undo / Redo and scene saving work as usual.
 
