@@ -1,7 +1,7 @@
 # Ivy Engine — Complete Ability & API Reference
 
 Exhaustive catalog of **Ivy Engine** capabilities and public functions,
-scanned from every header under `engine/` and `src/app/` (197 headers; regenerate to refresh).
+scanned from every header under `engine/` and `src/app/` (199 headers; regenerate to refresh).
 
 **Learning how to use the engine?** Start with [`ENGINE_USER_GUIDE.md`](ENGINE_USER_GUIDE.md) (humans).  
 For JSON schemas, source map, and change rules, see [`AGENTS.md`](../AGENTS.md) (AI agents).
@@ -1201,6 +1201,32 @@ Vendor header `WICTextureLoader11.h` is omitted.
 - `void EditorUndo_EndUiEdit(UIElement* el);`
 - `void EditorUndo_DiscardUiEdit();`
 - `void EditorUndo_DeleteNodeInternal(GameObject* toDelete);`
+
+### `engine/editor/inspector_layout_math.h`
+**Types:** RowLayout
+- `return std::clamp(cols, 1, count);`
+
+### `engine/editor/inspector_widgets.h`
+**Types:** Component, HeaderResult, PropRow, Toggle
+**Enums:** Accent, HeaderAction
+- `ImVec4 AccentColor(Accent accent);`
+- `HeaderResult ComponentHeader(const char* id, const char* icon, const char* name, Accent accent, bool* enabled, const Component* component, bool canRemove = true, bool canReset = true, void (*extraMenu)(void*) = nullptr, void* extraMenuUser = nullptr);`
+- `public: PropRow(const char* icon, const char* word, const char* tip = nullptr);`
+- `float RowLabel(const char* icon, const char* word, const char* tip);`
+- `bool DragVecN(const char* icon, const char* word, const char* tip, float* v, int n, float speed, float vmin = 0.0f, float vmax = 0.0f, float resetValue = 0.0f, float wheelStep = 0.0f, const char* fmt = "%.3f", const char* axes = "XYZW");`
+- `bool ToggleRow(const Toggle* toggles, int count);`
+- `bool ChoiceBar(const char* id, const char* const* icons, const char* const* tips, int count, int* selected);`
+- `bool AssetField(const char* icon, const char* word, const char* tip, std::string& path, const char* const* exts, int extCount);`
+- `void HintIcon(const char* icon, const ImVec4& color, const char* tip);`
+- `inline void HintIconSameLine(const char* icon, const ImVec4& color, const char* tip) { ImGui::SameLine();`
+- `bool WideButton(const char* icon, const char* word, const char* tip = nullptr);`
+- `int IconButtonRow(const char* id, const char* const* icons, const char* const* tips, int count);`
+- `void SubHeading(const char* icon, const char* word, const char* hint = nullptr, bool hintIsWarning = true);`
+- `void ReadOnlyRow(const char* icon, const char* word, const char* tip, const char* text, const ImVec4* color = nullptr);`
+- `std::string Ellipsize(const std::string& text, float maxW);`
+- `ImVec4 WarningColor();`
+- `ImVec4 InfoColor();`
+- `ImVec4 ErrorColor();`
 
 ### `engine/editor/light_gizmo.h`
 **Types:** DebugDrawer, GameObject

@@ -63,7 +63,7 @@ Linux-runnable checks (use what matches the change; none of these is a Windows p
 | Area | Command |
 |------|---------|
 | **Everything below at once** (CI: `.github/workflows/linux-checks.yml`) | `tools/run_linux_checks.sh` |
-| Editor pure-logic units | `tools/run_editor_{console_log,docking_math,settings_categories,theme,ui_scale_math}_check.sh`, `tools/run_debug_ofstream_tls_check.sh` |
+| Editor pure-logic units | `tools/run_editor_{console_log,docking_math,settings_categories,theme,ui_scale_math}_check.sh`, `tools/run_debug_ofstream_tls_check.sh`; Properties panel: `tests/inspector_layout_math_test.cpp`, `tools/run_inspector_widgets_check.sh` (headless ImGui: no widget wider than the panel) |
 | Shadow volumes | `tools/run_shadow_volume_check.sh` (topology builder, volume-pass policy, `shadowMode` ids, testbed casters are closed meshes) |
 | Culling / LOD | `tools/run_{frustum,shadow,sprite}_cull_check.sh`, `tools/run_lod_check.sh`; `tools/run_anim_cull_check.sh`, `tools/run_light_select_check.sh`, `tools/run_fx_cull_check.sh`, `tools/run_render_setting_check.sh`; `tests/{cull_settings,euler_math,third_person_move}_test.cpp` (build lines in each file header) |
 | Content paths / hot reload | `tools/run_utf8_path_check.sh`, `tools/run_content_removal_policy_check.sh`, `g++ -std=c++17 -I. tools/content_path_check.cpp -o /tmp/cpc && /tmp/cpc` |
@@ -86,7 +86,7 @@ Windows-only harnesses: `tools/run_*.cmd`, `tools/run_*.ps1` (2D regression, col
 | Path | Contents |
 |------|----------|
 | `engine/core/` | Editor core `engine_gui.cpp` (play state, hotkeys, scene load gating), `engine_gui_runtime.cpp` (runtime shims), `content_path.h`, `utf8_path.h`, job system, timers, debug system |
-| `engine/editor/` | Editor UI split by panel: `editor_menu_bar`, `editor_hierarchy_panel`, `editor_inspector_panel`, `editor_asset_panel`, `editor_console`, `editor_settings_windows`, `editor_docking`/`editor_layout`, `editor_theme`, `editor_toolbar`, `editor_start_screen`, `terrain_editor` (terrain sculpt tools), gizmos, undo, `project_manager`, `playable_package_builder`, content monitor |
+| `engine/editor/` | Editor UI split by panel: `editor_menu_bar`, `editor_hierarchy_panel`, `editor_inspector_panel`, `editor_asset_panel`, `editor_console`, `editor_settings_windows`, `editor_docking`/`editor_layout`, `inspector_widgets` (width-safe Properties widgets; layout rules in pure `inspector_layout_math.h`), `editor_theme`, `editor_toolbar`, `editor_start_screen`, `terrain_editor` (terrain sculpt tools), gizmos, undo, `project_manager`, `playable_package_builder`, content monitor |
 | `engine/ecs/` | `GameObject`, components, `ComponentFactory`, prefab serializer/runtime, tag registry, model cache |
 | `engine/scene/` | Scene loader, runtime sync, render settings, execution policy (2D/3D), file monitor, asset preload |
 | `engine/scripting/` | `Script`, `ScriptComponent`, `ScriptFactory`, DLL registration, `ScriptRuntimeApi`, `UICanvasScript` |
@@ -201,7 +201,7 @@ Saved by `SceneLoader_SaveToFile`:
 | `Terrain` | `ecs/terrain_component.h` (fields: `terrain/terrain_settings.h`) | `heightmap` (`rom/...r16`, "" = flat 129² placeholder), `sizeX`, `sizeZ`, `heightScale`, `heightOffset`, `chunkQuads`, `lodBias`, `texture`, `textureTileSize` (= layer 0), `layers` (≤4 `{texture, tileSize}`), `splatmap` (`rom/...splat`, RGBA8 weights), `color {r,g,b}`, `roughness`, `metallic`, `castShadows`, `enabled`, `collision` (static heightfield collider unless the object has a collider component; forces its rigidbody kinematic). Position only (rotation / scale ignored); ADR 0011 |
 | `Material`, `Effect`, `Camera`, 2D types | their headers in `engine/ecs/` | See each component's `Serialize()` |
 
-When adding a component: register it in `SceneLoader_RegisterComponentTypes()`, add inspector + undo support, add it to this table and `docs/agent/scene-prefab.md`.
+When adding a component: register it in `SceneLoader_RegisterComponentTypes()`, add an inspector section (a `Draw<Type>` function in `editor_inspector_panel.cpp` built from `Section` + `insp::` widgets; no fixed pixel offsets or `SameLine(x)` labels) + undo support, add it to this table and `docs/agent/scene-prefab.md`.
 
 ## Scripting
 
